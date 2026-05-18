@@ -1,0 +1,323 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Globe, Rocket, ShoppingCart, ShieldCheck, Zap, ArrowRight, CheckCircle2, MessageSquare, Sparkles, BrainCircuit } from 'lucide-react';
+import { motion } from 'framer-motion';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+
+export default function Services() {
+  const navigate = useNavigate();
+  const plans = [
+    {
+      name: "Paquete Destello",
+      titleColor: "text-amber-500",
+      desc: "Tu Landing Page económica (rápida y directa).",
+      price: "$299",
+      features: [
+        "Diseño responsivo exclusivo",
+        "Optimización de conversión",
+        "Integración de formularios",
+        "Soporte por 30 días"
+      ],
+      highlight: false
+    },
+    {
+      name: "Paquete Constelación",
+      titleColor: "text-[var(--color-primary-base)]",
+      desc: "Tu Web Corporativa de 5 páginas (robusta y conectada).",
+      price: "$699",
+      features: [
+        "Hasta 5 secciones personalizadas",
+        "SEO On-page avanzado",
+        "Blog autogestionable",
+        "Chatbot básico de respuestas predefinidas",
+        "Certificado SSL incluido",
+        "Soporte por 90 días"
+      ],
+      highlight: true
+    },
+    {
+      name: "Paquete Nova",
+      titleColor: "text-violet-500",
+      desc: "Tu tienda virtual (para explotar en ventas).",
+      prefix: "Desde",
+      price: "$1,299",
+      badge: "Potenciado con IA",
+      badgeIcon: true,
+      features: [
+        "Catálogo de productos ilimitado",
+        "Pasarelas de pago configuradas",
+        "Gestión de inventario",
+        "Chatbot IA para captura de leads",
+        "Integración con herramientas de IA (según proyecto)",
+        "Panel de administración",
+        "Soporte por 1 año"
+      ],
+      highlight: false
+    }
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+      <Navbar />
+
+      <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
+        {/* Header */}
+        <section className="text-center space-y-6 mb-20">
+          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">Expertise & Ejecución</span>
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter">Ingeniería Digital a tu Alcance</h1>
+          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
+            Explora nuestros servicios especializados. Desarrollamos soluciones escalables diseñadas para potenciar tu presencia en el mercado.
+          </p>
+        </section>
+
+        {/* Services Bento */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-32">
+          <div id="landing" className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
+              <Rocket size={28} />
+            </div>
+            <div>
+              <h2 className="text-3xl font-display font-bold mb-4 tracking-tight">Landing Pages</h2>
+              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
+                Páginas de aterrizaje diseñadas para convertir, con una interfaz de alto impacto y tiempos de carga mínimos.
+              </p>
+              <button 
+                onClick={() => navigate('/servicios#landing')}
+                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest"
+              >
+                Saber más <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div id="ecommerce" className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
+              <ShoppingCart size={28} />
+            </div>
+            <div>
+              <h2 className="text-3xl font-display font-bold mb-4 tracking-tight">E-commerce de Alto Nivel</h2>
+              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
+                Tiendas virtuales escalables construidas sobre tecnologías modernas para garantizar una experiencia de compra fluida.
+              </p>
+              <button 
+                onClick={() => navigate('/servicios#ecommerce')}
+                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest"
+              >
+                Saber más <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col gap-4 text-center items-center justify-center group bento-glow-hover transition-all">
+             <ShieldCheck className="text-[var(--color-primary-base)]" size={40} />
+             <h3 className="font-display font-bold">Mantenimiento</h3>
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-primary-muted)]/10 flex flex-col justify-center gap-2 items-center group bento-glow transition-all">
+             <Zap className="text-[var(--color-primary-base)]" size={32} />
+             <h3 className="text-2xl font-display font-bold">Optimización SEO</h3>
+             <p className="text-[var(--color-text-tertiary)] text-xs font-bold uppercase tracking-widest">Velocidad y Posicionamiento</p>
+          </div>
+
+          <div className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col gap-4 text-center items-center justify-center group bento-glow-hover transition-all">
+             <Globe className="text-[var(--color-primary-base)]" size={40} />
+             <h3 className="font-display font-bold">Apps Móviles</h3>
+          </div>
+        </div>
+
+        {/* Pricing Section */}
+        <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32">
+          <section className="space-y-12 text-center">
+            <div className="flex flex-col items-center gap-6">
+               <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">Nuestros Planes</span>
+               <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">Inversión Inteligente</h2>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto">
+              {plans.map((plan, i) => (
+                <motion.div 
+                  key={i}
+                  whileHover={{ y: -10 }}
+                  className={`p-8 rounded-[var(--radius-bento)] border transition-all flex flex-col justify-between min-h-[500px] relative ${
+                    plan.highlight 
+                      ? 'bg-[var(--color-surface-elevated)] border-[var(--color-primary-base)]' 
+                      : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]'
+                  }`}
+                >
+                  {/* Absolute Badges */}
+                  {plan.highlight && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg z-20">
+                      Más Popular
+                    </div>
+                  )}
+
+                  <div className="flex flex-col h-full justify-between">
+                    <div>
+                      <div className="h-[140px] md:h-[160px] lg:h-[160px] flex flex-col justify-start">
+                        <h3 className={`text-3xl font-display font-black tracking-tight mb-2 ${plan.titleColor}`}>{plan.name}</h3>
+                        {plan.badge && (
+                          <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-400 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1.5 mb-2 md:mb-4 uppercase tracking-wider shadow-inner w-fit">
+                            {plan.badgeIcon && <Sparkles size={12} className="text-purple-400" />}
+                            {plan.badge}
+                          </div>
+                        )}
+                        <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{plan.desc}</p>
+                      </div>
+                      <div className="mb-8 border-b border-[var(--color-border-subtle)] pb-8 mt-2 md:mt-0">
+                        <div className="text-[var(--color-text-tertiary)] font-bold text-[10px] uppercase tracking-widest mb-1 h-3 flex items-end">
+                          {plan.prefix || '\u00A0'}
+                        </div>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-5xl md:text-4xl xl:text-5xl font-display font-black text-[var(--color-primary-base)]">{plan.price}</span>
+                          <span className="text-[var(--color-text-tertiary)] font-bold text-xs uppercase tracking-widest">USD</span>
+                        </div>
+                      </div>
+                      <ul className="space-y-4 mb-8">
+                      {plan.features.map((feature, j) => (
+                        <li key={j} className="flex items-start gap-3 text-sm font-medium">
+                          <CheckCircle2 size={16} className="text-[var(--color-primary-base)] shrink-0 mt-0.5" />
+                          <span className="text-[var(--color-text-primary)]">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/?plan=${encodeURIComponent(plan.name)}#contacto`)}
+                    className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
+                    plan.highlight 
+                      ? 'bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20' 
+                      : 'bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)]'
+                  }`}>
+                    Elegir este Plan
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* AI Add-ons Section */}
+        <section className="space-y-12 py-20 border-t border-[var(--color-border-subtle)]">
+          <div className="flex flex-col items-center text-center gap-6">
+             <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">Add-ons Exclusivos</span>
+             <h2 className="text-4xl md:text-5xl font-display font-black tracking-tighter">Potencia tu web con <br className="hidden md:block lg:hidden" /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-purple)] inline-block">Inteligencia Artificial</span></h2>
+             <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl mx-auto">Complementos opcionales (add-ons) con costo adicional al implementar en tu plan para llevar tu plataforma al siguiente nivel de automatización.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover"
+            >
+              <div className="space-y-6">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                  <MessageSquare size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">Chatbot Inteligente</h3>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
+                    Responde preguntas de tus clientes 24/7, captura leads y agenda citas automáticamente.
+                  </p>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">Costo Adicional</span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]">Desde $150 / mes</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/?plan=Consulta#contacto')}
+                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
+              >
+                Consultar <ArrowRight size={14} />
+              </button>
+            </motion.div>
+
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.1 }}
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover"
+            >
+              <div className="space-y-6">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                  <BrainCircuit size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">Asistente de IA Avanzado</h3>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
+                    Integración con modelos de IA como GPT-4 o Gemini, capaz de mantener conversaciones complejas o procesos lógicos.
+                  </p>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">Costo Adicional</span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]">Desde $350 / mes</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/?plan=Consulta#contacto')}
+                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
+              >
+                Consultar <ArrowRight size={14} />
+              </button>
+            </motion.div>
+
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.2 }}
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover"
+            >
+              <div className="space-y-6">
+                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                  <Zap size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">Buscador Semántico</h3>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
+                    Para e-commerce: tus clientes encuentran productos describiendo lo que necesitan en lenguaje natural.
+                  </p>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">Costo Adicional</span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]">Desde $200 / mes</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/?plan=Consulta#contacto')}
+                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
+              >
+                Consultar <ArrowRight size={14} />
+              </button>
+            </motion.div>
+
+            <motion.div 
+              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ delay: 0.3 }}
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover"
+            >
+              <div className="space-y-6">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                  <Sparkles size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">Asistente de Contenido</h3>
+                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
+                    Genera descripciones de productos, posts de blog y respuestas a reseñas automáticamente.
+                  </p>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">Costo Adicional</span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]">Desde $100 / mes</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/?plan=Consulta#contacto')}
+                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
+              >
+                Consultar <ArrowRight size={14} />
+              </button>
+            </motion.div>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
