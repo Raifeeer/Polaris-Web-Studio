@@ -95,7 +95,7 @@ export default function Process() {
                <T en="Start today and transform your vision into a world-class digital product.">Comienza hoy mismo y transforma tu visión en un producto digital de clase mundial.</T>
              </p>
              <button 
-                onClick={() => window.open("https://wa.me/18299200544?text=Hola,%20quiero%20agendar%20una%20consultoría", "_blank")}
+                onClick={() => navigate("/cotizar")}
                 className="px-10 py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-lg hover:scale-105 transition-all shadow-lg flex items-center gap-2 mx-auto focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
               >
                 <T en="Schedule Free Consultation">Agendar Consultoría Gratuita</T> <ArrowRight size={20} />

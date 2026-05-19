@@ -5,6 +5,7 @@ export interface Project {
   title: string;
   client: string;
   clientEN?: string;
+  isConcept: boolean;
   plan: 'Destello' | 'Constelación' | 'Nova';
   planEN?: string;
   type: string;
@@ -42,6 +43,7 @@ export const projects: Project[] = [
     title: "Luxe Resort",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
+    isConcept: true,
     plan: "Constelación",
     planEN: "Constellation",
     type: "Turismo · Web Corporativa",
@@ -73,6 +75,7 @@ export const projects: Project[] = [
     title: "Nexus Realty",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
+    isConcept: true,
     plan: "Constelación",
     planEN: "Constellation",
     type: "Inmobiliario · Plataforma",
@@ -104,6 +107,7 @@ export const projects: Project[] = [
     title: "Chroma Tech Store",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
+    isConcept: true,
     plan: "Nova",
     planEN: "Nova",
     type: "E-commerce · Tecnología",
@@ -135,6 +139,7 @@ export const projects: Project[] = [
     title: "Vitality Med",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
+    isConcept: true,
     plan: "Destello",
     planEN: "Flash",
     type: "Salud · Landing Page",
@@ -166,6 +171,7 @@ export const projects: Project[] = [
     title: "Sabor Auténtico",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
+    isConcept: true,
     plan: "Destello",
     planEN: "Flash",
     type: "Gastronomía · Landing Page",

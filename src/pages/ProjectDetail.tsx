@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, CheckCircle2, Layout, Zap, Trophy, ArrowRight } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Layout, Zap, Trophy, ArrowRight, ExternalLink } from 'lucide-react';
 import { projects } from '../constants/projects';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -63,6 +63,17 @@ export default function ProjectDetail() {
               <p className="text-xl text-[var(--color-text-secondary)] leading-relaxed">
                 <T en={project.shortDescEN || project.shortDesc}>{project.shortDesc}</T>
               </p>
+              <div className="pt-2">
+                {project.liveUrl ? (
+                  <button onClick={() => window.open(project.liveUrl, "_blank")} className="px-8 py-3 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold flex items-center gap-2 transition-all hover:scale-105 shadow-lg">
+                    <T en="View Project">Ver Proyecto</T> <ExternalLink size={18} />
+                  </button>
+                ) : (
+                  <button disabled className="px-8 py-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] font-bold flex items-center gap-2 cursor-not-allowed">
+                    <T en="Coming Soon">Próximamente</T> <ExternalLink size={18} opacity={0.5} />
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] relative overflow-hidden mt-8 bento-glow">

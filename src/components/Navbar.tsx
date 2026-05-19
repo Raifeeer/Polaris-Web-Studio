@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
@@ -11,6 +11,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -57,19 +58,8 @@ export default function Navbar() {
     { name: <T en="Services">Servicios</T>, path: '/servicios' },
     { name: <T en="Process">Metodología</T>, path: '/proceso' },
     { name: <T en="Portfolio">Portafolio</T>, path: '/portafolio' },
+    { name: <T en="Client Portal">Portal</T>, path: '/login' },
   ];
-
-  const scrollToContact = () => {
-    if (location.pathname !== '/') {
-      window.location.href = '/?plan=Consulta#contacto';
-      return;
-    }
-    const element = document.getElementById('contacto');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsOpen(false);
-    }
-  };
 
   return (
     <>
@@ -107,7 +97,7 @@ export default function Navbar() {
           <ThemeToggle />
         </div>
         <button 
-          onClick={scrollToContact}
+          onClick={() => navigate('/cotizar')}
           className="hidden sm:block px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-xs sm:text-sm hover:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-[var(--color-surface-base)] whitespace-nowrap"
         >
           <T en="Get a Quote">Cotizar Proyecto</T>
@@ -172,7 +162,7 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
             <button 
-              onClick={scrollToContact}
+              onClick={() => { setIsOpen(false); navigate('/cotizar'); }}
               className="w-full py-4 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold uppercase tracking-widest mt-4"
             >
               <T en="Get a Quote">Cotizar Proyecto</T>

@@ -5,11 +5,12 @@ interface LogoProps {
   size?: number;
   showText?: boolean;
   className?: string;
+  stacked?: boolean;
 }
 
-export default function Logo({ size = 40, showText = true, className = "" }: LogoProps) {
+export default function Logo({ size = 40, showText = true, className = "", stacked = false }: LogoProps) {
   return (
-    <div className={`flex items-center gap-4 group ${className}`}>
+    <div className={`flex items-center ${stacked ? 'flex-col justify-center text-center gap-2' : 'gap-4'} group ${className}`}>
       <div 
         className="relative flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shrink-0"
         style={{ width: size, height: size }}

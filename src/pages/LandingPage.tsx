@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Code, Layers, Zap, ShoppingCart, Briefcase, Globe, BarChart3, Star, ChevronDown, Rocket } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Code, Layers, Zap, ShoppingCart, Briefcase, Globe, BarChart3, Star, ChevronDown, Rocket, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ContactSection from '../components/ContactSection';
+import Hero3D from '../components/Hero3D';
 import Logo from '../components/Logo';
 import { T } from '../context/LanguageContext';
 
@@ -38,6 +39,7 @@ function Counter({ value, suffix = "", duration = 2 }: { value: number, suffix?:
 }
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
 
   const toggleFaq = (index: number) => {
@@ -45,9 +47,9 @@ export default function LandingPage() {
   };
 
   const testimonials = [
-    { name: "Carlos Ruiz", role: "CEO @ TechFlow", text: <T en="Polaris transformed our landing page and conversions went up 40% in just a month. Incredible work.">Polaris transformó nuestra landing page y las conversiones subieron un 40% en solo un mes. Increíble trabajo.</T> },
-    { name: "Elena Gómez", role: "Marketing @ Elevate", text: <T en="The level of detail and clean code is on another level. Highly recommended for serious projects.">El nivel de detalle y la limpieza del código es de otro nivel. Súper recomendados para proyectos serios.</T> },
-    { name: "Marc Serra", role: "Founder @ Nexus", text: <T en="They don't just make pretty websites, they build sales tools. My business took a 180 degree turn.">No solo hacen webs bonitas, hacen herramientas de venta. Mi negocio dio un giro de 180 grados.</T> }
+    { name: "Carlos Ruiz", role: "CEO", company: "TechFlow", initials: "CR", colorClass: "bg-indigo-500/20 text-indigo-500", text: <T en="Polaris transformed our landing page and conversions went up 40% in just a month. Incredible work.">Polaris transformó nuestra landing page y las conversiones subieron un 40% en solo un mes. Increíble trabajo.</T> },
+    { name: "Elena Gómez", role: "Marketing", company: "Elevate", initials: "EG", colorClass: "bg-emerald-500/20 text-emerald-500", text: <T en="The level of detail and clean code is on another level. Highly recommended for serious projects.">El nivel de detalle y la limpieza del código es de otro nivel. Súper recomendados para proyectos serios.</T> },
+    { name: "Marc Serra", role: "Founder", company: "Nexus", initials: "MS", colorClass: "bg-violet-500/20 text-violet-500", text: <T en="They don't just make pretty websites, they build sales tools. My business took a 180 degree turn.">No solo hacen webs bonitas, hacen herramientas de venta. Mi negocio dio un giro de 180 grados.</T> }
   ];
 
   const faqs = [
@@ -57,13 +59,6 @@ export default function LandingPage() {
     { q: <T en="What does the maintenance service include?">¿Qué incluye el servicio de mantenimiento?</T>, a: <T en="It includes uptime monitoring, security updates, regular backups, and minor content changes so your site is always perfect.">Incluye monitoreo de uptime, actualizaciones de seguridad, copias de respaldo regulares y pequeñas modificaciones de contenido para que tu web siempre esté perfecta.</T> },
     { q: <T en="Do you offer payment plans?">¿Ofrecen facilidades de pago?</T>, a: <T en="Yes, we work with a 50% upfront and 50% upon launch structure. For large projects like e-commerce, we can structure milestone payments.">Sí, trabajamos con un esquema de 50% al iniciar el proyecto y 50% al momento del lanzamiento. Para proyectos grandes como e-commerce, podemos estructurar pagos por hitos.</T> }
   ];
-
-    const scrollToContact = () => {
-      const element = document.getElementById('contacto');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    };
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
@@ -77,11 +72,17 @@ export default function LandingPage() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] flex flex-col justify-end relative overflow-hidden group bento-glow"
+            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px]"
           >
             <div className="absolute top-1/2 -translate-y-1/2 right-[-150px] sm:right-[-250px] md:right-[-200px] opacity-10 group-hover:opacity-20 group-hover:-translate-x-4 transition-all duration-500 pointer-events-none">
               <Logo size={500} showText={false} className="text-[var(--color-primary-base)]" />
             </div>
+            
+            {/* 3D WebGL Canvas */}
+            <div className="absolute inset-0 z-0">
+              <Hero3D />
+            </div>
+
             <div className="max-w-3xl space-y-4 md:space-y-6 relative z-10 pt-4 md:pt-0">
               <span className="text-[var(--color-primary-base)] text-[10px] md:text-xs font-black uppercase tracking-[0.2em] font-body">Polaris Web Studio | Global</span>
               <h1 className="text-[2.5rem] sm:text-5xl md:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter">
@@ -94,7 +95,7 @@ export default function LandingPage() {
               </p>
               <div className="pt-2">
                 <button 
-                  onClick={scrollToContact}
+                  onClick={() => navigate('/cotizar')}
                   className="px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
                 >
                   <T en="Get a Quote">Cotizar Proyecto</T>
@@ -180,36 +181,37 @@ export default function LandingPage() {
 
           {/* Metrics Card - Multi-Stats */}
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-4 md:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px]"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] py-4 md:py-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px]"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-accent-blue)]/10 to-transparent blur-3xl opacity-50" />
             
-            <div className="grid grid-cols-1 gap-y-6 sm:gap-y-0 sm:grid-cols-3 sm:divide-x divide-[var(--color-border-strong)] w-full max-w-2xl px-1">
+            <div className="grid grid-cols-1 gap-y-6 sm:gap-y-0 sm:grid-cols-3 sm:divide-x divide-[var(--color-border-strong)] w-full">
               {/* Stat 1 */}
               <div className="flex flex-col items-center justify-center text-center px-2">
                 <div className="text-3xl sm:text-3xl lg:text-5xl font-display font-black text-[var(--color-primary-base)] tracking-tighter">
-                  <Counter value={5} suffix="+" />
+                  <T en="2 Weeks">2 Semanas</T>
                 </div>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full"><T en="Interfaces Created">Interfaces Creadas</T></p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full"><T en="Landing Page Delivery">Entrega Landing Page</T></p>
               </div>
 
               {/* Stat 2 */}
               <div className="flex flex-col items-center justify-center text-center px-2">
                 <div className="text-3xl sm:text-3xl lg:text-5xl font-display font-black text-[var(--color-primary-base)] tracking-tighter">
-                  <Counter value={100} suffix="%" />
+                  100%
                 </div>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full"><T en="Web Engineering">Ingeniería Web</T></p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full"><T en="Custom code, no templates">Código a medida, sin plantillas</T></p>
               </div>
 
               {/* Stat 3 */}
               <div className="flex flex-col items-center justify-center text-center px-2">
                 <div className="text-3xl sm:text-3xl lg:text-5xl font-display font-black text-[var(--color-primary-base)] tracking-tighter">
-                  <Counter value={99} suffix="" />
+                  24/7
                 </div>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full leading-tight"><T en="Lighthouse Optimization">Optimización Lighthouse</T></p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full leading-tight"><T en="Post-launch Support">Soporte Post-lanzamiento</T></p>
               </div>
             </div>
           </motion.div>
@@ -305,14 +307,31 @@ export default function LandingPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {testimonials.map((t, i) => (
-                <div key={i} className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-6 group hover:border-[var(--color-primary-base)] transition-colors duration-300">
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map(s => <Star key={s} size={14} className="fill-[var(--color-primary-base)] text-[var(--color-primary-base)]" />)}
+                <div key={i} className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-colors duration-300">
+                  <div className="space-y-6">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map(s => <Star key={s} size={14} className="fill-[var(--color-primary-base)] text-[var(--color-primary-base)]" />)}
+                    </div>
+                    <p className="text-[var(--color-text-secondary)] italic leading-relaxed">"{t.text}"</p>
                   </div>
-                  <p className="text-[var(--color-text-secondary)] italic leading-relaxed">"{t.text}"</p>
-                  <div className="pt-6 border-t border-[var(--color-border-subtle)]">
-                    <p className="font-bold">{t.name}</p>
-                    <p className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-widest">{t.role}</p>
+                  <div className="pt-6 border-t border-[var(--color-border-subtle)] flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0 ${t.colorClass}`}>
+                      {t.initials}
+                    </div>
+                    <div>
+                      <p className="font-bold flex items-center gap-1">
+                        {t.name}
+                      </p>
+                      <div className="flex items-center gap-1 text-xs text-[var(--color-text-tertiary)] mt-1">
+                        <span className="uppercase tracking-widest">{t.role}</span>
+                        <span className="text-[var(--color-border-strong)]">•</span>
+                        <a href="#" className="hover:text-[var(--color-text-primary)] transition-colors">{t.company}</a>
+                      </div>
+                      <div className="flex items-center gap-1 text-[10px] text-emerald-500/80 font-medium mt-1">
+                        <CheckCircle2 size={12} />
+                        <T en="Verified Client">Cliente verificado</T>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}

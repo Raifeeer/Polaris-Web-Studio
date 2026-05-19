@@ -22,6 +22,9 @@ export default function Portfolio() {
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             <T en="Explore a selection of concepts, interfaces, and functional prototypes created to demonstrate the scope of my engineering and visual design.">Explora una selección de conceptos, interfaces y prototipos funcionales creados para demostrar el alcance de mi ingeniería y diseño visual.</T>
           </p>
+          <p className="text-[var(--color-text-tertiary)] text-xs font-medium max-w-xl mx-auto">
+            <T en="Demonstration projects — client portfolio coming soon">Proyectos de demostración — portafolio de clientes próximamente</T>
+          </p>
         </section>
 
         {/* Portfolio Bento Grid */}
@@ -48,7 +51,12 @@ export default function Portfolio() {
                   }`}><T en={`Plan ${project.planEN || project.plan}`}>Plan {project.plan}</T></span>
                   <p className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest"><T en={project.typeEN || project.type}>{project.type}</T></p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-start">
+                  {project.isConcept && (
+                    <span className="px-3 py-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                      <T en="Demo">Demo</T>
+                    </span>
+                  )}
                   {project.liveUrl && (
                     <button 
                       onClick={(e) => {

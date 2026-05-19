@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Globe, Rocket, ShoppingCart, ShieldCheck, Zap, ArrowRight, CheckCircle2, MessageSquare, Sparkles, BrainCircuit } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -8,12 +8,42 @@ import { T } from '../context/LanguageContext';
 
 export default function Services() {
   const navigate = useNavigate();
+
+  const [targetDate] = useState(() => {
+    return new Date('2026-06-18T23:59:59Z').getTime();
+  });
+  
+  const [timeLeft, setTimeLeft] = useState(targetDate - new Date().getTime());
+  const [isOfferActive, setIsOfferActive] = useState(timeLeft > 0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const remaining = targetDate - new Date().getTime();
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        setIsOfferActive(false);
+        clearInterval(timer);
+      } else {
+        setTimeLeft(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  const formatTime = (ms: number) => {
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+    return `${days}d ${hours.toString().padStart(2, '0')}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+  };
+
   const plans = [
     {
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
       desc: <T en="Your economic Landing Page (fast and direct).">Tu Landing Page económica (rápida y directa).</T>,
-      price: "$299",
+      originalPrice: 299,
       features: [
         <T en="Exclusive responsive design">Diseño responsivo exclusivo</T>,
         <T en="Conversion optimization">Optimización de conversión</T>,
@@ -26,7 +56,7 @@ export default function Services() {
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
       desc: <T en="Your 5-page Corporate Website (robust and connected).">Tu Web Corporativa de 5 páginas (robusta y conectada).</T>,
-      price: "$699",
+      originalPrice: 699,
       features: [
         <T en="Up to 5 custom sections">Hasta 5 secciones personalizadas</T>,
         <T en="Advanced On-page SEO">SEO On-page avanzado</T>,
@@ -42,7 +72,7 @@ export default function Services() {
       titleColor: "text-violet-500",
       desc: <T en="Your virtual store (to explode in sales).">Tu tienda virtual (para explotar en ventas).</T>,
       prefix: <T en="From">Desde</T>,
-      price: "$1,299",
+      originalPrice: 1299,
       badge: <T en="AI Powered">Potenciado con IA</T>,
       badgeIcon: true,
       features: [
@@ -128,8 +158,19 @@ export default function Services() {
         </div>
 
         {/* Pricing Section */}
-        <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32">
-          <section className="space-y-12 text-center">
+        <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32 relative overflow-hidden">
+          {isOfferActive && (
+            <div className="absolute top-0 left-0 right-0 bg-[var(--color-primary-base)]/10 border-b border-[var(--color-primary-base)]/30 px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-10 text-center text-sm md:text-base">
+              <span className="font-bold text-[var(--color-text-primary)]">
+                <T en="Launch Offer: Get a 25% discount through the entire first month!">Oferta de lanzamiento: ¡todo el primer mes con 25% de descuento!</T>
+              </span>
+              <div className="font-display tracking-widest bg-[var(--color-surface-base)] border border-[var(--color-primary-base)] text-[var(--color-primary-base)] px-4 py-1.5 rounded-full shadow-inner tabular-nums">
+                {formatTime(timeLeft)}
+              </div>
+            </div>
+          )}
+
+          <section className={`space-y-12 text-center ${isOfferActive ? 'mt-12' : ''}`}>
             <div className="flex flex-col items-center gap-6">
                <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"><T en="Our Plans">Nuestros Planes</T></span>
                <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter"><T en="Smart Investment">Inversión Inteligente</T></h2>
@@ -169,9 +210,18 @@ export default function Services() {
                         <div className="text-[var(--color-text-tertiary)] font-bold text-[10px] uppercase tracking-widest mb-1 h-3 flex items-end">
                           {plan.prefix || '\u00A0'}
                         </div>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-5xl md:text-4xl xl:text-5xl font-display font-black text-[var(--color-primary-base)]">{plan.price}</span>
-                          <span className="text-[var(--color-text-tertiary)] font-bold text-xs uppercase tracking-widest">USD</span>
+                        <div className="flex flex-col gap-1">
+                          {isOfferActive && (
+                            <div className="flex items-baseline gap-2 opacity-60">
+                              <span className="text-xl md:text-2xl font-display font-medium line-through">${plan.originalPrice.toLocaleString()}</span>
+                            </div>
+                          )}
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-5xl md:text-4xl xl:text-5xl font-display font-black text-[var(--color-primary-base)]">
+                              ${isOfferActive ? Math.round(plan.originalPrice * 0.75).toLocaleString() : plan.originalPrice.toLocaleString()}
+                            </span>
+                            <span className="text-[var(--color-text-tertiary)] font-bold text-xs uppercase tracking-widest">USD</span>
+                          </div>
                         </div>
                       </div>
                       <ul className="space-y-4 mb-8">
@@ -185,7 +235,7 @@ export default function Services() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => navigate(`/?plan=${encodeURIComponent(typeof plan.name === 'string' ? plan.name : 'Custom')}#contacto`)}
+                    onClick={() => navigate('/cotizar')}
                     className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
                     plan.highlight 
                       ? 'bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20' 
