@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ContactSection from '../components/ContactSection';
 import Logo from '../components/Logo';
+import { T } from '../context/LanguageContext';
 
 function Counter({ value, suffix = "", duration = 2 }: { value: number, suffix?: string, duration?: number }) {
   const [count, setCount] = useState(0);
@@ -44,17 +45,17 @@ export default function LandingPage() {
   };
 
   const testimonials = [
-    { name: "Carlos Ruiz", role: "CEO @ TechFlow", text: "Polaris transformó nuestra landing page y las conversiones subieron un 40% en solo un mes. Increíble trabajo." },
-    { name: "Elena Gómez", role: "Marketing @ Elevate", text: "El nivel de detalle y la limpieza del código es de otro nivel. Súper recomendados para proyectos serios." },
-    { name: "Marc Serra", role: "Fundador @ Nexus", text: "No solo hacen webs bonitas, hacen herramientas de venta. Mi negocio dio un giro de 180 grados." }
+    { name: "Carlos Ruiz", role: "CEO @ TechFlow", text: <T en="Polaris transformed our landing page and conversions went up 40% in just a month. Incredible work.">Polaris transformó nuestra landing page y las conversiones subieron un 40% en solo un mes. Increíble trabajo.</T> },
+    { name: "Elena Gómez", role: "Marketing @ Elevate", text: <T en="The level of detail and clean code is on another level. Highly recommended for serious projects.">El nivel de detalle y la limpieza del código es de otro nivel. Súper recomendados para proyectos serios.</T> },
+    { name: "Marc Serra", role: "Founder @ Nexus", text: <T en="They don't just make pretty websites, they build sales tools. My business took a 180 degree turn.">No solo hacen webs bonitas, hacen herramientas de venta. Mi negocio dio un giro de 180 grados.</T> }
   ];
 
   const faqs = [
-    { q: "¿Cuánto tiempo toma un proyecto?", a: "Depende de la complejidad. Una landing page suele estar lista en 2 semanas, mientras que una web corporativa completa toma entre 4 y 6 semanas." },
-    { q: "¿Ofrecen mantenimiento?", a: "Sí, tenemos planes de soporte y mantenimiento para asegurar que tu web esté siempre al día y segura." },
-    { q: "¿Trabajan con SEO?", a: "Totalmente. Todas nuestras webs nacen con una estructura optimizada para motores de búsqueda (SEO On-page)." },
-    { q: "¿Qué incluye el servicio de mantenimiento?", a: "Incluye monitoreo de uptime, actualizaciones de seguridad, copias de respaldo regulares y pequeñas modificaciones de contenido para que tu web siempre esté perfecta." },
-    { q: "¿Ofrecen facilidades de pago?", a: "Sí, trabajamos con un esquema de 50% al iniciar el proyecto y 50% al momento del lanzamiento. Para proyectos grandes como e-commerce, podemos estructurar pagos por hitos." }
+    { q: <T en="How long does a project take?">¿Cuánto tiempo toma un proyecto?</T>, a: <T en="It depends on the complexity. A landing page is usually ready in 2 weeks, while a full corporate website takes between 4 and 6 weeks.">Depende de la complejidad. Una landing page suele estar lista en 2 semanas, mientras que una web corporativa completa toma entre 4 y 6 semanas.</T> },
+    { q: <T en="Do you offer maintenance?">¿Ofrecen mantenimiento?</T>, a: <T en="Yes, we have support and maintenance plans to ensure your website is always up to date and secure.">Sí, tenemos planes de soporte y mantenimiento para asegurar que tu web esté siempre al día y segura.</T> },
+    { q: <T en="Do you work with SEO?">¿Trabajan con SEO?</T>, a: <T en="Absolutely. All our websites are born with an optimized on-page SEO structure.">Totalmente. Todas nuestras webs nacen con una estructura optimizada para motores de búsqueda (SEO On-page).</T> },
+    { q: <T en="What does the maintenance service include?">¿Qué incluye el servicio de mantenimiento?</T>, a: <T en="It includes uptime monitoring, security updates, regular backups, and minor content changes so your site is always perfect.">Incluye monitoreo de uptime, actualizaciones de seguridad, copias de respaldo regulares y pequeñas modificaciones de contenido para que tu web siempre esté perfecta.</T> },
+    { q: <T en="Do you offer payment plans?">¿Ofrecen facilidades de pago?</T>, a: <T en="Yes, we work with a 50% upfront and 50% upon launch structure. For large projects like e-commerce, we can structure milestone payments.">Sí, trabajamos con un esquema de 50% al iniciar el proyecto y 50% al momento del lanzamiento. Para proyectos grandes como e-commerce, podemos estructurar pagos por hitos.</T> }
   ];
 
     const scrollToContact = () => {
@@ -84,17 +85,19 @@ export default function LandingPage() {
             <div className="max-w-3xl space-y-4 md:space-y-6 relative z-10 pt-4 md:pt-0">
               <span className="text-[var(--color-primary-base)] text-[10px] md:text-xs font-black uppercase tracking-[0.2em] font-body">Polaris Web Studio | Global</span>
               <h1 className="text-[2.5rem] sm:text-5xl md:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter">
-                Digitalizamos el futuro de tu negocio hoy
+                <T en="We digitize the future of your business today">Digitalizamos el futuro de tu negocio hoy</T>
               </h1>
               <p className="text-[var(--color-text-secondary)] text-sm sm:text-base md:text-xl max-w-xl leading-relaxed">
-                Desarrollamos plataformas web de alto impacto diseñadas específicamente para atraer clientes y cerrar ventas. Innovación digital para el mercado global.
+                <T en="We develop high-impact web platforms designed specifically to attract clients and close sales. Digital innovation for the global market.">
+                  Desarrollamos plataformas web de alto impacto diseñadas específicamente para atraer clientes y cerrar ventas. Innovación digital para el mercado global.
+                </T>
               </p>
               <div className="pt-2">
                 <button 
                   onClick={scrollToContact}
                   className="px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
                 >
-                  Cotizar Proyecto
+                  <T en="Get a Quote">Cotizar Proyecto</T>
                 </button>
               </div>
             </div>
@@ -117,7 +120,9 @@ export default function LandingPage() {
               <div className="mt-6 md:mt-12">
                 <h3 className="text-2xl font-display font-bold mb-3 tracking-tight">Landing Pages</h3>
                 <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-                  Diseño enfocado en conversión para convertir visitantes en clientes reales desde el primer día.
+                  <T en="Conversion-focused design to turn visitors into real clients from day one.">
+                    Diseño enfocado en conversión para convertir visitantes en clientes reales desde el primer día.
+                  </T>
                 </p>
               </div>
             </Link>
@@ -140,7 +145,9 @@ export default function LandingPage() {
               <div className="mt-6 md:mt-12">
                 <h3 className="text-2xl font-display font-bold mb-3 tracking-tight">E-commerce</h3>
                 <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-                  Plataformas de venta online escalables, seguras y optimizadas para multiplicar tus ingresos las 24 horas del día.
+                  <T en="Scalable, secure, and optimized online sales platforms to multiply your income 24/7.">
+                    Plataformas de venta online escalables, seguras y optimizadas para multiplicar tus ingresos las 24 horas del día.
+                  </T>
                 </p>
               </div>
             </Link>
@@ -161,9 +168,11 @@ export default function LandingPage() {
                 <ArrowRight className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] transition-colors translate-x-0 group-hover:translate-x-1" />
               </div>
               <div className="mt-6 md:mt-12">
-                <h3 className="text-2xl font-display font-bold mb-3 tracking-tight">Corporativas</h3>
+                <h3 className="text-2xl font-display font-bold mb-3 tracking-tight"><T en="Corporate">Corporativas</T></h3>
                 <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-                  Identidad digital sólida y elegante que posiciona tu marca como líder indiscutible en su respectivo mercado.
+                  <T en="Solid and elegant digital identity that positions your brand as an undisputed leader in its respective market.">
+                    Identidad digital sólida y elegante que posiciona tu marca como líder indiscutible en su respectivo mercado.
+                  </T>
                 </p>
               </div>
             </Link>
@@ -184,7 +193,7 @@ export default function LandingPage() {
                 <div className="text-3xl sm:text-3xl lg:text-5xl font-display font-black text-[var(--color-primary-base)] tracking-tighter">
                   <Counter value={5} suffix="+" />
                 </div>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full">Interfaces Creadas</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full"><T en="Interfaces Created">Interfaces Creadas</T></p>
               </div>
 
               {/* Stat 2 */}
@@ -192,7 +201,7 @@ export default function LandingPage() {
                 <div className="text-3xl sm:text-3xl lg:text-5xl font-display font-black text-[var(--color-primary-base)] tracking-tighter">
                   <Counter value={100} suffix="%" />
                 </div>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full">Ingeniería Web</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full"><T en="Web Engineering">Ingeniería Web</T></p>
               </div>
 
               {/* Stat 3 */}
@@ -200,7 +209,7 @@ export default function LandingPage() {
                 <div className="text-3xl sm:text-3xl lg:text-5xl font-display font-black text-[var(--color-primary-base)] tracking-tighter">
                   <Counter value={99} suffix="" />
                 </div>
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full leading-tight">Optimización Lighthouse</p>
+                <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[var(--color-text-secondary)] mt-1 sm:mt-2 text-center w-full leading-tight"><T en="Lighthouse Optimization">Optimización Lighthouse</T></p>
               </div>
             </div>
           </motion.div>
@@ -212,8 +221,8 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">Nuestros Clientes</span>
-              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">Soluciones a medida para cada etapa</h2>
+              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"><T en="Our Clients">Nuestros Clientes</T></span>
+              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter"><T en="Custom solutions for every stage">Soluciones a medida para cada etapa</T></h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -228,10 +237,12 @@ export default function LandingPage() {
                   <Rocket size={28} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold mb-3 tracking-tight">Emprendedores y startups</h3>
-                  <h4 className="text-sm font-bold text-[var(--color-text-primary)] mb-2 uppercase tracking-wide">"Estás lanzando tu idea"</h4>
+                  <h3 className="text-xl font-display font-bold mb-3 tracking-tight"><T en="Entrepreneurs & Startups">Emprendedores y startups</T></h3>
+                  <h4 className="text-sm font-bold text-[var(--color-text-primary)] mb-2 uppercase tracking-wide"><T en={'"You\'re launching your idea"'}>"Estás lanzando tu idea"</T></h4>
                   <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-                    Necesitas presencia digital rápida, profesional y que inspire confianza desde el primer día.
+                    <T en="You need a professional digital presence that inspires trust from day one.">
+                      Necesitas presencia digital rápida, profesional y que inspire confianza desde el primer día.
+                    </T>
                   </p>
                 </div>
               </motion.div>
@@ -248,10 +259,12 @@ export default function LandingPage() {
                   <Briefcase size={28} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold mb-3 tracking-tight">PYMEs y negocios establecidos</h3>
-                  <h4 className="text-sm font-bold text-[var(--color-text-primary)] mb-2 uppercase tracking-wide">"Tu negocio ya existe pero tu web no vende"</h4>
+                  <h3 className="text-xl font-display font-bold mb-3 tracking-tight"><T en="SMEs & Established Businesses">PYMEs y negocios establecidos</T></h3>
+                  <h4 className="text-sm font-bold text-[var(--color-text-primary)] mb-2 uppercase tracking-wide"><T en={'"Your business exists but your site doesn\'t sell"'}>"Tu negocio ya existe pero tu web no vende"</T></h4>
                   <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-                    Tienes clientes pero tu sitio actual no los refleja. Es momento de una web a la altura de lo que ofreces.
+                    <T en="You have clients but your site doesn't reflect them. It's time for a website up to par with what you offer.">
+                      Tienes clientes pero tu sitio actual no los refleja. Es momento de una web a la altura de lo que ofreces.
+                    </T>
                   </p>
                 </div>
               </motion.div>
@@ -269,9 +282,11 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-display font-bold mb-3 tracking-tight">E-commerce</h3>
-                  <h4 className="text-sm font-bold text-[var(--color-text-primary)] mb-2 uppercase tracking-wide">"Quieres vender en línea"</h4>
+                  <h4 className="text-sm font-bold text-[var(--color-text-primary)] mb-2 uppercase tracking-wide"><T en={'"You want to sell online"'}>"Quieres vender en línea"</T></h4>
                   <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-                    Desde catálogos simples hasta tiendas de alto volumen. Te construimos la plataforma que tu negocio necesita para vender 24/7.
+                    <T en="From simple catalogs to high-volume stores. We build the platform your business needs to sell 24/7.">
+                      Desde catálogos simples hasta tiendas de alto volumen. Te construimos la plataforma que tu negocio necesita para vender 24/7.
+                    </T>
                   </p>
                 </div>
               </motion.div>
@@ -285,8 +300,8 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">Impacto Real</span>
-              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">Lo que dicen de nosotros</h2>
+              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"><T en="Real Impact">Impacto Real</T></span>
+              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter"><T en="What they say about us">Lo que dicen de nosotros</T></h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {testimonials.map((t, i) => (
@@ -324,8 +339,8 @@ export default function LandingPage() {
           {/* FAQ Section */}
           <div className="md:col-span-2 lg:col-span-3 py-20 space-y-12">
             <div className="flex flex-col items-center text-center gap-6 mb-8">
-               <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">Dudas Comunes</span>
-               <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">Preguntas Frecuentes</h2>
+               <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"><T en="Common Questions">Dudas Comunes</T></span>
+               <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight"><T en="Frequently Asked Questions">Preguntas Frecuentes</T></h2>
             </div>
             <div className="max-w-3xl mx-auto space-y-4">
                {faqs.map((faq, i) => (

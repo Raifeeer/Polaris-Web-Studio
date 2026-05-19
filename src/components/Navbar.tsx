@@ -4,6 +4,7 @@ import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Logo from './Logo';
 import ThemeToggle from './ThemeToggle';
+import { useLanguage, T } from '../context/LanguageContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,11 +52,11 @@ export default function Navbar() {
   }, [isOpen]);
 
   const navLinks = [
-    { name: 'Inicio', path: '/' },
-    { name: 'Nosotros', path: '/nosotros' },
-    { name: 'Servicios', path: '/servicios' },
-    { name: 'Metodología', path: '/proceso' },
-    { name: 'Portafolio', path: '/portafolio' },
+    { name: <T en="Home">Inicio</T>, path: '/' },
+    { name: <T en="About">Nosotros</T>, path: '/nosotros' },
+    { name: <T en="Services">Servicios</T>, path: '/servicios' },
+    { name: <T en="Process">Metodología</T>, path: '/proceso' },
+    { name: <T en="Portfolio">Portafolio</T>, path: '/portafolio' },
   ];
 
   const scrollToContact = () => {
@@ -109,7 +110,7 @@ export default function Navbar() {
           onClick={scrollToContact}
           className="hidden sm:block px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-xs sm:text-sm hover:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-[var(--color-surface-base)] whitespace-nowrap"
         >
-          Cotizar Proyecto
+          <T en="Get a Quote">Cotizar Proyecto</T>
         </button>
         
         {/* Mobile Menu Toggle */}
@@ -167,14 +168,14 @@ export default function Navbar() {
               </Link>
             ))}
             <div className="flex items-center justify-between mt-4">
-              <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">Tema</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]"><T en="Theme">Tema</T></span>
               <ThemeToggle />
             </div>
             <button 
               onClick={scrollToContact}
               className="w-full py-4 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold uppercase tracking-widest mt-4"
             >
-              Cotizar Proyecto
+              <T en="Get a Quote">Cotizar Proyecto</T>
             </button>
           </motion.div>
         )}

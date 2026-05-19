@@ -4,24 +4,25 @@ import { Target, Lightbulb, TrendingUp, Users, ArrowRight, Globe } from 'lucide-
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ContactSection from '../components/ContactSection';
+import { T } from '../context/LanguageContext';
 
 export default function About() {
   const values = [
     {
-      title: "Precisión",
-      description: "Cada línea de código y cada píxel tiene un propósito definido. No dejamos nada al azar.",
+      title: <T en="Precision">Precisión</T>,
+      description: <T en="Every line of code and every pixel has a defined purpose. We leave nothing to chance.">Cada línea de código y cada píxel tiene un propósito definido. No dejamos nada al azar.</T>,
       icon: Target,
       color: "var(--color-primary-base)"
     },
     {
-      title: "Innovación",
-      description: "Exploramos las últimas tecnologías para ofrecer soluciones que no solo funcionen hoy, sino que lideren mañana.",
+      title: <T en="Innovation">Innovación</T>,
+      description: <T en="We explore the latest technologies to deliver solutions that not only work today, but lead tomorrow.">Exploramos las últimas tecnologías para ofrecer soluciones que no solo funcionen hoy, sino que lideren mañana.</T>,
       icon: Lightbulb,
       color: "var(--color-accent-blue)"
     },
     {
-      title: "Resultados",
-      description: "No solo construimos sitios web; creamos herramientas de negocio que generan conversiones reales.",
+      title: <T en="Results">Resultados</T>,
+      description: <T en="We don't just build websites; we create business tools that generate real conversions.">No solo construimos sitios web; creamos herramientas de negocio que generan conversiones reales.</T>,
       icon: TrendingUp,
       color: "var(--color-primary-base)"
     }
@@ -30,9 +31,9 @@ export default function About() {
   const team = [
     {
       name: "Cristian Dicen",
-      role: "CEO & Fundador",
+      role: <T en="CEO & Founder">CEO & Fundador</T>,
       initials: "CD",
-      bio: "Desarrollador y estratega digital. Experto en el ecosistema de Google y con un amplio dominio del stack tecnológico moderno para dirigir el desarrollo, diseño y operaciones."
+      bio: <T en="Developer and digital strategist. Expert in the Google ecosystem and with broad mastery of the modern tech stack to lead development, design, and operations.">Desarrollador y estratega digital. Experto en el ecosistema de Google y con un amplio dominio del stack tecnológico moderno para dirigir el desarrollo, diseño y operaciones.</T>
     }
   ];
 
@@ -56,7 +57,7 @@ export default function About() {
             animate={{ opacity: 1, y: 0 }}
             className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"
           >
-            Nuestros Inicios
+            <T en="Our Beginnings">Nuestros Inicios</T>
           </motion.span>
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
@@ -64,7 +65,7 @@ export default function About() {
             transition={{ delay: 0.1 }}
             className="text-5xl md:text-8xl font-display font-black leading-[1] tracking-tighter"
           >
-            Ingeniería Digital <br /> con Propósito.
+            <T en={<>Engineering Digital <br /> with Purpose.</>}>Ingeniería Digital <br /> con Propósito.</T>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
@@ -72,7 +73,7 @@ export default function About() {
             transition={{ delay: 0.2 }}
             className="text-lg md:text-xl text-[var(--color-text-secondary)] max-w-2xl mx-auto leading-relaxed"
           >
-            Nuestra misión es elevar el estándar digital de las marcas en Latinoamérica a través de soluciones web de élite.
+            <T en="Our mission is to raise the digital standard for brands in Latin America through elite web solutions.">Nuestra misión es elevar el estándar digital de las marcas en Latinoamérica a través de soluciones web de élite.</T>
           </motion.p>
         </section>
 
@@ -84,16 +85,16 @@ export default function About() {
             viewport={{ once: true }}
             className="space-y-6"
           >
-            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">Nuestra Historia</h2>
+            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight"><T en="Our Story">Nuestra Historia</T></h2>
             <div className="space-y-4 text-[var(--color-text-secondary)] leading-relaxed">
               <p>
-                Polaris Web Studio nació con una visión clara: cerrar la brecha entre el diseño estético y el rendimiento técnico excepcional. 
+                <T en="Polaris Web Studio was born with a clear vision: to bridge the gap between aesthetic design and exceptional technical performance.">Polaris Web Studio nació con una visión clara: cerrar la brecha entre el diseño estético y el rendimiento técnico excepcional. </T>
               </p>
               <p>
-                Lo que comenzó como una profunda pasión por el desarrollo y la tecnología, se ha consolidado como un estudio independiente que sirve a marcas ambiciosas en toda la región, desde startups disruptivas hasta empresas establecidas.
+                <T en="What started as a deep passion for development and technology has consolidated into an independent studio serving ambitious brands across the region, from disruptive startups to established businesses.">Lo que comenzó como una profunda pasión por el desarrollo y la tecnología, se ha consolidado como un estudio independiente que sirve a marcas ambiciosas en toda la región, desde startups disruptivas hasta empresas establecidas.</T>
               </p>
               <p>
-                La web es la frontera más importante para cualquier negocio moderno, y mi inquebrantable obsesión por la precisión me permite entregar resultados consistentes que desafían los límites de lo convencional.
+                <T en="The web is the most critical frontier for any modern business, and my unwavering obsession with precision allows me to deliver consistent results that push the boundaries of conventionality.">La web es la frontera más importante para cualquier negocio moderno, y mi inquebrantable obsesión por la precisión me permite entregar resultados consistentes que desafían los límites de lo convencional.</T>
               </p>
             </div>
           </motion.div>
@@ -105,8 +106,8 @@ export default function About() {
           >
             <div className="absolute inset-0 bg-gradient-to-br from-[var(--color-primary-base)]/5 to-transparent shadow-inner" />
             <div className="relative text-center space-y-4">
-              <Globe size={80} strokeWidth={1.5} className="mx-auto text-[var(--color-primary-base)]" />
-              <p className="font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">Operación 100% Virtual & Global</p>
+               <Globe size={80} strokeWidth={1.5} className="mx-auto text-[var(--color-primary-base)]" />
+               <p className="font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]"><T en="100% Virtual & Global Operation">Operación 100% Virtual & Global</T></p>
             </div>
           </motion.div>
         </section>
@@ -114,7 +115,7 @@ export default function About() {
         {/* Values Section */}
         <section className="space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">Valores que nos Guían</h2>
+            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight"><T en="Values that Guide Us">Valores que nos Guían</T></h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {values.map((value, i) => (
@@ -146,8 +147,8 @@ export default function About() {
         {/* Team Section */}
         <section className="space-y-12">
           <div className="text-center space-y-4">
-            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">El Equipo</h2>
-            <p className="text-[var(--color-text-secondary)] max-w-xl mx-auto">Un enfoque personalizado donde la creatividad y la técnica trabajan en sincronía para materializar tu visión.</p>
+            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight"><T en="The Team">El Equipo</T></h2>
+            <p className="text-[var(--color-text-secondary)] max-w-xl mx-auto"><T en="A personalized approach where creativity and technique work in sync to materialize your vision.">Un enfoque personalizado donde la creatividad y la técnica trabajan en sincronía para materializar tu visión.</T></p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-1 max-w-sm mx-auto gap-8">
             {team.map((member, i) => (
@@ -177,12 +178,12 @@ export default function About() {
 
         {/* CTA Footer Section */}
         <section className="text-center space-y-10 pt-20">
-           <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto">¿Listo para construir el futuro de tu marca?</h2>
+           <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto"><T en="Ready to build the future of your brand?">¿Listo para construir el futuro de tu marca?</T></h2>
            <button 
              onClick={scrollToContact}
              className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 flex items-center gap-2 mx-auto"
            >
-             Cotizar Proyecto <ArrowRight size={24} />
+             <T en="Get a Quote">Cotizar Proyecto</T> <ArrowRight size={24} />
            </button>
         </section>
 

@@ -3,6 +3,7 @@ import { Mail, MessageSquare, Send, User, ChevronRight, Loader2 } from 'lucide-r
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import emailjs from 'emailjs-com';
+import { T } from '../context/LanguageContext';
 
 export default function ContactSection() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -74,12 +75,12 @@ export default function ContactSection() {
         {/* Text Area */}
         <div className="flex-1 space-y-8">
           <div className="space-y-4">
-            <span className="inline-block mb-4 text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-highlight)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">Contacto</span>
+            <span className="inline-block mb-4 text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-highlight)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"><T en="Contact">Contacto</T></span>
             <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter leading-tight">
-              Hablemos de <br className="hidden md:block" /> tu próximo proyecto.
+              <T en={<>Let's talk about <br className="hidden md:block" /> your next project.</>}>Hablemos de <br className="hidden md:block" /> tu próximo proyecto.</T>
             </h2>
             <p className="text-[var(--color-text-secondary)] text-lg max-w-md leading-relaxed">
-              Estamos listos para transformar tus ideas en una realidad digital de alto impacto. Completa el formulario y responderemos en breve.
+              <T en="We are ready to transform your ideas into a high-impact digital reality. Fill out the form and we will respond shortly.">Estamos listos para transformar tus ideas en una realidad digital de alto impacto. Completa el formulario y responderemos en breve.</T>
             </p>
           </div>
 
@@ -89,7 +90,7 @@ export default function ContactSection() {
                 <Mail size={20} />
               </div>
               <div>
-                <p className="text-[var(--color-text-tertiary)] text-xs font-bold uppercase tracking-widest">Correo</p>
+                <p className="text-[var(--color-text-tertiary)] text-xs font-bold uppercase tracking-widest"><T en="Email">Correo</T></p>
                 <p className="font-bold">hola@polarisweb.studio</p>
               </div>
             </div>
@@ -126,7 +127,7 @@ export default function ContactSection() {
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label htmlFor="user-name" className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Tu Nombre</label>
+                    <label htmlFor="user-name" className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]"><T en="Your Name">Tu Nombre</T></label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" size={16} aria-hidden="true" />
                       <input 
@@ -141,7 +142,7 @@ export default function ContactSection() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="user-email" className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Email Corporativo</label>
+                    <label htmlFor="user-email" className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]"><T en="Corporate Email">Email Corporativo</T></label>
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" size={16} aria-hidden="true" />
                       <input 
@@ -158,7 +159,7 @@ export default function ContactSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Tipo de Proyecto</label>
+                  <label className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]"><T en="Project Type">Tipo de Proyecto</T></label>
                   <select 
                     name="project_type"
                     value={formData.project}
@@ -173,7 +174,7 @@ export default function ContactSection() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]">Detalles del Proyecto</label>
+                  <label className="text-xs font-black uppercase tracking-[0.1em] text-[var(--color-text-secondary)]"><T en="Project Details">Detalles del Proyecto</T></label>
                   <textarea 
                     name="message"
                     rows={4}
@@ -192,11 +193,11 @@ export default function ContactSection() {
                   >
                     {loading ? (
                       <>
-                        Enviando... <Loader2 size={18} className="animate-spin" />
+                        <T en="Sending...">Enviando...</T> <Loader2 size={18} className="animate-spin" />
                       </>
                     ) : (
                       <>
-                        Enviar Solicitud <Send size={18} aria-hidden="true" />
+                        <T en="Send Request">Enviar Solicitud</T> <Send size={18} aria-hidden="true" />
                       </>
                     )}
                   </button>
@@ -219,26 +220,26 @@ export default function ContactSection() {
                   <Send size={40} />
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-display font-bold">¡Mensaje Enviado!</h3>
+                  <h3 className="text-2xl font-display font-bold"><T en="Message Sent!">¡Mensaje Enviado!</T></h3>
                   <p className="text-[var(--color-text-secondary)] max-w-xs mx-auto">
-                    Gracias por confiar en Polaris. Nuestro equipo revisará tu solicitud y te contactará pronto.
+                    <T en="Thank you for trusting Polaris. Our team will review your request and contact you soon.">Gracias por confiar en Polaris. Nuestro equipo revisará tu solicitud y te contactará pronto.</T>
                   </p>
                 </div>
                 <button 
                   onClick={() => setSubmitted(false)}
                   className="text-[var(--color-primary-base)] font-bold uppercase tracking-widest text-xs"
                 >
-                  Enviar otro mensaje
+                  <T en="Send another message">Enviar otro mensaje</T>
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
           
           <div className="mt-8 pt-8 border-t border-[var(--color-border-subtle)] flex items-center justify-between">
-             <p className="text-[var(--color-text-tertiary)] text-[10px] font-bold uppercase tracking-widest">Seguridad Protegida</p>
+             <p className="text-[var(--color-text-tertiary)] text-[10px] font-bold uppercase tracking-widest"><T en="Protected Security">Seguridad Protegida</T></p>
              <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Sistemas en línea</p>
+                <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest"><T en="Systems Online">Sistemas en línea</T></p>
              </div>
           </div>
         </motion.div>

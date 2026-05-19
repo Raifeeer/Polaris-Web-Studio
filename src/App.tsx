@@ -44,27 +44,31 @@ function ScrollHandler() {
   return null;
 }
 
+import { LanguageProvider, T } from './context/LanguageContext';
+
 export default function App() {
   useTheme();
   
   return (
-    <Router>
-      <ScrollHandler />
-      <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/servicios" element={<Services />} />
-          <Route path="/proceso" element={<Process />} />
-          <Route path="/portafolio" element={<Portfolio />} />
-          <Route path="/portafolio/:slug" element={<ProjectDetail />} />
-          <Route path="/nosotros" element={<About />} />
-          <Route path="/privacidad" element={<LegalPage title="Política de Privacidad" />} />
-          <Route path="/terminos" element={<LegalPage title="Términos y Condiciones" />} />
-          <Route path="/cookies" element={<LegalPage title="Política de Cookies" />} />
-        </Routes>
-        <WhatsAppButton />
-        <QuoteBot />
-      </div>
-    </Router>
+    <LanguageProvider>
+      <Router>
+        <ScrollHandler />
+        <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/servicios" element={<Services />} />
+            <Route path="/proceso" element={<Process />} />
+            <Route path="/portafolio" element={<Portfolio />} />
+            <Route path="/portafolio/:slug" element={<ProjectDetail />} />
+            <Route path="/nosotros" element={<About />} />
+            <Route path="/privacidad" element={<LegalPage title={<T en="Privacy Policy">Política de Privacidad</T>} />} />
+            <Route path="/terminos" element={<LegalPage title={<T en="Terms and Conditions">Términos y Condiciones</T>} />} />
+            <Route path="/cookies" element={<LegalPage title={<T en="Cookie Policy">Política de Cookies</T>} />} />
+          </Routes>
+          <WhatsAppButton />
+          <QuoteBot />
+        </div>
+      </Router>
+    </LanguageProvider>
   );
 }

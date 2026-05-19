@@ -4,9 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { T } from '../context/LanguageContext';
 
 interface LegalPageProps {
-  title: string;
+  title: React.ReactNode;
 }
 
 export default function LegalPage({ title }: LegalPageProps) {
@@ -24,7 +25,7 @@ export default function LegalPage({ title }: LegalPageProps) {
           className="mb-8 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] transition-colors group"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Volver
+          <T en="Back">Volver</T>
         </motion.button>
 
         <motion.div
@@ -45,12 +46,12 @@ export default function LegalPage({ title }: LegalPageProps) {
               <div className="relative z-10">
                 <div className="w-12 h-1 bg-[var(--color-primary-base)] mb-6 rounded-full" />
                 <p className="text-[var(--color-text-secondary)] leading-relaxed text-lg">
-                  Estamos terminando de redactar este documento para garantizar la máxima transparencia y cumplimiento legal.
+                  <T en="We are finishing drafting this document to guarantee maximum transparency and legal compliance.">Estamos terminando de redactar este documento para garantizar la máxima transparencia y cumplimiento legal.</T>
                 </p>
                 <div className="mt-8 flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-[var(--color-primary-base)] animate-pulse" />
                   <span className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
-                    Contenido en preparación
+                    <T en="Content in preparation">Contenido en preparación</T>
                   </span>
                 </div>
               </div>
@@ -64,7 +65,7 @@ export default function LegalPage({ title }: LegalPageProps) {
             </div>
 
             <p className="text-[var(--color-text-tertiary)] text-sm italic">
-              Si necesitas información específica sobre este tema antes de que esté disponible, por favor contáctanos en <a href="mailto:hola@polarisweb.studio" className="text-[var(--color-primary-base)] underline">hola@polarisweb.studio</a>.
+              <T en="If you need specific information on this topic before it is available, please contact us at">Si necesitas información específica sobre este tema antes de que esté disponible, por favor contáctanos en</T> <a href="mailto:hola@polarisweb.studio" className="text-[var(--color-primary-base)] underline">hola@polarisweb.studio</a>.
             </p>
           </div>
         </motion.div>

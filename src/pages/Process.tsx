@@ -4,31 +4,32 @@ import { Globe, Search, Palette, Code, Rocket, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { T } from '../context/LanguageContext';
 
 export default function Process() {
   const steps = [
     {
       id: "01",
-      title: "Diagnóstico",
-      desc: "Analizamos a fondo tu modelo de negocio, competencia y objetivos claros (KPIs). Vemos la presencia digital como una ciencia aplicada a resultados.",
+      title: <T en="Diagnosis">Diagnóstico</T>,
+      desc: <T en="We thoroughly analyze your business model, competition, and clear objectives (KPIs). We view digital presence as an applied science for results.">Analizamos a fondo tu modelo de negocio, competencia y objetivos claros (KPIs). Vemos la presencia digital como una ciencia aplicada a resultados.</T>,
       icon: Search
     },
     {
       id: "02",
-      title: "Arquitectura y Diseño",
-      desc: "Creamos interfaces precisas y de alto impacto, enfocadas en la conversión y la mejor experiencia de usuario para tu audiencia.",
+      title: <T en="Architecture and Design">Arquitectura y Diseño</T>,
+      desc: <T en="We create precise and high-impact interfaces, focused on conversion and the best user experience for your audience.">Creamos interfaces precisas y de alto impacto, enfocadas en la conversión y la mejor experiencia de usuario para tu audiencia.</T>,
       icon: Palette
     },
     {
       id: "03",
-      title: "Desarrollo de Élite",
-      desc: "Código limpio, escalable y optimizado para velocidad. Implementamos interacciones fluidas con las últimas tecnologías del mercado.",
+      title: <T en="Elite Development">Desarrollo de Élite</T>,
+      desc: <T en="Clean, scalable code optimized for speed. We implement fluid interactions with the latest technologies on the market.">Código limpio, escalable y optimizado para velocidad. Implementamos interacciones fluidas con las últimas tecnologías del mercado.</T>,
       icon: Code
     },
     {
       id: "04",
-      title: "Lanzamiento",
-      desc: "Pruebas exhaustivas, despliegue seguro y monitoreo continuo para garantizar que tu sitio funcione perfecto desde el primer segundo.",
+      title: <T en="Launch">Lanzamiento</T>,
+      desc: <T en="Exhaustive testing, secure deployment, and continuous monitoring to ensure your site works perfectly from the first second.">Pruebas exhaustivas, despliegue seguro y monitoreo continuo para garantizar que tu sitio funcione perfecto desde el primer segundo.</T>,
       icon: Rocket
     }
   ];
@@ -41,10 +42,10 @@ export default function Process() {
         {/* Header */}
         <section className="text-center space-y-6 mb-32">
           <h1 className="text-5xl md:text-8xl font-display font-black tracking-tighter leading-tight drop-shadow-2xl">
-            Nuestra Metodología
+            <T en="Our Methodology">Nuestra Metodología</T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Un proceso sistemático y riguroso diseñado para escalar tu negocio con precisión técnica y visión estratégica.
+            <T en="A systematic and rigorous process designed to scale your business with technical precision and strategic vision.">Un proceso sistemático y riguroso diseñado para escalar tu negocio con precisión técnica y visión estratégica.</T>
           </p>
         </section>
 
@@ -89,15 +90,15 @@ export default function Process() {
         {/* Final CTA */}
         <section className="mt-40 p-12 md:p-24 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] text-center relative overflow-hidden bento-glow">
            <div className="relative z-10 space-y-8">
-             <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">¿Listo para elevar tu negocio?</h2>
+             <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter"><T en="Ready to elevate your business?">¿Listo para elevar tu negocio?</T></h2>
              <p className="text-[var(--color-text-secondary)] max-w-xl mx-auto text-lg leading-relaxed">
-               Comienza hoy mismo y transforma tu visión en un producto digital de clase mundial.
+               <T en="Start today and transform your vision into a world-class digital product.">Comienza hoy mismo y transforma tu visión en un producto digital de clase mundial.</T>
              </p>
              <button 
                 onClick={() => window.open("https://wa.me/18299200544?text=Hola,%20quiero%20agendar%20una%20consultoría", "_blank")}
                 className="px-10 py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-lg hover:scale-105 transition-all shadow-lg flex items-center gap-2 mx-auto focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
               >
-                Agendar Consultoría Gratuita <ArrowRight size={20} />
+                <T en="Schedule Free Consultation">Agendar Consultoría Gratuita</T> <ArrowRight size={20} />
              </button>
            </div>
         </section>
