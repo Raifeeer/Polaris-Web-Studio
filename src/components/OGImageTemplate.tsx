@@ -81,7 +81,7 @@ export default function OGImageTemplate() {
           polarisweb.studio
         </span>
         <div style={{ display: 'flex', gap: '12px' }}>
-           <div style={{ padding: '8px 16px', borderRadius: '100px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', tracking: '0.1em' }}>Santo Domingo, RD</div>
+           <div style={{ padding: '8px 16px', borderRadius: '100px', backgroundColor: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', fontSize: '14px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Santo Domingo, RD</div>
         </div>
       </div>
     </div>

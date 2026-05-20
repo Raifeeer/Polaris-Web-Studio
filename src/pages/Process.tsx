@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Globe, Search, Palette, Code, Rocket, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
@@ -7,6 +7,7 @@ import Footer from '../components/Footer';
 import { T } from '../context/LanguageContext';
 
 export default function Process() {
+  const navigate = useNavigate();
   const steps = [
     {
       id: "01",

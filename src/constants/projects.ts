@@ -39,8 +39,8 @@ export interface Project {
 
 export const projects: Project[] = [
   {
-    slug: "luxe-resort-concept",
-    title: "Luxe Resort",
+    slug: "lumina-sky-concept",
+    title: "Lúmina Sky",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
@@ -48,8 +48,9 @@ export const projects: Project[] = [
     planEN: "Constellation",
     type: "Turismo · Web Corporativa",
     typeEN: "Tourism · Corporate Web",
-    shortDesc: "Prototipo de web para hotel con motor de reservas y experiencia inmersiva para los usuarios.",
-    shortDescEN: "Hotel website prototype with booking engine and immersive user experience.",
+    liveUrl: "https://lumina-sky-demo.vercel.app/",
+    shortDesc: "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
+    shortDescEN: "Website prototype for Lúmina Sky, a luxury city hotel in Piantini, Santo Domingo, featuring a booking engine and immersive experience.",
     keyResult: "Estética",
     keyResultEN: "Aesthetics",
     resultLabel: "Atractivo Visual",
@@ -57,8 +58,8 @@ export const projects: Project[] = [
     color: "from-cyan-500/20 to-transparent",
     size: "large",
     icon: Globe,
-    context: "Luxe Resort es un prototipo creado para demostrar cómo un hotel boutique puede destacar mostrando sus instalaciones y facilitando las reservas a sus clientes.",
-    contextEN: "Luxe Resort is a prototype created to demonstrate how a boutique hotel can stand out by showing its facilities and making reservations easy for clients.",
+    context: "Lúmina Sky es un prototipo creado para demostrar cómo un hotel boutique de ciudad de lujo en Piantini, Santo Domingo, puede destacar mostrando sus instalaciones de élite y facilitando una reserva perfecta.",
+    contextEN: "Lúmina Sky is a prototype created to showcase how a luxury boutique city hotel in Piantini, Santo Domingo, can stand out by displaying their elite facilities and enabling a seamless booking experience.",
     challenge: "Crear una página que muestre fotos de alta calidad sin que se ponga lenta en los celulares, manteniendo al cliente interesado.",
     challengeEN: "Create a page that displays high-quality photos without slowing down on mobile phones, keeping the client interested.",
     solution: "Desarrollo de una página web fácil de usar, donde buscar habitaciones y reservar sea un proceso rápido y sencillo.",
