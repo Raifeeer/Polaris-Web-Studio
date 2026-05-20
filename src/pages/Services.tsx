@@ -160,7 +160,7 @@ export default function Services() {
         {/* Pricing Section */}
         <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32 relative overflow-hidden">
           {isOfferActive && (
-            <div className="absolute top-0 left-0 right-0 bg-[var(--color-primary-base)]/10 border-b border-[var(--color-primary-base)]/30 px-4 py-3 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-6 z-10 text-center text-sm md:text-base">
+            <div className="-mx-8 md:-mx-16 -mt-8 md:-mt-16 mb-8 md:mb-12 bg-[var(--color-primary-base)]/10 border-b border-[var(--color-primary-base)]/30 px-4 py-4 md:py-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center text-sm md:text-base relative z-10">
               <span className="font-bold text-[var(--color-text-primary)]">
                 <T en="Launch Offer: Get a 25% discount through the entire first month!">Oferta de lanzamiento: ¡todo el primer mes con 25% de descuento!</T>
               </span>
@@ -170,7 +170,7 @@ export default function Services() {
             </div>
           )}
 
-          <section className={`space-y-12 text-center ${isOfferActive ? 'mt-12' : ''}`}>
+          <section className="space-y-12 text-center">
             <div className="flex flex-col items-center gap-6">
                <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]"><T en="Our Plans">Nuestros Planes</T></span>
                <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter"><T en="Smart Investment">Inversión Inteligente</T></h2>

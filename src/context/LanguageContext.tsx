@@ -13,7 +13,11 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguageState] = useState<Language>(() => {
     const saved = localStorage.getItem('language');
-    return (saved === 'es' || saved === 'en') ? saved : 'es';
+    if (saved === 'es' || saved === 'en') {
+      return saved;
+    }
+    const browserLang = typeof navigator !== 'undefined' ? (navigator.language || '') : '';
+    return browserLang.toLowerCase().startsWith('es') ? 'es' : 'en';
   });
 
   useEffect(() => {
