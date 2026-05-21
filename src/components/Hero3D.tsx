@@ -63,6 +63,15 @@ function InteractiveScene() {
       mouse.current.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
     };
 
+    const handleTouchMove = (e: TouchEvent) => {
+      if (hasOrientation) return;
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        mouse.current.targetX = (touch.clientX / window.innerWidth) * 2 - 1;
+        mouse.current.targetY = -(touch.clientY / window.innerHeight) * 2 + 1;
+      }
+    };
+
     const handleScroll = () => {
       scroll.current.targetY = window.scrollY;
     };
@@ -86,6 +95,7 @@ function InteractiveScene() {
     // Register active listeners
     window.addEventListener('deviceorientation', handleOrientation, true);
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
 
     // iOS WebKit orientation permission request
@@ -115,6 +125,7 @@ function InteractiveScene() {
     return () => {
       window.removeEventListener('deviceorientation', handleOrientation);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('click', requestiOSPermission);
       document.removeEventListener('touchstart', requestiOSPermission);
