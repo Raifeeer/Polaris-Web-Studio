@@ -101,7 +101,8 @@ export const projects: Project[] = [
       { label: "Búsquedas", labelEN: "Searches", value: "Al Instante", valueEN: "Instantly" },
       { label: "Adaptado a", labelEN: "Adapted for", value: "Celulares", valueEN: "Mobiles" }
     ],
-    techStack: ["React", "TypeScript", "Tailwind CSS"]
+    techStack: ["React", "TypeScript", "Tailwind CSS"],
+    liveUrl: "https://nexus-realty-demo.vercel.app/"
   },
   {
     slug: "chroma-store",

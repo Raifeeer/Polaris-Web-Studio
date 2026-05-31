@@ -1,4 +1,5 @@
 @import url('https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&f[]=satoshi@900,700,500,300,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -54,6 +55,8 @@
   /* Typography */
   --font-display: 'Cabinet Grotesk', system-ui, sans-serif;
   --font-body: 'Satoshi', system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans-luxury: "Plus Jakarta Sans", "Outfit", system-ui, sans-serif;
 
   /* Colors - Core (Indigo & Slate) */
   --color-surface-base: var(--color-surface-base);
@@ -74,6 +77,13 @@
   --color-accent-blue: var(--color-accent-blue);
   --color-accent-purple: var(--color-accent-purple);
 
+  /* Nexus Luxury Colors */
+  --color-luxury-gold: #D4AF37;
+  --color-luxury-gold-hover: #C5A85C;
+  --color-luxury-emerald-800: #0a1628;
+  --color-luxury-emerald-950: #040b17;
+  --color-luxury-bronze: #8C7853;
+
   /* Specific mapping for aliases */
   --color-surface: var(--color-surface-base);
   --color-surface-container: var(--color-surface-elevated);
@@ -91,6 +101,7 @@
   --radius-radius-full: 9999px;
   --radius-bento: 24px;
 }
+
 
 @layer base {
   body {

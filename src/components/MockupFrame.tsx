@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Users, ChevronRight, Globe } from 'lucide-react';
+import { Calendar, Users, ChevronRight, Globe, Gem, Search, Compass, Lock, Moon, Heart, Menu, ChevronDown, Landmark } from 'lucide-react';
 
 interface MockupFrameProps {
   type: 'browser' | 'mobile';
@@ -175,42 +175,77 @@ function LuminaSkyMockup() {
   );
 }
 
+function NexusRealtyMockup() {
+  const [search, setSearch] = useState("");
+  return (
+    <div className="absolute inset-0 bg-white text-[#0A1628] flex flex-col font-sans select-none overflow-hidden">
+      {/* Navbar */}
+      <div className="flex justify-between items-center px-4 py-3 bg-[#0A1628] z-20 text-white">
+        <div className="flex items-center gap-2">
+           <img src="https://i.imgur.com/Kq5wE4B.png" alt="Nexus Logo" className="w-8 h-8" />
+           <div className="flex flex-col">
+             <span className="font-serif text-sm font-bold text-white tracking-[0.1em]">NEXUS</span>
+             <span className="text-[6px] text-[#D4AF37] tracking-[0.2em] font-medium uppercase">REALTY</span>
+           </div>
+        </div>
+        <div className="flex gap-4 text-white/70">
+           <Lock className="w-4 h-4" />
+           <Moon className="w-4 h-4" />
+           <Heart className="w-4 h-4" />
+           <Menu className="w-4 h-4" />
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="relative flex-1 flex flex-col justify-center items-center px-6">
+        <div className="absolute inset-0 z-0">
+           <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800')] bg-cover bg-center" />
+           <div className="absolute inset-0 bg-white/30" />
+        </div>
+        
+        {/* Tag */}
+        <div className="relative z-10 flex items-center gap-1.5 px-3 py-1 border border-[#D4AF37]/50 rounded-full mb-6 bg-white/20 backdrop-blur-sm">
+          <Gem className="w-3 h-3 text-[#D4AF37]" />
+          <span className="text-[8px] tracking-[0.15em] font-bold text-[#D4AF37] uppercase font-serif">SANTUARIOS INMOBILIARIOS EXCLUSIVOS</span>
+        </div>
+
+        {/* Title */}
+        <h1 className="relative z-10 font-serif text-3xl text-[#0A1628] text-center leading-tight mb-4 font-normal">
+          Encuentre su <span className="text-[#D4AF37] italic">Legado</span><br />
+          en República Dominicana
+        </h1>
+
+        {/* Subtitle */}
+        <p className="relative z-10 text-[9px] text-[#0A1628]/70 text-center max-w-[260px] leading-relaxed mb-6 font-sans">
+          Ofrecemos un portafolio ultracurado de las residencias más majestuosas ubicadas en las colinas de Samaná, farallones de Casa de Campo, y costas de Cap Cana.
+        </p>
+
+        {/* Search Widget */}
+        <div className="relative z-10 bg-white w-full max-w-[300px] rounded-full shadow-2xl p-1 border border-gray-100 divide-y divide-gray-100">
+          <div className="flex items-center gap-2 px-3 py-2">
+             <Search className="text-gray-400 w-4 h-4" />
+             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Busque por Piantini, Cap Cana, Casa de Ca" className="bg-transparent text-[9px] text-gray-700 w-full focus:outline-none" />
+          </div>
+          <div className="flex justify-between items-center px-4 py-2 text-[9px] text-gray-700 font-bold">
+            <span>ZONAS DE ALTO ESTATUS...</span>
+            <ChevronDown className="w-4 h-4 text-gray-400" />
+          </div>
+          <button onClick={() => alert(`Buscando: ${search}`)} className="flex w-full items-center justify-center gap-2 bg-[#D4AF37] text-white text-[9px] font-bold uppercase tracking-widest py-3 rounded-full">
+            <Compass className="w-3 h-3" /> EXPLORAR
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const MOCKUP_CONTENT: Record<string, { browser?: React.ReactNode, mobile?: React.ReactNode }> = {
   "lumina-sky-concept": {
     browser: <LuminaSkyMockup />
   },
   "nexus-real-estate": {
-    browser: (
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-950 to-stone-900 text-white flex flex-col font-sans">
-        <nav className="flex justify-between items-center px-4 py-2 border-b border-white/10">
-          <span className="text-[10px] font-black tracking-tighter text-amber-500">NOVA</span>
-          <div className="flex gap-2 text-[7px] font-bold uppercase tracking-widest opacity-70">
-            <span>Propiedades</span>
-            <span>Zonas</span>
-            <span>Agentes</span>
-          </div>
-          <button className="text-[7px] font-bold opacity-60">Contacto</button>
-        </nav>
-        <div className="flex-1 flex flex-col items-center justify-center text-center p-4 space-y-2">
-          <h3 className="text-xs font-black leading-tight text-amber-100">Tu Propiedad Ideal en RD</h3>
-          <p className="text-[8px] opacity-60">Residencial · Turístico · Inversión</p>
-          <button className="bg-amber-500 text-[8px] font-black px-3 py-1 rounded shadow-lg text-amber-950">Ver Propiedades</button>
-        </div>
-        <div className="grid grid-cols-3 gap-2 p-2 mt-auto">
-          {[
-            { name: "Apto Punta Cana", price: "$185K" },
-            { name: "Villa Cap Cana", price: "$420K" },
-            { name: "PH en Naco", price: "$310K" }
-          ].map((item, i) => (
-            <div key={i} className="bg-white/5 p-1.5 rounded-lg border border-amber-500/10">
-              <div className="w-full aspect-square bg-white/10 rounded mb-1" />
-              <p className="text-[6px] font-bold truncate">{item.name}</p>
-              <p className="text-[6px] text-amber-400">{item.price}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+    browser: <NexusRealtyMockup />,
+    mobile: <NexusRealtyMockup />
   },
   "chroma-store": {
     browser: (
