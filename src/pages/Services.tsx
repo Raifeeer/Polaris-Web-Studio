@@ -40,34 +40,38 @@ export default function Services() {
 
   const plans = [
     {
+      id: "flash",
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
-      desc: <T en="Your economic Landing Page (fast and direct).">Tu Landing Page económica (rápida y directa).</T>,
+      desc: <T en="One single scrollable page (Everything in one place, up to 5 blocks/sections).">1 sola página web (Diseño vertical todo en uno de hasta 5 bloques/secciones).</T>,
       originalPrice: 299,
       features: [
         <T en="Exclusive responsive design">Diseño responsivo exclusivo</T>,
         <T en="Conversion optimization">Optimización de conversión</T>,
         <T en="Form integration">Integración de formularios</T>,
-        <T en="30-day support">Soporte por 30 días</T>
+        <T en="Basic Google Optimization">Optimización básica para Google</T>,
+        <T en="30 days warranty and post-launch support">30 días de Garantía y Soporte Post-Lanzamiento</T>
       ],
       highlight: false
     },
     {
+      id: "constellation",
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
-      desc: <T en="Your 5-page Corporate Website (robust and connected).">Tu Web Corporativa de 5 páginas (robusta y conectada).</T>,
+      desc: <T en="Corporate site with up to 5 independent pages (e.g. Home, About, Services...).">Sitio corporativo con hasta 5 páginas independientes (Ej: Inicio, Nosotros, Servicios, Contacto, Blog).</T>,
       originalPrice: 699,
       features: [
-        <T en="Up to 5 custom sections">Hasta 5 secciones personalizadas</T>,
-        <T en="Advanced On-page SEO">SEO On-page avanzado</T>,
-        <T en="Self-manageable blog">Blog autogestionable</T>,
-        <T en="Basic chatbot for predefined answers">Chatbot básico de respuestas predefinidas</T>,
+        <T en="Up to 5 custom independent pages">Hasta 5 páginas internas personalizadas</T>,
+        <T en="Advanced Google Search Optimization">Estructura avanzada para Buscadores (Google)</T>,
+        <T en="Self-manageable blog (includes 3 initial posts)">Sistema de Blog autogestionable (incluye carga de 3 artículos)</T>,
+        <T en="Basic chatbot (setup of up to 5 FAQs)">Chatbot básico (configuración de hasta 5 preguntas frecuentes)</T>,
         <T en="SSL Certificate included">Certificado SSL incluido</T>,
-        <T en="90-day support">Soporte por 90 días</T>
+        <T en="30 days warranty and post-launch support">30 días de Garantía y Soporte Post-Lanzamiento</T>
       ],
       highlight: true
     },
     {
+      id: "nova",
       name: <T en="Nova Package">Paquete Nova</T>,
       titleColor: "text-violet-500",
       desc: <T en="Your virtual store (to explode in sales).">Tu tienda virtual (para explotar en ventas).</T>,
@@ -76,13 +80,14 @@ export default function Services() {
       badge: <T en="AI Powered">Potenciado con IA</T>,
       badgeIcon: true,
       features: [
-        <T en="Unlimited product catalog">Catálogo de productos ilimitado</T>,
+        <T en="System for unlimited products (Includes assisted setup of your first 20 items)">Sistema para productos ilimitados (Incluye carga asistida de tus primeros 20 artículos)</T>,
         <T en="Configured payment gateways">Pasarelas de pago configuradas</T>,
         <T en="Inventory management">Gestión de inventario</T>,
-        <T en="AI Chatbot for lead capture">Chatbot IA para captura de leads</T>,
-        <T en="AI tool integration (per project)">Integración con herramientas de IA (según proyecto)</T>,
+        <T en="Advanced Google Search Optimization">Estructura avanzada para Buscadores (Google)</T>,
+        <T en="Lead Capture Bot">Bot de Respuestas Rápidas</T>,
+        <T en="Setup of 1 AI Add-on (Monthly API/Subscription costs not included)">Instalación de 1 Add-on IA (Costos de suscripción/API mensual no incluidos)</T>,
         <T en="Admin panel">Panel de administración</T>,
-        <T en="1-year support">Soporte por 1 año</T>
+        <T en="90 days priority warranty and post-launch support">90 días de Garantía y Soporte Prioritario Post-Lanzamiento</T>
       ],
       highlight: false
     }
@@ -235,7 +240,7 @@ export default function Services() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => navigate('/cotizar')}
+                    onClick={() => navigate(`/cotizar${plan.id === 'nova' ? '?plan=nova' : ''}`)}
                     className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
                     plan.highlight 
                       ? 'bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20' 
@@ -245,6 +250,76 @@ export default function Services() {
                   </button>
                 </motion.div>
               ))}
+            </div>
+          </section>
+
+          {/* Hosting & Support Section */}
+          <section className="space-y-12 pt-8 pb-20">
+            <div className="flex flex-col lg:flex-row gap-12 items-center">
+              <div className="flex-1 space-y-6">
+                 <span className="inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20"><T en="Post-Launch">Post-Lanzamiento</T></span>
+                 <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight mt-4"><T en="Premium Hosting & Support">Hosting Premium y Soporte</T></h2>
+                 <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl">
+                   <T en="When your project goes live, your warranty begins. After that, we offer a $30/mo subscription to keep your business running smoothly without technical headaches.">Al entregar tu proyecto comienza tu periodo de garantía. A partir de ahí, ofrecemos una suscripción accesible para mantener tus servidores activos y tu web libre de hackeos.</T>
+                 </p>
+                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
+                   <div className="space-y-2">
+                     <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                       <ShieldCheck className="text-emerald-500" size={20} />
+                       <T en="Bank-grade Security">Seguridad Bancaria</T>
+                     </div>
+                     <p className="text-sm text-[var(--color-text-secondary)]"><T en="Automatic updates and SSL renewals to ensure your site is protected.">Actualizaciones automáticas y renovación de certificados para evitar vulnerabilidades.</T></p>
+                   </div>
+                   <div className="space-y-2">
+                     <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                       <Zap className="text-amber-500" size={20} />
+                       <T en="99.9% Uptime guarantee">Uptime del 99.9%</T>
+                     </div>
+                     <p className="text-sm text-[var(--color-text-secondary)]"><T en="Always-on infrastructure. If a server goes down, we handle the technical crisis.">Infraestructura siempre en línea. Nosotros nos encargamos de que nunca pierdas ventas.</T></p>
+                   </div>
+                   <div className="space-y-2">
+                     <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                       <Rocket className="text-blue-500" size={20} />
+                       <T en="Global Speed (CDN)">Velocidad Global (CDN)</T>
+                     </div>
+                     <p className="text-sm text-[var(--color-text-secondary)]"><T en="Continuous performance optimization so your site loads in milliseconds globally.">Optimización continua en servidores para que tu web cargue súper rápido.</T></p>
+                   </div>
+                   <div className="space-y-2">
+                     <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                       <Sparkles className="text-purple-500" size={20} />
+                       <T en="Content Updates">Actualizaciones Menores</T>
+                     </div>
+                     <p className="text-sm text-[var(--color-text-secondary)]"><T en="Need to change a photo or a paragraph? We make minor tweaks so your site stays fresh.">¿Necesitas cambiar una foto o un párrafo? Hacemos pequeños ajustes por ti sin cobrar por hora.</T></p>
+                   </div>
+                 </div>
+              </div>
+              <div className="w-full lg:w-[400px] flex-shrink-0 bg-[var(--color-surface-elevated)] p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-500 shadow-xl">
+                 <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-colors"></div>
+                 <h3 className="text-2xl font-display font-bold mb-2 relative"><T en="Peace of Mind">Tranquilidad Total</T></h3>
+                 <p className="text-sm text-[var(--color-text-secondary)] mb-6 relative"><T en="Focus on running your business, we take care of the code.">Enfócate en tu negocio, nosotros nos encargamos del código.</T></p>
+                 <div className="flex items-baseline gap-1 mb-8 relative">
+                   <span className="text-5xl font-black text-[var(--color-text-primary)]">$30</span>
+                   <span className="text-[var(--color-text-tertiary)] uppercase text-xs font-bold tracking-widest"><T en="USD / month">USD / mes</T></span>
+                 </div>
+                 <ul className="space-y-4 mb-8 relative">
+                   {[
+                     <T en="Premium Hosting Engine">Infraestructura Premium de Hosting</T>, 
+                     <T en="Automated Database Backups">Copias de seguridad automáticas (Backups)</T>, 
+                     <T en="Direct Tech Support">Soporte Técnico Directo (WhatsApp)</T>, 
+                     <T en="Content and Image Adjustments">Ajustes menores de texto/imágenes</T>
+                   ].map((item, i) => (
+                     <li key={i} className="flex items-start gap-3 text-sm text-[var(--color-text-secondary)] font-medium">
+                       <CheckCircle2 size={18} className="text-emerald-500 mt-0.5 flex-shrink-0" />
+                       <span>{item}</span>
+                     </li>
+                   ))}
+                 </ul>
+                 <button onClick={() => {
+                   navigate('/cotizar?addon=hosting');
+                 }} className="w-full py-4 rounded-xl font-bold bg-[#E8F5E9] hover:bg-[#C8E6C9] dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition-colors relative">
+                   <T en="Include Add-on in Quote">Incluir Add-on en Cotización</T>
+                 </button>
+              </div>
             </div>
           </section>
         </div>
@@ -268,12 +343,12 @@ export default function Services() {
                   <MessageSquare size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight"><T en="Smart Chatbot">Chatbot Inteligente</T></h3>
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight"><T en="Lead Capture Bot">Bot de Respuestas Rápidas</T></h3>
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="Answer customer questions 24/7, capture leads, and schedule appointments automatically.">Responde preguntas de tus clientes 24/7, captura leads y agenda citas automáticamente.</T>
+                    <T en="Automated flows with pre-programmed buttons to answer FAQs and capture client contact info 24/7.">Flujos automatizados con botones pre-programados para responder preguntas frecuentes y capturar datos de clientes 24/7.</T>
                   </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="Additional Cost">Costo Adicional</T></span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $150 / month">Desde $150 / mes</T></span>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="One-time Setup">Pago Único de Implementación</T></span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $150">Desde $150</T></span>
                 </div>
               </div>
               <button 
@@ -295,12 +370,12 @@ export default function Services() {
                   <BrainCircuit size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight"><T en="Advanced AI Assistant">Asistente de IA Avanzado</T></h3>
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight"><T en="Autonomous AI Sales Agent">Agente de Ventas Autónomo (IA)</T></h3>
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="Integration with AI models like GPT-4 or Gemini, capable of maintaining complex conversations or logical processes.">Integración con modelos de IA como GPT-4 o Gemini, capaz de mantener conversaciones complejas o procesos lógicos.</T>
+                    <T en="An AI with a 'brain' (like Gemini or Grok) trained on your business. It chats naturally, handles objections, and closes sales like a real employee.">Una IA con "cerebro" entrenada con los datos de tu negocio. Conversa natural, maneja objeciones y atiende dudas complejas como un empleado real.</T>
                   </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="Additional Cost">Costo Adicional</T></span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $350 / month">Desde $350 / mes</T></span>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="Monthly Subscription">Suscripción Mensual</T></span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $49 / month">Desde $49 / mes</T></span>
                 </div>
               </div>
               <button 
@@ -326,8 +401,8 @@ export default function Services() {
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
                     <T en="For e-commerce: your customers find products describing what they need in natural language.">Para e-commerce: tus clientes encuentran productos describiendo lo que necesitan en lenguaje natural.</T>
                   </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="Additional Cost">Costo Adicional</T></span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $200 / month">Desde $200 / mes</T></span>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="One-time Setup">Pago Único de Implementación</T></span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $250">Desde $250</T></span>
                 </div>
               </div>
               <button 
@@ -353,8 +428,8 @@ export default function Services() {
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
                     <T en="Automatically generate product descriptions, blog posts, and review responses.">Genera descripciones de productos, posts de blog y respuestas a reseñas automáticamente.</T>
                   </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="Additional Cost">Costo Adicional</T></span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $100 / month">Desde $100 / mes</T></span>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1"><T en="Monthly Subscription">Suscripción Mensual</T></span>
+                  <span className="text-sm font-black text-[var(--color-text-primary)]"><T en="From $29 / month">Desde $29 / mes</T></span>
                 </div>
               </div>
               <button 
