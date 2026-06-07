@@ -9,7 +9,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useState } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 
@@ -70,23 +70,38 @@ function ScrollHandler() {
 
 export default function App() {
   useTheme();
+  const [showBot, setShowBot] = useState(false);
 
   useEffect(() => {
-    // 1. Defer Google Analytics Initialization
-    const gaTimer = setTimeout(() => {
+    // 1. Defer chatbot to save initial bundles & execution cycles
+    const botTimer = setTimeout(() => {
+      setShowBot(true);
+    }, 4500);
+
+    // 2. Initialize trackers on first real interaction, or timing fallback
+    let initialized = false;
+
+    const initTrackers = () => {
+      if (initialized) return;
+      initialized = true;
+
+      // Clean up event listeners
+      cleanupListeners();
+
+      // Initialize Google Analytics (GA4)
       if (GA_ID) {
         try {
           import("react-ga4").then((module) => {
             module.default.initialize(GA_ID);
+          }).catch((err) => {
+            console.warn("ReactGA initialization deferred:", err);
           });
         } catch (err) {
           console.warn("ReactGA initialization deferred:", err);
         }
       }
-    }, 1500);
 
-    // 2. Defer Microsoft Clarity Initialization
-    const clarityTimer = setTimeout(() => {
+      // Initialize Microsoft Clarity
       try {
         (function (c: any, l: any, a: any, r: any, i: any, t?: any, y?: any) {
           c[a] =
@@ -98,16 +113,35 @@ export default function App() {
           t.async = 1;
           t.src = "https://www.clarity.ms/tag/" + i;
           y = l.getElementsByTagName(r)[0];
-          y.parentNode.insertBefore(t, y);
+          if (y && y.parentNode) {
+            y.parentNode.insertBefore(t, y);
+          }
         })(window, document, "clarity", "script", "x23wgnxw13");
       } catch (err) {
         console.warn("Clarity lazy initialization failed:", err);
       }
-    }, 2500);
+    };
+
+    const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
+
+    const cleanupListeners = () => {
+      events.forEach((event) => {
+        window.removeEventListener(event, initTrackers);
+      });
+    };
+
+    // Attach listeners for fast interaction-based tracking
+    events.forEach((event) => {
+      window.addEventListener(event, initTrackers, { passive: true, once: true });
+    });
+
+    // Fallback: load trackers after 6 seconds anyway if user remains idle
+    const fallbackTimer = setTimeout(initTrackers, 6000);
 
     return () => {
-      clearTimeout(gaTimer);
-      clearTimeout(clarityTimer);
+      clearTimeout(botTimer);
+      clearTimeout(fallbackTimer);
+      cleanupListeners();
     };
   }, []);
 
@@ -155,9 +189,11 @@ export default function App() {
               />
             </Routes>
           </Suspense>
-          <Suspense fallback={null}>
-            <QuoteBot />
-          </Suspense>
+          {showBot && (
+            <Suspense fallback={null}>
+              <QuoteBot />
+            </Suspense>
+          )}
         </div>
       </Router>
     </LanguageProvider>
