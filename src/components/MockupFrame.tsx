@@ -56,7 +56,7 @@ function LuminaSkyMockup() {
           referrerPolicy="no-referrer"
           loading="lazy"
           decoding="async"
-          fetchpriority="low"
+          fetchPriority="low"
           width="800"
           height="600"
         />

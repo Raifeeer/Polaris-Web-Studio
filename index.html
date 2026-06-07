@@ -63,9 +63,33 @@
         ]
       }
     </script>
+    <!-- Initial Loader Styles -->
+    <style>
+      body { margin: 0; background-color: #020617; }
+      #root:empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 100vw;
+      }
+      .spinner {
+        border: 3px solid rgba(255,255,255,0.1);
+        border-top: 3px solid #6366f1;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+      @media (prefers-color-scheme: light) {
+        body { background-color: #f8fafc; }
+        .spinner { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid #4f46e5; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="spinner"></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
