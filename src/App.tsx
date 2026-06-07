@@ -75,7 +75,7 @@ export default function App() {
           console.warn("ReactGA initialization deferred:", err);
         }
       }
-    }, 2500);
+    }, 1500);
 
     // 2. Defer Microsoft Clarity Initialization
     const clarityTimer = setTimeout(() => {
@@ -91,7 +91,7 @@ export default function App() {
       } catch (err) {
         console.warn("Clarity lazy initialization failed:", err);
       }
-    }, 3500);
+    }, 2500);
 
     return () => {
       clearTimeout(gaTimer);
