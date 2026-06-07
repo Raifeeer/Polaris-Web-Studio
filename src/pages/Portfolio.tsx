@@ -6,6 +6,7 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { projects } from '../constants/projects';
 import { T } from '../context/LanguageContext';
+import MockupFrame from '../components/MockupFrame';
 
 export default function Portfolio() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function Portfolio() {
         </section>
 
         {/* Portfolio Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-[300px] md:auto-rows-[350px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-[450px] md:auto-rows-[550px] pb-24">
           {projects.map((project, i) => (
             <motion.div 
               key={i}
@@ -37,7 +38,7 @@ export default function Portfolio() {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               onClick={() => navigate(`/portafolio/${project.slug}`)}
-              className={`rounded-[var(--radius-bento)] p-6 lg:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group overflow-hidden relative bento-glow-hover transition-colors duration-500 cursor-pointer ${
+              className={`rounded-[var(--radius-bento)] p-6 lg:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col group overflow-hidden relative bento-glow-hover transition-colors duration-500 cursor-pointer ${
                 i === projects.length - 1 ? 'md:col-span-2' : ''
               }`}
             >
@@ -75,29 +76,38 @@ export default function Portfolio() {
                 </div>
               </div>
 
-              {/* Key Result - Large Typo */}
-              <div className="relative z-10 py-6">
-                <div className="text-[2.5rem] leading-[1] md:text-5xl lg:text-6xl font-display font-black tracking-tighter text-[var(--color-primary-base)] opacity-80 group-hover:opacity-100 transition-opacity">
-                  <T en={project.keyResultEN || project.keyResult}>{project.keyResult}</T>
+              {/* Title & Badge */}
+              <div className="relative z-10 pt-4 flex flex-col gap-4">
+                <div className="flex gap-2 items-center flex-wrap">
+                  <span className="px-3 py-1 bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    <T en={project.keyResultEN || project.keyResult}>{project.keyResult}</T>
+                  </span>
                 </div>
-                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-text-tertiary)] mt-1">
-                  <T en={project.resultLabelEN || project.resultLabel}>{project.resultLabel}</T>
-                </div>
-              </div>
-
-              {/* Content Bottom */}
-              <div className="relative z-10 space-y-2">
-                <h3 className="text-3xl font-display font-bold tracking-tight">{project.title}</h3>
+                <h3 className="text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter text-[var(--color-text-primary)]">
+                  {project.title}
+                </h3>
                 <p className="text-[var(--color-text-secondary)] text-sm max-w-sm line-clamp-2">
                   <T en={project.shortDescEN || project.shortDesc}>{project.shortDesc}</T>
                 </p>
               </div>
 
-              {/* Decorative Overlay */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-0 group-hover:opacity-20 transition-opacity`} />
-              <div className="absolute right-[-10%] bottom-[-10%] opacity-5 group-hover:opacity-10 transition-all group-hover:scale-110">
-                <project.icon size={250} />
+              {/* Mockup Presentation */}
+              <div className="relative z-10 w-full mt-8 rounded-t-xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100">
+                {project.slug === 'nexus-real-estate' || project.slug === 'vitality-clinic' || project.slug === 'sabor-autentico' ? (
+                  <div className="h-full w-full overflow-hidden relative flex justify-center items-start bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] pt-6 rounded-t-xl border border-b-0 border-[var(--color-border-subtle)]">
+                    <div className="scale-[0.52] sm:scale-[0.6] md:scale-[0.68] lg:scale-[0.75] origin-top translate-y-2 transition-transform duration-500 group-hover:scale-[0.55] sm:group-hover:scale-[0.63] md:group-hover:scale-[0.71] lg:group-hover:scale-[0.78]">
+                      <MockupFrame type="mobile" projectSlug={project.slug} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full h-full rounded-t-xl overflow-hidden">
+                    <MockupFrame type="browser" projectSlug={project.slug} />
+                  </div>
+                )}
               </div>
+
+              {/* Decorative Overlay */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none`} />
             </motion.div>
           ))}
         </div>
@@ -106,10 +116,10 @@ export default function Portfolio() {
         <section className="mt-32 text-center space-y-10">
            <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter"><T en="Is your project next?">¿Tu proyecto es el siguiente?</T></h2>
            <button 
-             onClick={() => navigate('/?plan=Consulta#contacto')}
-             className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
+             onClick={() => navigate('/cotizar')}
+             className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 cursor-pointer"
            >
-             <T en="Consult us right now">Consúltanos ahora mismo</T>
+             <T en="Quote your project">Cotiza tu proyecto</T>
            </button>
         </section>
       </main>

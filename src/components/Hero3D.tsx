@@ -1,302 +1,308 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Sphere, MeshDistortMaterial, Stars } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { useMemo, useEffect, useRef } from 'react';
 
-function isWebGLAvailable() {
-  try {
-    const canvas = document.createElement('canvas');
-    return !!(window.WebGLRenderingContext && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')));
-  } catch (e) {
-    return false;
-  }
+interface BlobConfig {
+  background: string;
+  width: string;
+  height: string;
+  left: string;
+  top: string;
+  animationName: string;
+  duration: number;
+  opacity: number;
 }
 
-class ErrorBoundary extends React.Component<{ fallback: React.ReactNode, children: React.ReactNode }, { hasError: boolean }> {
-  constructor(props: { fallback: React.ReactNode, children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(error: any, errorInfo: any) {
-    console.error("WebGL Error:", error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return <>{this.props.fallback}</>;
-    }
-    return <>{this.props.children}</>;
-  }
-}
-
-const FallbackGrid = () => (
-  <div 
-    className="absolute inset-0 z-0 pointer-events-none opacity-20 animate-pulse"
-    style={{
-      backgroundImage: `radial-gradient(var(--color-primary-base) 1px, transparent 1px)`,
-      backgroundSize: '32px 32px'
-    }}
-  />
-);
-
-function InteractiveScene() {
-  const groupRef = useRef<THREE.Group>(null);
-  const sphereRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<any>(null);
-  const innerRef = useRef<THREE.Mesh>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
-  const ringOuterRef = useRef<THREE.Mesh>(null);
-
-  // References to smoothly lerp mouse & scroll coordinates
-  const mouse = useRef({ x: 0, y: 0, targetX: 0, targetY: 0 });
-  const scroll = useRef({ y: 0, targetY: 0 });
-
-  useEffect(() => {
-    let hasOrientation = false;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (hasOrientation) return;
-      // Normalize clientX/clientY to ranges [-1, 1]
-      mouse.current.targetX = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.current.targetY = -(e.clientY / window.innerHeight) * 2 + 1;
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (hasOrientation) return;
-      if (e.touches.length > 0) {
-        const touch = e.touches[0];
-        mouse.current.targetX = (touch.clientX / window.innerWidth) * 2 - 1;
-        mouse.current.targetY = -(touch.clientY / window.innerHeight) * 2 + 1;
-      }
-    };
-
-    const handleScroll = () => {
-      scroll.current.targetY = window.scrollY;
-    };
-
-    const handleOrientation = (e: DeviceOrientationEvent) => {
-      const beta = e.beta; // [-180, 180] (tilt front/back)
-      const gamma = e.gamma; // [-90, 90] (tilt left/right)
-
-      if (beta !== null && gamma !== null) {
-        hasOrientation = true;
-        // Typical holding position tilt: 60 degrees. 
-        // We divide by 24 degrees to comfortably bound mouse range around [-1.2, 1.2]
-        const tiltX = Math.min(Math.max(gamma / 24, -1.2), 1.2);
-        const tiltY = Math.min(Math.max((beta - 60) / 24, -1.2), 1.2);
-
-        mouse.current.targetX = tiltX;
-        mouse.current.targetY = -tiltY;
-      }
-    };
-
-    // Register active listeners
-    window.addEventListener('deviceorientation', handleOrientation, true);
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: true });
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    // iOS WebKit orientation permission request
-    const requestiOSPermission = () => {
-      const DeviceOrientationEventAny = DeviceOrientationEvent as any;
-      if (
-        typeof DeviceOrientationEventAny !== 'undefined' &&
-        typeof DeviceOrientationEventAny.requestPermission === 'function'
-      ) {
-        DeviceOrientationEventAny.requestPermission()
-          .then((permissionState: string) => {
-            if (permissionState === 'granted') {
-              window.addEventListener('deviceorientation', handleOrientation, true);
-            }
-          })
-          .catch((err: any) => {
-            console.warn("DeviceOrientation requested but failed:", err);
-          });
-      }
-      document.removeEventListener('click', requestiOSPermission);
-      document.removeEventListener('touchstart', requestiOSPermission);
-    };
-
-    document.addEventListener('click', requestiOSPermission);
-    document.addEventListener('touchstart', requestiOSPermission);
-
-    return () => {
-      window.removeEventListener('deviceorientation', handleOrientation);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('scroll', handleScroll);
-      document.removeEventListener('click', requestiOSPermission);
-      document.removeEventListener('touchstart', requestiOSPermission);
-    };
-  }, []);
-
-  useFrame((state) => {
-    // Elegant organic inertia (lerping)
-    mouse.current.x += (mouse.current.targetX - mouse.current.x) * 0.08;
-    mouse.current.y += (mouse.current.targetY - mouse.current.y) * 0.08;
-    scroll.current.y += (scroll.current.targetY - scroll.current.y) * 0.08;
-
-    const time = state.clock.elapsedTime;
-
-    // 1. Group / Overall System Rotation & Depth Scroll Drift
-    if (groupRef.current) {
-      // Tilt entire system base with mouse coordinates
-      groupRef.current.rotation.y = mouse.current.x * 0.35 + time * 0.03;
-      groupRef.current.rotation.x = -mouse.current.y * 0.35;
-      
-      // Dynamic vertical drift & 3D roll linked directly to viewport scroll
-      groupRef.current.position.y = -scroll.current.y * 0.0035;
-      groupRef.current.rotation.z = scroll.current.y * 0.0012;
-    }
-
-    // 2. Bioluminescent Liquid Core Pulsation & Scroll Responsive Scaling
-    if (sphereRef.current) {
-      const distanceToCenter = Math.sqrt(mouse.current.x ** 2 + mouse.current.y ** 2);
-      // Breathing pulse + organic kinetic bump when cursor approaches
-      const pulseFactor = 1.0 + Math.sin(time * 1.6) * 0.06 + distanceToCenter * 0.07;
-      
-      // Scale down space gracefully as client scrolls deeper to merge into contents
-      const scrollScale = Math.max(0.4, 1.05 - scroll.current.y * 0.0006);
-      sphereRef.current.scale.setScalar(pulseFactor * scrollScale);
-    }
-
-    // 3. Dynamic distortion parameters on the custom material
-    if (materialRef.current) {
-      const movementSpeed = Math.abs(mouse.current.x) + Math.abs(mouse.current.y);
-      // Distortion deepens on mouse move/speed and scrolling depth
-      materialRef.current.distort = 0.35 + movementSpeed * 0.15 + (scroll.current.y * 0.0003);
-      materialRef.current.speed = 1.8 + movementSpeed * 2.8;
-    }
-
-    // 4. Inner energetic wireframe crystal counter-rotation
-    if (innerRef.current) {
-      innerRef.current.rotation.y = -time * 0.75;
-      innerRef.current.rotation.x = time * 0.45;
-      innerRef.current.rotation.z = -time * 0.25;
-    }
-
-    // 5. Dual Orbital cyber-rings animation
-    if (ringRef.current) {
-      ringRef.current.rotation.z = time * 0.12;
-      ringRef.current.rotation.x = Math.PI / 2.4 + mouse.current.y * 0.12;
-      ringRef.current.rotation.y = mouse.current.x * 0.12;
-    }
-
-    if (ringOuterRef.current) {
-      ringOuterRef.current.rotation.z = -time * 0.16;
-      ringOuterRef.current.rotation.x = Math.PI / 3.4 - mouse.current.y * 0.08;
-      ringOuterRef.current.rotation.y = -mouse.current.x * 0.08;
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {/* Prime Core: Distorted holographic organic liquid orb */}
-      <Sphere ref={sphereRef} args={[1.3, 64, 64]} position={[0, 0, 0]}>
-        <MeshDistortMaterial
-          ref={materialRef}
-          color="#818cf8"
-          emissive="#312e81"
-          emissiveIntensity={1.8}
-          distort={0.4}
-          speed={2.0}
-          roughness={0.1}
-          metalness={0.9}
-          transparent
-          opacity={0.88}
-        />
-      </Sphere>
-
-      {/* Internal crystal core engine */}
-      <mesh ref={innerRef} position={[0, 0, 0]}>
-        <octahedronGeometry args={[0.65, 0]} />
-        <meshStandardMaterial
-          color="#c084fc"
-          emissive="#7e22ce"
-          emissiveIntensity={2.5}
-          wireframe
-          transparent
-          opacity={0.8}
-        />
-      </mesh>
-
-      {/* Cybernetic Golden/Indigo Orbit Ring 1 */}
-      <mesh ref={ringRef} position={[0, 0, 0]}>
-        <torusGeometry args={[2.3, 0.015, 8, 100]} />
-        <meshStandardMaterial
-          color="#e0e7ff"
-          emissive="#6366f1"
-          emissiveIntensity={2.0}
-          transparent
-          opacity={0.5}
-        />
-      </mesh>
-
-      {/* Larger Cybernetic Outer Orbit Ring 2 */}
-      <mesh ref={ringOuterRef} position={[0, 0, 0]}>
-        <torusGeometry args={[2.7, 0.01, 8, 120]} />
-        <meshStandardMaterial
-          color="#d8b4fe"
-          emissive="#a855f7"
-          emissiveIntensity={1.5}
-          transparent
-          opacity={0.3}
-        />
-      </mesh>
-
-      {/* Floating Sparkles & Cosmic dust, tilting elegantly along with the group */}
-      <Stars 
-        radius={100} 
-        depth={60} 
-        count={2000} 
-        factor={5} 
-        saturation={0.5} 
-        fade 
-        speed={1.5} 
-      />
-    </group>
-  );
+interface Star {
+  left: number;
+  top: number;
+  size: number;
+  opacity: number;
+  duration: number;
+  delay: number;
 }
 
 export default function Hero3D() {
-  const [hasWebGL, setHasWebGL] = useState(true);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setHasWebGL(isWebGLAvailable());
+  // Generate ~80 deterministic drift stars with fixed seeds
+  const stars: Star[] = useMemo(() => {
+    const result: Star[] = [];
+    let seed = 123;
+    function random() {
+      const x = Math.sin(seed++) * 10000;
+      return x - Math.floor(x);
+    }
+    for (let i = 0; i < 80; i++) {
+      result.push({
+        left: random() * 100,
+        top: random() * 100,
+        size: random() * 1.5 + 1.0, // 1px to 2.5px
+        opacity: random() * 0.4 + 0.3, // 0.3 to 0.7
+        duration: random() * 3 + 2, // 2s to 5s
+        delay: random() * 5,
+      });
+    }
+    return result;
   }, []);
 
-  if (!hasWebGL) {
-    return <FallbackGrid />;
-  }
+  const blobs: BlobConfig[] = useMemo(() => [
+    {
+      background: 'radial-gradient(circle, rgba(99, 102, 241, 0.85) 0%, rgba(99, 102, 241, 0) 70%)',
+      width: 'min(50vw, 550px)',
+      height: 'min(50vw, 550px)',
+      left: '12%',
+      top: '15%',
+      animationName: 'float-circle-1',
+      duration: 14,
+      opacity: 0.22,
+    },
+    {
+      background: 'radial-gradient(circle, rgba(192, 132, 252, 0.85) 0%, rgba(126, 34, 206, 0) 70%)',
+      width: 'min(55vw, 600px)',
+      height: 'min(55vw, 600px)',
+      left: '48%',
+      top: '10%',
+      animationName: 'float-circle-2',
+      duration: 18,
+      opacity: 0.18,
+    },
+    {
+      background: 'radial-gradient(circle, rgba(126, 34, 206, 0.9) 0%, rgba(126, 34, 206, 0) 70%)',
+      width: 'min(48vw, 500px)',
+      height: 'min(48vw, 500px)',
+      left: '20%',
+      top: '48%',
+      animationName: 'float-circle-3',
+      duration: 20,
+      opacity: 0.24,
+    },
+    {
+      background: 'radial-gradient(circle, rgba(129, 140, 248, 0.85) 0%, rgba(192, 132, 252, 0) 70%)',
+      width: 'min(60vw, 650px)',
+      height: 'min(60vw, 650px)',
+      left: '52%',
+      top: '42%',
+      animationName: 'float-circle-4',
+      duration: 16,
+      opacity: 0.16,
+    },
+  ], []);
+
+  // Interactivity Hook to handle highly smoothed cursor transitions on blobs
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+
+      // Approximate coordinates of the blob centers relative to viewport bounds
+      const blobCenters = [
+        { x: rect.width * 0.12 + 250, y: rect.height * 0.15 + 250 },
+        { x: rect.width * 0.48 + 250, y: rect.height * 0.10 + 250 },
+        { x: rect.width * 0.20 + 250, y: rect.height * 0.48 + 250 },
+        { x: rect.width * 0.52 + 250, y: rect.height * 0.42 + 250 },
+      ];
+
+      let closestIdx = -1;
+      let minDistance = Infinity;
+
+      const calculated = blobCenters.map((center, idx) => {
+        const dx = mouseX - center.x;
+        const dy = mouseY - center.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestIdx = idx;
+        }
+        return { dx, dy, dist };
+      });
+
+      calculated.forEach((val, idx) => {
+        // Nearest blob displaces up to 30px, others between 10px and 20px
+        const maxMove = idx === closestIdx ? 30 : (10 + (idx * 3.3) % 11);
+        const dist = val.dist || 1;
+        const factor = Math.min(dist / 300, 1); // smooth scaling limit
+        
+        const moveX = (val.dx / dist) * maxMove * factor;
+        const moveY = (val.dy / dist) * maxMove * factor;
+
+        container.style.setProperty(`--blob-${idx}-x`, `${moveX}px`);
+        container.style.setProperty(`--blob-${idx}-y`, `${moveY}px`);
+      });
+    };
+
+    const handleMouseLeave = () => {
+      const container = containerRef.current;
+      if (!container) return;
+      for (let i = 0; i < 4; i++) {
+        container.style.setProperty(`--blob-${i}-x`, '0px');
+        container.style.setProperty(`--blob-${i}-y`, '0px');
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
 
   return (
-    <div className="absolute inset-0 z-0 pointer-events-none flex items-center justify-center overflow-hidden">
-      {/* Loading state visual transition */}
-      <div className={`absolute inset-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-0' : 'opacity-100'}`}>
-        <FallbackGrid />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin"></div>
-        </div>
+    <div 
+      ref={containerRef}
+      className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
+    >
+      {/* Dynamic CSS animations tag injected cleanly inside module scope */}
+      <style>{`
+        @keyframes float-circle-1 {
+          0% {
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+          }
+          25% {
+            transform: translate3d(60px, 40px, 0) rotate(90deg) scale(1.05);
+          }
+          50% {
+            transform: translate3d(100px, -60px, 0) rotate(180deg) scale(0.95);
+          }
+          75% {
+            transform: translate3d(-40px, -80px, 0) rotate(270deg) scale(1.02);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) rotate(360deg) scale(1);
+          }
+        }
+
+        @keyframes float-circle-2 {
+          0% {
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1.02);
+          }
+          33% {
+            transform: translate3d(-80px, 90px, 0) rotate(120deg) scale(0.95);
+          }
+          66% {
+            transform: translate3d(70px, -50px, 0) rotate(240deg) scale(1.05);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) rotate(360deg) scale(1.02);
+          }
+        }
+
+        @keyframes float-circle-3 {
+          0% {
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(0.98);
+          }
+          25% {
+            transform: translate3d(-50px, -90px, 0) rotate(90deg) scale(1.02);
+          }
+          50% {
+            transform: translate3d(80px, 30px, 0) rotate(180deg) scale(0.95);
+          }
+          75% {
+            transform: translate3d(-20px, 70px, 0) rotate(270deg) scale(1.04);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) rotate(360deg) scale(0.98);
+          }
+        }
+
+        @keyframes float-circle-4 {
+          0% {
+            transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+          }
+          33% {
+            transform: translate3d(90px, -70px, 0) rotate(-120deg) scale(1.06);
+          }
+          66% {
+            transform: translate3d(-60px, 100px, 0) rotate(-240deg) scale(0.94);
+          }
+          100% {
+            transform: translate3d(0, 0, 0) rotate(-360deg) scale(1);
+          }
+        }
+
+        @keyframes twinkle {
+          0%, 100% {
+            opacity: var(--star-opacity, 0.5);
+          }
+          50% {
+            opacity: 0.05;
+          }
+        }
+
+        @keyframes drift {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(15px, -10px, 0);
+          }
+        }
+
+        .starfield-drift {
+          animation: drift 20s ease-in-out infinite alternate;
+        }
+
+        .gradient-mesh-blob {
+          position: absolute;
+          border-radius: 50%;
+          mix-blend-mode: screen;
+          will-change: transform;
+          filter: blur(80px);
+        }
+      `}</style>
+
+      {/* 2. Interactive Starfield Container with Drift & Twinkle effects */}
+      <div className="absolute inset-0 w-full h-full starfield-drift pointer-events-none">
+        {stars.map((star, idx) => (
+          <div
+            key={idx}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: `${star.left}%`,
+              top: `${star.top}%`,
+              width: `${star.size}px`,
+              height: `${star.size}px`,
+              animation: `twinkle ${star.duration}s ease-in-out infinite`,
+              animationDelay: `${star.delay}s`,
+              '--star-opacity': star.opacity,
+            } as React.CSSProperties}
+          />
+        ))}
       </div>
 
-      <ErrorBoundary fallback={<FallbackGrid />}>
-        <div className={`absolute inset-0 transition-opacity duration-1000 ${isLoaded ? 'opacity-70' : 'opacity-0'}`}>
-          <Canvas 
-            camera={{ position: [0, 0, 5], fov: 45 }}
-            onCreated={() => setIsLoaded(true)}
+      {/* 3. Layered Gradient Mesh Blobs Container */}
+      <div className="absolute inset-0 w-full h-full opacity-90">
+        {blobs.map((blob, idx) => (
+          <div
+            key={idx}
+            style={{
+              position: 'absolute',
+              left: blob.left,
+              top: blob.top,
+              width: blob.width,
+              height: blob.height,
+              transform: `translate3d(var(--blob-${idx}-x, 0px), var(--blob-${idx}-y, 0px), 0)`,
+              transition: 'transform 0.8s ease-out',
+            }}
           >
-            {/* Cinematic Multitonal Lighting */}
-            <ambientLight intensity={0.4} />
-            <pointLight position={[5, 10, 5]} intensity={2.5} color="#c084fc" />
-            <pointLight position={[-6, -6, 3]} intensity={1.8} color="#6366f1" />
-            <directionalLight position={[0, 10, 0]} intensity={1.0} color="#ffffff" />
-            <InteractiveScene />
-          </Canvas>
-        </div>
-      </ErrorBoundary>
+            <div
+              className="gradient-mesh-blob w-full h-full"
+              style={{
+                background: blob.background,
+                opacity: blob.opacity,
+                animationName: blob.animationName,
+                animationDuration: `${blob.duration}s`,
+                animationTimingFunction: 'ease-in-out',
+                animationIterationCount: 'infinite',
+              }}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

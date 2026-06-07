@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Target, Lightbulb, TrendingUp, Users, ArrowRight, Globe } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -7,6 +8,7 @@ import ContactSection from '../components/ContactSection';
 import { T } from '../context/LanguageContext';
 
 export default function About() {
+  const navigate = useNavigate();
   const values = [
     {
       title: <T en="Precision">Precisión</T>,
@@ -180,10 +182,10 @@ export default function About() {
         <section className="text-center space-y-10 pt-20">
            <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto"><T en="Ready to build the future of your brand?">¿Listo para construir el futuro de tu marca?</T></h2>
            <button 
-             onClick={scrollToContact}
-             className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 flex items-center gap-2 mx-auto"
+             onClick={() => navigate('/cotizar')}
+             className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 flex items-center gap-2 mx-auto cursor-pointer"
            >
-             <T en="Get a Quote">Cotizar Proyecto</T> <ArrowRight size={24} />
+             <T en="Quote your project">Cotizar Proyecto</T> <ArrowRight size={24} />
            </button>
         </section>
 

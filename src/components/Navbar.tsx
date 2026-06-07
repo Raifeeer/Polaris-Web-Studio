@@ -13,6 +13,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
+  const { language, setLanguage } = useLanguage();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -160,6 +161,47 @@ export default function Navbar() {
             <div className="flex items-center justify-between mt-4">
               <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]"><T en="Theme">Tema</T></span>
               <ThemeToggle />
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]"><T en="Language">Idioma</T></span>
+              <div className="flex items-center gap-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full p-1 relative">
+                <button
+                  type="button"
+                  onClick={() => setLanguage('es')}
+                  className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                    language === 'es'
+                      ? 'text-[var(--color-on-primary)]'
+                      : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                  }`}
+                >
+                  {language === 'es' && (
+                    <motion.span
+                      layoutId="activeLang"
+                      className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  ES
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                    language === 'en'
+                      ? 'text-[var(--color-on-primary)]'
+                      : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'
+                  }`}
+                >
+                  {language === 'en' && (
+                    <motion.span
+                      layoutId="activeLang"
+                      className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                  EN
+                </button>
+              </div>
             </div>
             <button 
               onClick={() => { setIsOpen(false); navigate('/cotizar'); }}

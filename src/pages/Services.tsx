@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Globe, Rocket, ShoppingCart, ShieldCheck, Zap, ArrowRight, CheckCircle2, MessageSquare, Sparkles, BrainCircuit } from 'lucide-react';
+import { Globe, Rocket, ShoppingCart, ShieldCheck, Zap, ArrowRight, CheckCircle2, MessageSquare, Sparkles, BrainCircuit, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -62,7 +62,7 @@ export default function Services() {
       originalPrice: 699,
       features: [
         <T en="Up to 5 custom independent pages">Hasta 5 páginas internas personalizadas</T>,
-        <T en="Advanced Google Search Optimization">Estructura avanzada para Buscadores (Google)</T>,
+        <T en="Advanced Search Engine Optimization">Estructura avanzada para Buscadores</T>,
         <T en="Self-manageable blog (includes 3 initial posts)">Sistema de Blog autogestionable (incluye carga de 3 artículos)</T>,
         <T en="Basic chatbot (setup of up to 5 FAQs)">Chatbot básico (configuración de hasta 5 preguntas frecuentes)</T>,
         <T en="SSL Certificate included">Certificado SSL incluido</T>,
@@ -83,12 +83,13 @@ export default function Services() {
         <T en="System for unlimited products (Includes assisted setup of your first 20 items)">Sistema para productos ilimitados (Incluye carga asistida de tus primeros 20 artículos)</T>,
         <T en="Configured payment gateways">Pasarelas de pago configuradas</T>,
         <T en="Inventory management">Gestión de inventario</T>,
-        <T en="Advanced Google Search Optimization">Estructura avanzada para Buscadores (Google)</T>,
+        <T en="Advanced Search Engine Optimization">Estructura avanzada para Buscadores</T>,
         <T en="Lead Capture Bot">Bot de Respuestas Rápidas</T>,
-        <T en="Setup of 1 AI Add-on (Monthly API/Subscription costs not included)">Instalación de 1 Add-on IA (Costos de suscripción/API mensual no incluidos)</T>,
+        <T en="Setup of 1 AI Add-on*">Instalación de 1 Add-on IA*</T>,
         <T en="Admin panel">Panel de administración</T>,
         <T en="90 days priority warranty and post-launch support">90 días de Garantía y Soporte Prioritario Post-Lanzamiento</T>
       ],
+      footnote: <T en="*Monthly API/Subscription costs not included">*Costos de suscripción/API mensual no incluidos</T>,
       highlight: false
     }
   ];
@@ -109,6 +110,7 @@ export default function Services() {
 
         {/* Services Bento */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-32">
+          {/* Landing Pages Card */}
           <div id="landing" className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all">
             <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
               <Rocket size={28} />
@@ -119,14 +121,34 @@ export default function Services() {
                 <T en="Landing pages designed to convert, with a high-impact interface and minimal loading times.">Páginas de aterrizaje diseñadas para convertir, con una interfaz de alto impacto y tiempos de carga mínimos.</T>
               </p>
               <button 
-                onClick={() => navigate('/servicios#landing')}
-                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest"
+                onClick={() => navigate('/servicios')}
+                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
               >
                 <T en="Learn More">Saber más</T> <ArrowRight size={14} />
               </button>
             </div>
           </div>
 
+          {/* Web Corporativa Card */}
+          <div id="corporate" className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
+              <Briefcase size={28} />
+            </div>
+            <div>
+              <h2 className="text-3xl font-display font-bold mb-4 tracking-tight"><T en="Corporate Websites">Webs Corporativas</T></h2>
+              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
+                <T en="Elegant and solid digital identity to position your brand as a market leader with structured multi-page content.">Identidad digital sólida y elegante para posicionar tu marca como referente de mercado mediante múltiples secciones.</T>
+              </p>
+              <button 
+                onClick={() => navigate('/servicios')}
+                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
+              >
+                <T en="Learn More">Saber más</T> <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* E-commerce Card */}
           <div id="ecommerce" className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all">
             <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
               <ShoppingCart size={28} />
@@ -137,28 +159,24 @@ export default function Services() {
                 <T en="Scalable virtual stores built on modern technologies to guarantee a seamless shopping experience.">Tiendas virtuales escalables construidas sobre tecnologías modernas para garantizar una experiencia de compra fluida.</T>
               </p>
               <button 
-                onClick={() => navigate('/servicios#ecommerce')}
-                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest"
+                onClick={() => navigate('/servicios')}
+                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
               >
                 <T en="Learn More">Saber más</T> <ArrowRight size={14} />
               </button>
             </div>
           </div>
 
+          {/* Maintenance Card */}
           <div className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col gap-4 text-center items-center justify-center group bento-glow-hover transition-all">
              <ShieldCheck className="text-[var(--color-primary-base)]" size={40} />
-             <h3 className="font-display font-bold"><T en="Maintenance">Mantenimiento</T></h3>
+             <h3 className="font-display font-bold text-base"><T en="Maintenance">Mantenimiento</T></h3>
           </div>
 
-          <div className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-primary-muted)]/10 flex flex-col justify-center gap-2 items-center group bento-glow transition-all">
-             <Zap className="text-[var(--color-primary-base)]" size={32} />
-             <h3 className="text-2xl font-display font-bold"><T en="SEO Optimization">Optimización SEO</T></h3>
-             <p className="text-[var(--color-text-tertiary)] text-xs font-bold uppercase tracking-widest"><T en="Speed and Ranking">Velocidad y Posicionamiento</T></p>
-          </div>
-
+          {/* SEO Card */}
           <div className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col gap-4 text-center items-center justify-center group bento-glow-hover transition-all">
-             <Globe className="text-[var(--color-primary-base)]" size={40} />
-             <h3 className="font-display font-bold"><T en="Mobile Apps">Apps Móviles</T></h3>
+             <Zap className="text-[var(--color-primary-base)]" size={40} />
+             <h3 className="font-display font-bold text-base"><T en="SEO Optimization">Optimización SEO</T></h3>
           </div>
         </div>
 
@@ -186,7 +204,7 @@ export default function Services() {
                 <motion.div 
                   key={i}
                   whileHover={{ y: -10 }}
-                  className={`p-8 rounded-[var(--radius-bento)] border transition-all flex flex-col justify-between min-h-[500px] relative ${
+                  className={`p-8 rounded-[var(--radius-bento)] border transition-[border-color,background-color,box-shadow] duration-300 flex flex-col justify-between min-h-[500px] relative ${
                     plan.highlight 
                       ? 'bg-[var(--color-surface-elevated)] border-[var(--color-primary-base)]' 
                       : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]'
@@ -229,7 +247,7 @@ export default function Services() {
                           </div>
                         </div>
                       </div>
-                      <ul className="space-y-4 mb-8">
+                      <ul className="space-y-4 mb-6">
                       {plan.features.map((feature, j) => (
                         <li key={j} className="flex items-start gap-3 text-sm font-medium">
                           <CheckCircle2 size={16} className="text-[var(--color-primary-base)] shrink-0 mt-0.5" />
@@ -237,10 +255,18 @@ export default function Services() {
                         </li>
                       ))}
                     </ul>
+                    {plan.footnote && (
+                      <p className="text-[10px] text-[var(--color-text-tertiary)] italic mb-6 leading-normal block">
+                        {plan.footnote}
+                      </p>
+                    )}
                     </div>
                   </div>
                   <button 
-                    onClick={() => navigate(`/cotizar${plan.id === 'nova' ? '?plan=nova' : ''}`)}
+                    onClick={() => {
+                      const typeMap: Record<string, string> = { flash: 'landing', constellation: 'corporate', nova: 'ecommerce' };
+                      navigate(`/cotizar?type=${typeMap[plan.id] || 'landing'}`);
+                    }}
                     className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
                     plan.highlight 
                       ? 'bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20' 

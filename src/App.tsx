@@ -16,7 +16,6 @@ import LegalPage from './pages/LegalPage';
 import WizardQuote from './pages/WizardQuote';
 import Login from './pages/Login';
 import ClientDashboard from './pages/ClientDashboard';
-import WhatsAppButton from './components/WhatsAppButton';
 import QuoteBot from './components/QuoteBot';
 import { useTheme } from './hooks/useTheme';
 
@@ -71,7 +70,6 @@ export default function App() {
             <Route path="/terminos" element={<LegalPage title={<T en="Terms and Conditions">Términos y Condiciones</T>} />} />
             <Route path="/cookies" element={<LegalPage title={<T en="Cookie Policy">Política de Cookies</T>} />} />
           </Routes>
-          <WhatsAppButton />
           <QuoteBot />
         </div>
       </Router>

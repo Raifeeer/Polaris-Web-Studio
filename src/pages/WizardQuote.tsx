@@ -8,6 +8,54 @@ import { T, useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../hooks/useTheme';
 import Cal, { getCalApi } from "@calcom/embed-react";
 
+function AnimatedNumber({ value }: { value: number }) {
+  const [displayValue, setDisplayValue] = useState(value);
+  const [pulse, setPulse] = useState(false);
+
+  useEffect(() => {
+    let startTimestamp: number | null = null;
+    const startValue = displayValue;
+    const endValue = value;
+    const duration = 400; // ms
+
+    let animationFrameId: number;
+
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Easing: easeOutCubic
+      const easedProgress = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(startValue + easedProgress * (endValue - startValue));
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        animationFrameId = window.requestAnimationFrame(step);
+      }
+    };
+
+    animationFrameId = window.requestAnimationFrame(step);
+    setPulse(prev => !prev);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+    };
+  }, [value]);
+
+  return (
+    <motion.span
+      animate={{
+        scale: [1, 1.08, 1],
+        y: [0, -2, 0]
+      }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      key={pulse ? "a" : "b"}
+      className="inline-block"
+    >
+      {displayValue}
+    </motion.span>
+  );
+}
+
 const steps = [
   { id: 'type', title: <T en="Project Type">Tipo de Proyecto</T> },
   { id: 'size', title: <T en="Size & Scope">Tamaño y Alcance</T> },
@@ -132,34 +180,84 @@ export default function WizardQuote() {
   const { language } = useLanguage();
   const calTheme = theme === 'dark' ? 'dark' : 'light';
   const location = useLocation();
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(() => {
+    const saved = localStorage.getItem('wizardQuote_currentStep');
+    return saved !== null ? parseInt(saved, 10) : 0;
+  });
   
-  const [selections, setSelections] = useState({
-    type: '',
-    size: '',
-    addons: [] as string[],
-    date: null as Date | null,
-    time: '',
-    name: '',
-    email: '',
+  const [selections, setSelections] = useState(() => {
+    const saved = localStorage.getItem('wizardQuote_selections');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse wizard selections from local storage', e);
+      }
+    }
+    return {
+      type: '',
+      size: '',
+      addons: [] as string[],
+      date: null as Date | null,
+      time: '',
+      name: '',
+      email: '',
+    };
   });
 
   useEffect(() => {
+    localStorage.setItem('wizardQuote_currentStep', currentStep.toString());
+  }, [currentStep]);
+
+  useEffect(() => {
+    localStorage.setItem('wizardQuote_selections', JSON.stringify(selections));
+  }, [selections]);
+
+  useEffect(() => {
     const params = new URLSearchParams(location.search);
+    const typeParam = params.get('type');
+    const scopeParam = params.get('scope');
+    const planParam = params.get('plan');
     const addonParam = params.get('addon');
-    const isNova = params.get('plan') === 'nova';
-    if (addonParam || isNova) {
+    const addonsParam = params.get('addons');
+    const stepParam = params.get('step');
+
+    if (stepParam === 'schedule' || stepParam === '3') {
+      setCurrentStep(3);
+      return;
+    }
+
+    const targetType = typeParam || scopeParam || (planParam === 'nova' ? 'ecommerce' : null);
+
+    if (targetType || addonParam || addonsParam) {
       setSelections(s => {
-        let newAddons = s.addons;
-        if (addonParam && !s.addons.includes(addonParam)) {
-          newAddons = [...s.addons, addonParam];
+        let newType = s.type;
+        if (targetType && ['landing', 'corporate', 'ecommerce'].includes(targetType)) {
+          newType = targetType;
         }
+
+        let newAddons = [...s.addons];
+        if (addonParam && !newAddons.includes(addonParam)) {
+          newAddons.push(addonParam);
+        }
+        if (addonsParam) {
+          const splitAddons = addonsParam.split(',');
+          splitAddons.forEach(a => {
+            const cleanA = a.trim();
+            if (cleanA && !newAddons.includes(cleanA)) {
+              newAddons.push(cleanA);
+            }
+          });
+        }
+
         return {
           ...s,
-          addons: newAddons,
-          type: isNova && !s.type ? 'ecommerce' : s.type
+          type: newType,
+          size: '', // Reset size so they pick complexity for that new type
+          addons: newAddons
         };
       });
+      setCurrentStep(0);
     }
   }, [location.search]);
 
@@ -293,6 +391,7 @@ export default function WizardQuote() {
   const t = (enText: string, esText: string) => language === 'en' ? enText : esText;
 
   const getTypeName = (id: string) => {
+    if (!id) return t('Direct Consultation', 'Consultoría Directa');
     switch (id) {
       case 'landing': return 'Landing Page';
       case 'corporate': return t('Corporate Web', 'Web Corporativa');
@@ -302,6 +401,7 @@ export default function WizardQuote() {
   };
 
   const getSizeName = (id: string) => {
+    if (!id) return t('Custom Scope', 'Alcance General');
     for (const scopeArray of Object.values(projectScopes)) {
       const found = scopeArray.find(s => s.id === id);
       if (found) return t(found.name, found.name); // You can expand translations here
@@ -329,7 +429,7 @@ export default function WizardQuote() {
     `${t("Project Type", "Tipo de Proyecto")}: ${getTypeName(selections.type)}`,
     `${t("Size/Scope", "Tamaño/Alcance")}: ${getSizeName(selections.size)}`,
     `${t("Add-ons", "Servicios Extra")}: ${selections.addons.length ? selections.addons.map(getAddonName).join(', ') : t('None', 'Ninguno')}`,
-    `${t("Total Estimated Price", "Precio Total Estimado")}: $${isOfferActive ? discountedTotal + ' (Launch Offer -25%)' : estimatedTotal}${monthlyAddonsPrice > 0 ? t(' + $' + monthlyAddonsPrice + '/mo', ' + $' + monthlyAddonsPrice + '/mes') : ''}`,
+    `${t("Total Estimated Price", "Precio Total Estimado")}: ${estimatedTotal > 0 ? `$${isOfferActive ? discountedTotal : estimatedTotal}` : t('To be custom defined in the session', 'A definir a medida en la llamada')}${monthlyAddonsPrice > 0 ? t(' + $' + monthlyAddonsPrice + '/mo', ' + $' + monthlyAddonsPrice + '/mes') : ''}`,
     ``,
     t("Please share anything else that will help prepare for our meeting:", "Por favor comparte cualquier otra cosa que ayude a prepararnos para la reunión:")
   ].join('\n');
@@ -337,13 +437,17 @@ export default function WizardQuote() {
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(c => c + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       submitQuote();
     }
   };
 
   const handleBack = () => {
-    if (currentStep > 0) setCurrentStep(c => c - 1);
+    if (currentStep > 0) {
+      setCurrentStep(c => c - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const submitQuote = () => {
@@ -442,9 +546,9 @@ export default function WizardQuote() {
                             className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.type === t.id ? 'bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]' : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50'}`}
                           >
                             <div className="flex-1">
-                               <div className="flex items-center gap-3 mb-1">
-                                 <h3 className={`font-bold font-display text-xl ${selections.type === t.id ? 'text-[var(--color-primary-base)]' : ''}`}>{t.title}</h3>
-                                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]"><T en="from">desde</T> ${t.price}</span>
+                               <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
+                                 <h3 className={`font-bold font-display text-lg sm:text-xl leading-tight ${selections.type === t.id ? 'text-[var(--color-primary-base)]' : ''}`}>{t.title}</h3>
+                                 <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap"><T en="from">desde</T> ${t.price}</span>
                                </div>
                                <p className="text-[var(--color-text-secondary)] text-sm">{t.desc}</p>
                             </div>
@@ -473,9 +577,9 @@ export default function WizardQuote() {
                             className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.size === s.id ? 'bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]' : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50'}`}
                           >
                             <div className="flex-1">
-                               <div className="flex items-center gap-3 mb-1">
-                                 <h3 className={`font-bold font-display text-xl ${selections.size === s.id ? 'text-[var(--color-primary-base)]' : ''}`}>{s.title}</h3>
-                                 <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]">
+                               <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
+                                 <h3 className={`font-bold font-display text-lg sm:text-xl leading-tight ${selections.size === s.id ? 'text-[var(--color-primary-base)]' : ''}`}>{s.title}</h3>
+                                 <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
                                    {s.priceAdd > 0 ? `+$${s.priceAdd}` : <T en="Included">Incluido</T>}
                                  </span>
                                </div>
@@ -499,9 +603,9 @@ export default function WizardQuote() {
                           <button
                             key={a.id}
                             onClick={() => toggleAddon(a.id)}
-                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex flex-col justify-between group h-32 ${selections.addons.includes(a.id) ? 'bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]' : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50'}`}
+                            className={`p-5 md:p-6 rounded-[var(--radius-bento)] border transition-all text-left flex flex-col justify-between group h-full ${selections.addons.includes(a.id) ? 'bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]' : 'bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50'}`}
                           >
-                             <div className="flex justify-between w-full">
+                             <div className="flex justify-between w-full gap-2 mb-4">
                                <div>
                                  <h3 className={`font-bold font-display ${selections.addons.includes(a.id) ? 'text-[var(--color-primary-base)]' : ''}`}>
                                    {a.title}
@@ -513,7 +617,16 @@ export default function WizardQuote() {
                                   <Check size={12} />
                                </div>
                              </div>
-                             <span className="text-sm font-black text-[var(--color-text-tertiary)]">+${a.price}{a.suffix ? a.suffix : (a.isMonthly ? <T en="/mo">/mes</T> : '')}</span>
+                             <span className="text-sm font-black text-[var(--color-text-tertiary)]">
+                               {a.id === discountedAiAddonId ? (
+                                 <span className="flex items-center gap-1">
+                                   <span className="line-through opacity-50 mr-1">$<AnimatedNumber value={a.price} /></span>
+                                   <span className="text-emerald-500 font-bold">$0 <T en="(Nova Perk)">(Incluido en Nova)</T></span>
+                                 </span>
+                               ) : (
+                                 <span>+$<AnimatedNumber value={a.price} />{a.suffix ? a.suffix : (a.isMonthly ? <T en="/mo">/mes</T> : '')}</span>
+                               )}
+                             </span>
                           </button>
                         ))}
                       </div>
@@ -589,12 +702,12 @@ export default function WizardQuote() {
              <div className="space-y-4">
                 <div className="flex justify-between items-start pb-4 border-b border-[var(--color-border-subtle)] text-sm">
                    <span className="text-[var(--color-text-secondary)] pr-4">Base</span>
-                   <span className="font-bold whitespace-nowrap flex-shrink-0">${basePrice}</span>
+                   <span className="font-bold whitespace-nowrap flex-shrink-0">$<AnimatedNumber value={basePrice} /></span>
                 </div>
                 {selections.size && (
                   <div className="flex justify-between items-start pb-4 border-b border-[var(--color-border-subtle)] text-sm">
                      <span className="text-[var(--color-text-secondary)] pr-4"><T en="Project Scope">Tamaño del proyecto</T> ({selectedScope?.title})</span>
-                     <span className="font-bold whitespace-nowrap flex-shrink-0">+{scopeExtraPrice === 0 ? '0' : `$${scopeExtraPrice}`}</span>
+                     <span className="font-bold whitespace-nowrap flex-shrink-0">+{scopeExtraPrice === 0 ? '0' : <span>$<AnimatedNumber value={scopeExtraPrice} /></span>}</span>
                   </div>
                 )}
                 {selections.addons.length > 0 && (
@@ -608,14 +721,14 @@ export default function WizardQuote() {
                            <span className="text-[var(--color-text-secondary)] pr-4">{getAddonName(addonId)}</span>
                            <div className="text-right">
                              {addon.isMonthly ? (
-                               <div className="font-bold whitespace-nowrap text-[var(--color-text-tertiary)]">+${addon.price}/mes</div>
+                               <div className="font-bold whitespace-nowrap text-[var(--color-text-tertiary)]">+$<AnimatedNumber value={addon.price} />/mes</div>
                              ) : isFree ? (
                                <div className="whitespace-nowrap">
-                                 <span className="line-through opacity-50 mr-2">${addon.price}</span>
+                                 <span className="line-through opacity-50 mr-2">$<AnimatedNumber value={addon.price} /></span>
                                  <span className="text-emerald-500 font-bold">$0 <T en="(Nova Perk)">(Incluido en Nova)</T></span>
                                </div>
                              ) : (
-                               <div className="font-bold whitespace-nowrap">+${addon.price}</div>
+                               <div className="font-bold whitespace-nowrap">+$<AnimatedNumber value={addon.price} /></div>
                              )}
                            </div>
                         </div>
@@ -629,13 +742,13 @@ export default function WizardQuote() {
                 <span className="block text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest mb-1"><T en="Total Estimate">Estimado Total</T></span>
                 {isOfferActive && estimatedTotal > 0 && (
                   <div className="flex items-baseline gap-2 opacity-60 mb-1">
-                    <span className="text-xl font-display font-medium line-through">${estimatedTotal}</span>
+                    <span className="text-xl font-display font-medium line-through">$<AnimatedNumber value={estimatedTotal} /></span>
                     <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase">-25%</span>
                   </div>
                 )}
                 <div className="flex items-baseline flex-wrap">
-                  <span className="text-4xl font-display font-black text-[var(--color-primary-base)]">${isOfferActive && estimatedTotal > 0 ? discountedTotal : estimatedTotal}</span>
-                  {monthlyAddonsPrice > 0 && <span className="text-lg font-bold text-[var(--color-text-tertiary)] ml-2">+${monthlyAddonsPrice}/mes</span>}
+                  <span className="text-4xl font-display font-black text-[var(--color-primary-base)]">$<AnimatedNumber value={isOfferActive && estimatedTotal > 0 ? discountedTotal : estimatedTotal} /></span>
+                  {monthlyAddonsPrice > 0 && <span className="text-lg font-bold text-[var(--color-text-tertiary)] ml-2">+$<AnimatedNumber value={monthlyAddonsPrice} />/mes</span>}
                 </div>
                 <p className="text-[10px] text-[var(--color-text-tertiary)] mt-2">
                   <T en="* Final prices may vary based on exact requirements.">* Los precios finales pueden variar según requisitos exactos.</T>
