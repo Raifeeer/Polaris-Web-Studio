@@ -421,26 +421,29 @@ export default function LandingPage() {
               </p>
               <div className="pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
-                  <button
-                    onClick={() => navigate("/cotizar")}
-                    className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 shrink-0"
-                    style={{ animation: "ctaPulse 2.5s ease-in-out infinite" }}
-                  >
-                    {/* Shimmer effect */}
-                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
+                  <div className="relative group shrink-0">
+                    {/* High-Performance, GPU-Composited glowing pulse ring */}
+                    <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/50 pointer-events-none animate-cta-glow-pulse" style={{ filter: "blur(6px)" }} />
+                    <button
+                      onClick={() => navigate("/cotizar")}
+                      className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 w-full justify-center"
+                    >
+                      {/* Shimmer effect */}
+                      <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
 
-                    <Rocket
-                      size={20}
-                      className="group-hover:rotate-12 group-hover:-translate-y-1 transition-transform duration-300"
-                    />
+                      <Rocket
+                        size={20}
+                        className="group-hover:rotate-12 group-hover:-translate-y-1 transition-transform duration-300"
+                      />
 
-                    <T en="Plan your Project">Planifica tu Proyecto</T>
+                      <T en="Plan your Project">Planifica tu Proyecto</T>
 
-                    <ArrowRight
-                      size={20}
-                      className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
-                    />
-                  </button>
+                      <ArrowRight
+                        size={20}
+                        className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
+                      />
+                    </button>
+                  </div>
                   <div className="flex flex-col text-left space-y-0.5">
                     <span className="text-xs font-black text-[var(--color-primary-base)] tracking-wider uppercase font-mono">
                       <T en="From $299 USD">Proyectos desde $299 USD</T>
@@ -473,7 +476,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <Layers size={24} />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/15 shrink-0">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-300 bg-indigo-100/60 dark:bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/20 shrink-0">
                     <T en="CONVERSION">CONVERSIÓN</T>
                   </span>
                 </div>
@@ -494,16 +497,16 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-indigo-400 shrink-0"
+                    className="text-indigo-600 dark:text-indigo-400 shrink-0"
                   />
                   <span>
                     <T en="Lead capture funnel">Captura rápida de leads</T>
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
+                <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)] font-medium">
                   <CheckCircle2
                     size={13}
-                    className="text-indigo-400 shrink-0"
+                    className="text-indigo-600 dark:text-indigo-400 shrink-0"
                   />
                   <span>
                     <T en="100% responsive layout">Diseño móvil optimizado</T>
@@ -512,7 +515,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-indigo-400 shrink-0"
+                    className="text-indigo-600 dark:text-indigo-400 shrink-0"
                   />
                   <span>
                     <T en="WhatsApp integrated button">
@@ -540,7 +543,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <ShoppingCart size={24} />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/15 shrink-0">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                     <T en="SELL 24/7">VENTAS 24/7</T>
                   </span>
                 </div>
@@ -562,7 +565,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-emerald-400 shrink-0"
+                    className="text-emerald-600 dark:text-emerald-400 shrink-0"
                   />
                   <span>
                     <T en="Stripe & payment systems">Pasarela segura de pago</T>
@@ -571,7 +574,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-emerald-400 shrink-0"
+                    className="text-emerald-600 dark:text-emerald-400 shrink-0"
                   />
                   <span>
                     <T en="Intuitive product manager">
@@ -582,7 +585,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-emerald-400 shrink-0"
+                    className="text-emerald-600 dark:text-emerald-400 shrink-0"
                   />
                   <span>
                     <T en="Frictionless checkouts">
@@ -610,7 +613,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <Briefcase size={24} />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-violet-400 bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-500/15 shrink-0">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-violet-600 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
                     <T en="AUTHORITY">AUTORIDAD</T>
                   </span>
                 </div>
@@ -631,7 +634,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-violet-400 shrink-0"
+                    className="text-violet-600 dark:text-violet-400 shrink-0"
                   />
                   <span>
                     <T en="Premium custom layout">Diseño estético premium</T>
@@ -640,7 +643,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-violet-400 shrink-0"
+                    className="text-violet-600 dark:text-violet-400 shrink-0"
                   />
                   <span>
                     <T en="Self-manageable section & blog">
@@ -651,7 +654,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
                   <CheckCircle2
                     size={13}
-                    className="text-violet-400 shrink-0"
+                    className="text-violet-600 dark:text-violet-400 shrink-0"
                   />
                   <span>
                     <T en="Enterprise light-speed loading">
@@ -907,7 +910,7 @@ export default function LandingPage() {
                     <div className="relative w-12 h-12 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:border-[var(--color-primary-base)] group-hover:scale-110 transition-all duration-300">
                       <ShoppingCart size={24} />
                     </div>
-                    <span className="text-[9px] uppercase tracking-widest font-extrabold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 shrink-0">
+                    <span className="text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                       <T en="E-COMMERCE">VENTA ONLINE</T>
                     </span>
                   </div>
@@ -918,7 +921,7 @@ export default function LandingPage() {
                     </h3>
 
                     {/* Custom Styled Quote container */}
-                    <div className="mt-2.5 mb-4 border-l-2 border-emerald-400/80 bg-emerald-500/5 px-3 py-2 rounded-r-lg">
+                    <div className="mt-2.5 mb-4 border-l-2 border-emerald-600 dark:border-emerald-400/80 bg-emerald-500/5 px-3 py-2 rounded-r-lg">
                       <p className="text-[11px] font-bold text-[var(--color-text-primary)] uppercase tracking-wide leading-tight">
                         <T en={'"You want to sell online"'}>
                           "Quieres vender en línea"
@@ -938,10 +941,10 @@ export default function LandingPage() {
 
                 {/* Checklist with Deliverables */}
                 <div className="border-t border-[var(--color-border-subtle)]/40 pt-4 mt-5 space-y-2 text-left">
-                  <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)]">
+                  <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)] font-medium">
                     <CheckCircle2
                       size={13}
-                      className="text-emerald-400 shrink-0"
+                      className="text-emerald-600 dark:text-emerald-400 shrink-0"
                     />
                     <span>
                       <T en="Agile cart & frictionless checkout">
@@ -952,7 +955,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)]">
                     <CheckCircle2
                       size={13}
-                      className="text-emerald-400 shrink-0"
+                      className="text-emerald-600 dark:text-emerald-400 shrink-0"
                     />
                     <span>
                       <T en="Stripe or custom payment gateways">
@@ -963,7 +966,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)]">
                     <CheckCircle2
                       size={13}
-                      className="text-emerald-400 shrink-0"
+                      className="text-emerald-600 dark:text-emerald-400 shrink-0"
                     />
                     <span>
                       <T en="Self-manageable admin products center">
@@ -1022,7 +1025,7 @@ export default function LandingPage() {
                       1
                     </div>
                   </div>
-                  <span className="text-[9px] uppercase tracking-widest font-extrabold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 shrink-0">
+                  <span className="text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                     <T en="2 MINUTES">2 MINUTOS</T>
                   </span>
                 </div>
@@ -1165,7 +1168,7 @@ export default function LandingPage() {
                       3
                     </div>
                   </div>
-                  <span className="text-[9px] uppercase tracking-widest font-extrabold text-violet-400 bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-500/20 shrink-0">
+                  <span className="text-[9px] uppercase tracking-widest font-extrabold text-violet-600 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
                     <T en="SEO & ULTRA SPEED">ALTO IMPACTO</T>
                   </span>
                 </div>
@@ -1188,7 +1191,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)]">
                     <CheckCircle2
                       size={13}
-                      className="text-violet-400 shrink-0"
+                      className="text-violet-600 dark:text-violet-400 shrink-0"
                     />
                     <span>
                       <T en="Top-tier load speed optimizations">
@@ -1199,7 +1202,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)]">
                     <CheckCircle2
                       size={13}
-                      className="text-violet-400 shrink-0"
+                      className="text-violet-600 dark:text-violet-400 shrink-0"
                     />
                     <span>
                       <T en="Standard technical structure configuration">
@@ -1210,7 +1213,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 text-[11px] text-[var(--color-text-secondary)]">
                     <CheckCircle2
                       size={13}
-                      className="text-violet-400 shrink-0"
+                      className="text-violet-600 dark:text-violet-400 shrink-0"
                     />
                     <span>
                       <T en="Administrative access & full control">
@@ -1765,26 +1768,29 @@ export default function LandingPage() {
             </T>
           </p>
           <div className="pt-4">
-            <button
-              onClick={() => navigate("/cotizar")}
-              className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
-              style={{ animation: "ctaPulse 2.5s ease-in-out infinite" }}
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
+            <div className="relative group shrink-0 inline-flex">
+              {/* High-Performance, GPU-Composited glowing pulse ring */}
+              <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/50 pointer-events-none animate-cta-glow-pulse" style={{ filter: "blur(6px)" }} />
+              <button
+                onClick={() => navigate("/cotizar")}
+                className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
+              >
+                {/* Shimmer effect */}
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
 
-              <Rocket
-                size={20}
-                className="group-hover:rotate-12 group-hover:-translate-y-1 transition-transform duration-300"
-              />
+                <Rocket
+                  size={20}
+                  className="group-hover:rotate-12 group-hover:-translate-y-1 transition-transform duration-300"
+                />
 
-              <T en="Plan your Project">Planifica tu Proyecto</T>
+                <T en="Plan your Project">Planifica tu Proyecto</T>
 
-              <ArrowRight
-                size={20}
-                className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
-              />
-            </button>
+                <ArrowRight
+                  size={20}
+                  className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
+                />
+              </button>
+            </div>
           </div>
         </div>
       </section>
