@@ -80,12 +80,8 @@ export default function Logo({
           <span className="font-display font-black text-xl tracking-tighter uppercase text-[var(--color-text-primary)] whitespace-nowrap">
             Polaris
           </span>
-          <span className="text-[9px] flex justify-between w-full font-black uppercase text-[var(--color-primary-base)] opacity-70 whitespace-nowrap">
-            {Array.from("Web Studio").map((char, i) => (
-              <span key={i} className={char === " " ? "w-[0.5ex]" : ""}>
-                {char}
-              </span>
-            ))}
+          <span className="text-[9px] font-black uppercase text-[var(--color-primary-base)] opacity-70 tracking-[0.22em] pl-[0.22em] whitespace-nowrap block">
+            Web Studio
           </span>
         </div>
       )}

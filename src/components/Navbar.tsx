@@ -35,18 +35,25 @@ export default function Navbar() {
 
   useEffect(() => {
     let lastScrollY = window.scrollY;
+    let ticking = false;
 
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      setScrolled(currentScrollY > 20);
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          setScrolled(currentScrollY > 20);
 
-      if (currentScrollY > lastScrollY && currentScrollY > 100 && !isOpen) {
-        setHidden(true);
-      } else if (currentScrollY < lastScrollY) {
-        setHidden(false);
+          if (currentScrollY > lastScrollY && currentScrollY > 100 && !isOpen) {
+            setHidden(true);
+          } else if (currentScrollY < lastScrollY) {
+            setHidden(false);
+          }
+
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
       }
-
-      lastScrollY = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });

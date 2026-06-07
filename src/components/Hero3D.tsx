@@ -108,13 +108,34 @@ export default function Hero3D() {
     [],
   );
 
-  // Interactivity Hook to handle highly smoothed cursor transitions on blobs
+  // Interactivity Hook to handle highly smoothed cursor transitions on blobs with cached bounding rect to prevent forced layout / reflow
   useEffect(() => {
+    let cachedRect: DOMRect | null = null;
+
+    const updateRect = () => {
+      const container = containerRef.current;
+      if (container) {
+        cachedRect = container.getBoundingClientRect();
+      }
+    };
+
+    // Calculate once on mount
+    updateRect();
+
+    // Also update on scroll/resize and onmouseenter
+    window.addEventListener("resize", updateRect, { passive: true });
+    window.addEventListener("scroll", updateRect, { passive: true });
+
     const handleMouseMove = (e: MouseEvent) => {
       const container = containerRef.current;
       if (!container) return;
 
-      const rect = container.getBoundingClientRect();
+      if (!cachedRect) {
+        updateRect();
+      }
+      const rect = cachedRect;
+      if (!rect) return;
+
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
 
@@ -163,12 +184,20 @@ export default function Hero3D() {
       }
     };
 
+    const handleMouseEnter = () => {
+      updateRect();
+    };
+
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     window.addEventListener("mouseleave", handleMouseLeave, { passive: true });
+    window.addEventListener("mouseenter", handleMouseEnter, { passive: true });
 
     return () => {
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mouseenter", handleMouseEnter);
     };
   }, []);
 
