@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Code, Layers, Zap, ShoppingCart, Briefcase, Globe, BarChart3, Star, ChevronDown, Rocket, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import ContactSection from '../components/ContactSection';
-import Hero3D from '../components/Hero3D';
 import Logo from '../components/Logo';
 import { T, useLanguage } from '../context/LanguageContext';
+
+const Hero3D = lazy(() => import('../components/Hero3D'));
 
 function Counter({ value, suffix = "", duration = 2 }: { value: number, suffix?: string, duration?: number }) {
   const [count, setCount] = useState(0);
@@ -216,7 +217,9 @@ export default function LandingPage() {
             
             {/* 3D WebGL Canvas */}
             <div className="absolute inset-0 z-0">
-              <Hero3D />
+              <Suspense fallback={<div className="absolute inset-0 z-0 pointer-events-none" />}>
+                <Hero3D />
+              </Suspense>
             </div>
 
             <div className="max-w-3xl space-y-4 md:space-y-6 relative z-10 pt-4 md:pt-0">
