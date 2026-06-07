@@ -11,7 +11,6 @@ import {
 } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import ReactGA from "react-ga4";
-import QuoteBot from "./components/QuoteBot";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 
@@ -26,6 +25,7 @@ const LegalPage = lazy(() => import("./pages/LegalPage"));
 const WizardQuote = lazy(() => import("./pages/WizardQuote"));
 const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
+const QuoteBot = lazy(() => import("./components/QuoteBot"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
@@ -152,7 +152,9 @@ export default function App() {
               />
             </Routes>
           </Suspense>
-          <QuoteBot />
+          <Suspense fallback={null}>
+            <QuoteBot />
+          </Suspense>
         </div>
       </Router>
     </LanguageProvider>

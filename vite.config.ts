@@ -17,16 +17,16 @@ export default defineConfig(({mode}) => {
       dedupe: ['react', 'react-dom'],
     },
     build: {
-      rollupOptions: {
-        output: {
-          manualChunks: {
-            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-            'vendor-motion': ['framer-motion'],
-            'vendor-icons': ['lucide-react'],
-          },
+      minify: 'terser',
+      terserOptions: {
+        compress: {
+          drop_console: true,
+          drop_debugger: true,
+        },
+        format: {
+          comments: false,
         },
       },
-      minify: 'esbuild',
       target: 'es2015',
     },
     server: {
