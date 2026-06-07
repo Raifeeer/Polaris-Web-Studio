@@ -252,11 +252,11 @@ export default function Process() {
                           {step.id} • {step.estTime}
                         </span>
                       </div>
-                      <h3 className={`text-sm sm:text-base font-bold tracking-tight transition-colors ${
+                      <div className={`text-sm sm:text-base font-bold tracking-tight transition-colors ${
                         isSelected ? 'text-[var(--color-text-primary)]' : 'text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]'
                       }`}>
                         {step.title}
-                      </h3>
+                      </div>
                       <p className="text-xs text-[var(--color-text-secondary)] line-clamp-1 opacity-80">
                         {step.shortDesc}
                       </p>
@@ -288,9 +288,9 @@ export default function Process() {
                         {steps[activeStep].id}
                       </span>
                       <div>
-                        <h4 className="text-lg sm:text-xl font-display font-black text-[var(--color-text-primary)] tracking-tight leading-tight">
+                        <h2 className="text-lg sm:text-xl font-display font-black text-[var(--color-text-primary)] tracking-tight leading-tight">
                           {steps[activeStep].title}
-                        </h4>
+                        </h2>
                         <span className="text-[10px] font-mono font-black text-[var(--color-primary-base)] uppercase tracking-widest block mt-0.5">
                           {steps[activeStep].estTime}
                         </span>

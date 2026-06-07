@@ -809,7 +809,7 @@ export default function LandingPage() {
                 >
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
-                      <span className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest">
+                      <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">
                         {p.type}
                       </span>
                       <span className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
@@ -843,7 +843,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-3 gap-2 text-center bg-[var(--color-surface-base)] p-3 rounded-xl border border-[var(--color-border-subtle)]/50">
                       {p.metrics.map((metric, mIdx) => (
                         <div key={mIdx} className="flex flex-col justify-center">
-                          <span className="text-[9px] text-[var(--color-text-tertiary)] uppercase font-semibold min-h-[36px] flex items-center justify-center leading-tight tracking-wider mb-1.5">
+                          <span className="text-[9px] text-[var(--color-text-secondary)] uppercase font-bold min-h-[36px] flex items-center justify-center leading-tight tracking-wider mb-1.5">
                             {metric.label}
                           </span>
                           <span className="text-xs sm:text-sm font-black font-mono text-[var(--color-primary-base)] leading-none">
