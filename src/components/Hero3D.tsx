@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 
 interface BlobConfig {
   background: string;
@@ -22,8 +22,21 @@ interface Star {
 
 export default function Hero3D() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  // Generate ~80 deterministic drift stars with fixed seeds
+  useEffect(() => {
+    // Defer hero background until after LCP paint
+    const cb = () => setMounted(true);
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(cb, { timeout: 500 });
+    } else {
+      setTimeout(cb, 100);
+    }
+  }, []);
+
+  // Adaptar cantidad de estrellas al viewport
+  const starCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 30 : 60;
+
   const stars: Star[] = useMemo(() => {
     const result: Star[] = [];
     let seed = 123;
@@ -31,18 +44,18 @@ export default function Hero3D() {
       const x = Math.sin(seed++) * 10000;
       return x - Math.floor(x);
     }
-    for (let i = 0; i < 80; i++) {
+    for (let i = 0; i < starCount; i++) {
       result.push({
         left: random() * 100,
         top: random() * 100,
-        size: random() * 1.5 + 1.0, // 1px to 2.5px
-        opacity: random() * 0.4 + 0.3, // 0.3 to 0.7
-        duration: random() * 3 + 2, // 2s to 5s
+        size: random() * 1.5 + 1.0,
+        opacity: random() * 0.4 + 0.3,
+        duration: random() * 3 + 2,
         delay: random() * 5,
       });
     }
     return result;
-  }, []);
+  }, [starCount]);
 
   const blobs: BlobConfig[] = useMemo(() => [
     {
@@ -150,6 +163,8 @@ export default function Hero3D() {
       window.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
+
+  if (!mounted) return <div className="absolute inset-0 z-0 pointer-events-none" />;
 
   return (
     <div 
