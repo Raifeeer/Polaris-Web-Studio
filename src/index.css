@@ -38,7 +38,7 @@
   --color-text-secondary: #334155;
   --color-text-tertiary: #475569;
 
-  --color-border-subtle: #e2e8f0;
+  --color-border-subtle: #cbd5e1;
   --color-border-strong: #cbd5e1;
 
   --color-on-primary: #ffffff;
@@ -147,4 +147,20 @@
 
 .animate-marquee:hover {
   animation-play-state: paused;
+}
+
+/* Ensure font-display swap for any self-hosted fallback */
+@layer base {
+  * {
+    font-display: swap;
+  }
+}
+
+/* Ensure sufficient contrast in light mode for small texts with tertiary colors */
+.light .text-\[9px\].text-\[var\(--color-text-tertiary\)\], 
+.light .text-\[10px\].text-\[var\(--color-text-tertiary\)\], 
+.light .text-\[11px\].text-\[var\(--color-text-tertiary\)\],
+.light .text-xs.text-\[var\(--color-text-tertiary\)\],
+.light .text-sm.text-\[var\(--color-text-tertiary\)\] {
+  color: var(--color-text-secondary) !important;
 }
