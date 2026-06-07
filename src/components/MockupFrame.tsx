@@ -54,6 +54,11 @@ function LuminaSkyMockup() {
           alt="Lumina Sky View"
           className="w-full h-full object-cover opacity-80"
           referrerPolicy="no-referrer"
+          loading="lazy"
+          decoding="async"
+          fetchpriority="low"
+          width="800"
+          height="600"
         />
       </div>
 
@@ -115,6 +120,7 @@ function LuminaSkyMockup() {
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
                   className="bg-transparent border-none outline-none font-sans text-[7px] tracking-wide w-full p-0 h-auto"
+                  aria-label="Fechas de estancia"
                 />
               </div>
             </div>
@@ -220,6 +226,10 @@ function NexusRealtyMockup() {
             src="https://i.imgur.com/Kq5wE4B.png"
             alt="Nexus Logo"
             className="w-8 h-8"
+            loading="lazy"
+            decoding="async"
+            width="400"
+            height="300"
           />
           <div className="flex flex-col">
             <span className="font-serif text-sm font-bold text-white tracking-[0.1em]">
@@ -241,7 +251,7 @@ function NexusRealtyMockup() {
       {/* Hero */}
       <div className="relative flex-1 flex flex-col justify-center items-center px-6">
         <div className="absolute inset-0 z-0">
-          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800')] bg-cover bg-center" />
+          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=60&fm=webp')] bg-cover bg-center" />
           <div className="absolute inset-0 bg-white/30" />
         </div>
 
@@ -277,6 +287,7 @@ function NexusRealtyMockup() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Busque por Piantini, Cap Cana, Casa de Ca"
               className="bg-transparent text-[9px] text-gray-700 w-full focus:outline-none"
+              aria-label="Buscar propiedades"
             />
           </div>
           <div className="flex justify-between items-center px-4 py-2 text-[9px] text-gray-700 font-bold">

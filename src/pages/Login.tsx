@@ -58,6 +58,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email Corporativo"
+                  aria-label="Email Corporativo"
                   className="w-full pl-12 pr-4 py-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors"
                 />
               </div>
@@ -72,6 +73,7 @@ export default function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Contraseña"
+                  aria-label="Contraseña"
                   className="w-full pl-12 pr-4 py-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors"
                 />
               </div>

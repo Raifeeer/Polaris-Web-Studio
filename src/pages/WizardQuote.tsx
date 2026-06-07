@@ -1013,6 +1013,7 @@ export default function WizardQuote() {
                             <input
                               type="text"
                               placeholder="miempresa.com"
+                              aria-label="Nombre de dominio a verificar"
                               value={domainName}
                               onChange={(e) => {
                                 const val = e.target.value;
