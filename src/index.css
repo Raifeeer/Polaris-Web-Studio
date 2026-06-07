@@ -19,6 +19,9 @@
   --color-accent-blue: #0ea5e9;
   --color-accent-purple: #a855f7;
 
+  --color-grok: #f4f4f5;
+  --color-grok-rgb: 244, 244, 245;
+
   --color-on-primary: #ffffff;
   
   --shadow-bento: inset 0 0 20px rgba(99, 102, 241, 0.03);
@@ -44,6 +47,9 @@
   --color-on-primary: #ffffff;
   --color-accent-blue: #0284c7;
   --color-accent-purple: #7c3aed;
+
+  --color-grok: #1c1c1e;
+  --color-grok-rgb: 28, 28, 30;
 
   --shadow-bento: 0 4px 20px rgba(79, 70, 229, 0.06);
   --shadow-bento-hover: 0 10px 30px rgba(79, 70, 229, 0.1);
@@ -74,6 +80,8 @@
   
   --color-accent-blue: var(--color-accent-blue);
   --color-accent-purple: var(--color-accent-purple);
+  --color-grok: var(--color-grok);
+  --color-grok-rgb: var(--color-grok-rgb);
 
   /* Nexus Luxury Colors */
   --color-luxury-gold: #D4AF37;

@@ -3,24 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, lazy, Suspense } from 'react';
-import ReactGA from 'react-ga4';
-import QuoteBot from './components/QuoteBot';
-import { useTheme } from './hooks/useTheme';
-import { LanguageProvider, T } from './context/LanguageContext';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
+import { useEffect, lazy, Suspense } from "react";
+import ReactGA from "react-ga4";
+import QuoteBot from "./components/QuoteBot";
+import { useTheme } from "./hooks/useTheme";
+import { LanguageProvider, T } from "./context/LanguageContext";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const Services = lazy(() => import('./pages/Services'));
-const Process = lazy(() => import('./pages/Process'));
-const Portfolio = lazy(() => import('./pages/Portfolio'));
-const ProjectDetail = lazy(() => import('./pages/ProjectDetail'));
-const About = lazy(() => import('./pages/About'));
-const LegalPage = lazy(() => import('./pages/LegalPage'));
-const WizardQuote = lazy(() => import('./pages/WizardQuote'));
-const Login = lazy(() => import('./pages/Login'));
-const ClientDashboard = lazy(() => import('./pages/ClientDashboard'));
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Services = lazy(() => import("./pages/Services"));
+const Process = lazy(() => import("./pages/Process"));
+const Portfolio = lazy(() => import("./pages/Portfolio"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
+const About = lazy(() => import("./pages/About"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
+const WizardQuote = lazy(() => import("./pages/WizardQuote"));
+const Login = lazy(() => import("./pages/Login"));
+const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
@@ -47,14 +52,14 @@ function ScrollHandler() {
         console.warn("GA send deferred:", e);
       }
     }
-    
+
     if (!hash) {
       window.scrollTo(0, 0);
     } else {
-      const id = hash.replace('#', '');
+      const id = hash.replace("#", "");
       const element = document.getElementById(id);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+        element.scrollIntoView({ behavior: "smooth" });
       }
     }
   }, [pathname, hash]);
@@ -80,8 +85,12 @@ export default function App() {
     // 2. Defer Microsoft Clarity Initialization
     const clarityTimer = setTimeout(() => {
       try {
-        (function(c: any, l: any, a: any, r: any, i: any, t?: any, y?: any){
-          c[a] = c[a] || function(){(c[a].q = c[a].q || []).push(arguments)};
+        (function (c: any, l: any, a: any, r: any, i: any, t?: any, y?: any) {
+          c[a] =
+            c[a] ||
+            function () {
+              (c[a].q = c[a].q || []).push(arguments);
+            };
           t = l.createElement(r);
           t.async = 1;
           t.src = "https://www.clarity.ms/tag/" + i;
@@ -98,7 +107,7 @@ export default function App() {
       clearTimeout(clarityTimer);
     };
   }, []);
-  
+
   return (
     <LanguageProvider>
       <Router>
@@ -115,9 +124,32 @@ export default function App() {
               <Route path="/cotizar" element={<WizardQuote />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<ClientDashboard />} />
-              <Route path="/privacidad" element={<LegalPage title={<T en="Privacy Policy">Política de Privacidad</T>} />} />
-              <Route path="/terminos" element={<LegalPage title={<T en="Terms and Conditions">Términos y Condiciones</T>} />} />
-              <Route path="/cookies" element={<LegalPage title={<T en="Cookie Policy">Política de Cookies</T>} />} />
+              <Route
+                path="/privacidad"
+                element={
+                  <LegalPage
+                    title={<T en="Privacy Policy">Política de Privacidad</T>}
+                  />
+                }
+              />
+              <Route
+                path="/terminos"
+                element={
+                  <LegalPage
+                    title={
+                      <T en="Terms and Conditions">Términos y Condiciones</T>
+                    }
+                  />
+                }
+              />
+              <Route
+                path="/cookies"
+                element={
+                  <LegalPage
+                    title={<T en="Cookie Policy">Política de Cookies</T>}
+                  />
+                }
+              />
             </Routes>
           </Suspense>
           <QuoteBot />

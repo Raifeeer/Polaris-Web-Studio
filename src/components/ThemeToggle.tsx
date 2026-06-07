@@ -1,7 +1,7 @@
-import React from 'react';
-import { Sun, Moon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useTheme } from '../hooks/useTheme';
+import React from "react";
+import { Sun, Moon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useTheme } from "../hooks/useTheme";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
@@ -10,7 +10,9 @@ export default function ThemeToggle() {
     <button
       onClick={toggleTheme}
       className="p-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
-      aria-label={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+      aria-label={
+        theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+      }
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -20,7 +22,7 @@ export default function ThemeToggle() {
           exit={{ y: 20, opacity: 0, rotate: 45 }}
           transition={{ duration: 0.2 }}
         >
-          {theme === 'dark' ? <Moon size={20} /> : <Sun size={20} />}
+          {theme === "dark" ? <Moon size={20} /> : <Sun size={20} />}
         </motion.div>
       </AnimatePresence>
     </button>

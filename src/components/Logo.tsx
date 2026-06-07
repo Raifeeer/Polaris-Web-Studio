@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React from "react";
+import { motion } from "framer-motion";
 
 interface LogoProps {
   size?: number;
@@ -8,32 +8,45 @@ interface LogoProps {
   stacked?: boolean;
 }
 
-export default function Logo({ size = 40, showText = true, className = "", stacked = false }: LogoProps) {
+export default function Logo({
+  size = 40,
+  showText = true,
+  className = "",
+  stacked = false,
+}: LogoProps) {
   return (
-    <div className={`flex items-center ${stacked ? 'flex-col justify-center text-center gap-2' : 'gap-4'} group ${className}`}>
-      <div 
+    <div
+      className={`flex items-center ${stacked ? "flex-col justify-center text-center gap-2" : "gap-4"} group ${className}`}
+    >
+      <div
         className="relative flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shrink-0"
         style={{ width: size, height: size }}
       >
         {/* Glow Effect */}
         <div className="absolute inset-0 bg-[var(--color-primary-base)] blur-2xl md:blur-3xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity" />
-        
+
         {/* Perfectly Symmetrical 8-Pointed Star (Compass Rose) */}
-        <svg 
-          viewBox="0 0 32 32" 
-          fill="none" 
+        <svg
+          viewBox="0 0 32 32"
+          fill="none"
           xmlns="http://www.w3.org/2000/svg"
           className="w-full h-full relative z-10"
         >
           <defs>
-            <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient
+              id="logo-gradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
               <stop stopColor="var(--color-primary-base)" />
               <stop offset="1" stopColor="#818cf8" />
             </linearGradient>
           </defs>
 
           {/* Combined Star Shape - Mathematically Symmetrical */}
-          <motion.path 
+          <motion.path
             d="M 16 2 
                L 17.5 13.5
                L 21.5 10.5
@@ -50,7 +63,7 @@ export default function Logo({ size = 40, showText = true, className = "", stack
                L 13.5 14.5
                L 10.5 10.5
                L 14.5 13.5
-               Z" 
+               Z"
             fill="url(#logo-gradient)"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -69,7 +82,9 @@ export default function Logo({ size = 40, showText = true, className = "", stack
           </span>
           <span className="text-[9px] flex justify-between w-full font-black uppercase text-[var(--color-primary-base)] opacity-70 whitespace-nowrap">
             {Array.from("Web Studio").map((char, i) => (
-              <span key={i} className={char === ' ' ? 'w-[0.5ex]' : ''}>{char}</span>
+              <span key={i} className={char === " " ? "w-[0.5ex]" : ""}>
+                {char}
+              </span>
             ))}
           </span>
         </div>

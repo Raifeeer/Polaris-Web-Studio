@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from "react";
 
 interface BlobConfig {
   background: string;
@@ -27,7 +27,7 @@ export default function Hero3D() {
   useEffect(() => {
     // Defer hero background until after LCP paint
     const cb = () => setMounted(true);
-    if ('requestIdleCallback' in window) {
+    if ("requestIdleCallback" in window) {
       (window as any).requestIdleCallback(cb, { timeout: 500 });
     } else {
       setTimeout(cb, 100);
@@ -35,7 +35,8 @@ export default function Hero3D() {
   }, []);
 
   // Adaptar cantidad de estrellas al viewport
-  const starCount = typeof window !== 'undefined' && window.innerWidth < 768 ? 30 : 60;
+  const starCount =
+    typeof window !== "undefined" && window.innerWidth < 768 ? 30 : 60;
 
   const stars: Star[] = useMemo(() => {
     const result: Star[] = [];
@@ -57,55 +58,62 @@ export default function Hero3D() {
     return result;
   }, [starCount]);
 
-  const blobs: BlobConfig[] = useMemo(() => [
-    {
-      background: 'radial-gradient(circle, rgba(99, 102, 241, 0.85) 0%, rgba(99, 102, 241, 0) 70%)',
-      width: 'min(50vw, 550px)',
-      height: 'min(50vw, 550px)',
-      left: '12%',
-      top: '15%',
-      animationName: 'float-circle-1',
-      duration: 14,
-      opacity: 0.22,
-    },
-    {
-      background: 'radial-gradient(circle, rgba(192, 132, 252, 0.85) 0%, rgba(126, 34, 206, 0) 70%)',
-      width: 'min(55vw, 600px)',
-      height: 'min(55vw, 600px)',
-      left: '48%',
-      top: '10%',
-      animationName: 'float-circle-2',
-      duration: 18,
-      opacity: 0.18,
-    },
-    {
-      background: 'radial-gradient(circle, rgba(126, 34, 206, 0.9) 0%, rgba(126, 34, 206, 0) 70%)',
-      width: 'min(48vw, 500px)',
-      height: 'min(48vw, 500px)',
-      left: '20%',
-      top: '48%',
-      animationName: 'float-circle-3',
-      duration: 20,
-      opacity: 0.24,
-    },
-    {
-      background: 'radial-gradient(circle, rgba(129, 140, 248, 0.85) 0%, rgba(192, 132, 252, 0) 70%)',
-      width: 'min(60vw, 650px)',
-      height: 'min(60vw, 650px)',
-      left: '52%',
-      top: '42%',
-      animationName: 'float-circle-4',
-      duration: 16,
-      opacity: 0.16,
-    },
-  ], []);
+  const blobs: BlobConfig[] = useMemo(
+    () => [
+      {
+        background:
+          "radial-gradient(circle, rgba(99, 102, 241, 0.85) 0%, rgba(99, 102, 241, 0) 70%)",
+        width: "min(50vw, 550px)",
+        height: "min(50vw, 550px)",
+        left: "12%",
+        top: "15%",
+        animationName: "float-circle-1",
+        duration: 14,
+        opacity: 0.22,
+      },
+      {
+        background:
+          "radial-gradient(circle, rgba(192, 132, 252, 0.85) 0%, rgba(126, 34, 206, 0) 70%)",
+        width: "min(55vw, 600px)",
+        height: "min(55vw, 600px)",
+        left: "48%",
+        top: "10%",
+        animationName: "float-circle-2",
+        duration: 18,
+        opacity: 0.18,
+      },
+      {
+        background:
+          "radial-gradient(circle, rgba(126, 34, 206, 0.9) 0%, rgba(126, 34, 206, 0) 70%)",
+        width: "min(48vw, 500px)",
+        height: "min(48vw, 500px)",
+        left: "20%",
+        top: "48%",
+        animationName: "float-circle-3",
+        duration: 20,
+        opacity: 0.24,
+      },
+      {
+        background:
+          "radial-gradient(circle, rgba(129, 140, 248, 0.85) 0%, rgba(192, 132, 252, 0) 70%)",
+        width: "min(60vw, 650px)",
+        height: "min(60vw, 650px)",
+        left: "52%",
+        top: "42%",
+        animationName: "float-circle-4",
+        duration: 16,
+        opacity: 0.16,
+      },
+    ],
+    [],
+  );
 
   // Interactivity Hook to handle highly smoothed cursor transitions on blobs
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const container = containerRef.current;
       if (!container) return;
-      
+
       const rect = container.getBoundingClientRect();
       const mouseX = e.clientX - rect.left;
       const mouseY = e.clientY - rect.top;
@@ -113,8 +121,8 @@ export default function Hero3D() {
       // Approximate coordinates of the blob centers relative to viewport bounds
       const blobCenters = [
         { x: rect.width * 0.12 + 250, y: rect.height * 0.15 + 250 },
-        { x: rect.width * 0.48 + 250, y: rect.height * 0.10 + 250 },
-        { x: rect.width * 0.20 + 250, y: rect.height * 0.48 + 250 },
+        { x: rect.width * 0.48 + 250, y: rect.height * 0.1 + 250 },
+        { x: rect.width * 0.2 + 250, y: rect.height * 0.48 + 250 },
         { x: rect.width * 0.52 + 250, y: rect.height * 0.42 + 250 },
       ];
 
@@ -134,10 +142,10 @@ export default function Hero3D() {
 
       calculated.forEach((val, idx) => {
         // Nearest blob displaces up to 30px, others between 10px and 20px
-        const maxMove = idx === closestIdx ? 30 : (10 + (idx * 3.3) % 11);
+        const maxMove = idx === closestIdx ? 30 : 10 + ((idx * 3.3) % 11);
         const dist = val.dist || 1;
         const factor = Math.min(dist / 300, 1); // smooth scaling limit
-        
+
         const moveX = (val.dx / dist) * maxMove * factor;
         const moveY = (val.dy / dist) * maxMove * factor;
 
@@ -150,24 +158,25 @@ export default function Hero3D() {
       const container = containerRef.current;
       if (!container) return;
       for (let i = 0; i < 4; i++) {
-        container.style.setProperty(`--blob-${i}-x`, '0px');
-        container.style.setProperty(`--blob-${i}-y`, '0px');
+        container.style.setProperty(`--blob-${i}-x`, "0px");
+        container.style.setProperty(`--blob-${i}-y`, "0px");
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mouseleave', handleMouseLeave, { passive: true });
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("mouseleave", handleMouseLeave, { passive: true });
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseleave', handleMouseLeave);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseleave", handleMouseLeave);
     };
   }, []);
 
-  if (!mounted) return <div className="absolute inset-0 z-0 pointer-events-none" />;
+  if (!mounted)
+    return <div className="absolute inset-0 z-0 pointer-events-none" />;
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="absolute inset-0 z-0 pointer-events-none overflow-hidden"
     >
@@ -276,15 +285,17 @@ export default function Hero3D() {
           <div
             key={idx}
             className="absolute rounded-full bg-white"
-            style={{
-              left: `${star.left}%`,
-              top: `${star.top}%`,
-              width: `${star.size}px`,
-              height: `${star.size}px`,
-              animation: `twinkle ${star.duration}s ease-in-out infinite`,
-              animationDelay: `${star.delay}s`,
-              '--star-opacity': star.opacity,
-            } as React.CSSProperties}
+            style={
+              {
+                left: `${star.left}%`,
+                top: `${star.top}%`,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                animation: `twinkle ${star.duration}s ease-in-out infinite`,
+                animationDelay: `${star.delay}s`,
+                "--star-opacity": star.opacity,
+              } as React.CSSProperties
+            }
           />
         ))}
       </div>
@@ -295,13 +306,13 @@ export default function Hero3D() {
           <div
             key={idx}
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: blob.left,
               top: blob.top,
               width: blob.width,
               height: blob.height,
               transform: `translate3d(var(--blob-${idx}-x, 0px), var(--blob-${idx}-y, 0px), 0)`,
-              transition: 'transform 0.8s ease-out',
+              transition: "transform 0.8s ease-out",
             }}
           >
             <div
@@ -311,8 +322,8 @@ export default function Hero3D() {
                 opacity: blob.opacity,
                 animationName: blob.animationName,
                 animationDuration: `${blob.duration}s`,
-                animationTimingFunction: 'ease-in-out',
-                animationIterationCount: 'infinite',
+                animationTimingFunction: "ease-in-out",
+                animationIterationCount: "infinite",
               }}
             />
           </div>
