@@ -17,16 +17,7 @@ export default defineConfig(({mode}) => {
       dedupe: ['react', 'react-dom'],
     },
     build: {
-      minify: 'terser',
-      terserOptions: {
-        compress: {
-          drop_console: true,
-          drop_debugger: true,
-        },
-        format: {
-          comments: false,
-        },
-      },
+      minify: 'esbuild',
       target: 'es2015',
     },
     server: {

@@ -10,7 +10,6 @@ import {
   useLocation,
 } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
-import ReactGA from "react-ga4";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 
@@ -47,7 +46,9 @@ function ScrollHandler() {
   useEffect(() => {
     if (GA_ID) {
       try {
-        ReactGA.send({ hitType: "pageview", page: pathname + hash });
+        import("react-ga4").then((module) => {
+          module.default.send({ hitType: "pageview", page: pathname + hash });
+        });
       } catch (e) {
         console.warn("GA send deferred:", e);
       }
@@ -75,7 +76,9 @@ export default function App() {
     const gaTimer = setTimeout(() => {
       if (GA_ID) {
         try {
-          ReactGA.initialize(GA_ID);
+          import("react-ga4").then((module) => {
+            module.default.initialize(GA_ID);
+          });
         } catch (err) {
           console.warn("ReactGA initialization deferred:", err);
         }
