@@ -10,7 +10,11 @@ interface FooterProps {
   linkedinUrl?: string;
 }
 
-export default function Footer({ twitterUrl, instagramUrl, linkedinUrl }: FooterProps) {
+export default function Footer({ 
+  twitterUrl = "https://x.com", 
+  instagramUrl = "https://instagram.com", 
+  linkedinUrl = "https://linkedin.com" 
+}: FooterProps) {
   const { language, setLanguage, translate } = useLanguage();
 
   const socialLinks = [
@@ -34,18 +38,24 @@ export default function Footer({ twitterUrl, instagramUrl, linkedinUrl }: Footer
             {socialLinks.map((social, i) => {
               const Icon = social.icon;
               const hasUrl = !!social.url;
+              if (!hasUrl) {
+                return (
+                  <span
+                    key={i}
+                    className="p-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-tertiary)] opacity-30 cursor-not-allowed"
+                  >
+                    <Icon size={18} aria-hidden="true" />
+                  </span>
+                );
+              }
               return (
                 <a 
                   key={i}
-                  href={hasUrl ? social.url : undefined}
-                  target={hasUrl ? "_blank" : undefined}
-                  rel={hasUrl ? "noopener noreferrer" : undefined}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   aria-label={social.label} 
-                  className={`p-2 rounded-lg bg-[var(--color-surface-highlight)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] ${
-                    hasUrl 
-                      ? 'text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] cursor-pointer' 
-                      : 'text-[var(--color-text-tertiary)] opacity-30 cursor-not-allowed'
-                  }`}
+                  className="p-2 rounded-lg bg-[var(--color-surface-highlight)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] cursor-pointer"
                 >
                   <Icon size={18} aria-hidden="true" />
                 </a>
