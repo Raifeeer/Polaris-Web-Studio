@@ -116,7 +116,6 @@
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -171,4 +170,20 @@
 .light .text-xs.text-\[var\(--color-text-tertiary\)\],
 .light .text-sm.text-\[var\(--color-text-tertiary\)\] {
   color: var(--color-text-secondary) !important;
+}
+
+@keyframes ctaGlowPulse {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+.animate-cta-glow-pulse {
+  animation: ctaGlowPulse 2.5s cubic-bezier(0.25, 0, 0, 1) infinite;
+  will-change: transform, opacity;
 }
