@@ -67,9 +67,9 @@ function LuminaSkyMockup() {
       <div className="relative z-10 flex-1 flex flex-col items-center justify-between p-3 text-center">
         {/* Title Group */}
         <div className="space-y-0.5 mt-1.5 max-w-[85%]">
-          <h1 className="text-xl sm:text-2xl font-serif text-white tracking-tight drop-shadow-md">
+          <div className="text-xl sm:text-2xl font-serif font-black text-white tracking-tight drop-shadow-md">
             Lúmina Sky
-          </h1>
+          </div>
           <p className="text-[6px] text-white/95 uppercase tracking-widest font-light">
             {lang === 'ESP' 
               ? 'Santuario Privado, Diseño Orgánico y Vistas en Piantini, SD'
@@ -210,10 +210,10 @@ function NexusRealtyMockup() {
         </div>
 
         {/* Title */}
-        <h1 className="relative z-10 font-serif text-3xl text-[#0A1628] text-center leading-tight mb-4 font-normal">
+        <div className="relative z-10 font-serif text-3xl text-[#0A1628] text-center leading-tight mb-4 font-normal">
           Encuentre su <span className="text-[#D4AF37] italic">Legado</span><br />
           en República Dominicana
-        </h1>
+        </div>
 
         {/* Subtitle */}
         <p className="relative z-10 text-[9px] text-[#0A1628]/70 text-center max-w-[260px] leading-relaxed mb-6 font-sans">
@@ -260,7 +260,7 @@ const MOCKUP_CONTENT: Record<string, { browser?: React.ReactNode, mobile?: React
         </nav>
         <div className="p-4 space-y-3">
           <div className="bg-violet-600/20 p-4 rounded-xl border border-violet-500/30 text-center">
-            <h3 className="text-[10px] font-black mb-1">Tech & Accesorios</h3>
+            <div className="text-[10px] font-black mb-1">Tech & Accesorios</div>
             <p className="text-[6px] opacity-70 mb-2">Envíos a todo RD · CardNet y PayPal</p>
             <button className="bg-violet-500 text-[7px] font-bold px-3 py-1 rounded-lg">Ver Catálogo</button>
           </div>
@@ -289,7 +289,7 @@ const MOCKUP_CONTENT: Record<string, { browser?: React.ReactNode, mobile?: React
             <span className="text-emerald-500 text-lg">✚</span>
             <span className="text-[10px] font-black tracking-widest uppercase">Bienestar RD</span>
           </div>
-          <h3 className="text-sm font-black leading-tight">Tu Salud, Nuestra Prioridad</h3>
+          <div className="text-sm font-black leading-tight">Tu Salud, Nuestra Prioridad</div>
           <p className="text-[9px] opacity-60">Santiago · Medicina General & Estética</p>
           <button className="w-full bg-emerald-500 text-slate-950 text-[10px] font-black py-2.5 rounded-xl shadow-lg shadow-emerald-500/20">Agendar Cita</button>
         </div>
@@ -313,8 +313,8 @@ const MOCKUP_CONTENT: Record<string, { browser?: React.ReactNode, mobile?: React
         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full" />
         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
           <div className="text-2xl">🍽️</div>
-          <h3 className="text-[12px] font-black uppercase tracking-tighter">Sabor Auténtico</h3>
-          <h4 className="text-sm font-black text-orange-400">Sabor Dominicano Auténtico</h4>
+          <div className="text-[12px] font-black uppercase tracking-tighter">Sabor Auténtico</div>
+          <div className="text-sm font-black text-orange-400 font-bold">Sabor Dominicano Auténtico</div>
           <p className="text-[9px] opacity-60">Santo Domingo · Reservas & Catering</p>
           <button className="w-full bg-orange-500 text-black text-[10px] font-black py-2.5 rounded-xl">Reservar Mesa</button>
         </div>

@@ -66,7 +66,7 @@ export default function Footer({
 
         {/* Links */}
         <div className="space-y-6">
-          <h4 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]"><T en="Studio">Estudio</T></h4>
+          <h3 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]"><T en="Studio">Estudio</T></h3>
           <div className="flex flex-col gap-3 text-sm text-[var(--color-text-secondary)]">
             <Link to="/" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="Home">Inicio</T></Link>
             <Link to="/nosotros" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="About">Nosotros</T></Link>
@@ -74,15 +74,15 @@ export default function Footer({
             <Link to="/portafolio" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="Portfolio">Portafolio</T></Link>
             <Link to="/proceso" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="Process">Metodología</T></Link>
             <div className="group flex items-center gap-2 cursor-default">
-              <span className="text-[var(--color-text-tertiary)]">Blog</span>
-              <span className="text-[10px] font-black uppercase tracking-tighter bg-[var(--color-surface-highlight)] px-1.5 py-0.5 rounded text-[var(--color-primary-base)] opacity-60"><T en="Soon">Próximamente</T></span>
+              <span className="text-[var(--color-text-secondary)]">Blog</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-[var(--color-surface-highlight)] px-1.5 py-0.5 rounded text-[var(--color-primary-base)] border border-[var(--color-border-subtle)]"><T en="Soon">Próximamente</T></span>
             </div>
           </div>
         </div>
 
         {/* Services */}
         <div className="space-y-6">
-          <h4 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]"><T en="Services">Servicios</T></h4>
+          <h3 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]"><T en="Services">Servicios</T></h3>
           <div className="flex flex-col gap-3 text-sm text-[var(--color-text-secondary)]">
             <Link to="/servicios" className="hover:text-[var(--color-primary-base)] transition-colors">Landing Pages</Link>
             <Link to="/servicios" className="hover:text-[var(--color-primary-base)] transition-colors">E-commerce</Link>
@@ -94,21 +94,21 @@ export default function Footer({
         {/* Contact */}
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h4 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]"><T en="Contact">Contacto</T></h4>
+            <h3 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]"><T en="Contact">Contacto</T></h3>
             {/* Language Switcher */}
             <div className="flex items-center gap-2 border border-[var(--color-border-subtle)] rounded-full px-2 py-1 bg-[var(--color-surface-elevated)]">
-              <Globe size={12} className="text-[var(--color-text-tertiary)]" />
+              <Globe size={12} className="text-[var(--color-text-secondary)]" />
               <div className="flex items-center gap-1 text-[10px] font-bold">
                 <button 
                   onClick={() => setLanguage('es')}
-                  className={`transition-colors uppercase ${language === 'es' ? 'text-[var(--color-primary-base)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'}`}
+                  className={`transition-colors uppercase ${language === 'es' ? 'text-[var(--color-primary-base)] font-bold' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
                 >
                   ES
                 </button>
                 <span className="text-[var(--color-border-strong)]">|</span>
                 <button 
                   onClick={() => setLanguage('en')}
-                  className={`transition-colors uppercase ${language === 'en' ? 'text-[var(--color-primary-base)]' : 'text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]'}`}
+                  className={`transition-colors uppercase ${language === 'en' ? 'text-[var(--color-primary-base)] font-bold' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}`}
                 >
                   EN
                 </button>
@@ -129,14 +129,14 @@ export default function Footer({
       </div>
       
       <div className="max-w-7xl mx-auto mt-16 pt-8 border-t border-[var(--color-border-subtle)] flex flex-col md:flex-row justify-between items-center gap-4">
-        <p className="text-[var(--color-text-tertiary)] text-xs font-medium uppercase tracking-[0.2em] text-center md:text-left leading-relaxed">
+        <p className="text-[var(--color-text-secondary)] text-xs font-medium uppercase tracking-[0.2em] text-center md:text-left leading-relaxed">
           © 2026 Polaris Web Studio. <br className="hidden md:block xl:hidden" />
           <span className="inline-block mt-1 md:mt-0"><T en="Precision Digital Engineering.">Ingeniería Digital de Precisión.</T></span>
         </p>
-        <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
-          <Link to="/privacidad" className="hover:text-[var(--color-primary-base)]"><T en="Privacy">Privacidad</T></Link>
-          <Link to="/terminos" className="hover:text-[var(--color-primary-base)]"><T en="Terms">Términos</T></Link>
-          <Link to="/cookies" className="hover:text-[var(--color-primary-base)]"><T en="Cookies">Cookies</T></Link>
+        <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-secondary)]">
+          <Link to="/privacidad" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="Privacy">Privacidad</T></Link>
+          <Link to="/terminos" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="Terms">Términos</T></Link>
+          <Link to="/cookies" className="hover:text-[var(--color-primary-base)] transition-colors"><T en="Cookies">Cookies</T></Link>
         </div>
       </div>
     </footer>
