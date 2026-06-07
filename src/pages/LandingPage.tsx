@@ -352,7 +352,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
+            className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
           >
             <Link to="/servicios" className="flex flex-col p-6 sm:p-8 h-full items-start gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 rounded-[var(--radius-bento)] text-left justify-between w-full">
               <div className="w-full space-y-6">
@@ -843,7 +843,7 @@ export default function LandingPage() {
                     <div className="grid grid-cols-3 gap-2 text-center bg-[var(--color-surface-base)] p-3 rounded-xl border border-[var(--color-border-subtle)]/50">
                       {p.metrics.map((metric, mIdx) => (
                         <div key={mIdx} className="flex flex-col justify-center">
-                          <span className="text-[9px] text-[var(--color-text-tertiary)] uppercase font-semibold h-[24px] flex items-center justify-center leading-tight tracking-wider mb-1.5">
+                          <span className="text-[9px] text-[var(--color-text-tertiary)] uppercase font-semibold min-h-[36px] flex items-center justify-center leading-tight tracking-wider mb-1.5">
                             {metric.label}
                           </span>
                           <span className="text-xs sm:text-sm font-black font-mono text-[var(--color-primary-base)] leading-none">
