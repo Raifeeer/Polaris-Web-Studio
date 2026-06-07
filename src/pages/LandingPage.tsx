@@ -21,7 +21,7 @@ import {
   Database,
   Cloud,
 } from "lucide-react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion"; // Tree-shaking: solo se usan estos 3 exports
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactSection from "../components/ContactSection";

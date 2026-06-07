@@ -15,7 +15,6 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
-import Cal, { getCalApi } from "@calcom/embed-react";
 
 function AnimatedNumber({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -556,12 +555,25 @@ export default function WizardQuote() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
+  const [CalComponent, setCalComponent] = useState<any>(null);
+
+  useEffect(() => {
+    // Solo cargar Cal cuando el usuario llegue al último paso
+    if (currentStep === 3 && !CalComponent) {
+      import('@calcom/embed-react').then((mod) => {
+        setCalComponent(() => mod.default);
+      });
+    }
+  }, [currentStep, CalComponent]);
+
   useEffect(() => {
     if (currentStep !== 3) return;
 
     let active = true;
     const initCal = async () => {
       try {
+        const calMod = await import("@calcom/embed-react");
+        const getCalApi = calMod.getCalApi;
         const cal = await getCalApi();
         if (!active) return;
 
@@ -1230,19 +1242,25 @@ export default function WizardQuote() {
                           } as React.CSSProperties
                         }
                       >
-                        <Cal
-                          calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(quoteSummary)}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            overflow: "scroll",
-                          }}
-                          config={{
-                            layout: "month_view",
-                            theme: calTheme,
-                            locale: language === "en" ? "en" : "es",
-                          }}
-                        />
+                        {CalComponent ? (
+                          <CalComponent
+                            calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(quoteSummary)}`}
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              overflow: "scroll",
+                            }}
+                            config={{
+                              layout: "month_view",
+                              theme: calTheme,
+                              locale: language === "en" ? "en" : "es",
+                            }}
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full min-h-[500px]">
+                            <div className="animate-spin w-6 h-6 border-2 border-[var(--color-primary-base)] border-t-transparent rounded-full" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}

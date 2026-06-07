@@ -19,6 +19,16 @@ export default defineConfig(({mode}) => {
     build: {
       minify: 'esbuild',
       target: 'es2015',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-motion': ['framer-motion'],
+            'vendor-icons': ['lucide-react'],
+            'vendor-calcom': ['@calcom/embed-react'],
+          },
+        },
+      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
