@@ -277,7 +277,7 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors duration-300">Landing Pages</h3>
+                  <h2 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors duration-300">Landing Pages</h2>
                   <p className="text-[var(--color-text-secondary)] leading-relaxed text-xs mt-2">
                     <T en="Conversion-focused design to turn visitors into real clients from day one.">
                       Diseño enfocado en conversión para convertir visitantes en clientes reales desde el primer día.
@@ -321,7 +321,7 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors duration-300">E-commerce</h3>
+                  <h2 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors duration-300">E-commerce</h2>
                   <p className="text-[var(--color-text-secondary)] leading-relaxed text-xs mt-2">
                     <T en="Scalable, secure, and optimized online sales platforms to multiply your income 24/7.">
                       Plataformas de venta online escalables, seguras y optimizadas para multiplicar tus ingresos las 24 horas del día.
@@ -365,7 +365,7 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors duration-300"><T en="Corporate">Corporativas</T></h3>
+                  <h2 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors duration-300"><T en="Corporate">Corporativas</T></h2>
                   <p className="text-[var(--color-text-secondary)] leading-relaxed text-xs mt-2">
                     <T en="Solid and elegant digital identity that positions your brand as an undisputed leader in its respective market.">
                       Identidad digital sólida y elegante que posiciona tu marca como líder indiscutible en su respectivo mercado.
@@ -949,7 +949,7 @@ export default function LandingPage() {
                    }`}
                  >
                     <div className="flex justify-between items-center">
-                       <h4 className="font-bold text-lg">{faq.q}</h4>
+                       <h3 className="font-bold text-lg">{faq.q}</h3>
                        <motion.div
                          animate={{ rotate: openFaqIndex === i ? 180 : 0 }}
                          transition={{ duration: 0.3 }}
