@@ -468,7 +468,7 @@ export default function Process() {
                     <div>
                       <span className="text-[9px] font-mono font-black text-[var(--color-text-tertiary)] uppercase tracking-widest block mb-1">
                         <T en="Quality Success Milestone">
-                          Hito de calidad y éxito
+                          Fase de calidad y éxito
                         </T>
                       </span>
                       <div className="flex items-center gap-2">

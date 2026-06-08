@@ -12,11 +12,248 @@ import {
   Sparkles,
   BrainCircuit,
   Briefcase,
+  Palette,
+  Wrench,
+  Headphones,
+  BarChart3,
+  Search,
+  Brain,
+  Database,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T } from "../context/LanguageContext";
+
+interface PlanItem {
+  id: string;
+  name: React.ReactNode;
+  titleColor: string;
+  desc: React.ReactNode;
+  originalPrice: number;
+  sections?: {
+    title: React.ReactNode;
+    icon: React.ComponentType<any>;
+    items: React.ReactNode[];
+  }[];
+  inheritedFrom?: React.ReactNode;
+  extraFeatures?: React.ReactNode[];
+  highlight: boolean;
+  prefix?: React.ReactNode;
+  badge?: React.ReactNode;
+  badgeIcon?: boolean;
+  footnote?: React.ReactNode;
+}
+
+function PlanCard({
+  plan,
+  isOfferActive,
+  navigate,
+}: {
+  plan: any;
+  isOfferActive: boolean;
+  navigate: any;
+  key?: any;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <motion.div
+      whileHover={{ y: -5 }}
+      style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+      className={`p-8 rounded-[var(--radius-bento)] border transition-[border-color,background-color,box-shadow] duration-300 min-h-[500px] relative ${
+        plan.highlight
+          ? "bg-[var(--color-surface-elevated)] border-[var(--color-primary-base)]"
+          : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]"
+      }`}
+    >
+      {/* Absolute Badges */}
+      {plan.highlight && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg z-20">
+          <T en="Most Popular">Más Popular</T>
+        </div>
+      )}
+
+      <div className="flex flex-col h-full justify-between">
+        <div>
+          <div className="h-[140px] md:h-[160px] lg:h-[160px] flex flex-col justify-start">
+            <h3
+              className={`text-3xl font-display font-black tracking-tight mb-2 ${plan.titleColor}`}
+            >
+              {plan.name}
+            </h3>
+            {plan.badge && (
+              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-400 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1.5 mb-2 md:mb-4 uppercase tracking-wider shadow-inner w-fit">
+                {plan.badgeIcon && (
+                  <Sparkles size={12} className="text-purple-400" />
+                )}
+               {plan.badge}
+              </div>
+            )}
+            <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mt-1">
+              {plan.desc}
+            </p>
+          </div>
+          <div className="mb-8 border-b border-[var(--color-border-subtle)] pb-8 mt-2 md:mt-0">
+            <div className="text-[var(--color-text-tertiary)] font-bold text-[10px] uppercase tracking-widest mb-1 h-3 flex items-end">
+              {plan.prefix || "\u00A0"}
+            </div>
+            <div className="flex flex-col gap-1">
+              {isOfferActive && (
+                <div className="flex items-baseline gap-2 opacity-60">
+                  <span className="text-xl md:text-2xl font-display font-medium line-through">
+                    ${plan.originalPrice.toLocaleString()}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl md:text-4xl xl:text-5xl font-display font-black text-[var(--color-primary-base)]">
+                  $
+                  {isOfferActive
+                    ? Math.round(
+                        plan.originalPrice * 0.75,
+                      ).toLocaleString()
+                    : plan.originalPrice.toLocaleString()}
+                </span>
+                <span className="text-[var(--color-text-tertiary)] font-bold text-xs uppercase tracking-widest">
+                  USD
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6 mb-6">
+            {plan.inheritedFrom && (
+              <div className="text-xs md:text-[13px] font-medium italic text-[var(--color-text-secondary)] mb-4 block leading-normal">
+                {plan.inheritedFrom}
+              </div>
+            )}
+
+            {plan.sections && plan.sections.map((section: any, sIdx: number) => {
+              const SectionIcon = section.icon;
+              return (
+                <div key={sIdx} className="space-y-3">
+                  <div className="flex items-center gap-2.5">
+                    <SectionIcon size={18} className="text-[var(--color-text-secondary)] shrink-0" />
+                    <span className="text-xs md:text-[13px] font-extrabold uppercase tracking-widest text-[var(--color-text-secondary)] select-none">
+                      {section.title}
+                    </span>
+                  </div>
+                  <ul className="space-y-2 ml-1">
+                    {section.items.map((item: any, iIdx: number) => {
+                      const isNew = plan.id !== "flash";
+                      return (
+                        <li
+                          key={iIdx}
+                          className="flex items-start gap-2.5 text-sm font-medium"
+                        >
+                          {isNew ? (
+                            <>
+                              <svg
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                                strokeLinejoin="round"
+                                className="w-2.5 h-2.5 text-[var(--color-primary-base)] shrink-0 mt-[5px] select-none"
+                              >
+                                <path d="M12 4l2.5 5.5h6l-4.5 4 1.5 6L12 16l-5.5 3.5 1.5-6L3.5 9.5h6L12 4z" />
+                              </svg>
+                              <span className="text-[var(--color-primary-base)] font-semibold leading-normal">
+                                {item}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2
+                                size={15}
+                                className="text-[var(--color-primary-base)] shrink-0 mt-0.5"
+                              />
+                              <span className="text-[var(--color-text-primary)] leading-normal">
+                                {item}
+                              </span>
+                            </>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          {plan.extraFeatures && plan.extraFeatures.length > 0 && (
+            <div className="mb-6">
+              <div
+                className="overflow-hidden"
+                style={{
+                  maxHeight: expanded ? "600px" : "0px",
+                  transition: "max-height 0.4s ease",
+                }}
+              >
+                <ul className="space-y-3 pt-4 pb-2 border-t border-[var(--color-border-subtle)]/50">
+                  {plan.extraFeatures.map((extraF: any, idx: number) => (
+                    <li
+                      key={idx}
+                      className="flex items-start gap-2.5 text-sm font-medium"
+                    >
+                      <CheckCircle2
+                        size={15}
+                        className="text-[var(--color-primary-base)] shrink-0 mt-0.5"
+                      />
+                      <span className="text-[var(--color-text-primary)] leading-normal">
+                        {extraF}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                type="button"
+                style={{ cursor: "pointer" }}
+                onClick={() => setExpanded(!expanded)}
+                className="text-xs font-bold text-[var(--color-primary-base)] hover:opacity-80 transition-opacity flex items-center gap-1 mt-2 p-0 border-none bg-transparent cursor-pointer"
+              >
+                {expanded ? (
+                  <T en="Hide benefits ↑">Ocultar ↑</T>
+                ) : (
+                  <T en="See more benefits ↓">Ver más beneficios ↓</T>
+                )}
+              </button>
+            </div>
+          )}
+
+          {plan.footnote && (
+            <p className="text-[10px] text-[var(--color-text-tertiary)] italic mb-6 leading-normal block">
+              {plan.footnote}
+            </p>
+          )}
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          const typeMap: Record<string, string> = {
+            flash: "landing",
+            constellation: "corporate",
+            nova: "ecommerce",
+          };
+          navigate(
+            `/cotizar?type=${typeMap[plan.id] || "landing"}`,
+          );
+        }}
+        style={{ cursor: "pointer" }}
+        className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 border-none ${
+          plan.highlight
+            ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20"
+            : "bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)]"
+        }`}
+      >
+        <T en="Choose this Plan">Elegir este Plan</T>
+      </button>
+    </motion.div>
+  );
+}
 
 export default function Services() {
   const navigate = useNavigate();
@@ -50,28 +287,75 @@ export default function Services() {
     return `${days}d ${hours.toString().padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`;
   };
 
-  const plans = [
+  const plans: {
+    id: string;
+    name: React.ReactNode;
+    titleColor: string;
+    desc: React.ReactNode;
+    originalPrice: number;
+    sections?: {
+      title: React.ReactNode;
+      icon: React.ComponentType<any>;
+      items: React.ReactNode[];
+    }[];
+    inheritedFrom?: React.ReactNode;
+    extraFeatures?: React.ReactNode[];
+    highlight: boolean;
+    prefix?: React.ReactNode;
+    badge?: React.ReactNode;
+    badgeIcon?: boolean;
+    footnote?: React.ReactNode;
+  }[] = [
     {
       id: "flash",
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
       desc: (
-        <T en="All-in-one vertical design with up to 5 strategic sections">
-          Diseño vertical todo en uno de hasta 5 secciones estratégicas
+        <T en="Strategic one-page landing optimized to convert visits into actual customers.">
+          Página de aterrizaje estratégica optimizada para convertir visitas en clientes.
         </T>
       ),
       originalPrice: 299,
-      features: [
-        <T en="Exclusive responsive design">Diseño responsivo exclusivo</T>,
-        <T en="Conversion optimization">Optimización de conversión</T>,
-        <T en="Form integration">Integración de formularios</T>,
-        <T en="Basic Google Optimization">Optimización básica para Google</T>,
-        <T en="Web domain for 1 year with standard coverage of $15 USD">
-          Dominio web por 1 año con cobertura estándar de $15 USD
-        </T>,
-        <T en="30 days warranty and post-launch support">
-          30 días de Garantía y Soporte Post-Lanzamiento
-        </T>,
+      sections: [
+        {
+          title: <T en="Design">DISEÑO</T>,
+          icon: Palette,
+          items: [
+            <T en="Exclusive and responsive design">Diseño exclusivo y responsivo</T>,
+            <T en="Designed to capture customers">Diseñada para captar clientes</T>,
+            <T en="Visible on Google">Visible en Google</T>,
+          ],
+        },
+        {
+          title: <T en="Features">FUNCIONALIDADES</T>,
+          icon: Wrench,
+          items: [
+            <T en="Contact form included">Formulario de contacto incluido</T>,
+            <T en="Integrated WhatsApp button">Botón de WhatsApp integrado</T>,
+            <T en="Compatible with social media">Compatible con redes sociales</T>,
+          ],
+        },
+        {
+          title: <T en="Infrastructure">INFRAESTRUCTURA</T>,
+          icon: ShieldCheck,
+          items: [
+            <T en="Web domain included (up to $15 USD)">Dominio web incluido (hasta $15 USD)</T>,
+            <T en="Secure connection (HTTPS)">Conexión segura (HTTPS)</T>,
+            <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
+          ],
+        },
+        {
+          title: <T en="Support">SOPORTE</T>,
+          icon: Headphones,
+          items: [
+            <T en="30 days of post-launch support">30 días de soporte post-lanzamiento</T>,
+          ],
+        },
+      ],
+      extraFeatures: [
+        <T en="Loads in less than 3 seconds">Carga en menos de 3 segundos</T>,
+        <T en="The code is yours forever">El código es tuyo para siempre</T>,
+        <T en="Basic visitor statistics">Estadísticas básicas de visitas</T>,
       ],
       highlight: false,
     },
@@ -80,31 +364,63 @@ export default function Services() {
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
       desc: (
-        <T en="Corporate site with up to 5 independent internal pages">
-          Sitio corporativo con hasta 5 páginas internas independientes
+        <T en="Complete corporate website of up to 5 internal pages with custom integrated blog.">
+          Sitio corporativo de hasta 5 secciones internas con blog autogestionable integrado.
         </T>
       ),
       originalPrice: 699,
-      features: [
-        <T en="Up to 5 custom independent pages">
-          Hasta 5 páginas internas personalizadas
-        </T>,
-        <T en="Advanced Search Engine Optimization">
-          Estructura avanzada para Buscadores
-        </T>,
-        <T en="Self-manageable corporate blog with 3 initial posts">
-          Blog corporativo autogestionable con 3 artículos iniciales
-        </T>,
-        <T en="Customer support chatbot with 5 configured FAQs">
-          Chatbot de atención con 5 preguntas frecuentes configuradas
-        </T>,
-        <T en="SSL Certificate included">Certificado SSL incluido</T>,
-        <T en="Web domain for 1 year with standard coverage of $15 USD">
-          Dominio web por 1 año con cobertura estándar de $15 USD
-        </T>,
-        <T en="30 days warranty and post-launch support">
-          30 días de Garantía y Soporte Post-Lanzamiento
-        </T>,
+      inheritedFrom: <T en="↳ Everything in Flash, plus:">↳ Todo lo de Destello, más:</T>,
+      sections: [
+        {
+          title: <T en="Design">DISEÑO</T>,
+          icon: Palette,
+          items: [
+            <T en="Up to 5 custom sections/pages">Hasta 5 páginas personalizadas</T>,
+            <T en="Visual identity coherent with your brand">Identidad visual coherente con tu marca</T>,
+          ],
+        },
+        {
+          title: <T en="Features">FUNCIONALIDADES</T>,
+          icon: Wrench,
+          items: [
+            <T en="Blog that you can update yourself">Blog que tú mismo puedes actualizar</T>,
+            <T en="3 initial articles written">3 artículos iniciales redactados</T>,
+            <T en="24/7 Support Chatbot">Chatbot de atención 24/7</T>,
+            <T en="Google Maps Integration">Integración de Google Maps</T>,
+          ],
+        },
+        {
+          title: <T en="Analytics">ANALYTICS</T>,
+          icon: BarChart3,
+          items: [
+            <T en="Full Google Analytics 4">Google Analytics 4 completo</T>,
+            <T en="Real-time visitor statistics">Estadísticas de visitas en tiempo real</T>,
+          ],
+        },
+        {
+          title: <T en="SEO">SEO</T>,
+          icon: Search,
+          items: [
+            <T en="Advanced SEO">SEO avanzado</T>,
+            <T en="Google Search Console configuration">Configuración en Google Search Console</T>,
+          ],
+        },
+        {
+          title: <T en="Support">SOPORTE</T>,
+          icon: Headphones,
+          items: [
+            <T en="30 days of post-launch support">30 días de soporte post-lanzamiento</T>,
+          ],
+        },
+      ],
+      extraFeatures: [
+        <T en="Loads in less than 3 seconds">Carga en menos de 3 segundos</T>,
+        <T en="The code is yours forever">El código es tuyo para siempre</T>,
+        <T en="Basic visitor statistics">Estadísticas básicas de visitas</T>,
+        <T en="Open Graph for social media">Open Graph para redes sociales</T>,
+        <T en="Advanced forms with automatic replies">Formularios avanzados con respuestas automáticas</T>,
+        <T en="Email notifications">Notificaciones por email</T>,
+        <T en="Website history of changes">Historial de cambios de tu web</T>,
       ],
       highlight: true,
     },
@@ -113,32 +429,64 @@ export default function Services() {
       name: <T en="Nova Package">Paquete Nova</T>,
       titleColor: "text-violet-500",
       desc: (
-        <T en="Your virtual store (to explode in sales).">
-          Tu tienda virtual (para explotar en ventas).
+        <T en="High-performance online store with automated checkout and support for AI integration.">
+          Tienda online de alto rendimiento con pasarelas de pago y soporte para integración de IA.
         </T>
       ),
-      prefix: <T en="From">Desde</T>,
       originalPrice: 1299,
       badge: <T en="AI Powered">Potenciado con IA</T>,
       badgeIcon: true,
-      features: [
-        <T en="Unlimited catalog with assisted loading of your first 20 products">
-          Catálogo ilimitado con carga asistida de tus primeros 20 productos
-        </T>,
-        <T en="Configured payment gateways">Pasarelas de pago configuradas</T>,
-        <T en="Inventory management">Gestión de inventario</T>,
-        <T en="Advanced Search Engine Optimization">
-          Estructura avanzada para Buscadores
-        </T>,
-        <T en="Lead Capture Bot">Bot de Respuestas Rápidas</T>,
-        <T en="Setup of 1 AI Add-on*">Instalación de 1 Add-on IA*</T>,
-        <T en="Admin panel">Panel de administración</T>,
-        <T en="Web domain for 1 year with standard coverage of $15 USD">
-          Dominio web por 1 año con cobertura estándar de $15 USD
-        </T>,
-        <T en="90 days priority warranty and post-launch support">
-          90 días de Garantía y Soporte Prioritario Post-Lanzamiento
-        </T>,
+      inheritedFrom: <T en="↳ Everything in Constellation, plus:">↳ Todo lo de Constelación, más:</T>,
+      sections: [
+        {
+          title: <T en="Store">TIENDA</T>,
+          icon: ShoppingCart,
+          items: [
+            <T en="Unlimited product catalog">Catálogo ilimitado de productos</T>,
+            <T en="Initial loading of 20 products">Carga Inicial de 20 productos</T>,
+            <T en="Configured payment gateways">Pasarelas de pago configuradas</T>,
+            <T en="Inventory manager">Gestor de inventario</T>,
+            <T en="Admin panel">Panel de administración</T>,
+          ],
+        },
+        {
+          title: <T en="Artificial Intelligence">INTELIGENCIA ARTIFICIAL</T>,
+          icon: Brain,
+          items: [
+            <T en="1 AI tool included*">1 herramienta de IA incluida*</T>,
+            <T en="Chatbot trained on your catalog">Chatbot entrenado con tu catálogo</T>,
+            <T en="Smart cross-selling recommender">Recomendador inteligente cross-selling</T>,
+          ],
+        },
+        {
+          title: <T en="Backend">BACKEND</T>,
+          icon: Database,
+          items: [
+            <T en="Real-time database">Base de datos en tiempo real</T>,
+            <T en="Client registration and login">Registro y login de clientes</T>,
+            <T en="Cloud stored images">Imágenes almacenadas en la nube</T>,
+          ],
+        },
+        {
+          title: <T en="Support">SOPORTE</T>,
+          icon: Headphones,
+          items: [
+            <T en="90 days of priority support">90 días de soporte prioritario</T>,
+          ],
+        },
+      ],
+      extraFeatures: [
+        <T en="Loads in less than 3 seconds">Carga en menos de 3 segundos</T>,
+        <T en="The code is yours forever">El código es tuyo para siempre</T>,
+        <T en="Open Graph for social media">Open Graph para redes sociales</T>,
+        <T en="Advanced forms with automatic replies">Formularios avanzados con respuestas automáticas</T>,
+        <T en="Email notifications">Notificaciones por email</T>,
+        <T en="Website history of changes">Historial de cambios de tu web</T>,
+        <T en="Real-time sales notifications">Notificaciones de venta en tiempo real</T>,
+        <T en="Abandoned cart recovery">Recuperación de carritos abandonados</T>,
+        <T en="Monthly sales reports">Reporte mensual de ventas</T>,
+        <T en="Post-sale automations">Automatizaciones post-venta</T>,
+        <T en="Products in Google Shopping">Productos en Google Shopping</T>,
       ],
       footnote: (
         <T en="*Monthly API/Subscription costs not included">
@@ -194,7 +542,7 @@ export default function Services() {
                 </T>
               </p>
               <button
-                onClick={() => navigate("/servicios")}
+                onClick={() => navigate("/blog/landing-pages-conversion")}
                 className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
               >
                 <T en="Learn More">Saber más</T> <ArrowRight size={14} />
@@ -221,7 +569,7 @@ export default function Services() {
                 </T>
               </p>
               <button
-                onClick={() => navigate("/servicios")}
+                onClick={() => navigate("/blog/webs-corporativas-identidad")}
                 className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
               >
                 <T en="Learn More">Saber más</T> <ArrowRight size={14} />
@@ -248,7 +596,7 @@ export default function Services() {
                 </T>
               </p>
               <button
-                onClick={() => navigate("/servicios")}
+                onClick={() => navigate("/blog/ecommerce-alto-nivel")}
                 className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
               >
                 <T en="Learn More">Saber más</T> <ArrowRight size={14} />
@@ -304,112 +652,12 @@ export default function Services() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto">
               {plans.map((plan, i) => (
-                <motion.div
+                <PlanCard
                   key={i}
-                  whileHover={{ y: -10 }}
-                  className={`p-8 rounded-[var(--radius-bento)] border transition-[border-color,background-color,box-shadow] duration-300 flex flex-col justify-between min-h-[500px] relative ${
-                    plan.highlight
-                      ? "bg-[var(--color-surface-elevated)] border-[var(--color-primary-base)]"
-                      : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]"
-                  }`}
-                >
-                  {/* Absolute Badges */}
-                  {plan.highlight && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg z-20">
-                      <T en="Most Popular">Más Popular</T>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col h-full justify-between">
-                    <div>
-                      <div className="h-[140px] md:h-[160px] lg:h-[160px] flex flex-col justify-start">
-                        <h3
-                          className={`text-3xl font-display font-black tracking-tight mb-2 ${plan.titleColor}`}
-                        >
-                          {plan.name}
-                        </h3>
-                        {plan.badge && (
-                          <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-400 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1.5 mb-2 md:mb-4 uppercase tracking-wider shadow-inner w-fit">
-                            {plan.badgeIcon && (
-                              <Sparkles size={12} className="text-purple-400" />
-                            )}
-                            {plan.badge}
-                          </div>
-                        )}
-                        <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
-                          {plan.desc}
-                        </p>
-                      </div>
-                      <div className="mb-8 border-b border-[var(--color-border-subtle)] pb-8 mt-2 md:mt-0">
-                        <div className="text-[var(--color-text-tertiary)] font-bold text-[10px] uppercase tracking-widest mb-1 h-3 flex items-end">
-                          {plan.prefix || "\u00A0"}
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          {isOfferActive && (
-                            <div className="flex items-baseline gap-2 opacity-60">
-                              <span className="text-xl md:text-2xl font-display font-medium line-through">
-                                ${plan.originalPrice.toLocaleString()}
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-5xl md:text-4xl xl:text-5xl font-display font-black text-[var(--color-primary-base)]">
-                              $
-                              {isOfferActive
-                                ? Math.round(
-                                    plan.originalPrice * 0.75,
-                                  ).toLocaleString()
-                                : plan.originalPrice.toLocaleString()}
-                            </span>
-                            <span className="text-[var(--color-text-tertiary)] font-bold text-xs uppercase tracking-widest">
-                              USD
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <ul className="space-y-4 mb-6">
-                        {plan.features.map((feature, j) => (
-                          <li
-                            key={j}
-                            className="flex items-start gap-3 text-sm font-medium"
-                          >
-                            <CheckCircle2
-                              size={16}
-                              className="text-[var(--color-primary-base)] shrink-0 mt-0.5"
-                            />
-                            <span className="text-[var(--color-text-primary)]">
-                              {feature}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                      {plan.footnote && (
-                        <p className="text-[10px] text-[var(--color-text-tertiary)] italic mb-6 leading-normal block">
-                          {plan.footnote}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      const typeMap: Record<string, string> = {
-                        flash: "landing",
-                        constellation: "corporate",
-                        nova: "ecommerce",
-                      };
-                      navigate(
-                        `/cotizar?type=${typeMap[plan.id] || "landing"}`,
-                      );
-                    }}
-                    className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
-                      plan.highlight
-                        ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20"
-                        : "bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)]"
-                    }`}
-                  >
-                    <T en="Choose this Plan">Elegir este Plan</T>
-                  </button>
-                </motion.div>
+                  plan={plan}
+                  isOfferActive={isOfferActive}
+                  navigate={navigate}
+                />
               ))}
             </div>
           </section>
@@ -607,10 +855,10 @@ export default function Services() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/?plan=Consulta#contacto")}
+                onClick={() => navigate("/cotizar?addon=bot_fast")}
                 className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
               >
-                <T en="Consult">Consultar</T> <ArrowRight size={14} />
+                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
               </button>
             </motion.div>
 
@@ -646,10 +894,10 @@ export default function Services() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/?plan=Consulta#contacto")}
+                onClick={() => navigate("/cotizar?addon=ai_agent")}
                 className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
               >
-                <T en="Consult">Consultar</T> <ArrowRight size={14} />
+                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
               </button>
             </motion.div>
 
@@ -664,8 +912,11 @@ export default function Services() {
                   <Zap size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">
+                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight flex flex-wrap items-center gap-2">
                     <T en="Semantic Search">Buscador Semántico</T>
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 text-[9px] uppercase font-bold tracking-wider border border-violet-500/20 shadow-sm leading-none">
+                      <T en="Recommended for Nova">Recomendado para Nova</T>
+                    </span>
                   </h3>
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
                     <T en="For e-commerce: your customers find products describing what they need in natural language.">
@@ -682,10 +933,10 @@ export default function Services() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/?plan=Consulta#contacto")}
+                onClick={() => navigate("/cotizar?addon=semantic_search")}
                 className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
               >
-                <T en="Consult">Consultar</T> <ArrowRight size={14} />
+                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
               </button>
             </motion.div>
 
@@ -718,10 +969,10 @@ export default function Services() {
                 </div>
               </div>
               <button
-                onClick={() => navigate("/?plan=Consulta#contacto")}
+                onClick={() => navigate("/cotizar?addon=content_assistant")}
                 className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
               >
-                <T en="Consult">Consultar</T> <ArrowRight size={14} />
+                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
               </button>
             </motion.div>
           </div>

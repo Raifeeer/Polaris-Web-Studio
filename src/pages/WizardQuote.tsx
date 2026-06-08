@@ -10,6 +10,7 @@ import {
   Loader2,
   Sparkles,
   Globe,
+  Cloud,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -255,8 +256,13 @@ const addons = [
     id: "semantic_search",
     title: <T en="Semantic AI Search">Buscador Semántico IA</T>,
     price: 250,
-    desc: <T en="Smart catalog search">Búsqueda avanzada para e-commerce</T>,
+    desc: (
+      <T en="Smart catalog search. Recommended for Nova e-commerce.">
+        Búsqueda avanzada para e-commerce. Recomendado para Nova.
+      </T>
+    ),
     isAi: true,
+    novaSpec: true,
   },
   {
     id: "content_assistant",
@@ -464,7 +470,7 @@ export default function WizardQuote() {
     return {
       type: "",
       size: "",
-      addons: [] as string[],
+      addons: ["hosting"] as string[],
       date: null as Date | null,
       time: "",
       name: "",
@@ -580,7 +586,20 @@ export default function WizardQuote() {
         cal("on", {
           action: "bookingSuccessful",
           callback: (e) => {
-            setSuccess(true);
+            const selectedPlanName = getTypeName(selections.type);
+            const finalTotal = isOfferActive ? discountedTotal : estimatedTotal;
+            const statePayload = {
+              plan: selections.type,
+              planName: selectedPlanName,
+              total: finalTotal,
+              isMonthly: monthlyAddonsPrice > 0 ? monthlyAddonsPrice : null,
+              discountActive: isOfferActive,
+              addons: selections.addons.map(getAddonName),
+              domain: domainSummaryText,
+            };
+            localStorage.removeItem("wizardQuote_currentStep");
+            localStorage.removeItem("wizardQuote_selections");
+            navigate("/gracias", { state: statePayload });
           },
         });
 
@@ -778,8 +797,21 @@ export default function WizardQuote() {
     // Simulate API call
     setTimeout(() => {
       setLoading(false);
-      setSuccess(true);
-    }, 2000);
+      const selectedPlanName = getTypeName(selections.type);
+      const finalTotal = isOfferActive ? discountedTotal : estimatedTotal;
+      const statePayload = {
+        plan: selections.type,
+        planName: selectedPlanName,
+        total: finalTotal,
+        isMonthly: monthlyAddonsPrice > 0 ? monthlyAddonsPrice : null,
+        discountActive: isOfferActive,
+        addons: selections.addons.map(getAddonName),
+        domain: domainSummaryText,
+      };
+      localStorage.removeItem("wizardQuote_currentStep");
+      localStorage.removeItem("wizardQuote_selections");
+      navigate("/gracias", { state: statePayload });
+    }, 1500);
   };
 
   const toggleAddon = (id: string) => {
@@ -1170,11 +1202,17 @@ export default function WizardQuote() {
                             <div className="flex justify-between w-full gap-2 mb-4">
                               <div>
                                 <h3
-                                  className={`font-bold font-display ${selections.addons.includes(a.id) ? "text-[var(--color-primary-base)]" : ""}`}
+                                  className={`font-bold font-display flex flex-wrap items-center gap-x-1.5 gap-y-1 leading-snug ${selections.addons.includes(a.id) ? "text-[var(--color-primary-base)]" : ""}`}
                                 >
-                                  {a.title}
+                                  <span>{a.title}</span>
+                                  {/* @ts-ignore */}
+                                  {a.novaSpec && (
+                                    <span className="inline-flex items-center text-[8px] bg-violet-500/15 border border-violet-500/10 text-violet-400 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider leading-none">
+                                      <T en="Nova Rec.">Recomendado Nova</T>
+                                    </span>
+                                  )}
                                   {a.isAi && (
-                                    <span className="ml-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 text-[10px] uppercase font-bold tracking-wider">
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 text-[10px] uppercase font-bold tracking-wider leading-none">
                                       <Sparkles size={10} /> <T en="AI">IA</T>
                                     </span>
                                   )}
@@ -1230,6 +1268,31 @@ export default function WizardQuote() {
                         <T en="Let's build it together">Vamos a construirlo</T>
                       </h2>
 
+                      {!selections.addons.includes("hosting") && (
+                        <div className="p-5 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/35 flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition-all">
+                          <div className="flex gap-3 items-start">
+                            <div className="p-2 ml-1 rounded-xl bg-amber-500/10 text-amber-500 flex-shrink-0 mt-0.5">
+                              <Cloud size={18} />
+                            </div>
+                            <div className="space-y-1">
+                              <h4 className="text-sm font-bold text-[var(--color-text-primary)]">
+                                <T en="Add hosting and support?">¿Deseas agregar hosting y soporte?</T>
+                              </h4>
+                              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                                <T en="Get optimized speed, automatic backups, and continuous tech support for just $30/mo. Recommended for launch.">Consigue velocidad óptima, copias de seguridad automáticas y soporte continuo por solo $30/mes. Opción recomendada para el lanzamiento.</T>
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleAddon("hosting")}
+                            className="md:shrink-0 py-2.5 px-5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs uppercase tracking-wider active:scale-95 transition-all text-center border-none cursor-pointer"
+                          >
+                            <T en="+ Add for $30/month">+ Agregar por $30/mes</T>
+                          </button>
+                        </div>
+                      )}
+
                       <div
                         className="w-full bg-[var(--color-surface-base)] rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] min-h-[500px]"
                         style={
@@ -1245,6 +1308,7 @@ export default function WizardQuote() {
                       >
                         {CalComponent ? (
                           <CalComponent
+                            key={quoteSummary}
                             calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(quoteSummary)}`}
                             style={{
                               width: "100%",
@@ -1438,6 +1502,32 @@ export default function WizardQuote() {
                 </T>
               </p>
             </div>
+
+            {/* Hosting Upsell inside sidebar */}
+            {!selections.addons.includes("hosting") && (
+              <div className="mt-6 p-4 rounded-xl bg-amber-500/5 border border-amber-500/25 space-y-3">
+                <div className="flex gap-2 items-start">
+                  <div className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500 flex-shrink-0 mt-0.5">
+                    <Cloud size={14} />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xs font-bold text-[var(--color-text-primary)]">
+                      <T en="Recommended: Hosting & Support">¿Deseas hosting y soporte?</T>
+                    </h4>
+                    <p className="text-[10px] text-[var(--color-text-secondary)] leading-normal">
+                      <T en="Get guaranteed speed, automatic backups, and 24/7 tech support for $30/mo.">Consigue velocidad óptima, copias de seguridad automáticas y soporte continuo por solo $30/mes.</T>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggleAddon("hosting")}
+                  className="w-full py-1.5 px-3 rounded-lg bg-amber-500 text-white font-bold text-[10px] uppercase tracking-wider hover:bg-amber-600 active:scale-95 transition-all text-center border-none cursor-pointer"
+                >
+                  <T en="+ Add for $30/month">+ Agregar por $30/mes</T>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </main>

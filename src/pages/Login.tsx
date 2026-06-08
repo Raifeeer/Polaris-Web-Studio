@@ -1,24 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Lock, Mail, ArrowRight } from "lucide-react";
+import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Logo from "../components/Logo";
-import { T } from "../context/LanguageContext";
+import { T, useLanguage } from "../context/LanguageContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
+  const { login, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Auto redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/dashboard"); // Mock login success
-    }, 1500);
+    setError(null);
+
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      navigate("/dashboard");
+    } else {
+      setError(
+        language === "en" 
+          ? "Invalid credentials. Please verify your email and password." 
+          : "Credenciales inválidas. Por favor verifique sus datos de acceso."
+      );
+    }
+  };
+
+  const fillCredentials = (demoEmail: string, demoPass: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPass);
   };
 
   return (
@@ -28,13 +54,13 @@ export default function Login() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md p-8 md:p-12 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] bento-glow"
+          className="w-full max-w-md p-6 md:p-10 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] bento-glow"
         >
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6">
             <Logo size={40} stacked />
           </div>
 
-          <div className="text-center mb-8 space-y-2">
+          <div className="text-center mb-6 space-y-2">
             <h1 className="text-2xl font-display font-black">
               <T en="Client Portal">Portal de Clientes</T>
             </h1>
@@ -45,8 +71,15 @@ export default function Login() {
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div className="space-y-4">
+          {error && (
+            <div className="mb-4 p-3.5 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs flex items-start gap-2 animate-shake">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-3">
               <div className="relative">
                 <Mail
                   className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
@@ -57,9 +90,9 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email Corporativo"
-                  aria-label="Email Corporativo"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors"
+                  placeholder="Email"
+                  aria-label="Email"
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
               </div>
               <div className="relative">
@@ -74,7 +107,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Contraseña"
                   aria-label="Contraseña"
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors"
+                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
               </div>
             </div>
@@ -82,7 +115,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 rounded-xl bg-[var(--color-primary-base)] text-white font-black flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
+              className="w-full py-3.5 rounded-xl bg-[var(--color-primary-base)] text-white font-black flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 text-sm cursor-pointer"
             >
               {loading ? (
                 <T en="Authenticating...">Autenticando...</T>
@@ -95,7 +128,33 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-8">
+          {/* Setup quick access help box for convenient testing */}
+          <div className="mt-6 p-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/70 text-xs space-y-2">
+            <div className="font-bold text-[var(--color-text-secondary)] uppercase tracking-wider text-[10px] pb-1 border-b border-[var(--color-border-subtle)]/30">
+              <T en="Quick Demo Access">Acceso Rápido Demo</T>
+            </div>
+            <button
+              type="button"
+              onClick={() => fillCredentials("cristian2200299@gmail.com", "admin123")}
+              className="w-full text-left flex justify-between items-center py-1 hover:text-[var(--color-primary-base)] transition-colors group cursor-pointer"
+            >
+              <span>🔑 Admin (Gestión)</span>
+              <span className="font-mono text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] underline">cristian...@gmail.com</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fillCredentials("nexus@client.com", "client123")}
+              className="w-full text-left flex justify-between items-center py-1 hover:text-[var(--color-primary-base)] transition-colors group cursor-pointer"
+            >
+              <span>💼 Cliente (Vista Avances)</span>
+              <span className="font-mono text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] underline">nexus@client.com</span>
+            </button>
+            <p className="text-[10px] text-[var(--color-text-tertiary)] italic pt-1">
+              * El administrador puede crear, registrar y administrar nuevos clientes en vivo.
+            </p>
+          </div>
+
+          <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">
             <T en="Did you forget your password? Contact your assigned manager.">
               ¿Olvidaste tu contraseña? Contacta a tu project manager asignado.
             </T>
@@ -105,3 +164,4 @@ export default function Login() {
     </div>
   );
 }
+

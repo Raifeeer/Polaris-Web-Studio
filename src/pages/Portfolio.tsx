@@ -25,9 +25,9 @@ export default function Portfolio() {
             <T en="Portfolio">Portafolio</T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            <T en="Explore a selection of concepts, interfaces, and functional prototypes created to demonstrate the scope of my engineering and visual design.">
+            <T en="Explore a selection of concepts, interfaces, and functional prototypes created to demonstrate the scope of my development and visual design.">
               Explora una selección de conceptos, interfaces y prototipos
-              funcionales creados para demostrar el alcance de mi ingeniería y
+              funcionales creados para demostrar el alcance de mi desarrollo y
               diseño visual.
             </T>
           </p>
@@ -115,7 +115,7 @@ export default function Portfolio() {
                 </p>
               </div>
 
-              {/* Mockup Presentation */}
+               {/* Mockup Presentation */}
               <div className="relative z-10 w-full mt-8 rounded-t-xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100">
                 {project.slug === "nexus-real-estate" ||
                 project.slug === "chroma-store" ||
@@ -125,8 +125,6 @@ export default function Portfolio() {
                     <div className="scale-[0.52] sm:scale-[0.6] md:scale-[0.68] lg:scale-[0.75] origin-top translate-y-2 transition-transform duration-500 group-hover:scale-[0.55] sm:group-hover:scale-[0.63] md:group-hover:scale-[0.71] lg:group-hover:scale-[0.78]">
                       <MockupFrame type="mobile" projectSlug={project.slug} />
                     </div>
-                    {/* Fade overlay since it's elegantly cropped to half-height */}
-                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-surface-elevated)] to-transparent pointer-events-none z-10" />
                   </div>
                 ) : (
                   <div className="w-full h-full rounded-t-xl overflow-hidden">

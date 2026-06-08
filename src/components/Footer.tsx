@@ -101,12 +101,12 @@ export default function Footer({
             >
               <T en="Process">Metodología</T>
             </Link>
-            <div className="group flex items-center gap-2 cursor-default">
-              <span className="text-[var(--color-text-secondary)]">Blog</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-[var(--color-surface-highlight)] px-1.5 py-0.5 rounded text-[var(--color-primary-base)] border border-[var(--color-border-subtle)]">
-                <T en="Soon">Próximamente</T>
-              </span>
-            </div>
+            <Link
+              to="/blog"
+              className="hover:text-[var(--color-primary-base)] transition-colors"
+            >
+              Blog
+            </Link>
           </div>
         </div>
 

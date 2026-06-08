@@ -354,7 +354,7 @@ export default function LandingPage() {
         <T en="Yes, we work with a 50% upfront and 50% upon launch structure. For large projects like e-commerce, we can structure milestone payments.">
           Sí, trabajamos con un esquema de 50% al iniciar el proyecto y 50% al
           momento del lanzamiento. Para proyectos grandes como e-commerce,
-          podemos estructurar pagos por hitos.
+          podemos estructurar pagos por fases.
         </T>
       ),
     },
@@ -468,7 +468,7 @@ export default function LandingPage() {
             className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
           >
             <Link
-              to="/servicios"
+              to="/blog/landing-pages-conversion"
               className="flex flex-col p-6 sm:p-8 h-full items-start gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 rounded-[var(--radius-bento)] text-left justify-between w-full"
             >
               <div className="w-full space-y-6">
@@ -535,7 +535,7 @@ export default function LandingPage() {
             className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
           >
             <Link
-              to="/servicios"
+              to="/blog/ecommerce-alto-nivel"
               className="flex flex-col p-6 sm:p-8 h-full items-start gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 rounded-[var(--radius-bento)] text-left justify-between w-full"
             >
               <div className="w-full space-y-6">
@@ -605,7 +605,7 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
           >
             <Link
-              to="/servicios"
+              to="/blog/webs-corporativas-identidad"
               className="flex flex-col p-6 sm:p-8 h-full items-start gap-4 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 rounded-[var(--radius-bento)] text-left justify-between w-full"
             >
               <div className="w-full space-y-6">
@@ -1243,7 +1243,7 @@ export default function LandingPage() {
                 </T>
               </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {featuredProjects.map((p, i) => (
                 <div
                   key={i}
@@ -1289,8 +1289,6 @@ export default function LandingPage() {
                             <div className="scale-[0.45] origin-top translate-y-[-10px] transition-transform duration-500 group-hover:scale-[0.48]">
                               <MockupFrame type="mobile" projectSlug={p.slug} />
                             </div>
-                            {/* Fade overlay since it's elegantly cropped to half-height */}
-                            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-surface-elevated)] to-transparent pointer-events-none z-10" />
                           </div>
                         ) : (
                           <MockupFrame type="browser" projectSlug={p.slug} />
@@ -1301,16 +1299,16 @@ export default function LandingPage() {
 
                   {/* Real Numbers Metrics */}
                   <div className="pt-6 border-t border-[var(--color-border-subtle)] space-y-4">
-                    <div className="grid grid-cols-3 gap-2 text-center bg-[var(--color-surface-base)] p-3 rounded-xl border border-[var(--color-border-subtle)]/50">
+                    <div className="grid grid-cols-3 gap-2 text-center bg-[var(--color-surface-base)] p-3 rounded-xl border border-[var(--color-border-subtle)]/50 divide-x divide-[var(--color-border-subtle)]/30">
                       {p.metrics.map((metric, mIdx) => (
                         <div
                           key={mIdx}
-                          className="flex flex-col justify-center"
+                          className="flex flex-col justify-between p-1 min-h-[72px]"
                         >
-                          <span className="text-[9px] text-[var(--color-text-secondary)] uppercase font-bold min-h-[36px] flex items-center justify-center leading-tight tracking-wider mb-1.5">
+                          <span className="text-[10px] text-[var(--color-text-secondary)] uppercase font-bold tracking-wider leading-tight mb-2 block">
                             {metric.label}
                           </span>
-                          <span className="text-xs sm:text-sm font-black font-mono text-[var(--color-primary-base)] leading-none">
+                          <span className="text-xs sm:text-sm font-black font-mono text-[var(--color-primary-base)] leading-normal block mt-auto">
                             {metric.value}
                           </span>
                         </div>
@@ -1398,72 +1396,84 @@ export default function LandingPage() {
                             icon: Zap,
                             rgb: "245, 158, 11",
                             hex: "#f59e0b",
+                            slug: "nextjs-arquitectura-optima",
                           },
                           {
                             name: "React",
                             icon: Code,
-                            rgb: "88, 196, 220",
-                            hex: "#58c4dc",
+                            rgb: "6, 182, 212",
+                            hex: "#06b6d4",
+                            slug: "react-libreria-componentes",
                           },
                           {
                             name: "Tailwind",
                             icon: Globe,
                             rgb: "56, 189, 248",
                             hex: "#38bdf8",
+                            slug: "tailwind-diseno-rapido",
                           },
                           {
                             name: "Cloud",
                             icon: Cloud,
-                            rgb: "14, 165, 233",
-                            hex: "#0ea5e9",
+                            rgb: "249, 115, 22",
+                            hex: "#f97316",
+                            slug: "cloud-firebase-servidores",
                           },
                           {
                             name: "Vite",
                             icon: Rocket,
-                            rgb: "189, 52, 254",
-                            hex: "#bd34fe",
+                            rgb: "168, 85, 247",
+                            hex: "#a855f7",
+                            slug: "vite-desarrollo-veloz",
                           },
                           {
                             name: "TypeScript",
                             icon: ShieldCheck,
-                            rgb: "49, 120, 198",
-                            hex: "#3178c6",
+                            rgb: "37, 99, 235",
+                            hex: "#2563eb",
+                            slug: "typescript-codigo-seguro",
                           },
                           {
                             name: "Gemini",
                             icon: Cpu,
-                            rgb: "66, 133, 244",
-                            hex: "#4285f4",
+                            rgb: "99, 102, 241",
+                            hex: "#6366f1",
+                            slug: "gemini-inteligencia-artificial",
                           },
                           {
                             name: "Grok",
                             icon: Brain,
-                            rgb: "var(--color-grok-rgb)",
-                            hex: "var(--color-grok)",
+                            rgb: "107, 114, 128",
+                            hex: "#6b7280",
+                            slug: "grok-modelo-ia",
                           },
                           {
                             name: "PostgreSQL",
                             icon: Database,
-                            rgb: "51, 103, 145",
-                            hex: "#336791",
+                            rgb: "71, 85, 105",
+                            hex: "#475569",
+                            slug: "postgresql-base-datos",
                           },
                           {
                             name: "SEO Core",
                             icon: BarChart3,
                             rgb: "16, 185, 129",
                             hex: "#10b981",
+                            slug: "seo-core-optimizacion-busqueda",
                           },
                           {
                             name: "Framer",
                             icon: Layers,
-                            rgb: "168, 85, 247",
-                            hex: "#a855f7",
+                            rgb: "219, 39, 119",
+                            hex: "#db2777",
+                            slug: "framer-motion-animaciones",
                           },
                           {
                             name: "SSL",
                             icon: Lock,
-                            rgb: "6, 182, 212",
-                            hex: "#06b6d4",
+                            rgb: "20, 184, 166",
+                            hex: "#14b8a6",
+                            slug: "ssl-seguridad-certificado",
                           },
                         ];
 
@@ -1482,6 +1492,10 @@ export default function LandingPage() {
                                   key={uniqueKey}
                                   whileHover={{ scale: 1.05, y: -2 }}
                                   whileTap={{ scale: 0.95 }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/blog/${tech.slug}`);
+                                  }}
                                   style={{
                                     backgroundColor: `rgba(${tech.rgb}, 0.08)`,
                                     borderColor: `rgba(${tech.rgb}, 0.25)`,
@@ -1505,7 +1519,7 @@ export default function LandingPage() {
                                   >
                                     <IconComponent size={18} />
                                   </motion.div>
-                                  <span className="font-bold text-xs tracking-tight text-[var(--color-text-primary)] group-hover/tech:text-white transition-colors duration-200 whitespace-nowrap">
+                                  <span className="font-bold text-xs tracking-tight text-[var(--color-text-primary)] transition-colors duration-200 whitespace-nowrap">
                                     {tech.name}
                                   </span>
                                 </motion.div>
@@ -1537,14 +1551,16 @@ export default function LandingPage() {
                             hex: "#f59e0b",
                             catEs: "Framework",
                             catEn: "Framework",
+                            slug: "nextjs-arquitectura-optima",
                           },
                           {
                             name: "React",
                             icon: Code,
-                            rgb: "88, 196, 220",
-                            hex: "#58c4dc",
+                            rgb: "6, 182, 212",
+                            hex: "#06b6d4",
                             catEs: "Librería UI",
                             catEn: "UI Library",
+                            slug: "react-libreria-componentes",
                           },
                           {
                             name: "Tailwind",
@@ -1553,54 +1569,61 @@ export default function LandingPage() {
                             hex: "#38bdf8",
                             catEs: "Diseño CSS",
                             catEn: "CSS Design",
+                            slug: "tailwind-diseno-rapido",
                           },
                           {
                             name: "Cloud",
                             icon: Cloud,
-                            rgb: "14, 165, 233",
-                            hex: "#0ea5e9",
+                            rgb: "249, 115, 22",
+                            hex: "#f97316",
                             catEs: "Nube / Firebase",
                             catEn: "Cloud / Firebase",
+                            slug: "cloud-firebase-servidores",
                           },
                           {
                             name: "Vite",
                             icon: Rocket,
-                            rgb: "189, 52, 254",
-                            hex: "#bd34fe",
+                            rgb: "168, 85, 247",
+                            hex: "#a855f7",
                             catEs: "Construcción",
                             catEn: "Build Tool",
+                            slug: "vite-desarrollo-veloz",
                           },
                           {
                             name: "TypeScript",
                             icon: ShieldCheck,
-                            rgb: "49, 120, 198",
-                            hex: "#3178c6",
+                            rgb: "37, 99, 235",
+                            hex: "#2563eb",
                             catEs: "Lenguaje",
                             catEn: "Language",
+                            slug: "typescript-codigo-seguro",
                           },
                           {
                             name: "Gemini",
                             icon: Cpu,
-                            rgb: "66, 133, 244",
-                            hex: "#4285f4",
+                            rgb: "99, 102, 241",
+                            hex: "#6366f1",
                             catEs: "Modelo IA",
                             catEn: "AI Model",
+                            slug: "gemini-inteligencia-artificial",
                           },
                           {
                             name: "Grok",
                             icon: Brain,
-                            rgb: "var(--color-grok-rgb)",
-                            hex: "var(--color-grok)",
+                            rgb: "107, 114, 128",
+                            hex: "#6b7280",
                             catEs: "Modelo IA",
                             catEn: "AI Model",
+                            slug: "grok-modelo-ia",
                           },
                           {
                             name: "PostgreSQL",
                             icon: Database,
-                            rgb: "51, 103, 145",
-                            hex: "#336791",
+                            rgb: "71, 85, 105",
+                            hex: "#475569",
                             catEs: "Base de Datos",
                             catEn: "Database",
+                            slug: "postgresql-base-datos",
                           },
                           {
                             name: "SEO Core",
@@ -1609,22 +1632,25 @@ export default function LandingPage() {
                             hex: "#10b981",
                             catEs: "Optimización",
                             catEn: "Optimization",
+                            slug: "seo-core-optimizacion-busqueda",
                           },
                           {
                             name: "Framer",
                             icon: Layers,
-                            rgb: "168, 85, 247",
-                            hex: "#a855f7",
+                            rgb: "219, 39, 119",
+                            hex: "#db2777",
                             catEs: "Animación",
                             catEn: "Animation",
+                            slug: "framer-motion-animaciones",
                           },
                           {
                             name: "SSL",
                             icon: Lock,
-                            rgb: "6, 182, 212",
-                            hex: "#06b6d4",
+                            rgb: "20, 184, 166",
+                            hex: "#14b8a6",
                             catEs: "Seguridad",
                             catEn: "SSL Security",
+                            slug: "ssl-seguridad-certificado",
                           },
                         ];
                         return baseTechs.map((tech, idx) => {
@@ -1635,6 +1661,7 @@ export default function LandingPage() {
                               href="#"
                               onClick={(e) => {
                                 e.preventDefault();
+                                navigate(`/blog/${tech.slug}`);
                               }}
                               initial={{ opacity: 0, y: 15 }}
                               animate={{ opacity: 1, y: 0 }}
@@ -1648,7 +1675,7 @@ export default function LandingPage() {
                               }}
                               className="flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-300 group/tech cursor-pointer text-center relative overflow-hidden"
                             >
-                              <div className="absolute top-2.5 right-2.5 opacity-0 group-hover/tech:opacity-100 transition-opacity duration-300 text-[var(--color-primary-base)]">
+                              <div className="absolute top-2.5 right-2.5 opacity-0 group-hover/tech:opacity-100 transition-opacity duration-300" style={{ color: tech.hex }}>
                                 <ArrowRight size={12} className="-rotate-45" />
                               </div>
                               <motion.div
@@ -1667,7 +1694,7 @@ export default function LandingPage() {
                               >
                                 <IconComponent size={24} />
                               </motion.div>
-                              <span className="font-bold text-xs sm:text-sm tracking-tight text-[var(--color-text-primary)] group-hover/tech:text-white transition-colors duration-200">
+                              <span className="font-bold text-xs sm:text-sm tracking-tight text-[var(--color-text-primary)] transition-colors duration-200">
                                 {tech.name}
                               </span>
                               <span className="text-[10px] text-[var(--color-text-tertiary)] mt-1.5 font-mono uppercase tracking-wider">

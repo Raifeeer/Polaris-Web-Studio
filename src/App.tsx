@@ -12,6 +12,7 @@ import {
 import { useEffect, lazy, Suspense, useState } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
+import { AuthProvider } from "./context/AuthContext";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -20,10 +21,13 @@ const Process = lazy(() => import("./pages/Process"));
 const Portfolio = lazy(() => import("./pages/Portfolio"));
 const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const About = lazy(() => import("./pages/About"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPostDetail = lazy(() => import("./pages/BlogPostDetail"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
 const WizardQuote = lazy(() => import("./pages/WizardQuote"));
 const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
+const Gracias = lazy(() => import("./pages/Gracias"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
@@ -146,8 +150,9 @@ export default function App() {
   }, []);
 
   return (
-    <LanguageProvider>
-      <Router>
+    <AuthProvider>
+      <LanguageProvider>
+        <Router>
         <ScrollHandler />
         <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
           <Suspense fallback={<RouteLoader />}>
@@ -158,7 +163,10 @@ export default function App() {
               <Route path="/portafolio" element={<Portfolio />} />
               <Route path="/portafolio/:slug" element={<ProjectDetail />} />
               <Route path="/nosotros" element={<About />} />
+              <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/:slug" element={<BlogPostDetail />} />
               <Route path="/cotizar" element={<WizardQuote />} />
+              <Route path="/gracias" element={<Gracias />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<ClientDashboard />} />
               <Route
@@ -197,5 +205,6 @@ export default function App() {
         </div>
       </Router>
     </LanguageProvider>
+    </AuthProvider>
   );
 }

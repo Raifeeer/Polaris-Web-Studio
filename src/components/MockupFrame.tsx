@@ -319,7 +319,7 @@ const MOCKUP_CONTENT: Record<
   },
   "chroma-store": {
     browser: (
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-950 to-slate-900 text-white flex flex-col font-sans mb-0">
+      <div className="absolute inset-0 bg-[#0d091a] text-white flex flex-col font-sans mb-0">
         <nav className="flex justify-between items-center px-4 py-2 bg-white/5">
           <span className="text-[9px] font-black">MERCANIKA</span>
           <div className="flex gap-2 text-[6px] font-bold uppercase opacity-60">
@@ -362,7 +362,7 @@ const MOCKUP_CONTENT: Record<
       </div>
     ),
     mobile: (
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-950 to-slate-900 text-white p-4 pt-10 flex flex-col font-sans relative overflow-hidden">
+      <div className="absolute inset-0 bg-[#0d091a] text-white p-4 pt-10 flex flex-col font-sans relative overflow-hidden">
         <nav className="flex justify-between items-center pb-3 border-b border-white/5 shrink-0">
           <span className="text-[10px] font-black tracking-wider text-violet-400">
             MERCANIKA
@@ -408,7 +408,7 @@ const MOCKUP_CONTENT: Record<
   },
   "vitality-clinic": {
     mobile: (
-      <div className="absolute inset-0 bg-gradient-to-b from-emerald-950 to-slate-900 text-white p-4 pt-10 flex flex-col font-sans">
+      <div className="absolute inset-0 bg-[#041d13] text-white p-4 pt-10 flex flex-col font-sans">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-2">
             <span className="text-emerald-500 text-lg">✚</span>
@@ -449,7 +449,7 @@ const MOCKUP_CONTENT: Record<
   },
   "sabor-autentico": {
     mobile: (
-      <div className="absolute inset-0 bg-gradient-to-br from-orange-950 to-red-950 text-white p-4 pt-10 flex flex-col font-sans relative overflow-hidden">
+      <div className="absolute inset-0 bg-[#1f0e08] text-white p-4 pt-10 flex flex-col font-sans relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full" />
         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
           <div className="text-2xl">🍽️</div>

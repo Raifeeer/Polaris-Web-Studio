@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, ArrowRight, Share2 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import { useLanguage, T } from "../context/LanguageContext";
 
@@ -80,6 +80,11 @@ const QUESTIONS: Question[] = [
 
 export default function QuoteBot() {
   const { translate } = useLanguage();
+  const location = useLocation();
+
+  if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/login')) {
+    return null;
+  }
 
   const [isOpen, setIsOpen] = useState(() => {
     if (typeof window !== "undefined") {
