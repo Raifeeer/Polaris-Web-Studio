@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Rocket,
@@ -28,9 +28,9 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import Testimonials from "../components/Testimonials";
-import WhyPolaris from "../components/WhyPolaris";
-import FinalCTA from "../components/FinalCTA";
+const Testimonials = lazy(() => import("../components/Testimonials"));
+const WhyPolaris = lazy(() => import("../components/WhyPolaris"));
+const FinalCTA = lazy(() => import("../components/FinalCTA"));
 import { T, useLanguage } from "../context/LanguageContext";
 
 interface PlanItem {
@@ -859,8 +859,12 @@ export default function Services() {
           </AnimatePresence>
         </div>
 
-        <WhyPolaris />
-        <Testimonials />
+        <Suspense fallback={<div className="h-96 animate-pulse bg-[var(--color-surface-elevated)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)]" />}>
+          <WhyPolaris />
+        </Suspense>
+        <Suspense fallback={<div className="h-96 animate-pulse bg-[var(--color-surface-elevated)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)]" />}>
+          <Testimonials />
+        </Suspense>
 
         {/* Pricing Section */}
         <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32 relative overflow-hidden">
@@ -1360,7 +1364,9 @@ export default function Services() {
           </div>
         </section>
 
-        <FinalCTA />
+        <Suspense fallback={<div className="h-64 animate-pulse bg-[var(--color-surface-elevated)] border-t border-[var(--color-border-subtle)]" />}>
+          <FinalCTA />
+        </Suspense>
       </main>
 
       <Footer />

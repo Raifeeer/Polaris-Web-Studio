@@ -58,6 +58,8 @@ export default defineConfig(({mode}) => {
         output: {
           manualChunks: {
             'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-motion': ['framer-motion'],
+            'vendor-ui': ['lucide-react'],
             'vendor-calcom': ['@calcom/embed-react'],
           },
         },
