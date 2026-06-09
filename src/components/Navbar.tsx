@@ -107,8 +107,11 @@ export default function Navbar() {
               {link.name}
               {location.pathname === link.path && (
                 <motion.div
-                  layoutId="nav-underline"
-                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  style={{ originX: 0.5 }}
+                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)] rounded-full"
                 />
               )}
             </Link>
@@ -196,21 +199,10 @@ export default function Navbar() {
                     onClick={() => setLanguage("es")}
                     className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-all ${
                       language === "es"
-                        ? "text-[var(--color-on-primary)]"
-                        : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                        ? "text-[var(--color-on-primary)] bg-[var(--color-primary-base)]"
+                        : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] bg-transparent"
                     }`}
                   >
-                    {language === "es" && (
-                      <motion.span
-                        layoutId="activeLang"
-                        className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
-                        transition={{
-                          type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                        }}
-                      />
-                    )}
                     ES
                   </button>
                   <button
@@ -218,21 +210,10 @@ export default function Navbar() {
                     onClick={() => setLanguage("en")}
                     className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-all ${
                       language === "en"
-                        ? "text-[var(--color-on-primary)]"
-                        : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                        ? "text-[var(--color-on-primary)] bg-[var(--color-primary-base)]"
+                        : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] bg-transparent"
                     }`}
                   >
-                    {language === "en" && (
-                      <motion.span
-                        layoutId="activeLang"
-                        className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
-                        transition={{
-                          type: "spring",
-                          stiffness: 380,
-                          damping: 30,
-                        }}
-                      />
-                    )}
                     EN
                   </button>
                 </div>
