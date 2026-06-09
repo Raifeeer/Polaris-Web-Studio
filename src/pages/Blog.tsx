@@ -156,7 +156,14 @@ export default function Blog() {
   }, [searchQuery, activeCategory, sortBy, dateRange, language]);
 
   // Categories list based on translation
-  const categories = ["All", "Performance", "SEO", "Desarrollo", "Comercio Electrónico", "Inteligencia Artificial"];
+  const categories = [
+    { key: "All", es: "Todos", en: "All" },
+    { key: "Performance", es: "Performance", en: "Performance" },
+    { key: "SEO", es: "SEO", en: "SEO" },
+    { key: "Desarrollo", es: "Desarrollo", en: "Development" },
+    { key: "Comercio Electrónico", es: "Comercio Electrónico", en: "E-commerce" },
+    { key: "Inteligencia Artificial", es: "Inteligencia Artificial", en: "Artificial Intelligence" },
+  ];
 
   // Helper format date
   const formatDate = (isoStr: string) => {
@@ -319,23 +326,15 @@ export default function Blog() {
           {/* Quick Categories Bar */}
           <div className="flex flex-wrap gap-2 pt-2 border-t border-[var(--color-border-subtle)]/30">
             {categories.map((cat) => {
-              let displayCat = cat;
-              if (language === "en") {
-                if (cat === "All") displayCat = "All";
-                else if (cat === "Desarrollo") displayCat = "Development";
-                else if (cat === "Comercio Electrónico") displayCat = "E-commerce";
-                else if (cat === "Inteligencia Artificial") displayCat = "Artificial Intelligence";
-              } else {
-                if (cat === "All") displayCat = "Todos";
-              }
+              const displayCat = language === "es" ? cat.es : cat.en;
                 
               return (
                 <button
-                  id={`blog-cat-btn-${cat.toLowerCase().replace(/\s+/g, '-')}`}
-                  key={cat}
-                  onClick={() => handleCategoryChange(cat)}
+                  id={`blog-cat-btn-${cat.key.toLowerCase().replace(/\s+/g, '-')}`}
+                  key={cat.key}
+                  onClick={() => handleCategoryChange(cat.key)}
                   className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                    activeCategory === cat
+                    activeCategory === cat.key
                       ? "bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
                       : "bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]"
                   }`}

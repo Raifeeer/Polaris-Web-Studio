@@ -105,7 +105,7 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contraseña"
+                  placeholder={language === "es" ? "Contraseña" : "Password"}
                   aria-label="Contraseña"
                   className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />

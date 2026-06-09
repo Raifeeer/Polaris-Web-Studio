@@ -292,7 +292,7 @@ export default function ClientDashboard() {
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClientName || !newClientEmail || !newClientPassword || !newClientCompany || !newClientProjectName) {
-      setErrorMsg("Por favor, rellene todos los campos obligatorios.");
+      setErrorMsg(language === "es" ? "Por favor, rellene todos los campos obligatorios." : "Please fill in all required fields.");
       return;
     }
 
@@ -316,9 +316,9 @@ export default function ClientDashboard() {
       const resData = await response.json();
       if (response.ok) {
         setSuccessMsg(
-          language === "en"
-            ? "Client registered successfully! Associated project, milestones, and initial deliverable generated."
-            : "¡Cliente registrado con éxito! Se ha generado su proyecto de forma automática con fases, entregable y factura de inicio."
+          language === "es"
+            ? "¡Cliente registrado con éxito! Se ha generado su proyecto de forma automática con fases, entregable y factura de inicio."
+            : "Client registered successfully! A project has been automatically generated with phases, deliverable and initial invoice."
         );
         // Clear inputs
         setNewClientName("");
@@ -331,10 +331,10 @@ export default function ClientDashboard() {
         setRefreshTrigger((prev) => prev + 1);
         setActiveTab("overview");
       } else {
-        setErrorMsg(resData.error || "No se pudo registrar.");
+        setErrorMsg(resData.error || (language === "es" ? "No se pudo registrar." : "Could not register."));
       }
     } catch (err) {
-      setErrorMsg("Ocurrió un error.");
+      setErrorMsg(language === "es" ? "Ocurrió un error." : "An error occurred.");
     }
   };
 
@@ -447,7 +447,10 @@ export default function ClientDashboard() {
     const nextProgress = phaseIndex === 0 && nextStatus === "active" ? 25 : phaseIndex === 1 && nextStatus === "active" ? 65 : phaseIndex === 2 && nextStatus === "active" ? 90 : 100;
 
     handleUpdateProjectProgress(project.id, nextProgress, activePhase.name, updatedPhases).then(() => {
-      setSuccessMsg(`Fase actualizada a: ${nextStatus === 'completed' ? 'Listo' : nextStatus === 'active' ? 'En Curso' : 'Pendiente'}`);
+      const phaseLabels = language === "es"
+        ? { completed: "Listo", active: "En Curso", pending: "Pendiente" }
+        : { completed: "Done", active: "In Progress", pending: "Pending" };
+      setSuccessMsg(`${language === "es" ? "Fase actualizada a:" : "Phase updated to:"} ${phaseLabels[nextStatus as keyof typeof phaseLabels]}`);
     });
   };
 
@@ -475,7 +478,7 @@ export default function ClientDashboard() {
         setNewTaskDesc("");
         setNewTaskLink("");
         setRefreshTrigger((prev) => prev + 1);
-        setSuccessMsg("¡Entregable creado con éxito y notificado!");
+        setSuccessMsg(language === "es" ? "¡Entregable creado con éxito y notificado!" : "Deliverable created successfully and notified!");
       }
     } catch (err) {
       console.error(err);
@@ -576,7 +579,7 @@ export default function ClientDashboard() {
         setNewMeetTime("");
         setNewMeetLink("");
         setRefreshTrigger((prev) => prev + 1);
-        setSuccessMsg("¡Reunión agendada!");
+        setSuccessMsg(language === "es" ? "¡Reunión agendada!" : "Meeting scheduled!");
       }
     } catch (err) {
       console.error(err);
@@ -619,8 +622,10 @@ export default function ClientDashboard() {
         setRefreshTrigger((prev) => prev + 1);
         setSuccessMsg(
           status === "approved"
-            ? "¡Entregable aprobado de forma oficial! Tu manager ha sido notificado para avanzar al siguiente módulo."
-            : "Feedback registrado. Revisaremos tus observaciones."
+            ? (language === "es" 
+                ? "¡Entregable aprobado de forma oficial! Tu manager ha sido notificado para avanzar al siguiente módulo."
+                : "Deliverable officially approved! Your manager has been notified to advance to the next module.")
+            : (language === "es" ? "Feedback registrado. Revisaremos tus observaciones." : "Feedback registered. We will review your observations.")
         );
       }
     } catch (err) {

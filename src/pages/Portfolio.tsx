@@ -5,11 +5,12 @@ import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { projects } from "../constants/projects";
-import { T } from "../context/LanguageContext";
+import { T, useLanguage } from "../context/LanguageContext";
 import MockupFrame from "../components/MockupFrame";
 
 export default function Portfolio() {
   const navigate = useNavigate();
+  const { language } = useLanguage();
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
@@ -85,7 +86,7 @@ export default function Portfolio() {
                         window.open(project.liveUrl, "_blank");
                       }}
                       className="p-3 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/30 transition-all"
-                      title="Ver sitio en vivo"
+                      title={language === "es" ? "Ver sitio en vivo" : "View live site"}
                     >
                       <ExternalLink size={20} />
                     </button>

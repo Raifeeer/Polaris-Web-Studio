@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import {
-  Globe,
   Rocket,
   ShoppingCart,
   ShieldCheck,
@@ -19,11 +18,20 @@ import {
   Search,
   Brain,
   Database,
+  ChevronDown,
+  Coins,
+  RefreshCw,
+  ArrowLeft,
+  MoveHorizontal,
+  Pointer,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { T } from "../context/LanguageContext";
+import Testimonials from "../components/Testimonials";
+import WhyPolaris from "../components/WhyPolaris";
+import FinalCTA from "../components/FinalCTA";
+import { T, useLanguage } from "../context/LanguageContext";
 
 interface PlanItem {
   id: string;
@@ -232,6 +240,14 @@ function PlanCard({
         </div>
       </div>
       <button
+        onClick={() => navigate("/portafolio")}
+        className="w-full py-4 rounded-xl font-bold text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-all mb-3"
+        style={{ cursor: "pointer" }}
+      >
+        <T en="See examples →">Ver ejemplos →</T>
+      </button>
+
+      <button
         onClick={() => {
           const typeMap: Record<string, string> = {
             flash: "landing",
@@ -243,10 +259,10 @@ function PlanCard({
           );
         }}
         style={{ cursor: "pointer" }}
-        className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 border-none ${
+        className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
           plan.highlight
-            ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20"
-            : "bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)]"
+            ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20 border-none"
+            : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
         }`}
       >
         <T en="Choose this Plan">Elegir este Plan</T>
@@ -256,7 +272,20 @@ function PlanCard({
 }
 
 export default function Services() {
+  const { language } = useLanguage();
+  const [isServicesExpanded, setIsServicesExpanded] = useState(false);
   const navigate = useNavigate();
+  const [showComparison, setShowComparison] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  const handleToggleComparison = () => {
+    setShowComparison(prev => {
+      if (!prev) {
+        setTimeout(() => tableRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+      }
+      return !prev;
+    });
+  };
 
   const [targetDate] = useState(() => {
     return new Date("2026-06-18T23:59:59Z").getTime();
@@ -383,7 +412,7 @@ export default function Services() {
           title: <T en="Features">FUNCIONALIDADES</T>,
           icon: Wrench,
           items: [
-            <T en="Blog that you can update yourself">Blog que tú mismo puedes actualizar</T>,
+            <T en="Self-managed blog">Blog autogestionable</T>,
             <T en="3 initial articles written">3 artículos iniciales redactados</T>,
             <T en="24/7 Support Chatbot">Chatbot de atención 24/7</T>,
             <T en="Google Maps Integration">Integración de Google Maps</T>,
@@ -409,7 +438,7 @@ export default function Services() {
           title: <T en="Support">SOPORTE</T>,
           icon: Headphones,
           items: [
-            <T en="30 days of post-launch support">30 días de soporte post-lanzamiento</T>,
+            <T en="60 days of post-launch support">60 días de soporte post-lanzamiento</T>,
           ],
         },
       ],
@@ -497,6 +526,240 @@ export default function Services() {
     },
   ];
 
+  const Check = () => (
+    <div className="flex justify-center select-none">
+      <CheckCircle2 size={16} className="text-indigo-600 dark:text-indigo-400" />
+    </div>
+  );
+
+  const Dash = () => (
+    <div className="flex justify-center select-none">
+      <span className="text-[var(--color-text-tertiary)]">—</span>
+    </div>
+  );
+
+  const tableCategories = [
+    {
+      title: <T en="DESIGN">DISEÑO</T>,
+      icon: Palette,
+      rows: [
+        {
+          name: <T en="Pages / sections">Páginas / secciones</T>,
+          v1: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="1 page">1 página</T></span>,
+          v2: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Up to 5">Hasta 5</T></span>,
+          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Unlimited">Ilimitadas</T></span>,
+        },
+        {
+          name: <T en="Exclusive design">Diseño exclusivo</T>,
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Brand visual identity">Identidad visual de marca</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+      ],
+    },
+    {
+      title: <T en="FEATURES">FUNCIONALIDADES</T>,
+      icon: Wrench,
+      rows: [
+        {
+          name: <T en="Contact form">Formulario de contacto</T>,
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="WhatsApp button">Botón de WhatsApp</T>,
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Self-managed blog">Blog autogestionable</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="24/7 Chatbot">Chatbot 24/7</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Google Maps Integration">Integración de Google Maps</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Online store">Tienda online</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Payment gateways">Pasarelas de pago</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+      ],
+    },
+    {
+      title: <T en="ARTIFICIAL INTELLIGENCE">INTELIGENCIA ARTIFICIAL</T>,
+      icon: Brain,
+      rows: [
+        {
+          name: <T en="AI tool included">Herramienta de IA incluida</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="1 included">1 incluida</T></span>,
+        },
+        {
+          name: <T en="Chatbot trained on your catalog">Chatbot entrenado con tu catálogo</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Smart cross-selling recommender">Recomendador inteligente cross-selling</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+      ],
+    },
+    {
+      title: <T en="BACKEND">BACKEND</T>,
+      icon: Database,
+      rows: [
+        {
+          name: <T en="Real-time database">Base de datos en tiempo real</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Client registration & login">Registro y login de clientes</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Cloud stored images">Imágenes almacenadas en la nube</T>,
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+      ],
+    },
+    {
+      title: <T en="SEO & ANALYTICS">SEO & ANALYTICS</T>,
+      icon: BarChart3,
+      rows: [
+        {
+          name: <T en="Visible on Google">Visible en Google</T>,
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Advanced SEO">SEO avanzado</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Google Search Console">Google Search Console</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Google Analytics 4">Google Analytics 4</T>,
+          v1: <Dash />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+      ],
+    },
+    {
+      title: <T en="INFRASTRUCTURE">INFRAESTRUCTURA</T>,
+      icon: ShieldCheck,
+      rows: [
+        {
+          name: <T en="Domain included">Dominio incluido</T>,
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: <T en="Secure connection (HTTPS)">Conexión segura (HTTPS)</T>,
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+      ],
+    },
+    {
+      title: <T en="SUPPORT">SOPORTE</T>,
+      icon: Headphones,
+      rows: [
+        {
+          name: <T en="Warranty days">Días de garantía</T>,
+          v1: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="30 days">30 días</T></span>,
+          v2: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="60 days">60 días</T></span>,
+          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="90 days">90 días</T></span>,
+        },
+        {
+          name: <T en="Support priority">Prioridad de soporte</T>,
+          v1: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Normal">Normal</T></span>,
+          v2: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Normal">Normal</T></span>,
+          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Priority">Prioritario</T></span>,
+        },
+      ],
+    },
+    {
+      title: <T en="PRICE">PRECIO</T>,
+      icon: Coins,
+      rows: [
+        {
+          name: <T en="Base price">Precio base</T>,
+          v1: (
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-amber-500 font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
+                <T en="Flash">Destello</T>
+              </span>
+              <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(299 * 0.75) : 299} USD</span>
+            </div>
+          ),
+          v2: (
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
+                <T en="Constellation">Constelación</T>
+              </span>
+              <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(699 * 0.75) : 699} USD</span>
+            </div>
+          ),
+          v3: (
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] text-violet-500 font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
+                <T en="Nova">Nova</T>
+              </span>
+              <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(1299 * 0.75) : 1299} USD</span>
+            </div>
+          ),
+        },
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
@@ -505,124 +768,99 @@ export default function Services() {
         {/* Header */}
         <section className="text-center space-y-6 mb-20">
           <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">
-            <T en="Expertise & Execution">Expertise & Ejecución</T>
+            <T en="Solutions that Convert">Soluciones que Convierten</T>
           </span>
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter">
-            <T en="Digital Engineering at Your Fingertips">
-              Ingeniería Digital a tu Alcance
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto">
+            <T en="Scale your business in the Dominican market with Custom Digital Engineering">
+              Impulsa tu negocio con ingeniería digital a medida y escalable
             </T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
-            <T en="Explore our specialized services. We develop scalable solutions designed to boost your market presence.">
-              Explora nuestros servicios especializados. Desarrollamos
-              soluciones escalables diseñadas para potenciar tu presencia en el
-              mercado.
+            <T en="Transform your web presence into a 24/7 sales engine designed to grow your local or international business.">
+              Transforma tu presencia digital en una máquina de ventas 24/7 diseñada para hacer crecer tu negocio.
             </T>
           </p>
         </section>
 
-        {/* Services Bento */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-32">
-          {/* Landing Pages Card */}
-          <div
-            id="landing"
-            className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all"
+        {/* Services Carousel */}
+        <div className="mb-20 animate-fade-in relative z-20">
+          <style>{`
+            @keyframes marquee {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-marquee {
+              animation: marquee 30s linear infinite;
+            }
+          `}</style>
+
+          <button
+            onClick={() => setIsServicesExpanded(!isServicesExpanded)}
+            className="w-full flex items-center justify-between p-4 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary-base)] transition-all duration-300 group"
           >
-            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
-              <Rocket size={28} />
+            <div className="overflow-hidden flex-1">
+              <div className="flex animate-marquee gap-8 w-max">
+                  {[
+                    { labelEs: "Captación 24/7", labelEn: "24/7 Lead Gen", icon: Rocket },
+                    { labelEs: "Identidad Autoritaria", labelEn: "Authoritative Identity", icon: Briefcase },
+                    { labelEs: "Ventas Automatizadas", labelEn: "Automated Sales", icon: ShoppingCart },
+                    { labelEs: "Seguridad Total", labelEn: "Total Security", icon: ShieldCheck },
+                    { labelEs: "Visibilidad Máxima", labelEn: "Maximum Visibility", icon: Zap },
+                    // Duplicar para continuidad
+                    { labelEs: "Captación 24/7", labelEn: "24/7 Lead Gen", icon: Rocket },
+                    { labelEs: "Identidad Autoritaria", labelEn: "Authoritative Identity", icon: Briefcase },
+                    { labelEs: "Ventas Automatizadas", labelEn: "Automated Sales", icon: ShoppingCart },
+                    { labelEs: "Seguridad Total", labelEn: "Total Security", icon: ShieldCheck },
+                    { labelEs: "Visibilidad Máxima", labelEn: "Maximum Visibility", icon: Zap },
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-secondary)]">
+                      <item.icon size={18} className="text-[var(--color-primary-base)]" />
+                      <span className="whitespace-nowrap">{language === "es" ? item.labelEs : item.labelEn}</span>
+                    </div>
+                ))}
+              </div>
             </div>
-            <div>
-              <h2 className="text-3xl font-display font-bold mb-4 tracking-tight">
-                Landing Pages
-              </h2>
-              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
-                <T en="Landing pages designed to convert, with a high-impact interface and minimal loading times.">
-                  Páginas de aterrizaje diseñadas para convertir, con una
-                  interfaz de alto impacto y tiempos de carga mínimos.
-                </T>
-              </p>
-              <button
-                onClick={() => navigate("/blog/landing-pages-conversion")}
-                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
+            <motion.div
+              animate={{ rotate: isServicesExpanded ? 180 : 0 }}
+              className="p-1 pl-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)]"
+            >
+              <ChevronDown size={20} />
+            </motion.div>
+          </button>
+
+          <AnimatePresence>
+            {isServicesExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
               >
-                <T en="Learn More">Saber más</T> <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Web Corporativa Card */}
-          <div
-            id="corporate"
-            className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
-              <Briefcase size={28} />
-            </div>
-            <div>
-              <h2 className="text-3xl font-display font-bold mb-4 tracking-tight">
-                <T en="Corporate Websites">Webs Corporativas</T>
-              </h2>
-              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
-                <T en="Elegant and solid digital identity to position your brand as a market leader with structured multi-page content.">
-                  Identidad digital sólida y elegante para posicionar tu marca
-                  como referente de mercado mediante múltiples secciones.
-                </T>
-              </p>
-              <button
-                onClick={() => navigate("/blog/webs-corporativas-identidad")}
-                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
-              >
-                <T en="Learn More">Saber más</T> <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* E-commerce Card */}
-          <div
-            id="ecommerce"
-            className="md:col-span-2 lg:col-span-2 rounded-[var(--radius-bento)] p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col justify-between group bento-glow-hover transition-all"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] mb-8 transition-transform group-hover:scale-110">
-              <ShoppingCart size={28} />
-            </div>
-            <div>
-              <h2 className="text-3xl font-display font-bold mb-4 tracking-tight">
-                <T en="High-Level E-commerce">E-commerce de Alto Nivel</T>
-              </h2>
-              <p className="text-[var(--color-text-secondary)] leading-relaxed mb-6">
-                <T en="Scalable virtual stores built on modern technologies to guarantee a seamless shopping experience.">
-                  Tiendas virtuales escalables construidas sobre tecnologías
-                  modernas para garantizar una experiencia de compra fluida.
-                </T>
-              </p>
-              <button
-                onClick={() => navigate("/blog/ecommerce-alto-nivel")}
-                className="flex items-center gap-2 text-[var(--color-primary-base)] font-bold group-hover:gap-4 transition-all uppercase text-xs tracking-widest cursor-pointer"
-              >
-                <T en="Learn More">Saber más</T> <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Maintenance Card */}
-          <div className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col gap-4 text-center items-center justify-center group bento-glow-hover transition-all">
-            <ShieldCheck
-              className="text-[var(--color-primary-base)]"
-              size={40}
-            />
-            <h3 className="font-display font-bold text-base">
-              <T en="Maintenance">Mantenimiento</T>
-            </h3>
-          </div>
-
-          {/* SEO Card */}
-          <div className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col gap-4 text-center items-center justify-center group bento-glow-hover transition-all">
-            <Zap className="text-[var(--color-primary-base)]" size={40} />
-            <h3 className="font-display font-bold text-base">
-              <T en="SEO Optimization">Optimización SEO</T>
-            </h3>
-          </div>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-3">
+                  {[
+                    { labelEs: "Captación 24/7", labelEn: "24/7 Lead Gen", icon: Rocket, link: "/blog/landing-pages-conversion" },
+                    { labelEs: "Identidad Autoritaria", labelEn: "Authoritative Identity", icon: Briefcase, link: "/blog/webs-corporativas-identidad" },
+                    { labelEs: "Ventas Automatizadas", labelEn: "Automated Sales", icon: ShoppingCart, link: "/blog/ecommerce-alto-nivel" },
+                    { labelEs: "Seguridad Total", labelEn: "Total Security", icon: ShieldCheck, link: "/blog/arquitectura-web-estatico-spa" },
+                    { labelEs: "Visibilidad Máxima", labelEn: "Maximum Visibility", icon: Zap, link: "/blog/seo-semantico-google" },
+                  ].map((service, idx) => (
+                    <Link
+                      key={idx}
+                      to={service.link}
+                      className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] hover:border-[var(--color-primary-base)] transition-all duration-300 text-center"
+                    >
+                      <service.icon size={24} className="text-[var(--color-primary-base)]" />
+                      <span className="text-xs font-bold text-[var(--color-text-primary)]">{language === "es" ? service.labelEs : service.labelEn}</span>
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        <WhyPolaris />
+        <Testimonials />
 
         {/* Pricing Section */}
         <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32 relative overflow-hidden">
@@ -634,7 +872,7 @@ export default function Services() {
                   descuento!
                 </T>
               </span>
-              <div className="font-display tracking-widest bg-[var(--color-surface-base)] border border-[var(--color-primary-base)] text-[var(--color-primary-base)] px-4 py-1.5 rounded-full shadow-inner tabular-nums">
+              <div className="font-display font-black tracking-widest bg-[var(--color-surface-base)] border border-[var(--color-primary-base)] text-[var(--color-primary-base)] px-4 py-1.5 rounded-full shadow-inner tabular-nums text-xs md:text-sm uppercase">
                 {formatTime(timeLeft)}
               </div>
             </div>
@@ -660,133 +898,152 @@ export default function Services() {
                 />
               ))}
             </div>
-          </section>
 
-          {/* Hosting & Support Section */}
-          <section className="space-y-12 pt-8 pb-20">
-            <div className="flex flex-col lg:flex-row gap-12 items-center">
-              <div className="flex-1 space-y-6">
-                <span className="inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
-                  <T en="Post-Launch">Post-Lanzamiento</T>
-                </span>
-                <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight mt-4">
-                  <T en="Premium Hosting & Support">
-                    Hosting Premium y Soporte
-                  </T>
-                </h2>
-                <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl">
-                  <T en="When your project goes live, your warranty begins. After that, we offer a $30/mo subscription to keep your business running smoothly without technical headaches.">
-                    Al entregar tu proyecto comienza tu periodo de garantía. A
-                    partir de ahí, ofrecemos una suscripción accesible para
-                    mantener tus servidores activos y tu web libre de hackeos.
-                  </T>
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                      <ShieldCheck className="text-emerald-500" size={20} />
-                      <T en="Bank-grade Security">Seguridad Bancaria</T>
-                    </div>
-                    <p className="text-sm text-[var(--color-text-secondary)]">
-                      <T en="Automatic updates and SSL renewals to ensure your site is protected.">
-                        Actualizaciones automáticas y renovación de certificados
-                        para evitar vulnerabilidades.
-                      </T>
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                      <Zap className="text-amber-500" size={20} />
-                      <T en="99.9% Uptime guarantee">Uptime del 99.9%</T>
-                    </div>
-                    <p className="text-sm text-[var(--color-text-secondary)]">
-                      <T en="Always-on infrastructure. If a server goes down, we handle the technical crisis.">
-                        Infraestructura siempre en línea. Nosotros nos
-                        encargamos de que nunca pierdas ventas.
-                      </T>
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                      <Rocket className="text-blue-500" size={20} />
-                      <T en="Global Speed (CDN)">Velocidad Global (CDN)</T>
-                    </div>
-                    <p className="text-sm text-[var(--color-text-secondary)]">
-                      <T en="Continuous performance optimization so your site loads in milliseconds globally.">
-                        Optimización continua en servidores para que tu web
-                        cargue súper rápido.
-                      </T>
-                    </p>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                      <Sparkles className="text-purple-500" size={20} />
-                      <T en="Content Updates">Actualizaciones Menores</T>
-                    </div>
-                    <p className="text-sm text-[var(--color-text-secondary)]">
-                      <T en="Need to change a photo or a paragraph? We make minor tweaks so your site stays fresh.">
-                        ¿Necesitas cambiar una foto o un párrafo? Hacemos
-                        pequeños ajustes por ti sin cobrar por hora.
-                      </T>
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="w-full lg:w-[400px] flex-shrink-0 bg-[var(--color-surface-elevated)] p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-500 shadow-xl">
-                <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-colors"></div>
-                <h3 className="text-2xl font-display font-bold mb-2 relative">
-                  <T en="Peace of Mind">Tranquilidad Total</T>
-                </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] mb-6 relative">
-                  <T en="Focus on running your business, we take care of the code.">
-                    Enfócate en tu negocio, nosotros nos encargamos del código.
-                  </T>
-                </p>
-                <div className="flex items-baseline gap-1 mb-8 relative">
-                  <span className="text-5xl font-black text-[var(--color-text-primary)]">
-                    $30
-                  </span>
-                  <span className="text-[var(--color-text-tertiary)] uppercase text-xs font-bold tracking-widest">
-                    <T en="USD / month">USD / mes</T>
-                  </span>
-                </div>
-                <ul className="space-y-4 mb-8 relative">
-                  {[
-                    <T en="Premium Hosting Engine">
-                      Infraestructura Premium de Hosting
-                    </T>,
-                    <T en="Automated Database Backups">
-                      Copias de seguridad automáticas (Backups)
-                    </T>,
-                    <T en="Direct Tech Support">
-                      Soporte Técnico Directo (WhatsApp)
-                    </T>,
-                    <T en="Content and Image Adjustments">
-                      Ajustes menores de texto/imágenes
-                    </T>,
-                  ].map((item, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-3 text-sm text-[var(--color-text-secondary)] font-medium"
-                    >
-                      <CheckCircle2
-                        size={18}
-                        className="text-emerald-500 mt-0.5 flex-shrink-0"
-                      />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => {
-                    navigate("/cotizar?addon=hosting");
-                  }}
-                  className="w-full py-4 rounded-xl font-bold bg-[#E8F5E9] hover:bg-[#C8E6C9] dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition-colors relative"
-                >
-                  <T en="Include Add-on in Plan">
-                    Incluir en la Planificación
-                  </T>
-                </button>
+            {/* Comparar todos los planes button */}
+            <div className="pt-8 text-center mx-auto">
+              <button
+                type="button"
+                style={{ cursor: "pointer" }}
+                onClick={handleToggleComparison}
+                className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)] bg-transparent border-none outline-none select-none flex items-center gap-2 mx-auto cursor-pointer"
+              >
+                <T en="Compare all plans">Comparar todos los planes</T>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform duration-300 ${showComparison ? "rotate-180" : ""}`}
+                />
+              </button>
+            </div>
+
+            {/* Collapsible Comparative Table */}
+            <div
+              ref={tableRef}
+              style={{
+                maxHeight: showComparison ? "2500px" : "0px",
+                transition: "max-height 0.5s ease",
+              }}
+              className="overflow-hidden w-full text-left"
+            >
+                <div className="overflow-x-auto w-full">
+                  <table className="w-full text-left border-collapse min-w-[750px]">
+                    <thead>
+                      <tr className="md:hidden border-b border-[var(--color-border-subtle)]">
+                        <th className="sticky left-0 z-20 p-2 pl-6 bg-[var(--color-surface-elevated)] pointer-events-none select-none w-full">
+                          <div className="flex items-center justify-between pr-4 text-[var(--color-text-tertiary)]">
+                            <ArrowLeft size={18} strokeWidth={2.5} />
+                            <Pointer size={16} className="text-[var(--color-primary-base)] animate-pulse" />
+                            <ArrowRight size={18} strokeWidth={2.5} />
+                          </div>
+                        </th>
+                        <th className="bg-[var(--color-surface-elevated)]" />
+                        <th className="bg-[var(--color-surface-elevated)]" />
+                        <th className="bg-[var(--color-surface-elevated)]" />
+                      </tr>
+                      <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-elevated)] z-10">
+                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] select-none">
+                          <T en="Characteristics">Características</T>
+                        </th>
+                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-elevated)]">
+                        <div className="font-display font-black text-amber-500 text-lg md:text-2xl tracking-tight">
+                          <T en="Flash">Destello</T>
+                        </div>
+                        <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
+                          ${isOfferActive ? Math.round(299 * 0.75) : 299} USD
+                        </div>
+                      </th>
+                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-elevated)] bg-indigo-50/10 dark:bg-indigo-950/5">
+                        <div className="font-display font-black text-indigo-600 dark:text-indigo-400 text-lg md:text-2xl tracking-tight">
+                          <T en="Constellation">Constelación</T>
+                        </div>
+                        <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
+                          ${isOfferActive ? Math.round(699 * 0.75) : 699} USD
+                        </div>
+                      </th>
+                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-elevated)]">
+                        <div className="font-display font-black text-violet-500 text-lg md:text-2xl tracking-tight">
+                          <T en="Nova">Nova</T>
+                        </div>
+                        <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
+                          ${isOfferActive ? Math.round(1299 * 0.75) : 1299} USD
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tableCategories.map((cat, catIdx) => (
+                      <React.Fragment key={catIdx}>
+                        {/* Category Row */}
+                        <tr className="bg-[var(--color-primary-base)]/[0.04] dark:bg-[var(--color-primary-base)]/[0.06] border-y border-[var(--color-border-subtle)]/70">
+                          <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-black uppercase tracking-wider text-[var(--color-text-primary)] select-none">
+                            <span className="flex items-center gap-3 relational-heading">
+                              {cat.icon && <cat.icon className="text-indigo-600 dark:text-indigo-400 w-5 h-5 flex-shrink-0" />}
+                              {cat.title}
+                            </span>
+                          </td>
+                        </tr>
+                        {/* Features Rows */}
+                        {cat.rows.map((row, rowIdx) => (
+                          <tr
+                            key={rowIdx}
+                            className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50" : ""}
+                          >
+                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none">
+                              {row.name}
+                            </td>
+                            <td className="p-4 text-center text-sm font-bold">
+                              {row.v1}
+                            </td>
+                            <td className="p-4 text-center text-sm font-bold bg-indigo-50/10 dark:bg-indigo-950/5">
+                              {row.v2}
+                            </td>
+                            <td className="p-4 text-center text-sm font-bold">
+                              {row.v3}
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                     {/* Action buttons row */}
+                    <tr className="border-t border-[var(--color-border-subtle)]">
+                      <td className="p-4 bg-[var(--color-surface-elevated)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] select-none">
+                        <T en="Select Plan">Seleccionar Plan</T>
+                      </td>
+                      <td className="p-4 bg-[var(--color-surface-elevated)] text-center">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <button
+                            onClick={() => navigate("/cotizar?type=landing")}
+                            style={{ cursor: "pointer" }}
+                            className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
+                          >
+                            <T en="Choose this Plan">Elegir este Plan</T>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-4 bg-[var(--color-surface-elevated)] bg-indigo-50/10 dark:bg-indigo-950/5 text-center">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <button
+                            onClick={() => navigate("/cotizar?type=corporate")}
+                            style={{ cursor: "pointer" }}
+                            className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md border-none whitespace-nowrap cursor-pointer"
+                          >
+                            <T en="Choose this Plan">Elegir este Plan</T>
+                          </button>
+                        </div>
+                      </td>
+                      <td className="p-4 bg-[var(--color-surface-elevated)] text-center">
+                        <div className="flex flex-col items-center gap-1.5">
+                          <button
+                            onClick={() => navigate("/cotizar?type=ecommerce")}
+                            style={{ cursor: "pointer" }}
+                            className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
+                          >
+                            <T en="Choose this Plan">Elegir este Plan</T>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </section>
@@ -977,6 +1234,133 @@ export default function Services() {
             </motion.div>
           </div>
         </section>
+
+        {/* Hosting & Support Section */}
+        <section className="space-y-12 py-20 border-t border-[var(--color-border-subtle)]">
+          <div className="flex flex-col lg:flex-row gap-12 items-center">
+            <div className="flex-1 space-y-6">
+              <span className="inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
+                <T en="Post-Launch">Post-Lanzamiento</T>
+              </span>
+              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight mt-4">
+                <T en="Premium Maintenance & Support">
+                  Mantenimiento y Soporte Premium
+                </T>
+              </h2>
+              <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl">
+                <T en="When your project goes live, your warranty begins. After that, we offer a $30/mo subscription to keep your business running smoothly without technical headaches.">
+                  Al entregar tu proyecto comienza tu periodo de garantía. A
+                  partir de ahí, ofrecemos una suscripción accesible para
+                  mantener tus servidores activos y tu web libre de hackeos.
+                </T>
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                    <ShieldCheck className="text-emerald-500" size={20} />
+                    <T en="Anti-hack Protection">Protección contra hackeos</T>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="We monitor your website so no one accesses without permission or injects malicious code.">
+                      Vigilamos tu web para que nadie acceda sin permiso ni inyecte código malicioso.
+                    </T>
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                    <Zap className="text-amber-500" size={20} />
+                    <T en="Continuously Optimized Loading">Carga optimizada continuamente</T>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="We check that your web continues to load quickly and make adjustments when necessary.">
+                      Revisamos que tu web siga cargando rápido y hacemos ajustes cuando sea necesario.
+                    </T>
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                    <Database className="text-blue-500" size={20} />
+                    <T en="Periodic Backups">Backups periódicos</T>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="If anything fails, we restore your website to the last stable state.">
+                      Si algo falla, restauramos tu web al último estado estable.
+                    </T>
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                    <RefreshCw className="text-purple-500" size={20} />
+                    <T en="Always Updated Dependencies">Dependencias siempre actualizadas</T>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="No security gaps due to outdated code.">
+                      Sin brechas de seguridad por código desactualizado.
+                    </T>
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="w-full lg:w-[400px] flex-shrink-0 bg-[var(--color-surface-elevated)] p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-500 shadow-xl">
+              <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-colors"></div>
+              <h3 className="text-2xl font-display font-bold mb-2 relative">
+                <T en="Peace of Mind">Tranquilidad Total</T>
+              </h3>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-6 relative">
+                <T en="Focus on running your business, we take care of the code.">
+                  Enfócate en tu negocio, nosotros nos encargamos del código.
+                </T>
+              </p>
+              <div className="flex items-baseline gap-1 mb-8 relative">
+                <span className="text-5xl font-black text-[var(--color-text-primary)]">
+                  $30
+                </span>
+                <span className="text-[var(--color-text-tertiary)] uppercase text-xs font-bold tracking-widest">
+                  <T en="USD / month">USD / mes</T>
+                </span>
+              </div>
+              <ul className="space-y-4 mb-8 relative">
+                {[
+                  <T en="Anti-hack Protection">
+                    Protección contra hackeos
+                  </T>,
+                  <T en="Continuously Optimized Loading">
+                    Carga optimizada continuamente
+                  </T>,
+                  <T en="Periodic Backups">
+                    Backups periódicos
+                  </T>,
+                  <T en="Always Updated Dependencies">
+                    Dependencias siempre actualizadas
+                  </T>,
+                ].map((item, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 text-sm text-[var(--color-text-secondary)] font-medium"
+                  >
+                    <CheckCircle2
+                      size={18}
+                      className="text-emerald-500 mt-0.5 flex-shrink-0"
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => {
+                  navigate("/cotizar?addon=hosting");
+                }}
+                className="w-full py-4 rounded-xl font-bold bg-[#E8F5E9] hover:bg-[#C8E6C9] dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition-colors relative cursor-pointer"
+              >
+                <T en="Include Add-on in Plan">
+                  Incluir en la Planificación
+                </T>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <FinalCTA />
       </main>
 
       <Footer />

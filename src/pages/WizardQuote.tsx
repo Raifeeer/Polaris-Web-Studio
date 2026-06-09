@@ -319,7 +319,7 @@ const addons = [
   },
   {
     id: "hosting",
-    title: <T en="Premium Hosting & Support">Hosting Premium y Soporte</T>,
+    title: <T en="Premium Maintenance & Support">Mantenimiento y Soporte Premium</T>,
     price: 30,
     isMonthly: true,
     suffix: "/mes",
@@ -752,7 +752,7 @@ export default function WizardQuote() {
       case "branding":
         return t("Basic Branding Kit", "Kit de Branding Básico");
       case "hosting":
-        return t("Premium Hosting & Support", "Hosting Premium y Soporte");
+        return t("Premium Maintenance & Support", "Mantenimiento y Soporte Premium");
       default:
         return id;
     }
@@ -772,7 +772,9 @@ export default function WizardQuote() {
     ``,
     t(
       "Please share anything else that will help prepare for our meeting:",
-      "Por favor comparte cualquier otra cosa que ayude a prepararnos para la reunión:",
+                      language === "es"
+                  ? "Por favor comparte cualquier otra cosa que ayude a prepararnos para la reunión:"
+                  : "Please share anything else that will help us prepare for the meeting:",
     ),
   ].join("\n");
 
@@ -1276,7 +1278,7 @@ export default function WizardQuote() {
                             </div>
                             <div className="space-y-1">
                               <h4 className="text-sm font-bold text-[var(--color-text-primary)]">
-                                <T en="Add hosting and support?">¿Deseas agregar hosting y soporte?</T>
+                                <T en="Add maintenance and support?">¿Deseas agregar mantenimiento y soporte?</T>
                               </h4>
                               <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                                 <T en="Get optimized speed, automatic backups, and continuous tech support for just $30/mo. Recommended for launch.">Consigue velocidad óptima, copias de seguridad automáticas y soporte continuo por solo $30/mes. Opción recomendada para el lanzamiento.</T>
@@ -1512,7 +1514,7 @@ export default function WizardQuote() {
                   </div>
                   <div className="space-y-1">
                     <h4 className="text-xs font-bold text-[var(--color-text-primary)]">
-                      <T en="Recommended: Hosting & Support">¿Deseas hosting y soporte?</T>
+                      <T en="Recommended: Maintenance & Support">¿Deseas mantenimiento y soporte?</T>
                     </h4>
                     <p className="text-[10px] text-[var(--color-text-secondary)] leading-normal">
                       <T en="Get guaranteed speed, automatic backups, and 24/7 tech support for $30/mo.">Consigue velocidad óptima, copias de seguridad automáticas y soporte continuo por solo $30/mes.</T>
