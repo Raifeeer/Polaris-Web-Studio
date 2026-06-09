@@ -251,7 +251,7 @@ function NexusRealtyMockup() {
       {/* Hero */}
       <div className="relative flex-1 flex flex-col justify-center items-center px-6">
         <div className="absolute inset-0 z-0">
-          <div className="w-full h-full bg-[url('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=600&q=60&fm=webp')] bg-cover bg-center" />
+          <div className="w-full h-full bg-gradient-to-br from-amber-100 via-orange-50 to-stone-200 dark:from-amber-950/40 dark:via-orange-900/20 dark:to-stone-900" />
           <div className="absolute inset-0 bg-white/30" />
         </div>
 

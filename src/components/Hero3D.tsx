@@ -36,7 +36,13 @@ export default function Hero3D() {
 
   // Adaptar cantidad de estrellas al viewport
   const starCount =
-    typeof window !== "undefined" && window.innerWidth < 768 ? 30 : 60;
+    typeof window !== "undefined"
+      ? window.innerWidth < 640
+        ? 0
+        : window.innerWidth < 768
+        ? 15
+        : 60
+      : 0;
 
   const stars: Star[] = useMemo(() => {
     const result: Star[] = [];
@@ -310,7 +316,7 @@ export default function Hero3D() {
 
       {/* 2. Interactive Starfield Container with Drift & Twinkle effects */}
       <div className="absolute inset-0 w-full h-full starfield-drift pointer-events-none">
-        {stars.map((star, idx) => (
+        {starCount > 0 && stars.map((star, idx) => (
           <div
             key={idx}
             className="absolute rounded-full bg-white"
