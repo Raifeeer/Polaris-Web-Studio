@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import { useLanguage, T } from "../context/LanguageContext";
@@ -72,6 +71,37 @@ export default function Navbar() {
 
   return (
     <>
+      <style>{`
+        @keyframes nav-scale-in {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .animate-nav-scale-in {
+          animation: nav-scale-in 0.3s ease-out forwards;
+          transform-origin: center;
+        }
+        @keyframes menu-spin-in {
+          from { opacity: 0; transform: rotate(-90deg); }
+          to { opacity: 1; transform: rotate(0); }
+        }
+        .animate-menu-spin-in {
+          animation: menu-spin-in 0.2s ease-out forwards;
+        }
+        @keyframes menu-spin-out {
+          from { opacity: 0; transform: rotate(90deg); }
+          to { opacity: 1; transform: rotate(0); }
+        }
+        .animate-menu-spin-out {
+          animation: menu-spin-out 0.2s ease-out forwards;
+        }
+        @keyframes mobile-nav-slide-down {
+          from { opacity: 0; transform: translateY(-20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-mobile-nav-slide-down {
+          animation: mobile-nav-slide-down 0.2s ease-out forwards;
+        }
+      `}</style>
       <div
         className="h-[60px] md:h-[76px] w-full shrink-0"
         aria-hidden="true"
@@ -106,12 +136,8 @@ export default function Navbar() {
             >
               {link.name}
               {location.pathname === link.path && (
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                  style={{ originX: 0.5 }}
-                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)] rounded-full"
+                <div
+                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)] rounded-full animate-nav-scale-in"
                 />
               )}
             </Link>
@@ -136,44 +162,24 @@ export default function Navbar() {
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={isOpen}
           >
-            <AnimatePresence mode="wait">
-              {isOpen ? (
-                <motion.div
-                  key="close"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute"
-                >
-                  <X size={24} aria-hidden="true" />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute"
-                >
-                  <Menu size={24} aria-hidden="true" />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {isOpen ? (
+              <div className="absolute animate-menu-spin-in">
+                <X size={24} aria-hidden="true" />
+              </div>
+            ) : (
+              <div className="absolute animate-menu-spin-out">
+                <Menu size={24} aria-hidden="true" />
+              </div>
+            )}
           </button>
         </div>
 
         {/* Mobile Nav Overlay */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="absolute top-full left-0 right-0 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] p-6 flex flex-col gap-4 lg:hidden z-40 shadow-lg"
-            >
-              {navLinks.map((link) => (
+        {isOpen && (
+          <div
+            className="absolute top-full left-0 right-0 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] p-6 flex flex-col gap-4 lg:hidden z-40 shadow-lg animate-mobile-nav-slide-down"
+          >
+            {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
@@ -227,9 +233,8 @@ export default function Navbar() {
               >
                 <T en="Plan your Project">Planifica tu Proyecto</T>
               </button>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </nav>
     </>
   );
