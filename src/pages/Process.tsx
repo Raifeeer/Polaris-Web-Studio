@@ -17,13 +17,13 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
+import Cal, { getCalApi } from "@calcom/embed-react";
 
 export default function Process() {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = React.useState(0);
   const [isSchedulerOpen, setIsSchedulerOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const [CalComponent, setCalComponent] = React.useState<any>(null);
   const { theme } = useTheme();
   const { language } = useLanguage();
   const calTheme = theme === "dark" ? "dark" : "light";
@@ -34,11 +34,7 @@ export default function Process() {
     let active = true;
     const initCal = async () => {
       try {
-        const calMod = await import("@calcom/embed-react");
-        if (!active) return;
-        setCalComponent(() => calMod.default);
-
-        const cal = await calMod.getCalApi();
+        const cal = await getCalApi();
         if (!active) return;
 
         cal("on", {
@@ -683,29 +679,23 @@ export default function Process() {
                         } as React.CSSProperties
                       }
                     >
-                      {CalComponent ? (
-                        <CalComponent
-                          calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(
-                            language === "en"
-                              ? "Direct consultation booked from the Work Methodology page."
-                              : "Consulta directa programada desde la sección de Metodología de Trabajo.",
-                          )}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            overflow: "scroll",
-                          }}
-                          config={{
-                            layout: "month_view",
-                            theme: calTheme,
-                            locale: language === "en" ? "en" : "es",
-                          }}
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full min-h-[480px]">
-                          <div className="animate-spin w-6 h-6 border-2 border-[var(--color-primary-base)] border-t-transparent rounded-full" />
-                        </div>
-                      )}
+                      <Cal
+                        calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(
+                          language === "en"
+                            ? "Direct consultation booked from the Work Methodology page."
+                            : "Consulta directa programada desde la sección de Metodología de Trabajo.",
+                        )}`}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          overflow: "scroll",
+                        }}
+                        config={{
+                          layout: "month_view",
+                          theme: calTheme,
+                          locale: language === "en" ? "en" : "es",
+                        }}
+                      />
                     </div>
                   )}
                 </div>

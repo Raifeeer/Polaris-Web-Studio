@@ -25,19 +25,18 @@ export default function Hero3D() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 300);
-    return () => clearTimeout(t);
+    // Defer hero background until after LCP paint
+    const cb = () => setMounted(true);
+    if ("requestIdleCallback" in window) {
+      (window as any).requestIdleCallback(cb, { timeout: 500 });
+    } else {
+      setTimeout(cb, 100);
+    }
   }, []);
 
   // Adaptar cantidad de estrellas al viewport
   const starCount =
-    typeof window !== "undefined"
-      ? window.innerWidth < 640
-        ? 0
-        : window.innerWidth < 768
-        ? 15
-        : 60
-      : 0;
+    typeof window !== "undefined" && window.innerWidth < 768 ? 30 : 60;
 
   const stars: Star[] = useMemo(() => {
     const result: Star[] = [];
@@ -202,6 +201,9 @@ export default function Hero3D() {
     };
   }, []);
 
+  if (!mounted)
+    return <div className="absolute inset-0 z-0 pointer-events-none" />;
+
   return (
     <div
       ref={containerRef}
@@ -308,7 +310,7 @@ export default function Hero3D() {
 
       {/* 2. Interactive Starfield Container with Drift & Twinkle effects */}
       <div className="absolute inset-0 w-full h-full starfield-drift pointer-events-none">
-        {mounted && starCount > 0 && stars.map((star, idx) => (
+        {stars.map((star, idx) => (
           <div
             key={idx}
             className="absolute rounded-full bg-white"
@@ -329,7 +331,7 @@ export default function Hero3D() {
 
       {/* 3. Layered Gradient Mesh Blobs Container */}
       <div className="absolute inset-0 w-full h-full opacity-90">
-        {mounted && blobs.map((blob, idx) => (
+        {blobs.map((blob, idx) => (
           <div
             key={idx}
             style={{

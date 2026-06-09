@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 
 interface LogoProps {
   size?: number;
@@ -45,7 +46,7 @@ export default function Logo({
           </defs>
 
           {/* Combined Star Shape - Mathematically Symmetrical */}
-          <path
+          <motion.path
             d="M 16 2 
                L 17.5 13.5
                L 21.5 10.5
@@ -64,6 +65,9 @@ export default function Logo({
                L 14.5 13.5
                Z"
             fill="url(#logo-gradient)"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, ease: "circOut" }}
           />
 
           {/* Precision Core */}

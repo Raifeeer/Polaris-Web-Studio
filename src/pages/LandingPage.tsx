@@ -26,7 +26,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactSection from "../components/ContactSection";
 import Logo from "../components/Logo";
-const MockupFrame = lazy(() => import("../components/MockupFrame"));
+import MockupFrame from "../components/MockupFrame";
 import { T, useLanguage } from "../context/LanguageContext";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
@@ -1287,15 +1287,11 @@ export default function LandingPage() {
                         p.slug === "chroma-store" ? (
                           <div className="h-[160px] w-full overflow-hidden relative flex justify-center items-start bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] pt-6 rounded-lg border border-[var(--color-border-subtle)]">
                             <div className="scale-[0.45] origin-top translate-y-[-10px] transition-transform duration-500 group-hover:scale-[0.48]">
-                              <Suspense fallback={<div className="w-full h-full min-h-[400px] animate-pulse bg-[var(--color-surface-elevated)] rounded-[2rem] border border-[var(--color-border-strong)]" />}>
-                                <MockupFrame type="mobile" projectSlug={p.slug} />
-                              </Suspense>
+                              <MockupFrame type="mobile" projectSlug={p.slug} />
                             </div>
                           </div>
                         ) : (
-                          <Suspense fallback={<div className="w-full aspect-[4/3] animate-pulse bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border-strong)]" />}>
-                            <MockupFrame type="browser" projectSlug={p.slug} />
-                          </Suspense>
+                          <MockupFrame type="browser" projectSlug={p.slug} />
                         )}
                       </div>
                     </div>
