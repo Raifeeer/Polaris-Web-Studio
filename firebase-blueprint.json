@@ -1,0 +1,193 @@
+{
+  "entities": {
+    "Excursion": {
+      "title": "Excursion",
+      "description": "An available tropical excursion in the Dominican Republic.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the excursion."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the excursion."
+        },
+        "shortDescription": {
+          "type": "string",
+          "description": "A brief overview description."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of what the excursion offers."
+        },
+        "price": {
+          "type": "integer",
+          "description": "Price per person in USD."
+        },
+        "image": {
+          "type": "string",
+          "description": "URL to the representative imagery."
+        },
+        "activityType": {
+          "type": "string",
+          "description": "Type of category (e.g. acuático, party, off-road, naturaleza, cultural)."
+        },
+        "duration": {
+          "type": "string",
+          "description": "The duration of the excursion."
+        },
+        "rating": {
+          "type": "number",
+          "description": "Average user rating out of 5 stars."
+        },
+        "icon": {
+          "type": "string",
+          "description": "Lucide icon key used for visual represention."
+        },
+        "includes": {
+          "type": "array",
+          "description": "An array of items or features included in the price."
+        },
+        "excludes": {
+          "type": "array",
+          "description": "An array of items or features explicitly excluded."
+        },
+        "whatToBring": {
+          "type": "array",
+          "description": "What travelers should bring."
+        }
+      },
+      "required": ["id", "name", "price", "activityType", "duration", "rating"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "An excursion review submitted by an authenticated traveler.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique ID of the review."
+        },
+        "excursionId": {
+          "type": "string",
+          "description": "Referenced excursion ID."
+        },
+        "userName": {
+          "type": "string",
+          "description": "Display name of the reviewer."
+        },
+        "rating": {
+          "type": "integer",
+          "description": "Rating out of 5 stars."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Feedback message details."
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO timestamp of submission."
+        }
+      },
+      "required": ["id", "excursionId", "userName", "rating", "comment", "date"]
+    },
+    "Reservation": {
+      "title": "Reservation",
+      "description": "A booking or reservation for an excursion.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique reservation identifier."
+        },
+        "excursionId": {
+          "type": "string",
+          "description": "The excursion ID being reserved."
+        },
+        "date": {
+          "type": "string",
+          "description": "Reserved travel date."
+        },
+        "attendees": {
+          "type": "integer",
+          "description": "Number of people attending."
+        },
+        "customerName": {
+          "type": "string",
+          "description": "Primary customer full name."
+        },
+        "customerEmail": {
+          "type": "string",
+          "description": "Primary customer contact email."
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Primary customer phone contact."
+        },
+        "totalPrice": {
+          "type": "number",
+          "description": "Total payment price in USD."
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the booking.",
+          "enum": ["confirmed", "pending", "cancelled"]
+        },
+        "paypalOrderId": {
+          "type": "string",
+          "description": "Referenced PayPal transaction tracking ID."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Reservation creation time ISO string."
+        }
+      },
+      "required": ["id", "excursionId", "date", "attendees", "customerName", "customerEmail", "totalPrice", "status", "paypalOrderId", "createdAt"]
+    },
+    "Admin": {
+      "title": "Admin",
+      "description": "An administrative user role assignment record.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "The unique email of the admin."
+        },
+        "role": {
+          "type": "string",
+          "description": "The dynamic privilege level.",
+          "enum": ["superadmin", "admin"]
+        },
+        "grantedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO timestamp representing the date permissions were granted."
+        },
+        "grantedBy": {
+          "type": "string",
+          "description": "The email of the administrative issuer who granted this privilege."
+        }
+      },
+      "required": ["email", "role", "grantedAt", "grantedBy"]
+    }
+  },
+  "firestore": {
+    "excursions": {
+      "schema": "Excursion",
+      "description": "Catalogue collection of all travel excursions."
+    },
+    "reviews": {
+      "schema": "Review",
+      "description": "Reviews collection posted by authenticated consumers."
+    },
+    "reservations": {
+      "schema": "Reservation",
+      "description": "Booking and customer reservations tracking."
+    },
+    "admins": {
+      "schema": "Admin",
+      "description": "Administrators directory defining dynamic privilege access levels."
+    }
+  }
+}

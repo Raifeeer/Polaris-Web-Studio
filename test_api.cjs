@@ -1,0 +1,7 @@
+const http = require('http');
+
+http.get('http://localhost:3000/api/excursions', (res) => {
+  let data = '';
+  res.on('data', chunk => data += chunk);
+  res.on('end', () => console.log('Response Status:', res.statusCode, 'Body:', data.substring(0, 200)));
+}).on('error', err => console.error(err));

@@ -1,8 +1,6 @@
 {
-  "name": "Polaris Web Studio | Santo Domingo",
-  "description": "Estudio boutique de ingeniería digital basado en Santo Domingo. Especializados en landing pages de alta conversión, e-commerce robusto y experiencias web de élite.",
+  "name": "Tano Excursions",
+  "description": "Book tropical excursions in the Dominican Republic with PayPal payments, admin panel, and WhatsApp notifications.",
   "requestFramePermissions": [],
-  "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

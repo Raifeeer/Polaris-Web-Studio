@@ -1,96 +1,20 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
+    <!-- Desarrollado por Cristian Dicen bajo la empresa de desarrollo web Polaris Web Studio -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Polaris Web Studio | Desarrollo Web de Alto Impacto</title>
-    <meta name="description" content="Diseñamos y desarrollamos plataformas web que atraen clientes y generan ventas. Landing pages, e-commerce y webs corporativas para el mercado global." />
-    
-    <!-- Preconnect to external font origins for optimized PageSpeed -->
-    <link rel="preconnect" href="https://api.fontshare.com" />
-    <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
-    <!-- Performance font loading (non-blocking via media trick + noscript fallbacks) -->
-    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&f[]=satoshi@900,700,500,300,400&display=swap" media="print" onload="this.media='all'" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript>
-      <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&f[]=satoshi@900,700,500,300,400&display=swap" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&display=swap" />
-    </noscript>
-
-    <!-- Canonical -->
-    <link rel="canonical" href="https://polarisweb.studio" />
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-    <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-    <link rel="alternate icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-
-    <!-- Open Graph / Facebook -->
+    <link rel="icon" type="image/png" href="https://i.imgur.com/xoLbyYx.png" />
+    <title>Tano Excursions | Tours y Excursiones en Punta Cana, República Dominicana</title>
+    <meta name="description" content="Reserva las mejores excursiones en Punta Cana: Isla Saona, catamaranes, buggies, party boats y más. Pago seguro por PayPal. Guías locales expertos." />
+    <meta name="keywords" content="excursiones punta cana, isla saona, catamaran republica dominicana, buggy punta cana, party boat, tours dominicana" />
+    <meta property="og:title" content="Tano Excursions | Tours en Punta Cana" />
+    <meta property="og:description" content="Las mejores excursiones de Punta Cana con guías locales expertos. Reserva online con pago seguro." />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://polarisweb.studio" />
-    <meta property="og:site_name" content="Polaris Web Studio" />
-    <meta property="og:locale" content="es_DO" />
-    <meta property="og:locale:alternate" content="en_US" />
-    <meta property="og:title" content="Polaris Web Studio | Desarrollo Web de Alto Impacto" />
-    <meta property="og:description" content="Diseñamos y desarrollamos plataformas web que atraen clientes y generan ventas. Landing pages, e-commerce y webs corporativas para el mercado global." />
-    <!-- Recommended image size: 1200x630 pixels -->
-    <meta property="og:image" content="https://polariswebstudio.com/og-image.jpg" />
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://polarisweb.studio" />
-    <meta property="twitter:title" content="Polaris Web Studio | Desarrollo Web de Alto Impacto" />
-    <meta property="twitter:description" content="Diseñamos y desarrollamos plataformas web que atraen clientes y generan ventas. Landing pages, e-commerce y webs corporativas para el mercado global." />
-    <meta property="twitter:image" content="https://polariswebstudio.com/og-image.jpg" />
-    
-    <!-- Schema.org JSON-LD -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Polaris Web Studio",
-        "url": "https://polarisweb.studio",
-        "logo": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=200&h=200",
-        "email": "hola@polarisweb.studio",
-        "description": "Estudio boutique de ingeniería digital especializado en diseño web de alta performance y experiencias digitales globales.",
-        "servicedUsed": [
-          "Diseño Web a Medida",
-          "E-commerce de alto rendimiento",
-          "Landing Pages de conversión",
-          "Optimización SEO"
-        ]
-      }
-    </script>
-    <!-- Initial Loader Styles -->
-    <style>
-      body { margin: 0; background-color: #020617; }
-      #root:empty {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        width: 100vw;
-      }
-      .spinner {
-        border: 3px solid rgba(255,255,255,0.1);
-        border-top: 3px solid #6366f1;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        animation: spin 1s linear infinite;
-      }
-      @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      @media (prefers-color-scheme: light) {
-        body { background-color: #f8fafc; }
-        .spinner { border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid #4f46e5; }
-      }
-    </style>
+    <meta name="robots" content="index, follow" />
   </head>
   <body>
-    <div id="root"><div class="spinner"></div></div>
+    <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -13,8 +13,10 @@
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
+    "resolveJsonModule": true,
     "allowJs": true,
     "jsx": "react-jsx",
+    "types": ["vite/client"],
     "paths": {
       "@/*": [
         "./*"
