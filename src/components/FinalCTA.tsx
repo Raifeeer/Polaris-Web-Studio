@@ -13,8 +13,8 @@ export default function FinalCTA() {
         </T>
       </p>
       <a
-        href="https://cal.com/"
-        target="_blank"
+        href="/cotizar?step=schedule"
+        target="_self"
         rel="noopener noreferrer"
         className="inline-block px-8 py-4 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] rounded-xl font-bold hover:bg-[var(--color-primary-base)]/90 transition-all"
       >

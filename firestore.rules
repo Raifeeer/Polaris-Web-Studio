@@ -1,56 +1,23 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Global Safety Net: Default deny
     match /{document=**} {
       allow read, write: if false;
     }
 
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    function isValidNewsletterSubscriber(data) {
+      return data.keys().hasAll(['email', 'source', 'subscribedAt']) && 
+             data.keys().size() == 3 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.source is string && data.source.size() <= 50;
     }
 
-    function isEmailVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
-
-    function isValidId(id) {
-      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
-    }
-
-    // Excursions: Read by everyone, write only by admins / server (disabled client-side)
-    match /excursions/{excursionId} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    // Reviews: Read by everyone, create by verified authenticated users
-    match /reviews/{reviewId} {
-      allow read: if true;
-      allow create: if isSignedIn() 
-                    && request.resource.data.userId == request.auth.uid
-                    && request.resource.data.rating >= 1 
-                    && request.resource.data.rating <= 5
-                    && request.resource.data.comment is string
-                    && request.resource.data.comment.size() <= 2000;
-      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
-    }
-
-    // Reservations: Created during checkout, only readable/writable by admin or the owner
-    match /reservations/{reservationId} {
-      allow create: if true; // Allows reservation posting during checkout
-      allow read, write: if isSignedIn() && (
-        resource.data.customerEmail == request.auth.token.email
-        // Admin overrides go here if needed, or through server APIs
-      );
-    }
-
-    // Admins: Only accessible by the owner for role queries on client; write operations strictly server-mediated
-    match /admins/{email} {
-      allow read: if isSignedIn() && request.auth.token.email.toLowerCase().trim() == email.toLowerCase().trim();
-      allow write: if false;
+    match /newsletter_subscribers/{subscriberId} {
+      // Allow any user (even unauthenticated) to subscribe via the form.
+      // We only allow create. We don't allow read, update, or delete.
+      allow create: if isValidNewsletterSubscriber(request.resource.data) &&
+                    request.resource.data.subscribedAt == request.time;
     }
   }
 }

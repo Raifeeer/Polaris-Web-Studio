@@ -284,10 +284,10 @@ const addons = [
   {
     id: "multilingual",
     title: <T en="Multilingual Website">Sitio Web Multilingüe</T>,
-    price: 250,
+    price: 99,
     desc: (
-      <T en="Architecture and translation for international clients">
-        Arquitectura y traducción para llegar a clientes internacionales
+      <T en="Site in up to 3 languages, architecture included">
+        Sitio en hasta 3 idiomas, arquitectura incluida
       </T>
     ),
   },
@@ -308,12 +308,12 @@ const addons = [
     ),
   },
   {
-    id: "seo",
-    title: <T en="Local SEO (Google Maps)">SEO Local (Google Maps)</T>,
-    price: 150,
+    id: "content_seo",
+    title: <T en="Content SEO Map">Mapa de Contenidos SEO</T>,
+    price: 149,
     desc: (
-      <T en="Google Business Profile optimization">
-        Optimización de Perfil de Empresa
+      <T en="Keyword research + content structure for organic traffic">
+        Investigación de keywords + estructura de contenido para tráfico orgánico
       </T>
     ),
   },
@@ -330,6 +330,50 @@ const addons = [
     ),
   },
 ];
+
+// Micro-copy de validación por addon
+const addonSocialProof: Record<string, { en: string; es: string }> = {
+  ai_agent: {
+    en: "Intercom, Zendesk & HubSpot replaced their first-touch support with AI agents — reducing response time by 80%.",
+    es: "Intercom, Zendesk y HubSpot reemplazaron su soporte inicial con agentes IA, reduciendo el tiempo de respuesta un 80%.",
+  },
+  bot_fast: {
+    en: "Businesses using 24/7 automated flows capture 3× more leads outside business hours.",
+    es: "Negocios con flujos automatizados 24/7 capturan 3× más leads fuera del horario laboral.",
+  },
+  semantic_search: {
+    en: "Shopify stores with AI-powered search see up to 43% higher conversion than keyword-only search.",
+    es: "Tiendas con búsqueda semántica convierten hasta un 43% más que las de búsqueda por palabras clave.",
+  },
+  content_assistant: {
+    en: "Brands using AI-generated descriptions publish content 5× faster, freeing time for growth.",
+    es: "Marcas que usan IA para sus descripciones publican contenido 5× más rápido.",
+  },
+  crm: {
+    en: "HubSpot reports that CRM-connected businesses close deals 27% faster on average.",
+    es: "HubSpot reporta que los negocios conectados a un CRM cierran ventas un 27% más rápido.",
+  },
+  multilingual: {
+    en: "Sites in 2+ languages reach 72% more buyers globally. Includes full architecture and translation for up to 3 languages (CSA Research).",
+    es: "Sitios en 2+ idiomas alcanzan un 72% más de compradores globales. Incluye arquitectura y traducción para hasta 3 idiomas (CSA Research).",
+  },
+  copy: {
+    en: "Basecamp and Stripe attribute their early growth largely to conversion-focused copywriting.",
+    es: "Basecamp y Stripe atribuyen su crecimiento inicial al copywriting enfocado en conversión.",
+  },
+  branding: {
+    en: "Consistent branding across touchpoints increases revenue by up to 23% (Lucidpress).",
+    es: "Una marca consistente en todos los puntos de contacto aumenta los ingresos hasta un 23% (Lucidpress).",
+  },
+  content_seo: {
+    en: "Businesses with a defined keyword strategy get 3× more organic traffic than those without one (BrightEdge, 2024).",
+    es: "Los negocios con una estrategia de keywords definida reciben 3× más tráfico orgánico que los que no la tienen (BrightEdge, 2024).",
+  },
+  hosting: {
+    en: "Sites with active maintenance have 99.9% uptime vs 94% for unmanaged servers.",
+    es: "Sitios con mantenimiento activo alcanzan 99.9% de uptime vs 94% en servidores sin gestión.",
+  },
+};
 
 function safePatchCal() {
   try {
@@ -541,6 +585,22 @@ export default function WizardQuote() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Lead capture state
+  const [leadCaptured, setLeadCaptured] = useState(() =>
+    !!localStorage.getItem("wizardQuote_leadCaptured")
+  );
+  const [showLeadCapture, setShowLeadCapture] = useState(false);
+  const [leadName, setLeadName] = useState(selections.name || "");
+  const [leadEmail, setLeadEmail] = useState(selections.email || "");
+  const [leadEmailError, setLeadEmailError] = useState("");
+
+  // GA4 helper
+  const trackEvent = (eventName: string, params?: Record<string, any>) => {
+    try {
+      (window as any).gtag?.("event", eventName, params);
+    } catch (_) {}
+  };
+
   const [targetDate] = useState(() =>
     new Date("2026-06-18T23:59:59Z").getTime(),
   );
@@ -733,8 +793,8 @@ export default function WizardQuote() {
 
   const getAddonName = (id: string) => {
     switch (id) {
-      case "seo":
-        return t("Local SEO (Google Maps)", "SEO Local (Google Maps)");
+      case "content_seo":
+        return t("Content SEO Map", "Mapa de Contenidos SEO");
       case "bot_fast":
         return t("Lead Capture Bot", "Bot de Respuestas Rápidas");
       case "ai_agent":
@@ -780,6 +840,12 @@ export default function WizardQuote() {
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
+      // Intercept before step 3 if lead not captured
+      if (currentStep === 2 && !leadCaptured) {
+        setShowLeadCapture(true);
+        return;
+      }
+      trackEvent("wizard_step_complete", { step: currentStep + 1 });
       setCurrentStep((c) => c + 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
@@ -792,6 +858,23 @@ export default function WizardQuote() {
       setCurrentStep((c) => c - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+  };
+
+  const handleSubmitLead = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(leadEmail)) {
+      setLeadEmailError(t("Enter a valid email.", "Ingresa un email válido."));
+      return;
+    }
+    setLeadEmailError("");
+    setSelections((s) => ({ ...s, name: leadName, email: leadEmail }));
+    localStorage.setItem("wizardQuote_leadCaptured", "1");
+    setLeadCaptured(true);
+    setShowLeadCapture(false);
+    trackEvent("lead_captured", { method: "wizard_pre_schedule" });
+    trackEvent("wizard_step_complete", { step: 3 });
+    setCurrentStep((c) => c + 1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const submitQuote = () => {
@@ -1256,6 +1339,20 @@ export default function WizardQuote() {
                                 </span>
                               )}
                             </span>
+                            {/* Social proof micro-copy on selection */}
+                            <AnimatePresence>
+                              {selections.addons.includes(a.id) && addonSocialProof[a.id] && (
+                                <motion.p
+                                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                  animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+                                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                  transition={{ duration: 0.25 }}
+                                  className="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed border-t border-[var(--color-primary-base)]/20 pt-2 mt-2 overflow-hidden"
+                                >
+                                  💡 {language === "en" ? addonSocialProof[a.id].en : addonSocialProof[a.id].es}
+                                </motion.p>
+                              )}
+                            </AnimatePresence>
                           </button>
                         ))}
                       </div>
@@ -1311,7 +1408,7 @@ export default function WizardQuote() {
                         {CalComponent ? (
                           <CalComponent
                             key={quoteSummary}
-                            calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(quoteSummary)}`}
+                            calLink={`cristian-dicen/consultoria-polaris?name=${encodeURIComponent(selections.name || "")}&email=${encodeURIComponent(selections.email || "")}&notes=${encodeURIComponent(quoteSummary)}`}
                             style={{
                               width: "100%",
                               height: "100%",
@@ -1534,6 +1631,87 @@ export default function WizardQuote() {
         </div>
       </main>
       <Footer />
+
+      {/* Lead Capture Modal */}
+      <AnimatePresence>
+        {showLeadCapture && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="w-full max-w-md bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] p-8 space-y-6 shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="space-y-2">
+                <div className="w-10 h-10 rounded-2xl bg-[var(--color-primary-base)]/10 flex items-center justify-center text-[var(--color-primary-base)] mb-4">
+                  <Calendar size={20} />
+                </div>
+                <h3 className="text-xl font-display font-black tracking-tight">
+                  <T en="Save your proposal">Guarda tu propuesta</T>
+                </h3>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                  <T en="We'll send a detailed copy to your email so you can review it anytime — even if you don't schedule today.">
+                    Te enviamos una copia detallada a tu correo para que la revises cuando quieras, aunque no agendes hoy.
+                  </T>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    placeholder={t("Your name", "Tu nombre")}
+                    value={leadName}
+                    onChange={(e) => setLeadName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="email"
+                    placeholder={t("your@email.com", "tu@correo.com")}
+                    value={leadEmail}
+                    onChange={(e) => { setLeadEmail(e.target.value); setLeadEmailError(""); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
+                    className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all ${leadEmailError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
+                  />
+                  {leadEmailError && (
+                    <p className="text-xs text-red-500 mt-1">{leadEmailError}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleSubmitLead}
+                  className="w-full py-3 px-6 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all border-none cursor-pointer"
+                >
+                  <T en="Save & continue to scheduling →">Guardar y continuar →</T>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLeadCapture(false);
+                    localStorage.setItem("wizardQuote_leadCaptured", "1");
+                    setLeadCaptured(true);
+                    trackEvent("wizard_step_complete", { step: 3 });
+                    setCurrentStep((c) => c + 1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="w-full py-2 px-6 text-[var(--color-text-tertiary)] text-xs hover:text-[var(--color-text-secondary)] transition-colors border-none bg-transparent cursor-pointer"
+                >
+                  <T en="Skip for now">Continuar sin guardar</T>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

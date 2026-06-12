@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, ArrowRight, Home, Calendar, Sparkles, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ArrowRight, BookOpen, Calendar, Sparkles, ShieldCheck } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T } from "../context/LanguageContext";
@@ -224,12 +224,12 @@ export default function Gracias() {
           className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto font-sans"
         >
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/blog")}
             style={{ cursor: "pointer" }}
             className="flex items-center justify-center gap-2 px-8 py-3 bg-[var(--color-surface-highlight)] hover:bg-[var(--color-border-strong)] rounded-xl font-bold transition-all text-sm w-full sm:w-auto border-none"
           >
-            <Home size={16} />
-            <T en="Go to Homepage">Ir al Inicio</T>
+            <BookOpen size={16} />
+            <T en="Read our Blog">Leer el Blog</T>
           </button>
           
           <a

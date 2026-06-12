@@ -108,6 +108,15 @@ Anteriormente, los redactores colocaban una palabra clave de manera forzada para
 3. **Datos Estructurados (Schema.org)**: Proporciona a Google un resumen directo de lo que trata tu página en formato JSON-LD, facilitando su catalogación rápida.
 4. **Respuestas Directas**: Estructura preguntas y respuestas resumidas. Esto te calificará para los buscados fragmentos destacados (featured snippets) en los primeros puestos.
 
+### Sinergia con otros pilares del SEO
+
+Para que tu estrategia semántica rinda de manera extraordinaria en Google, debe acoplarse con la familia completa de optimizaciones que ya hemos analizado en detalle:
+
+* **SEO On-Page**: La disciplina fundamental que optimiza el contenido visible y las etiquetas HTML.
+* **SEO Técnico**: La base de infraestructura ultraveloz y configuración de servidores que Google exige.
+* **SEO Off-Page**: El incremento de autoridad externa mediante backlinks de alta reputación.
+* **SEO de Contenidos**: La estrategia sistemática para captar prospectos mediante contenidos de gran valor.
+
 *Cuando escribes para educar y estructurar con claridad técnica, Google te premia de manera automática.*`,
     contentEn: `Google's algorithm no longer looks for a keyword repeated 50 times in a text. Today, it seeks **entities, search intent, and conceptual relevance**. This is what Semantic SEO is all about.
 
@@ -120,6 +129,15 @@ In the past, marketers stuffed articles with keywords to manipulate search engin
 1. **Research Topics, Not Just Words**: Instead of optimizing solely for 'buy shoes', map out the entire domain: material types, sizing guides, footwear care, etc.
 2. **Hierarchical Headings**: Use H1, H2, and H3 tags to draw a logical structure, not just aesthetic styling.
 3. **Structured Data (Schema.org)**: Offer search engines a direct JSON-LD summary of your page to facilitate quick indexation.
+
+### Synergy with other SEO Pillars
+
+To make your semantic strategy perform truly exceptionally, it has to be tightly integrated with the rest of the search optimization pillars we've developed:
+
+* **On-Page SEO**: The core foundation optimization of visible keywords and HTML structural code.
+* **Technical SEO**: High performance site rendering, server routes and speed.
+* **Off-Page SEO**: Scaling up your authoritative link network.
+* **Content SEO**: Systematic writing framework built specifically to solve direct search intents.
 
 *When you write to educate and structure with technical clarity, search engines naturally reward your content with higher visibility.*`
   },
@@ -145,13 +163,15 @@ In the past, marketers stuffed articles with keywords to manipulate search engin
     content: `Elegir la base técnica incorrecta para tu sitio web puede arrastrar las conversiones por el suelo o causar costes innecesarios de servidor. Comparemos las metodologías más eficientes:
 
 ### SPA (Single Page Application) - Interactividad Pura
-Las SPAs (ej. aplicaciones construidas sobre React puro con Vite) cargan la estructura básica una sola vez y van actualizando las secciones de manera fluida e instantánea en respuesta a clics del usuario.
+
+Las SPAs (por ejemplo, aplicaciones construidas sobre React puro con Vite) cargan la estructura básica una sola vez y van actualizando las secciones de manera fluida e instantánea en respuesta a clics del usuario.
 
 * **Ideal para**: Paneles de usuario, herramientas SaaS, cotizadores interactivos y plataformas privadas.
 * **Ventaja**: Interacción instantánea sin recargas de pantalla que se siente como una app nativa.
 
 ### Sitios Estáticos / SSG / Híbridos - Velocidad y SEO Extremos
-Los sitios estáticos se compilan previamente durante el desarrollo, lo que significa que el servidor simplemente entrega archivos HTML rígidos e instantáneos cuando el cliente los solicita.
+
+Los sitios estáticos se compilan previamente durante el desarrollo, lo que significa que el servidor simplemente entrega archivos HTML estáticos e instantáneos cuando el cliente los solicita.
 
 * **Ideal para**: Landing pages de marketing, blogs, portafolios de alta visibilidad, sitios corporativos.
 * **Ventaja**: Carga de inmediato (en milisegundos) y seguridad total (no hay base de datos expuesta al tráfico público).
@@ -160,12 +180,14 @@ Los sitios estáticos se compilan previamente durante el desarrollo, lo que sign
     contentEn: `Choosing the wrong technical foundation for your website can drag conversions down or trigger unnecessary server bills. Let us compare the most efficient approaches:
 
 ### SPA (Single Page Application) - Pure Interactivity
+
 SPAs (e.g., custom React+Vite utilities) load the core shells once and transition dynamically to user actions.
 
 * **Best for**: SaaS dashboards, private portals, interactive wizard systems.
 * **Core Benefit**: App-like fluid transition without hard screen reloads.
 
 ### Static Sites / SSG - Ultimate Speed & SEO
+
 Static sites compile ahead-of-time, meaning the server serves finished HTML files instantly when requested.
 
 * **Best for**: Marketing landing pages, authoritative blogs, portfolios.
@@ -241,7 +263,7 @@ Static sites compile ahead-of-time, meaning the server serves finished HTML file
 
 La tecnología semántica procesa el lenguaje humano natural. Analiza:
 * **Sinónimos y Variaciones**: Entiende que "abrigo" y "chaqueta", u "ocio" y "vacaciones" guardan relación directa.
-* **Intención del Usuario**: Reconoce el contexto de la búsqueda (ej: si busca "reparación de celular" vs "comprar celular").
+* **Intención del Usuario**: Reconoce el contexto de la búsqueda (por ejemplo, si busca "reparación de celular" frente a "comprar celular").
 * **Tolerancia a erratas y errores de escritura**: Filtra y corrige errores ortográficos e imprecisiones de inmediato y sin esfuerzo.
 
 ### Retorno de Inversión Instantáneo
@@ -1236,7 +1258,7 @@ Una PWA es un sitio web optimizado con estándares modernos de navegador que per
 
 ### Características Esenciales de una PWA de Polaris
 
-* **Instalación Directa con un Toque**: Tus visitantes descargan la app directamente desde tu navegador web mediante un banner persuasivo, evitando el friccionado paso de buscar en la tienda de aplicaciones.
+* **Instalación Directa con un Toque**: Tus visitantes descargan la app directamente desde tu navegador web mediante un banner persuasivo, evitando la fricción de buscar en la tienda de aplicaciones.
 * **Soporte Sin Conexión a Internet (Offline Cache)**: Utiliza controladores en segundo plano (Service Workers) para guardar en caché los archivos principales. Tus clientes pueden navegar por tu catálogo, leer información técnica o rellenar formularios incluso en túneles del metro o áreas sin cobertura móvil.
 * **Notificaciones Push Personalizadas**: Permite enviar avisos directos a la barra de estado de los celulares de tus usuarios para alertar sobre promociones flash, carritos abandonados o actualizaciones de entrega.
 * **Rendimiento e Integración de Sistema**: Disfruta de un ícono personalizado en la cuadrícula de apps del celular, pantallas de carga fluidas personalizadas y capacidades avanzadas de hardware táctil.
@@ -1290,7 +1312,7 @@ Cada modificación y mejora de código sigue un refinado canal tecnológico auto
 ### Beneficios para tu Negocio
 
 *   **Lanzamientos Múltiples Diarios**: Publica parches, nuevas landing pages o actualizaciones en segundos con absoluta serenidad.
-*   **Ahorro Operativo Escala-a-Cero**: Cloud Run desactiva los recursos de servidor cuando tu web no tiene visitas y los prende en milisegundos ante tráfico masivo, reduciendo las facturas en la nube.
+*   **Ahorro Operativo Escala-a-Cero**: Cloud Run desactiva los recursos de servidor cuando tu web no tiene visitas y los enciende en milisegundos ante tráfico masivo, reduciendo las facturas en la nube.
 *   **Uptime Total Protegido**: No importa si estás actualizando la sección más sensible de tu carrito, la web continuará respondiendo de forma ininterrumpida.
 
 *Gobernar una infraestructura elástica y automatizada separa a las corporaciones obsoletas del software altamente ágil, competitivo y con fiabilidad de clase mundial.*`,
@@ -1313,6 +1335,452 @@ Every visual upgrade or logic enhancement traverses a structured, automated vali
 * **100% Unbroken Availability**: System updates occur in the background, keeping payment terminals open.
 
 *Sustaining automated, elastic deployment pipelines separates traditional, friction-heavy legacy enterprises from highly agile systems delivering world-class reliable software.*`
+  },
+  {
+    id: "seo-on-page-guide",
+    slug: "seo-on-page-guia-completa",
+    title: "SEO On-Page: La base para rankear en Google",
+    titleEn: "On-Page SEO: The Foundation for Google Rankings",
+    summary: "Aprende a optimizar el contenido y código de tu sitio web: títulos, meta descriptions, headings, palabras clave y estructura.",
+    summaryEn: "Learn how to optimize your website content and code: titles, meta descriptions, headings, keywords, and overall structure.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-09",
+    readTime: 6,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "on-page", "optimizacion", "google", "contenido", "palabras clave"],
+    concepts: ["seo on-page", "titulos", "meta descriptions", "keywords", "h1", "h2"],
+    content: `El SEO On-Page es el primer paso y el más fundamental para que tu sitio web sea visible en Google. Se refiere a todas las optimizaciones que aplicas directamente dentro de tu propia página web (tanto en el contenido visible como en el código fuente).
+
+### Elementos Clave del SEO On-Page
+
+* **Títulos y Meta Descriptions**: Cada página debe tener un título (Title Tag) único y una descripción que atraiga clics en los resultados de búsqueda. Deben incluir tu palabra clave principal.
+* **Estructura de Headings (H1, H2, H3)**: Un contenido bien estructurado ayuda a Google y a los usuarios a entender la jerarquía de la información. El H1 es el título principal de la página, los H2 son subtítulos, y así sucesivamente.
+* **Optimización de Palabras Clave**: Usar los términos que tus clientes buscan de forma natural a lo largo de tu contenido, sin forzarlos.
+* **URLs Amigables**: URLs cortas, legibles y que describan el contenido (por ejemplo: \`/servicios/seo\` en lugar de \`/page?id=123\`).
+* **Optimización de Imágenes**: Comprimir imágenes y añadir el atributo "ALT" descriptivo para que Google entienda de qué tratan.
+* **Diseño Mobile-Friendly y Accesibilidad**: Garantizar que la página se vea perfecta en celulares y sea fácil de navegar.
+
+*Dominar el SEO On-Page significa hablar el mismo idioma que Google, estructurando tu valor para que sea indexado de manera inmediata.*`,
+    contentEn: `On-Page SEO is the first and most fundamental step to make your website visible on Google. It refers to all optimizations you apply directly within your own web pages, both in the visible content and the source code.
+
+### Key Elements of On-Page SEO
+
+* **Titles and Meta Descriptions**: Every page must have a unique Title Tag and a compelling description to drive clicks from search results, naturally incorporating native keywords.
+* **Heading Structure (H1, H2, H3)**: A well-structured content hierarchy helps Google and users digest information. H1 is the main topic; H2s are major sections.
+* **Keyword Optimization**: Naturally utilizing the terms your customers actually search for throughout your content without artificially stuffing them.
+* **Friendly URLs**: Short, readable URLs that describe the content (e.g., \`/services/seo\` rather than \`/page?id=123\`).
+* **Image Optimization**: Enhancing load speeds and adding descriptive "ALT" attributes so search engines can "see" your visual content.
+* **Mobile-Friendly Design**: Ensuring your site scales flawlessly to phones and maintains deep accessibility.
+
+*Mastering On-Page SEO means speaking the same language as Google, structuring your value so it gets indexed immediately.*`
+  },
+  {
+    id: "seo-tecnico-guide",
+    slug: "seo-tecnico-guia-completa",
+    title: "SEO Técnico: La infraestructura que Google exige",
+    titleEn: "Technical SEO: The Infrastructure Google Demands",
+    summary: "Descubre por qué una web visualmente atractiva no es suficiente. El SEO Técnico optimiza servidores, sitemaps, robots.txt, y la velocidad extrema.",
+    summaryEn: "Discover why a visually stunning website is not enough. Technical SEO optimizes servers, sitemaps, robots.txt, and raw speed.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-09",
+    readTime: 7,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "tecnico", "sitemap", "velocidad", "core web vitals", "seguridad"],
+    concepts: ["seo tecnico", "sitemap", "robots.txt", "https", "cloudflare", "schema markup", "vitals"],
+    content: `Puedes tener el mejor contenido del mundo, pero si los robots de Google no pueden acceder a tu sitio web, rastrearlo o entenderlo, no aparecerás en los resultados de búsqueda. El SEO Técnico se encarga de la infraestructura.
+
+### Pilares del SEO Técnico
+
+* **Sitemap XML**: Esencialmente el mapa de tu sitio web. Le dice a Google exactamente cuántas páginas tienes y dónde encontrarlas, garantizando una indexación completa.
+* **Archivo robots.txt**: Le indica a los buscadores qué secciones de tu web pueden rastrear y cuáles deben ignorar (como paneles privados de administración).
+* **HTTPS y Seguridad**: Google penaliza severamente los sitios web que no son seguros. Contar con un certificado SSL (HTTPS) es un requisito básico.
+* **Core Web Vitals y Velocidad**: Google mide el tiempo de carga, la interactividad visual y la estabilidad de carga. Las páginas lentas pierden posiciones de inmediato.
+* **Schema Markup (Datos Estructurados)**: Un código avanzado, a menudo en formato JSON-LD, que se inyecta en la web para explicarle a Google explícitamente de qué trata la empresa (productos, reseñas, preguntas frecuentes).
+
+*El SEO Técnico es el puente de acero entre tu negocio y el buscador de Google. Sin él, tu sitio web es invisible.*`,
+    contentEn: `You can write the best content in the world, but if Google's crawlers cannot access, crawl, or understand your website, you will never rank. Technical SEO handles the underlying infrastructure.
+
+### Pillars of Technical SEO
+
+* **XML Sitemap**: The architectural map of your website. It explicitly hands Google a list of all your pages, guaranteeing comprehensive indexing.
+* **robots.txt File**: Instructs search engine bots on which sections of your site they can crawl and which to ignore (like private dashboards).
+* **HTTPS and Security**: Google heavily penalizes non-secure web environments. An SSL certificate (HTTPS) is a foundational ranking requirement.
+* **Core Web Vitals**: Google strictly grades load speeds, visual interactivity, and stability. Slow sites drop in rankings immediately.
+* **Schema Markup**: Advanced JSON-LD code injected into the backend, translating unstructured data into absolute facts for Google (summarizing products, reviews, or FAQs).
+
+*Technical SEO is the iron bridge connecting your enterprise to the search engine backend. Without it, your digital presence is completely invisible.*`
+  },
+  {
+    id: "seo-off-page-guide",
+    slug: "seo-off-page-guia-completa",
+    title: "SEO Off-Page: Autoridad de Dominio y Backlinks",
+    titleEn: "Off-Page SEO: Domain Authority and Backlinks",
+    summary: "Cómo mejorar la reputación de tu sitio web a través de enlaces externos, menciones de marca y crecimiento de autoridad a largo plazo.",
+    summaryEn: "How to elevate the reputation of your website via external links, brand mentions, and long-term authoritative scaling.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-09",
+    readTime: 6,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "off-page", "backlinks", "autoridad", "enlaces", "reputacion"],
+    concepts: ["seo off-page", "link building", "backlinks", "autoridad", "dominio", "menciones"],
+    content: `Mientras que el SEO On-Page y Técnico suceden dentro de tu propio código, el SEO Off-Page trata de las acciones tomadas fuera de tu sitio web para impactar en tus rankings. En resumen, se centra en aumentar la "Autoridad de Dominio" de tu negocio.
+
+### ¿Qué es la Autoridad de Dominio?
+
+Es una métrica que predice lo bien que va a posicionarse una página. Google interpreta los enlaces de otros sitios web hacia el tuyo como "votos de confianza".
+
+### Elementos clave del SEO Off-Page
+
+* **Backlinks (Link Building)**: El factor número uno. Se trata de conseguir que otros sitios web (idealmente sitios grandes y respetados dentro de tu industria) coloquen un enlace hacia el tuyo.
+* **Menciones de Marca**: Cuando hablan de ti en noticias, redes sociales o foros grandes, incluso si no te enlazan. Google detecta la popularidad de tu marca.
+* **SEO Local y Directorios**: Estar dado de alta correctamente en Google Business Profile y otras plataformas importantes de la localidad aporta una gran relevancia geográfica a tu negocio.
+* **Marketing en Redes Sociales**: Aunque los enlaces de redes sociales usualmente son "no-follow", el tráfico y el ruido social influyen en la presencia de marca, lo cual potencia indirectamente tu SEO.
+
+*El SEO Off-Page es un trabajo progresivo de relaciones públicas digitales que, con constancia, eleva a tu web por encima de gigantes.*`,
+    contentEn: `While On-Page and Technical SEO happen inside your servers, Off-Page SEO centers entirely on actions happening outside of your website to impact rankings. Fundamentally, it scales up your "Domain Authority".
+
+### What is Domain Authority?
+
+It is an aggregate metric predicting how well a website will rank. Google interprets external hyperlinks pointing from other websites to yours as "votes of confidence".
+
+### Key Elements of Off-Page SEO
+
+* **Backlinks (Link Building)**: The strongest off-page signal. It involves acquiring incoming links from high-authority, respected domains within your specific industry.
+* **Brand Mentions**: Unlinked citations of your brand in large news outlets or forums. Google algorithms parse this global brand noise.
+* **Local SEO and Profiles**: Solidifying a strong footprint across Google Business Profile and local digital registries boosts geospatial relevance.
+* **Social and PR Amplification**: Though direct social links may hold "no-follow" weights, the traffic surge and digital PR strongly fuel indirect SEO performance.
+
+*Off-Page SEO functions as digital public relations engineering. Managed consistently, it lifts your domain authority directly above legacy competitors.*`
+  },
+  {
+    id: "seo-contenidos-guide",
+    slug: "seo-contenidos-guia-completa",
+    title: "SEO de Contenidos: Atraer clientes con valor real",
+    titleEn: "Content SEO: Attracting Customers with Authentic Value",
+    summary: "Crear artículos de blog y estrategias de palabras clave que respondan a lo que tu audiencia está buscando, generando tráfico gratuito continuo.",
+    summaryEn: "Building blog architectures and semantic strategies that directly answer your audience's questions, fueling continuous organic traffic.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-09",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "contenidos", "blog", "keywords", "estrategia", "inbound"],
+    concepts: ["seo contenidos", "blog", "redaccion", "estrategia", "articulos", "palabras clave", "intencion"],
+    content: `El SEO de Contenidos es la estrategia de crear material (usualmente artículos de blog o guías extensas) diseñado específicamente para posicionarse en los motores de búsqueda y captar clientes potenciales desde la fase de investigación.
+
+### Cómo funciona el SEO de Contenidos
+
+Mientras que las páginas de ventas de tu sitio "convierten", el SEO de Contenidos "atrae". Si vendes servicios de contabilidad, tus clientes no buscarán directamente "contratar contador" en su primer día. Estarán buscando: "cómo deducir impuestos de software" o "¿necesito declarar IVA como freelancer?". 
+
+Si tú respondes a esa duda en tu blog de manera sublime, ese usuario pasará a estar en tu ecosistema y, al ganar su confianza, terminará contratándote.
+
+### Pilares del SEO de Contenidos
+
+* **Investigación de Palabras Clave (Keyword Research)**: Identificar volúmenes de búsqueda, intenciones reales y nivel de dificultad para encontrar oportunidades de oro o nichos de larga cola ("long-tail").
+* **Estructura Semántica**: Textos ricos en términos informativos de la industria, y no simple relleno de palabras clave repetitivas.
+* **Respuesta a la Intención de Búsqueda**: Si el cliente busca una "guía paso a paso", bríndale una lista clara, no un artículo filosófico de 5000 palabras. El formato de entrega importa.
+* **Frescura del Contenido**: Google ama el contenido dinámico y frecuentemente actualizado. Los blogs mantienen "viva" la autoridad general de un sitio web.
+
+*La creación sistemática de SEO de Contenidos es un activo perenne que genera de forma automática prospectos mensuales, sin gastar un céntimo en publicidad.*`,
+    contentEn: `Content SEO is the strategic blueprint for generating written material (often expansive blog pipelines or exhaustive guides) designed natively to rank natively and aggregate high-intent research-phase customers.
+
+### The Mechanics of Content SEO
+
+While standard sales landing pages operate to "convert", Content SEO works dynamically to "attract". If you offer law services, clients won't instinctively search "hire a lawyer immediately". They will search: "what is the legal liability of software defects?" or "do I need to trademark my software name?".
+
+If your content network answers those inquiries authoritatively, you pull users securely into your brand ecosystem, ultimately forging trust and converting them down the funnel.
+
+### Content SEO Pillars
+
+* **Granular Keyword Research**: Locating search volumes, ranking difficulty, and gold-mine long-tail variants to capture hyper-targeted traffic sectors.
+* **Semantic Richness**: Filling documents with complex industry terminology and entity relationships, completely abandoning old-fashioned keyword stuffing.
+* **Search Intent Alignment**: Providing the precise format expected. If a user queries a "step-by-step checklist", outputting a 4000-word philosophical essay fails.
+* **Content Freshness Cycles**: Search engines structurally reward constantly updated domains. A strong editorial pipeline injects continuous domain vitality into the technical algorithm weights.
+
+*Systematic Content SEO serves as an immortal business asset, compounding passive lead generation flows each month without a single dollar spent on ads.*`
+  },
+  {
+    id: "schema-markup-guide",
+    slug: "schema-markup-guia-completa",
+    title: "Schema Markup: Habla el idioma nativo de Google",
+    titleEn: "Schema Markup: Speak Google's Native Language",
+    summary: "Descubre cómo los datos estructurados pueden potenciar tu SEO, haciendo que tus resultados de búsqueda destaquen visualmente en Google.",
+    summaryEn: "Discover how structured data can boost your SEO, making your search results stand out visually on Google search pages.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-09",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "schema markup", "datos estructurados", "rich snippets", "google", "codigo"],
+    concepts: ["schema markup", "json-ld", "datos estructurados", "rich snippets", "resultados enriquecidos"],
+    content: `El Schema Markup (o marcado de esquemas) es un código que puedes colocar en tu sitio web para ayudar a los motores de búsqueda a devolver resultados más informativos para los usuarios. Es esencialmente un vocabulario de datos estructurados que define entidades, acciones y relaciones en Internet.
+
+### ¿Por qué es importante el Schema Markup?
+
+A Google le encanta la información organizada. Cuando usas Schema Markup, no solo le dices a Google de qué trata tu página, le dices exactamente *qué es* cada elemento. Por ejemplo, en lugar de que Google tenga que adivinar que "€19.99" es el precio de un producto, el Schema Markup lo etiqueta explícitamente como el precio.
+
+### Fragmentos Enriquecidos (Rich Snippets)
+
+La mayor ventaja visible del Schema Markup son los "Rich Snippets" o fragmentos enriquecidos. Estos son los resultados de búsqueda que muestran información adicional atractiva, como:
+
+*   **Estrellas de valoración** en reseñas.
+*   **Imágenes, tiempos de cocción y calorías** en recetas.
+*   **Precios y disponibilidad** en páginas de productos (ecommerce).
+*   **Fechas y ubicaciones** de eventos.
+*   **Preguntas frecuentes (FAQ)** directamente en la página de resultados de Google.
+
+Tener estos resultados visualmente destacados aumenta drásticamente tu **Click-Through Rate (CTR)**, lo que significa que más personas harán clic en tu web en lugar de en la competencia, incluso si no estás en la posición número uno.
+
+### Cómo se implementa (JSON-LD)
+
+Google prefiere que el Schema Markup se añada usando un formato llamado **JSON-LD**. Este es un bloque de código JavaScript que normalmente se coloca en el \`<head>\` de tu página HTML. Aunque no cambia el aspecto visual de la página para los usuarios humanos, es música para los oídos (o algoritmos) de Google.
+
+*Implementar Schema Markup es como darle a Google un mapa del tesoro detallado de tu contenido, garantizando que entienda y muestre tu valor exacto al mundo.*`,
+    contentEn: `Schema Markup is code (semantic vocabulary) that you put on your website to help search engines return more informative results for users. It is essentially a structured data vocabulary that defines entities, actions, and relationships on the internet.
+
+### Why is Schema Markup Important?
+
+Google loves organized, structured information. When you use Schema Markup, you don't just tell Google what your page is about; you tell it exactly *what* each element is. For instance, instead of Google having to guess that "$19.99" is a product price, Schema Markup explicitly tags it as the price.
+
+### Rich Snippets
+
+The biggest visible advantage of Schema Markup is "Rich Snippets." These are enhanced search results that display attractive additional information, such as:
+
+*   **Star ratings** on reviews.
+*   **Images, cooking times, and calories** on recipes.
+*   **Prices and availability** on product pages (ecommerce).
+*   **Dates and locations** for events.
+*   **Frequently Asked Questions (FAQ)** directly on the Google search results page.
+
+Having these visually prominent results drastically increases your **Click-Through Rate (CTR)**, meaning more people will click on your website rather than competitors, even if you are not in the absolute number one ranking spot.
+
+### How it's implemented (JSON-LD)
+
+Google strongly prefers Schema Markup to be added using a format called **JSON-LD**. This is a block of JavaScript code typically placed in the \`<head>\` of your HTML page. While it doesn't change the visual appearance of the page for human users, it's music to Google's algorithms.
+
+*Implementing Schema Markup is like giving Google a detailed treasure map of your content, ensuring it understands and showcases your exact value to the world.*`
+  },
+  {
+    id: "google-business-profile-guide",
+    slug: "google-business-profile-guia-completa",
+    title: "Google Business Profile: Domina tu visibilidad local",
+    titleEn: "Google Business Profile: Master Your Local Visibility",
+    summary: "Guía completa para optimizar tu ficha de negocio en Google, atraer clientes de tu zona y escalar posiciones en Google Maps.",
+    summaryEn: "Complete guide to optimize your business profile on Google, attract local customers, and rank higher on Google Maps.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-10",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "google business profile", "seo local", "google maps", "negocio local"],
+    concepts: ["google business profile", "ficha de google", "mi negocio", "seo local", "maps", "ubicacion", "reseñas"],
+    content: `Tener una presencia digital estelar comienza con ser visible para aquellos que están literalmente a la vuelta de la esquina. Aquí es donde **Google Business Profile** (anteriormente conocido como Google My Business) se convierte en tu activo de marketing local más poderoso y, lo mejor de todo, totalmente gratuito.
+
+### ¿Qué es Google Business Profile?
+
+Es la herramienta oficial de Google que permite a dueños de negocios gestionar su presencia en el motor de búsqueda y en Google Maps. Cuando alguien busca "desarrollo de software cerca de mí" o "restaurante italiano en [ciudad]", las fichas optimizadas son las que se muestran en el codiciado "Local Pack" (las 3 primeras posiciones en el mapa).
+
+### Factores Clave para Dominar el SEO Local
+
+Para ganarte la confianza del algoritmo geográfico de Google y superar a tus competidores locales, debes dominar tres conceptos fundamentales:
+
+1. **Relevancia**: Qué tan bien coincide tu ficha con la búsqueda del usuario. Asegúrate de categorizar tu negocio con precisión quirúrgica.
+2. **Distancia**: Qué tan lejos está tu negocio de la ubicación de la persona que realiza la búsqueda.
+3. **Prominencia**: Qué tan conocido es tu negocio. Esto se calcula a través de enlaces, menciones de marca, y la cantidad y calidad de tus reseñas.
+
+### Pasos Críticos para Optimizar tu Ficha
+
+*   **Completa toda la información (NAP)**: Nombre, Dirección (Address) y Teléfono (Phone) deben ser idénticos en tu web y en todas tus plataformas sociales. El desajuste de datos confunde a Google.
+*   **Gestión Activa de Reseñas**: No solo solicites valoraciones de 5 estrellas, ¡respóndelas todas de inmediato! Agradecer a tus clientes y responder constructivamente demuestra actividad y fiabilidad tanto al público como a los robots del buscador.
+*   **Publicaciones Periódicas (Google Updates)**: Usa tu ficha como una red social secundaria. Publica ofertas, lanzamientos de productos y artículos de tu blog de manera continua.
+*   **Fotografías de Alta Resolución**: Los perfiles con fotos profesionales y actualizadas de los proyectos o locales reciben un 42% más de solicitudes de indicaciones de cómo llegar.
+
+*Optimizar tu perfil de Google Business Profile no es opcional si tienes un local físico o atiendes a una región geográfica específica. Es el imán definitivo de tráfico de alta conversión.*`,
+    contentEn: `Building a digital presence starts with being visible to those who are literally around the corner. This is why **Google Business Profile** (formerly Google My Business) is your most powerful local marketing tool, completely for free.
+
+### What is Google Business Profile?
+
+It's Google's tool allowing business owners to customize and manage how their business appears under search outcomes and on Google Maps. When someone searches for "software developers near me" or "italian restaurant in [city]", fully optimized listings populate the highly convertive "Local Pack" (the top 3 map items).
+
+### Core Pillars for Local SEO Dominance
+
+To establish ranking authority block by block and bypass local competitors, you must perfect three variables:
+
+1. **Relevance**: How precisely your custom profile matches what the target client is looking for. Fill out categories meticulously.
+2. **Distance**: The proximity of your business location relative to the user conducting the lookup.
+3. **Prominence**: The popularity of your enterprise based on local backlinks, public press, and reviews.
+
+### Essential Profile Tuning Actions
+
+*   **Maintain NAP Consistency**: Your Name, Address, and Phone must align perfectly state-wide. Contradicting contact info triggers ranking penalties.
+*   **Active Review Optimization**: Don't just ask for star ratings—actively reply to reviews! Responding demonstrates community commitment to both users and crawlers.
+*   **Regular Google Updates**: Share blog updates, local events, or deals consistently to signal fresh, live business operations.
+*   **UHD Photography**: Uploading premium, real-life pictures of your office environment improves request directions conversions by 42%.
+
+*Mastering Google Business Profile is a foundational step for any geographically anchored or service-based enterprise looking to dominate search.*`
+  },
+  {
+    id: "google-analytics-4-guide",
+    slug: "google-analytics-4-guia-completa",
+    title: "Google Analytics 4: Mide lo que realmente importa",
+    titleEn: "Google Analytics 4: Measure What Truly Matters",
+    summary: "Aprende a configurar GA4 desde cero para rastrear conversiones y tomar decisiones basadas en datos reales para tu negocio.",
+    summaryEn: "Learn to configure GA4 from scratch to track conversions and make data-driven decisions for your business.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-10",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "analitica", "ga4", "google analytics 4", "conversiones", "datos"],
+    concepts: ["google analytics 4", "ga4", "analitica", "metricas", "eventos", "conversiones", "rastreo", "datos"],
+    content: `En la era del marketing moderno, lo que no se mide no se puede mejorar. **Google Analytics 4** (GA4) es la evolución definitiva en analítica web, diseñada no solo para contar visitas, sino para entender el comportamiento de tus usuarios a través de múltiples dispositivos y predecir su intención de compra de manera inteligente.
+
+### La Revolución del Modelo de Eventos
+
+A diferencia del antiguo Universal Analytics, que dependía enteramente de páginas vistas y sesiones fijas, GA4 opera con un modelo unificado basado puramente en **eventos**. Cualquier interacción de un usuario (un clic, una descarga de PDF, la inicialización del carrito, o el scroll del blog) se registra como un evento con parámetros personalizados.
+
+### ¿Por qué mudar tu negocio inmediatamente a GA4?
+
+Si buscas construir decisiones comerciales basadas en datos precisos, GA4 te brinda ventajas sin precedentes:
+
+1. **Métricas de Participación (Engagement)**: Di adiós a la ambigua "tasa de rebote" (bounce rate). GA4 implementa el "tiempo de interacción activa", dándote certezas sobre si los usuarios realmente leen y consumen tus contenidos.
+2. **Seguimiento Multipantalla Directo**: Integra fluidamente los datos de tu sitio web de escritorio, tu versión móvil y tus aplicaciones nativas en un solo embudo de conversión cohesivo.
+3. **Inteligencia Artificial Predictiva**: El motor de Google calcula automáticamente la probabilidad de abandono o el potencial de compra de tus usuarios más activos basándose en patrones predictivos de comportamiento.
+4. **Cumplimiento de Privacidad Absoluto**: Diseñado para persistir en un mundo libre de cookies de terceros, utilizando aprendizaje automático para rellenar vacíos de información sin comprometer la privacidad del usuario.
+
+### Estructura tu Configuración Básica de GA4
+
+*   **Flujos de Datos (Data Streams)**: El punto de partida de tu propiedad, que conecta el flujo de señales desde tu dominio web mediante la etiqueta global de Google (gtag.js).
+*   **Eventos Personalizados (Custom Events)**: Registra acciones críticas para el negocio, como clics en "Cotizar desarrollo a medida" o suscripciones a tu Newsletter.
+*   **Definición de Conversiones**: Marca los eventos más valiosos como conversiones para alimentar con precisión los algoritmos de marketing y medir el retorno real de tu inversión (ROI).
+
+*Google Analytics 4 te da el control analítico absoluto sobre el viaje del cliente, permitiéndote tomar decisiones audaces respaldadas por métricas de alta precisión.*`,
+    contentEn: `In modern marketing, what isn't measured cannot be improved. **Google Analytics 4** (GA4) represents the evolution of web analytics, engineered to analyze multi-device consumer journeys and dynamically predetermine high-ticket conversion events.
+
+### The Events-Driven Paradigm Shift
+
+Unlike historical Universal Analytics architectures built around pageviews and rigid sessions, GA4 features an architecture solely powered by **events**. Any user interaction (a button click, scroll depth, form submission, or file download) maps as a fully configured event armed with custom parameters.
+
+### Why Your Platform Needs Google Analytics 4
+
+To extract performance measurements that guide strategic development, GA4 brings major advantages:
+
+1. **Engagement Over Bounce Rates**: Traditional high-noise bounce metrics are deprecated in favor of "engaged sessions," proving exactly if audiences consume your long-form contents.
+2. **Seamless Multi-Platform Tracking**: Map and aggregate web signals alongside application touchpoints in a unified, streamlined marketing funnel.
+3. **Predictive Machine Learning**: Google's algorithms analyze event density to predict churn rates or project purchase probabilities for active visitors.
+4. **Privacy-Centric Architecture**: Geared to maintain accurate tracking in a cookie-less atmosphere by blending predictive data filling with safe, secure anonymization.
+
+### Core GA4 Implementation Blueprint
+
+*   **Setup Web Data Streams**: Connect tracking codes securely via Google Tag parameters directly inside the head of your custom application.
+*   **Configure Custom Conversion Events**: Ensure button engagement (e.g., custom checkout paths) triggers an analytic conversion event.
+*   **Establish Actionable Audience Pools**: Organize high-intent visitors and dynamically feed lists back to campaign sources for maximum marketing ROI.
+
+*GA4 provides total analytical clarity, transforming raw clicks into strategic milestones to fuel your growth engine.*`
+  },
+  {
+    id: "google-search-console-guide",
+    slug: "google-search-console-guia-completa",
+    title: "Google Search Console: La central de comando de tu SEO",
+    titleEn: "Google Search Console: Your SEO Command Center",
+    summary: "Aprende a diagnosticar errores, medir clics y comunicarte directamente con los rastreadores de Google para disparar tu visibilidad orgánica.",
+    summaryEn: "Learn to diagnose errors, measure clicks, and communicate directly with Google trackers to boost your organic visibility.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-10",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+    },
+    tags: ["seo", "google search console", "gsc", "indexacion", "rastreo"],
+    concepts: ["google search console", "search console", "gsc", "sitemap", "rastreo", "errores", "clics"],
+    content: `Para conquistar los primeros puestos de Google, necesitas saber con exactitud cómo ve el buscador tu sitio web. **Google Search Console** (GSC) es la herramienta oficial, gratuita y directa de Google que actúa como el panel de control técnico de tu sitio. No mide qué hacen los usuarios cuando entran (eso lo hace GA4), sino **cómo interactúa el robot de Google (Googlebot) con tu plataforma antes de que entren**.
+
+### ¿Qué hace Google Search Console?
+
+A diferencia de cualquier otra herramienta de SEO de terceros, la información de GSC proviene directamente del motor de búsqueda de Google. Te permite identificar de forma instantánea qué páginas han sido indexadas con éxito, qué problemas de rastreo existen, por qué palabras clave te están buscando y si tu sitio web cumple con los estándares de usabilidad móvil y velocidad (Core Web Vitals).
+
+### Prestaciones Esenciales de Search Console
+
+Para convertir esta herramienta en tu mayor ventaja competitiva de SEO, debes dominar sus cuatro funciones principales:
+
+1. **Informe de Rendimiento (Performance)**: Te muestra los clics reales, las impresiones (cuántas veces te vieron), la tasa de clics (CTR) y la posición media de tus páginas para cada consulta de búsqueda específica.
+2. **Herramienta de Inspección de URLs**: Introduce cualquier enlace de tu sitio para ver su estado de indexación en vivo. Te dice exactamente si Google puede rastrear la página y, si hay un problema, te da el diagnóstico exacto.
+3. **Envío de Sitemaps**: Sube tu archivo sitemap.xml para indicarle formalmente a Google la estructura completa del sitio, forzando un rastreo eficiente de las páginas nuevas o actualizadas.
+4. **Informe de Cobertura e Indexación**: Identifica páginas excluidas, errores 404, redirecciones mal configuradas o problemas de etiquetas canónicas que están deteniendo tu crecimiento orgánico.
+
+### Pasos Iniciales para Activar tu Central de Comando
+
+*   **Verifica la Propiedad**: Añade tu dominio a Google Search Console y verifícalo mediante un registro TXT en tu proveedor de DNS o subiendo un archivo de verificación HTML.
+*   **Envía tu Sitemap**: Ve a la sección "Sitemaps" y añade la ruta de tu mapa web. Esto es vital para acelerar la indexación de nuevos artículos de blog o landing pages.
+*   **Inspecciona y Solicita Indexación**: Cuando publiques contenido nuevo de alta prioridad, usa la caja de inspección en la parte superior e "inspecciona la URL", luego haz clic en "Solicitar indexación" para acelerar su aparición en los resultados.
+*   **Monitorea los Errores de Usabilidad**: Revisa periódicamente la pestaña de usabilidad y Core Web Vitals para asegurar que Google califique tu experiencia móvil con la máxima puntuación.
+
+*Google Search Console es el canal de comunicación bidireccional más valioso entre tu código y el buscador. Ignorarlo es como volar un avión a ciegas.*`,
+    contentEn: `To conquer the top positions on Google, you must understand exactly how the search engine views your codebase and content. **Google Search Console** (GSC) is Google's official, direct, and completely free diagnostic board, serving as your Technical SEO control room. GSC doesn't track what users do inside your app (that's GA4's job)—it monitors **how Google's crawlers (Googlebot) index your pages before traffic arrives**.
+
+### What Is Google Search Console?
+
+Unlike third-party SEO toolkits, all reports inside GSC represent direct feedback from Google's core engines. It reveals which URLs are fully indexed, any crawler blocks, high-performing organic queries, and whether your platform fulfills vital mobile experiences and Core Web Vitals targets.
+
+### Crucial Search Console Capabilities
+
+To turn GSC into your ultimate search engine competitive advantage, master these four core sections:
+
+1. **Performance Report**: Get accurate real-world data outlining impressions, actual clicks, average click-through rate (CTR), and precise search position variables for each individual keyword query.
+2. **URL Inspection Utility**: Test any address in real-time to analyze indexation criteria. Discover exactly if Google can process the URL, and receive immediate diagnostic details upon failure.
+3. **Sitemap Management**: Submit your sitemap.xml path to structure efficient indexing paths for new service layers or blogs.
+4. **Indexation Coverage Audits**: Instantly pinpoint canonical issues, broken 404 targets, redirect loops, or non-indexed links blocking organic authority.
+
+### Roadmap to Configure Your SEO Command Center
+
+*   **Verify Domain Ownership**: Connect DNS records or upload secure verification files to confirm domain authority within GSC.
+*   **Submit Your XML Map**: Navigate to the "Sitemaps" section, type in your map file route, and trigger immediate, structured indexation.
+*   **Execute URL Inspections**: When writing high-importance pages, inspect their paths and trigger "Request Indexing" to drastically cut down on wait times.
+*   **Monitor Core Alerts**: Regularly audit the Experience tab to ensure Googlebot registers flawless mobile and speed performance points.
+
+*Google Search Console bridges the communication gap between your production environment and the search index engine. To neglect GSC is to fly your business completely blind.*`
   }
 ];
 

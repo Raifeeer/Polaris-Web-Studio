@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import {
   Rocket,
   ShoppingCart,
@@ -26,6 +26,7 @@ import {
   Pointer,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Testimonials from "../components/Testimonials";
@@ -68,6 +69,7 @@ function PlanCard({
   return (
     <motion.div
       whileHover={{ y: -5 }}
+      id={`plan-card-${plan.id}`}
       style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}
       className={`p-8 rounded-[var(--radius-bento)] border transition-[border-color,background-color,box-shadow] duration-300 min-h-[500px] relative ${
         plan.highlight
@@ -247,36 +249,81 @@ function PlanCard({
         <T en="See examples →">Ver ejemplos →</T>
       </button>
 
-      <button
-        onClick={() => {
-          const typeMap: Record<string, string> = {
-            flash: "landing",
-            constellation: "corporate",
-            nova: "ecommerce",
-          };
-          navigate(
-            `/cotizar?type=${typeMap[plan.id] || "landing"}`,
-          );
-        }}
-        style={{ cursor: "pointer" }}
-        className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
-          plan.highlight
-            ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20 border-none"
-            : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
-        }`}
-      >
-        <T en="Choose this Plan">Elegir este Plan</T>
-      </button>
+      {plan.id === "paypal_test" ? (
+        <div className="w-full relative z-50">
+          <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test", currency: "USD", intent: "capture" }}>
+            <PayPalButtons 
+              style={{ layout: "vertical" }}
+              createOrder={(data, actions) => {
+                return actions.order.create({
+                  intent: "CAPTURE",
+                  purchase_units: [{ amount: { currency_code: "USD", value: "3.00" }, description: "Test Plan $3 USD" }]
+                });
+              }}
+              onApprove={(data, actions) => {
+                return actions.order!.capture().then(() => alert("¡Pago completado con éxito! / Payment successful!"));
+              }}
+            />
+          </PayPalScriptProvider>
+        </div>
+      ) : (
+        <button
+          onClick={() => {
+            const typeMap: Record<string, string> = {
+              flash: "landing",
+              constellation: "corporate",
+              nova: "ecommerce",
+            };
+            navigate(
+              `/cotizar?type=${typeMap[plan.id] || "landing"}`,
+            );
+          }}
+          style={{ cursor: "pointer" }}
+          className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
+            plan.highlight
+              ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20 border-none"
+              : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
+          }`}
+        >
+          <T en="Choose this Plan">Elegir este Plan</T>
+        </button>
+      )}
     </motion.div>
   );
 }
 
 export default function Services() {
   const { language } = useLanguage();
+  const location = useLocation();
   const [isServicesExpanded, setIsServicesExpanded] = useState(false);
   const navigate = useNavigate();
   const [showComparison, setShowComparison] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
+
+  const stateFromTab = location.state?.fromTab;
+
+  useEffect(() => {
+    if (stateFromTab) {
+      if (stateFromTab === "comparativa") {
+        setShowComparison(true);
+        setTimeout(() => {
+          const compTable = document.getElementById("comparison-table");
+          if (compTable) {
+            compTable.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 300);
+      } else {
+        setTimeout(() => {
+          const planCard = document.getElementById(`plan-card-${stateFromTab}`);
+          if (planCard) {
+            planCard.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 100);
+      }
+      // Reset state to avoid scrolling again on subsequent renders or background updates
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [stateFromTab, navigate, location.pathname]);
 
   const handleToggleComparison = () => {
     setShowComparison(prev => {
@@ -352,7 +399,6 @@ export default function Services() {
           items: [
             <T en="Exclusive and responsive design">Diseño exclusivo y responsivo</T>,
             <T en="Designed to capture customers">Diseñada para captar clientes</T>,
-            <T en="Visible on Google">Visible en Google</T>,
           ],
         },
         {
@@ -370,7 +416,6 @@ export default function Services() {
           items: [
             <T en="Web domain included (up to $15 USD)">Dominio web incluido (hasta $15 USD)</T>,
             <T en="Secure connection (HTTPS)">Conexión segura (HTTPS)</T>,
-            <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
           ],
         },
         {
@@ -378,6 +423,17 @@ export default function Services() {
           icon: Headphones,
           items: [
             <T en="30 days of post-launch support">30 días de soporte post-lanzamiento</T>,
+          ],
+        },
+        {
+          title: <T en="SEO">SEO</T>,
+          icon: Search,
+          items: [
+            <T en="Google indexing">Indexación en Google</T>,
+            <Link to="/blog/seo-on-page-guia-completa" state={{ fromTab: "flash", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="SEO On-Page">SEO On-Page</T>
+            </Link>,
+            <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
           ],
         },
       ],
@@ -422,7 +478,9 @@ export default function Services() {
           title: <T en="Analytics">ANALYTICS</T>,
           icon: BarChart3,
           items: [
-            <T en="Full Google Analytics 4">Google Analytics 4 completo</T>,
+            <T en={<>Full <Link to="/blog/google-analytics-4-guia-completa" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Analytics 4</Link></>}>
+              <Link to="/blog/google-analytics-4-guia-completa" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Analytics 4</Link> completo
+            </T>,
             <T en="Real-time visitor statistics">Estadísticas de visitas en tiempo real</T>,
           ],
         },
@@ -430,8 +488,12 @@ export default function Services() {
           title: <T en="SEO">SEO</T>,
           icon: Search,
           items: [
-            <T en="Advanced SEO">SEO avanzado</T>,
-            <T en="Google Search Console configuration">Configuración en Google Search Console</T>,
+            <Link to="/blog/seo-tecnico-guia-completa" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Technical SEO">SEO Técnico</T>
+            </Link>,
+            <T en={<><Link to="/blog/google-search-console-guia-completa" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Search Console</Link> configuration</>}>
+              Configuración en <Link to="/blog/google-search-console-guia-completa" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Search Console</Link>
+            </T>,
           ],
         },
         {
@@ -497,6 +559,18 @@ export default function Services() {
           ],
         },
         {
+          title: <T en="SEO">SEO</T>,
+          icon: Search,
+          items: [
+            <Link to="/blog/schema-markup-guia-completa" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Schema Markup">Schema Markup</T>
+            </Link>,
+            <T en={<><Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Business Profile</Link> optimization guide</>}>
+              Guía de optimización de <Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Business Profile</Link>
+            </T>,
+          ],
+        },
+        {
           title: <T en="Support">SOPORTE</T>,
           icon: Headphones,
           items: [
@@ -523,6 +597,28 @@ export default function Services() {
         </T>
       ),
       highlight: false,
+    },
+    {
+      id: "paypal_test",
+      name: <T en="Test Plan">Plan de Prueba</T>,
+      titleColor: "text-emerald-500",
+      desc: (
+        <T en="Temporary test for PayPal business checkout module.">
+          Test temporal para probar transacción de 3 USD.
+        </T>
+      ),
+      originalPrice: 4,
+      highlight: true,
+      sections: [
+        {
+          title: <T en="Details">DETALLES</T>,
+          icon: ShieldCheck,
+          items: [
+            <T en="Real PayPal transaction">Transacción real de PayPal</T>,
+            <T en="Amount: $3 USD fixed">Monto: $3 USD fijo</T>
+          ]
+        }
+      ]
     },
   ];
 
@@ -664,25 +760,67 @@ export default function Services() {
       icon: BarChart3,
       rows: [
         {
-          name: <T en="Visible on Google">Visible en Google</T>,
+          name: <T en="Google indexing">Indexación en Google</T>,
           v1: <Check />,
           v2: <Check />,
           v3: <Check />,
         },
         {
-          name: <T en="Advanced SEO">SEO avanzado</T>,
+          name: (
+            <Link to="/blog/seo-on-page-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="SEO On-Page">SEO On-Page</T>
+            </Link>
+          ),
+          v1: <Check />,
+          v2: <Check />,
+          v3: <Check />,
+        },
+        {
+          name: (
+            <Link to="/blog/seo-tecnico-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Technical SEO">SEO Técnico</T>
+            </Link>
+          ),
           v1: <Dash />,
           v2: <Check />,
           v3: <Check />,
         },
         {
-          name: <T en="Google Search Console">Google Search Console</T>,
+          name: (
+            <Link to="/blog/google-search-console-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Google Search Console">Google Search Console</T>
+            </Link>
+          ),
           v1: <Dash />,
           v2: <Check />,
           v3: <Check />,
         },
         {
-          name: <T en="Google Analytics 4">Google Analytics 4</T>,
+          name: (
+            <Link to="/blog/schema-markup-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Schema Markup">Schema Markup</T>
+            </Link>
+          ),
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+        {
+          name: (
+            <T en={<><Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Business Profile</Link> guide</>}>
+              Guía de <Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Business Profile</Link>
+            </T>
+          ),
+          v1: <Dash />,
+          v2: <Dash />,
+          v3: <Check />,
+        },
+        {
+          name: (
+            <Link to="/blog/google-analytics-4-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Google Analytics 4">Google Analytics 4</T>
+            </Link>
+          ),
           v1: <Dash />,
           v2: <Check />,
           v3: <Check />,
@@ -888,7 +1026,7 @@ export default function Services() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 text-left max-w-2xl xl:max-w-none mx-auto">
               {plans.map((plan, i) => (
                 <PlanCard
                   key={i}
@@ -918,6 +1056,7 @@ export default function Services() {
             {/* Collapsible Comparative Table */}
             <div
               ref={tableRef}
+              id="comparison-table"
               style={{
                 maxHeight: showComparison ? "2500px" : "0px",
                 transition: "max-height 0.5s ease",

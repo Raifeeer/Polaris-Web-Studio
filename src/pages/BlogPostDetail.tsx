@@ -7,11 +7,13 @@ import {
   Share2, 
   Sparkles,
   BookMarked,
-  ArrowRight
+  ArrowRight,
+  ArrowLeft
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import NewsletterForm from "../components/NewsletterForm";
 import { BLOG_POSTS, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 
@@ -40,6 +42,22 @@ const LINK_DEFINITIONS: LinkDef[] = [
   {
     slug: "asistente-de-contenido-ia-reputacion",
     terms: ["asistente de contenido y reseñas", "asistente de contenido y resenas", "asistente de contenido", "content & review assistant"]
+  },
+  {
+    slug: "seo-on-page-guia-completa",
+    terms: ["seo on-page", "seo onpage", "on-page seo"]
+  },
+  {
+    slug: "seo-tecnico-guia-completa",
+    terms: ["seo técnico", "seo tecnico", "technical seo"]
+  },
+  {
+    slug: "seo-off-page-guia-completa",
+    terms: ["seo off-page", "seo offpage", "off-page seo"]
+  },
+  {
+    slug: "seo-contenidos-guia-completa",
+    terms: ["seo de contenidos", "seo de contenido", "content seo"]
   },
   {
     slug: "seo-semantico-google",
@@ -96,10 +114,22 @@ const LINK_DEFINITIONS: LinkDef[] = [
   {
     slug: "react-libreria-componentes",
     terms: ["react"]
+  },
+  {
+    slug: "google-business-profile-guia-completa",
+    terms: ["google business profile", "google my business", "ficha de google", "mi negocio en google"]
+  },
+  {
+    slug: "google-analytics-4-guia-completa",
+    terms: ["google analytics 4", "google analytics", "ga4"]
+  },
+  {
+    slug: "google-search-console-guia-completa",
+    terms: ["google search console", "search console", "gsc"]
   }
 ];
 
-function linkifyText(text: string, currentSlug: string, alreadyLinked: Set<string>): React.ReactNode {
+function linkifyText(text: string, currentSlug: string, alreadyLinked: Set<string>, parentState?: any): React.ReactNode {
   if (!text || typeof text !== "string") return text;
 
   const activeDefs = LINK_DEFINITIONS.filter(def => {
@@ -133,7 +163,7 @@ function linkifyText(text: string, currentSlug: string, alreadyLinked: Set<strin
           continue;
         }
 
-        if (earliestMatch === null || pos < earliestMatch.index) {
+        if (earliestMatch === null || pos < earliestMatch.index || (pos === earliestMatch.index && term.length > earliestMatch.length)) {
           earliestMatch = {
             index: pos,
             length: term.length,
@@ -158,15 +188,28 @@ function linkifyText(text: string, currentSlug: string, alreadyLinked: Set<strin
 
   alreadyLinked.add(earliestMatch.slug);
 
-  const leftNode = linkifyText(leftText, currentSlug, alreadyLinked);
-  const rightNode = linkifyText(rightText, currentSlug, alreadyLinked);
+  const leftNode = linkifyText(leftText, currentSlug, alreadyLinked, parentState);
+  const rightNode = linkifyText(rightText, currentSlug, alreadyLinked, parentState);
+
+  // Compute history array for the next navigated article
+  const nextHistory = [...(parentState?.history || [])];
+  const currentPath = `/blog/${currentSlug}`;
+  if (!nextHistory.includes(currentPath)) {
+    nextHistory.push(currentPath);
+  }
 
   return (
     <>
       {leftNode}
       <Link
         to={`/blog/${earliestMatch.slug}`}
-        state={{ fromArticle: true, fromPath: window.location.pathname }}
+        state={{
+          fromServices: parentState?.fromServices,
+          fromTab: parentState?.fromTab,
+          history: nextHistory,
+          fromArticle: true,
+          fromPath: currentPath
+        }}
         className="text-indigo-400 hover:text-indigo-300 underline font-semibold transition-colors decoration-indigo-400/40 hover:decoration-indigo-300"
       >
         {matchedText}
@@ -176,22 +219,22 @@ function linkifyText(text: string, currentSlug: string, alreadyLinked: Set<strin
   );
 }
 
-function renderFormattedAndLinkedText(text: string, currentSlug: string, alreadyLinked: Set<string>): React.ReactNode {
+function renderFormattedAndLinkedText(text: string, currentSlug: string, alreadyLinked: Set<string>, parentState?: any): React.ReactNode {
   if (!text) return "";
   if (!text.includes("**")) {
-    return linkifyText(text, currentSlug, alreadyLinked);
+    return linkifyText(text, currentSlug, alreadyLinked, parentState);
   }
   return text.split("**").map((textToken, tokenIdx) => {
     if (tokenIdx % 2 === 1) {
       return (
         <strong key={tokenIdx} className="text-[var(--color-text-primary)]">
-          {linkifyText(textToken, currentSlug, alreadyLinked)}
+          {linkifyText(textToken, currentSlug, alreadyLinked, parentState)}
         </strong>
       );
     } else {
       return (
         <React.Fragment key={tokenIdx}>
-          {linkifyText(textToken, currentSlug, alreadyLinked)}
+          {linkifyText(textToken, currentSlug, alreadyLinked, parentState)}
         </React.Fragment>
       );
     }
@@ -288,7 +331,33 @@ export default function BlogPostDetail() {
         
         {/* Navigation Header bar */}
         <div className="flex items-center justify-between gap-4 mb-10 pb-6 border-b border-[var(--color-border-subtle)]/30">
-          {location.state && location.state.fromArticle ? (
+          {location.state?.history && location.state.history.length > 0 ? (
+            <Link
+              to={location.state.history[location.state.history.length - 1]}
+              state={{
+                fromServices: location.state.fromServices,
+                fromTab: location.state.fromTab,
+                history: location.state.history.slice(0, -1),
+                fromArticle: true,
+                fromPath: location.state.history.length > 1 ? location.state.history[location.state.history.length - 2] : undefined
+              }}
+              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
+              id="blog-detail-back-history-lnk"
+            >
+              <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+              <T en="BACK TO PREVIOUS ARTICLE">VOLVER AL ARTÍCULO ANTERIOR</T>
+            </Link>
+          ) : location.state && location.state.fromServices ? (
+            <Link
+              to="/servicios"
+              state={{ fromTab: location.state.fromTab }}
+              className="px-3.5 py-1.5 border border-indigo-500/30 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
+              id="blog-detail-back-srv-lnk"
+            >
+              <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+              <T en="RETURN TO PLANS">VOLVER A SERVICIOS</T>
+            </Link>
+          ) : location.state && location.state.fromArticle ? (
             <Link
               to={location.state.fromPath || "/blog"}
               className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
@@ -396,12 +465,12 @@ export default function BlogPostDetail() {
                             {match ? (
                               <>
                                 <strong className="text-[var(--color-text-primary)]">
-                                  {linkifyText(match[1], post.slug, alreadyLinked)}
+                                  {linkifyText(match[1], post.slug, alreadyLinked, location.state)}
                                 </strong>
-                                {renderFormattedAndLinkedText(match[2], post.slug, alreadyLinked)}
+                                {renderFormattedAndLinkedText(match[2], post.slug, alreadyLinked, location.state)}
                               </>
                             ) : (
-                              renderFormattedAndLinkedText(li.replace(/^\*\s+/, ""), post.slug, alreadyLinked)
+                              renderFormattedAndLinkedText(li.replace(/^\*\s+/, ""), post.slug, alreadyLinked, location.state)
                             )}
                           </li>
                         );
@@ -419,12 +488,12 @@ export default function BlogPostDetail() {
                             {numMatch ? (
                               <>
                                 <strong className="text-[var(--color-text-primary)]">
-                                  {linkifyText(numMatch[1], post.slug, alreadyLinked)}
+                                  {linkifyText(numMatch[1], post.slug, alreadyLinked, location.state)}
                                 </strong>
-                                {renderFormattedAndLinkedText(numMatch[2], post.slug, alreadyLinked)}
+                                {renderFormattedAndLinkedText(numMatch[2], post.slug, alreadyLinked, location.state)}
                               </>
                             ) : (
-                              renderFormattedAndLinkedText(li.replace(/^\d+\.\s+/, ""), post.slug, alreadyLinked)
+                              renderFormattedAndLinkedText(li.replace(/^\d+\.\s+/, ""), post.slug, alreadyLinked, location.state)
                             )}
                           </li>
                         );
@@ -436,13 +505,13 @@ export default function BlogPostDetail() {
                 if (paragraph.startsWith("*") && paragraph.endsWith("*")) {
                   return (
                     <blockquote key={pIdx} className="my-6 border-l-4 border-indigo-500 bg-indigo-500/[0.02] p-4 font-mono text-xs md:text-sm text-[var(--color-text-primary)] leading-normal rounded-r-lg">
-                      {renderFormattedAndLinkedText(paragraph.replace(/^\*/, "").replace(/\*$/, ""), post.slug, alreadyLinked)}
+                      {renderFormattedAndLinkedText(paragraph.replace(/^\*/, "").replace(/\*$/, ""), post.slug, alreadyLinked, location.state)}
                     </blockquote>
                   );
                 }
                 return (
                   <p key={pIdx} className="text-[var(--color-text-secondary)] text-left">
-                    {renderFormattedAndLinkedText(paragraph, post.slug, alreadyLinked)}
+                    {renderFormattedAndLinkedText(paragraph, post.slug, alreadyLinked, location.state)}
                   </p>
                 );
               })}
@@ -468,12 +537,39 @@ export default function BlogPostDetail() {
               >
                 <T en="Quote custom build">COTIZAR DESARROLLO A MEDIDA</T>
               </button>
-              {location.state && location.state.fromArticle ? (
+              {location.state?.history && location.state.history.length > 0 ? (
+                <Link
+                  id="blog-detail-cta-back-history"
+                  to={location.state.history[location.state.history.length - 1]}
+                  state={{
+                    fromServices: location.state.fromServices,
+                    fromTab: location.state.fromTab,
+                    history: location.state.history.slice(0, -1),
+                    fromArticle: true,
+                    fromPath: location.state.history.length > 1 ? location.state.history[location.state.history.length - 2] : undefined
+                  }}
+                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
+                >
+                  <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                  <T en="Back to Previous Article">VOLVER AL ARTÍCULO ANTERIOR</T>
+                </Link>
+              ) : location.state && location.state.fromServices ? (
+                <Link
+                  id="blog-detail-cta-back-srv"
+                  to="/servicios"
+                  state={{ fromTab: location.state.fromTab }}
+                  className="px-6 py-3 rounded-xl bg-indigo-500/20 border border-indigo-500/30 hover:bg-indigo-500/30 text-indigo-400 hover:text-indigo-300 text-xs font-black uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
+                >
+                  <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                  <T en="Return to Services">VOLVER A SERVICIOS</T>
+                </Link>
+              ) : location.state && location.state.fromArticle ? (
                 <Link
                   id="blog-detail-cta-back"
                   to={location.state.fromPath || "/blog"}
-                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all"
+                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
                 >
+                  <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                   <T en="Back to Previous Article">VOLVER AL ARTÍCULO</T>
                 </Link>
               ) : (
@@ -488,6 +584,8 @@ export default function BlogPostDetail() {
             </div>
           </div>
         </article>
+        {/* Newsletter Subscription */}
+        <NewsletterForm />
 
         {/* Related Posts Section */}
         {relatedPosts.length > 0 && (
@@ -501,7 +599,22 @@ export default function BlogPostDetail() {
                 <div
                   id={`related-post-card-${rp.id}`}
                   key={rp.id}
-                  onClick={() => navigate(`/blog/${rp.slug}`, { state: { fromArticle: true, fromPath: window.location.pathname } })}
+                  onClick={() => {
+                    const nextHistory = [...(location.state?.history || [])];
+                    const currentPath = `/blog/${post.slug}`;
+                    if (!nextHistory.includes(currentPath)) {
+                      nextHistory.push(currentPath);
+                    }
+                    navigate(`/blog/${rp.slug}`, {
+                      state: {
+                        fromServices: location.state?.fromServices,
+                        fromTab: location.state?.fromTab,
+                        history: nextHistory,
+                        fromArticle: true,
+                        fromPath: currentPath
+                      }
+                    });
+                  }}
                   className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-indigo-500/20 p-5 rounded-xl cursor-pointer hover:shadow-md transition-all flex flex-col justify-between space-y-3"
                 >
                   <div className="space-y-1.5 flex-grow">
