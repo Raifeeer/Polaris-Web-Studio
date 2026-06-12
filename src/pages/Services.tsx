@@ -65,6 +65,7 @@ function PlanCard({
   key?: any;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [isPaid, setIsPaid] = useState(false);
 
   return (
     <motion.div
@@ -250,21 +251,43 @@ function PlanCard({
       </button>
 
       {plan.id === "paypal_test" ? (
-        <div className="w-full relative z-50">
-          <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test", currency: "USD", intent: "capture" }}>
-            <PayPalButtons 
-              style={{ layout: "vertical" }}
-              createOrder={(data, actions) => {
-                return actions.order.create({
-                  intent: "CAPTURE",
-                  purchase_units: [{ amount: { currency_code: "USD", value: "3.00" }, description: "Test Plan $3 USD" }]
-                });
-              }}
-              onApprove={(data, actions) => {
-                return actions.order!.capture().then(() => alert("¡Pago completado con éxito! / Payment successful!"));
-              }}
-            />
-          </PayPalScriptProvider>
+        <div className="w-full relative z-50 mt-4 rounded-xl overflow-hidden min-h-[150px] flex flex-col justify-center">
+          {isPaid ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-xl flex flex-col items-center justify-center text-center w-full"
+            >
+              <div className="w-12 h-12 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-4">
+                <CheckCircle2 size={24} />
+              </div>
+              <h4 className="font-bold text-emerald-500 mb-2">
+                <T en="Payment Successful">¡Pago Exitoso!</T>
+              </h4>
+              <p className="text-sm text-[var(--color-text-secondary)]">
+                <T en="Thank you for trying out the PayPal integration test.">
+                  ¡Gracias por probar el test de pago con PayPal! Recibirás los detalles de la transacción por correo.
+                </T>
+              </p>
+            </motion.div>
+          ) : (
+            <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test", currency: "USD", intent: "capture" }}>
+              <PayPalButtons 
+                style={{ layout: "vertical", shape: "rect", color: "gold" }}
+                createOrder={(data, actions) => {
+                  return actions.order.create({
+                    intent: "CAPTURE",
+                    purchase_units: [{ amount: { currency_code: "USD", value: "3.00" }, description: "Test Plan $3 USD" }]
+                  });
+                }}
+                onApprove={(data, actions) => {
+                  return actions.order!.capture().then(() => {
+                    setIsPaid(true);
+                  });
+                }}
+              />
+            </PayPalScriptProvider>
+          )}
         </div>
       ) : (
         <button
