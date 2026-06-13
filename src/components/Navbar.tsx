@@ -78,10 +78,16 @@ export default function Navbar() {
       />
       <nav
         ref={navRef}
-        className={`fixed left-0 right-0 top-0 w-full px-4 md:px-6 lg:px-8 xl:px-12 py-2 md:py-4 flex items-center justify-between z-50 transition duration-300 border-b backdrop-blur-md ${
-          scrolled
-            ? "bg-[var(--color-surface-base)]/80 border-[var(--color-border-subtle)]"
-            : "bg-transparent border-transparent"
+        className={`fixed left-0 right-0 top-0 w-full px-4 md:px-6 lg:px-8 xl:px-12 py-2 md:py-4 flex items-center justify-between z-50 transition duration-300 backdrop-blur-xl border-b ${
+          scrolled || isOpen
+            ? "bg-[var(--color-surface-base)]/98"
+            : "bg-transparent"
+        } ${
+          isOpen
+            ? "border-b-transparent"
+            : scrolled
+            ? "border-b-[var(--color-border-subtle)]"
+            : "border-b-transparent"
         } ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
         <Link
@@ -168,7 +174,7 @@ export default function Navbar() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="absolute top-full left-0 right-0 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] p-6 flex flex-col gap-4 lg:hidden z-40 shadow-lg"
+              className="absolute top-full left-0 right-0 bg-[var(--color-surface-base)]/98 backdrop-blur-xl border-x border-b border-[var(--color-border-subtle)] p-6 flex flex-col gap-4 lg:hidden z-40"
             >
               {navLinks.map((link) => (
                 <Link

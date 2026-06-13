@@ -28,7 +28,6 @@ const WizardQuote = lazy(() => import("./pages/WizardQuote"));
 const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const Gracias = lazy(() => import("./pages/Gracias"));
-const PaypalButtonTest = lazy(() => import("./pages/PaypalButtonTest"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
@@ -168,7 +167,6 @@ export default function App() {
               <Route path="/blog/:slug" element={<BlogPostDetail />} />
               <Route path="/cotizar" element={<WizardQuote />} />
               <Route path="/gracias" element={<Gracias />} />
-              <Route path="/paypal-test" element={<PaypalButtonTest />} />
               <Route path="/login" element={<Login />} />
               <Route path="/dashboard" element={<ClientDashboard />} />
               <Route

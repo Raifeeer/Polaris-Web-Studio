@@ -73,7 +73,7 @@ export default function ContactSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg pt-2">
             <a
               href="mailto:hola@polarisweb.studio"
-              className="flex items-center gap-4 p-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-colors"
+              className="flex items-center gap-4 p-4 rounded-xl glass-panel group hover:border-[var(--color-primary-base)] transition-colors will-change-transform transition-all"
             >
               <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 transition-transform">
                 <Mail size={18} />
@@ -92,7 +92,7 @@ export default function ContactSection() {
               href="https://wa.me/18299200544?text=Hola%2C%20vi%20tu%20p%C3%A1gina%20y%20me%20gustar%C3%ADa%20planificar%20un%20proyecto%20con%20Polaris%20Web%20Studio."
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 p-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[#25D366] transition-all duration-300"
+              className="flex items-center gap-4 p-4 rounded-xl glass-panel group hover:border-[#25D366] transition-all duration-300 will-change-transform transition-all"
             >
               <div className="w-10 h-10 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#25D366] group-hover:text-white transition-all duration-300 shrink-0">
                 <svg
@@ -121,7 +121,7 @@ export default function ContactSection() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="flex-1 w-full bg-[var(--color-surface-elevated)] p-6 sm:p-8 md:p-10 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] shadow-2xl relative overflow-hidden flex flex-col gap-6"
+          className="flex-1 w-full glass-panel p-6 sm:p-8 md:p-10 rounded-[var(--radius-bento)] relative overflow-hidden flex flex-col gap-6"
         >
           {/* Top colored indicator line */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-primary-base)]/10 via-[var(--color-primary-base)] to-[var(--color-primary-base)]/10" />

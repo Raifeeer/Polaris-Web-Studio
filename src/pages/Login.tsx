@@ -54,7 +54,7 @@ export default function Login() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-md p-6 md:p-10 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] bento-glow"
+          className="w-full max-w-md p-6 md:p-10 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] bento-glow"
         >
           <div className="flex justify-center mb-6">
             <Logo size={40} stacked />
@@ -92,7 +92,7 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email"
                   aria-label="Email"
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
+                  className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
               </div>
               <div className="relative">
@@ -107,7 +107,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={language === "es" ? "Contraseña" : "Password"}
                   aria-label="Contraseña"
-                  className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
+                  className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
               </div>
             </div>

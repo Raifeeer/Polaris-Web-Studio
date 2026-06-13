@@ -28,7 +28,7 @@ export default function NewsletterForm() {
   };
 
   return (
-    <div className="bg-[var(--color-surface-elevated)] border border-indigo-500/20 rounded-2xl p-6 md:p-8 mt-12 mb-8 relative overflow-hidden">
+    <div className="glass-panel rounded-2xl p-6 md:p-8 mt-12 mb-8 relative overflow-hidden">
       <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
       
       <div className="relative z-10 flex flex-col md:flex-row md:items-center gap-6 justify-between">
@@ -67,7 +67,7 @@ export default function NewsletterForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="ejemplo@empresa.com"
                   disabled={status === "loading"}
-                  className="w-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] outline-none transition-all disabled:opacity-50"
+                  className="glass-input w-full rounded-xl px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] transition-all disabled:opacity-50"
                 />
               </div>
               <button

@@ -412,7 +412,7 @@ export default function Process() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.3 }}
-                  className="bg-[var(--color-surface-elevated)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-6 sm:p-10 shadow-xl relative overflow-hidden flex flex-col justify-between min-h-[440px]"
+                  className="glass-panel rounded-[var(--radius-bento)] p-6 sm:p-10 relative overflow-hidden flex flex-col justify-between min-h-[440px]"
                 >
                   {/* Decorative mesh glows */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-primary-muted)] rounded-full blur-[90px] opacity-15 translate-x-1/3 -translate-y-1/3 pointer-events-none" />
@@ -504,7 +504,7 @@ export default function Process() {
         {/* Final CTA Action */}
         <section className="mt-28 md:mt-32 space-y-10">
           <div className="text-center space-y-4">
-            <span className="inline-block text-emerald-500 text-[10px] font-mono font-black uppercase tracking-wider bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20">
+            <span className="glass-badge inline-block text-emerald-500 text-[10px] font-mono font-black uppercase tracking-wider px-3.5 py-1.5 rounded-full border border-emerald-500/20">
               <T en="Interactive & Direct Options">
                 Opciones de contacto a medida
               </T>
@@ -525,7 +525,7 @@ export default function Process() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
             {/* Path 1: Planificador */}
-            <div className="p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary-base)]/50 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between min-h-[280px] shadow-lg bento-glow">
+            <div className="p-8 rounded-[var(--radius-bento)] glass-panel transition-all duration-300 relative overflow-hidden group flex flex-col justify-between min-h-[280px] bento-glow">
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-primary-muted)]/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
               <div className="relative z-10 space-y-4">
                 <div className="w-12 h-12 rounded-xl bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] flex items-center justify-center">
@@ -555,7 +555,7 @@ export default function Process() {
             </div>
 
             {/* Path 2: Direct Consultation */}
-            <div className="p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary-base)]/75 transition-all duration-300 relative overflow-hidden group flex flex-col justify-between min-h-[280px] shadow-xl bento-glow">
+            <div className="p-8 rounded-[var(--radius-bento)] glass-panel transition-all duration-300 relative overflow-hidden group flex flex-col justify-between min-h-[280px] bento-glow">
               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
               <div className="relative z-10 space-y-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
@@ -609,7 +609,7 @@ export default function Process() {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 30 }}
                 transition={{ type: "spring", duration: 0.5, bounce: 0.15 }}
-                className="relative bg-[var(--color-surface-elevated)] w-full max-w-4xl rounded-3xl border border-[var(--color-border-strong)] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10"
+                className="relative glass-panel w-full max-w-4xl rounded-3xl overflow-hidden flex flex-col max-h-[90vh] z-10"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-subtle)] relative z-20">
@@ -701,7 +701,7 @@ export default function Process() {
                 </div>
 
                 {/* Footer with a helpful reminder */}
-                <div className="px-6 py-3 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex justify-between items-center text-[10px] text-[var(--color-text-tertiary)]">
+                <div className="px-6 py-3 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] flex justify-between items-center text-[10px] text-[var(--color-text-tertiary)]">
                   <span>
                     <T en="* Direct video meeting length: 15 mins.">
                       * Duración aproximada de la reunión: 15 minutos.

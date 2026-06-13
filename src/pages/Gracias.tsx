@@ -111,7 +111,7 @@ export default function Gracias() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] p-6 md:p-8 mb-16 shadow-lg relative overflow-hidden"
+          className="w-full glass-panel rounded-[var(--radius-bento)] p-6 md:p-8 mb-16 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
             <Sparkles size={80} />
@@ -171,7 +171,7 @@ export default function Gracias() {
                   <span className="text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] font-bold block mb-1">
                     <T en="Proposed Domain">Dominio Propuesto</T>
                   </span>
-                  <span className="font-mono text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-base)] px-2 py-1 rounded border border-[var(--color-border-subtle)] inline-block">
+                  <span className="glass-badge font-mono text-xs text-[var(--color-text-secondary)] px-2 py-1 rounded border border-[var(--color-border-subtle)] inline-block">
                     {state.domain}
                   </span>
                 </div>
@@ -198,7 +198,7 @@ export default function Gracias() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + i * 0.1 }}
-                className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] relative flex flex-col justify-between"
+                className="p-6 rounded-2xl glass-panel relative flex flex-col justify-between"
               >
                 <div>
                   <div className="text-3xl font-display font-black text-[var(--color-primary-base)]/25 mb-4 font-mono select-none">

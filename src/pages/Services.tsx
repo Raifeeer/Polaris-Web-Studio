@@ -10,7 +10,6 @@ import {
   MessageSquare,
   Sparkles,
   BrainCircuit,
-  Briefcase,
   Palette,
   Wrench,
   Headphones,
@@ -22,11 +21,10 @@ import {
   Coins,
   RefreshCw,
   ArrowLeft,
-  MoveHorizontal,
   Pointer,
+  TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Testimonials from "../components/Testimonials";
@@ -65,7 +63,6 @@ function PlanCard({
   key?: any;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const [isPaid, setIsPaid] = useState(false);
 
   return (
     <motion.div
@@ -242,75 +239,34 @@ function PlanCard({
           )}
         </div>
       </div>
-      <button
+      <p
         onClick={() => navigate("/portafolio")}
-        className="w-full py-4 rounded-xl font-bold text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-all mb-3"
+        className="text-center text-xs text-text-tertiary hover:text-primary-base hover:opacity-80 transition-all cursor-pointer mb-4 underline decoration-dotted underline-offset-4"
         style={{ cursor: "pointer" }}
       >
-        <T en="See examples →">Ver ejemplos →</T>
-      </button>
+        <T en="See portfolio examples →">Ver ejemplos en el portafolio →</T>
+      </p>
 
-      {plan.id === "paypal_test" ? (
-        <div className="w-full relative z-50 mt-4 rounded-xl overflow-hidden min-h-[150px] flex flex-col justify-center">
-          {isPaid ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-xl flex flex-col items-center justify-center text-center w-full"
-            >
-              <div className="w-12 h-12 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-4">
-                <CheckCircle2 size={24} />
-              </div>
-              <h4 className="font-bold text-emerald-500 mb-2">
-                <T en="Payment Successful">¡Pago Exitoso!</T>
-              </h4>
-              <p className="text-sm text-[var(--color-text-secondary)]">
-                <T en="Thank you for trying out the PayPal integration test.">
-                  ¡Gracias por probar el test de pago con PayPal! Recibirás los detalles de la transacción por correo.
-                </T>
-              </p>
-            </motion.div>
-          ) : (
-            <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "test", currency: "USD", intent: "capture" }}>
-              <PayPalButtons 
-                style={{ layout: "vertical", shape: "rect", color: "gold" }}
-                createOrder={(data, actions) => {
-                  return actions.order.create({
-                    intent: "CAPTURE",
-                    purchase_units: [{ amount: { currency_code: "USD", value: "3.00" }, description: "Test Plan $3 USD" }]
-                  });
-                }}
-                onApprove={(data, actions) => {
-                  return actions.order!.capture().then(() => {
-                    setIsPaid(true);
-                  });
-                }}
-              />
-            </PayPalScriptProvider>
-          )}
-        </div>
-      ) : (
-        <button
-          onClick={() => {
-            const typeMap: Record<string, string> = {
-              flash: "landing",
-              constellation: "corporate",
-              nova: "ecommerce",
-            };
-            navigate(
-              `/cotizar?type=${typeMap[plan.id] || "landing"}`,
-            );
-          }}
-          style={{ cursor: "pointer" }}
-          className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
-            plan.highlight
-              ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20 border-none"
-              : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
-          }`}
-        >
-          <T en="Choose this Plan">Elegir este Plan</T>
-        </button>
-      )}
+      <button
+        onClick={() => {
+          const typeMap: Record<string, string> = {
+            flash: "landing",
+            constellation: "corporate",
+            nova: "ecommerce",
+          };
+          navigate(
+            `/cotizar?type=${typeMap[plan.id] || "landing"}`,
+          );
+        }}
+        style={{ cursor: "pointer" }}
+        className={`w-full py-4 rounded-xl font-black text-sm transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 ${
+          plan.highlight
+            ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-lg shadow-[var(--color-primary-base)]/20 border-none"
+            : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
+        }`}
+      >
+        <T en="Choose this Plan">Elegir este Plan</T>
+      </button>
     </motion.div>
   );
 }
@@ -318,7 +274,6 @@ function PlanCard({
 export default function Services() {
   const { language } = useLanguage();
   const location = useLocation();
-  const [isServicesExpanded, setIsServicesExpanded] = useState(false);
   const navigate = useNavigate();
   const [showComparison, setShowComparison] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
@@ -456,14 +411,13 @@ export default function Services() {
             <Link to="/blog/seo-on-page-guia-completa" state={{ fromTab: "flash", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
               <T en="SEO On-Page">SEO On-Page</T>
             </Link>,
-            <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
           ],
         },
       ],
       extraFeatures: [
-        <T en="Loads in less than 3 seconds">Carga en menos de 3 segundos</T>,
+        <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
         <T en="The code is yours forever">El código es tuyo para siempre</T>,
-        <T en="Basic visitor statistics">Estadísticas básicas de visitas</T>,
+        <T en="Live visitor statistics">Estadísticas de visitas en vivo</T>,
       ],
       highlight: false,
     },
@@ -528,13 +482,20 @@ export default function Services() {
         },
       ],
       extraFeatures: [
-        <T en="Loads in less than 3 seconds">Carga en menos de 3 segundos</T>,
+        <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
         <T en="The code is yours forever">El código es tuyo para siempre</T>,
-        <T en="Basic visitor statistics">Estadísticas básicas de visitas</T>,
-        <T en="Open Graph for social media">Open Graph para redes sociales</T>,
-        <T en="Advanced forms with automatic replies">Formularios avanzados con respuestas automáticas</T>,
-        <T en="Email notifications">Notificaciones por email</T>,
-        <T en="Website history of changes">Historial de cambios de tu web</T>,
+        <T en="Live visitor statistics">Estadísticas de visitas en vivo</T>,
+        <T en={
+          <>
+            <Link to="/blog/open-graph-redes-sociales" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Open Graph</Link> for social media
+          </>
+        }>
+          <>
+            <Link to="/blog/open-graph-redes-sociales" state={{ fromTab: "constellation", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Open Graph</Link> para redes sociales
+          </>
+        </T>,
+        <T en="Automatic email configuration">Configuración de emails automáticos</T>,
+        <T en="Instant alert when you receive a message">Alerta inmediata al recibir un mensaje</T>,
       ],
       highlight: true,
     },
@@ -567,9 +528,9 @@ export default function Services() {
           title: <T en="Artificial Intelligence">INTELIGENCIA ARTIFICIAL</T>,
           icon: Brain,
           items: [
-            <T en="1 AI tool included*">1 herramienta de IA incluida*</T>,
+            <T en="1 AI tool included¹">1 herramienta de IA incluida¹</T>,
             <T en="Chatbot trained on your catalog">Chatbot entrenado con tu catálogo</T>,
-            <T en="Smart cross-selling recommender">Recomendador inteligente cross-selling</T>,
+            <T en="Smart cross-selling recommender²">Recomendador inteligente cross-selling²</T>,
           ],
         },
         {
@@ -602,46 +563,44 @@ export default function Services() {
         },
       ],
       extraFeatures: [
-        <T en="Loads in less than 3 seconds">Carga en menos de 3 segundos</T>,
+        <T en="Optimized loading speed">Velocidad de carga optimizada</T>,
         <T en="The code is yours forever">El código es tuyo para siempre</T>,
-        <T en="Open Graph for social media">Open Graph para redes sociales</T>,
-        <T en="Advanced forms with automatic replies">Formularios avanzados con respuestas automáticas</T>,
-        <T en="Email notifications">Notificaciones por email</T>,
-        <T en="Website history of changes">Historial de cambios de tu web</T>,
+        <T en="Live visitor statistics">Estadísticas de visitas en vivo</T>,
+        <T en={
+          <>
+            <Link to="/blog/open-graph-redes-sociales" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Open Graph</Link> for social media
+          </>
+        }>
+          <>
+            <Link to="/blog/open-graph-redes-sociales" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Open Graph</Link> para redes sociales
+          </>
+        </T>,
+        <T en="Automatic email configuration">Configuración de emails automáticos</T>,
+        <T en="Instant alert when you receive a message">Alerta inmediata al recibir un mensaje</T>,
         <T en="Real-time sales notifications">Notificaciones de venta en tiempo real</T>,
         <T en="Abandoned cart recovery">Recuperación de carritos abandonados</T>,
-        <T en="Monthly sales reports">Reporte mensual de ventas</T>,
-        <T en="Post-sale automations">Automatizaciones post-venta</T>,
-        <T en="Products in Google Shopping">Productos en Google Shopping</T>,
+        <T en={
+          <>
+            <Link to="/blog/google-shopping-guia-completa" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Shopping</Link> optimization guide
+          </>
+        }>
+          <>
+            Guía de optimización de <Link to="/blog/google-shopping-guia-completa" state={{ fromTab: "nova", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Shopping</Link>
+          </>
+        </T>,
       ],
       footnote: (
-        <T en="*Monthly API/Subscription costs not included">
-          *Costos de suscripción/API mensual no incluidos
-        </T>
+        <>
+          <T en="¹ Monthly API/Subscription costs for the AI tool are not included.">
+            ¹ Costos de suscripción/API mensual de la herramienta de IA no incluidos.
+          </T>
+          <br />
+          <T en="² Requires a minimum catalog of 20 products.">
+            ² Requiere un catálogo mínimo de 20 productos.
+          </T>
+        </>
       ),
       highlight: false,
-    },
-    {
-      id: "paypal_test",
-      name: <T en="Test Plan">Plan de Prueba</T>,
-      titleColor: "text-emerald-500",
-      desc: (
-        <T en="Temporary test for PayPal business checkout module.">
-          Test temporal para probar transacción de 3 USD.
-        </T>
-      ),
-      originalPrice: 4,
-      highlight: true,
-      sections: [
-        {
-          title: <T en="Details">DETALLES</T>,
-          icon: ShieldCheck,
-          items: [
-            <T en="Real PayPal transaction">Transacción real de PayPal</T>,
-            <T en="Amount: $3 USD fixed">Monto: $3 USD fijo</T>
-          ]
-        }
-      ]
     },
   ];
 
@@ -943,86 +902,6 @@ export default function Services() {
           </p>
         </section>
 
-        {/* Services Carousel */}
-        <div className="mb-20 animate-fade-in relative z-20">
-          <style>{`
-            @keyframes marquee {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .animate-marquee {
-              animation: marquee 30s linear infinite;
-            }
-          `}</style>
-
-          <button
-            onClick={() => setIsServicesExpanded(!isServicesExpanded)}
-            className="w-full flex items-center justify-between p-4 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:border-[var(--color-primary-base)] transition-all duration-300 group"
-          >
-            <div className="overflow-hidden flex-1">
-              <div className="flex animate-marquee gap-8 w-max">
-                  {[
-                    { labelEs: "Captación 24/7", labelEn: "24/7 Lead Gen", icon: Rocket },
-                    { labelEs: "Identidad Autoritaria", labelEn: "Authoritative Identity", icon: Briefcase },
-                    { labelEs: "Ventas Automatizadas", labelEn: "Automated Sales", icon: ShoppingCart },
-                    { labelEs: "Seguridad Total", labelEn: "Total Security", icon: ShieldCheck },
-                    { labelEs: "Visibilidad Máxima", labelEn: "Maximum Visibility", icon: Zap },
-                    // Duplicar para continuidad
-                    { labelEs: "Captación 24/7", labelEn: "24/7 Lead Gen", icon: Rocket },
-                    { labelEs: "Identidad Autoritaria", labelEn: "Authoritative Identity", icon: Briefcase },
-                    { labelEs: "Ventas Automatizadas", labelEn: "Automated Sales", icon: ShoppingCart },
-                    { labelEs: "Seguridad Total", labelEn: "Total Security", icon: ShieldCheck },
-                    { labelEs: "Visibilidad Máxima", labelEn: "Maximum Visibility", icon: Zap },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm font-bold text-[var(--color-text-secondary)]">
-                      <item.icon size={18} className="text-[var(--color-primary-base)]" />
-                      <span className="whitespace-nowrap">{language === "es" ? item.labelEs : item.labelEn}</span>
-                    </div>
-                ))}
-              </div>
-            </div>
-            <motion.div
-              animate={{ rotate: isServicesExpanded ? 180 : 0 }}
-              className="p-1 pl-4 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)]"
-            >
-              <ChevronDown size={20} />
-            </motion.div>
-          </button>
-
-          <AnimatePresence>
-            {isServicesExpanded && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-3">
-                  {[
-                    { labelEs: "Captación 24/7", labelEn: "24/7 Lead Gen", icon: Rocket, link: "/blog/landing-pages-conversion" },
-                    { labelEs: "Identidad Autoritaria", labelEn: "Authoritative Identity", icon: Briefcase, link: "/blog/webs-corporativas-identidad" },
-                    { labelEs: "Ventas Automatizadas", labelEn: "Automated Sales", icon: ShoppingCart, link: "/blog/ecommerce-alto-nivel" },
-                    { labelEs: "Seguridad Total", labelEn: "Total Security", icon: ShieldCheck, link: "/blog/arquitectura-web-estatico-spa" },
-                    { labelEs: "Visibilidad Máxima", labelEn: "Maximum Visibility", icon: Zap, link: "/blog/seo-semantico-google" },
-                  ].map((service, idx) => (
-                    <Link
-                      key={idx}
-                      to={service.link}
-                      className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] hover:border-[var(--color-primary-base)] transition-all duration-300 text-center"
-                    >
-                      <service.icon size={24} className="text-[var(--color-primary-base)]" />
-                      <span className="text-xs font-bold text-[var(--color-text-primary)]">{language === "es" ? service.labelEs : service.labelEn}</span>
-                    </Link>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <WhyPolaris />
-        <Testimonials />
-
         {/* Pricing Section */}
         <div className="bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] p-8 md:p-16 mb-32 relative overflow-hidden">
           {isOfferActive && (
@@ -1041,7 +920,7 @@ export default function Services() {
 
           <section className="space-y-12 text-center">
             <div className="flex flex-col items-center gap-6">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Plans">Nuestros Planes</T>
               </span>
               <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
@@ -1049,7 +928,7 @@ export default function Services() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 text-left max-w-2xl xl:max-w-none mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto">
               {plans.map((plan, i) => (
                 <PlanCard
                   key={i}
@@ -1090,22 +969,22 @@ export default function Services() {
                   <table className="w-full text-left border-collapse min-w-[750px]">
                     <thead>
                       <tr className="md:hidden border-b border-[var(--color-border-subtle)]">
-                        <th className="sticky left-0 z-20 p-2 pl-6 bg-[var(--color-surface-elevated)] pointer-events-none select-none w-full">
+                        <th className="sticky left-0 z-20 p-2 pl-6 bg-[var(--color-surface-base)] pointer-events-none select-none w-full">
                           <div className="flex items-center justify-between pr-4 text-[var(--color-text-tertiary)]">
                             <ArrowLeft size={18} strokeWidth={2.5} />
                             <Pointer size={16} className="text-[var(--color-primary-base)] animate-pulse" />
                             <ArrowRight size={18} strokeWidth={2.5} />
                           </div>
                         </th>
-                        <th className="bg-[var(--color-surface-elevated)]" />
-                        <th className="bg-[var(--color-surface-elevated)]" />
-                        <th className="bg-[var(--color-surface-elevated)]" />
+                        <th className="bg-[var(--color-surface-base)]" />
+                        <th className="bg-[var(--color-surface-base)]" />
+                        <th className="bg-[var(--color-surface-base)]" />
                       </tr>
-                      <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-elevated)] z-10">
-                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] select-none">
+                      <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-base)] z-10">
+                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] select-none">
                           <T en="Characteristics">Características</T>
                         </th>
-                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-elevated)]">
+                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)]">
                         <div className="font-display font-black text-amber-500 text-lg md:text-2xl tracking-tight">
                           <T en="Flash">Destello</T>
                         </div>
@@ -1113,7 +992,7 @@ export default function Services() {
                           ${isOfferActive ? Math.round(299 * 0.75) : 299} USD
                         </div>
                       </th>
-                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-elevated)] bg-indigo-50/10 dark:bg-indigo-950/5">
+                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5">
                         <div className="font-display font-black text-indigo-600 dark:text-indigo-400 text-lg md:text-2xl tracking-tight">
                           <T en="Constellation">Constelación</T>
                         </div>
@@ -1121,7 +1000,7 @@ export default function Services() {
                           ${isOfferActive ? Math.round(699 * 0.75) : 699} USD
                         </div>
                       </th>
-                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-elevated)]">
+                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)]">
                         <div className="font-display font-black text-violet-500 text-lg md:text-2xl tracking-tight">
                           <T en="Nova">Nova</T>
                         </div>
@@ -1167,10 +1046,10 @@ export default function Services() {
                     ))}
                      {/* Action buttons row */}
                     <tr className="border-t border-[var(--color-border-subtle)]">
-                      <td className="p-4 bg-[var(--color-surface-elevated)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] select-none">
+                      <td className="p-4 bg-[var(--color-surface-base)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] select-none">
                         <T en="Select Plan">Seleccionar Plan</T>
                       </td>
-                      <td className="p-4 bg-[var(--color-surface-elevated)] text-center">
+                      <td className="p-4 bg-[var(--color-surface-base)] text-center">
                         <div className="flex flex-col items-center gap-1.5">
                           <button
                             onClick={() => navigate("/cotizar?type=landing")}
@@ -1181,7 +1060,7 @@ export default function Services() {
                           </button>
                         </div>
                       </td>
-                      <td className="p-4 bg-[var(--color-surface-elevated)] bg-indigo-50/10 dark:bg-indigo-950/5 text-center">
+                      <td className="p-4 bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5 text-center">
                         <div className="flex flex-col items-center gap-1.5">
                           <button
                             onClick={() => navigate("/cotizar?type=corporate")}
@@ -1192,7 +1071,7 @@ export default function Services() {
                           </button>
                         </div>
                       </td>
-                      <td className="p-4 bg-[var(--color-surface-elevated)] text-center">
+                      <td className="p-4 bg-[var(--color-surface-base)] text-center">
                         <div className="flex flex-col items-center gap-1.5">
                           <button
                             onClick={() => navigate("/cotizar?type=ecommerce")}
@@ -1214,7 +1093,7 @@ export default function Services() {
         {/* AI Add-ons Section */}
         <section className="space-y-12 py-20 border-t border-[var(--color-border-subtle)]">
           <div className="flex flex-col items-center text-center gap-6">
-            <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+            <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
               <T en="Exclusive Add-ons">Add-ons Exclusivos</T>
             </span>
             <h2 className="text-4xl md:text-5xl font-display font-black tracking-tighter">
@@ -1248,7 +1127,7 @@ export default function Services() {
             <motion.div
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
@@ -1285,7 +1164,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
               transition={{ delay: 0.1 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
@@ -1324,7 +1203,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
               transition={{ delay: 0.2 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 dark:text-blue-400">
@@ -1363,7 +1242,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
               transition={{ delay: 0.3 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400">
@@ -1401,7 +1280,7 @@ export default function Services() {
         <section className="space-y-12 py-20 border-t border-[var(--color-border-subtle)]">
           <div className="flex flex-col lg:flex-row gap-12 items-center">
             <div className="flex-1 space-y-6">
-              <span className="inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20">
+              <span className="glass-badge inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-emerald-500/20">
                 <T en="Post-Launch">Post-Lanzamiento</T>
               </span>
               <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight mt-4">
@@ -1461,9 +1340,20 @@ export default function Services() {
                     </T>
                   </p>
                 </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
+                    <TrendingUp className="text-indigo-500" size={20} />
+                    <T en="Monthly Performance Report">Informe mensual de rendimiento</T>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="Every month you receive a personalized summary of how your website is performing — visits, trends, and actionable recommendations. Nova clients also receive sales data.">
+                      Cada mes recibes un resumen personalizado del rendimiento de tu web — visitas, tendencias y recomendaciones accionables. Los clientes Nova reciben además datos de ventas.
+                    </T>
+                  </p>
+                </div>
               </div>
             </div>
-            <div className="w-full lg:w-[400px] flex-shrink-0 bg-[var(--color-surface-elevated)] p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-500 shadow-xl">
+            <div className="w-full lg:w-[400px] flex-shrink-0 bg-[var(--color-surface-base)] p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-500 shadow-xl">
               <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-colors"></div>
               <h3 className="text-2xl font-display font-bold mb-2 relative">
                 <T en="Peace of Mind">Tranquilidad Total</T>
@@ -1495,6 +1385,9 @@ export default function Services() {
                   <T en="Always Updated Dependencies">
                     Dependencias siempre actualizadas
                   </T>,
+                  <T en="Monthly performance report">
+                    Informe mensual de rendimiento
+                  </T>,
                 ].map((item, i) => (
                   <li
                     key={i}
@@ -1521,6 +1414,9 @@ export default function Services() {
             </div>
           </div>
         </section>
+
+        <WhyPolaris />
+        <Testimonials />
 
         <FinalCTA />
       </main>

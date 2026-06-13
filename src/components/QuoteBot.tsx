@@ -227,7 +227,7 @@ export default function QuoteBot() {
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="absolute bottom-20 right-0 w-[320px] max-h-[500px] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+            className="absolute bottom-20 right-0 w-[320px] max-h-[500px] glass-panel-indigo rounded-3xl shadow-2xl overflow-hidden flex flex-col"
           >
             {/* Header */}
             <div className="p-4 bg-[var(--color-surface-base)] border-b border-[var(--color-border-subtle)] flex items-center justify-between">
@@ -250,7 +250,7 @@ export default function QuoteBot() {
             </div>
 
             {/* Chat Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-[var(--color-surface-elevated)]">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-transparent">
               {/* Message History */}
               {Array.from({ length: currentStep + 1 }).map((_, stepIndex) => {
                 const question = QUESTIONS[stepIndex];

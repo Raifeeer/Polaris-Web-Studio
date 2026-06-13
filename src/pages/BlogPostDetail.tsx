@@ -341,7 +341,7 @@ export default function BlogPostDetail() {
                 fromArticle: true,
                 fromPath: location.state.history.length > 1 ? location.state.history[location.state.history.length - 2] : undefined
               }}
-              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
               id="blog-detail-back-history-lnk"
             >
               <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -360,7 +360,7 @@ export default function BlogPostDetail() {
           ) : location.state && location.state.fromArticle ? (
             <Link
               to={location.state.fromPath || "/blog"}
-              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
               id="blog-detail-back-lnk"
             >
               <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -369,7 +369,7 @@ export default function BlogPostDetail() {
           ) : (
             <Link
               to="/blog"
-              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
               id="blog-detail-back-lnk"
             >
               <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
@@ -380,7 +380,7 @@ export default function BlogPostDetail() {
           <button
             id={`share-blog-btn-${post.slug}`}
             onClick={handleShare}
-            className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center gap-2 text-xs font-mono font-bold"
+            className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center gap-2 text-xs font-mono font-bold"
             title={language === "en" ? "Copy Article URL" : "Copiar enlace del artículo"}
           >
             {copied ? (
@@ -455,11 +455,11 @@ export default function BlogPostDetail() {
                     </h2>
                   );
                 }
-                if (paragraph.startsWith("* ")) {
+                if (paragraph.startsWith("* ") || paragraph.startsWith("- ")) {
                   return (
                     <ul key={pIdx} className="list-disc pl-5 space-y-1.5 my-4">
                       {paragraph.split("\n").map((li, lIdx) => {
-                        const match = li.match(/^\*\s+\*\*(.*?)\*\*(.*)/);
+                        const match = li.match(/^[\*-]\s+\*\*(.*?)\*\*(.*)/);
                         return (
                           <li key={lIdx} className="text-[var(--color-text-secondary)]">
                             {match ? (
@@ -470,7 +470,7 @@ export default function BlogPostDetail() {
                                 {renderFormattedAndLinkedText(match[2], post.slug, alreadyLinked, location.state)}
                               </>
                             ) : (
-                              renderFormattedAndLinkedText(li.replace(/^\*\s+/, ""), post.slug, alreadyLinked, location.state)
+                              renderFormattedAndLinkedText(li.replace(/^[\*-]\s+/, ""), post.slug, alreadyLinked, location.state)
                             )}
                           </li>
                         );
@@ -548,7 +548,7 @@ export default function BlogPostDetail() {
                     fromArticle: true,
                     fromPath: location.state.history.length > 1 ? location.state.history[location.state.history.length - 2] : undefined
                   }}
-                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
+                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
                 >
                   <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                   <T en="Back to Previous Article">VOLVER AL ARTÍCULO ANTERIOR</T>
@@ -567,7 +567,7 @@ export default function BlogPostDetail() {
                 <Link
                   id="blog-detail-cta-back"
                   to={location.state.fromPath || "/blog"}
-                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
+                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
                 >
                   <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                   <T en="Back to Previous Article">VOLVER AL ARTÍCULO</T>
@@ -576,7 +576,7 @@ export default function BlogPostDetail() {
                 <Link
                   id="blog-detail-cta-back"
                   to="/blog"
-                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all"
+                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all"
                 >
                   <T en="Back to Article List">VOLVER AL LISTADO</T>
                 </Link>
@@ -615,7 +615,7 @@ export default function BlogPostDetail() {
                       }
                     });
                   }}
-                  className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-indigo-500/20 p-5 rounded-xl cursor-pointer hover:shadow-md transition-all flex flex-col justify-between space-y-3"
+                  className="bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:border-indigo-500/20 p-5 rounded-xl cursor-pointer hover:shadow-md transition-all flex flex-col justify-between space-y-3"
                 >
                   <div className="space-y-1.5 flex-grow">
                     <span className="text-[9px] font-mono font-black uppercase tracking-wider text-indigo-500">

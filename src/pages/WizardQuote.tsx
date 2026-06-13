@@ -931,7 +931,7 @@ export default function WizardQuote() {
             <React.Fragment key={idx}>
               <div className="flex-1 flex flex-col gap-2">
                 <div
-                  className={`h-2 rounded-full transition-colors ${idx <= currentStep ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]"}`}
+                  className={`h-2 rounded-full transition-colors ${idx <= currentStep ? "bg-[var(--color-primary-base)]" : "glass-panel border border-[var(--color-border-subtle)]"}`}
                 />
                 <span
                   className={`text-[10px] font-bold uppercase tracking-widest ${idx <= currentStep ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"}`}
@@ -952,7 +952,7 @@ export default function WizardQuote() {
                   key="success"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="p-12 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-primary-base)]/30 text-center space-y-6 flex flex-col items-center justify-center min-h-[400px]"
+                  className="p-12 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-primary-base)]/30 text-center space-y-6 flex flex-col items-center justify-center min-h-[400px]"
                 >
                   <div className="w-20 h-20 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-4">
                     <Check size={40} />
@@ -1003,7 +1003,7 @@ export default function WizardQuote() {
                                 }));
                               }
                             }}
-                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.type === t.id ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
+                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.type === t.id ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
                           >
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
@@ -1012,7 +1012,7 @@ export default function WizardQuote() {
                                 >
                                   {t.title}
                                 </h3>
-                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
+                                <span className="glass-badge text-xs font-bold px-2.5 py-0.5 rounded-full border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
                                   <T en="from">desde</T> ${t.price}
                                 </span>
                               </div>
@@ -1072,7 +1072,7 @@ export default function WizardQuote() {
                             onClick={() =>
                               setSelections((sel) => ({ ...sel, size: s.id }))
                             }
-                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.size === s.id ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
+                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.size === s.id ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
                           >
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
@@ -1081,7 +1081,7 @@ export default function WizardQuote() {
                                 >
                                   {s.title}
                                 </h3>
-                                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
+                                <span className="glass-badge text-xs font-bold px-2.5 py-0.5 rounded-full border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
                                   {s.priceAdd > 0 ? (
                                     `+$${s.priceAdd}`
                                   ) : (
@@ -1110,7 +1110,7 @@ export default function WizardQuote() {
                   {currentStep === 2 && (
                     <div className="space-y-8 animate-fade-in">
                       {/* Premium Domain Checker Card */}
-                      <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] space-y-5 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-all duration-300">
+                      <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel space-y-5 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-all duration-300 will-change-transform transition-all">
                         <div className="flex items-start gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] flex items-center justify-center shrink-0 shadow-inner">
                             <Globe size={22} className="opacity-90" />
@@ -1158,7 +1158,7 @@ export default function WizardQuote() {
                               autoComplete="off"
                               spellCheck={false}
                               inputMode="url"
-                              className="w-full px-4 py-3.5 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface-base)] text-[var(--color-text-primary)] font-medium placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] focus:border-transparent text-sm shadow-sm transition-all text-left"
+                              className="glass-input w-full px-4 py-3.5 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-medium placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] focus:border-transparent text-sm shadow-sm transition-all text-left"
                             />
                             {checkingDomain && (
                               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -1282,7 +1282,7 @@ export default function WizardQuote() {
                           <button
                             key={a.id}
                             onClick={() => toggleAddon(a.id)}
-                            className={`p-5 md:p-6 rounded-[var(--radius-bento)] border transition-all text-left flex flex-col justify-between group h-full ${selections.addons.includes(a.id) ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
+                            className={`p-5 md:p-6 rounded-[var(--radius-bento)] border transition-all text-left flex flex-col justify-between group h-full ${selections.addons.includes(a.id) ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
                           >
                             <div className="flex justify-between w-full gap-2 mb-4">
                               <div>
@@ -1465,7 +1465,7 @@ export default function WizardQuote() {
           </div>
 
           {/* Sidebar Estimator */}
-          <div className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
+          <div className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
             <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
               <T en="Live Estimate">Estimación en vivo</T>
             </h3>
@@ -1571,7 +1571,7 @@ export default function WizardQuote() {
                   <span className="text-xl font-display font-medium line-through">
                     $<AnimatedNumber value={estimatedTotal} />
                   </span>
-                  <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase">
+                  <span className="glass-badge text-xs font-bold text-emerald-500 px-2 py-0.5 rounded uppercase">
                     -25%
                   </span>
                 </div>
@@ -1601,6 +1601,24 @@ export default function WizardQuote() {
                 </T>
               </p>
             </div>
+
+            {selections.type && (
+              <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
+                <span className="block text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-widest mb-1">
+                  <T en="Estimated Delivery">Tiempo estimado de entrega</T>
+                </span>
+                <p className="text-sm font-black text-[var(--color-text-primary)]">
+                  {selections.type === "landing" && <T en="1–2 weeks">1–2 semanas</T>}
+                  {selections.type === "corporate" && <T en="2–4 weeks">2–4 semanas</T>}
+                  {selections.type === "ecommerce" && <T en="4–6 weeks">4–6 semanas</T>}
+                </p>
+                <p className="text-[10px] text-[var(--color-text-tertiary)] mt-1">
+                  <T en="* May vary based on complexity and feedback speed.">
+                    * Puede variar según la complejidad y velocidad de feedback.
+                  </T>
+                </p>
+              </div>
+            )}
 
             {/* Hosting Upsell inside sidebar */}
             {!selections.addons.includes("hosting") && (
@@ -1642,7 +1660,7 @@ export default function WizardQuote() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-md bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] p-8 space-y-6 shadow-2xl"
+              className="w-full max-w-md glass-panel border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] p-8 space-y-6 shadow-2xl"
               initial={{ opacity: 0, scale: 0.95, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 16 }}
@@ -1669,7 +1687,7 @@ export default function WizardQuote() {
                     placeholder={t("Your name", "Tu nombre")}
                     value={leadName}
                     onChange={(e) => setLeadName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
                   />
                 </div>
                 <div>
@@ -1682,7 +1700,7 @@ export default function WizardQuote() {
                     className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all ${leadEmailError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
                   />
                   {leadEmailError && (
-                    <p className="text-xs text-red-500 mt-1">{leadEmailError}</p>
+                    <p className="glass-input text-xs text-red-500 mt-1">{leadEmailError}</p>
                   )}
                 </div>
               </div>

@@ -48,7 +48,7 @@ function CompareBar({ label, polarisVal, competitorVal, unit }: any) {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[11px] font-bold text-[var(--color-text-secondary)] w-28 shrink-0">
-            <T en="Typical agency">Agencia típica</T>
+            <T en="Other agencies">Otras agencias</T>
           </span>
           <div className="flex-1 h-5 bg-[var(--color-surface-highlight)] rounded-full overflow-hidden">
             <motion.div
@@ -146,14 +146,14 @@ export default function WhyPolaris() {
           <p className="text-xs font-black uppercase tracking-widest text-center text-[var(--color-text-tertiary)] mb-8">
             <T en="Head-to-head comparison">Comparación directa</T>
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-2xl p-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 glass-panel rounded-2xl p-5">
             <CompareBar
-              label={language === 'es' ? 'Tiempo de entrega (semanas)' : 'Delivery time (weeks)'}
-              polarisVal={3} competitorVal={10} unit={language === 'es' ? ' sem' : ' wks'}
+              label={language === 'es' ? 'Respuesta de comunicación' : 'Communication response'}
+              polarisVal={24} competitorVal={72} unit={language === 'es' ? 'h' : 'h'}
             />
             <CompareBar
-              label={language === 'es' ? 'Revisiones incluidas' : 'Included revisions'}
-              polarisVal={5} competitorVal={2} unit=""
+              label={language === 'es' ? 'Tecnologías dominadas' : 'Technologies mastered'}
+              polarisVal={10} competitorVal={3} unit="+"
             />
           </div>
         </motion.div>
@@ -168,23 +168,23 @@ export default function WhyPolaris() {
           <p className="text-xs font-black uppercase tracking-widest text-center text-[var(--color-text-tertiary)] mb-8">
             <T en="Our standards">Nuestros estándares</T>
           </p>
-          <div className="grid grid-cols-3 gap-4 md:gap-5 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-2xl p-5">
+          <div className="grid grid-cols-3 gap-4 md:gap-5 glass-panel rounded-2xl p-5">
             <CircleProgress
-              value={95} suffix="+"
-              label={<T en="PageSpeed">PageSpeed</T>}
-              sublabel={<T en="Mobile score">Score móvil</T>}
+              value={100} suffix=""
+              label={<T en="SEO Score">SEO Score</T>}
+              sublabel={<T en="Consistent in all projects">Consistente en todos los proyectos</T>}
               color="#6366f1"
             />
             <CircleProgress
               value={99} suffix="%"
               label={<T en="Uptime">Uptime</T>}
-              sublabel={<T en="Guaranteed">Garantizado</T>}
+              sublabel={<T en="Global infrastructure">Infraestructura global</T>}
               color="#22c55e"
             />
             <CircleProgress
               value={100} suffix="%"
-              label={<T en="Satisfaction">Satisfacción</T>}
-              sublabel={<T en="Verified clients">Clientes verificados</T>}
+              label={<T en="Your code">Tu código</T>}
+              sublabel={<T en="Proprietary, always yours">Propietario, siempre tuyo</T>}
               color="#f59e0b"
             />
           </div>

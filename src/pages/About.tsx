@@ -140,11 +140,11 @@ export default function About() {
             transition={{ delay: 0.3, duration: 0.5 }}
             className="pt-4 flex flex-wrap gap-4 items-center justify-center text-xs font-mono text-[var(--color-text-secondary)]"
           >
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg glass-badge">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               <T en="Clean, Optimized Code">Código Limpio y Optimizado</T>
             </span>
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
+            <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg glass-badge">
               <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
               <T en="100% Performance Driven">Enfoque de Alto Rendimiento</T>
             </span>
@@ -196,7 +196,7 @@ export default function About() {
             className="lg:col-span-5 relative"
           >
             <div className="absolute inset-0 rounded-[var(--radius-bento)] bg-gradient-to-tr from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
-            <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] relative overflow-hidden backdrop-blur-sm space-y-6 shadow-xl">
+            <div className="p-6 md:p-8 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden space-y-6">
               {/* Terminal-like window decorations */}
               <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] pb-4">
                 <div className="flex items-center gap-1.5">
@@ -311,7 +311,8 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className={`p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-indigo-500/30 transition-all duration-300 bento-glow-hover flex flex-col justify-between group h-full relative overflow-hidden`}
+                className={`p-8 rounded-[var(--radius-bento)] glass-panel transition-all duration-300 bento-glow-hover flex flex-col justify-between group h-full relative overflow-hidden`}
+                style={{ willChange: "transform" }}
               >
                 {/* Visual Number top right */}
                 <span className="absolute top-6 right-8 font-mono text-3xl font-black text-indigo-500/5 group-hover:text-indigo-500/10 transition-colors pointer-events-none">
@@ -340,7 +341,7 @@ export default function About() {
         </section>
 
         {/* METRICS & DIGITAL CAPABILITIES */}
-        <section className="p-8 md:p-12 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] relative overflow-hidden">
+        <section className="p-8 md:p-12 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-transparent pointer-events-none" />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
             {/* Left Area: Title & description */}
@@ -388,7 +389,7 @@ export default function About() {
                       <span className="text-[var(--color-text-secondary)]">{cap.name}</span>
                       <span className="font-mono font-bold text-indigo-500">{cap.value}</span>
                     </div>
-                    <div className="w-full bg-[var(--color-surface-elevated)] h-2 rounded-full overflow-hidden border border-[var(--color-border-subtle)]/30">
+                    <div className="w-full bg-[var(--color-surface-base)] h-2 rounded-full overflow-hidden border border-[var(--color-border-subtle)]/30">
                       <div 
                         className="bg-indigo-500 h-full rounded-full transition-all duration-1000" 
                         style={{ width: cap.value }}
@@ -423,7 +424,7 @@ export default function About() {
               initial={{ opacity: 0, scale: 0.98 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 p-8 md:p-12 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] relative overflow-hidden shadow-xl"
+              className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 p-8 md:p-12 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden"
             >
               {/* Left Column: Visual Developer ID Badge / Interactive Container */}
               <div className="md:col-span-5 flex flex-col items-center justify-center space-y-6">
@@ -442,13 +443,13 @@ export default function About() {
 
                 {/* Technical Tags */}
                 <div className="flex flex-wrap gap-2 justify-center">
-                  <span className="px-2.5 py-1 text-[10px] font-mono uppercase bg-[var(--color-surface-base)] border border-indigo-500/20 text-indigo-500 rounded-full font-bold">
+                  <span className="glass-badge px-2.5 py-1 text-[10px] font-mono uppercase border border-indigo-500/20 text-indigo-500 rounded-full font-bold">
                     Web Developer
                   </span>
-                  <span className="px-2.5 py-1 text-[10px] font-mono uppercase bg-[var(--color-surface-base)] border border-purple-500/20 text-purple-500 rounded-full font-bold">
+                  <span className="glass-badge px-2.5 py-1 text-[10px] font-mono uppercase border border-purple-500/20 text-purple-500 rounded-full font-bold">
                     SEO Strategist
                   </span>
-                  <span className="px-2.5 py-1 text-[10px] font-mono uppercase bg-[var(--color-surface-base)] border border-emerald-500/20 text-emerald-500 rounded-full font-bold">
+                  <span className="glass-badge px-2.5 py-1 text-[10px] font-mono uppercase border border-emerald-500/20 text-emerald-500 rounded-full font-bold">
                     UX Lead
                   </span>
                 </div>

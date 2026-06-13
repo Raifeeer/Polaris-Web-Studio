@@ -198,7 +198,7 @@ export default function Blog() {
         </section>
 
         {/* Dynamic Search & Filters Toolbar */}
-        <section className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-2xl p-6 md:p-8 mb-12 shadow-sm space-y-6">
+        <section className="bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-2xl p-6 md:p-8 mb-12 shadow-sm space-y-6">
           <div className="flex flex-col md:flex-row gap-4 items-center">
             {/* Semantic Search Input Element */}
             <div className="relative w-full flex-grow">
@@ -211,7 +211,7 @@ export default function Blog() {
                 placeholder={language === "en" ? "Search conceptually (e.g. 'speed', 'google ranking', 'shopify')..." : "Busca conceptualmente (ej: 'rapidez', 'posicionar en google', 'vender')..."}
                 value={searchQuery}
                 onChange={(e) => handleQueryChange(e.target.value)}
-                className="w-full bg-[var(--color-surface-base)] text-[var(--color-text-primary)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl py-3.5 pl-12 pr-28 text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all font-mono"
+                className="glass-input w-full text-[var(--color-text-primary)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl py-3.5 pl-12 pr-28 text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all font-mono"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg text-[9px] font-mono tracking-widest font-black uppercase">
                 <Sparkles size={8} className="animate-spin" style={{ animationDuration: "3s" }} />
@@ -259,7 +259,7 @@ export default function Blog() {
                         id="blog-sort-select"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
-                        className="w-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] focus:border-indigo-500 focus:outline-none rounded-xl p-3 text-xs font-medium text-[var(--color-text-primary)]"
+                        className="glass-input w-full border border-[var(--color-border-subtle)] focus:border-indigo-500 focus:outline-none rounded-xl p-3 text-xs font-medium text-[var(--color-text-primary)]"
                       >
                         <option value="newest">{language === "en" ? "Publication Date: Newest First" : "Fecha de publicación: Más Reciente"}</option>
                         <option value="oldest">{language === "en" ? "Publication Date: Oldest First" : "Fecha de publicación: Más Antiguo"}</option>
@@ -282,7 +282,7 @@ export default function Blog() {
                         id="blog-daterange-select"
                         value={dateRange}
                         onChange={(e) => setDateRange(e.target.value)}
-                        className="w-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] focus:border-indigo-500 focus:outline-none rounded-xl p-3 text-xs font-medium text-[var(--color-text-primary)]"
+                        className="glass-input w-full border border-[var(--color-border-subtle)] focus:border-indigo-500 focus:outline-none rounded-xl p-3 text-xs font-medium text-[var(--color-text-primary)]"
                       >
                         <option value="all">{language === "en" ? "Display All Articles" : "Mostrar Todos los Artículos"}</option>
                         <option value="30days">{language === "en" ? "Last 30 Days Only" : "Últimos 30 días"}</option>
@@ -313,7 +313,7 @@ export default function Blog() {
                       </p>
                     </div>
                     {searchQuery.trim() && (
-                      <span className="inline-flex max-w-fit items-center gap-1 text-[9px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 font-mono font-bold uppercase mt-2">
+                      <span className="glass-badge inline-flex max-w-fit items-center gap-1 text-[9px] px-2 py-0.5 rounded text-emerald-500 border border-emerald-500/20 font-mono font-bold uppercase mt-2">
                         STATE: FULLY ALIGNED
                       </span>
                     )}
@@ -389,7 +389,7 @@ export default function Blog() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => handlePostClick(post)}
-                className="group relative bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-indigo-500/20 rounded-2xl overflow-hidden flex flex-col h-full hover:shadow-xl bento-glow-hover cursor-pointer transition-all duration-300"
+                className="group relative bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:border-indigo-500/20 rounded-2xl overflow-hidden flex flex-col h-full hover:shadow-xl bento-glow-hover cursor-pointer transition-all duration-300"
               >
                 {/* Article Card Body */}
                 <div className="p-6 md:p-8 flex flex-col flex-grow space-y-4">

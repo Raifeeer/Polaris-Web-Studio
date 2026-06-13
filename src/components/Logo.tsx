@@ -16,7 +16,7 @@ export default function Logo({
 }: LogoProps) {
   return (
     <div
-      className={`flex items-center ${stacked ? "flex-col justify-center text-center gap-2" : "gap-4"} group ${className}`}
+      className={`flex items-center ${stacked ? "flex-col justify-center text-center gap-2" : "gap-1"} group ${className}`}
     >
       <div
         className="relative flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shrink-0"
@@ -80,7 +80,7 @@ export default function Logo({
           <span className="font-display font-black text-xl tracking-tighter uppercase text-[var(--color-text-primary)] whitespace-nowrap">
             Polaris
           </span>
-          <span className="text-[9px] font-black uppercase text-[var(--color-primary-base)] opacity-70 tracking-[0.22em] pl-[0.22em] whitespace-nowrap block">
+          <span className="text-[9px] font-black uppercase text-[var(--color-primary-base)] opacity-70 tracking-[0.23em] whitespace-nowrap block mt-[-5px]">
             Web Studio
           </span>
         </div>

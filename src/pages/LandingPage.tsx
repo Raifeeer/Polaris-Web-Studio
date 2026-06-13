@@ -382,7 +382,7 @@ export default function LandingPage() {
             id="inicio"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 border border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px]"
+            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 glass-panel flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px]"
           >
             <div className="absolute top-1/2 -translate-y-1/2 right-[-150px] sm:right-[-250px] md:right-[-200px] opacity-10 group-hover:opacity-20 group-hover:-translate-x-4 transition-all duration-500 pointer-events-none">
               <Logo
@@ -465,7 +465,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
+            className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform transition-all"
           >
             <Link
               to="/blog/landing-pages-conversion"
@@ -476,7 +476,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <Layers size={24} />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-300 bg-indigo-100/60 dark:bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-300 dark: px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/20 shrink-0">
                     <T en="CONVERSION">CONVERSIÓN</T>
                   </span>
                 </div>
@@ -532,7 +532,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
+            className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform transition-all"
           >
             <Link
               to="/blog/ecommerce-alto-nivel"
@@ -543,7 +543,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <ShoppingCart size={24} />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-300 dark: px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                     <T en="SELL 24/7">VENTAS 24/7</T>
                   </span>
                 </div>
@@ -602,7 +602,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col"
+            className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform transition-all"
           >
             <Link
               to="/blog/webs-corporativas-identidad"
@@ -613,7 +613,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <Briefcase size={24} />
                   </div>
-                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-violet-600 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-violet-600 dark:text-violet-300 dark: px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
                     <T en="AUTHORITY">AUTORIDAD</T>
                   </span>
                 </div>
@@ -672,7 +672,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] py-4 md:py-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px]"
+            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] py-4 md:py-8 glass-panel flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px]"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-accent-blue)]/10 to-transparent blur-3xl opacity-50" />
 
@@ -718,7 +718,7 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Clients">Nuestros Clientes</T>
               </span>
               <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
@@ -734,7 +734,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 initial={{ opacity: 0, y: 20 }}
                 viewport={{ once: true }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -742,7 +742,7 @@ export default function LandingPage() {
                     <div className="relative w-12 h-12 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:border-[var(--color-primary-base)] group-hover:scale-110 transition-all duration-300">
                       <Rocket size={24} />
                     </div>
-                    <span className="text-[9px] uppercase tracking-widest font-extrabold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20 shrink-0">
+                    <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-blue-400 px-2.5 py-1 rounded-full border border-blue-500/20 shrink-0">
                       <T en="FASE INICIAL">FASE INICIAL</T>
                     </span>
                   </div>
@@ -816,7 +816,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -824,7 +824,7 @@ export default function LandingPage() {
                     <div className="relative w-12 h-12 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:border-[var(--color-primary-base)] group-hover:scale-110 transition-all duration-300">
                       <Briefcase size={24} />
                     </div>
-                    <span className="text-[9px] uppercase tracking-widest font-extrabold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 shrink-0">
+                    <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-amber-400 px-2.5 py-1 rounded-full border border-amber-500/20 shrink-0">
                       <T en="GROWTH">CRECIMIENTO</T>
                     </span>
                   </div>
@@ -902,7 +902,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -910,7 +910,7 @@ export default function LandingPage() {
                     <div className="relative w-12 h-12 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:border-[var(--color-primary-base)] group-hover:scale-110 transition-all duration-300">
                       <ShoppingCart size={24} />
                     </div>
-                    <span className="text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
+                    <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 dark: px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                       <T en="E-COMMERCE">VENTA ONLINE</T>
                     </span>
                   </div>
@@ -988,7 +988,7 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-3 py-16 space-y-12 border-t border-b border-[var(--color-border-subtle)]/50 my-12"
           >
             <div className="flex flex-col items-center text-center gap-4">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Process">Nuestro Proceso</T>
               </span>
               <h2 className="text-3xl md:text-5xl font-display font-black tracking-tighter">
@@ -1015,7 +1015,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4 }}
-                className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1025,7 +1025,7 @@ export default function LandingPage() {
                       1
                     </div>
                   </div>
-                  <span className="text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 bg-emerald-100/60 dark:bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 dark: px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                     <T en="2 MINUTES">2 MINUTOS</T>
                   </span>
                 </div>
@@ -1086,7 +1086,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.15 }}
-                className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1158,7 +1158,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.3 }}
-                className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1168,7 +1168,7 @@ export default function LandingPage() {
                       3
                     </div>
                   </div>
-                  <span className="text-[9px] uppercase tracking-widest font-extrabold text-violet-600 dark:text-violet-300 bg-violet-100/60 dark:bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-violet-600 dark:text-violet-300 dark: px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
                     <T en="SEO & ULTRA SPEED">ALTO IMPACTO</T>
                   </span>
                 </div>
@@ -1234,7 +1234,7 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="What We Build">Lo que construimos</T>
               </span>
               <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
@@ -1248,7 +1248,7 @@ export default function LandingPage() {
                 <div
                   key={i}
                   onClick={() => navigate(`/portafolio/${p.slug}`)}
-                  className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-all duration-300 cursor-pointer bento-glow-hover"
+                  className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-all duration-300 cursor-pointer bento-glow-hover will-change-transform transition-all"
                 >
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
@@ -1340,7 +1340,7 @@ export default function LandingPage() {
           >
             <div
               ref={techStackRef}
-              className={`rounded-[var(--radius-bento)] p-6 sm:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] backdrop-blur-md relative overflow-hidden bento-glow-hover transition-all duration-500 ${techStackExpanded ? "shadow-2xl shadow-purple-500/10 border-purple-500/30 font-medium" : ""}`}
+              className={`rounded-[var(--radius-bento)] p-6 sm:p-8 glass-panel backdrop-blur-md relative overflow-hidden bento-glow-hover transition-all duration-500 ${techStackExpanded ? "shadow-2xl shadow-purple-500/10 border-purple-500/30 font-medium" : ""}`}
             >
               {/* Dropdown toggle arrow in the top right corner */}
               <button
@@ -1717,7 +1717,7 @@ export default function LandingPage() {
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6 mb-8">
-              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Common Questions">Dudas Comunes</T>
               </span>
               <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
@@ -1729,7 +1729,7 @@ export default function LandingPage() {
                 <div
                   key={i}
                   onClick={() => toggleFaq(i)}
-                  className={`p-6 rounded-2xl bg-[var(--color-surface-elevated)] border transition-colors cursor-pointer ${
+                  className={`p-6 rounded-2xl glass-panel transition-colors cursor-pointer ${
                     openFaqIndex === i
                       ? "border-[var(--color-primary-base)] shadow-lg"
                       : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"
@@ -1779,7 +1779,7 @@ export default function LandingPage() {
       <section className="py-24 px-6 md:px-12 bg-[var(--color-surface-base)] relative overflow-hidden border-t border-[var(--color-border-subtle)]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--color-primary-base)]/5 opacity-50 pointer-events-none" />
         <div className="max-w-4xl mx-auto text-center space-y-6 relative z-10 flex flex-col items-center">
-          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+          <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
             <T en="Ready to Start?">¿Listo para comenzar?</T>
           </span>
           <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight max-w-2xl mx-auto">

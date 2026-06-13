@@ -24,7 +24,7 @@ export default function Footer({
   ];
 
   return (
-    <footer className="w-full border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-6 py-16 md:px-12">
+    <footer className="w-full border-t border-[var(--color-border-subtle)] glass-panel px-6 py-16 md:px-12">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         {/* Brand */}
         <div className="col-span-1 md:col-span-1 space-y-6">
@@ -150,7 +150,7 @@ export default function Footer({
               <T en="Contact">Contacto</T>
             </h3>
             {/* Language Switcher */}
-            <div className="flex items-center gap-2 border border-[var(--color-border-subtle)] rounded-full px-2 py-1 bg-[var(--color-surface-elevated)]">
+            <div className="flex items-center gap-2 border border-[var(--color-border-subtle)] rounded-full px-2 py-1 bg-[var(--color-surface-base)]">
               <Globe size={12} className="text-[var(--color-text-secondary)]" />
               <div className="flex items-center gap-1 text-[10px] font-bold">
                 <button

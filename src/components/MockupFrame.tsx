@@ -119,7 +119,7 @@ function LuminaSkyMockup() {
                   type="text"
                   value={dateRange}
                   onChange={(e) => setDateRange(e.target.value)}
-                  className="bg-transparent border-none outline-none font-sans text-[7px] tracking-wide w-full p-0 h-auto"
+                  className="glass-input border-none outline-none font-sans text-[7px] tracking-wide w-full p-0 h-auto"
                   aria-label="Fechas de estancia"
                 />
               </div>
@@ -286,7 +286,7 @@ function NexusRealtyMockup() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Busque por Piantini, Cap Cana, Casa de Ca"
-              className="bg-transparent text-[9px] text-gray-700 w-full focus:outline-none"
+              className="glass-input text-[9px] text-gray-700 w-full focus:outline-none"
               aria-label="Buscar propiedades"
             />
           </div>

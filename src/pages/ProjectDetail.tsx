@@ -105,7 +105,7 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            <div className="rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] relative overflow-hidden mt-8 bento-glow">
+            <div className="rounded-[var(--radius-bento)] p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] relative overflow-hidden mt-8 bento-glow">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-primary-base)]/10 to-transparent blur-3xl opacity-50" />
               <div className="grid grid-cols-1 gap-y-6 sm:gap-y-0 sm:grid-cols-3 sm:divide-x divide-[var(--color-border-strong)] w-full relative z-10">
                 {project.results.map((res, i) => (
@@ -169,7 +169,7 @@ export default function ProjectDetail() {
                 </T>
               </h2>
               <div className="space-y-4">
-                <div className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]">
+                <div className="p-6 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
                   <h4 className="font-black uppercase text-[10px] tracking-[0.2em] text-red-500 mb-2">
                     <T en="Technical Challenge">Desafío Técnico</T>
                   </h4>
@@ -181,7 +181,7 @@ export default function ProjectDetail() {
                     "
                   </p>
                 </div>
-                <div className="p-6 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-primary-base)]/30">
+                <div className="p-6 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-primary-base)]/30">
                   <h4 className="font-black uppercase text-[10px] tracking-[0.2em] text-[var(--color-primary-base)] mb-2">
                     <T en="Web Engineering">Ingeniería Web</T>
                   </h4>
@@ -196,7 +196,7 @@ export default function ProjectDetail() {
           </div>
 
           <div className="space-y-12">
-            <div className="p-8 rounded-3xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-8">
+            <div className="p-8 rounded-3xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-8">
               <h3 className="text-xl font-display font-black tracking-tight flex items-center gap-2">
                 <Trophy
                   className="text-[var(--color-primary-base)]"

@@ -756,7 +756,7 @@ export default function ClientDashboard() {
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
           >
             {successMsg && (
-              <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+              <div className="p-4 rounded-xl glass-panel border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
                 <div className="bg-emerald-500/10 p-1.5 rounded-full text-emerald-500 shrink-0">
                   <CheckCircle size={18} />
                 </div>
@@ -770,7 +770,7 @@ export default function ClientDashboard() {
               </div>
             )}
             {errorMsg && (
-              <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+              <div className="p-4 rounded-xl glass-panel border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
                 <div className="bg-red-500/10 p-1.5 rounded-full text-red-500 shrink-0">
                   <AlertCircle size={18} />
                 </div>
@@ -788,7 +788,7 @@ export default function ClientDashboard() {
       </AnimatePresence>
 
       {/* Sidebar navigation */}
-      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-6 flex flex-col gap-8 shrink-0 justify-between">
+      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[var(--color-border-subtle)] glass-panel p-6 flex flex-col gap-8 shrink-0 justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Logo size={32} showText={true} />
@@ -935,7 +935,7 @@ export default function ClientDashboard() {
             </p>
           </div>
           
-          <div className="text-xs text-[var(--color-text-tertiary)] font-mono flex items-center gap-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-lg self-start">
+          <div className="text-xs text-[var(--color-text-tertiary)] font-mono flex items-center gap-2 glass-panel border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-lg self-start">
             <div className="w-2 h-2 rounded-full overflow-hidden bg-emerald-500 animate-[pulse_1.5s_infinite]" />
             <span>
               RD: {new Intl.DateTimeFormat('es-DO', {
@@ -975,7 +975,7 @@ export default function ClientDashboard() {
                   <div className="space-y-6">
                     {/* Admin Dashboard Stats (Bento Style) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <div className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-indigo-500/25">
+                      <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-indigo-500/25 will-change-transform transition-all">
                         <div className="flex justify-between items-center text-[var(--color-text-tertiary)]">
                           <span className="text-[10px] font-black uppercase tracking-widest font-mono">Clientes Totales</span>
                           <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
@@ -988,7 +988,7 @@ export default function ClientDashboard() {
                         </div>
                       </div>
 
-                      <div className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-amber-500/25">
+                      <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-amber-500/25 will-change-transform transition-all">
                         <div className="flex justify-between items-center text-[var(--color-text-tertiary)]">
                           <span className="text-[10px] font-black uppercase tracking-widest font-mono">Balances Pendientes</span>
                           <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
@@ -1005,7 +1005,7 @@ export default function ClientDashboard() {
                         </div>
                       </div>
 
-                      <div className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-emerald-500/25">
+                      <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-emerald-500/25 will-change-transform transition-all">
                         <div className="flex justify-between items-center text-[var(--color-text-tertiary)]">
                           <span className="text-[10px] font-black uppercase tracking-widest font-mono">Aprobaciones Pendientes</span>
                           <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
@@ -1029,7 +1029,7 @@ export default function ClientDashboard() {
                     </div>
 
                     {data.projects.length === 0 ? (
-                      <div className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-dashed border-[var(--color-border-subtle)] text-center space-y-3">
+                      <div className="p-8 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3">
                         <HelpCircle size={36} className="mx-auto text-[var(--color-text-tertiary)]" />
                         <h3 className="font-bold">No hay clientes con proyectos registrados</h3>
                         <p className="text-xs text-[var(--color-text-secondary)]">Ve a la pestaña "Registrar Nuevos Clientes" para crear el primero.</p>
@@ -1041,7 +1041,7 @@ export default function ClientDashboard() {
                           return (
                             <div
                               key={project.id}
-                              className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-6 hover:border-indigo-500/20 transition-all bento-glow shadow-sm"
+                              className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-6 hover:border-indigo-500/20 transition-all bento-glow shadow-sm will-change-transform transition-all"
                             >
                               <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                                 <div>
@@ -1188,7 +1188,7 @@ export default function ClientDashboard() {
                             <button
                               onClick={() => setProjectsPage(p => Math.max(1, p - 1))}
                               disabled={projectsPage === 1}
-                              className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                              className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                             >
                               Anterior
                             </button>
@@ -1198,7 +1198,7 @@ export default function ClientDashboard() {
                             <button
                               onClick={() => setProjectsPage(p => Math.min(Math.ceil(data.projects.length / itemsPerPage), p + 1))}
                               disabled={projectsPage === Math.ceil(data.projects.length / itemsPerPage)}
-                              className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                              className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                             >
                               Siguiente
                             </button>
@@ -1224,7 +1224,7 @@ export default function ClientDashboard() {
                             return (
                               <div
                                 key={project.id}
-                                className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-red-500/20 space-y-4 opacity-70 hover:opacity-100 transition-all shadow-sm"
+                                className="p-6 rounded-[var(--radius-bento)] glass-panel border border-red-500/20 space-y-4 opacity-70 hover:opacity-100 transition-all shadow-sm will-change-transform transition-all"
                               >
                                 <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                                   <div>
@@ -1260,7 +1260,7 @@ export default function ClientDashboard() {
                   /* Client Project Overview */
                   <div className="space-y-8">
                     {!clientProject ? (
-                      <div className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-dashed border-[var(--color-border-subtle)] text-center space-y-3">
+                      <div className="p-8 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3">
                         <HelpCircle size={36} className="mx-auto text-[var(--color-text-tertiary)]" />
                         <h3 className="font-bold">No hay proyectos activos asignados</h3>
                         <p className="text-xs text-[var(--color-text-secondary)]">Su cuenta no posee iniciativas cargadas. Comuníquese con soporte.</p>
@@ -1328,7 +1328,7 @@ export default function ClientDashboard() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Interactive Phase Map */}
-                        <div className="lg:col-span-2 p-6 md:p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-6 bento-glow">
+                        <div className="lg:col-span-2 p-6 md:p-8 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-6 bento-glow">
                           <h2 className="text-lg md:text-xl font-display font-black flex items-center gap-2 border-b border-[var(--color-border-subtle)]/30 pb-4">
                             <TrendingUp size={18} className="text-indigo-400" />
                             Progreso del Desarrollo
@@ -1418,7 +1418,7 @@ export default function ClientDashboard() {
                           )}
 
                           {/* Quick Invoicing / Budget box widget */}
-                          <div className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-4">
+                          <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
                             <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] flex justify-between items-center">
                               Facturación Reciente
                               <span className="text-[10px] font-mono lowercase">Fase Inicial</span>
@@ -1476,7 +1476,7 @@ export default function ClientDashboard() {
 
                 {/* MANAGER ONLY: Form to create deliverables for approvals */}
                 {isAdmin && (
-                  <form onSubmit={handleCreateTask} className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-indigo-500/10 space-y-4">
+                  <form onSubmit={handleCreateTask} className="p-6 rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 space-y-4">
                     <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-1.5 mb-2">
                       <PlusCircle size={16} />
                       Subir Nuevo Entregable para Revisión
@@ -1488,7 +1488,7 @@ export default function ClientDashboard() {
                         <select
                           value={selectedProjectId}
                           onChange={(e) => setSelectedProjectId(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none bg-[var(--color-surface-base)]"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         >
                           {data.projects.map(p => (
                             <option key={p.id} value={p.id}>{p.displayId ? `${p.displayId} - ` : ""}{p.name}</option>
@@ -1535,7 +1535,7 @@ export default function ClientDashboard() {
                           placeholder="Ej: Mockups de Panel de Control Web"
                           value={newTaskTitle}
                           onChange={(e) => setNewTaskTitle(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
                         />
                       </div>
                     </div>
@@ -1583,7 +1583,7 @@ export default function ClientDashboard() {
                           placeholder="Breve reseña de qué revisar..."
                           value={newTaskDesc}
                           onChange={(e) => setNewTaskDesc(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
                         />
                       </div>
 
@@ -1594,7 +1594,7 @@ export default function ClientDashboard() {
                           placeholder="https://..."
                           value={newTaskLink}
                           onChange={(e) => setNewTaskLink(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         />
                       </div>
                     </div>
@@ -1611,7 +1611,7 @@ export default function ClientDashboard() {
 
                 {/* List dynamic deliverables */}
                 {data.tasks.length === 0 ? (
-                  <div className="p-10 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm animate-fade-in w-full">
+                  <div className="p-10 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm animate-fade-in w-full">
                     <CheckCircle2 size={36} className="mx-auto text-indigo-400/80 animate-pulse" />
                     <h3 className="font-display font-medium text-sm text-[var(--color-text-primary)]">¡Todo en Orden!</h3>
                     <p className="text-xs text-[var(--color-text-secondary)]">
@@ -1630,7 +1630,7 @@ export default function ClientDashboard() {
                               ? "bg-emerald-500/5 border-emerald-500/15"
                               : task.status === "rejected"
                               ? "bg-red-500/5 border-red-500/15"
-                              : "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)]"
+                              : "glass-panel border-[var(--color-border-subtle)]"
                           }`}
                         >
                           <div className="space-y-1 md:max-w-2xl">
@@ -1654,7 +1654,7 @@ export default function ClientDashboard() {
                               </span>
                               
                               {task.status === "approved" && (
-                                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                                <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-emerald-400 px-2 py-0.5 rounded">
                                   ✔ Aprobado Oficialmente
                                 </span>
                               )}
@@ -1664,7 +1664,7 @@ export default function ClientDashboard() {
                                 </span>
                               )}
                               {task.status === "pending" && (
-                                <span className="text-[10px] uppercase font-bold tracking-wider text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded animate-pulse">
+                                <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-blue-400 px-2 py-0.5 rounded animate-pulse">
                                   ⏳ {isAdmin ? "Esperando Aprobación del Cliente" : "Esperando Tu Aprobación"}
                                 </span>
                               )}
@@ -1710,7 +1710,7 @@ export default function ClientDashboard() {
                                         value={feedbackText}
                                         onChange={(e) => setFeedbackText(e.target.value)}
                                         placeholder="Agrega tus comentarios para realizar ajustes..."
-                                        className="w-full min-w-[200px] p-2 rounded bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)]"
+                                        className="glass-input w-full min-w-[200px] p-2 rounded bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)]"
                                         rows={2}
                                       />
                                       <div className="flex gap-2 justify-end">
@@ -1759,7 +1759,7 @@ export default function ClientDashboard() {
                         <button
                           onClick={() => setTasksPage(p => Math.max(1, p - 1))}
                           disabled={tasksPage === 1}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                         >
                           Anterior
                         </button>
@@ -1769,7 +1769,7 @@ export default function ClientDashboard() {
                         <button
                           onClick={() => setTasksPage(p => Math.min(Math.ceil(data.tasks.length / itemsPerPage), p + 1))}
                           disabled={tasksPage === Math.ceil(data.tasks.length / itemsPerPage)}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                         >
                           Siguiente
                         </button>
@@ -1794,7 +1794,7 @@ export default function ClientDashboard() {
 
                 {/* MANAGER ONLY: Form to create invoices */}
                 {isAdmin && (
-                  <form onSubmit={handleCreateInvoice} className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-indigo-500/10 space-y-4">
+                  <form onSubmit={handleCreateInvoice} className="p-6 rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 space-y-4">
                     <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-1.5 mb-2">
                       <PlusCircle size={16} />
                       Añadir Registro de Factura
@@ -1806,7 +1806,7 @@ export default function ClientDashboard() {
                         <select
                           value={selectedProjectId}
                           onChange={(e) => setSelectedProjectId(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none bg-[var(--color-surface-base)]"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         >
                           {data.projects.map(p => (
                             <option key={p.id} value={p.id}>{p.displayId ? `${p.displayId} - ` : ""}{p.name}</option>
@@ -1836,7 +1836,7 @@ export default function ClientDashboard() {
                           placeholder="Ej: 1500"
                           value={newInvoiceAmount}
                           onChange={(e) => setNewInvoiceAmount(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         />
                       </div>
                     </div>
@@ -1878,7 +1878,7 @@ export default function ClientDashboard() {
                         placeholder="Ej: Cobro correspondiente a la etapa 2 del desarrollo frontend."
                         value={newInvoiceDesc}
                         onChange={(e) => setNewInvoiceDesc(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                        className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                       />
                     </div>
 
@@ -1895,7 +1895,7 @@ export default function ClientDashboard() {
 
                 {/* Invoices List */}
                 {data.invoices.length === 0 ? (
-                  <div className="p-10 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm">
+                  <div className="p-10 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm">
                     <DollarSign size={36} className="mx-auto text-indigo-400/80 animate-pulse" />
                     <h3 className="font-display font-medium text-sm text-[var(--color-text-primary)]">Sin Transacciones Pendientes</h3>
                     <p className="text-xs text-[var(--color-text-secondary)]">
@@ -1909,7 +1909,7 @@ export default function ClientDashboard() {
                       return (
                         <div
                           key={inv.id}
-                          className="p-5 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-500/10 transition-all"
+                          className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-500/10 transition-all will-change-transform transition-all"
                         >
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
@@ -1999,7 +1999,7 @@ export default function ClientDashboard() {
                         <button
                           onClick={() => setInvoicesPage(p => Math.max(1, p - 1))}
                           disabled={invoicesPage === 1}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                         >
                           Anterior
                         </button>
@@ -2009,7 +2009,7 @@ export default function ClientDashboard() {
                         <button
                           onClick={() => setInvoicesPage(p => Math.min(Math.ceil(data.invoices.length / itemsPerPage), p + 1))}
                           disabled={invoicesPage === Math.ceil(data.invoices.length / itemsPerPage)}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                         >
                           Siguiente
                         </button>
@@ -2034,7 +2034,7 @@ export default function ClientDashboard() {
 
                 {/* MANAGER ONLY: Form to schedule meetings */}
                 {isAdmin && (
-                  <form onSubmit={handleCreateMeeting} className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-indigo-500/10 space-y-4">
+                  <form onSubmit={handleCreateMeeting} className="p-6 rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 space-y-4">
                     <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-1.5 mb-2">
                       <PlusCircle size={16} />
                       Agendar Videollamada Técnica (Google Meet)
@@ -2046,7 +2046,7 @@ export default function ClientDashboard() {
                         <select
                           value={selectedProjectId}
                           onChange={(e) => setSelectedProjectId(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none bg-[var(--color-surface-base)]"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         >
                           {data.projects.map(p => (
                             <option key={p.id} value={p.id}>{p.displayId ? `${p.displayId} - ` : ""}{p.name}</option>
@@ -2062,7 +2062,7 @@ export default function ClientDashboard() {
                           placeholder="Ej: Demo Avances Sprint 2"
                           value={newMeetTitle}
                           onChange={(e) => setNewMeetTitle(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         />
                       </div>
 
@@ -2073,7 +2073,7 @@ export default function ClientDashboard() {
                           required
                           value={newMeetDate}
                           onChange={(e) => setNewMeetDate(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         />
                       </div>
 
@@ -2084,7 +2084,7 @@ export default function ClientDashboard() {
                           required
                           value={newMeetTime}
                           onChange={(e) => setNewMeetTime(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                         />
                       </div>
                     </div>
@@ -2096,7 +2096,7 @@ export default function ClientDashboard() {
                         placeholder="https://meet.google.com/..."
                         value={newMeetLink}
                         onChange={(e) => setNewMeetLink(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                        className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                       />
                     </div>
 
@@ -2113,7 +2113,7 @@ export default function ClientDashboard() {
 
                 {/* Meetings List */}
                 {data.meetings.length === 0 ? (
-                  <div className="p-10 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm">
+                  <div className="p-10 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm">
                     <Calendar size={36} className="mx-auto text-indigo-400/80 animate-pulse" />
                     <h3 className="font-display font-medium text-sm text-[var(--color-text-primary)]">Calendario Despejado</h3>
                     <p className="text-xs text-[var(--color-text-secondary)]">
@@ -2126,7 +2126,7 @@ export default function ClientDashboard() {
                       {data.meetings.slice((meetingsPage - 1) * itemsPerPage, meetingsPage * itemsPerPage).map((meet) => (
                         <div
                           key={meet.id}
-                          className="p-5 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-4 hover:border-indigo-500/10 transition-all shadow-sm"
+                          className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-4 hover:border-indigo-500/10 transition-all shadow-sm will-change-transform transition-all"
                         >
                           <div className="space-y-1">
                             <div className="flex justify-between items-start gap-2">
@@ -2170,7 +2170,7 @@ export default function ClientDashboard() {
                         <button
                           onClick={() => setMeetingsPage(p => Math.max(1, p - 1))}
                           disabled={meetingsPage === 1}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer animate-fade-in"
+                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer animate-fade-in will-change-transform transition-all"
                         >
                           Anterior
                         </button>
@@ -2180,7 +2180,7 @@ export default function ClientDashboard() {
                         <button
                           onClick={() => setMeetingsPage(p => Math.min(Math.ceil(data.meetings.length / itemsPerPage), p + 1))}
                           disabled={meetingsPage === Math.ceil(data.meetings.length / itemsPerPage)}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer animate-fade-in"
+                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer animate-fade-in will-change-transform transition-all"
                         >
                           Siguiente
                         </button>
@@ -2205,7 +2205,7 @@ export default function ClientDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Register Form Column */}
-                  <div className="lg:col-span-2 p-6 md:p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-6">
+                  <div className="lg:col-span-2 p-6 md:p-8 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-6">
                     <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                       Completa este formulario oficial de iniciación. Al guardarlo, se crea la cuenta del cliente y una plantilla de proyecto, la cual incluye su fase inicial al 25%, una factura de fase inicial y su primer entregable de validación para firmar de forma interactiva.
                     </p>
@@ -2225,7 +2225,7 @@ export default function ClientDashboard() {
                               placeholder="Ej: Sofía Martínez"
                               value={newClientName}
                               onChange={(e) => setNewClientName(e.target.value)}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                              className="glass-input w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                             />
                           </div>
                           
@@ -2237,7 +2237,7 @@ export default function ClientDashboard() {
                               placeholder="Ej: sofia@empresa.com"
                               value={newClientEmail}
                               onChange={(e) => setNewClientEmail(e.target.value)}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                              className="glass-input w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                             />
                           </div>
 
@@ -2260,7 +2260,7 @@ export default function ClientDashboard() {
                                 placeholder="Ej: ••••••••"
                                 value={newClientPassword}
                                 onChange={(e) => setNewClientPassword(e.target.value)}
-                                className="w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none font-mono"
+                                className="glass-input w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none font-mono"
                               />
                               <button
                                 type="button"
@@ -2289,7 +2289,7 @@ export default function ClientDashboard() {
                               placeholder="Ej: Acme Corp"
                               value={newClientCompany}
                               onChange={(e) => setNewClientCompany(e.target.value)}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                              className="glass-input w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                             />
                           </div>
 
@@ -2308,7 +2308,7 @@ export default function ClientDashboard() {
                                 placeholder="Ej: Acme Portal SaaS"
                                 value={newClientProjectName}
                                 onChange={(e) => setNewClientProjectName(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-transparent text-xs text-[var(--color-text-primary)] focus:outline-none"
+                                className="glass-input w-full px-3.5 py-2.5 text-xs text-[var(--color-text-primary)] focus:outline-none"
                               />
                             </div>
                           </div>
@@ -2351,7 +2351,7 @@ export default function ClientDashboard() {
                               placeholder="Escribe una breve idea del proyecto y presiona Generar con IA..."
                               value={newClientProjectDesc}
                               onChange={(e) => setNewClientProjectDesc(e.target.value)}
-                              className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                              className="glass-input w-full px-3.5 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                             />
                           </div>
                         </div>
@@ -2369,7 +2369,7 @@ export default function ClientDashboard() {
 
                   {/* Right side help block explaining auto setup */}
                   <div className="space-y-6">
-                    <div className="p-6 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-4">
+                    <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
                       <div className="w-10 h-10 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                         <CheckCircle size={20} />
                       </div>
@@ -2411,7 +2411,7 @@ export default function ClientDashboard() {
                 initial={{ y: 20, scale: 0.95 }}
                 animate={{ y: 0, scale: 1 }}
                 exit={{ y: 20, scale: 0.95 }}
-                className="w-full max-w-md bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-6 rounded-2xl shadow-2xl relative"
+                className="w-full max-w-md glass-panel border border-[var(--color-border-subtle)] p-6 rounded-2xl shadow-2xl relative"
               >
                 <button
                   onClick={() => setPayingInvoice(null)}
@@ -2464,7 +2464,7 @@ export default function ClientDashboard() {
                           placeholder="0000 0000 0000 0000"
                           value={ccNumber}
                           onChange={(e) => setCcNumber(e.target.value)}
-                          className="w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                          className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -2475,7 +2475,7 @@ export default function ClientDashboard() {
                             placeholder="MM/YY"
                             value={ccExpiry}
                             onChange={(e) => setCcExpiry(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -2485,7 +2485,7 @@ export default function ClientDashboard() {
                             placeholder="123"
                             value={ccCvc}
                             onChange={(e) => setCcCvc(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                           />
                         </div>
                       </div>
@@ -2577,7 +2577,7 @@ export default function ClientDashboard() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 z-50 h-[100dvh] w-full sm:w-[380px] flex flex-col bg-[var(--color-surface-elevated)] border-l border-[var(--color-border-subtle)] shadow-2xl"
+              className="fixed top-0 right-0 z-50 h-[100dvh] w-full sm:w-[380px] flex flex-col glass-panel border-l border-[var(--color-border-subtle)] shadow-2xl"
             >
               
               {/* Header */}
@@ -2722,7 +2722,7 @@ export default function ClientDashboard() {
                       document.getElementById("send-chat-btn")?.click();
                     }
                   }}
-                  className="chat-input flex-1 px-3 py-2 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                  className="glass-input chat-input flex-1 px-3 py-2 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                   placeholder="Escribe tu pregunta..."
                   autoCapitalize="none"
                 />
