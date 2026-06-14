@@ -21,6 +21,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import ContactSection from "../components/ContactSection";
 import { T } from "../context/LanguageContext";
+import RippleButton from "../components/RippleButton";
 
 export default function About() {
   const navigate = useNavigate();
@@ -104,21 +105,21 @@ export default function About() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-4xl sm:text-6xl md:text-[5.5rem] font-display font-black leading-[1.05] tracking-tight text-[var(--color-text-primary)]"
+            className="text-5xl md:text-7xl font-display font-black leading-[1.1] md:leading-[1.05] tracking-tight text-[var(--color-text-primary)]"
           >
             <T
               en={
                 <>
-                  Developing Web <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-                    With Pure Precision.
+                  Developing web with pure <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    precision
                   </span>
                 </>
               }
             >
-              Desarrollo Web <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
-                Con Pura Precisión.
+              Desarrollo web con pura <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                precisión
               </span>
             </T>
           </motion.h1>
@@ -176,8 +177,8 @@ export default function About() {
                 </T>
               </p>
               <p>
-                <T en="What started as an absolute obsession for clean, efficient technology has grown into an independent digital craft facility. Today, we build bespoke digital platforms for visionary agencies, founders, and enterprises globally.">
-                  Lo que comenzó como una obsesión absoluta por la velocidad y la eficiencia del software, se ha transformado en un taller de artesanía digital de alta tecnología que presta servicios a marcas globales, startups disruptivas y corporaciones independientes.
+                <T en="What started as an absolute obsession for clean, efficient technology has grown into an independent digital craft facility. Today, we build bespoke digital platforms for Dominican and Latin American businesses with a vision for growth.">
+                  Lo que comenzó como una obsesión absoluta por la velocidad y la eficiencia del software, se ha transformado en un taller de artesanía digital de alta tecnología que presta servicios a negocios dominicanos y latinoamericanos con visión de crecimiento.
                 </T>
               </p>
               <p className="font-semibold text-[var(--color-text-primary)]">
@@ -278,7 +279,7 @@ export default function About() {
                 <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--color-text-secondary)] bg-zinc-500/5 px-3 py-2 rounded-lg border border-[var(--color-border-subtle)]/40">
                   <Globe size={12} className="text-indigo-400 animate-spin" style={{ animationDuration: "12s" }} />
                   <span>
-                    <T en="Hyper-secure global servers operation">Infraestructura global de respuesta optimizada</T>
+                    <T en="High-availability cloud infrastructure">Infraestructura en la nube de alta disponibilidad</T>
                   </span>
                 </div>
               </div>
@@ -402,7 +403,7 @@ export default function About() {
           </div>
         </section>
 
-        {/* FOUNDER & CHIEF ENGINEER PROFILE (CRISTIAN DICEN) */}
+        {/* FOUNDER & CREATIVE DIRECTOR PROFILE (CRISTIAN DICEN) */}
         <section className="space-y-12">
           <div className="text-center space-y-4 max-w-xl mx-auto">
             <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-indigo-500 tracking-wider uppercase">
@@ -473,7 +474,7 @@ export default function About() {
                     </T>
                   </p>
                   <p>
-                    <T en="With an unwavering obsession for performance optimization, SEO, and visual cleanliness, I build web solutions that solve business critical needs. If there is a bottleneck, or a design that looks obsolete, I create the perfect remedy.">
+                    <T en="With an unwavering obsession for performance optimization, SEO, and visual cleanliness, we build web solutions that solve business critical needs. If there is a bottleneck, or a design that looks obsolete, we create the perfect remedy.">
                       Con una inquebrantable obsesión por el rendimiento, la accesibilidad de primer nivel y la pulcritud estética, desarrollo soluciones de software que resuelven prioridades de negocio reales. No construyo páginas genéricas; configuro motores de captación y venta.
                     </T>
                   </p>
@@ -535,10 +536,10 @@ export default function About() {
           <div className="pt-2 flex justify-center">
             <div className="relative group shrink-0 inline-flex">
               {/* High-Performance, GPU-Composited glowing pulse ring */}
-              <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/50 pointer-events-none animate-cta-glow-pulse" style={{ filter: "blur(6px)" }} />
-              <button
+              <div className="absolute inset-0 rounded-xl border border-[var(--color-primary-base)]/40 pointer-events-none animate-cta-ping" />
+              <RippleButton
                 onClick={() => navigate("/cotizar")}
-                className="group relative overflow-hidden inline-flex items-center gap-2 px-8 py-4 sm:px-10 sm:py-4.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-base sm:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 cursor-pointer"
+                className="group relative overflow-hidden inline-flex items-center gap-2 px-8 py-4 sm:px-10 sm:py-4.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-base sm:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
               >
                 {/* Shimmer effect */}
                 <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
@@ -546,7 +547,7 @@ export default function About() {
                 <Cpu size={18} className="group-hover:rotate-12 transition-transform" />
                 <T en="Plan your Project">Planifica tu Proyecto</T>
                 <ArrowRight size={18} className="ml-1 group-hover:translate-x-1.5 transition-transform" />
-              </button>
+              </RippleButton>
             </div>
           </div>
         </section>

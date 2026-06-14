@@ -5,12 +5,18 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  CheckCircle2,
   Calendar,
   Clock,
   Loader2,
   Sparkles,
   Globe,
   Cloud,
+  Info,
+  MessageCircle,
+  Bot,
+  Search,
+  PenLine,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -494,6 +500,155 @@ export default function WizardQuote() {
       setCheckingDomain(false);
     }
   };
+
+  // AI-powered setup states and functions
+  const [aiDescription, setAiDescription] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [aiUsed, setAiUsed] = useState(false);
+  const [aiResult, setAiResult] = useState<{ type: string; addons: string[]; reasoning: string } | null>(null);
+  const [showAiStep, setShowAiStep] = useState(true);
+
+  const analyzeWithAI = async () => {
+    if (!aiDescription.trim() || aiDescription.length < 10) {
+      setAiError(language === "en" ? "Please enter a description." : "Por favor ingresa una descripción.");
+      return;
+    }
+    setAiLoading(true);
+    setAiError("");
+
+    try {
+      const systemPrompt = `Eres el asistente de cotización de Polaris Web Studio, una agencia de desarrollo web en República Dominicana. Analiza la descripción del negocio y devuelve ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin backticks.
+
+PLANES (campo "type"):
+- "landing": presencia básica, 1 página, emprendedores, profesionales independientes, negocios simples. $299
+- "corporate": múltiples páginas, blog, restaurantes, clínicas, hoteles, despachos, salones. $699
+- "ecommerce": vender productos online, pagos con tarjeta, inventario, tiendas de cualquier tipo. $1,299
+
+ADD-ONS (campo "addons", array, puede estar vacío []):
+- "bot_fast": respuestas automáticas, preguntas frecuentes, atención 24/7
+- "ai_agent": ventas automatizadas, seguimiento de clientes
+- "semantic_search": buscador de productos (solo si type es ecommerce)
+- "content_assistant": blog activo, publicar contenido frecuente
+- "hosting": mantenimiento continuo (incluir siempre por defecto)
+
+CAMPO "confidence": "high" | "medium" | "low"
+CAMPO "reasoning": entre 20 y 30 palabras en español. Explica específicamente qué tipo de negocio es, qué problema resuelve el plan elegido y por qué los add-ons sugeridos le aportan valor concreto.
+
+EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high","reasoning":"Dentista necesita web corporativa para captar pacientes localmente"}`;
+
+      // Función auxiliar para parsear la respuesta en JSON
+      const parseJSON = (raw: string) => {
+        const clean = raw.replace(/```json|```/g, "").trim();
+        return JSON.parse(clean);
+      };
+
+      // Función auxiliar para mapear el resultado al estado
+      const mapResult = (data: any) => {
+        const mappedType = ["landing", "corporate", "ecommerce"].includes(data.type)
+          ? data.type : "landing";
+        const mappedAddons = ["hosting"];
+        if (data.addons && Array.isArray(data.addons)) {
+          const validAddons = ["bot_fast", "ai_agent", "semantic_search", "content_assistant"];
+          data.addons.forEach((key: string) => {
+            if (validAddons.includes(key) && !mappedAddons.includes(key)) {
+              mappedAddons.push(key);
+            }
+          });
+        }
+        return { mappedType, mappedAddons, reasoning: data.reasoning || "", confidence: data.confidence || "low" };
+      };
+
+      let data: any = null;
+
+      // Intento 1 — Gemini
+      try {
+        const geminiRes = await fetch(
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + import.meta.env.VITE_GEMINI_API_KEY,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents: [{ parts: [{ text: aiDescription }] }],
+              generationConfig: { temperature: 0.1, maxOutputTokens: 300 }
+            })
+          }
+        );
+        if (!geminiRes.ok) throw new Error("Gemini error");
+        const geminiResult = await geminiRes.json();
+        const geminiText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        data = parseJSON(geminiText);
+      } catch {
+        // Gemini falló — intentar con Grok
+        try {
+          const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + import.meta.env.VITE_GROK_API_KEY
+            },
+            body: JSON.stringify({
+              model: "grok-3-mini",
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: aiDescription }
+              ],
+              temperature: 0.1,
+              max_tokens: 300
+            })
+          });
+          if (!grokRes.ok) throw new Error("Grok error");
+          const grokResult = await grokRes.json();
+          const grokText = grokResult.choices?.[0]?.message?.content || "";
+          data = parseJSON(grokText);
+        } catch {
+          throw new Error("all_providers_failed");
+        }
+      }
+
+      if (!data) throw new Error("no_data");
+
+      const { mappedType, mappedAddons, reasoning, confidence } = mapResult(data);
+
+      if (confidence === "low") {
+        setAiError(
+          language === "en"
+            ? "Your description is too brief. Could you add a bit more detail? For example, what type of business is it and what do you need your website to do?"
+            : "Tu descripción es muy breve. ¿Puedes agregar un poco más de detalle? Por ejemplo, ¿qué tipo de negocio tienes y qué necesitas que haga tu web?"
+        );
+        setAiLoading(false);
+        return;
+      }
+
+      setSelections((prev: any) => ({
+        ...prev,
+        type: mappedType,
+        addons: mappedAddons,
+        notes: aiDescription,
+      }));
+
+      setAiResult({ type: mappedType, addons: mappedAddons, reasoning });
+      setAiUsed(true);
+      trackEvent("ai_analysis_complete", { type: mappedType });
+
+    } catch (err: any) {
+      setAiError(
+        language === "en"
+          ? "Couldn't analyze your description. Choose manually below."
+          : "No pudimos analizar tu descripción. Elige manualmente abajo."
+      );
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const skipAiStep = () => {
+    setAiUsed(false);
+    setShowAiStep(false);
+    setCurrentStep(0);
+  };
+
   const [currentStep, setCurrentStep] = useState(() => {
     const saved = localStorage.getItem("wizardQuote_currentStep");
     return saved !== null ? parseInt(saved, 10) : 0;
@@ -519,6 +674,7 @@ export default function WizardQuote() {
       time: "",
       name: "",
       email: "",
+      notes: "",
     };
   });
 
@@ -814,7 +970,11 @@ export default function WizardQuote() {
       case "hosting":
         return t("Premium Maintenance & Support", "Mantenimiento y Soporte Premium");
       default:
-        return id;
+        if (!id) return "";
+        return id
+          .split("_")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ");
     }
   };
 
@@ -856,8 +1016,10 @@ export default function WizardQuote() {
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep((c) => c - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (currentStep === 0 && !showAiStep) {
+      setShowAiStep(true);
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleSubmitLead = () => {
@@ -912,36 +1074,53 @@ export default function WizardQuote() {
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 py-24 relative z-10 flex flex-col">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-6 pt-10 pb-24 md:pt-24 relative z-10 flex flex-col">
+        {/* Ambient Background Glows */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] pointer-events-none overflow-hidden -z-10 bg-transparent">
+          <div className="absolute top-[-150px] left-1/2 -translate-x-1/2 w-[550px] h-[550px] rounded-full bg-[var(--color-primary-base)]/15" style={{ filter: "blur(130px)" }} />
+          <div className="absolute top-[-100px] left-1/4 w-[320px] h-[320px] rounded-full bg-indigo-500/10" style={{ filter: "blur(110px)" }} />
+          <div className="absolute top-[-100px] right-1/4 w-[320px] h-[320px] rounded-full bg-cyan-700/8" style={{ filter: "blur(110px)" }} />
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-12 space-y-4">
-          <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter">
-            <T en="Interactive Project Planner">Planificador de Proyectos</T>
+        <div className="text-center mb-16 space-y-6 relative">
+          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em]">
+            <T en="Build Your Digital Presence">Construye tu Presencia Digital</T>
+          </div>
+
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-black tracking-tight leading-[1.1] py-2">
+            <span className="inline-block bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent pb-1 select-none px-1">
+              <T en="Interactive">Planificador</T>
+            </span>{" "}
+            <span className="inline-block whitespace-nowrap bg-gradient-to-r from-[var(--color-primary-base)] to-indigo-400 bg-clip-text text-transparent pb-1 select-none px-1">
+              <T en="Project Planner">de Proyectos</T>
+            </span>
           </h1>
-          <p className="text-[var(--color-text-secondary)]">
-            <T en="Build your project and schedule a strategy session.">
-              Construye tu proyecto y agenda una sesión estratégica.
-            </T>
+
+          <p className="text-[var(--color-text-secondary)] text-sm sm:text-base md:text-lg max-w-xl mx-auto leading-relaxed font-normal">
+            <T en="Build your custom platform spec, evaluate costs dynamically, and lock in your session built for growth.">Construye las especificaciones de tu plataforma, evalúa costos dinámicamente y agenda tu sesión estratégica.</T>
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="flex items-center gap-2 mb-12">
-          {steps.map((step, idx) => (
-            <React.Fragment key={idx}>
-              <div className="flex-1 flex flex-col gap-2">
-                <div
-                  className={`h-2 rounded-full transition-colors ${idx <= currentStep ? "bg-[var(--color-primary-base)]" : "glass-panel border border-[var(--color-border-subtle)]"}`}
-                />
-                <span
-                  className={`text-[10px] font-bold uppercase tracking-widest ${idx <= currentStep ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"}`}
-                >
-                  {step.title}
-                </span>
-              </div>
-            </React.Fragment>
-          ))}
-        </div>
+        {!showAiStep && (
+          <div className="flex items-center gap-2 mb-12">
+            {steps.map((step, idx) => (
+              <React.Fragment key={idx}>
+                <div className="flex-1 flex flex-col gap-2">
+                  <div
+                    className={`h-2 rounded-full transition-colors ${idx <= currentStep ? "bg-[var(--color-primary-base)]" : "glass-panel border border-[var(--color-border-subtle)]"}`}
+                  />
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-widest ${idx <= currentStep ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"}`}
+                  >
+                    {step.title}
+                  </span>
+                </div>
+              </React.Fragment>
+            ))}
+          </div>
+        )}
 
         {/* Dynamic Content */}
         <div className="flex-1 flex flex-col md:flex-row gap-12">
@@ -972,6 +1151,222 @@ export default function WizardQuote() {
                   >
                     <T en="Return to Home">Volver al Inicio</T>
                   </button>
+                </motion.div>
+              ) : showAiStep ? (
+                <motion.div
+                  key="ai-step"
+                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, y: -10 }}
+                  className="space-y-8 animate-fade-in"
+                >
+                  <div className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel p-8 md:p-12 space-y-6 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-all duration-300">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] flex items-center justify-center shrink-0 shadow-inner w-12 h-12">
+                        <Sparkles size={22} className="opacity-90 animate-pulse text-[var(--color-primary-base)]" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <div className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
+                          <T en="Smart suggestions">Sugerencias inteligentes</T>
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-display font-black text-[var(--color-text-primary)] leading-tight">
+                          <T en="Describe your project">Describe tu proyecto</T>
+                        </h2>
+                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                          <T en="Tell us about your business in a few words and we'll suggest the right plan automatically.">
+                            Cuéntanos sobre tu negocio en pocas palabras y te sugeriremos el plan ideal automáticamente.
+                          </T>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <textarea
+                        value={aiDescription}
+                        onChange={(e) => setAiDescription(e.target.value)}
+                        placeholder={language === 'es'
+                          ? "Ej: Tengo una panadería y quiero que mis clientes puedan hacer pedidos online..."
+                          : "E.g: I have a bakery and want my customers to place orders online..."}
+                        className="glass-input w-full h-16 md:h-24 p-3 md:p-5 rounded-2xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm md:text-base shadow-sm transition-all resize-none"
+                      />
+                      
+                      <div className="mt-3 flex flex-col gap-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">
+                          <T en="Examples">Ejemplos</T>
+                        </span>
+                        {[
+                          language === 'es' ? '"Tengo una ferretería y quiero vender online"' : '"I have a hardware store and want to sell online"',
+                          language === 'es' ? '"Soy dentista y quiero que mis pacientes me encuentren en Google"' : '"I\'m a dentist and want patients to find me on Google"',
+                          language === 'es' ? '"Tengo una tienda de ropa y quiero aceptar pagos con tarjeta"' : '"I have a clothing store and want to accept card payments"',
+                        ].map((example, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setAiDescription(example.replace(/"/g, ''))}
+                            className="text-left text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-surface-elevated)] transition-all cursor-pointer py-1.5 px-2 rounded-lg flex items-center gap-1.5 group w-full"
+                          >
+                            <ArrowRight size={10} className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] flex-shrink-0 transition-colors" />
+                            <span>{example}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {aiError && (
+                      <div className="text-xs md:text-sm text-red-500 font-medium bg-red-500/10 p-4 rounded-xl border border-red-500/20 flex items-start gap-2 animate-fade-in">
+                        <span>⚠</span>
+                        <span>{aiError}</span>
+                      </div>
+                    )}
+
+                    {aiResult && (
+                      <div className="mt-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-4">
+                        
+                        {/* Header de la tarjeta */}
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={14} className="text-[var(--color-primary-base)]" />
+                          <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
+                            <T en="Based on your description">Basado en tu descripción</T>
+                          </p>
+                        </div>
+
+                        {/* Plan sugerido con features */}
+                        <div className="p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-2">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
+                            <span className="text-sm font-black flex items-center gap-1.5 flex-wrap">
+                              {aiResult.type === "landing" && (
+                                <>
+                                  <span className="text-amber-500"><T en="Destello Plan">Plan Destello</T></span>
+                                  <span className="text-[var(--color-text-secondary)] font-medium">•</span>
+                                  <span className="text-[var(--color-text-primary)]">${isOfferActive ? Math.round(299 * 0.75) : 299} USD</span>
+                                </>
+                              )}
+                              {aiResult.type === "corporate" && (
+                                <>
+                                  <span className="text-[var(--color-primary-base)]"><T en="Constellation Plan">Plan Constelación</T></span>
+                                  <span className="text-[var(--color-text-secondary)] font-medium">•</span>
+                                  <span className="text-[var(--color-text-primary)]">${isOfferActive ? Math.round(699 * 0.75) : 699} USD</span>
+                                </>
+                              )}
+                              {aiResult.type === "ecommerce" && (
+                                <>
+                                  <span className="text-violet-500"><T en="Nova Plan">Plan Nova</T></span>
+                                  <span className="text-[var(--color-text-secondary)] font-medium">•</span>
+                                  <span className="text-[var(--color-text-primary)]">${isOfferActive ? Math.round(1299 * 0.75) : 1299} USD</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+
+                          {/* Features clave del plan */}
+                          <ul className="space-y-1 pl-6">
+                            {aiResult.type === "landing" && [
+                              <T en="1 page designed to convert">1 página diseñada para captar clientes</T>,
+                              <T en="WhatsApp button + contact form">Botón de WhatsApp + formulario de contacto</T>,
+                              <T en="Visible on Google from day 1">Visible en Google desde el día 1</T>,
+                            ].map((f, i) => (
+                              <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1.5 align-middle">
+                                <span className="text-[var(--color-primary-base)] mt-0.5">·</span>{f}
+                              </li>
+                            ))}
+                            {aiResult.type === "corporate" && [
+                              <T en="Up to 5 custom pages">Hasta 5 páginas personalizadas</T>,
+                              <T en="Blog + 24/7 chatbot">Blog + chatbot de atención 24/7</T>,
+                              <T en="Advanced SEO + Google Analytics">SEO avanzado + Google Analytics</T>,
+                            ].map((f, i) => (
+                              <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1.5 align-middle">
+                                <span className="text-[var(--color-primary-base)] mt-0.5">·</span>{f}
+                              </li>
+                            ))}
+                            {aiResult.type === "ecommerce" && [
+                              <T en="Unlimited product catalog">Catálogo ilimitado de productos</T>,
+                              <T en="Accepts cards and PayPal">Acepta tarjetas y PayPal</T>,
+                              <T en="Inventory management + admin panel">Gestión de inventario + panel de administración</T>,
+                            ].map((f, i) => (
+                              <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1.5 align-middle">
+                                <span className="text-[var(--color-primary-base)] mt-0.5">·</span>{f}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {/* Add-ons sugeridos */}
+                        {aiResult.addons.filter(a => a !== "hosting").length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                              <T en="Suggested add-ons">Add-ons sugeridos</T>
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {aiResult.addons.filter(a => a !== "hosting").map((addon) => (
+                                <span key={addon} className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)]">
+                                  {addon === "bot_fast" && <MessageCircle size={11} />}
+                                  {addon === "ai_agent" && <Bot size={11} />}
+                                  {addon === "semantic_search" && <Search size={11} />}
+                                  {addon === "content_assistant" && <PenLine size={11} />}
+                                  <span>{getAddonName(addon)}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Reasoning mejorado */}
+                        {aiResult.reasoning && (
+                          <div className="flex items-start gap-2 p-3 rounded-xl bg-[var(--color-primary-base)]/5 border border-[var(--color-primary-base)]/10">
+                            <Info size={12} className="text-[var(--color-primary-base)] flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                              {aiResult.reasoning}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* CTAs */}
+                        <button
+                          type="button"
+                          onClick={() => { setShowAiStep(false); setCurrentStep(0); }}
+                          className="w-full py-3 rounded-xl text-sm font-black bg-[var(--color-primary-base)] text-white hover:opacity-90 transition-all cursor-pointer border-none"
+                        >
+                          <T en="Continue with this selection →">Continuar con esta selección →</T>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAiResult(null); setAiUsed(false); }}
+                          className="w-full text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors cursor-pointer py-1 border-none bg-transparent"
+                        >
+                          <T en="Adjust manually">Ajustar manualmente</T>
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[var(--color-border-subtle)]">
+                      <button
+                        type="button"
+                        onClick={skipAiStep}
+                        className="py-3 px-6 rounded-xl text-[var(--color-text-secondary)] font-bold hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] active:scale-95 transition-all text-center border-none cursor-pointer bg-transparent"
+                      >
+                        <T en="Skip & configure manually ➔">Configurar manualmente ➔</T>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={aiLoading}
+                        onClick={analyzeWithAI}
+                        className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-75 border-none min-w-[180px] shadow-lg shadow-indigo-500/10 cursor-pointer"
+                      >
+                        {aiLoading ? (
+                          <>
+                            <Loader2 className="animate-spin" size={18} />
+                            <T en="Analyzing...">Analizando...</T>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={18} />
+                            <T en="Suggest my plan">Sugerir mi plan</T>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
                 </motion.div>
               ) : (
                 <motion.div
@@ -1297,8 +1692,11 @@ export default function WizardQuote() {
                                     </span>
                                   )}
                                   {a.isAi && (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 text-[10px] uppercase font-bold tracking-wider leading-none">
-                                      <Sparkles size={10} /> <T en="AI">IA</T>
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--color-surface-highlight)] border border-purple-500/20 text-[10px] uppercase font-bold tracking-wider leading-none">
+                                      <Sparkles size={10} className="text-indigo-500 animate-pulse" />
+                                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold">
+                                        <T en="AI">IA</T>
+                                      </span>
                                     </span>
                                   )}
                                 </h3>
@@ -1349,7 +1747,7 @@ export default function WizardQuote() {
                                   transition={{ duration: 0.25 }}
                                   className="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed border-t border-[var(--color-primary-base)]/20 pt-2 mt-2 overflow-hidden"
                                 >
-                                  💡 {language === "en" ? addonSocialProof[a.id].en : addonSocialProof[a.id].es}
+                                  <Info size={11} className="inline mr-1.5 text-[var(--color-primary-base)] opacity-70 shrink-0" />{language === "en" ? addonSocialProof[a.id].en : addonSocialProof[a.id].es}
                                 </motion.p>
                               )}
                             </AnimatePresence>
@@ -1433,7 +1831,7 @@ export default function WizardQuote() {
             </AnimatePresence>
 
             {/* Footer Navigation */}
-            {!success && (
+            {!success && !showAiStep && (
               <div className="mt-8 flex items-center justify-between pt-8 border-t border-[var(--color-border-subtle)]">
                 <button
                   onClick={handleBack}
@@ -1465,7 +1863,8 @@ export default function WizardQuote() {
           </div>
 
           {/* Sidebar Estimator */}
-          <div className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
+          {!showAiStep && !success && (
+            <div className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
             <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
               <T en="Live Estimate">Estimación en vivo</T>
             </h3>
@@ -1646,6 +2045,7 @@ export default function WizardQuote() {
               </div>
             )}
           </div>
+          )}
         </div>
       </main>
       <Footer />

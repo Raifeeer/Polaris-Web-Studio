@@ -187,8 +187,22 @@ export default function Blog() {
             <BookMarked size={14} className="text-indigo-500 animate-pulse" />
             <T en="EDUCATIONAL HUB & ARTICLE LIBRARY">BIBLIOTECA DE CONOCIMIENTO DIGITAL</T>
           </span>
-          <h1 className="text-4xl md:text-7xl font-display font-black tracking-tighter">
-            <T en="Polaris Insights">Polaris Insights</T>
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+            <T
+              en={
+                <>
+                  Polaris <br className="hidden md:block" />
+                  <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] pr-4 pb-1 select-none">
+                    Insights
+                  </span>
+                </>
+              }
+            >
+              Polaris <br className="hidden md:block" />
+              <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] pr-4 pb-1 select-none">
+                Insights
+              </span>
+            </T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-base md:text-xl max-w-3xl mx-auto leading-relaxed">
             <T en="Articles, concepts, and technical demystifications. Learn about speed optimizations, semantic structures, clean rendering, and modern web growth.">

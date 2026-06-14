@@ -1,34 +1,251 @@
-import React from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Globe, ArrowUpRight, ExternalLink, Code } from "lucide-react";
-import { motion } from "framer-motion";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  Globe,
+  ArrowUpRight,
+  ExternalLink,
+  Code,
+  Search,
+  Grid,
+  Film,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  Zap,
+  Info,
+  Clock,
+  X,
+  Compass,
+  Layout,
+  Trophy,
+  ArrowRight,
+  Layers,
+  Star,
+  Monitor,
+  Smartphone
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { projects } from "../constants/projects";
+import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
-import MockupFrame from "../components/MockupFrame";
+
+function ProjectScreenshot({ project }: { project: Project }) {
+  const [view, setView] = useState<"desktop" | "mobile">("desktop");
+  const [desktopError, setDesktopError] = useState(false);
+  const [mobileError, setMobileError] = useState(false);
+
+  return (
+    <div className="relative w-full h-full min-h-[250px] flex flex-col justify-between bg-[var(--color-surface-base)] overflow-hidden">
+      {/* Toggle buttons top-right corner */}
+      <div className="absolute top-3 right-3 z-30 flex items-center gap-1 bg-[var(--color-surface-elevated)]/90 backdrop-blur-sm p-1 rounded-xl shadow-md border border-[var(--color-border-subtle)]">
+        <button
+          onClick={() => setView("desktop")}
+          className={`p-1.5 rounded-lg transition-all hover:bg-[var(--color-surface-base)] cursor-pointer ${
+            view === "desktop" ? "text-[var(--color-primary-base)] bg-[var(--color-surface-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+          }`}
+          title="Desktop version"
+        >
+          <Monitor size={14} />
+        </button>
+        <button
+          onClick={() => setView("mobile")}
+          className={`p-1.5 rounded-lg transition-all hover:bg-[var(--color-surface-base)] cursor-pointer ${
+            view === "mobile" ? "text-[var(--color-primary-base)] bg-[var(--color-surface-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+          }`}
+          title="Mobile version"
+        >
+          <Smartphone size={14} />
+        </button>
+      </div>
+
+      <div className="flex-grow flex items-center justify-center p-4 pt-12 relative w-full h-full">
+        <AnimatePresence mode="wait">
+          {view === "desktop" ? (
+            <motion.div
+              key="desktop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full flex flex-col rounded-t-xl overflow-hidden border border-[var(--color-border-subtle)] max-w-full"
+            >
+              {/* Browser bar */}
+              <div className="flex items-center gap-1.5 px-3 py-2 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] shrink-0 select-none">
+                <div className="w-2 h-2 rounded-full bg-red-500" />
+                <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+              </div>
+              <div className="flex-grow overflow-hidden relative min-h-[160px] flex items-center justify-center bg-neutral-900/10">
+                {desktopError || !project.desktopImg ? (
+                  <div className="absolute inset-0 bg-neutral-800/40 flex items-center justify-center text-center p-4">
+                    <span className="text-xs font-bold text-[var(--color-text-tertiary)] select-none">
+                      {project.title} (Desktop View)
+                    </span>
+                  </div>
+                ) : (
+                  <img
+                    src={project.desktopImg}
+                    alt={`${project.title} Desktop`}
+                    className="w-full object-cover object-top"
+                    onError={() => setDesktopError(true)}
+                  />
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="mobile"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-[170px] shrink-0 rounded-[2rem] border-4 border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden shadow-xl"
+            >
+              {/* Phone notch */}
+              <div className="w-16 h-1.5 bg-[var(--color-border-strong)] rounded-full mx-auto mt-2 mb-1 shrink-0" />
+              <div className="flex-grow overflow-hidden relative min-h-[220px] aspect-[9/16] flex items-center justify-center bg-neutral-900/10">
+                {mobileError || !project.mobileImg ? (
+                  <div className="absolute inset-0 bg-neutral-800/40 flex items-center justify-center text-center p-4">
+                    <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] select-none">
+                      {project.title} (Mobile)
+                    </span>
+                  </div>
+                ) : (
+                  <img
+                    src={project.mobileImg}
+                    alt={`${project.title} Mobile`}
+                    className="w-full object-cover object-top rounded-b-[1.5rem]"
+                    onError={() => setMobileError(true)}
+                  />
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 export default function Portfolio() {
   const navigate = useNavigate();
   const { language } = useLanguage();
 
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPlan, setSelectedPlan] = useState<string>("ALL");
+  const [selectedType, setSelectedType] = useState<string>("ALL");
+  const [viewMode, setViewMode] = useState<"bento" | "cinema">("bento");
+
+  // Cinema Showcase Slider State
+  const [activeCinemaIndex, setActiveCinemaIndex] = useState(0);
+  const [direction, setDirection] = useState<1 | -1>(1);
+
+  // Quick View Overlay State
+  const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
+
+  // Type definitions/categories for filter pills
+  const availableTypes = useMemo(() => {
+    const types = new Set<string>();
+    projects.forEach(p => {
+      // Extract main category by splitting dot or taking full type
+      const mainCategory = p.type.split("·")[0].trim();
+      types.add(mainCategory);
+    });
+    return ["ALL", ...Array.from(types)];
+  }, []);
+
+  const plans = ["ALL", "Nova", "Constelación", "Destello"];
+
+  // Filtered Projects List
+  const filteredProjects = useMemo(() => {
+    return projects.filter(project => {
+      const pTitle = project.title.toLowerCase();
+      const pDesc = (project.shortDesc || "").toLowerCase();
+      const pDescEn = (project.shortDescEN || "").toLowerCase();
+      const pType = project.type.toLowerCase();
+      const pTypeEn = (project.typeEN || "").toLowerCase();
+      const matchesSearch =
+        pTitle.includes(searchQuery.toLowerCase()) ||
+        pDesc.includes(searchQuery.toLowerCase()) ||
+        pDescEn.includes(searchQuery.toLowerCase()) ||
+        pType.includes(searchQuery.toLowerCase()) ||
+        pTypeEn.includes(searchQuery.toLowerCase());
+
+      const matchesPlan =
+        selectedPlan === "ALL" ||
+        project.plan.toLowerCase() === selectedPlan.toLowerCase() ||
+        (selectedPlan === "Destello" && project.planEN === "Flash");
+
+      const matchesType =
+        selectedType === "ALL" ||
+        project.type.toLowerCase().includes(selectedType.toLowerCase());
+
+      return matchesSearch && matchesPlan && matchesType;
+    });
+  }, [searchQuery, selectedPlan, selectedType]);
+
+  // Adjust Cinema active index if filtered array changes
+  const cinemaProjects = filteredProjects.length > 0 ? filteredProjects : projects;
+  const currentCinemaProject = cinemaProjects[activeCinemaIndex % cinemaProjects.length] || cinemaProjects[0];
+
+  const handleNextCinema = () => {
+    setDirection(1);
+    setActiveCinemaIndex(prev => (prev + 1) % cinemaProjects.length);
+  };
+
+  const handlePrevCinema = () => {
+    setDirection(-1);
+    setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
+      {/* Decorative premium gradients in background */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[var(--color-primary-base)]/5 rounded-full blur-[140px] pointer-events-none z-0" />
+      <div className="absolute bottom-1/3 right-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[160px] pointer-events-none z-0" />
+
+      <main className="max-w-7xl mx-auto w-full px-4 md:px-10 py-12 md:py-20 relative z-10 flex-grow">
+        
         {/* Header */}
-        <section className="text-center space-y-6 mb-20">
-          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">
-            <T en="Concepts and Prototypes">Conceptos y Prototipos</T>
-          </span>
-          <h1 className="text-5xl md:text-8xl font-display font-black tracking-tighter">
-            <T en="Portfolio">Portafolio</T>
+        <section className="text-center space-y-6 mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[var(--color-primary-base)]/10 to-purple-500/10 border border-[var(--color-primary-base)]/25 rounded-full"
+          >
+            <Layers size={12} className="text-[var(--color-primary-base)]" />
+            <span className="text-[var(--color-primary-base)] text-[10px] sm:text-xs font-black uppercase tracking-[0.15em]">
+              <T en="Interactive Showcase">Galería Interactiva de Diseño y Desarrollo</T>
+            </span>
+          </motion.div>
+          
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+            <T
+              en={
+                <>
+                  Creative <br className="hidden md:block" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    Portfolio
+                  </span>
+                </>
+              }
+            >
+              Nuestro <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                Portafolio
+              </span>
+            </T>
           </h1>
+          
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            <T en="Explore a selection of concepts, interfaces, and functional prototypes created to demonstrate the scope of my development and visual design.">
+            <T en="Explore a selection of concepts, interfaces, and functional prototypes created to demonstrate the scope of our development and visual design.">
               Explora una selección de conceptos, interfaces y prototipos
-              funcionales creados para demostrar el alcance de mi desarrollo y
+              funcionales creados para demostrar el alcance de nuestro desarrollo y
               diseño visual.
             </T>
           </p>
@@ -39,119 +256,619 @@ export default function Portfolio() {
           </p>
         </section>
 
-        {/* Portfolio Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-[450px] md:auto-rows-[550px] pb-24">
-          {projects.map((project, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              onClick={() => navigate(`/portafolio/${project.slug}`)}
-              className={`rounded-[var(--radius-bento)] p-6 lg:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col group overflow-hidden relative bento-glow-hover transition-colors duration-500 cursor-pointer ${
-                i === projects.length - 1 ? "md:col-span-2" : ""
-              }`}
-            >
-              {/* Content Top */}
-              <div className="relative z-10 flex justify-between items-start">
-                <div className="space-y-1">
-                  <span
-                    className={`text-[10px] font-black uppercase tracking-[0.2em] ${
-                      project.plan === "Destello"
-                        ? "text-amber-500"
-                        : project.plan === "Constelación"
-                          ? "text-[var(--color-primary-base)]"
-                          : "text-purple-500"
+        {/* Filters/Search Control Deck & View Switcher */}
+        <div className="bg-[var(--color-surface-elevated)] p-4 rounded-3xl border border-[var(--color-border-subtle)] backdrop-blur-md shadow-lg space-y-4 mb-10">
+          
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+            {/* Search Input */}
+            <div className="relative w-full lg:max-w-xs">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] w-4 h-4" />
+              <input
+                type="text"
+                placeholder={language === "es" ? "Buscar por proyecto o tecnología..." : "Search project or tech..."}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)]/25 focus:border-[var(--color-primary-base)]"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            {/* View Mode Switcher (Bento vs Cinema) */}
+            <div className="flex bg-[var(--color-surface-base)] p-1 rounded-xl border border-[var(--color-border-subtle)] w-full sm:w-auto">
+              <button
+                onClick={() => setViewMode("bento")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all flex-1 justify-center ${
+                  viewMode === "bento"
+                    ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md"
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                <Grid size={14} />
+                <T en="Bento Grid">Mosaico Bento</T>
+              </button>
+              <button
+                onClick={() => setViewMode("cinema")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all flex-1 justify-center ${
+                  viewMode === "cinema"
+                    ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md"
+                    : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                <Film size={14} />
+                <T en="Cinema Mode">Sala Cinema</T>
+              </button>
+            </div>
+          </div>
+
+          {/* Tag filters block */}
+          <div className="flex flex-col gap-3 pt-2 border-t border-[var(--color-border-subtle)]/50">
+            {/* Plan filter */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)] tracking-wider mr-2">
+                <T en="Scale Plan:">Plan de Escala:</T>
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {plans.map((plan) => (
+                  <button
+                    key={plan}
+                    onClick={() => setSelectedPlan(plan)}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      selectedPlan === plan
+                        ? plan === "Nova"
+                          ? "bg-purple-500/15 text-purple-400 border border-purple-500/35"
+                          : plan === "Destello"
+                            ? "bg-amber-500/15 text-amber-500 border border-amber-500/35"
+                            : "bg-indigo-500/15 text-indigo-400 border border-indigo-500/35"
+                        : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
-                    <T en={`Plan ${project.planEN || project.plan}`}>
-                      Plan {project.plan}
-                    </T>
-                  </span>
-                  <p className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest">
-                    <T en={project.typeEN || project.type}>{project.type}</T>
-                  </p>
-                </div>
-                <div className="flex gap-2 items-start">
-                  {project.isConcept && (
-                    <span className="px-3 py-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-                      <T en="Demo">Demo</T>
-                    </span>
-                  )}
-                  {project.liveUrl && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(project.liveUrl, "_blank");
-                      }}
-                      className="p-3 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/30 transition-all"
-                      title={language === "es" ? "Ver sitio en vivo" : "View live site"}
-                    >
-                      <ExternalLink size={20} />
-                    </button>
-                  )}
-                  <div className="p-3 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] group-hover:border-[var(--color-primary-base)]/30 transition-all">
-                    <ArrowUpRight size={20} />
-                  </div>
-                </div>
+                    {plan === "ALL" ? (language === "es" ? "Todos los Planes" : "All Plans") : `Plan ${plan}`}
+                  </button>
+                ))}
               </div>
+            </div>
 
-              {/* Title & Badge */}
-              <div className="relative z-10 pt-4 flex flex-col gap-4">
-                <div className="flex gap-2 items-center flex-wrap">
-                  <span className="px-3 py-1 bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 rounded-full text-[10px] font-black uppercase tracking-widest">
-                    <T en={project.keyResultEN || project.keyResult}>
-                      {project.keyResult}
-                    </T>
-                  </span>
-                </div>
-                <h3 className="text-4xl md:text-5xl lg:text-6xl font-display font-black tracking-tighter text-[var(--color-text-primary)]">
-                  {project.title}
-                </h3>
-                <p className="text-[var(--color-text-secondary)] text-sm max-w-sm line-clamp-2">
-                  <T en={project.shortDescEN || project.shortDesc}>
-                    {project.shortDesc}
-                  </T>
-                </p>
+            {/* Type Filter */}
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)] tracking-wider mr-2">
+                <T en="Industry:">Industria:</T>
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {availableTypes.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setSelectedType(type)}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                      selectedType === type
+                        ? "bg-purple-500/15 text-purple-400 border border-purple-500/35"
+                        : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
+                    }`}
+                  >
+                    {type === "ALL" ? (language === "es" ? "Todas las Áreas" : "All Industries") : type}
+                  </button>
+                ))}
               </div>
-
-               {/* Mockup Presentation */}
-              <div className="relative z-10 w-full mt-8 rounded-t-xl overflow-hidden shadow-2xl transition-transform duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100">
-                {project.slug === "nexus-real-estate" ||
-                project.slug === "chroma-store" ||
-                project.slug === "vitality-clinic" ||
-                project.slug === "sabor-autentico" ? (
-                  <div className="h-[180px] w-full overflow-hidden relative flex justify-center items-start bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] pt-6 rounded-t-xl border border-b-0 border-[var(--color-border-subtle)]">
-                    <div className="scale-[0.52] sm:scale-[0.6] md:scale-[0.68] lg:scale-[0.75] origin-top translate-y-2 transition-transform duration-500 group-hover:scale-[0.55] sm:group-hover:scale-[0.63] md:group-hover:scale-[0.71] lg:group-hover:scale-[0.78]">
-                      <MockupFrame type="mobile" projectSlug={project.slug} />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-full h-full rounded-t-xl overflow-hidden">
-                    <MockupFrame type="browser" projectSlug={project.slug} />
-                  </div>
-                )}
-              </div>
-
-              {/* Decorative Overlay */}
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none`}
-              />
-            </motion.div>
-          ))}
+            </div>
+          </div>
         </div>
 
+        {/* Empty Search Result Warning */}
+        {filteredProjects.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20 px-6 rounded-3xl border border-dashed border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] max-w-lg mx-auto"
+          >
+            <Info size={32} className="text-indigo-500 mx-auto mb-4" />
+            <h3 className="text-xl font-bold mb-2">
+              <T en="No projects match filters">Sin resultados de búsqueda</T>
+            </h3>
+            <p className="text-[var(--color-text-secondary)] text-sm mb-6">
+              <T en="Try selecting other metrics, cleaning the search query, or resetting filters.">
+                Prueba buscando otro término de tecnología, o restablece los filtros haciendo clic abajo.
+              </T>
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedPlan("ALL");
+                setSelectedType("ALL");
+              }}
+              className="px-5 py-2 rounded-xl text-xs font-bold bg-[var(--color-primary-base)] text-white hover:scale-105 transition-all"
+            >
+              <T en="Reset Filters">Restaurar Filtros</T>
+            </button>
+          </motion.div>
+        )}
+
+        {/* 1. VIEW MODE: BENTO GRID */}
+        {viewMode === "bento" && filteredProjects.length > 0 && (
+          <motion.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-[550px] pb-24"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredProjects.map((project, i) => (
+                <motion.div
+                  key={project.slug}
+                  layout
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4 }}
+                  className={`rounded-[var(--radius-bento)] p-6 lg:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col group overflow-hidden relative bento-glow-hover transition-colors duration-500 ${
+                    i === filteredProjects.length - 1 && filteredProjects.length % 2 !== 0 ? "md:col-span-2" : ""
+                  }`}
+                >
+                  {/* Decorative faint background glow */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-br ${project.color} opacity-[0.02] group-hover:opacity-[0.08] transition-opacity duration-700 pointer-events-none z-0`}
+                  />
+
+                  {/* Header metadata */}
+                  <div className="relative z-10 flex justify-between items-start">
+                    <div className="space-y-1">
+                      <span
+                        className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                          project.plan === "Destello"
+                            ? "text-amber-500"
+                            : project.plan === "Constelación"
+                              ? "text-indigo-400"
+                              : "text-purple-400"
+                        }`}
+                      >
+                        <T en={`Plan ${project.planEN || project.plan}`}>
+                          Plan {project.plan}
+                        </T>
+                      </span>
+                      <p className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest leading-none pt-0.5">
+                        <T en={project.typeEN || project.type}>{project.type}</T>
+                      </p>
+                    </div>
+
+                    <div className="flex gap-2 items-start">
+                      {project.isConcept && (
+                        <span className="px-3 py-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full text-[9px] font-extrabold text-[var(--color-text-tertiary)] uppercase tracking-wider leading-none">
+                          <T en="Prototype">Demo Interactiva</T>
+                        </span>
+                      )}
+                      
+                      {/* Live site and arrow buttons */}
+                      {project.liveUrl && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(project.liveUrl, "_blank");
+                          }}
+                          className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-indigo-400 hover:border-indigo-400/30 transition-all cursor-pointer shadow-sm"
+                          title={language === "es" ? "Ver sitio en vivo" : "View live site"}
+                        >
+                          <ExternalLink size={16} />
+                        </button>
+                      )}
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProjectForQuickView(project);
+                        }}
+                        className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-purple-400 hover:border-purple-400/30 transition-all cursor-pointer shadow-sm"
+                        title={language === "es" ? "Lectura Completa Caso de Estudio" : "Read Case Study"}
+                      >
+                        <Info size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Title & Stats */}
+                  <div className="relative z-10 pt-4 flex flex-col gap-3">
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <span className="px-2.5 py-0.5 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center">
+                        <Star size={9} className="inline mr-1 text-indigo-400" />
+                        <T en={project.keyResultEN || project.keyResult}>{project.keyResult}</T>
+                      </span>
+                    </div>
+
+                    <h3 className="text-3xl md:text-4xl font-display font-black tracking-tighter text-[var(--color-text-primary)] group-hover:text-indigo-400 transition-colors duration-300">
+                      {project.title}
+                    </h3>
+
+                    <p className="text-[var(--color-text-secondary)] text-xs md:text-sm max-w-md line-clamp-2 leading-relaxed">
+                      <T en={project.shortDescEN || project.shortDesc}>
+                        {project.shortDesc}
+                      </T>
+                    </p>
+                  </div>
+
+                  {/* Technology Tags footer inside card */}
+                  <div className="relative z-10 flex flex-wrap gap-1.5 mt-3">
+                    {project.techStack.slice(0, 3).map((tech) => (
+                      <span
+                        key={tech}
+                        className="px-2 py-0.5 rounded bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] text-[10px] font-bold border border-[var(--color-border-subtle)]"
+                      >
+                        {tech}
+                      </span>
+                    ))}
+                    {project.techStack.length > 3 && (
+                      <span className="px-2 py-0.5 rounded bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] text-[10px] font-black">
+                        +{project.techStack.length - 3}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Mockup Frame presentation with custom responsive scale */}
+                  <div className="relative z-10 w-full mt-6 rounded-t-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]">
+                    <ProjectScreenshot project={project} />
+                  </div>
+
+                  {/* Click to open full details banner on hover */}
+                  <div
+                    onClick={() => navigate(`/portafolio/${project.slug}`)}
+                    className="absolute bottom-0 inset-x-0 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider py-3.5 text-center flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 cursor-pointer z-20"
+                  >
+                    <span><T en="Explore Technical Breakdown">Análisis del Caso de Estudio</T></span>
+                    <ArrowRight size={14} />
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        )}
+
+        {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
+        {viewMode === "cinema" && filteredProjects.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden bento-glow shadow-2xl pb-16"
+          >
+            {/* Background glowing ball matched to project accent */}
+            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-[130px] rounded-full pointer-events-none`} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+              
+              {/* Left Column: Details */}
+              <div className="lg:col-span-5 space-y-6 relative z-10 ordered-last lg:order-first">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={currentCinemaProject.slug + "-info"}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="space-y-6"
+                  >
+                    {/* Upper Badge Line */}
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest">
+                        <T en={`Plan ${currentCinemaProject.planEN || currentCinemaProject.plan}`}>
+                          Plan {currentCinemaProject.plan}
+                        </T>
+                      </span>
+                      <span className="text-[var(--color-text-tertiary)] text-[9px] font-black uppercase tracking-widest">
+                        <T en={currentCinemaProject.typeEN || currentCinemaProject.type}>
+                          {currentCinemaProject.type}
+                        </T>
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h2 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-[var(--color-text-primary)] leading-none">
+                      {currentCinemaProject.title}
+                    </h2>
+
+                    {/* Quick Pitch Description */}
+                    <p className="text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed">
+                      <T en={currentCinemaProject.shortDescEN || currentCinemaProject.shortDesc}>
+                        {currentCinemaProject.shortDesc}
+                      </T>
+                    </p>
+
+                    {/* Performance progress metrics in Cinema layout */}
+                    <div className="bg-[var(--color-surface-base)] rounded-2xl p-4 border border-[var(--color-border-subtle)] space-y-3">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] pb-2 border-b border-[var(--color-border-subtle)]">
+                        <T en="Key Results">Resultados Clave</T>
+                      </h4>
+                      
+                      {currentCinemaProject.results.map((res, idx) => (
+                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-[var(--color-border-subtle)]/40 last:border-0 last:pb-0">
+                          <span className="font-bold text-[var(--color-text-secondary)]">
+                            <T en={res.labelEN || res.label}>{res.label}</T>
+                          </span>
+                          <span className="text-indigo-400 font-black text-sm">
+                            <T en={res.valueEN || res.value}>{res.value}</T>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tech Stack List */}
+                    <div className="space-y-2">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                        <T en="Engine Technologies">Tecnologías Principales:</T>
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {currentCinemaProject.techStack.map((tech) => (
+                          <span
+                            key={tech}
+                            className="px-2 py-1 rounded bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[10px] font-bold text-[var(--color-text-secondary)]"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Actions Panel */}
+                    <div className="flex flex-wrap gap-3 pt-4">
+                      <button
+                        onClick={() => navigate(`/portafolio/${currentCinemaProject.slug}`)}
+                        className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <T en="See Case Study">Ver Caso de Estudio</T>
+                        <ArrowRight size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedProjectForQuickView(currentCinemaProject)}
+                        className="px-5 py-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                      >
+                        <T en="Quick Specs">Vista Rápida</T>
+                      </button>
+
+                      {currentCinemaProject.liveUrl && (
+                        <button
+                          onClick={() => window.open(currentCinemaProject.liveUrl, "_blank")}
+                          className="p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-indigo-400 cursor-pointer"
+                        >
+                          <ExternalLink size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {/* Right Column: Large Dynamic Interactive Mockup */}
+              <div className="lg:col-span-7 flex justify-center items-center relative z-10">
+                <div className="w-full max-w-[550px] relative">
+                  
+                  {/* Left & Right floating navigation keys for carousel */}
+                  <div className="absolute top-1/2 -translate-y-1/2 left-[-15px] z-20">
+                    <button
+                      onClick={handlePrevCinema}
+                      className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] cursor-pointer shadow-lg"
+                      aria-label="Previous project"
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                  </div>
+
+                  <div className="absolute top-1/2 -translate-y-1/2 right-[-15px] z-20">
+                    <button
+                      onClick={handleNextCinema}
+                      className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] cursor-pointer shadow-lg"
+                      aria-label="Next project"
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+                  </div>
+
+                  {/* Mockup Frame presentation with custom responsive scale */}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentCinemaProject.slug}
+                      initial={{ opacity: 0, x: direction * 60 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: direction * -60 }}
+                      transition={{ duration: 0.35, ease: "easeInOut" }}
+                      className="transform transition-transform duration-500 hover:scale-[1.01]"
+                    >
+                      <ProjectScreenshot project={currentCinemaProject} />
+                    </motion.div>
+                  </AnimatePresence>
+                  
+                  {/* Step dots slider controls */}
+                  <div className="flex gap-1.5 justify-center mt-6">
+                    {cinemaProjects.map((proj, idx) => (
+                      <button
+                        key={proj.slug}
+                        onClick={() => setActiveCinemaIndex(idx)}
+                        className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+                          idx === activeCinemaIndex ? "bg-indigo-500 w-6" : "bg-gray-700 hover:bg-gray-500"
+                        }`}
+                        title={proj.title}
+                      />
+                    ))}
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+
+        {/* Case Study Detail Quick view Modal */}
+        <AnimatePresence>
+          {selectedProjectForQuickView && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Blur backdrop overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setSelectedProjectForQuickView(null)}
+                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+              />
+
+              {/* Modal Container */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] rounded-3xl w-full max-w-4xl p-6 md:p-8 overflow-y-auto max-h-[85vh] relative z-10 shadow-2xl space-y-8"
+              >
+                {/* Close Button top right */}
+                <button
+                  onClick={() => setSelectedProjectForQuickView(null)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-white cursor-pointer transition-all"
+                  aria-label="Cerrar detalles"
+                >
+                  <X size={18} />
+                </button>
+
+                {/* Grid header inside Modal */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                  
+                  {/* Left Column: Metrics & Specs */}
+                  <div className="md:col-span-8 space-y-6">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <span className="px-3 py-1 text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+                          Plan {selectedProjectForQuickView.plan}
+                        </span>
+                        <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)]">
+                          <T en={selectedProjectForQuickView.typeEN || selectedProjectForQuickView.type}>
+                            {selectedProjectForQuickView.type}
+                          </T>
+                        </span>
+                      </div>
+                      <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight text-[var(--color-text-primary)] leading-tight">
+                        {selectedProjectForQuickView.title}
+                      </h2>
+                      <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
+                        <T en={selectedProjectForQuickView.contextEN || selectedProjectForQuickView.context}>
+                          {selectedProjectForQuickView.context}
+                        </T>
+                      </p>
+                    </div>
+
+                    {/* Challenge & Solution details */}
+                    <div className="space-y-4 pt-4 border-t border-[var(--color-border-subtle)]">
+                      <div className="p-4 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                        <h4 className="font-extrabold uppercase text-[9px] tracking-[0.2em] text-red-500 mb-1">
+                          <T en="Technical Challenge">Desafío Técnico</T>
+                        </h4>
+                        <p className="text-[var(--color-text-secondary)] text-xs leading-relaxed italic border-l-2 border-red-500/30 pl-3">
+                          "
+                          <T en={selectedProjectForQuickView.challengeEN || selectedProjectForQuickView.challenge}>
+                            {selectedProjectForQuickView.challenge}
+                          </T>
+                          "
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-[var(--color-surface-base)] border border-indigo-500/20">
+                        <h4 className="font-extrabold uppercase text-[9px] tracking-[0.2em] text-indigo-400 mb-1">
+                          <T en="Studio Development Solution">Solución Web Aplicada</T>
+                        </h4>
+                        <p className="text-[var(--color-text-primary)] text-xs leading-relaxed">
+                          <T en={selectedProjectForQuickView.solutionEN || selectedProjectForQuickView.solution}>
+                            {selectedProjectForQuickView.solution}
+                          </T>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Technologies & Metrics Box inside Modal */}
+                  <div className="md:col-span-4 space-y-6">
+                    
+                    {/* Key Metric Indicators box */}
+                    <div className="p-5 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-4">
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1.5">
+                        <Trophy size={12} className="text-amber-500" />
+                        <T en="Key Results">Resultados Clave</T>
+                      </h4>
+                      
+                      <div className="space-y-3 pt-2">
+                        {selectedProjectForQuickView.results.map((res, i) => (
+                          <div key={i} className="flex flex-col border-b border-[var(--color-border-subtle)]/70 pb-3 last:border-0 last:pb-0 gap-0.5">
+                            <span className="text-[10px] font-bold text-[var(--color-text-secondary)] uppercase">
+                              <T en={res.labelEN || res.label}>{res.label}</T>
+                            </span>
+                            <span className="text-base font-display font-black text-indigo-400">
+                              <T en={res.valueEN || res.value}>{res.value}</T>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Technologies list */}
+                    <div className="space-y-2">
+                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                        <T en="Stack & Frameworks">Herramientas & Frameworks</T>
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedProjectForQuickView.techStack.map((tech) => (
+                          <span
+                            key={tech}
+                            className="px-2.5 py-1 rounded bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[10px] font-bold text-[var(--color-text-secondary)]"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Quick navigation and Booking trigger */}
+                    <div className="space-y-2 pt-4">
+                      <button
+                        onClick={() => {
+                          setSelectedProjectForQuickView(null);
+                          navigate(`/portafolio/${selectedProjectForQuickView.slug}`);
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider text-center transition-all flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <T en="Read Full Case Study">Ver Caso Completo</T>
+                        <ArrowUpRight size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setSelectedProjectForQuickView(null);
+                          navigate("/cotizar");
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider text-center transition-all cursor-pointer"
+                      >
+                        <T en="Quote Similar Project">Cotizar Proyecto Similar</T>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         {/* CTA Footer Section */}
-        <section className="mt-32 text-center space-y-10">
-          <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter">
+        <section className="mt-28 text-center space-y-10">
+          <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter leading-none bg-gradient-to-r from-[var(--color-primary-base)] to-purple-400 bg-clip-text text-transparent">
             <T en="Is your project next?">¿Tu proyecto es el siguiente?</T>
           </h2>
+          <p className="text-[var(--color-text-secondary)] max-w-lg mx-auto text-sm sm:text-base">
+            <T en="Let's build a secure, hyper-optimized web platform with real-time sync, custom styles, and strict TypeScript logic. Get a budget in 3 minutes.">
+              Construyamos una plataforma web ultra-optimizada con sincronización en tiempo real, diseño minimalista moderno y lógica robusta tipada. Obtén tu presupuesto en 3 minutos.
+            </T>
+          </p>
           <button
             onClick={() => navigate("/cotizar")}
-            className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 cursor-pointer"
+            className="px-10 py-5 rounded-2xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 hover:bg-indigo-500 transition-all shadow-xl shadow-indigo-500/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 cursor-pointer inline-flex items-center gap-2"
           >
             <T en="Plan your project">Planifica tu proyecto</T>
+            <ArrowRight size={20} />
           </button>
         </section>
       </main>

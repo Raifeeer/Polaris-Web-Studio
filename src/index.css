@@ -192,6 +192,17 @@
   will-change: transform, opacity;
 }
 
+@keyframes ctaPing {
+  0% { transform: scale(1); opacity: 0.35; }
+  70% { transform: scale(1.1); opacity: 0; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+
+.animate-cta-ping {
+  animation: ctaPing 3s ease-out infinite;
+  will-change: transform, opacity;
+}
+
 /* === LIQUID GLASS SYSTEM === */
 
 .glass-panel {

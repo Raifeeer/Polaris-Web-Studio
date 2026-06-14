@@ -285,8 +285,22 @@ export default function Process() {
           <span className="inline-block text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-highlight)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
             <T en="Agile engineering">Ingeniería Web Sin Fricciones</T>
           </span>
-          <h1 className="text-5xl md:text-8xl font-display font-black tracking-tighter leading-tight text-transparent bg-clip-text bg-gradient-to-b from-[var(--color-text-primary)] via-[var(--color-text-primary)] to-[var(--color-text-secondary)]">
-            <T en="Our Methodology">Nuestra Metodología</T>
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+            <T
+              en={
+                <>
+                  Our <br className="hidden md:block" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    Methodology
+                  </span>
+                </>
+              }
+            >
+              Nuestra <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                Metodología
+              </span>
+            </T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             <T en="A systematic and transparent process designed to scale your brand with software reliability and world-class design standards.">

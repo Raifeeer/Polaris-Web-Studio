@@ -27,6 +27,8 @@ export interface Project {
   size: "small" | "wide" | "tall" | "large";
   icon: LucideIcon;
   liveUrl?: string;
+  desktopImg?: string;
+  mobileImg?: string;
 
   // Case Study Details
   challenge: string;
@@ -56,6 +58,8 @@ export const projects: Project[] = [
     type: "Turismo · Web Corporativa",
     typeEN: "Tourism · Corporate Web",
     liveUrl: "https://lumina-sky-demo.vercel.app/",
+    desktopImg: "/screenshots/lumina-sky-concept-desktop.png",
+    mobileImg: "/screenshots/lumina-sky-concept-mobile.png",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
     shortDescEN:
@@ -156,6 +160,8 @@ export const projects: Project[] = [
     ],
     techStack: ["React", "TypeScript", "Tailwind CSS"],
     liveUrl: "https://nexus-realty-demo.vercel.app/",
+    desktopImg: "/screenshots/nexus-real-estate-desktop.png",
+    mobileImg: "/screenshots/nexus-real-estate-mobile.png",
   },
   {
     slug: "chroma-store",
@@ -206,6 +212,8 @@ export const projects: Project[] = [
       },
     ],
     techStack: ["Next.js", "Zustand", "Stripe (UI)", "Tailwind"],
+    desktopImg: "/screenshots/chroma-store-desktop.png",
+    mobileImg: "/screenshots/chroma-store-mobile.png",
   },
   {
     slug: "vitality-clinic",
@@ -261,6 +269,8 @@ export const projects: Project[] = [
       },
     ],
     techStack: ["React", "TypeScript", "Tailwind CSS"],
+    desktopImg: "/screenshots/vitality-clinic-desktop.png",
+    mobileImg: "/screenshots/vitality-clinic-mobile.png",
   },
   {
     slug: "sabor-autentico",
@@ -316,5 +326,7 @@ export const projects: Project[] = [
       },
     ],
     techStack: ["React", "CSS Modules", "Tailwind CSS"],
+    desktopImg: "/screenshots/sabor-autentico-desktop.png",
+    mobileImg: "/screenshots/sabor-autentico-mobile.png",
   },
 ];

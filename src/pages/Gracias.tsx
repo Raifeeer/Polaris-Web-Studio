@@ -141,7 +141,7 @@ export default function Gracias() {
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {state.addons.map((add: string, i: number) => (
                       <span key={i} className="px-2 py-0.5 bg-[var(--color-surface-highlight)] text-xs rounded border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] font-medium">
-                        {add}
+                        {add.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                       </span>
                     ))}
                   </div>

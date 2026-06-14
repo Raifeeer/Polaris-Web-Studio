@@ -91,11 +91,13 @@ function PlanCard({
               {plan.name}
             </h3>
             {plan.badge && (
-              <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-400 text-[10px] font-black rounded-full px-2.5 py-0.5 inline-flex items-center gap-1.5 mb-2 md:mb-4 uppercase tracking-wider shadow-inner w-fit">
+              <div className="bg-[var(--color-surface-highlight)] border border-purple-500/20 text-[10px] rounded-full px-2.5 py-0.5 inline-flex items-center gap-1.5 mb-2 md:mb-4 uppercase tracking-wider shadow-inner w-fit">
                 {plan.badgeIcon && (
-                  <Sparkles size={12} className="text-purple-400" />
+                  <Sparkles size={12} className="text-indigo-500 animate-pulse" />
                 )}
-               {plan.badge}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold">
+                  {plan.badge}
+                </span>
               </div>
             )}
             <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mt-1">
@@ -861,7 +863,7 @@ export default function Services() {
           ),
           v2: (
             <div className="flex flex-col items-center">
-              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
+              <span className="text-[10px] text-[var(--color-primary-base)] font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
                 <T en="Constellation">Constelación</T>
               </span>
               <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(699 * 0.75) : 699} USD</span>
@@ -886,13 +888,25 @@ export default function Services() {
 
       <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
         {/* Header */}
-        <section className="text-center space-y-6 mb-20">
+        <section className="text-center space-y-4 mb-12">
           <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">
             <T en="Solutions that Convert">Soluciones que Convierten</T>
           </span>
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto">
-            <T en="Scale your business in the Dominican market with Custom Digital Engineering">
-              Impulsa tu negocio con ingeniería digital a medida y escalable
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+            <T
+              en={
+                <>
+                  Scale your business <br className="hidden md:block" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    with Custom Digital Engineering
+                  </span>
+                </>
+              }
+            >
+              Impulsa tu negocio con <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                ingeniería digital a medida
+              </span>
             </T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
@@ -923,8 +937,22 @@ export default function Services() {
               <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Plans">Nuestros Planes</T>
               </span>
-              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
-                <T en="Smart Investment">Inversión Inteligente</T>
+              <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+                <T
+                  en={
+                    <>
+                      Smart <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                        Investment
+                      </span>
+                    </>
+                  }
+                >
+                  Inversión <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    Inteligente
+                  </span>
+                </T>
               </h2>
             </div>
 
@@ -969,11 +997,14 @@ export default function Services() {
                   <table className="w-full text-left border-collapse min-w-[750px]">
                     <thead>
                       <tr className="md:hidden border-b border-[var(--color-border-subtle)]">
-                        <th className="sticky left-0 z-20 p-2 pl-6 bg-[var(--color-surface-base)] pointer-events-none select-none w-full">
-                          <div className="flex items-center justify-between pr-4 text-[var(--color-text-tertiary)]">
-                            <ArrowLeft size={18} strokeWidth={2.5} />
-                            <Pointer size={16} className="text-[var(--color-primary-base)] animate-pulse" />
-                            <ArrowRight size={18} strokeWidth={2.5} />
+                        <th className="sticky left-0 z-20 p-2 px-3 bg-[var(--color-surface-base)] pointer-events-none select-none min-w-[220px] w-[220px]">
+                          <div className="flex items-center justify-center gap-1.5 px-2 py-1 text-indigo-500 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
+                            <ArrowLeft size={13} strokeWidth={3} className="shrink-0" />
+                            <div className="flex items-center gap-1 text-[9px] uppercase tracking-widest font-black pr-0.5">
+                              <Pointer size={11} className="-rotate-45 shrink-0 text-indigo-500" />
+                              <T en="Swipe">Desliza</T>
+                            </div>
+                            <ArrowRight size={13} strokeWidth={3} className="shrink-0" />
                           </div>
                         </th>
                         <th className="bg-[var(--color-surface-base)]" />
@@ -981,7 +1012,7 @@ export default function Services() {
                         <th className="bg-[var(--color-surface-base)]" />
                       </tr>
                       <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-base)] z-10">
-                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] select-none">
+                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] select-none min-w-[220px] w-[220px]">
                           <T en="Characteristics">Características</T>
                         </th>
                       <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)]">
@@ -993,7 +1024,7 @@ export default function Services() {
                         </div>
                       </th>
                       <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5">
-                        <div className="font-display font-black text-indigo-600 dark:text-indigo-400 text-lg md:text-2xl tracking-tight">
+                        <div className="font-display font-black text-[var(--color-primary-base)] text-lg md:text-2xl tracking-tight">
                           <T en="Constellation">Constelación</T>
                         </div>
                         <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
@@ -1028,7 +1059,7 @@ export default function Services() {
                             key={rowIdx}
                             className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50" : ""}
                           >
-                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none">
+                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none min-w-[220px] w-[220px]">
                               {row.name}
                             </td>
                             <td className="p-4 text-center text-sm font-bold">
@@ -1102,14 +1133,14 @@ export default function Services() {
                   <>
                     Power your site with{" "}
                     <br className="hidden md:block lg:hidden" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-purple)] inline-block">
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 inline-block pb-1 pr-1">
                       Artificial Intelligence
                     </span>
                   </>
                 }
               >
                 Potencia tu web con <br className="hidden md:block lg:hidden" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-purple)] inline-block">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 inline-block pb-1 pr-1">
                   Inteligencia Artificial
                 </span>
               </T>

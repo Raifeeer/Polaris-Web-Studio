@@ -523,6 +523,67 @@ async function startServer() {
 
   // --- AI Assistance Endpoints ---
 
+  // IA: Analizar descripción de proyecto pública para el cotizador
+  app.post("/api/ai/analyze-project", async (req, res) => {
+    const { description } = req.body;
+    if (!description) return res.status(400).json({ error: "Falta la descripción del proyecto." });
+    try {
+      const text = await askAI(
+        `Eres el asistente de cotización de Polaris Web Studio, una agencia de desarrollo web en República Dominicana.
+         Tu única tarea es analizar la descripción de un negocio o proyecto web y devolver UN SOLO objeto JSON con las selecciones correctas para el cotizador.
+         NUNCA respondas con texto, explicaciones ni markdown. SOLO el objeto JSON.
+
+         PLANES DISPONIBLES (campo "type"):
+         - "landing": negocios que solo necesitan presencia online básica, una sola página, emprendedores, profesionales independientes, negocios pequeños sin necesidad de blog ni múltiples secciones. Precio: $299
+         - "corporate": empresas que necesitan múltiples páginas, blog, secciones de servicios, equipo, contacto. Restaurantes, clínicas, despachos, constructoras, hoteles, etc. Precio: $699
+         - "ecommerce": negocios que quieren vender productos online, aceptar pagos, gestionar inventario, tiendas de cualquier tipo. Precio: $1,299
+
+         ADD-ONS DISPONIBLES (campo "addons", array):
+         - "quick-bot": si menciona atención automática, respuestas rápidas, preguntas frecuentes
+         - "sales-agent": si menciona ventas automatizadas, agente de ventas, seguimiento de clientes
+         - "semantic-search": si menciona buscador, encontrar productos fácilmente (solo para e-commerce)
+         - "content-assistant": si menciona blog activo, contenido frecuente, redes sociales
+         - "maintenance": si menciona mantenimiento, soporte continuo, tranquilidad post-lanzamiento
+
+         CAMPO "confidence":
+         - "high": la descripción es clara y específica
+         - "medium": hay ambigüedad pero puedes inferir
+         - "low": descripción muy vaga, no hay suficiente info
+
+         CAMPO "reasoning" (máximo 15 palabras en español):
+         Explica brevemente por qué elegiste ese plan.
+
+         EJEMPLO DE INPUT:
+         "tengo una barbería y quiero que mis clientes puedan reservar citas online"
+
+         EJEMPLO DE OUTPUT:
+         {
+           "type": "corporate",
+           "addons": ["quick-bot"],
+           "confidence": "high",
+           "reasoning": "Barbería necesita web corporativa con sistema de citas y atención automática"
+         }
+
+         INPUT DEL USUARIO:
+         "${description.replace(/"/g, '\\"')}"`
+      );
+
+      // Limpiar cualquier markdown que Gemini o el fallback de Grok puedan agregar
+      const clean = text
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .replace(/^[^{]*/s, "")  // eliminar antes del primer {
+        .replace(/[^}]*$/s, "")  // eliminar después del último }
+        .trim();
+
+      const parsed = JSON.parse(clean);
+      res.json(parsed);
+    } catch (e: any) {
+      console.error("Error en /api/ai/analyze-project:", e);
+      res.status(500).json({ error: e.message });
+    }
+  });
+
   // IA: Generar alcance/descripción de proyecto
   app.post("/api/ai/project-description", authenticateToken, requireAdmin, async (req, res) => {
     const { projectName, companyName, briefDescription } = req.body;

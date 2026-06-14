@@ -28,6 +28,7 @@ import ContactSection from "../components/ContactSection";
 import Logo from "../components/Logo";
 import MockupFrame from "../components/MockupFrame";
 import { T, useLanguage } from "../context/LanguageContext";
+import RippleButton from "../components/RippleButton";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
 
@@ -362,16 +363,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
-      <style>{`
-        @keyframes ctaPulse {
-          0%, 100% {
-            box-shadow: 0 0 0px 0px rgba(99, 102, 241, 0);
-          }
-          50% {
-            box-shadow: 0 0 20px 6px rgba(99, 102, 241, 0.5);
-          }
-        }
-      `}</style>
       <Navbar />
 
       {/* Hero Section */}
@@ -405,7 +396,7 @@ export default function LandingPage() {
 
             <div className="max-w-3xl space-y-4 md:space-y-6 relative z-10 pt-4 md:pt-0">
               <span className="text-[var(--color-primary-base)] text-[10px] md:text-xs font-black uppercase tracking-[0.2em] font-body">
-                Polaris Web Studio | Global
+                Polaris Web Studio | República Dominicana
               </span>
               <h1 className="text-[2.5rem] sm:text-5xl md:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter">
                 <T en="We digitize the future of your business today">
@@ -413,18 +404,21 @@ export default function LandingPage() {
                 </T>
               </h1>
               <p className="text-[var(--color-text-secondary)] text-sm sm:text-base md:text-xl max-w-xl leading-relaxed">
-                <T en="We develop high-impact web platforms designed specifically to attract clients and close sales. Digital innovation for the global market.">
+                <T en="We develop high-impact web platforms designed specifically to attract clients and close sales. High-performance web development, built in the Caribbean.">
                   Desarrollamos plataformas web de alto impacto diseñadas
                   específicamente para atraer clientes y cerrar ventas.
-                  Innovación digital para el mercado global.
+                  Desarrollo web de alto rendimiento, desde República Dominicana.
                 </T>
               </p>
               <div className="pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
                   <div className="relative group shrink-0">
-                    {/* High-Performance, GPU-Composited glowing pulse ring */}
-                    <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/50 pointer-events-none animate-cta-glow-pulse" style={{ filter: "blur(6px)" }} />
-                    <button
+                    {/* Static subtle glow */}
+                    <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/20 pointer-events-none" style={{ filter: "blur(8px)" }} />
+
+                    {/* Periodic ping ring */}
+                    <div className="absolute inset-0 rounded-xl border border-[var(--color-primary-base)]/35 pointer-events-none animate-cta-ping" />
+                    <RippleButton
                       onClick={() => navigate("/cotizar")}
                       className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50 w-full justify-center"
                     >
@@ -442,7 +436,7 @@ export default function LandingPage() {
                         size={20}
                         className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
                       />
-                    </button>
+                    </RippleButton>
                   </div>
                   <div className="flex flex-col text-left space-y-0.5">
                     <span className="text-xs font-black text-[var(--color-primary-base)] tracking-wider uppercase font-mono">
@@ -721,9 +715,21 @@ export default function LandingPage() {
               <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Clients">Nuestros Clientes</T>
               </span>
-              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
-                <T en="Custom solutions for every stage">
-                  Soluciones a medida para cada etapa
+              <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+                <T
+                  en={
+                    <>
+                      Custom solutions <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                        for every stage
+                      </span>
+                    </>
+                  }
+                >
+                  Soluciones a medida <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    para cada etapa
+                  </span>
                 </T>
               </h2>
             </div>
@@ -991,8 +997,22 @@ export default function LandingPage() {
               <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Process">Nuestro Proceso</T>
               </span>
-              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tighter">
-                <T en="How it works">¿Cómo funciona?</T>
+              <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+                <T
+                  en={
+                    <>
+                      How it <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                        works
+                      </span>
+                    </>
+                  }
+                >
+                  ¿Cómo <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    funciona?
+                  </span>
+                </T>
               </h2>
               <p className="text-[var(--color-text-secondary)] text-sm max-w-md mx-auto leading-relaxed">
                 <T en="Three simple steps to transform your vision into a high-performance digital reality.">
@@ -1237,9 +1257,21 @@ export default function LandingPage() {
               <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="What We Build">Lo que construimos</T>
               </span>
-              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
-                <T en="Real projects, proven results">
-                  Proyectos reales, resultados demostrados
+              <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+                <T
+                  en={
+                    <>
+                      Real projects, <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                        proven results
+                      </span>
+                    </>
+                  }
+                >
+                  Proyectos reales, <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    resultados demostrados
+                  </span>
                 </T>
               </h2>
             </div>
@@ -1782,10 +1814,21 @@ export default function LandingPage() {
           <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
             <T en="Ready to Start?">¿Listo para comenzar?</T>
           </span>
-          <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight max-w-2xl mx-auto">
-            <T en="Let's build a digital experience that drives results.">
-              Construyamos una experiencia digital que multiplique tus
-              resultados.
+          <h2 className="text-5xl md:text-7xl font-display font-black tracking-tight max-w-2xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+            <T
+              en={
+                <>
+                  Let's build a digital experience <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    that drives results.
+                  </span>
+                </>
+              }
+            >
+              Construyamos una experiencia digital <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                que multiplique tus resultados.
+              </span>
             </T>
           </h2>
           <p className="text-[var(--color-text-secondary)] text-sm md:text-lg max-w-lg mx-auto leading-relaxed">
@@ -1796,9 +1839,12 @@ export default function LandingPage() {
           </p>
           <div className="pt-4">
             <div className="relative group shrink-0 inline-flex">
-              {/* High-Performance, GPU-Composited glowing pulse ring */}
-              <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/50 pointer-events-none animate-cta-glow-pulse" style={{ filter: "blur(6px)" }} />
-              <button
+              {/* Static subtle glow */}
+              <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/20 pointer-events-none" style={{ filter: "blur(8px)" }} />
+
+              {/* Periodic ping ring */}
+              <div className="absolute inset-0 rounded-xl border border-[var(--color-primary-base)]/35 pointer-events-none animate-cta-ping" />
+              <RippleButton
                 onClick={() => navigate("/cotizar")}
                 className="group relative overflow-hidden inline-flex items-center gap-2 px-6 py-3 sm:px-8 sm:py-3 md:px-10 md:py-4 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm sm:text-base md:text-lg hover:scale-105 transition-all shadow-lg focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/50"
               >
@@ -1816,7 +1862,7 @@ export default function LandingPage() {
                   size={20}
                   className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
                 />
-              </button>
+              </RippleButton>
             </div>
           </div>
         </div>
