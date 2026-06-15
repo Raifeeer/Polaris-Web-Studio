@@ -30,6 +30,8 @@ export interface DbProject {
   status: "active" | "completed" | "on_hold";
   phases: DbProjectPhase[];
   deletedAt?: string;
+  vercelProjectId?: string;  // nombre del proyecto en Vercel ej: "tano-excursions"
+  vercelUrl?: string;        // URL de producción ej: "https://tano-excursions.vercel.app"
 }
 
 export interface DbTask {
@@ -66,12 +68,24 @@ export interface DbMeeting {
   status: "upcoming" | "completed" | "canceled";
 }
 
+export interface DbDeploy {
+  id: string;
+  projectId: string;
+  vercelDeploymentId: string;
+  url: string;
+  commitMessage: string;
+  commitMessageEs?: string; // traducido por Gemini
+  state: "ready" | "error" | "building";
+  createdAt: string;
+}
+
 export interface DatabaseSchema {
   users: DbUser[];
   projects: DbProject[];
   tasks: DbTask[];
   invoices: DbInvoice[];
   meetings: DbMeeting[];
+  deploys: DbDeploy[];
   projectDisplayCounter: number;
 }
 
@@ -168,6 +182,7 @@ const getInitialSeededData = (): DatabaseSchema => {
         status: "upcoming",
       },
     ],
+    deploys: [],
   };
 };
 
@@ -205,6 +220,7 @@ class PortalDatabase {
         if (!Array.isArray(c.tasks)) c.tasks = [];
         if (!Array.isArray(c.invoices)) c.invoices = [];
         if (!Array.isArray(c.meetings)) c.meetings = [];
+        if (!Array.isArray(c.deploys)) c.deploys = [];
       } else {
         this.cache = getInitialSeededData();
         this.save();
@@ -442,6 +458,25 @@ class PortalDatabase {
   deleteInvoice(invoiceId: string) {
     this.ensureInitialized();
     this.cache!.invoices = this.cache!.invoices.filter((i) => i.id !== invoiceId);
+    this.save();
+  }
+
+  getDeploys(projectId?: string): DbDeploy[] {
+    this.ensureInitialized();
+    const all = this.cache!.deploys || [];
+    return projectId ? all.filter(d => d.projectId === projectId) : all;
+  }
+
+  addDeploy(deploy: DbDeploy) {
+    this.ensureInitialized();
+    if (!this.cache!.deploys) this.cache!.deploys = [];
+    this.cache!.deploys.unshift(deploy); // más reciente primero
+    // Mantener solo los últimos 20 deploys por proyecto
+    const projectDeploys = this.cache!.deploys.filter(d => d.projectId === deploy.projectId);
+    if (projectDeploys.length > 20) {
+      const toRemove = projectDeploys.slice(20).map(d => d.id);
+      this.cache!.deploys = this.cache!.deploys.filter(d => !toRemove.includes(d.id));
+    }
     this.save();
   }
 

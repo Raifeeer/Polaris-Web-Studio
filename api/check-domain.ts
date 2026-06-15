@@ -19,14 +19,18 @@ async function checkDomain(domain: string): Promise<boolean> {
   const ext = domain.split('.').pop()?.toLowerCase() || 'com';
   const baseUrl = RDAP_SERVERS[ext] || DEFAULT_RDAP;
 
-  const response = await fetch(`${baseUrl}${encodeURIComponent(domain)}`, {
-    headers: { Accept: 'application/rdap+json' },
-    signal: AbortSignal.timeout(8000),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8500);
 
-  // 404 = no registrado = disponible
-  // 200 = registrado = no disponible
-  return response.status === 404;
+  try {
+    const response = await fetch(`${baseUrl}${encodeURIComponent(domain)}`, {
+      headers: { Accept: 'application/rdap+json' },
+      signal: controller.signal,
+    });
+    return response.status === 404;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

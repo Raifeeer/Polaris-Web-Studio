@@ -118,14 +118,18 @@ async function checkDomain(domain: string): Promise<boolean> {
   const ext = domain.split('.').pop()?.toLowerCase() || 'com';
   const baseUrl = RDAP_SERVERS[ext] || DEFAULT_RDAP;
 
-  const response = await fetch(`${baseUrl}${encodeURIComponent(domain)}`, {
-    headers: { Accept: 'application/rdap+json' },
-    signal: AbortSignal.timeout(8000),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-  // 404 = no registrado = disponible
-  // 200 = registrado = no disponible
-  return response.status === 404;
+  try {
+    const response = await fetch(`${baseUrl}${encodeURIComponent(domain)}`, {
+      headers: { Accept: 'application/rdap+json' },
+      signal: controller.signal,
+    });
+    return response.status === 404;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 async function startServer() {
@@ -684,6 +688,89 @@ async function startServer() {
     } catch (e: any) {
       res.status(500).json({ error: e.message });
     }
+  });
+
+  // Webhook de GitHub — no requiere autenticación JWT, usa secret propio
+  app.post("/api/webhooks/github", async (req, res) => {
+    const secret = process.env.GITHUB_WEBHOOK_SECRET;
+
+    // Verificar que sea un push event
+    const event = req.headers["x-github-event"];
+    if (event !== "push") {
+      return res.status(200).json({ ok: true, skipped: true });
+    }
+
+    // Verificar secret si está configurado
+    if (secret) {
+      const signature = req.headers["x-hub-signature-256"] as string;
+      if (!signature) return res.status(401).json({ error: "No signature" });
+      const crypto = await import("crypto");
+      const expected = "sha256=" + crypto.createHmac("sha256", secret).update(JSON.stringify(req.body)).digest("hex");
+      if (signature !== expected) return res.status(401).json({ error: "Invalid signature" });
+    }
+
+    const repoName = req.body?.repository?.name; // ej: "tano-excursions"
+    const commitMessage = req.body?.head_commit?.message || "Actualización del sitio";
+    const pusher = req.body?.pusher?.name || "Polaris";
+    const branch = req.body?.ref?.replace("refs/heads/", "") || "main";
+
+    // Solo procesar push a main/master
+    if (branch !== "main" && branch !== "master") {
+      return res.status(200).json({ ok: true, skipped: true });
+    }
+
+    if (!repoName) {
+      return res.status(200).json({ ok: true, noRepo: true });
+    }
+
+    // Buscar proyecto en DB por vercelProjectId (mismo nombre que el repo)
+    const allProjects = dbInstance.getProjects();
+    const project = allProjects.find((p: any) =>
+      p.vercelProjectId === repoName ||
+      p.vercelUrl?.includes(repoName)
+    );
+
+    if (!project) {
+      console.log(`[GitHub Webhook] No project found for repo: ${repoName}`);
+      return res.status(200).json({ ok: true, projectNotFound: true });
+    }
+
+    // Traducir commit message con Gemini
+    let commitMessageEs = commitMessage;
+    try {
+      const translated = await askAI(
+        `Traduce este mensaje técnico de desarrollo web al español de forma clara y amigable para un cliente no técnico (máximo 1 oración, sin jerga técnica, sin mencionar nombres de archivos ni código): "${commitMessage}"`
+      );
+      if (translated) commitMessageEs = translated;
+    } catch (_) {}
+
+    // Guardar el deploy
+    dbInstance.addDeploy({
+      id: `dep-${Date.now()}`,
+      projectId: project.id,
+      vercelDeploymentId: req.body?.after || `gh-${Date.now()}`,
+      url: project.vercelUrl || `https://${repoName}.vercel.app`,
+      commitMessage,
+      commitMessageEs,
+      state: "ready",
+      createdAt: new Date().toISOString(),
+    });
+
+    console.log(`[GitHub Webhook] Push registrado para proyecto ${project.name}`);
+    res.status(200).json({ ok: true });
+  });
+
+  app.get("/api/portal/deploys/:projectId", authenticateToken, async (req: any, res) => {
+    const { projectId } = req.params;
+    const deploys = dbInstance.getDeploys(projectId);
+    res.json(deploys);
+  });
+
+  app.put("/api/portal/projects/:id/vercel", authenticateToken, requireAdmin, (req: any, res) => {
+    const { id } = req.params;
+    const { vercelProjectId, vercelUrl } = req.body;
+    dbInstance.updateProject(id, { vercelProjectId, vercelUrl });
+    res.json({ success: true });
   });
 
   // Vite integration middleware config

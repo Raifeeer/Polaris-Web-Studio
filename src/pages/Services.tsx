@@ -367,8 +367,8 @@ export default function Services() {
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
       desc: (
-        <T en="Strategic one-page landing optimized to convert visits into actual customers.">
-          Página de aterrizaje estratégica optimizada para convertir visitas en clientes.
+        <T en="A focused, effective landing page — up to 5 sections, designed to convert from the first scroll.">
+          Una landing page enfocada y efectiva — hasta 5 secciones, diseñada para convertir desde el primer scroll.
         </T>
       ),
       originalPrice: 299,
@@ -399,13 +399,6 @@ export default function Services() {
           ],
         },
         {
-          title: <T en="Support">SOPORTE</T>,
-          icon: Headphones,
-          items: [
-            <T en="30 days of post-launch support">30 días de soporte post-lanzamiento</T>,
-          ],
-        },
-        {
           title: <T en="SEO">SEO</T>,
           icon: Search,
           items: [
@@ -413,6 +406,13 @@ export default function Services() {
             <Link to="/blog/seo-on-page-guia-completa" state={{ fromTab: "flash", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
               <T en="SEO On-Page">SEO On-Page</T>
             </Link>,
+          ],
+        },
+        {
+          title: <T en="Support">SOPORTE</T>,
+          icon: Headphones,
+          items: [
+            <T en="30-day post-launch warranty">30 días de garantía post-lanzamiento</T>,
           ],
         },
       ],
@@ -428,8 +428,8 @@ export default function Services() {
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
       desc: (
-        <T en="Complete corporate website of up to 5 internal pages with custom integrated blog.">
-          Sitio corporativo de hasta 5 secciones internas con blog autogestionable integrado.
+        <T en="Your complete digital presence — a professional corporate website of up to 5 pages, built to grow.">
+          Tu presencia digital completa — un sitio corporativo profesional de hasta 5 páginas, construido para crecer.
         </T>
       ),
       originalPrice: 699,
@@ -479,7 +479,7 @@ export default function Services() {
           title: <T en="Support">SOPORTE</T>,
           icon: Headphones,
           items: [
-            <T en="60 days of post-launch support">60 días de soporte post-lanzamiento</T>,
+            <T en="60-day post-launch warranty">60 días de garantía post-lanzamiento</T>,
           ],
         },
       ],
@@ -506,8 +506,8 @@ export default function Services() {
       name: <T en="Nova Package">Paquete Nova</T>,
       titleColor: "text-violet-500",
       desc: (
-        <T en="High-performance online store with automated checkout and support for AI integration.">
-          Tienda online de alto rendimiento con pasarelas de pago y soporte para integración de IA.
+        <T en="Your high-performance online store — built to sell, scale and integrate AI.">
+          Tu tienda online de alto rendimiento — construida para vender, escalar e integrar IA.
         </T>
       ),
       originalPrice: 1299,
@@ -560,7 +560,7 @@ export default function Services() {
           title: <T en="Support">SOPORTE</T>,
           icon: Headphones,
           items: [
-            <T en="90 days of priority support">90 días de soporte prioritario</T>,
+            <T en="90-day priority warranty">90 días de garantía prioritaria</T>,
           ],
         },
       ],
@@ -997,10 +997,10 @@ export default function Services() {
                   <table className="w-full text-left border-collapse min-w-[750px]">
                     <thead>
                       <tr className="md:hidden border-b border-[var(--color-border-subtle)]">
-                        <th className="sticky left-0 z-20 p-2 px-3 bg-[var(--color-surface-base)] pointer-events-none select-none min-w-[220px] w-[220px]">
-                          <div className="flex items-center justify-center gap-1.5 px-2 py-1 text-indigo-500 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
+                        <th className="sticky left-0 z-20 p-0 bg-[var(--color-surface-base)] pointer-events-none select-none min-w-[260px] w-[260px]">
+                          <div className="flex items-center justify-between w-full px-4 py-2 text-indigo-500 bg-indigo-500/5 border-b border-indigo-500/10">
                             <ArrowLeft size={13} strokeWidth={3} className="shrink-0" />
-                            <div className="flex items-center gap-1 text-[9px] uppercase tracking-widest font-black pr-0.5">
+                            <div className="flex items-center gap-1 text-[9px] uppercase tracking-widest font-black">
                               <Pointer size={11} className="-rotate-45 shrink-0 text-indigo-500" />
                               <T en="Swipe">Desliza</T>
                             </div>
@@ -1012,7 +1012,7 @@ export default function Services() {
                         <th className="bg-[var(--color-surface-base)]" />
                       </tr>
                       <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-base)] z-10">
-                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] select-none min-w-[220px] w-[220px]">
+                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] select-none min-w-[260px] w-[260px]">
                           <T en="Characteristics">Características</T>
                         </th>
                       <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)]">
@@ -1059,7 +1059,7 @@ export default function Services() {
                             key={rowIdx}
                             className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50" : ""}
                           >
-                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none min-w-[220px] w-[220px]">
+                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none min-w-[260px] w-[260px]">
                               {row.name}
                             </td>
                             <td className="p-4 text-center text-sm font-bold">

@@ -182,29 +182,28 @@ export default function Blog() {
 
       {/* Hero Header */}
       <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10 flex-grow">
-        <section className="text-center space-y-6 mb-16">
-          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-            <BookMarked size={14} className="text-indigo-500 animate-pulse" />
+        <section className="text-center space-y-4 mb-16 relative select-none">
+          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] block">
             <T en="EDUCATIONAL HUB & ARTICLE LIBRARY">BIBLIOTECA DE CONOCIMIENTO DIGITAL</T>
           </span>
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tight leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
             <T
               en={
                 <>
                   Polaris <br className="hidden md:block" />
-                  <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] pr-4 pb-1 select-none">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
                     Insights
                   </span>
                 </>
               }
             >
               Polaris <br className="hidden md:block" />
-              <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] pr-4 pb-1 select-none">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
                 Insights
               </span>
             </T>
           </h1>
-          <p className="text-[var(--color-text-secondary)] text-base md:text-xl max-w-3xl mx-auto leading-relaxed">
+          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
             <T en="Articles, concepts, and technical demystifications. Learn about speed optimizations, semantic structures, clean rendering, and modern web growth.">
               Artículos completos, aclaraciones conceptuales y desmitificación técnica. Aprende de rendimiento, estructuras semánticas, indexación en buscadores y captación digital libre de basura.
             </T>

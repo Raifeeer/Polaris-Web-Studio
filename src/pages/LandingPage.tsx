@@ -373,9 +373,9 @@ export default function LandingPage() {
             id="inicio"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 glass-panel flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px]"
+            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 glass-panel flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px] bg-gradient-to-br from-indigo-50/40 via-transparent to-violet-50/30 dark:from-transparent dark:to-transparent"
           >
-            <div className="absolute top-1/2 -translate-y-1/2 right-[-150px] sm:right-[-250px] md:right-[-200px] opacity-10 group-hover:opacity-20 group-hover:-translate-x-4 transition-all duration-500 pointer-events-none">
+            <div className="absolute top-1/2 -translate-y-1/2 right-[-150px] sm:right-[-250px] md:right-[-200px] opacity-[0.07] dark:opacity-[0.15] group-hover:opacity-[0.18] dark:group-hover:opacity-[0.28] group-hover:-translate-x-4 transition-all duration-500 pointer-events-none">
               <Logo
                 size={500}
                 showText={false}
@@ -395,22 +395,40 @@ export default function LandingPage() {
             </div>
 
             <div className="max-w-3xl space-y-4 md:space-y-6 relative z-10 pt-4 md:pt-0">
-              <span className="text-[var(--color-primary-base)] text-[10px] md:text-xs font-black uppercase tracking-[0.2em] font-body">
+              <motion.span
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="text-[var(--color-primary-base)] text-[10px] md:text-xs font-black uppercase tracking-[0.2em] font-body block"
+              >
                 Polaris Web Studio | República Dominicana
-              </span>
-              <h1 className="text-[2.5rem] sm:text-5xl md:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter">
+              </motion.span>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.2 }}
+                className="text-[2.5rem] sm:text-5xl md:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter"
+              >
                 <T en="We digitize the future of your business today">
                   Digitalizamos el futuro de tu negocio hoy
                 </T>
-              </h1>
-              <p className="text-[var(--color-text-secondary)] text-sm sm:text-base md:text-xl max-w-xl leading-relaxed">
-                <T en="We develop high-impact web platforms designed specifically to attract clients and close sales. High-performance web development, built in the Caribbean.">
-                  Desarrollamos plataformas web de alto impacto diseñadas
-                  específicamente para atraer clientes y cerrar ventas.
-                  Desarrollo web de alto rendimiento, desde República Dominicana.
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.32 }}
+                className="text-[var(--color-text-secondary)] text-sm sm:text-base md:text-xl max-w-xl leading-relaxed"
+              >
+                <T en="We build web platforms designed to attract clients, close sales and scale. From the Caribbean, with cutting-edge technology.">
+                  Desarrollamos plataformas web diseñadas para atraer clientes, cerrar ventas y escalar. Desde República Dominicana, con tecnología de punta.
                 </T>
-              </p>
-              <div className="pt-2">
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.44 }}
+                className="pt-2"
+              >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
                   <div className="relative group shrink-0">
                     {/* Static subtle glow */}
@@ -443,13 +461,13 @@ export default function LandingPage() {
                       <T en="From $299 USD">Proyectos desde $299 USD</T>
                     </span>
                     <span className="text-[10px] sm:text-xs text-[var(--color-text-secondary)] font-medium">
-                      <T en="Agile delivery · Fully customized coding">
-                        Entrega ágil · Código 100% original
+                      <T en="Agile delivery · 100% original code · No templates">
+                        Entrega ágil · Código 100% original · Sin plantillas
                       </T>
                     </span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </motion.div>
 

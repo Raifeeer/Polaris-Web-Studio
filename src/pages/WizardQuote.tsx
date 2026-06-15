@@ -9,14 +9,13 @@ import {
   Calendar,
   Clock,
   Loader2,
-  Sparkles,
   Globe,
   Cloud,
   Info,
-  MessageCircle,
-  Bot,
-  Search,
-  PenLine,
+  RotateCcw,
+  Sparkles,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -73,9 +72,112 @@ function AnimatedNumber({ value }: { value: number }) {
   );
 }
 
+const sectors = [
+  {
+    id: "food",
+    title: <T en="Food & Beverages">Alimentación & Bebidas</T>,
+    desc: <T en="Restaurants, cafes, bakeries, catering...">Restaurantes, cafeterías, panaderías, catering...</T>,
+    businesses: {
+      en: ["Restaurant", "Ice Cream Shop", "Cafeteria", "Bakery", "Bar/Lounge", "Catering", "Food Truck", "Pastry Shop", "Juices & Smoothies", "Other"],
+      es: ["Restaurante", "Heladería", "Cafetería", "Panadería", "Bar/Lounge", "Catering", "Food Truck", "Repostería", "Jugos & Smoothies", "Otro"]
+    }
+  },
+  {
+    id: "health",
+    title: <T en="Health, Beauty & Wellness">Salud, Belleza & Bienestar</T>,
+    desc: <T en="Clinics, gyms, spas, aesthetics, specialized consultations...">Clínicas, gimnasios, spas, estética, consultas...</T>,
+    businesses: {
+      en: ["Clinic", "Pharmacy", "Gym", "Spa/Aesthetics", "Psychology", "Nutrition", "Dentistry", "Veterinary", "Optics", "Yoga Center", "Beauty Salon", "Barber Shop", "Nails & Manicure", "Makeup", "Other"],
+      es: ["Clínica", "Farmacia", "Gimnasio", "Spa/Estética", "Psicología", "Nutrición", "Odontología", "Veterinaria", "Óptica", "Centro de Yoga", "Salón de belleza", "Barbería", "Uñas & Manicure", "Maquillaje", "Otro"]
+    }
+  },
+  {
+    id: "retail",
+    title: <T en="Fashion & Retail">Moda & Retail</T>,
+    desc: <T en="Clothing stores, footwear, accessories, jewelry...">Tiendas de ropa, calzado, accesorios, joyería...</T>,
+    businesses: {
+      en: ["Clothing Store", "Footwear", "Accessories", "Jewelry", "Cosmetics", "Perfumery", "Children's Clothing", "Uniforms", "Other"],
+      es: ["Tienda de ropa", "Calzado", "Accesorios", "Joyería", "Cosmética", "Perfumería", "Ropa infantil", "Uniformes", "Otro"]
+    }
+  },
+  {
+    id: "services",
+    title: <T en="Professional Services">Servicios Profesionales</T>,
+    desc: <T en="Lawyers, accountants, consultants, coaches...">Abogados, contadores, consultores, coaches...</T>,
+    businesses: {
+      en: ["Lawyer", "Accountant", "Consultant", "Architect", "Coach", "Marketing Agency", "Photography", "Graphic Design", "Translation", "Private Security", "Other"],
+      es: ["Abogado", "Contador", "Consultor", "Arquitecto", "Coach", "Agencia de marketing", "Fotografía", "Diseño gráfico", "Traducción", "Seguridad privada", "Otro"]
+    }
+  },
+  {
+    id: "realestate",
+    title: <T en="Real Estate">Inmobiliario</T>,
+    desc: <T en="Real estate brokers, construction, vacation rentals...">Agentes inmobiliarios, constructoras, alquiler vacacional...</T>,
+    businesses: {
+      en: ["Broker/Agent", "Construction Company", "Vacation Rental", "Property Management", "Appraisal", "Other"],
+      es: ["Broker/Agente", "Constructora", "Alquiler vacacional", "Administración de propiedades", "Tasación", "Otro"]
+    }
+  },
+  {
+    id: "education",
+    title: <T en="Education & Training">Educación & Capacitación</T>,
+    desc: <T en="Language academies, tutors, schools, online courses...">Academias de idiomas, tutores, escuelas, cursos online...</T>,
+    businesses: {
+      en: ["Language Academy", "Tutor", "School", "Online Course", "Daycare", "Training Center", "Music & Art", "Other"],
+      es: ["Academia de idiomas", "Tutor", "Escuela", "Curso online", "Guardería", "Centro de capacitación", "Música & Arte", "Otro"]
+    }
+  },
+  {
+    id: "tourism",
+    title: <T en="Tourism, Events & Hospitality">Turismo, Eventos & Hospitalidad</T>,
+    desc: <T en="Hotels, hostels, operators, event photographer, travel agencies...">Hoteles, hostales, agencias de viaje, fotografía...</T>,
+    businesses: {
+      en: ["Hotel", "Hostel", "Tour Operator", "Car Rental", "Excursions", "Travel Agency", "DJ", "Event Photography", "Decoration", "Children's Entertainment", "Party Hall", "Audiovisual Production", "Other"],
+      es: ["Hotel", "Hostal", "Tour operador", "Renta de vehículos", "Excursiones", "Agencia de viajes", "DJ", "Fotografía de eventos", "Decoración", "Animación infantil", "Salón de fiestas", "Producción audiovisual", "Otro"]
+    }
+  },
+  {
+    id: "tech",
+    title: <T en="Technology & Agencies">Tecnología & Agencias</T>,
+    desc: <T en="Startups, SaaS platforms, mobile applications...">Startups, plataformas SaaS, aplicaciones móviles...</T>,
+    businesses: {
+      en: ["Startup", "SaaS", "Mobile App", "Digital Agency", "Technical Support", "Equipment Sales", "Other"],
+      es: ["Startup", "SaaS", "App móvil", "Agencia digital", "Soporte técnico", "Venta de equipos", "Otro"]
+    }
+  },
+  {
+    id: "other",
+    title: <T en="Other">Otro</T>,
+    desc: <T en="Any other business model or custom interactive platform project.">Cualquier otro modelo de negocio o proyecto de plataforma personalizado.</T>,
+    businesses: {
+      en: ["Other"],
+      es: ["Otro"]
+    }
+  }
+];
+
+const sectorRecommendations: Record<
+  string,
+  {
+    primary: string;
+    secondary: string | null;
+    addons: string[];
+  }
+> = {
+  food: { primary: "landing", secondary: "corporate", addons: ["bot_fast", "branding"] },
+  health: { primary: "corporate", secondary: null, addons: ["bot_fast", "content_assistant"] },
+  retail: { primary: "ecommerce", secondary: null, addons: ["semantic_search", "ai_agent"] },
+  services: { primary: "landing", secondary: "corporate", addons: ["bot_fast", "content_assistant"] },
+  realestate: { primary: "corporate", secondary: null, addons: ["bot_fast", "branding"] },
+  education: { primary: "corporate", secondary: null, addons: ["bot_fast", "content_assistant"] },
+  tourism: { primary: "landing", secondary: "corporate", addons: ["bot_fast", "branding"] },
+  tech: { primary: "corporate", secondary: "ecommerce", addons: ["ai_agent", "semantic_search"] },
+  other: { primary: "landing", secondary: "corporate", addons: ["bot_fast"] },
+};
+
 const steps = [
-  { id: "type", title: <T en="Project Type">Tipo de Proyecto</T> },
-  { id: "size", title: <T en="Size & Scope">Tamaño y Alcance</T> },
+  { id: "sector", title: <T en="Sector">Sector</T> },
+  { id: "type", title: <T en="Web Type">Tipo de Web</T> },
   { id: "addons", title: <T en="AI & Add-ons">IA y Complementos</T> },
   { id: "schedule", title: <T en="Schedule Meeting">Agendar Reunión</T> },
 ];
@@ -116,130 +218,7 @@ const types = [
   },
 ];
 
-const projectScopes: Record<
-  string,
-  {
-    id: string;
-    name: string;
-    title: React.ReactNode;
-    priceAdd: number;
-    desc: React.ReactNode;
-  }[]
-> = {
-  landing: [
-    {
-      id: "landing_basic",
-      name: "Standard Layout",
-      title: <T en="Standard Design">Diseño Estándar</T>,
-      priceAdd: 0,
-      desc: (
-        <T en="Proven layout structure, fast delivery">
-          Estructura probada, entrega rápida
-        </T>
-      ),
-    },
-    {
-      id: "landing_pro",
-      name: "Custom Design",
-      title: <T en="Custom Design">Diseño a Medida</T>,
-      priceAdd: 150,
-      desc: (
-        <T en="Highly personalized, custom animations">
-          Diseño único, animaciones fluidas 3D/2D
-        </T>
-      ),
-    },
-    {
-      id: "landing_enterprise",
-      name: "Conversion Focused (A/B)",
-      title: (
-        <T en="Conversion Focused (A/B Test)">
-          Enfocada en Conversión (Test A/B)
-        </T>
-      ),
-      priceAdd: 300,
-      desc: (
-        <T en="2 visual variants to measure which sells more">
-          Creamos 2 variantes para medir cuál vende más
-        </T>
-      ),
-    },
-  ],
-  corporate: [
-    {
-      id: "corp_basic",
-      name: "Essential",
-      title: <T en="Essential (Up to 5 pages)">Esencial (Hasta 5 secc/págs)</T>,
-      priceAdd: 0,
-      desc: (
-        <T en="e.g. Home, About Us, Services, Contact">
-          Ej: Inicio, Nosotros, Servicios, Contacto
-        </T>
-      ),
-    },
-    {
-      id: "corp_pro",
-      name: "Professional",
-      title: (
-        <T en="Professional (CMS & Blog)">Profesional (Con Blog/Noticias)</T>
-      ),
-      priceAdd: 400,
-      desc: (
-        <T en="Manageable content (Includes 3 initial posts)">
-          Autoadministrable (Incluye carga de 3 posts)
-        </T>
-      ),
-    },
-    {
-      id: "corp_enterprise",
-      name: "Enterprise",
-      title: (
-        <T en="Enterprise (Client Portal)">Empresarial (Portal de Clientes)</T>
-      ),
-      priceAdd: 900,
-      desc: (
-        <T en="User login, database, custom dashboard">
-          Login de usuarios, base de datos y panel a medida
-        </T>
-      ),
-    },
-  ],
-  ecommerce: [
-    {
-      id: "ecom_basic",
-      name: "Starter",
-      title: <T en="Starter (Standard Store)">Tienda Inicial</T>,
-      priceAdd: 0,
-      desc: (
-        <T en="Catalog, payments, user accounts">
-          Catálogo, pagos online y cuentas de cliente
-        </T>
-      ),
-    },
-    {
-      id: "ecom_pro",
-      name: "Growth",
-      title: <T en="Growth (Advanced Store)">Crecimiento Avanzado</T>,
-      priceAdd: 500,
-      desc: (
-        <T en="Subscriptions, abandoned cart recovery">
-          Suscripciones, envíos automáticos de carritos
-        </T>
-      ),
-    },
-    {
-      id: "ecom_enterprise",
-      name: "Custom ERP",
-      title: <T en="Custom / Integrations">A medida / Integraciones</T>,
-      priceAdd: 1500,
-      desc: (
-        <T en="Sync with external software (ERP) or B2B">
-          Conexión con tu software de inventario o B2B
-        </T>
-      ),
-    },
-  ],
-};
+
 
 const addons = [
   {
@@ -248,20 +227,38 @@ const addons = [
     price: 49,
     isMonthly: true,
     suffix: "/mes",
-    desc: <T en="Smart bot with GPT-4">Bot inteligente que conversa y vende</T>,
+    desc: (
+      <T
+        en={
+          <>
+            Smart bot that converses and sells*
+            <span className="block text-[10px] text-[var(--color-text-tertiary)] mt-1 font-normal">
+              *Not available for Nova — already included
+            </span>
+          </>
+        }
+      >
+        <>
+          Bot inteligente que conversa y vende*
+          <span className="block text-[10px] text-[var(--color-text-tertiary)] mt-1 font-normal">
+            *No disponible para Nova — ya incluido
+          </span>
+        </>
+      </T>
+    ),
     isAi: true,
   },
   {
     id: "bot_fast",
-    title: <T en="Lead Capture Bot">Bot de Respuestas Rápidas</T>,
-    price: 150,
+    title: <T en="24/7 Attendance Bot">Bot de Atención 24/7</T>,
+    price: 149,
     desc: <T en="Automated flows 24/7">Flujos automatizados 24/7</T>,
     isAi: true,
   },
   {
     id: "semantic_search",
     title: <T en="Semantic AI Search">Buscador Semántico IA</T>,
-    price: 250,
+    price: 249,
     desc: (
       <T en="Smart catalog search. Recommended for Nova e-commerce.">
         Búsqueda avanzada para e-commerce. Recomendado para Nova.
@@ -277,15 +274,31 @@ const addons = [
     isMonthly: true,
     suffix: "/mes",
     desc: (
-      <T en="Auto-generate products and posts">Genera descripciones y posts</T>
+      <T en="AI assistant integrated into your website, trained on your brand, products and tone — generates descriptions, posts and replies just like your team would.">
+        Asistente IA integrado en tu web, entrenado con tu marca, productos y tono — genera descripciones, posts y respuestas tal como lo haría tu equipo.
+      </T>
     ),
     isAi: true,
   },
   {
-    id: "crm",
-    title: <T en="CRM Integration">Integración CRM</T>,
-    price: 300,
-    desc: <T en="Connect your sales software">Conecta tu software de ventas</T>,
+    id: "content_seo",
+    title: <T en="SEO Strategy Guide">Guía de Estrategia SEO</T>,
+    price: 49,
+    desc: (
+      <T en="Personalized content strategy guide with 20 keywords prioritized for your industry and market.">
+        Guía personalizada de estrategia de contenido con 20 keywords priorizadas para tu industria y mercado.
+      </T>
+    ),
+  },
+  {
+    id: "crm_connect",
+    title: <T en="CRM Connect">CRM Connect</T>,
+    price: 149,
+    desc: (
+      <T en="Automatically sync every web lead to HubSpot, Zoho CRM, Google Sheets, Pipedrive or Salesforce.">
+        Sincroniza cada lead de tu web automáticamente con HubSpot, Zoho CRM, Google Sheets, Pipedrive o Salesforce.
+      </T>
+    ),
   },
   {
     id: "multilingual",
@@ -300,26 +313,16 @@ const addons = [
   {
     id: "copy",
     title: <T en="Pro Copywriting">Copywriting Profesional</T>,
-    price: 99,
+    price: 97,
     desc: <T en="Persuasive sales texts">Textos persuasivos que venden</T>,
   },
   {
     id: "branding",
     title: <T en="Basic Branding Kit">Kit de Branding Básico</T>,
-    price: 150,
+    price: 149,
     desc: (
       <T en="Logo redesign and professional color palette">
         Rediseño de logotipo y paleta de colores profesional
-      </T>
-    ),
-  },
-  {
-    id: "content_seo",
-    title: <T en="Content SEO Map">Mapa de Contenidos SEO</T>,
-    price: 149,
-    desc: (
-      <T en="Keyword research + content structure for organic traffic">
-        Investigación de keywords + estructura de contenido para tráfico orgánico
       </T>
     ),
   },
@@ -355,9 +358,9 @@ const addonSocialProof: Record<string, { en: string; es: string }> = {
     en: "Brands using AI-generated descriptions publish content 5× faster, freeing time for growth.",
     es: "Marcas que usan IA para sus descripciones publican contenido 5× más rápido.",
   },
-  crm: {
-    en: "HubSpot reports that CRM-connected businesses close deals 27% faster on average.",
-    es: "HubSpot reporta que los negocios conectados a un CRM cierran ventas un 27% más rápido.",
+  crm_connect: {
+    en: "Businesses that auto-capture leads into a CRM close 27% more deals — HubSpot, Zoho, Sheets, Pipedrive and Salesforce supported.",
+    es: "Los negocios que capturan leads automáticamente en un CRM cierran un 27% más de ventas — compatible con HubSpot, Zoho, Sheets, Pipedrive y Salesforce.",
   },
   multilingual: {
     en: "Sites in 2+ languages reach 72% more buyers globally. Includes full architecture and translation for up to 3 languages (CSA Research).",
@@ -495,164 +498,51 @@ export default function WizardQuote() {
         isPremium: false,
       });
     } catch (error: any) {
-      setDomainError(error.message || 'No se pudo verificar la disponibilidad. Intenta nuevamente.');
+      let rawMsg = error.message || '';
+      if (
+        rawMsg.toLowerCase().includes('pattern') || 
+        rawMsg.toLowerCase().includes('format') || 
+        rawMsg.toLowerCase().includes('load failed') ||
+        rawMsg.toLowerCase().includes('failed to fetch')
+      ) {
+        setDomainError('No se pudo comprobar la disponibilidad. Asegúrate de ingresar un dominio con formato válido (ejemplo.com) o intenta de nuevo.');
+      } else {
+        setDomainError(rawMsg || 'No se pudo verificar la disponibilidad. Intenta nuevamente.');
+      }
     } finally {
       setCheckingDomain(false);
     }
   };
 
-  // AI-powered setup states and functions
-  const [aiDescription, setAiDescription] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState("");
-  const [aiUsed, setAiUsed] = useState(false);
-  const [aiResult, setAiResult] = useState<{ type: string; addons: string[]; reasoning: string } | null>(null);
-  const [showAiStep, setShowAiStep] = useState(true);
-
-  const analyzeWithAI = async () => {
-    if (!aiDescription.trim() || aiDescription.length < 10) {
-      setAiError(language === "en" ? "Please enter a description." : "Por favor ingresa una descripción.");
-      return;
-    }
-    setAiLoading(true);
-    setAiError("");
-
-    try {
-      const systemPrompt = `Eres el asistente de cotización de Polaris Web Studio, una agencia de desarrollo web en República Dominicana. Analiza la descripción del negocio y devuelve ÚNICAMENTE un objeto JSON válido, sin texto adicional, sin markdown, sin backticks.
-
-PLANES (campo "type"):
-- "landing": presencia básica, 1 página, emprendedores, profesionales independientes, negocios simples. $299
-- "corporate": múltiples páginas, blog, restaurantes, clínicas, hoteles, despachos, salones. $699
-- "ecommerce": vender productos online, pagos con tarjeta, inventario, tiendas de cualquier tipo. $1,299
-
-ADD-ONS (campo "addons", array, puede estar vacío []):
-- "bot_fast": respuestas automáticas, preguntas frecuentes, atención 24/7
-- "ai_agent": ventas automatizadas, seguimiento de clientes
-- "semantic_search": buscador de productos (solo si type es ecommerce)
-- "content_assistant": blog activo, publicar contenido frecuente
-- "hosting": mantenimiento continuo (incluir siempre por defecto)
-
-CAMPO "confidence": "high" | "medium" | "low"
-CAMPO "reasoning": entre 20 y 30 palabras en español. Explica específicamente qué tipo de negocio es, qué problema resuelve el plan elegido y por qué los add-ons sugeridos le aportan valor concreto.
-
-EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high","reasoning":"Dentista necesita web corporativa para captar pacientes localmente"}`;
-
-      // Función auxiliar para parsear la respuesta en JSON
-      const parseJSON = (raw: string) => {
-        const clean = raw.replace(/```json|```/g, "").trim();
-        return JSON.parse(clean);
-      };
-
-      // Función auxiliar para mapear el resultado al estado
-      const mapResult = (data: any) => {
-        const mappedType = ["landing", "corporate", "ecommerce"].includes(data.type)
-          ? data.type : "landing";
-        const mappedAddons = ["hosting"];
-        if (data.addons && Array.isArray(data.addons)) {
-          const validAddons = ["bot_fast", "ai_agent", "semantic_search", "content_assistant"];
-          data.addons.forEach((key: string) => {
-            if (validAddons.includes(key) && !mappedAddons.includes(key)) {
-              mappedAddons.push(key);
-            }
-          });
-        }
-        return { mappedType, mappedAddons, reasoning: data.reasoning || "", confidence: data.confidence || "low" };
-      };
-
-      let data: any = null;
-
-      // Intento 1 — Gemini
-      try {
-        const geminiRes = await fetch(
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" + import.meta.env.VITE_GEMINI_API_KEY,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              systemInstruction: { parts: [{ text: systemPrompt }] },
-              contents: [{ parts: [{ text: aiDescription }] }],
-              generationConfig: { temperature: 0.1, maxOutputTokens: 300 }
-            })
-          }
-        );
-        if (!geminiRes.ok) throw new Error("Gemini error");
-        const geminiResult = await geminiRes.json();
-        const geminiText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        data = parseJSON(geminiText);
-      } catch {
-        // Gemini falló — intentar con Grok
-        try {
-          const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": "Bearer " + import.meta.env.VITE_GROK_API_KEY
-            },
-            body: JSON.stringify({
-              model: "grok-3-mini",
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: aiDescription }
-              ],
-              temperature: 0.1,
-              max_tokens: 300
-            })
-          });
-          if (!grokRes.ok) throw new Error("Grok error");
-          const grokResult = await grokRes.json();
-          const grokText = grokResult.choices?.[0]?.message?.content || "";
-          data = parseJSON(grokText);
-        } catch {
-          throw new Error("all_providers_failed");
-        }
-      }
-
-      if (!data) throw new Error("no_data");
-
-      const { mappedType, mappedAddons, reasoning, confidence } = mapResult(data);
-
-      if (confidence === "low") {
-        setAiError(
-          language === "en"
-            ? "Your description is too brief. Could you add a bit more detail? For example, what type of business is it and what do you need your website to do?"
-            : "Tu descripción es muy breve. ¿Puedes agregar un poco más de detalle? Por ejemplo, ¿qué tipo de negocio tienes y qué necesitas que haga tu web?"
-        );
-        setAiLoading(false);
-        return;
-      }
-
-      setSelections((prev: any) => ({
-        ...prev,
-        type: mappedType,
-        addons: mappedAddons,
-        notes: aiDescription,
-      }));
-
-      setAiResult({ type: mappedType, addons: mappedAddons, reasoning });
-      setAiUsed(true);
-      trackEvent("ai_analysis_complete", { type: mappedType });
-
-    } catch (err: any) {
-      setAiError(
-        language === "en"
-          ? "Couldn't analyze your description. Choose manually below."
-          : "No pudimos analizar tu descripción. Elige manualmente abajo."
-      );
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const skipAiStep = () => {
-    setAiUsed(false);
-    setShowAiStep(false);
+  const resetWizard = () => {
     setCurrentStep(0);
+    localStorage.removeItem("wizardQuote_currentStep");
+    localStorage.removeItem("wizardQuote_selections");
+    localStorage.removeItem("wizardQuote_leadCaptured");
+    localStorage.removeItem("wizardQuote_selectedType");
+    localStorage.removeItem("wizardQuote_selectedAddons");
+    localStorage.removeItem("wizardQuote_domainName");
+    localStorage.removeItem("polaris_addon_descriptions");
+    window.location.reload();
   };
 
   const [currentStep, setCurrentStep] = useState(() => {
     const saved = localStorage.getItem("wizardQuote_currentStep");
     return saved !== null ? parseInt(saved, 10) : 0;
   });
+
+  const [expandedThirdType, setExpandedThirdType] = useState(false);
+  const [addonDescriptions, setAddonDescriptions] = useState<Record<string, string | null>>(() => {
+    try {
+      const saved = localStorage.getItem("polaris_addon_descriptions");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.descriptions || {};
+      }
+    } catch {}
+    return {};
+  });
+  const [addonDescLoading, setAddonDescLoading] = useState(false);
 
   const [selections, setSelections] = useState(() => {
     const saved = localStorage.getItem("wizardQuote_selections");
@@ -667,8 +557,9 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
       }
     }
     return {
+      sector: "",
+      businessType: "",
       type: "",
-      size: "",
       addons: ["hosting"] as string[],
       date: null as Date | null,
       time: "",
@@ -685,6 +576,20 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
   useEffect(() => {
     localStorage.setItem("wizardQuote_selections", JSON.stringify(selections));
   }, [selections]);
+
+  useEffect(() => {
+    if (!selections.businessType || !selections.sector) return;
+    const currentPlanType = selections.type || sectorRecommendations[selections.sector]?.primary || "corporate";
+    const cacheKey = `polaris_addon_desc_${selections.businessType}_${currentPlanType}`;
+    try {
+      const saved = localStorage.getItem(cacheKey);
+      if (saved) {
+        setAddonDescriptions(JSON.parse(saved));
+        return;
+      }
+    } catch {}
+    generateAddonDescriptions(selections.businessType, selections.sector, currentPlanType);
+  }, [selections.businessType, selections.type, selections.sector]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -730,7 +635,6 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
         return {
           ...s,
           type: newType,
-          size: "", // Reset size so they pick complexity for that new type
           addons: newAddons,
         };
       });
@@ -740,6 +644,36 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const [estimateExpanded, setEstimateExpanded] = useState(false);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+
+  const scrollToProgress = () => {
+    setTimeout(() => {
+      const el = progressRef.current;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        window.scrollTo({
+          top: rect.top + scrollTop - 100,
+          behavior: "smooth",
+        });
+      }
+    }, 50);
+  };
+
+  useEffect(() => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setSidebarVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   // Lead capture state
   const [leadCaptured, setLeadCaptured] = useState(() =>
@@ -815,6 +749,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
             };
             localStorage.removeItem("wizardQuote_currentStep");
             localStorage.removeItem("wizardQuote_selections");
+            localStorage.removeItem("polaris_addon_descriptions");
             navigate("/gracias", { state: statePayload });
           },
         });
@@ -895,10 +830,6 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
   const isNovaPlan = params.get("plan") === "nova";
 
   const basePrice = types.find((t) => t.id === selections.type)?.price || 0;
-  const currentScopes =
-    projectScopes[selections.type as keyof typeof projectScopes] || [];
-  const selectedScope = currentScopes.find((s) => s.id === selections.size);
-  const scopeExtraPrice = selectedScope?.priceAdd || 0;
 
   let discountedAiAddonId: string | null = null;
   if (isNovaPlan) {
@@ -916,7 +847,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
     .filter((a) => selections.addons.includes(a.id) && a.isMonthly)
     .reduce((acc, a) => acc + a.price, 0);
 
-  const estimatedTotal = basePrice + scopeExtraPrice + addonsPrice;
+  const estimatedTotal = basePrice + addonsPrice;
   const discountedTotal = isOfferActive
     ? Math.round(estimatedTotal * 0.75)
     : estimatedTotal;
@@ -938,29 +869,22 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
     }
   };
 
-  const getSizeName = (id: string) => {
-    if (!id) return t("Custom Scope", "Alcance General");
-    for (const scopeArray of Object.values(projectScopes)) {
-      const found = scopeArray.find((s) => s.id === id);
-      if (found) return t(found.name, found.name); // You can expand translations here
-    }
-    return id;
-  };
+
 
   const getAddonName = (id: string) => {
     switch (id) {
       case "content_seo":
-        return t("Content SEO Map", "Mapa de Contenidos SEO");
+        return t("SEO Strategy Guide", "Guía de Estrategia SEO");
       case "bot_fast":
-        return t("Lead Capture Bot", "Bot de Respuestas Rápidas");
+        return t("24/7 Attendance Bot", "Bot de Atención 24/7");
       case "ai_agent":
         return t("Autonomous AI Agent", "Agente de Ventas IA");
       case "semantic_search":
         return t("Semantic AI Search", "Buscador Semántico IA");
       case "content_assistant":
         return t("Content Assistant", "Asistente de Contenido");
-      case "crm":
-        return t("CRM Integration", "Integración CRM");
+      case "crm_connect":
+        return t("CRM Connect", "CRM Connect");
       case "copy":
         return t("Pro Copywriting", "Copywriting Profesional");
       case "multilingual":
@@ -983,9 +907,1263 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
       ? `${domainStatus.domain} (Included)`
       : t("Standard Included ($15 default credit)", "Estándar Incluido ($15 crédito por defecto)");
 
+  const getSectorName = (id: string) => {
+    switch (id) {
+      case "food": return t("Food & Beverages", "Alimentación & Bebidas");
+      case "health": return t("Health, Beauty & Wellness", "Salud, Belleza & Bienestar");
+      case "retail": return t("Fashion & Retail", "Moda & Retail");
+      case "services": return t("Professional Services", "Servicios Profesionales");
+      case "realestate": return t("Real Estate", "Inmobiliario");
+      case "education": return t("Education & Training", "Educación & Capacitación");
+      case "tourism": return t("Tourism, Events & Hospitality", "Turismo, Eventos & Hospitalidad");
+      case "tech": return t("Technology & Agencies", "Tecnología & Agencias");
+      case "other": return t("Other", "Otro");
+      default: return id ? (id.charAt(0).toUpperCase() + id.slice(1)) : "";
+    }
+  };
+
+  const getBadgeAndExplanation = (typeId: string, sector: string) => {
+    const rec = sectorRecommendations[sector] || { primary: "corporate", secondary: null };
+    const isPr = typeId === rec.primary;
+    const isSec = typeId === rec.secondary;
+
+    let badge = null;
+    let explanation = null;
+
+    if (isPr) {
+      badge = (
+        <span className="absolute top-2 left-2 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)]">
+          <T en="Recommended for your business">Recomendado para tu negocio</T>
+        </span>
+      );
+    } else {
+      badge = (
+        <span className="absolute top-2 left-2 text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-[var(--color-border-subtle)] text-[var(--color-text-tertiary)]">
+          <T en="Also available">También disponible</T>
+        </span>
+      );
+    }
+
+    if (sector === "food") {
+      if (typeId === "corporate") {
+        explanation = (
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+            <T en="Ideal if you have multiple services and want a complete online presence.">
+              Ideal si tienes múltiples servicios y quieres una presencia completa online.
+            </T>
+          </p>
+        );
+      } else if (typeId === "landing") {
+        explanation = (
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+            <T en="Ideal to capture clients for a specific product or promotion.">
+              Ideal para captar clientes para un producto o promoción específica.
+            </T>
+          </p>
+        );
+      }
+    } else if (sector === "tourism") {
+      if (typeId === "corporate") {
+        explanation = (
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+            <T en="Ideal if you offer multiple services and want a complete online presence.">
+              Ideal si ofreces múltiples servicios y quieres una presencia completa online.
+            </T>
+          </p>
+        );
+      } else if (typeId === "landing") {
+        explanation = (
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+            <T en="Ideal to capture clients for a specific service or season.">
+              Ideal para captar clientes para un servicio específico o una temporada.
+            </T>
+          </p>
+        );
+      }
+    } else if (sector === "tech") {
+      if (typeId === "corporate") {
+        explanation = (
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+            <T en="Ideal if you have a service portfolio and want to position yourself as a brand.">
+              Ideal si tienes un portafolio de servicios y quieres posicionarte como marca.
+            </T>
+          </p>
+        );
+      } else if (typeId === "landing") {
+        explanation = (
+          <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+            <T en="Ideal to launch a specific product and validate the market fast.">
+              Ideal para lanzar un producto puntual y validar el mercado rápido.
+            </T>
+          </p>
+        );
+      }
+    }
+
+    // Dynamic dynamic fallback or enhancement for all sectors/businesses
+    let bizNameEn = "";
+    let bizNameEs = "";
+    const secData = sectors.find((s) => s.id === sector);
+    const selectedBus = selections.businessType;
+
+    if (selectedBus) {
+      if (secData) {
+        const esIndex = secData.businesses.es.indexOf(selectedBus);
+        const enIndex = secData.businesses.en.indexOf(selectedBus);
+        let idx = -1;
+        if (esIndex !== -1) idx = esIndex;
+        else if (enIndex !== -1) idx = enIndex;
+
+        if (idx !== -1) {
+          bizNameEn = secData.businesses.en[idx].toLowerCase();
+          bizNameEs = secData.businesses.es[idx].toLowerCase();
+        } else {
+          bizNameEn = selectedBus.toLowerCase();
+          bizNameEs = selectedBus.toLowerCase();
+        }
+      } else {
+        bizNameEn = selectedBus.toLowerCase();
+        bizNameEs = selectedBus.toLowerCase();
+      }
+    }
+
+    const isOtherBiz = bizNameEs === "otro" || bizNameEn === "other" || !selectedBus;
+
+    let sectorEn = "your industry";
+    let sectorEs = "tu sector de negocio";
+    if (sector === "food") { sectorEn = "food & beverage"; sectorEs = "alimentación y bebidas"; }
+    else if (sector === "health") { sectorEn = "health & wellness"; sectorEs = "salud y bienestar"; }
+    else if (sector === "retail") { sectorEn = "retail & fashion"; sectorEs = "moda y tienda física"; }
+    else if (sector === "services") { sectorEn = "professional services"; sectorEs = "servicios profesionales"; }
+    else if (sector === "realestate") { sectorEn = "real estate"; sectorEs = "bienes raíces"; }
+    else if (sector === "education") { sectorEn = "education & training"; sectorEs = "educación y capacitación"; }
+    else if (sector === "tourism") { sectorEn = "tourism & hospitality"; sectorEs = "turismo y eventos"; }
+    else if (sector === "tech") { sectorEn = "technology"; sectorEs = "tecnología"; }
+
+    const businessExplanations: Record<string, {
+      landing: { es: string; en: string };
+      corporate: { es: string; en: string };
+      ecommerce: { es: string; en: string };
+    }> = {
+      // ALIMENTACIÓN & BEBIDAS
+      "Restaurante": {
+        landing: {
+          es: "Muestra tu menú, horarios y ubicación en una página rápida que aparece en Google Maps cuando alguien busca dónde comer cerca.",
+          en: "Showcase your menu, hours and location on a fast page that shows up on Google Maps when someone searches where to eat nearby."
+        },
+        corporate: {
+          es: "Presenta tu historia, menú completo, galería de platos y formulario de reservas — todo lo que necesita un cliente antes de decidir dónde cenar.",
+          en: "Present your story, full menu, dish gallery and reservation form — everything a client needs before deciding where to dine."
+        },
+        ecommerce: {
+          es: "Vende combos, cajas de regalo o servicios de catering online con pago inmediato — sin llamadas, sin intermediarios.",
+          en: "Sell combos, gift boxes or catering services online with instant payment — no calls, no middlemen."
+        }
+      },
+      "Heladería": {
+        landing: {
+          es: "Captura pedidos de temporada, lanza sabores nuevos y promociones especiales — una página enfocada convierte mejor que un menú de navegación complejo.",
+          en: "Capture seasonal orders, launch new flavors and special promos — a focused page converts better than complex navigation."
+        },
+        corporate: {
+          es: "Muestra tus sabores, sucursales, historia de marca y eventos especiales. Ideal si tienes más de una ubicación o línea de productos.",
+          en: "Showcase your flavors, locations, brand story and special events. Ideal if you have more than one location or product line."
+        },
+        ecommerce: {
+          es: "Vende tortas personalizadas, pedidos anticipados y paquetes de eventos directamente desde tu web con pago en línea.",
+          en: "Sell custom cakes, pre-orders and event packages directly from your website with online payment."
+        }
+      },
+      "Cafetería": {
+        landing: {
+          es: "Una página limpia con tu menú, horarios y ubicación exacta — perfecta para captar clientes que buscan 'cafetería cerca de mí' en Google.",
+          en: "A clean page with your menu, hours and exact location — perfect for capturing clients searching 'coffee shop near me' on Google."
+        },
+        corporate: {
+          es: "Presenta tu carta completa, galería de ambiente, opciones de trabajo remoto y eventos culturales — construye comunidad alrededor de tu espacio.",
+          en: "Present your full menu, ambiance gallery, remote work options and cultural events — build community around your space."
+        },
+        ecommerce: {
+          es: "Vende suscripciones de café, merchandise o paquetes de catering para oficinas directamente online.",
+          en: "Sell coffee subscriptions, merchandise or office catering packages directly online."
+        }
+      },
+      "Panadería": {
+        landing: {
+          es: "Muestra tus productos estrella y recibe pedidos anticipados para fechas especiales — sin perder ventas por no tener presencia online.",
+          en: "Showcase your star products and receive pre-orders for special dates — without losing sales from having no online presence."
+        },
+        corporate: {
+          es: "Presenta tu historia artesanal, catálogo completo, opciones de entrega y pedidos para eventos — genera confianza antes de la primera compra.",
+          en: "Present your artisan story, full catalog, delivery options and event orders — build trust before the first purchase."
+        },
+        ecommerce: {
+          es: "Recibe pedidos con pago adelantado para bodas, cumpleaños y eventos corporativos — automatiza tu proceso de ventas especiales.",
+          en: "Receive pre-paid orders for weddings, birthdays and corporate events — automate your special sales process."
+        }
+      },
+      "Bar / Lounge": {
+        landing: {
+          es: "Captura reservas de mesas, promociona eventos nocturnos y muestra tu ambiente — todo en una página que carga en segundos.",
+          en: "Capture table reservations, promote night events and show your vibe — all on a page that loads in seconds."
+        },
+        corporate: {
+          es: "Presenta tu carta de bebidas, galería de eventos pasados, política de reservas y calendario de actividades para fidelizar clientes.",
+          en: "Present your drinks menu, past event gallery, reservation policy and activity calendar to build client loyalty."
+        },
+        ecommerce: {
+          es: "Vende entradas para eventos, experiencias VIP y botellas reservadas online antes de que se agoten.",
+          en: "Sell event tickets, VIP experiences and reserved bottles online before they sell out."
+        }
+      },
+      "Catering": {
+        landing: {
+          es: "Una landing enfocada en captar leads de eventos — formulario de cotización, galería de montajes y testimonios que cierran contratos.",
+          en: "A landing focused on capturing event leads — quote form, setup gallery and testimonials that close contracts."
+        },
+        corporate: {
+          es: "Muestra tu portafolio de eventos, menús por tipo de servicio, equipo profesional y proceso de contratación paso a paso.",
+          en: "Showcase your event portfolio, menus by service type, professional team and step-by-step hiring process."
+        },
+        ecommerce: {
+          es: "Ofrece paquetes de catering con precio fijo para empresas y eventos sociales — el cliente paga y reserva sin necesidad de llamarte.",
+          en: "Offer fixed-price catering packages for companies and social events — the client pays and books without needing to call you."
+        }
+      },
+      "Food Truck": {
+        landing: {
+          es: "Muestra tu ruta semanal, menú del día y redes sociales en una página que carga al instante desde el móvil mientras el cliente está en la calle.",
+          en: "Show your weekly route, daily menu and social media on a page that loads instantly from mobile while the client is on the street."
+        },
+        corporate: {
+          es: "Presenta tu concepto, historia, menú completo, calendario de ubicaciones y opciones de reserva para eventos privados.",
+          en: "Present your concept, story, full menu, location calendar and private event booking options."
+        },
+        ecommerce: {
+          es: "Vende reservas de tu food truck para eventos corporativos y fiestas privadas con pago anticipado en línea.",
+          en: "Sell your food truck reservations for corporate events and private parties with advance online payment."
+        }
+      },
+      "Repostería": {
+        landing: {
+          es: "Muestra tus creaciones más llamativas y recibe pedidos personalizados — una galería visual bien hecha vende sola.",
+          en: "Showcase your most eye-catching creations and receive custom orders — a well-crafted visual gallery sells itself."
+        },
+        corporate: {
+          es: "Presenta tu portafolio completo, precios por categoría, proceso de pedido y testimonios de clientes satisfechos.",
+          en: "Present your full portfolio, prices by category, ordering process and satisfied client testimonials."
+        },
+        ecommerce: {
+          es: "Recibe pedidos personalizados con pago adelantado para bodas, baby showers y eventos especiales — sin mensajes de WhatsApp interminables.",
+          en: "Receive custom orders with advance payment for weddings, baby showers and special events — without endless WhatsApp messages."
+        }
+      },
+      "Jugos & Smoothies": {
+        landing: {
+          es: "Muestra tu menú, beneficios de cada ingrediente y ubicación — capta clientes health-conscious que buscan opciones saludables cerca.",
+          en: "Show your menu, each ingredient's benefits and location — capture health-conscious clients looking for healthy options nearby."
+        },
+        corporate: {
+          es: "Presenta tu filosofía de alimentación saludable, menú completo, planes de detox y opciones de delivery para fidelizar clientes.",
+          en: "Present your healthy eating philosophy, full menu, detox plans and delivery options to build client loyalty."
+        },
+        ecommerce: {
+          es: "Vende planes de jugos semanales, suscripciones de batidos y paquetes detox con pago online y entrega a domicilio.",
+          en: "Sell weekly juice plans, smoothie subscriptions and detox packages with online payment and home delivery."
+        }
+      },
+      // SALUD, BELLEZA & BIENESTAR
+      "Clínica": {
+        landing: {
+          es: "Capta pacientes nuevos con una página clara que muestra tus especialidades, médicos y formulario de citas — aparece en Google cuando buscan atención médica cerca.",
+          en: "Attract new patients with a clear page showing your specialties, doctors and appointment form — appear on Google when they search for medical care nearby."
+        },
+        corporate: {
+          es: "Presenta tu equipo médico, especialidades, tecnología disponible y proceso de atención — genera confianza antes de la primera consulta.",
+          en: "Present your medical team, specialties, available technology and care process — build trust before the first consultation."
+        },
+        ecommerce: {
+          es: "Vende consultas online, chequeos preventivos y paquetes de salud con pago anticipado — reduce las citas no atendidas.",
+          en: "Sell online consultations, preventive checkups and health packages with advance payment — reduce no-show appointments."
+        }
+      },
+      "Farmacia": {
+        landing: {
+          es: "Muestra tu ubicación, horario extendido y servicios especiales — captura clientes que buscan farmacia de turno cerca de ellos.",
+          en: "Show your location, extended hours and special services — capture clients searching for a nearby on-duty pharmacy."
+        },
+        corporate: {
+          es: "Presenta tu catálogo de servicios, equipo, especialidades farmacéuticas y convenios con aseguradoras para diferenciarte de las cadenas grandes.",
+          en: "Present your service catalog, team, pharmaceutical specialties and insurance agreements to stand out from large chains."
+        },
+        ecommerce: {
+          es: "Permite pedidos online de medicamentos con entrega a domicilio — reduce filas y capta clientes que prefieren comprar desde casa.",
+          en: "Allow online medication orders with home delivery — reduce lines and capture clients who prefer buying from home."
+        }
+      },
+      "Gimnasio": {
+        landing: {
+          es: "Capta nuevos miembros con una landing que muestra instalaciones, precios y una oferta de prueba gratuita — con formulario de registro inmediato.",
+          en: "Capture new members with a landing showing facilities, prices and a free trial offer — with immediate registration form."
+        },
+        corporate: {
+          es: "Muestra clases, entrenadores, horarios, testimonios de transformación y planes de membresía — todo lo que necesita un prospecto para inscribirse.",
+          en: "Show classes, trainers, schedules, transformation testimonials and membership plans — everything a prospect needs to sign up."
+        },
+        ecommerce: {
+          es: "Vende membresías mensuales, clases individuales y programas de entrenamiento online con pago automático recurrente.",
+          en: "Sell monthly memberships, individual classes and online training programs with automatic recurring payment."
+        }
+      },
+      "Spa / Estética": {
+        landing: {
+          es: "Muestra tus tratamientos estrella y captura reservas directamente — sin llamadas, sin WhatsApp, con disponibilidad en tiempo real.",
+          en: "Show your star treatments and capture reservations directly — no calls, no WhatsApp, with real-time availability."
+        },
+        corporate: {
+          es: "Presenta tu menú de servicios completo, galería de resultados, equipo de terapeutas y paquetes especiales para parejas o grupos.",
+          en: "Present your full service menu, results gallery, therapist team and special packages for couples or groups."
+        },
+        ecommerce: {
+          es: "Vende gift cards, paquetes de tratamientos y membresías de bienestar online — el regalo perfecto que se compra desde el sofá.",
+          en: "Sell gift cards, treatment packages and wellness memberships online — the perfect gift bought from the couch."
+        }
+      },
+      "Psicología": {
+        landing: {
+          es: "Una página profesional y empática que presenta tu especialidad y permite agendar una primera sesión — reduce la fricción del primer paso.",
+          en: "A professional and empathetic page presenting your specialty and allowing a first session booking — reduces the friction of the first step."
+        },
+        corporate: {
+          es: "Presenta tu enfoque terapéutico, especialidades, formación, modalidades de consulta presencial y online, y preguntas frecuentes.",
+          en: "Present your therapeutic approach, specialties, training, in-person and online consultation modalities, and FAQs."
+        },
+        ecommerce: {
+          es: "Vende sesiones individuales, paquetes de terapia y talleres grupales con pago anticipado — reduce cancelaciones de último momento.",
+          en: "Sell individual sessions, therapy packages and group workshops with advance payment — reduce last-minute cancellations."
+        }
+      },
+      "Nutrición": {
+        landing: {
+          es: "Capta clientes que buscan cambios reales — muestra tu metodología, resultados y agenda tu primera consulta directamente.",
+          en: "Capture clients looking for real changes — show your methodology, results and book your first consultation directly."
+        },
+        corporate: {
+          es: "Presenta tus planes nutricionales, especialidades, blog de recetas y testimonios de clientes — construye autoridad en tu área.",
+          en: "Present your plans, specialties, recipe blog and client testimonials — build authority in your field."
+        },
+        ecommerce: {
+          es: "Vende planes de alimentación personalizados, consultas online y guías descargables con pago directo en tu web.",
+          en: "Sell personalized meal plans, online consultations and downloadable guides with direct payment on your website."
+        }
+      },
+      "Odontología": {
+        landing: {
+          es: "Capta pacientes nuevos mostrando tus tratamientos principales, antes/después y un botón directo para agendar — genera confianza desde el primer clic.",
+          en: "Capture new patients by showing your main treatments, before/after results and a direct booking button — build trust from the first click."
+        },
+        corporate: {
+          es: "Presenta tu equipo, tecnología dental, especialidades, financiamiento disponible y galería de casos — diferénciate de otras clínicas.",
+          en: "Present your team, dental technology, specialties, available financing and case gallery — stand out from other clinics."
+        },
+        ecommerce: {
+          es: "Vende blanqueamientos, limpiezas y chequeos preventivos con pago anticipado — llena tu agenda sin depender solo del boca a boca.",
+          en: "Sell whitening treatments, cleanings and preventive checkups with advance payment — fill your schedule without relying only on word of mouth."
+        }
+      },
+      "Veterinaria": {
+        landing: {
+          es: "Una página clara con tus servicios, horarios y mapa — perfecta para captar dueños de mascotas que buscan atención veterinaria cerca.",
+          en: "A clear page with your services, hours and map — perfect for capturing pet owners searching for nearby veterinary care."
+        },
+        corporate: {
+          es: "Muestra tu equipo veterinario, especialidades, servicios de emergencia, tienda de productos y blog de cuidado animal.",
+          en: "Show your veterinary team, specialties, emergency services, product store and animal care blog."
+        },
+        ecommerce: {
+          es: "Vende consultas, vacunas, productos veterinarios y planes de salud para mascotas con pago online — expande tu negocio más allá de tu local.",
+          en: "Sell consultations, vaccines, veterinary products and pet health plans with online payment — expand your business beyond your location."
+        }
+      },
+      "Óptica": {
+        landing: {
+          es: "Muestra tus marcas de armazones, servicios de examen visual y ubicación — capta clientes que buscan óptica cerca antes de ir a un centro comercial.",
+          en: "Show your frame brands, vision exam services and location — capture clients searching for a nearby optician before going to a mall."
+        },
+        corporate: {
+          es: "Presenta tu catálogo completo, servicios de optometría, marcas disponibles, convenios y precios — genera confianza antes de la visita.",
+          en: "Present your full catalog, optometry services, available brands, agreements and prices — build trust before the visit."
+        },
+        ecommerce: {
+          es: "Vende armazones, lentes de contacto y soluciones de limpieza online con envío a domicilio — amplía tus ventas más allá de tu local.",
+          en: "Sell frames, contact lenses and cleaning solutions online with home delivery — expand your sales beyond your location."
+        }
+      },
+      "Centro de Yoga": {
+        landing: {
+          es: "Capta nuevos estudiantes con tu clase de prueba gratuita, horarios y filosofía — una página enfocada convierte curiosos en clientes comprometidos.",
+          en: "Capture new students with your free trial class, schedules and philosophy — a focused page converts curious visitors into committed clients."
+        },
+        corporate: {
+          es: "Presenta tus instructores, estilos de yoga, horarios completos, retiros y talleres especiales — construye una comunidad alrededor de tu espacio.",
+          en: "Present your instructors, yoga styles, full schedules, retreats and special workshops — build a community around your space."
+        },
+        ecommerce: {
+          es: "Vende membresías, clases sueltas, retiros y material digital como guías de meditación con pago automático recurrente.",
+          en: "Sell memberships, drop-in classes, retreats and digital materials like meditation guides with automatic recurring payment."
+        }
+      },
+      "Salón de belleza": {
+        landing: {
+          es: "Muestra tus servicios estrella, galería de trabajos y agenda citas directamente — sin llamadas, sin mensajes de WhatsApp que se pierden.",
+          en: "Show your star services, work gallery and book appointments directly — no calls, no WhatsApp messages that get lost."
+        },
+        corporate: {
+          es: "Presenta tu equipo de estilistas, servicios completos, galería antes/después, precios y sistema de reservas online.",
+          en: "Present your stylist team, full services, before/after gallery, prices and online booking system."
+        },
+        ecommerce: {
+          es: "Vende gift cards, paquetes de novia y productos de cuidado capilar online — genera ingresos más allá de las citas del día.",
+          en: "Sell gift cards, bridal packages and hair care products online — generate revenue beyond daily appointments."
+        }
+      },
+      "Barbería": {
+        landing: {
+          es: "Una página con tus cortes, precios, equipo y botón de reserva — capta clientes que buscan barbería cerca y deciden con lo que ven.",
+          en: "A page with your cuts, prices, team and booking button — capture clients searching for a nearby barbershop who decide based on what they see."
+        },
+        corporate: {
+          es: "Presenta tu identidad de marca, barberos, servicios, galería de trabajos y sistema de citas online — diferénciate de la competencia.",
+          en: "Present your brand identity, barbers, services, work gallery and online appointment system — stand out from the competition."
+        },
+        ecommerce: {
+          es: "Vende productos de cuidado de barba, gift cards y paquetes de membresía mensual con descuento online.",
+          en: "Sell beard care products, gift cards and monthly membership packages with online discount."
+        }
+      },
+      "Uñas & Manicure": {
+        landing: {
+          es: "Muestra tus diseños más llamativos, precios y disponibilidad — las clientas deciden con los ojos, una galería bien hecha llena tu agenda.",
+          en: "Show your most eye-catching designs, prices and availability — clients decide with their eyes, a well-crafted gallery fills your schedule."
+        },
+        corporate: {
+          es: "Presenta tu catálogo completo de servicios, galería de trabajos, precios, equipo y sistema de reservas para varios clientes simultáneos.",
+          en: "Present your full service catalog, work gallery, prices, team and booking system for multiple simultaneous clients."
+        },
+        ecommerce: {
+          es: "Vende paquetes de uñas para eventos, gift cards y kits de cuidado de uñas en casa con entrega a domicilio.",
+          en: "Sell nail packages for events, gift cards and at-home nail care kits with home delivery."
+        }
+      },
+      "Maquillaje": {
+        landing: {
+          es: "Una galería impactante de tus trabajos más recientes con botón de reserva directo — las novias y clientas de eventos contratan lo que ven.",
+          en: "An impactful gallery of your most recent work with direct booking button — brides and event clients hire what they see."
+        },
+        corporate: {
+          es: "Presenta tu portafolio por categorías (novias, editoriales, eventos), formación, servicios a domicilio y proceso de contratación.",
+          en: "Present your portfolio by categories (brides, editorials, events), training, at-home services and hiring process."
+        },
+        ecommerce: {
+          es: "Vende sesiones de maquillaje, talleres de automaquillaje y kits de productos seleccionados con pago directo online.",
+          en: "Sell makeup sessions, self-makeup workshops and curated product kits with direct online payment."
+        }
+      },
+      // MODA & RETAIL
+      "Tienda de ropa": {
+        landing: {
+          es: "Una página de lanzamiento o temporada con tus piezas estrella y botón de compra inmediata — ideal para campañas y colecciones nuevas.",
+          en: "A launch or seasonal page with your star pieces and immediate purchase button — ideal for campaigns and new collections."
+        },
+        corporate: {
+          es: "Presenta tu marca, historia, colecciones, lookbook y puntos de venta — construye identidad antes de que el cliente entre a la tienda.",
+          en: "Present your brand, story, collections, lookbook and sales points — build identity before the client enters the store."
+        },
+        ecommerce: {
+          es: "Vende tu colección completa online con tallas, colores, filtros y pasarela de pago — tu tienda abierta las 24 horas.",
+          en: "Sell your full collection online with sizes, colors, filters and payment gateway — your store open 24 hours."
+        }
+      },
+      "Calzado": {
+        landing: {
+          es: "Lanza una colección o temporada con tus modelos más vendidos y un CTA directo de compra o visita a la tienda.",
+          en: "Launch a collection or season with your best-selling models and a direct purchase or store visit CTA."
+        },
+        corporate: {
+          es: "Presenta tu catálogo por categorías, historia de marca, puntos de venta y lookbook editorial — diferénciate de las zapatillas del mall.",
+          en: "Present your catalog by categories, brand story, sales points and editorial lookbook — stand out from mall sneakers."
+        },
+        ecommerce: {
+          es: "Vende tu catálogo completo con filtros por talla, estilo y precio — elimina la fricción entre el cliente y su próximo par.",
+          en: "Sell your full catalog with filters by size, style and price — remove the friction between the client and their next pair."
+        }
+      },
+      "Accesorios": {
+        landing: {
+          es: "Muestra tu colección más reciente y captura ventas inmediatas — los accesorios son compras impulsivas que una buena imagen cierra sola.",
+          en: "Show your latest collection and capture immediate sales — accessories are impulse purchases that a good image closes alone."
+        },
+        corporate: {
+          es: "Presenta tu universo de marca, colecciones, materiales y proceso artesanal — ideal si tus piezas tienen una historia que contar.",
+          en: "Present your brand universe, collections, materials and artisan process — ideal if your pieces have a story to tell."
+        },
+        ecommerce: {
+          es: "Vende bolsos, jewelry, cinturones y más con fotografías de alta calidad, variantes de color y envío nacional.",
+          en: "Sell bags, jewelry, belts and more with high-quality photos, color variants and nationwide shipping."
+        }
+      },
+      "Joyería": {
+        landing: {
+          es: "Una página de lujo que presenta tu colección estrella y captura solicitudes de piezas personalizadas — la joyería se vende con la emoción, no con el precio.",
+          en: "A luxury page presenting your star collection and capturing custom piece requests — jewelry sells with emotion, not price."
+        },
+        corporate: {
+          es: "Presenta tu historia artesanal, colecciones por categoría, materiales premium, proceso de personalización y galería de piezas únicas.",
+          en: "Present your artisan story, collections by category, premium materials, customization process and unique pieces gallery."
+        },
+        ecommerce: {
+          es: "Vende piezas individuales y colecciones completas online con certificaciones, variantes y envío seguro — tu joyería abierta 24/7.",
+          en: "Sell individual pieces and full collections online with certifications, variants and secure shipping — your jewelry store open 24/7."
+        }
+      },
+      "Cosmética": {
+        landing: {
+          es: "Lanza un producto o línea nueva con una página de conversión enfocada — ideal para campañas de marketing digital y colaboraciones con influencers.",
+          en: "Launch a new product or line with a focused conversion page — ideal for digital marketing campaigns and influencer collaborations."
+        },
+        corporate: {
+          es: "Presenta tu filosofía de marca, líneas de productos, ingredientes, proceso y valores — los consumidores de cosmética compran la historia.",
+          en: "Present your brand philosophy, product lines, ingredients, process and values — cosmetics consumers buy the story."
+        },
+        ecommerce: {
+          es: "Vende tu catálogo completo con rutinas recomendadas, reseñas de clientes y suscripciones de reabastecimiento automático.",
+          en: "Sell your full catalog with recommended routines, customer reviews and automatic replenishment subscriptions."
+        }
+      },
+      "Perfumería": {
+        landing: {
+          es: "Una página sensorial que presenta tu fragancia estrella con historia, notas olfativas y opción de muestra gratuita — convierte curiosos en compradores.",
+          en: "A sensory page presenting your star fragrance with story, olfactory notes and free sample option — converts curious visitors into buyers."
+        },
+        corporate: {
+          es: "Presenta tu catálogo de fragancias, historia de la marca, colecciones por familia olfativa y proceso de selección personalizada.",
+          en: "Present your fragrance catalog, brand story, collections by olfactory family and personalized selection process."
+        },
+        ecommerce: {
+          es: "Vende perfumes, sets de regalo y muestras online con descripciones sensoriales detalladas que suplen la imposibilidad de oler antes de comprar.",
+          en: "Sell perfumes, gift sets and samples online with detailed sensory descriptions that compensate for the inability to smell before buying."
+        }
+      },
+      "Ropa infantil": {
+        landing: {
+          es: "Presenta tu colección de temporada con fotos de niños reales usando tus prendas — los padres compran lo que imaginan en sus hijos.",
+          en: "Present your seasonal collection with photos of real children wearing your garments — parents buy what they imagine on their children."
+        },
+        corporate: {
+          es: "Muestra tus colecciones por edad, materiales seguros, proceso de confección y valores de marca — los padres investigan antes de comprar para sus hijos.",
+          en: "Show your collections by age, safe materials, manufacturing process and brand values — parents research before buying for their children."
+        },
+        ecommerce: {
+          es: "Vende tu catálogo completo con filtros por talla, edad y temporada — con políticas de cambio claras que dan confianza a los padres.",
+          en: "Sell your full catalog with filters by size, age and season — with clear exchange policies that give parents confidence."
+        }
+      },
+      "Uniformes": {
+        landing: {
+          es: "Capta empresas y colegios que necesitan uniformes con una página enfocada en solicitud de cotización — tu formulario es tu vendedor.",
+          en: "Capture companies and schools that need uniforms with a page focused on quote requests — your form is your salesperson."
+        },
+        corporate: {
+          es: "Presenta tus capacidades de producción, tipos de uniformes, clientes anteriores, materiales y proceso de personalización para cerrar contratos corporativos.",
+          en: "Present your production capabilities, uniform types, previous clients, materials and customization process to close corporate contracts."
+        },
+        ecommerce: {
+          es: "Permite que empresas hagan pedidos de uniformes en cantidad con personalización online — reduce el proceso de ventas de semanas a minutos.",
+          en: "Allow companies to place bulk uniform orders with online customization — reduce the sales process from weeks to minutes."
+        }
+      },
+      // SERVICIOS PROFESIONALES
+      "Abogado": {
+        landing: {
+          es: "Una página profesional con tu especialidad, casos de éxito y formulario de consulta gratuita — los clientes contratan abogados en los que confían.",
+          en: "A professional page with your specialty, success cases and free consultation form — clients hire lawyers they trust."
+        },
+        corporate: {
+          es: "Presenta tu bufete, áreas de práctica, equipo de abogados, casos destacados y proceso de contratación — construye autoridad legal online.",
+          en: "Present your firm, practice areas, lawyer team, highlighted cases and hiring process — build legal authority online."
+        },
+        ecommerce: {
+          es: "Vende consultas iniciales, revisiones de contratos y servicios legales estandarizados con pago online — monetiza tu expertise sin llamadas.",
+          en: "Sell initial consultations, contract reviews and standardized legal services with online payment — monetize your expertise without calls."
+        }
+      },
+      "Contador": {
+        landing: {
+          es: "Capta clientes que buscan contador cerca con una página que muestra tus servicios, precios y formulario de contacto directo.",
+          en: "Capture clients searching for a nearby accountant with a page showing your services, prices and direct contact form."
+        },
+        corporate: {
+          es: "Presenta tus servicios contables y fiscales, equipo, software que dominas, tipos de clientes que atiendes y proceso de incorporación.",
+          en: "Present your accounting and tax services, team, software you master, types of clients you serve and onboarding process."
+        },
+        ecommerce: {
+          es: "Vende servicios contables recurrentes, declaraciones de impuestos y asesorías financieras con pago mensual automatizado.",
+          en: "Sell recurring accounting services, tax returns and financial consulting with automated monthly payment."
+        }
+      },
+      "Consultor": {
+        landing: {
+          es: "Una landing de autoridad con tu metodología, resultados medibles y CTA para agendar una sesión estratégica gratuita.",
+          en: "An authority landing with your methodology, measurable results and CTA to book a free strategy session."
+        },
+        corporate: {
+          es: "Presenta tu expertise, casos de éxito, metodología de trabajo, servicios y testimonios de clientes — vende tu conocimiento antes de la reunión.",
+          en: "Present your expertise, success cases, work methodology, services and client testimonials — sell your knowledge before the meeting."
+        },
+        ecommerce: {
+          es: "Vende talleres, cursos, sesiones de consultoría y documentos estratégicos descargables — escala tu impacto más allá de tu tiempo disponible.",
+          en: "Sell workshops, courses, consulting sessions and downloadable strategic documents — scale your impact beyond your available time."
+        }
+      },
+      "Arquitecto": {
+        landing: {
+          es: "Un portafolio visual de tus proyectos más impresionantes con formulario de consulta — los clientes contratan arquitectos por lo que han hecho.",
+          en: "A visual portfolio of your most impressive projects with consultation form — clients hire architects for what they've done."
+        },
+        corporate: {
+          es: "Presenta tu filosofía de diseño, portafolio completo por categorías, equipo, premios y proceso de trabajo — diferénciate en un mercado visual.",
+          en: "Present your design philosophy, full portfolio by categories, team, awards and work process — stand out in a visual market."
+        },
+        ecommerce: {
+          es: "Vende consultas iniciales, planos estandarizados y servicios de diseño de interiores con cotización online — captura leads calificados.",
+          en: "Sell initial consultations, standardized floor plans and interior design services with online quotes — capture qualified leads."
+        }
+      },
+      "Coach": {
+        landing: {
+          es: "Tu historia de transformación personal + metodología + sesión gratuita de descubrimiento — la landing más poderosa para coaches es la que conecta emocionalmente.",
+          en: "Your personal transformation story + methodology + free discovery session — the most powerful landing for coaches is the one that connects emotionally."
+        },
+        corporate: {
+          es: "Presenta tus programas, metodología, certificaciones, podcast o blog y testimonios de clientes transformados — construye una marca personal sólida.",
+          en: "Present your programs, methodology, certifications, podcast or blog and transformed client testimonials — build a solid personal brand."
+        },
+        ecommerce: {
+          es: "Vende programas de coaching grupales, cursos online, masterminds y recursos descargables — escala tus ingresos sin multiplicar tus horas.",
+          en: "Sell group coaching programs, online courses, masterminds and downloadable resources — scale your income without multiplying your hours."
+        }
+      },
+      "Agencia de marketing": {
+        landing: {
+          es: "Muestra tus resultados más impresionantes y captura leads listos para invertir — las agencias se venden con números reales.",
+          en: "Show your most impressive results and capture leads ready to invest — agencies sell with real numbers."
+        },
+        corporate: {
+          es: "Presenta tus servicios, casos de éxito por industria, equipo, metodología y stack de herramientas — diferénciate en un mercado saturado.",
+          en: "Present your services, success cases by industry, team, methodology and tool stack — stand out in a saturated market."
+        },
+        ecommerce: {
+          es: "Vende paquetes de servicios de marketing con precio fijo, auditorías digitales y cursos — genera ingresos predecibles más allá de los proyectos.",
+          en: "Sell fixed-price marketing service packages, digital audits and courses — generate predictable revenue beyond projects."
+        }
+      },
+      "Fotografía": {
+        landing: {
+          es: "Tu mejor trabajo en una galería impactante con botón directo de reserva — en fotografía, la imagen vende sola si la presentas bien.",
+          en: "Your best work in an impactful gallery with direct booking button — in photography, the image sells itself if you present it well."
+        },
+        corporate: {
+          es: "Presenta tu portafolio por categorías (bodas, corporativo, producto), paquetes, proceso y testimonios — construye confianza antes del primer contacto.",
+          en: "Present your portfolio by categories (weddings, corporate, product), packages, process and testimonials — build trust before first contact."
+        },
+        ecommerce: {
+          es: "Vende sesiones fotográficas, álbumes digitales, prints y paquetes especiales con reserva y pago online anticipado.",
+          en: "Sell photography sessions, digital albums, prints and special packages with advance online booking and payment."
+        }
+      },
+      "Diseño gráfico": {
+        landing: {
+          es: "Un portafolio visual que habla por sí solo con formulario de proyecto — los diseñadores que muestran bien su trabajo no necesitan convencer, solo mostrar.",
+          en: "A visual portfolio that speaks for itself with project form — designers who showcase their work well don't need to convince, just show."
+        },
+        corporate: {
+          es: "Presenta tus servicios, proceso creativo, clientes anteriores, portafolio por industria y paquetes de branding — posiciónate como experto.",
+          en: "Present your services, creative process, previous clients, portfolio by industry and branding packages — position yourself as an expert."
+        },
+        ecommerce: {
+          es: "Vende templates, recursos gráficos, paquetes de branding y sesiones de diseño con entrega digital inmediata.",
+          en: "Sell templates, graphic resources, branding packages and design sessions with immediate digital delivery."
+        }
+      },
+      "Traducción": {
+        landing: {
+          es: "Capta clientes corporativos con una página que muestra tus pares de idiomas, especialidades técnicas y tiempo de entrega garantizado.",
+          en: "Capture corporate clients with a page showing your language pairs, technical specialties and guaranteed delivery time."
+        },
+        corporate: {
+          es: "Presenta tus servicios por tipo (legal, médico, técnico), equipo de traductores, certificaciones y proceso de control de calidad.",
+          en: "Present your services by type (legal, medical, technical), translator team, certifications and quality control process."
+        },
+        ecommerce: {
+          es: "Vende traducciones por número de palabras, revisiones de documentos y servicios de interpretación remota con pago online inmediato.",
+          en: "Sell translations by word count, document reviews and remote interpretation services with immediate online payment."
+        }
+      },
+      "Seguridad privada": {
+        landing: {
+          es: "Capta empresas y residencias que necesitan seguridad con una página que transmite confianza, trayectoria y formulario de cotización rápida.",
+          en: "Capture companies and residences needing security with a page that conveys trust, track record and quick quote form."
+        },
+        corporate: {
+          es: "Presenta tus servicios de seguridad, tipos de clientes, certificaciones, equipo y tecnología de monitoreo — genera confianza institucional.",
+          en: "Present your security services, client types, certifications, team and monitoring technology — build institutional trust."
+        },
+        ecommerce: {
+          es: "Vende paquetes de monitoreo mensual, instalación de cámaras y servicios de consultoría de seguridad con contratación online.",
+          en: "Sell monthly monitoring packages, camera installation and security consulting services with online contracting."
+        }
+      },
+      // INMOBILIARIO
+      "Broker / Agente": {
+        landing: {
+          es: "Tu diferenciador personal, propiedades destacadas y formulario de contacto directo — en inmobiliario, la confianza en el agente es la venta.",
+          en: "Your personal differentiator, featured properties and direct contact form — in real estate, trust in the agent is the sale."
+        },
+        corporate: {
+          es: "Presenta tu portafolio de propiedades, historial de ventas, área de especialización, equipo y proceso de trabajo — construye tu marca personal inmobiliaria.",
+          en: "Present your property portfolio, sales history, area of specialization, team and work process — build your real estate personal brand."
+        },
+        ecommerce: {
+          es: "Publica propiedades con filtros avanzados, tours virtuales y formulario de visita — captura leads calificados directamente en tu web.",
+          en: "Publish properties with advanced filters, virtual tours and visit form — capture qualified leads directly on your website."
+        }
+      },
+      "Constructora": {
+        landing: {
+          es: "Muestra tu proyecto estrella actual y captura interesados antes de que se llene — las preventas inmobiliarias se ganan online.",
+          en: "Show your current star project and capture interested buyers before it fills up — real estate pre-sales are won online."
+        },
+        corporate: {
+          es: "Presenta tu portafolio de proyectos terminados, en construcción y planificados, con especificaciones, equipo y proceso de compra.",
+          en: "Present your portfolio of completed, under construction and planned projects, with specifications, team and purchasing process."
+        },
+        ecommerce: {
+          es: "Publica apartamentos y unidades disponibles con precio, planos y formulario de reserva con depósito online — digitaliza tu proceso de preventa.",
+          en: "Publish available apartments and units with price, floor plans and reservation form with online deposit — digitize your pre-sale process."
+        }
+      },
+      "Alquiler vacacional": {
+        landing: {
+          es: "Una página por propiedad con galería, amenidades, disponibilidad en tiempo real y botón de reserva directa — sin comisiones de Airbnb.",
+          en: "A page per property with gallery, amenities, real-time availability and direct booking button — no Airbnb commissions."
+        },
+        corporate: {
+          es: "Presenta todas tus propiedades disponibles, reviews de huéspedes, políticas y experiencias locales — construye una marca de hospitalidad propia.",
+          en: "Present all your available properties, guest reviews, policies and local experiences — build your own hospitality brand."
+        },
+        ecommerce: {
+          es: "Sistema completo de reservas con calendario, pagos online, confirmación automática y gestión de huéspedes — tu Airbnb propio sin comisiones.",
+          en: "Complete booking system with calendar, online payments, automatic confirmation and guest management — your own Airbnb without commissions."
+        }
+      },
+      "Administración de propiedades": {
+        landing: {
+          es: "Capta propietarios que necesitan administrar sus inmuebles con una página que muestra tus servicios, tarifas y formulario de contacto.",
+          en: "Capture property owners who need to manage their real estate with a page showing your services, rates and contact form."
+        },
+        corporate: {
+          es: "Presenta tus servicios de administración, portafolio de propiedades gestionadas, equipo, tecnología y reportes mensuales que ofreces.",
+          en: "Present your management services, managed properties portfolio, team, technology and monthly reports you provide."
+        },
+        ecommerce: {
+          es: "Vende planes de administración de propiedades con precio mensual fijo y contratación online — escala tu cartera sin escalar tu equipo.",
+          en: "Sell property management plans with fixed monthly price and online contracting — scale your portfolio without scaling your team."
+        }
+      },
+      "Tasación": {
+        landing: {
+          es: "Capta propietarios que necesitan conocer el valor de su propiedad con una página clara de servicios y formulario de solicitud inmediata.",
+          en: "Capture property owners who need to know their property value with a clear services page and immediate request form."
+        },
+        corporate: {
+          es: "Presenta tus credenciales, tipos de tasaciones, metodología, clientes que sirves y proceso de entrega de informes.",
+          en: "Present your credentials, types of appraisals, methodology, clients you serve and report delivery process."
+        },
+        ecommerce: {
+          es: "Vende informes de tasación por tipo de propiedad con pago online y entrega digital — elimina el proceso manual de cotización.",
+          en: "Sell appraisal reports by property type with online payment and digital delivery — eliminate the manual quoting process."
+        }
+      },
+      // EDUCACIÓN & CAPACITACIÓN
+      "Academia de idiomas": {
+        landing: {
+          es: "Capta estudiantes con una clase de prueba gratuita y muestra tus niveles, horarios y metodología — la decisión de aprender un idioma empieza online.",
+          en: "Capture students with a free trial class and show your levels, schedules and methodology — the decision to learn a language starts online."
+        },
+        corporate: {
+          es: "Presenta tus idiomas disponibles, profesores nativos, metodología, horarios, precios y testimonios de alumnos — construye confianza académica.",
+          en: "Present your available languages, native teachers, methodology, schedules, prices and student testimonials — build academic trust."
+        },
+        ecommerce: {
+          es: "Vende cursos por nivel, suscripciones mensuales de clases y material didáctico descargable con matrícula online inmediata.",
+          en: "Sell courses by level, monthly class subscriptions and downloadable teaching materials with immediate online enrollment."
+        }
+      },
+      "Tutor": {
+        landing: {
+          es: "Tu especialidad, metodología y disponibilidad en una página que captura solicitudes de clases directamente — sin intermediarios.",
+          en: "Your specialty, methodology and availability on a page that captures class requests directly — no middlemen."
+        },
+        corporate: {
+          es: "Presenta tus áreas de tutoría, niveles que atiendes, metodología, historial académico y testimonios de estudiantes y padres.",
+          en: "Present your tutoring areas, levels you serve, methodology, academic background and student and parent testimonials."
+        },
+        ecommerce: {
+          es: "Vende paquetes de clases, sesiones individuales y materiales de estudio con pago online — llena tu agenda sin llamadas.",
+          en: "Sell class packages, individual sessions and study materials with online payment — fill your schedule without calls."
+        }
+      },
+      "Escuela": {
+        landing: {
+          es: "Capta familias en proceso de matrícula con una página que muestra tu propuesta educativa, instalaciones y formulario de inscripción.",
+          en: "Capture families in enrollment process with a page showing your educational proposal, facilities and registration form."
+        },
+        corporate: {
+          es: "Presenta tu modelo educativo, niveles académicos, actividades extracurriculares, cuerpo docente, instalaciones y proceso de admisión.",
+          en: "Present your educational model, academic levels, extracurricular activities, teaching staff, facilities and admission process."
+        },
+        ecommerce: {
+          es: "Permite pagos de matrícula, mensualidades y actividades extracurriculares online — reduce filas y simplifica la gestión de cobros.",
+          en: "Allow online tuition, monthly fee and extracurricular activity payments — reduce lines and simplify collection management."
+        }
+      },
+      "Curso online": {
+        landing: {
+          es: "Una landing de lanzamiento con módulos, bonos, testimonios y precio con urgencia — el 80% de la venta de cursos online ocurre en la landing.",
+          en: "A launch landing with modules, bonuses, testimonials and urgency pricing — 80% of online course sales happen on the landing."
+        },
+        corporate: {
+          es: "Presenta tu catálogo completo de cursos, metodología de enseñanza, instructor, comunidad de alumnos y resultados obtenidos.",
+          en: "Present your full course catalog, teaching methodology, instructor, student community and results achieved."
+        },
+        ecommerce: {
+          es: "Vende acceso a cursos, bundles de programas y membresías de comunidad con pago inmediato y entrega automática del contenido.",
+          en: "Sell course access, program bundles and community memberships with immediate payment and automatic content delivery."
+        }
+      },
+      "Guardería": {
+        landing: {
+          es: "Capta padres que buscan guardería cerca con una página que transmite seguridad, calidez y formulario de visita directa.",
+          en: "Capture parents searching for a nearby daycare with a page that conveys safety, warmth and direct visit form."
+        },
+        corporate: {
+          es: "Presenta tu filosofía de cuidado, instalaciones, equipo educativo, horarios, tarifas y actividades diarias — los padres necesitan confiar antes de dejar a sus hijos.",
+          en: "Present your care philosophy, facilities, educational team, schedules, rates and daily activities — parents need to trust before leaving their children."
+        },
+        ecommerce: {
+          es: "Permite pagos de mensualidad y actividades online con facturación automática — simplifica la gestión administrativa de tu guardería.",
+          en: "Allow monthly fee and activity payments online with automatic billing — simplify your daycare's administrative management."
+        }
+      },
+      "Centro de capacitación": {
+        landing: {
+          es: "Capta empresas que necesitan capacitar a sus equipos con una página enfocada en ROI, temas disponibles y solicitud de propuesta.",
+          en: "Capture companies needing to train their teams with a page focused on ROI, available topics and proposal request."
+        },
+        corporate: {
+          es: "Presenta tu catálogo de programas, modalidades (presencial, virtual, mixta), instructores certificados, clientes corporativos y metodología.",
+          en: "Present your program catalog, modalities (in-person, virtual, blended), certified instructors, corporate clients and methodology."
+        },
+        ecommerce: {
+          es: "Vende talleres públicos, cursos abiertos y certificaciones online con inscripción y pago inmediato — llena tus grupos sin llamadas de ventas.",
+          en: "Sell public workshops, open courses and online certifications with immediate registration and payment — fill your groups without sales calls."
+        }
+      },
+      "Música & Arte": {
+        landing: {
+          es: "Una página que muestra tu talento con muestras de trabajo y captura inscripciones para clases — el arte se vende con lo que se ve y escucha.",
+          en: "A page showcasing your talent with work samples and capturing class registrations — art sells with what is seen and heard."
+        },
+        corporate: {
+          es: "Presenta tus programas por instrumento o disciplina, profesores, metodología, galería de presentaciones y sistema de inscripciones.",
+          en: "Present your programs by instrument or discipline, teachers, methodology, performance gallery and enrollment system."
+        },
+        ecommerce: {
+          es: "Vende clases individuales, paquetes mensuales y materiales didácticos online — escala tu enseñanza más allá de tu espacio físico.",
+          en: "Sell individual classes, monthly packages and teaching materials online — scale your teaching beyond your physical space."
+        }
+      },
+      // TURISMO, EVENTOS & HOSPITALIDAD
+      "Hotel": {
+        landing: {
+          es: "Una página de reserva directa con galería, tarifas y disponibilidad en tiempo real — cada reserva directa que capturas elimina la comisión de Booking.com.",
+          en: "A direct booking page with gallery, rates and real-time availability — every direct booking you capture eliminates the Booking.com commission."
+        },
+        corporate: {
+          es: "Presenta todas tus habitaciones, amenidades, restaurante, eventos disponibles, ubicación y sistema de reservas — tu alternativa a depender de OTAs.",
+          en: "Present all your rooms, amenities, restaurant, available events, location and booking system — your alternative to depending on OTAs."
+        },
+        ecommerce: {
+          es: "Sistema completo de reservas con calendario, pago online, confirmación automática y gestión de habitaciones — elimina la comisión de intermediarios.",
+          en: "Complete booking system with calendar, online payment, automatic confirmation and room management — eliminate intermediary commissions."
+        }
+      },
+      "Hostal": {
+        landing: {
+          es: "Muestra tu ambiente único, precios competitivos y ubicación estratégica — los viajeros independientes deciden rápido si la foto y el precio convencen.",
+          en: "Show your unique vibe, competitive prices and strategic location — independent travelers decide fast if the photo and price convince."
+        },
+        corporate: {
+          es: "Presenta tus habitaciones, áreas comunes, actividades, reviews de huéspedes y sistema de reservas — compite con las grandes cadenas con autenticidad.",
+          en: "Present your rooms, common areas, activities, guest reviews and booking system — compete with large chains through authenticity."
+        },
+        ecommerce: {
+          es: "Reservas directas con pago online, paquetes de experiencias locales y tours incluidos — elimina las comisiones de Hostelworld o Booking.",
+          en: "Direct bookings with online payment, local experience packages and included tours — eliminate Hostelworld or Booking commissions."
+        }
+      },
+      "Tour operador": {
+        landing: {
+          es: "Presenta tu tour estrella con itinerario detallado, fotos reales y botón de reserva directa — los turistas deciden en minutos si el tour es visual.",
+          en: "Present your star tour with detailed itinerary, real photos and direct booking button — tourists decide in minutes if the tour is visual."
+        },
+        corporate: {
+          es: "Presenta tu catálogo completo de tours, destinos, guías, reviews y sistema de reservas con disponibilidad en tiempo real.",
+          en: "Present your full tour catalog, destinations, guides, reviews and booking system with real-time availability."
+        },
+        ecommerce: {
+          es: "Vende tours, excursiones y paquetes completos con reserva y pago online — captura turistas que investigan y compran desde su hotel.",
+          en: "Sell tours, excursions and complete packages with online booking and payment — capture tourists who research and buy from their hotel."
+        }
+      },
+      "Renta de vehículos": {
+        landing: {
+          es: "Muestra tu flota disponible con precios claros y formulario de reserva directa — los viajeros comparan y reservan en el mismo momento.",
+          en: "Show your available fleet with clear prices and direct reservation form — travelers compare and book at the same moment."
+        },
+        corporate: {
+          es: "Presenta tu flota completa por categoría, tarifas, condiciones, cobertura y proceso de entrega — diferénciate de las grandes cadenas con servicio personalizado.",
+          en: "Present your full fleet by category, rates, conditions, coverage and delivery process — stand out from large chains with personalized service."
+        },
+        ecommerce: {
+          es: "Reservas online con selección de fechas, vehículo y extras — pago seguro y confirmación inmediata sin esperar llamadas.",
+          en: "Online bookings with date, vehicle and extras selection — secure payment and immediate confirmation without waiting for calls."
+        }
+      },
+      "Excursiones": {
+        landing: {
+          es: "Una página por destino con galería impactante, itinerario y botón de reserva — los turistas en Punta Cana buscan excursiones desde su teléfono.",
+          en: "A page per destination with impactful gallery, itinerary and booking button — tourists in Punta Cana search for excursions from their phones."
+        },
+        corporate: {
+          es: "Presenta todo tu catálogo de excursiones con destinos, duración, precio, inclusiones y sistema de reservas multilingüe.",
+          en: "Present your full excursion catalog with destinations, duration, price, inclusions and multilingual booking system."
+        },
+        ecommerce: {
+          es: "Vende excursiones individuales y paquetes combinados con reserva online, pago seguro y voucher digital automático.",
+          en: "Sell individual excursions and combined packages with online booking, secure payment and automatic digital voucher."
+        }
+      },
+      "Agencia de viajes": {
+        landing: {
+          es: "Capta viajeros con una oferta específica de temporada — luna de miel, viaje de grupo o destino particular — con formulario de cotización directa.",
+          en: "Capture travelers with a specific seasonal offer — honeymoon, group trip or particular destination — with direct quote form."
+        },
+        corporate: {
+          es: "Presenta tus destinos, tipos de viajes, equipo de asesores, clientes satisfechos y proceso de planificación personalizada.",
+          en: "Present your destinations, trip types, advisor team, satisfied clients and personalized planning process."
+        },
+        ecommerce: {
+          es: "Vende paquetes de viaje con precio cerrado, reserva online y pago seguro — capta clientes que quieren planificar sin llamadas.",
+          en: "Sell closed-price travel packages with online booking and secure payment — capture clients who want to plan without calls."
+        }
+      },
+      "DJ": {
+        landing: {
+          es: "Tu mix más impactante, galería de eventos y formulario de contratación directa — los DJ se contratan por lo que suenan y lo que se ve en sus eventos.",
+          en: "Your most impactful mix, event gallery and direct booking form — DJs are hired for how they sound and what is seen at their events."
+        },
+        corporate: {
+          es: "Presenta tu catálogo de géneros, equipamiento, eventos pasados, rider técnico y paquetes disponibles — profesionaliza tu imagen como artista.",
+          en: "Present your genre catalog, equipment, past events, technical rider and available packages — professionalize your artist image."
+        },
+        ecommerce: {
+          es: "Vende paquetes de DJ para bodas, cumpleaños y eventos corporativos con cotización online y anticipo para reservar fecha.",
+          en: "Sell DJ packages for weddings, birthdays and corporate events with online quote and advance payment to book the date."
+        }
+      },
+      "Fotografía de eventos": {
+        landing: {
+          es: "Tu mejor trabajo de bodas o eventos en una galería que enamora — con botón de reserva directa para la fecha disponible más próxima.",
+          en: "Your best wedding or event work in a gallery that captivates — with direct booking button for the nearest available date."
+        },
+        corporate: {
+          es: "Presenta tu portafolio por tipo de evento, paquetes con y sin álbum, proceso de trabajo y política de entrega de fotos.",
+          en: "Present your portfolio by event type, packages with and without album, work process and photo delivery policy."
+        },
+        ecommerce: {
+          es: "Vende paquetes fotográficos con reserva de fecha y anticipo online — llena tu agenda con meses de anticipación sin gestión manual.",
+          en: "Sell photography packages with date reservation and online advance payment — fill your schedule months ahead without manual management."
+        }
+      },
+      "Decoración": {
+        landing: {
+          es: "Una galería de tus montajes más impresionantes con formulario de cotización directa — en decoración, la foto lo es todo.",
+          en: "A gallery of your most impressive setups with direct quote form — in decoration, the photo is everything."
+        },
+        corporate: {
+          es: "Presenta tu portafolio por tipo de evento, equipo, proveedores aliados, proceso y testimonios — construye confianza para los momentos más importantes.",
+          en: "Present your portfolio by event type, team, allied suppliers, process and testimonials — build trust for the most important moments."
+        },
+        ecommerce: {
+          es: "Vende paquetes de decoración por tipo de evento con cotización base online y anticipo para reservar tu fecha.",
+          en: "Sell decoration packages by event type with base online quote and advance payment to reserve your date."
+        }
+      },
+      "Animación infantil": {
+        landing: {
+          es: "Fotos de niños felices, personajes disponibles y botón de reserva directa — los padres contratan animadores en minutos si lo que ven les da confianza.",
+          en: "Photos of happy children, available characters and direct booking button — parents hire entertainers in minutes if what they see builds trust."
+        },
+        corporate: {
+          es: "Presenta tus personajes, servicios completos, paquetes por duración, galería de eventos y testimonios de padres satisfechos.",
+          en: "Present your characters, full services, packages by duration, event gallery and satisfied parent testimonials."
+        },
+        ecommerce: {
+          es: "Vende paquetes de animación con precio fijo por duración, reserva online y anticipo para confirmar la fecha del cumpleaños.",
+          en: "Sell entertainment packages with fixed price by duration, online booking and advance to confirm the birthday date."
+        }
+      },
+      "Salón de fiestas": {
+        landing: {
+          es: "Muestra tus espacios, capacidad, amenidades y disponibilidad — capta reservas de cumpleaños, bodas y eventos corporativos directamente.",
+          en: "Show your spaces, capacity, amenities and availability — capture birthday, wedding and corporate event bookings directly."
+        },
+        corporate: {
+          es: "Presenta todos tus salones, paquetes de catering incluido, servicios adicionales, galería de eventos pasados y proceso de reserva.",
+          en: "Present all your halls, included catering packages, additional services, past event gallery and reservation process."
+        },
+        ecommerce: {
+          es: "Sistema de reservas con selección de fecha, salón y extras — anticipo online para confirmar y reducir cancelaciones de último momento.",
+          en: "Booking system with date, hall and extras selection — online advance to confirm and reduce last-minute cancellations."
+        }
+      },
+      "Producción audiovisual": {
+        landing: {
+          es: "Tu reel más impactante con los primeros 30 segundos que cautivan — y formulario de proyecto para captar clientes corporativos.",
+          en: "Your most impactful reel with the first 30 seconds that captivate — and project form to capture corporate clients."
+        },
+        corporate: {
+          es: "Presenta tus servicios por tipo (video corporativo, publicidad, documental), equipo técnico, clientes y proceso de producción.",
+          en: "Present your services by type (corporate video, advertising, documentary), technical team, clients and production process."
+        },
+        ecommerce: {
+          es: "Vende paquetes de producción de video con precio base para YouTube, redes sociales y eventos — capta clientes con presupuesto definido.",
+          en: "Sell video production packages with base price for YouTube, social media and events — capture clients with defined budgets."
+        }
+      },
+      // TECNOLOGÍA & AGENCIAS
+      "Startup": {
+        landing: {
+          es: "Tu propuesta de valor en una página que convierte — para validar el mercado, captar early adopters e inversores antes del lanzamiento.",
+          en: "Your value proposition on a converting page — to validate the market, capture early adopters and investors before launch."
+        },
+        corporate: {
+          es: "Presenta tu producto, equipo fundador, tracción actual, modelo de negocio y roadmap — genera confianza para clientes e inversores.",
+          en: "Present your product, founding team, current traction, business model and roadmap — build trust for clients and investors."
+        },
+        ecommerce: {
+          es: "Vende acceso anticipado, planes de suscripción y servicios adicionales online — monetiza desde el día uno sin esperar el producto final.",
+          en: "Sell early access, subscription plans and additional services online — monetize from day one without waiting for the final product."
+        }
+      },
+      "SaaS": {
+        landing: {
+          es: "La landing más importante de tu empresa — debe comunicar el valor en 5 segundos, mostrar el producto y convertir visitantes en trials.",
+          en: "The most important page of your company — must communicate value in 5 seconds, show the product and convert visitors into trials."
+        },
+        corporate: {
+          es: "Presenta todas tus funcionalidades, integraciones, planes de precio, casos de uso por industria y testimonios de clientes — tu web es tu vendedor principal.",
+          en: "Present all your features, integrations, pricing plans, use cases by industry and client testimonials — your website is your main salesperson."
+        },
+        ecommerce: {
+          es: "Planes de suscripción con pago online, upgrades automáticos y portal de cliente — la infraestructura de monetización de tu SaaS.",
+          en: "Subscription plans with online payment, automatic upgrades and client portal — the monetization infrastructure of your SaaS."
+        }
+      },
+      "App móvil": {
+        landing: {
+          es: "Una landing de lanzamiento que presenta tu app, muestra las pantallas principales y captura descargas o registros anticipados.",
+          en: "A launch landing presenting your app, showing the main screens and capturing downloads or early registrations."
+        },
+        corporate: {
+          es: "Presenta todas las funciones de tu app, screenshots, reseñas de usuarios, casos de uso y botones directos a App Store y Google Play.",
+          en: "Present all your app features, screenshots, user reviews, use cases and direct buttons to App Store and Google Play."
+        },
+        ecommerce: {
+          es: "Vende suscripciones premium, funciones adicionales y acceso anticipado directamente desde tu web — sin las comisiones del 30% de las tiendas.",
+          en: "Sell premium subscriptions, additional features and early access directly from your website — without the 30% commission from app stores."
+        }
+      },
+      "Agencia digital": {
+        landing: {
+          es: "Muestra tus mejores resultados en números reales y captura leads listos para invertir — las agencias digitales se contratan por resultados probados.",
+          en: "Show your best results in real numbers and capture leads ready to invest — digital agencies are hired for proven results."
+        },
+        corporate: {
+          es: "Presenta tus servicios, casos de éxito por industria, equipo, metodología y stack tecnológico — diferénciate en un mercado saturado de agencias.",
+          en: "Present your services, success cases by industry, team, methodology and technology stack — stand out in a market saturated with agencies."
+        },
+        ecommerce: {
+          es: "Vende paquetes de servicios con precio fijo, auditorías digitales y cursos — genera ingresos predecibles más allá de los proyectos por proyecto.",
+          en: "Sell fixed-price service packages, digital audits and courses — generate predictable revenue beyond project-by-project work."
+        }
+      },
+      "Soporte técnico": {
+        landing: {
+          es: "Capta empresas que necesitan soporte IT con una página que muestra tiempos de respuesta, servicios y formulario de contacto de emergencia.",
+          en: "Capture companies needing IT support with a page showing response times, services and emergency contact form."
+        },
+        corporate: {
+          es: "Presenta tus servicios de soporte, tipos de contratos, SLA garantizados, tecnologías que dominas y clientes que atienes.",
+          en: "Present your support services, contract types, guaranteed SLAs, technologies you master and clients you serve."
+        },
+        ecommerce: {
+          es: "Vende contratos de soporte mensual, horas de consultoría y servicios de configuración con contratación y pago online.",
+          en: "Sell monthly support contracts, consulting hours and configuration services with online contracting and payment."
+        }
+      },
+      "Venta de equipos": {
+        landing: {
+          es: "Muestra tu producto estrella o promoción del mes con especificaciones, precio y botón de compra o cotización directa.",
+          en: "Show your star product or monthly promotion with specifications, price and direct purchase or quote button."
+        },
+        corporate: {
+          es: "Presenta tu catálogo por categoría, marcas que manejas, servicios postventa, garantías y proceso de compra corporativa.",
+          en: "Present your catalog by category, brands you carry, after-sale services, warranties and corporate purchase process."
+        },
+        ecommerce: {
+          es: "Vende tu inventario completo online con especificaciones técnicas, comparativas y envío a domicilio — tu tienda abierta 24/7.",
+          en: "Sell your full inventory online with technical specifications, comparisons and home delivery — your store open 24/7."
+        }
+      }
+    };
+
+    // Generic fallbacks by sector when specific business not found
+    const sectorFallbacks: Record<string, {
+      landing: { es: string; en: string };
+      corporate: { es: string; en: string };
+      ecommerce: { es: string; en: string };
+    }> = {
+      food: {
+        landing: { es: "Captura clientes con una página enfocada en tu producto o servicio principal y un CTA directo de contacto o reserva.", en: "Capture clients with a page focused on your main product or service and a direct contact or booking CTA." },
+        corporate: { es: "Muestra todos tus servicios, historia, equipo y formas de contacto — una presencia completa que genera confianza antes de la primera visita.", en: "Show all your services, story, team and contact methods — a complete presence that builds trust before the first visit." },
+        ecommerce: { es: "Vende tus productos o servicios online con pago inmediato y gestión automática de pedidos.", en: "Sell your products or services online with immediate payment and automatic order management." }
+      },
+      health: {
+        landing: { es: "Capta pacientes o clientes nuevos con una página que muestra tu especialidad, equipo y formulario de cita directa.", en: "Capture new patients or clients with a page showing your specialty, team and direct appointment form." },
+        corporate: { es: "Presenta tus servicios completos, equipo profesional, instalaciones y proceso de atención — genera confianza antes del primer contacto.", en: "Present your full services, professional team, facilities and care process — build trust before first contact." },
+        ecommerce: { es: "Vende servicios, productos o planes de bienestar online con pago anticipado y gestión automática.", en: "Sell wellness services, products or plans online with advance payment and automatic management." }
+      },
+      retail: {
+        landing: { es: "Lanza tu colección o producto estrella con una página de conversión directa y botón de compra inmediata.", en: "Launch your collection or star product with a direct conversion page and immediate purchase button." },
+        corporate: { es: "Presenta tu marca, catálogo completo, historia y puntos de venta — construye identidad antes de que el cliente entre a tu tienda.", en: "Present your brand, full catalog, story and sales points — build identity before the client enters your store." },
+        ecommerce: { es: "Vende tu catálogo completo online con filtros, variantes y pasarela de pago — tu tienda abierta las 24 horas.", en: "Sell your full catalog online with filters, variants and payment gateway — your store open 24 hours." }
+      },
+      services: {
+        landing: { es: "Capta clientes con tu propuesta de valor principal y un formulario de contacto o cotización directa.", en: "Capture clients with your main value proposition and a direct contact or quote form." },
+        corporate: { es: "Presenta tus servicios, equipo, proceso de trabajo y casos de éxito — vende tu expertise antes de la primera reunión.", en: "Present your services, team, work process and success cases — sell your expertise before the first meeting." },
+        ecommerce: { es: "Vende tus servicios con precio definido y contratación online — elimina el proceso manual de cotización.", en: "Sell your services with defined price and online contracting — eliminate the manual quoting process." }
+      },
+      realestate: {
+        landing: { es: "Muestra tu propuesta inmobiliaria principal y captura leads calificados con formulario de contacto directo.", en: "Show your main real estate proposition and capture qualified leads with direct contact form." },
+        corporate: { es: "Presenta tu portafolio, equipo, áreas de especialización y proceso de trabajo — construye confianza en el sector inmobiliario.", en: "Present your portfolio, team, areas of specialization and work process — build trust in the real estate sector." },
+        ecommerce: { es: "Publica propiedades o servicios con sistema de reserva y pago online — captura leads calificados directamente.", en: "Publish properties or services with online booking and payment system — capture qualified leads directly." }
+      },
+      education: {
+        landing: { es: "Capta estudiantes con tu oferta educativa principal, una clase de prueba y formulario de inscripción directa.", en: "Capture students with your main educational offer, a trial class and direct enrollment form." },
+        corporate: { es: "Presenta tus programas, metodología, equipo docente, horarios y testimonios — construye confianza académica online.", en: "Present your programs, methodology, teaching team, schedules and testimonials — build academic trust online." },
+        ecommerce: { es: "Vende cursos, programas y materiales online con inscripción y pago inmediato — escala tu educación más allá del aula.", en: "Sell courses, programs and materials online with immediate enrollment and payment — scale your education beyond the classroom." }
+      },
+      tourism: {
+        landing: { es: "Presenta tu experiencia estrella con galería visual impactante y botón de reserva directa — los turistas deciden rápido.", en: "Present your star experience with impactful visual gallery and direct booking button — tourists decide fast." },
+        corporate: { es: "Muestra todo tu catálogo de servicios, experiencias, equipo, reviews y sistema de reservas con disponibilidad en tiempo real.", en: "Show your full service and experience catalog, team, reviews and booking system with real-time availability." },
+        ecommerce: { es: "Vende experiencias, paquetes y servicios con reserva y pago online — capta turistas que investigan y compran desde su dispositivo.", en: "Sell experiences, packages and services with online booking and payment — capture tourists who research and buy from their device." }
+      },
+      tech: {
+        landing: { es: "Tu propuesta de valor en una página que convierte — comunica el problema que resuelves y captura leads calificados.", en: "Your value proposition on a converting page — communicate the problem you solve and capture qualified leads." },
+        corporate: { es: "Presenta tu producto o servicios, equipo, casos de uso, integraciones y prueba social — tu web es tu vendedor principal.", en: "Present your product or services, team, use cases, integrations and social proof — your website is your main salesperson." },
+        ecommerce: { es: "Vende suscripciones, servicios o productos digitales online con pago automático y entrega inmediata.", en: "Sell subscriptions, services or digital products online with automatic payment and immediate delivery." }
+      },
+      other: {
+        landing: { es: "Una página enfocada en tu propuesta de valor principal con un CTA claro — ideal para captar clientes rápidamente.", en: "A page focused on your main value proposition with a clear CTA — ideal for capturing clients quickly." },
+        corporate: { es: "Una presencia digital completa que muestra todo lo que ofreces, genera confianza y facilita el contacto.", en: "A complete digital presence showing everything you offer, building trust and facilitating contact." },
+        ecommerce: { es: "Vende tus productos o servicios online con pasarela de pago integrada y gestión automática.", en: "Sell your products or services online with integrated payment gateway and automatic management." }
+      }
+    };
+
+    const getExplanationCopy = (busType: string) => {
+      if (!busType) return null;
+      if (businessExplanations[busType]) return businessExplanations[busType];
+
+      const norm = (s: string) => s.replace(/\s+/g, "").toLowerCase();
+      const targetNorm = norm(busType);
+
+      const foundKey = Object.keys(businessExplanations).find(
+        (key) => norm(key) === targetNorm
+      );
+      if (foundKey) {
+        return businessExplanations[foundKey];
+      }
+      return null;
+    };
+
+    let lookupKey = selections.businessType;
+    if (lookupKey && secData) {
+      const enIndex = secData.businesses.en.indexOf(lookupKey);
+      const esIndex = secData.businesses.es.indexOf(lookupKey);
+      if (enIndex !== -1) {
+        lookupKey = secData.businesses.es[enIndex];
+      } else if (esIndex !== -1) {
+        lookupKey = secData.businesses.es[esIndex];
+      }
+    }
+
+    const specificCopy = getExplanationCopy(lookupKey);
+    const fallback = sectorFallbacks[sector] || sectorFallbacks.other;
+    const copy = specificCopy || fallback;
+
+    let expEs = "";
+    let expEn = "";
+
+    if (typeId === "landing") {
+      expEs = copy.landing.es;
+      expEn = copy.landing.en;
+    } else if (typeId === "corporate") {
+      expEs = copy.corporate.es;
+      expEn = copy.corporate.en;
+    } else if (typeId === "ecommerce") {
+      expEs = copy.ecommerce.es;
+      expEn = copy.ecommerce.en;
+    }
+
+    if (expEn && expEs) {
+      explanation = (
+        <p className="text-xs text-[var(--color-text-tertiary)] mt-2 italic">
+          <T en={expEn}>{expEs}</T>
+        </p>
+      );
+    }
+
+    return { badge, explanation };
+  };
+
+  const selectedSectorName = getSectorName(selections.sector);
+  const selectedBusinessType = selections.businessType || t("Not specified", "No especificado");
+
   const quoteSummary = [
+    `Sector: ${selectedSectorName} | Negocio: ${selectedBusinessType}`,
     `${t("Project Type", "Tipo de Proyecto")}: ${getTypeName(selections.type)}`,
-    `${t("Size/Scope", "Tamaño/Alcance")}: ${getSizeName(selections.size)}`,
     `${t("Target Domain name", "Nombre del dominio")}: ${domainSummaryText}`,
     `${t("Add-ons", "Servicios Extra")}: ${selections.addons.length ? selections.addons.map(getAddonName).join(", ") : t("None", "Ninguno")}`,
     `${t("Total Estimated Price", "Precio Total Estimado")}: ${estimatedTotal > 0 ? `$${isOfferActive ? discountedTotal : estimatedTotal}` : t("To be custom defined in the session", "A definir a medida en la llamada")}${monthlyAddonsPrice > 0 ? t(" + $" + monthlyAddonsPrice + "/mo", " + $" + monthlyAddonsPrice + "/mes") : ""}`,
@@ -1007,7 +2185,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
       }
       trackEvent("wizard_step_complete", { step: currentStep + 1 });
       setCurrentStep((c) => c + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      scrollToProgress();
     } else {
       submitQuote();
     }
@@ -1016,10 +2194,8 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep((c) => c - 1);
-    } else if (currentStep === 0 && !showAiStep) {
-      setShowAiStep(true);
     }
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToProgress();
   };
 
   const handleSubmitLead = () => {
@@ -1036,7 +2212,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
     trackEvent("lead_captured", { method: "wizard_pre_schedule" });
     trackEvent("wizard_step_complete", { step: 3 });
     setCurrentStep((c) => c + 1);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToProgress();
   };
 
   const submitQuote = () => {
@@ -1057,6 +2233,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
       };
       localStorage.removeItem("wizardQuote_currentStep");
       localStorage.removeItem("wizardQuote_selections");
+      localStorage.removeItem("polaris_addon_descriptions");
       navigate("/gracias", { state: statePayload });
     }, 1500);
   };
@@ -1068,6 +2245,257 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
         ? s.addons.filter((a) => a !== id)
         : [...s.addons, id],
     }));
+  };
+
+  const recommendedAddonIds = sectorRecommendations[selections.sector]?.addons || [];
+
+  const isAddonDisabled = (a: any) => {
+    return !!(a.novaSpec && selections.type !== "ecommerce");
+  };
+
+  const disabledAddons = addons.filter(isAddonDisabled);
+
+  const recommendedAddons = addons.filter((a) =>
+    recommendedAddonIds.includes(a.id) && !isAddonDisabled(a)
+  );
+
+  const nonRecommendedAddons = addons.filter((a) =>
+    !recommendedAddonIds.includes(a.id) && !isAddonDisabled(a)
+  );
+
+  const remainingAi = nonRecommendedAddons.filter((a) =>
+    ["ai_agent", "bot_fast", "semantic_search", "content_assistant"].includes(a.id)
+  );
+
+  const remainingGrowth = nonRecommendedAddons.filter((a) =>
+    ["content_seo", "crm_connect", "multilingual"].includes(a.id)
+  );
+
+  const remainingBranding = nonRecommendedAddons.filter((a) =>
+    ["copy", "branding"].includes(a.id)
+  );
+
+  const remainingHosting = nonRecommendedAddons.filter((a) =>
+    ["hosting"].includes(a.id)
+  );
+
+  const renderAddonCard = (a: any, isRecommended: boolean) => {
+    return (
+      <button
+        key={a.id}
+        onClick={() => toggleAddon(a.id)}
+        className={`p-5 md:p-6 rounded-[var(--radius-bento)] border transition-all text-left flex flex-col justify-between group h-full ${
+          selections.addons.includes(a.id)
+            ? isRecommended
+              ? "bg-[var(--color-primary-base)]/15 border border-[var(--color-primary-base)] shadow-md translate-y-[-1px]"
+              : "bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)] shadow-sm"
+            : isRecommended
+              ? "bg-[var(--color-primary-base)]/[0.04] border border-[var(--color-primary-base)]/40 hover:border-[var(--color-primary-base)]/70 shadow-sm"
+              : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"
+        } ${isAddonDisabled(a) ? "opacity-40 pointer-events-none" : ""}`}
+      >
+        <div className="flex justify-between w-full gap-2 mb-4">
+          <div className="flex-1">
+            <div className="flex flex-col gap-1.5">
+              <h3
+                className={`font-bold font-display flex flex-wrap items-center gap-1.5 leading-snug ${
+                  selections.addons.includes(a.id) ? "text-[var(--color-primary-base)]" : ""
+                }`}
+              >
+                <span>{a.title}</span>
+                {a.isAi && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--color-surface-highlight)] border border-purple-500/20 text-[10px] uppercase font-bold tracking-wider leading-none">
+                    <Sparkles size={10} className="text-indigo-500 animate-pulse" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold">
+                      <T en="AI">IA</T>
+                    </span>
+                  </span>
+                )}
+              </h3>
+              {/* @ts-ignore */}
+              {a.novaSpec && (
+                <div className="flex flex-wrap gap-1.5">
+                  <span className="inline-flex items-center text-[8px] bg-violet-500/15 border border-violet-500/10 text-violet-400 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider leading-none w-fit">
+                    <T en="Exclusive for E-commerce">Exclusivo para E-commerce</T>
+                  </span>
+                </div>
+              )}
+            </div>
+            {!isAddonDisabled(a) && (
+              addonDescLoading && Object.keys(addonDescriptions).length === 0
+                ? <div className="h-3 w-3/4 rounded bg-[var(--color-border-subtle)] animate-pulse mt-1" />
+                : addonDescriptions[a.id] !== undefined && addonDescriptions[a.id] !== null && addonDescriptions[a.id] !== ""
+                  ? <p className="text-xs text-[var(--color-text-secondary)] mt-1">{addonDescriptions[a.id]}</p>
+                  : a.desc && <p className="text-xs text-[var(--color-text-secondary)] mt-1">{a.desc}</p>
+            )}
+          </div>
+          <div
+            className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center ${
+              selections.addons.includes(a.id)
+                ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)] text-white"
+                : "border-[var(--color-border-strong)] text-transparent"
+            }`}
+          >
+            <Check size={12} />
+          </div>
+        </div>
+        <span className="text-sm font-black text-[var(--color-text-tertiary)]">
+          {a.id === discountedAiAddonId ? (
+            <span className="flex items-center gap-1">
+              <span className="line-through opacity-50 mr-1">
+                $<AnimatedNumber value={a.price} />
+              </span>
+              <span className="text-emerald-500 font-bold">
+                $0 <T en="(Nova Perk)">(Incluido en Nova)</T>
+              </span>
+            </span>
+          ) : (
+            <span>
+              +$
+              <AnimatedNumber value={a.price} />
+              {a.suffix ? (
+                a.suffix
+              ) : a.isMonthly ? (
+                <T en="/mo">/mes</T>
+              ) : (
+                ""
+              )}
+            </span>
+          )}
+        </span>
+        {/* Social proof micro-copy on selection */}
+        <AnimatePresence>
+          {selections.addons.includes(a.id) && addonSocialProof[a.id] && (
+            <motion.p
+              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+              animate={{ opacity: 1, height: "auto", marginTop: 8 }}
+              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+              transition={{ duration: 0.25 }}
+              className="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed border-t border-[var(--color-primary-base)]/20 pt-2 mt-2 overflow-hidden"
+            >
+              <Info
+                size={11}
+                className="inline mr-1.5 text-[var(--color-primary-base)] opacity-70 shrink-0"
+              />
+              {language === "en" ? addonSocialProof[a.id].en : addonSocialProof[a.id].es}
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </button>
+    );
+  };
+
+  const generateAddonDescriptions = async (businessType: string, sector: string, planType: string) => {
+    if (!businessType || !sector) return;
+    setAddonDescLoading(true);
+
+    const recommendedAddonIds = sectorRecommendations[sector]?.addons || [];
+
+    const allAddonIds = [
+      "bot_fast", "ai_agent", "semantic_search", "content_assistant",
+      "content_seo", "crm_connect", "multilingual", "copy", "branding", "hosting"
+    ];
+
+    const systemPrompt = `Eres un copywriter experto en marketing digital para pequeñas y medianas empresas en República Dominicana. Tu tarea es escribir descripciones cortas, específicas y convincentes de add-ons para sitios web, personalizadas para el tipo de negocio del cliente.
+
+REGLAS ESTRICTAS:
+- Cada descripción: máximo 22 palabras, mínimo 12 palabras
+- Habla directamente al dueño: usa "tus clientes", "tu negocio", "tu equipo"
+- Menciona situaciones CONCRETAS y REALES del tipo de negocio — nunca genérico
+- Tono conversacional, sin tecnicismos
+- NUNCA uses: "mejora tu presencia", "aumenta tus ventas", "potencia tu negocio", "optimiza"
+- DEBES devolver un objeto JSON con EXACTAMENTE estas 10 claves: bot_fast, ai_agent, semantic_search, content_assistant, content_seo, crm_connect, multilingual, copy, branding, hosting
+- Para add-ons irrelevantes devuelve null — EXCEPTO los recomendados que SIEMPRE deben tener descripción
+- Add-ons recomendados (NUNCA null): ${recommendedAddonIds.join(", ")}
+- Devuelve ÚNICAMENTE JSON válido, sin markdown, sin backticks, sin texto adicional
+
+EJEMPLO para una clínica dental con plan corporativo (recomendados: bot_fast, content_assistant):
+{
+  "bot_fast": "Responde a las 11pm cuando un paciente pregunta si aceptas su seguro médico o cuánto cuesta una limpieza",
+  "ai_agent": null,
+  "semantic_search": null,
+  "content_assistant": "Publica casos de antes y después, tips de higiene bucal y promociones de blanqueamiento con tu voz",
+  "content_seo": "Keywords para aparecer cuando alguien busca dentista en tu zona o emergencia dental cerca",
+  "crm_connect": "Cada paciente que agenda cita online queda registrado automáticamente en tu sistema",
+  "multilingual": "Atiende pacientes extranjeros o turistas que necesitan un dentista de confianza en el país",
+  "copy": "Textos que transmiten profesionalismo y confianza antes de que el paciente pise tu clínica",
+  "branding": null,
+  "hosting": "Tu agenda online y formulario de citas siempre disponibles, sin caídas en hora pico"
+}`;
+
+    const promptText = `Tipo de negocio: ${businessType}
+Sector: ${sector}
+Plan web seleccionado: ${planType || "corporate"}
+Add-ons que DEBES describir obligatoriamente (nunca null): ${recommendedAddonIds.join(", ")}
+Devuelve descripciones para los 10 add-ons: ${allAddonIds.join(", ")}`;
+
+    const parseAndValidate = (text: string): Record<string, string | null> => {
+      const clean = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(clean);
+      
+      // Verificar que los 10 addons existan y ninguno sea null o vacío
+      for (const id of allAddonIds) {
+        if (!parsed[id] || parsed[id] === null || parsed[id] === "") {
+          throw new Error(`Missing description for addon: ${id}`);
+        }
+      }
+      return parsed;
+    };
+
+    const saveDescriptions = (descriptions: Record<string, string | null>) => {
+      setAddonDescriptions(descriptions);
+      const cacheKey = `polaris_addon_desc_${businessType}_${planType}`;
+      localStorage.setItem(cacheKey, JSON.stringify(descriptions));
+      localStorage.setItem("polaris_addon_descriptions", JSON.stringify({ businessType, descriptions }));
+    };
+
+    try {
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ parts: [{ text: promptText }] }],
+            generationConfig: { temperature: 0.75, maxOutputTokens: 1200 }
+          })
+        }
+      );
+      if (!geminiRes.ok) throw new Error("Gemini error");
+      const geminiResult = await geminiRes.json();
+      const geminiText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      saveDescriptions(parseAndValidate(geminiText));
+
+    } catch {
+      try {
+        const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_GROK_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: "grok-4.3",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: promptText }
+            ],
+            temperature: 0.75,
+            max_tokens: 1200
+          })
+        });
+        if (!grokRes.ok) throw new Error("Grok error");
+        const grokResult = await grokRes.json();
+        const grokText = grokResult.choices?.[0]?.message?.content || "";
+        saveDescriptions(parseAndValidate(grokText));
+
+      } catch {
+        // Ambos fallaron — se usan las descripciones hardcodeadas
+      }
+    } finally {
+      setAddonDescLoading(false);
+    }
   };
 
   return (
@@ -1083,44 +2511,75 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
         </div>
 
         {/* Header */}
-        <div className="text-center mb-16 space-y-6 relative">
-          <div className="inline-flex items-center px-4 py-1.5 rounded-full border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] text-[10px] sm:text-[11px] font-black uppercase tracking-[0.25em]">
+        <section className="text-center space-y-4 mb-12 relative select-none">
+          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] block">
             <T en="Build Your Digital Presence">Construye tu Presencia Digital</T>
-          </div>
+          </span>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display font-black tracking-tight leading-[1.1] py-2">
-            <span className="inline-block bg-gradient-to-r from-[var(--color-text-primary)] via-[var(--color-text-primary)] to-[var(--color-text-secondary)] bg-clip-text text-transparent pb-1 select-none px-1">
-              <T en="Interactive">Planificador</T>
-            </span>{" "}
-            <span className="inline-block whitespace-nowrap bg-gradient-to-r from-[var(--color-primary-base)] to-indigo-400 bg-clip-text text-transparent pb-1 select-none px-1">
-              <T en="Project Planner">de Proyectos</T>
-            </span>
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)] pb-4 border-b border-[var(--color-border-subtle)] w-full">
+            <T
+              en={
+                <>
+                  Interactive <br className="hidden md:block" />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                    Project Planner
+                  </span>
+                </>
+              }
+            >
+              Planificador de <br className="hidden md:block" />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
+                proyectos interactivo
+              </span>
+            </T>
           </h1>
 
-          <p className="text-[var(--color-text-secondary)] text-sm sm:text-base md:text-lg max-w-xl mx-auto leading-relaxed font-normal">
-            <T en="Build your custom platform spec, evaluate costs dynamically, and lock in your session built for growth.">Construye las especificaciones de tu plataforma, evalúa costos dinámicamente y agenda tu sesión estratégica.</T>
+          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
+            <T en="Build your custom platform spec, evaluate costs dynamically, and lock in your session built for growth.">
+              Construye las especificaciones de tu plataforma, evalúa costos dinámicamente y agenda tu sesión estratégica.
+            </T>
           </p>
-        </div>
+        </section>
 
         {/* Progress Bar */}
-        {!showAiStep && (
-          <div className="flex items-center gap-2 mb-12">
-            {steps.map((step, idx) => (
+        <div ref={progressRef} className="flex items-start gap-2 mb-12">
+          {steps.map((step, idx) => {
+            const isClickable = idx < currentStep;
+            return (
               <React.Fragment key={idx}>
-                <div className="flex-1 flex flex-col gap-2">
+                <button
+                  disabled={!isClickable}
+                  onClick={() => {
+                    if (isClickable) {
+                      setCurrentStep(idx);
+                      scrollToProgress();
+                    }
+                  }}
+                  className={`flex-1 flex flex-col gap-2 text-left focus:outline-none transition-all ${
+                    isClickable ? "cursor-pointer hover:opacity-80" : "cursor-default"
+                  }`}
+                >
                   <div
-                    className={`h-2 rounded-full transition-colors ${idx <= currentStep ? "bg-[var(--color-primary-base)]" : "glass-panel border border-[var(--color-border-subtle)]"}`}
+                    className={`h-2 w-full rounded-full transition-all border ${
+                      idx <= currentStep
+                        ? "bg-[var(--color-primary-base)] border-transparent"
+                        : "glass-panel border-[var(--color-border-subtle)]"
+                    }`}
                   />
                   <span
-                    className={`text-[10px] font-bold uppercase tracking-widest ${idx <= currentStep ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"}`}
+                    className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                      idx <= currentStep
+                        ? "text-[var(--color-primary-base)]"
+                        : "text-[var(--color-text-tertiary)]"
+                    }`}
                   >
                     {step.title}
                   </span>
-                </div>
+                </button>
               </React.Fragment>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
         {/* Dynamic Content */}
         <div className="flex-1 flex flex-col md:flex-row gap-12">
@@ -1152,222 +2611,6 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
                     <T en="Return to Home">Volver al Inicio</T>
                   </button>
                 </motion.div>
-              ) : showAiStep ? (
-                <motion.div
-                  key="ai-step"
-                  initial={{ opacity: 0, scale: 0.98, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, y: -10 }}
-                  className="space-y-8 animate-fade-in"
-                >
-                  <div className="rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel p-8 md:p-12 space-y-6 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-all duration-300">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] flex items-center justify-center shrink-0 shadow-inner w-12 h-12">
-                        <Sparkles size={22} className="opacity-90 animate-pulse text-[var(--color-primary-base)]" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <div className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
-                          <T en="Smart suggestions">Sugerencias inteligentes</T>
-                        </div>
-                        <h2 className="text-2xl md:text-3xl font-display font-black text-[var(--color-text-primary)] leading-tight">
-                          <T en="Describe your project">Describe tu proyecto</T>
-                        </h2>
-                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                          <T en="Tell us about your business in a few words and we'll suggest the right plan automatically.">
-                            Cuéntanos sobre tu negocio en pocas palabras y te sugeriremos el plan ideal automáticamente.
-                          </T>
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <textarea
-                        value={aiDescription}
-                        onChange={(e) => setAiDescription(e.target.value)}
-                        placeholder={language === 'es'
-                          ? "Ej: Tengo una panadería y quiero que mis clientes puedan hacer pedidos online..."
-                          : "E.g: I have a bakery and want my customers to place orders online..."}
-                        className="glass-input w-full h-16 md:h-24 p-3 md:p-5 rounded-2xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm md:text-base shadow-sm transition-all resize-none"
-                      />
-                      
-                      <div className="mt-3 flex flex-col gap-1">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">
-                          <T en="Examples">Ejemplos</T>
-                        </span>
-                        {[
-                          language === 'es' ? '"Tengo una ferretería y quiero vender online"' : '"I have a hardware store and want to sell online"',
-                          language === 'es' ? '"Soy dentista y quiero que mis pacientes me encuentren en Google"' : '"I\'m a dentist and want patients to find me on Google"',
-                          language === 'es' ? '"Tengo una tienda de ropa y quiero aceptar pagos con tarjeta"' : '"I have a clothing store and want to accept card payments"',
-                        ].map((example, i) => (
-                          <button
-                            key={i}
-                            type="button"
-                            onClick={() => setAiDescription(example.replace(/"/g, ''))}
-                            className="text-left text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-surface-elevated)] transition-all cursor-pointer py-1.5 px-2 rounded-lg flex items-center gap-1.5 group w-full"
-                          >
-                            <ArrowRight size={10} className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] flex-shrink-0 transition-colors" />
-                            <span>{example}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {aiError && (
-                      <div className="text-xs md:text-sm text-red-500 font-medium bg-red-500/10 p-4 rounded-xl border border-red-500/20 flex items-start gap-2 animate-fade-in">
-                        <span>⚠</span>
-                        <span>{aiError}</span>
-                      </div>
-                    )}
-
-                    {aiResult && (
-                      <div className="mt-4 p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-4">
-                        
-                        {/* Header de la tarjeta */}
-                        <div className="flex items-center gap-2">
-                          <Sparkles size={14} className="text-[var(--color-primary-base)]" />
-                          <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
-                            <T en="Based on your description">Basado en tu descripción</T>
-                          </p>
-                        </div>
-
-                        {/* Plan sugerido con features */}
-                        <div className="p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-2">
-                          <div className="flex items-center gap-2">
-                            <CheckCircle2 size={14} className="text-emerald-500 flex-shrink-0" />
-                            <span className="text-sm font-black flex items-center gap-1.5 flex-wrap">
-                              {aiResult.type === "landing" && (
-                                <>
-                                  <span className="text-amber-500"><T en="Destello Plan">Plan Destello</T></span>
-                                  <span className="text-[var(--color-text-secondary)] font-medium">•</span>
-                                  <span className="text-[var(--color-text-primary)]">${isOfferActive ? Math.round(299 * 0.75) : 299} USD</span>
-                                </>
-                              )}
-                              {aiResult.type === "corporate" && (
-                                <>
-                                  <span className="text-[var(--color-primary-base)]"><T en="Constellation Plan">Plan Constelación</T></span>
-                                  <span className="text-[var(--color-text-secondary)] font-medium">•</span>
-                                  <span className="text-[var(--color-text-primary)]">${isOfferActive ? Math.round(699 * 0.75) : 699} USD</span>
-                                </>
-                              )}
-                              {aiResult.type === "ecommerce" && (
-                                <>
-                                  <span className="text-violet-500"><T en="Nova Plan">Plan Nova</T></span>
-                                  <span className="text-[var(--color-text-secondary)] font-medium">•</span>
-                                  <span className="text-[var(--color-text-primary)]">${isOfferActive ? Math.round(1299 * 0.75) : 1299} USD</span>
-                                </>
-                              )}
-                            </span>
-                          </div>
-
-                          {/* Features clave del plan */}
-                          <ul className="space-y-1 pl-6">
-                            {aiResult.type === "landing" && [
-                              <T en="1 page designed to convert">1 página diseñada para captar clientes</T>,
-                              <T en="WhatsApp button + contact form">Botón de WhatsApp + formulario de contacto</T>,
-                              <T en="Visible on Google from day 1">Visible en Google desde el día 1</T>,
-                            ].map((f, i) => (
-                              <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1.5 align-middle">
-                                <span className="text-[var(--color-primary-base)] mt-0.5">·</span>{f}
-                              </li>
-                            ))}
-                            {aiResult.type === "corporate" && [
-                              <T en="Up to 5 custom pages">Hasta 5 páginas personalizadas</T>,
-                              <T en="Blog + 24/7 chatbot">Blog + chatbot de atención 24/7</T>,
-                              <T en="Advanced SEO + Google Analytics">SEO avanzado + Google Analytics</T>,
-                            ].map((f, i) => (
-                              <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1.5 align-middle">
-                                <span className="text-[var(--color-primary-base)] mt-0.5">·</span>{f}
-                              </li>
-                            ))}
-                            {aiResult.type === "ecommerce" && [
-                              <T en="Unlimited product catalog">Catálogo ilimitado de productos</T>,
-                              <T en="Accepts cards and PayPal">Acepta tarjetas y PayPal</T>,
-                              <T en="Inventory management + admin panel">Gestión de inventario + panel de administración</T>,
-                            ].map((f, i) => (
-                              <li key={i} className="text-xs text-[var(--color-text-secondary)] flex items-start gap-1.5 align-middle">
-                                <span className="text-[var(--color-primary-base)] mt-0.5">·</span>{f}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Add-ons sugeridos */}
-                        {aiResult.addons.filter(a => a !== "hosting").length > 0 && (
-                          <div className="space-y-2">
-                            <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                              <T en="Suggested add-ons">Add-ons sugeridos</T>
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {aiResult.addons.filter(a => a !== "hosting").map((addon) => (
-                                <span key={addon} className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-1.5 rounded-full bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)]">
-                                  {addon === "bot_fast" && <MessageCircle size={11} />}
-                                  {addon === "ai_agent" && <Bot size={11} />}
-                                  {addon === "semantic_search" && <Search size={11} />}
-                                  {addon === "content_assistant" && <PenLine size={11} />}
-                                  <span>{getAddonName(addon)}</span>
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Reasoning mejorado */}
-                        {aiResult.reasoning && (
-                          <div className="flex items-start gap-2 p-3 rounded-xl bg-[var(--color-primary-base)]/5 border border-[var(--color-primary-base)]/10">
-                            <Info size={12} className="text-[var(--color-primary-base)] flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                              {aiResult.reasoning}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* CTAs */}
-                        <button
-                          type="button"
-                          onClick={() => { setShowAiStep(false); setCurrentStep(0); }}
-                          className="w-full py-3 rounded-xl text-sm font-black bg-[var(--color-primary-base)] text-white hover:opacity-90 transition-all cursor-pointer border-none"
-                        >
-                          <T en="Continue with this selection →">Continuar con esta selección →</T>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => { setAiResult(null); setAiUsed(false); }}
-                          className="w-full text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors cursor-pointer py-1 border-none bg-transparent"
-                        >
-                          <T en="Adjust manually">Ajustar manualmente</T>
-                        </button>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-[var(--color-border-subtle)]">
-                      <button
-                        type="button"
-                        onClick={skipAiStep}
-                        className="py-3 px-6 rounded-xl text-[var(--color-text-secondary)] font-bold hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] active:scale-95 transition-all text-center border-none cursor-pointer bg-transparent"
-                      >
-                        <T en="Skip & configure manually ➔">Configurar manualmente ➔</T>
-                      </button>
-                      <button
-                        type="button"
-                        disabled={aiLoading}
-                        onClick={analyzeWithAI}
-                        className="flex items-center justify-center gap-2 px-8 py-3.5 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-75 border-none min-w-[180px] shadow-lg shadow-indigo-500/10 cursor-pointer"
-                      >
-                        {aiLoading ? (
-                          <>
-                            <Loader2 className="animate-spin" size={18} />
-                            <T en="Analyzing...">Analizando...</T>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={18} />
-                            <T en="Suggest my plan">Sugerir mi plan</T>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
               ) : (
                 <motion.div
                   key={currentStep}
@@ -1377,127 +2620,297 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
                   transition={{ duration: 0.3 }}
                   className="min-h-[400px]"
                 >
-                  {/* STEP 0: TYPE */}
+                  {currentStep > 0 && selections.sector && (
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-[var(--color-primary-base)]/5 border border-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] text-[10px] md:text-[11px] font-bold uppercase tracking-wider rounded-lg mb-4 max-w-full">
+                      <span>{getSectorName(selections.sector)}</span>
+                      {selections.businessType && (
+                        <>
+                          <span className="opacity-40">|</span>
+                          <span className="text-[var(--color-text-secondary)]">{selections.businessType}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  {/* STEP 0: SECTOR */}
                   {currentStep === 0 && (
-                    <div className="space-y-4">
-                      <h2 className="text-2xl font-display font-bold mb-6">
+                    <div className="space-y-6 animate-fade-in">
+                      <h2 className="text-2xl font-display font-bold">
+                        <T en="What is your business sector?">
+                          ¿Cuál es tu sector de negocio?
+                        </T>
+                      </h2>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {sectors.map((s) => {
+                          const isSelected = selections.sector === s.id;
+                          return (
+                            <motion.div
+                              key={s.id}
+                              initial={{ opacity: 0, y: 15 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                ease: "easeOut"
+                              }}
+                              whileHover={!isSelected ? { y: -4, scale: 1.01 } : undefined}
+                              whileTap={!isSelected ? { scale: 0.99 } : undefined}
+                              onClick={() => {
+                                if (!isSelected) {
+                                  setSelections((prev) => {
+                                    const newSector = s.id;
+
+                                    // Retain the previously selected addons
+                                    let updatedAddons = [...prev.addons];
+
+                                    // Guarantee hosting is included
+                                    if (!updatedAddons.includes("hosting")) {
+                                      updatedAddons.push("hosting");
+                                    }
+
+                                    // Do not preselect the web type automatically
+                                    const newType = "";
+
+                                    return {
+                                      ...prev,
+                                      sector: newSector,
+                                      businessType: "",
+                                      type: newType,
+                                      addons: updatedAddons,
+                                    };
+                                  });
+                                }
+                              }}
+                                                            className={`rounded-[var(--radius-bento)] border transition-[background-color,border-color,box-shadow] duration-200 text-left flex flex-col relative overflow-hidden ${
+                                isSelected
+                                  ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)] shadow-md col-span-full h-auto p-6"
+                                  : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50 cursor-pointer h-auto min-h-[140px] sm:min-h-[160px] p-6 justify-between flex-row sm:flex-col"
+                              }`}
+                            >
+                              {!isSelected ? (
+                                <>
+                                  <div className="flex flex-col gap-1.5 flex-1 pr-2">
+                                    <span className="font-display font-black text-sm md:text-base leading-snug text-[var(--color-text-primary)]">
+                                      {s.title}
+                                    </span>
+                                    {/* @ts-ignore */}
+                                    {s.desc && (
+                                      <p className="text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                                        {/* @ts-ignore */}
+                                        {s.desc}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center sm:justify-end w-auto sm:w-full mt-0 sm:mt-3 shrink-0 self-center sm:self-auto">
+                                    <div className="w-5 h-5 rounded-full border border-[var(--color-border-strong)] flex items-center justify-center">
+                                      {/* Empty Circle */}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="w-full">
+                                  <div className="flex justify-between items-center w-full mb-5 pb-3 border-b border-[var(--color-border-subtle)]">
+                                    <span className="font-display font-black text-base md:text-lg leading-snug text-[var(--color-primary-base)]">
+                                      {s.title}
+                                    </span>
+                                    <div className="w-5 h-5 rounded-full border border-[var(--color-primary-base)] bg-[var(--color-primary-base)] text-white flex items-center justify-center">
+                                      <Check size={12} />
+                                    </div>
+                                  </div>
+
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    transition={{ duration: 0.35, ease: "easeInOut" }}
+                                    className="space-y-4 w-full overflow-hidden"
+                                  >
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-secondary)]">
+                                      <T en="What specific business are you?">
+                                        ¿Qué tipo de negocio específico eres?
+                                      </T>
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                      {(language === "en"
+                                        ? s.businesses.en
+                                        : s.businesses.es
+                                      ).map((b) => {
+                                        const isBizSelected = selections.businessType === b;
+                                        return (
+                                          <button
+                                            key={b}
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation(); // prevent re-triggering parent onClick
+                                              setSelections((prev) => ({
+                                                ...prev,
+                                                businessType: b,
+                                              }));
+                                              // Auto advance after 300ms
+                                              setTimeout(() => {
+                                                setCurrentStep(1);
+                                                scrollToProgress();
+                                              }, 300);
+                                            }}
+                                            className={`px-4 py-2.5 rounded-full border text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                                              isBizSelected
+                                                ? "bg-[var(--color-primary-base)] text-white border-[var(--color-primary-base)] shadow-sm"
+                                                : "glass-panel border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)] hover:text-white"
+                                            }`}
+                                          >
+                                            {b}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </motion.div>
+                                </div>
+                              )}
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 1: WEB TYPE */}
+                  {currentStep === 1 && (
+                    <div className="space-y-6 animate-fade-in">
+                      <h2 className="text-2xl font-display font-bold">
                         <T en="What are you looking to build?">
                           ¿Qué buscas construir?
                         </T>
                       </h2>
                       <div className="grid gap-4">
-                        {types.map((t) => (
-                          <button
-                            key={t.id}
-                            onClick={() => {
-                              if (selections.type !== t.id) {
-                                setSelections((s) => ({
-                                  ...s,
-                                  type: t.id,
-                                  size: "",
-                                }));
-                              }
-                            }}
-                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.type === t.id ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
-                          >
-                            <div className="flex-1">
-                              <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
-                                <h3
-                                  className={`font-bold font-display text-lg sm:text-xl leading-tight ${selections.type === t.id ? "text-[var(--color-primary-base)]" : ""}`}
-                                >
-                                  {t.title}
-                                </h3>
-                                <span className="glass-badge text-xs font-bold px-2.5 py-0.5 rounded-full border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
-                                  <T en="from">desde</T> ${t.price}
-                                </span>
+                        {(() => {
+                          const rec = sectorRecommendations[selections.sector] || { primary: "corporate", secondary: null };
+                          const primary = types.find(t => t.id === rec.primary);
+                          const secondary = types.find(t => t.id === rec.secondary);
+                          const others = types.filter(t => t.id !== rec.primary && t.id !== rec.secondary);
+
+                          const renderCard = (
+                            type: typeof types[0],
+                            variant: "primary" | "secondary" | "third"
+                          ) => {
+                            const isSelected = selections.type === type.id;
+                            const isThird = variant === "third";
+                            const isExpanded = !isThird || expandedThirdType;
+                            const { explanation } = getBadgeAndExplanation(type.id, selections.sector);
+
+                            return (
+                              <div
+                                key={type.id}
+                                onClick={() => {
+                                  if (isThird && !expandedThirdType) {
+                                    setExpandedThirdType(true);
+                                    return;
+                                  }
+                                  setSelections(prev => {
+                                    let updatedAddons = [...prev.addons];
+                                    // Filter out any novaSpec addons if the new type is not ecommerce
+                                    if (type.id !== "ecommerce") {
+                                      const novaSpecAddons = addons.filter((a) => (a as any).novaSpec).map((a) => a.id);
+                                      updatedAddons = updatedAddons.filter((addonId) => !novaSpecAddons.includes(addonId));
+                                    }
+                                    return {
+                                      ...prev,
+                                      type: type.id,
+                                      addons: updatedAddons
+                                    };
+                                  });
+                                }}
+                                className={`
+                                  relative p-6 pt-10 rounded-2xl border transition-all cursor-pointer text-left
+                                  ${isSelected
+                                    ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 shadow-md ring-1 ring-[var(--color-primary-base)]"
+                                    : variant === "primary"
+                                    ? "border-[var(--color-primary-base)]/50 bg-[var(--color-primary-base)]/[0.03] shadow-sm hover:bg-[var(--color-primary-base)]/[0.05]"
+                                    : variant === "secondary"
+                                    ? "border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/[0.01] hover:bg-[var(--color-primary-base)]/[0.03]"
+                                    : "border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] hover:border-[var(--color-primary-base)]/30"
+                                  }
+                                `}
+                              >
+                                {/* Badge */}
+                                {variant === "primary" && (
+                                  <span className="absolute top-2 left-2 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)]">
+                                    <T en="Recommended for your business">Recomendado para tu negocio</T>
+                                  </span>
+                                )}
+                                {variant === "secondary" && (
+                                  <span className="absolute top-2 left-2 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[var(--color-primary-base)]/5 text-[var(--color-primary-base)]/80">
+                                    <T en="Could also work">También podría funcionar</T>
+                                  </span>
+                                )}
+
+                                <div className="flex justify-between items-start w-full gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
+                                      <h3 className={`font-black font-display text-lg sm:text-xl leading-tight text-[var(--color-text-primary)]`}>
+                                        {type.title}
+                                      </h3>
+                                      <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border shrink-0 w-fit whitespace-nowrap ${
+                                        variant === "primary"
+                                          ? "border-[var(--color-primary-base)]/30 text-[var(--color-primary-base)]"
+                                          : "border-[var(--color-border-subtle)] text-[var(--color-text-secondary)]"
+                                      }`}>
+                                        <T en="from">desde</T> ${type.price}
+                                      </span>
+                                    </div>
+
+                                    {/* Contenido expandible */}
+                                    {isExpanded && (
+                                      <div className="mt-3 space-y-2">
+                                        <p className="text-[var(--color-text-secondary)] text-sm">{type.desc}</p>
+                                        {explanation && (
+                                          <div className="border-t border-[var(--color-border-subtle)]/70 my-3" />
+                                        )}
+                                        {explanation}
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex items-center gap-2 mt-1 shrink-0">
+                                    {isThird && (
+                                      <ChevronDown
+                                        size={16}
+                                        className={`text-[var(--color-text-tertiary)] transition-transform ${expandedThirdType ? "rotate-180" : ""}`}
+                                      />
+                                    )}
+                                    {isExpanded && (
+                                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                        isSelected
+                                          ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]"
+                                          : "border-[var(--color-border-strong)]"
+                                      }`}>
+                                        {isSelected && <Check size={12} className="text-white" />}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <p className="text-[var(--color-text-secondary)] text-sm">
-                                {t.desc}
-                              </p>
-                            </div>
-                            <div
-                              className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${selections.type === t.id ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]" : "border-[var(--color-border-strong)]"}`}
-                            >
-                              {selections.type === t.id && (
-                                <Check size={14} className="text-white" />
+                            );
+                          };
+
+                          return (
+                            <div className="space-y-3 w-full">
+                              {primary && renderCard(primary, "primary")}
+                              {secondary && renderCard(secondary, "secondary")}
+
+                              {others.length > 0 && (
+                                <>
+                                  <div className="flex items-center gap-3 py-1">
+                                    <div className="flex-1 h-px bg-[var(--color-border-subtle)]" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                                      <T en="Other options">Otras opciones</T>
+                                    </span>
+                                    <div className="flex-1 h-px bg-[var(--color-border-subtle)]" />
+                                  </div>
+                                  {others.map(t => renderCard(t, "third"))}
+                                </>
                               )}
                             </div>
-                          </button>
-                        ))}
+                          );
+                        })()}
                       </div>
-                    </div>
-                  )}
 
-                  {/* STEP 1: SIZE */}
-                  {currentStep === 1 && (
-                    <div className="space-y-4">
-                      {selections.type === "landing" && (
-                        <h2 className="text-2xl font-display font-bold mb-6">
-                          <T en="How complex should your Landing Page be?">
-                            ¿Qué tan compleja será tu Landing Page?
-                          </T>
-                        </h2>
-                      )}
-                      {selections.type === "corporate" && (
-                        <h2 className="text-2xl font-display font-bold mb-6">
-                          <T en="How large is your Corporate Website?">
-                            ¿Qué tan grande es tu Web Corporativa?
-                          </T>
-                        </h2>
-                      )}
-                      {selections.type === "ecommerce" && (
-                        <h2 className="text-2xl font-display font-bold mb-6">
-                          <T en="What scale is your Online Store?">
-                            ¿A qué escala será tu Tienda Online?
-                          </T>
-                        </h2>
-                      )}
-                      {!selections.type && (
-                        <h2 className="text-2xl font-display font-bold mb-6">
-                          <T en="What is the dimension of your project?">
-                            ¿Cuál es la dimensión de tu proyecto?
-                          </T>
-                        </h2>
-                      )}
-
-                      <div className="grid gap-4">
-                        {currentScopes.map((s) => (
-                          <button
-                            key={s.id}
-                            onClick={() =>
-                              setSelections((sel) => ({ ...sel, size: s.id }))
-                            }
-                            className={`p-6 rounded-[var(--radius-bento)] border transition-all text-left flex items-start gap-4 justify-between group ${selections.size === s.id ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
-                          >
-                            <div className="flex-1">
-                              <div className="flex flex-col sm:flex-row sm:items-start md:items-center gap-1.5 sm:gap-3 mb-2 w-full">
-                                <h3
-                                  className={`font-bold font-display text-lg sm:text-xl leading-tight ${selections.size === s.id ? "text-[var(--color-primary-base)]" : ""}`}
-                                >
-                                  {s.title}
-                                </h3>
-                                <span className="glass-badge text-xs font-bold px-2.5 py-0.5 rounded-full border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] shrink-0 w-fit whitespace-nowrap">
-                                  {s.priceAdd > 0 ? (
-                                    `+$${s.priceAdd}`
-                                  ) : (
-                                    <T en="Included">Incluido</T>
-                                  )}
-                                </span>
-                              </div>
-                              <p className="text-[var(--color-text-secondary)] text-sm">
-                                {s.desc}
-                              </p>
-                            </div>
-                            <div
-                              className={`mt-1 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${selections.size === s.id ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]" : "border-[var(--color-border-strong)]"}`}
-                            >
-                              {selections.size === s.id && (
-                                <Check size={14} className="text-white" />
-                              )}
-                            </div>
-                          </button>
-                        ))}
-                      </div>
                     </div>
                   )}
 
@@ -1666,93 +3079,100 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
                       <div className="space-y-6">
                         <div>
                           <h2 className="text-xl md:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
-                            <T en="¿Deseas agregar superpoderes?">¿Deseas agregar superpoderes?</T>
+                            <T
+                              en={
+                                <>
+                                  Want to add{" "}
+                                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pr-1">
+                                    superpowers
+                                  </span>
+                                  ?
+                                </>
+                              }
+                            >
+                              ¿Deseas agregar{" "}
+                              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pr-1">
+                                superpoderes
+                              </span>
+                              ?
+                            </T>
                           </h2>
                           <p className="text-xs text-[var(--color-text-secondary)] mt-1">
                             <T en="Select from our advanced features to optimize your conversions, client management, and search engines.">Selecciona de nuestras características avanzadas para optimizar tus conversiones, gestión de clientes y motores de búsqueda.</T>
                           </p>
                         </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {addons.map((a) => (
-                          <button
-                            key={a.id}
-                            onClick={() => toggleAddon(a.id)}
-                            className={`p-5 md:p-6 rounded-[var(--radius-bento)] border transition-all text-left flex flex-col justify-between group h-full ${selections.addons.includes(a.id) ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)]" : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"}`}
-                          >
-                            <div className="flex justify-between w-full gap-2 mb-4">
-                              <div>
-                                <h3
-                                  className={`font-bold font-display flex flex-wrap items-center gap-x-1.5 gap-y-1 leading-snug ${selections.addons.includes(a.id) ? "text-[var(--color-primary-base)]" : ""}`}
-                                >
-                                  <span>{a.title}</span>
-                                  {/* @ts-ignore */}
-                                  {a.novaSpec && (
-                                    <span className="inline-flex items-center text-[8px] bg-violet-500/15 border border-violet-500/10 text-violet-400 font-bold px-1.5 py-0.5 rounded uppercase tracking-wider leading-none">
-                                      <T en="Nova Rec.">Recomendado Nova</T>
-                                    </span>
-                                  )}
-                                  {a.isAi && (
-                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--color-surface-highlight)] border border-purple-500/20 text-[10px] uppercase font-bold tracking-wider leading-none">
-                                      <Sparkles size={10} className="text-indigo-500 animate-pulse" />
-                                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold">
-                                        <T en="AI">IA</T>
-                                      </span>
-                                    </span>
-                                  )}
-                                </h3>
-                                {a.desc && (
-                                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                                    {a.desc}
-                                  </p>
-                                )}
-                              </div>
-                              <div
-                                className={`flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center ${selections.addons.includes(a.id) ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)] text-white" : "border-[var(--color-border-strong)] text-transparent"}`}
-                              >
-                                <Check size={12} />
-                              </div>
+                      <div className="space-y-8">
+                        {/* Recommended Addons Section */}
+                        {recommendedAddons.length > 0 && (
+                          <div className="space-y-3">
+                            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] mt-2 mb-1">
+                              <T en="Recommended for your business">Recomendado para tu negocio</T>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {recommendedAddons.map((a) => renderAddonCard(a, true))}
                             </div>
-                            <span className="text-sm font-black text-[var(--color-text-tertiary)]">
-                              {a.id === discountedAiAddonId ? (
-                                <span className="flex items-center gap-1">
-                                  <span className="line-through opacity-50 mr-1">
-                                    $<AnimatedNumber value={a.price} />
-                                  </span>
-                                  <span className="text-emerald-500 font-bold">
-                                    $0{" "}
-                                    <T en="(Nova Perk)">(Incluido en Nova)</T>
-                                  </span>
-                                </span>
-                              ) : (
-                                <span>
-                                  +$
-                                  <AnimatedNumber value={a.price} />
-                                  {a.suffix ? (
-                                    a.suffix
-                                  ) : a.isMonthly ? (
-                                    <T en="/mo">/mes</T>
-                                  ) : (
-                                    ""
-                                  )}
-                                </span>
-                              )}
-                            </span>
-                            {/* Social proof micro-copy on selection */}
-                            <AnimatePresence>
-                              {selections.addons.includes(a.id) && addonSocialProof[a.id] && (
-                                <motion.p
-                                  initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                  animate={{ opacity: 1, height: "auto", marginTop: 8 }}
-                                  exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                  transition={{ duration: 0.25 }}
-                                  className="text-[11px] text-[var(--color-text-tertiary)] leading-relaxed border-t border-[var(--color-primary-base)]/20 pt-2 mt-2 overflow-hidden"
-                                >
-                                  <Info size={11} className="inline mr-1.5 text-[var(--color-primary-base)] opacity-70 shrink-0" />{language === "en" ? addonSocialProof[a.id].en : addonSocialProof[a.id].es}
-                                </motion.p>
-                              )}
-                            </AnimatePresence>
-                          </button>
-                        ))}
+                          </div>
+                        )}
+
+                        {/* Remaining: AI & Automation */}
+                        {remainingAi.length > 0 && (
+                          <div className="space-y-3">
+                            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mt-4 mb-1">
+                              <T en="AI & Automation">IA y Automatización</T>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {remainingAi.map((a) => renderAddonCard(a, false))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Remaining: Growth & Reach */}
+                        {remainingGrowth.length > 0 && (
+                          <div className="space-y-3">
+                            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mt-4 mb-1">
+                              <T en="Growth & Reach">Crecimiento y Alcance</T>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {remainingGrowth.map((a) => renderAddonCard(a, false))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Remaining: Brand & Content */}
+                        {remainingBranding.length > 0 && (
+                          <div className="space-y-3">
+                            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mt-4 mb-1">
+                              <T en="Brand & Content">Marca y Contenido</T>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {remainingBranding.map((a) => renderAddonCard(a, false))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Remaining: Infrastructure */}
+                        {remainingHosting.length > 0 && (
+                          <div className="space-y-3">
+                            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mt-4 mb-1">
+                              <T en="Infrastructure">Infraestructura</T>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {remainingHosting.map((a) => renderAddonCard(a, false))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Disabled Addons Section */}
+                        {disabledAddons.length > 0 && (
+                          <div className="pt-8 mt-8 border-t border-[var(--color-border-subtle)]/50 space-y-3">
+                            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] opacity-60 mb-1">
+                              <T en="Not Recommended / Unavailable">No recomendado o no disponible</T>
+                            </p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              {disabledAddons.map((a) => renderAddonCard(a, false))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       </div>
                     </div>
@@ -1831,21 +3251,30 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
             </AnimatePresence>
 
             {/* Footer Navigation */}
-            {!success && !showAiStep && (
+            {!success && (
               <div className="mt-8 flex items-center justify-between pt-8 border-t border-[var(--color-border-subtle)]">
-                <button
-                  onClick={handleBack}
-                  disabled={currentStep === 0}
-                  className={`flex items-center gap-2 p-3 font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:hover:text-[var(--color-text-secondary)] transition-colors ${currentStep === 0 ? "invisible" : ""}`}
-                >
-                  <ArrowLeft size={18} /> <T en="Back">Atrás</T>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleBack}
+                    disabled={currentStep === 0}
+                    className={`flex items-center gap-2 p-3 font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-30 disabled:hover:text-[var(--color-text-secondary)] transition-colors ${currentStep === 0 ? "invisible" : ""}`}
+                  >
+                    <ArrowLeft size={18} /> <T en="Back">Atrás</T>
+                  </button>
+                  <button
+                    onClick={resetWizard}
+                    title={language === "es" ? "Reiniciar planificador" : "Reset planner"}
+                    className="w-7 h-7 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-all cursor-pointer"
+                  >
+                    <RotateCcw size={12} />
+                  </button>
+                </div>
                 {currentStep < 3 && (
                   <button
                     onClick={handleNext}
                     disabled={
-                      (currentStep === 0 && !selections.type) ||
-                      (currentStep === 1 && !selections.size)
+                      (currentStep === 0 && (!selections.sector || !selections.businessType)) ||
+                      (currentStep === 1 && !selections.type)
                     }
                     className="flex items-center gap-2 px-8 py-3 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-50 border-none ml-auto"
                   >
@@ -1863,8 +3292,8 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
           </div>
 
           {/* Sidebar Estimator */}
-          {!showAiStep && !success && (
-            <div className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
+          {!success && (
+            <div ref={sidebarRef} className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
             <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
               <T en="Live Estimate">Estimación en vivo</T>
             </h3>
@@ -1878,24 +3307,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
                   $<AnimatedNumber value={basePrice} />
                 </span>
               </div>
-              {selections.size && (
-                <div className="flex justify-between items-start pb-4 border-b border-[var(--color-border-subtle)] text-sm">
-                  <span className="text-[var(--color-text-secondary)] pr-4">
-                    <T en="Project Scope">Tamaño del proyecto</T> (
-                    {selectedScope?.title})
-                  </span>
-                  <span className="font-bold whitespace-nowrap flex-shrink-0">
-                    +
-                    {scopeExtraPrice === 0 ? (
-                      "0"
-                    ) : (
-                      <span>
-                        $<AnimatedNumber value={scopeExtraPrice} />
-                      </span>
-                    )}
-                  </span>
-                </div>
-              )}
+
               {selections.addons.length > 0 && (
                 <div className="flex flex-col gap-2 pb-4 border-b border-[var(--color-border-subtle)] text-sm">
                   {selections.addons.map((addonId: string) => {
@@ -2047,6 +3459,142 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
           </div>
           )}
         </div>
+
+        {/* Barra sticky mobile — se oculta cuando el sidebar real es visible */}
+        {!success && (
+          <AnimatePresence>
+            {!sidebarVisible && (
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="md:hidden fixed bottom-0 left-0 right-0 z-40 rounded-t-2xl overflow-hidden shadow-2xl border border-b-0 border-[var(--color-border-subtle)] pb-safe"
+              >
+                {/* Drawer expandido */}
+                <AnimatePresence>
+                  {estimateExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                      className="overflow-hidden bg-[var(--color-surface-elevated)]"
+                    >
+                      <div className="px-5 pt-5 pb-2 max-h-[60vh] overflow-y-auto space-y-3">
+                        {/* Desglose */}
+                        <div className="flex justify-between items-start text-sm pb-3 border-b border-[var(--color-border-subtle)]">
+                          <span className="text-[var(--color-text-secondary)]">Base</span>
+                          <span className="font-bold">${basePrice}</span>
+                        </div>
+
+                        {selections.addons.length > 0 && (
+                          <div className="flex flex-col gap-2 pb-3 border-b border-[var(--color-border-subtle)]">
+                            {selections.addons.map((addonId: string) => {
+                              const addon = addons.find((a) => a.id === addonId);
+                              if (!addon) return null;
+                              const isFree = addonId === discountedAiAddonId;
+                              return (
+                                <div key={addonId} className="flex justify-between items-start text-sm">
+                                  <span className="text-[var(--color-text-secondary)] pr-4">{getAddonName(addonId)}</span>
+                                  <span className="font-bold whitespace-nowrap">
+                                    {isFree ? (
+                                      <span className="text-emerald-500">$0</span>
+                                    ) : addon.isMonthly ? (
+                                      `+$${addon.price}/mes`
+                                    ) : (
+                                      `+$${addon.price}`
+                                    )}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {domainStatus?.available && (
+                          <div className="flex justify-between items-start text-sm pb-3 border-b border-[var(--color-border-subtle)]">
+                            <span className="text-[var(--color-text-secondary)]">
+                              <T en="Domain">Dominio</T> ({domainStatus.domain})
+                            </span>
+                            <span className="font-bold text-emerald-500">
+                              <T en="Free">Gratis</T>
+                            </span>
+                          </div>
+                        )}
+                        {selections.type && (
+                          <div className="pb-2 text-xs text-[var(--color-text-tertiary)]">
+                            <span className="font-bold text-[var(--color-text-primary)]">
+                              <T en="Delivery">Entrega</T>:{" "}
+                            </span>
+                            {selections.type === "landing" && <T en="1–2 weeks">1–2 semanas</T>}
+                            {selections.type === "corporate" && <T en="2–4 weeks">2–4 semanas</T>}
+                            {selections.type === "ecommerce" && <T en="4–6 weeks">4–6 semanas</T>}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Barra compacta siempre visible */}
+                <div
+                  onClick={() => setEstimateExpanded(prev => !prev)}
+                  className="w-full flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)] border-t border-[var(--color-border-subtle)] cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-start">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                        <T en="Estimate">Estimado</T>
+                      </span>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-xl font-display font-black text-[var(--color-primary-base)]">
+                          $<AnimatedNumber value={isOfferActive && estimatedTotal > 0 ? discountedTotal : estimatedTotal} />
+                        </span>
+                        {monthlyAddonsPrice > 0 && (
+                          <span className="text-xs text-[var(--color-text-tertiary)] font-bold">
+                            +$<AnimatedNumber value={monthlyAddonsPrice} />/mes
+                          </span>
+                        )}
+                        {isOfferActive && estimatedTotal > 0 && (
+                          <span className="text-[10px] bg-emerald-500/15 text-emerald-500 font-black px-1.5 py-0.5 rounded">
+                            -25%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        resetWizard();
+                      }}
+                      title={language === "es" ? "Reiniciar planificador" : "Reset planner"}
+                      className="w-7 h-7 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <RotateCcw size={12} />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-[var(--color-text-tertiary)]">
+                        {estimateExpanded
+                          ? <T en="Close">Cerrar</T>
+                          : <T en="Details">Detalles</T>
+                        }
+                      </span>
+                      <motion.div
+                        animate={{ rotate: estimateExpanded ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <ChevronUp size={16} className="text-[var(--color-text-tertiary)]" />
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </main>
       <Footer />
 
@@ -2119,7 +3667,7 @@ EJEMPLO: {"type":"corporate","addons":["hosting","bot_fast"],"confidence":"high"
                     setLeadCaptured(true);
                     trackEvent("wizard_step_complete", { step: 3 });
                     setCurrentStep((c) => c + 1);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    scrollToProgress();
                   }}
                   className="w-full py-2 px-6 text-[var(--color-text-tertiary)] text-xs hover:text-[var(--color-text-secondary)] transition-colors border-none bg-transparent cursor-pointer"
                 >

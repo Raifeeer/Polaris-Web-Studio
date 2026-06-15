@@ -58,8 +58,8 @@ export const projects: Project[] = [
     type: "Turismo · Web Corporativa",
     typeEN: "Tourism · Corporate Web",
     liveUrl: "https://lumina-sky-demo.vercel.app/",
-    desktopImg: "/screenshots/lumina-sky-concept-desktop.png",
-    mobileImg: "/screenshots/lumina-sky-concept-mobile.png",
+    desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20PC.PNG?alt=media&token=26caed50-0c21-4386-913f-ce3f31b0384c",
+    mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
     shortDescEN:

@@ -11,6 +11,7 @@ import {
   Plus,
   Trash2,
   Check,
+  Copy,
   X,
   ExternalLink,
   PlusCircle,
@@ -47,7 +48,31 @@ export default function ClientDashboard() {
   }, [user, navigate]);
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "invoices" | "meetings" | "admin-clients">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "invoices" | "meetings" | "updates" | "admin-clients" | "admin-config">("overview");
+  const [deploys, setDeploys] = useState<any[]>([]);
+  const [editVercelId, setEditVercelId] = useState("");
+  const [generatedSecret, setGeneratedSecret] = useState("");
+  const [secretCopied, setSecretCopied] = useState(false);
+
+  const generateWebhookSecret = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const array = new Uint8Array(20);
+    crypto.getRandomValues(array);
+    const random = Array.from(array)
+      .map(b => chars[b % chars.length])
+      .join("");
+    const year = new Date().getFullYear();
+    const secret = `pk_polaris_${year}_${random}`;
+    setGeneratedSecret(secret);
+    setSecretCopied(false);
+  };
+
+  const copySecret = async () => {
+    if (!generatedSecret) return;
+    await navigator.clipboard.writeText(generatedSecret);
+    setSecretCopied(true);
+    setTimeout(() => setSecretCopied(false), 2000);
+  };
 
   // Dashboard Data State
   const [data, setData] = useState<{
@@ -166,6 +191,15 @@ export default function ClientDashboard() {
       })
       .then((resData) => {
         setData(resData);
+        // Cargar deploys del proyecto
+        if (resData.projects?.[0]?.id) {
+          fetch(`/api/portal/deploys/${resData.projects[0].id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+            .then(r => r.json())
+            .then(d => Array.isArray(d) && setDeploys(d))
+            .catch(() => {});
+        }
         // Default select first project for admin tasks
         if (resData.projects && resData.projects.length > 0) {
           setSelectedProjectId((prev) => prev || resData.projects[0].id);
@@ -871,6 +905,18 @@ export default function ClientDashboard() {
               <T en="Meetings Schedule">Agenda de Reuniones</T>
             </button>
 
+            <button
+              onClick={() => setActiveTab("updates")}
+              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "updates"
+                  ? "bg-[var(--color-primary-base)] text-white"
+                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"
+              }`}
+            >
+              <RefreshCw size={14} />
+              <T en="Updates">Actualizaciones</T>
+            </button>
+
             {isAdmin && (
               <button
                 onClick={() => setActiveTab("admin-clients")}
@@ -882,6 +928,20 @@ export default function ClientDashboard() {
               >
                 <UserPlus size={16} />
                 <T en="Register Clients">Registrar Nuevos Clientes</T>
+              </button>
+            )}
+
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab("admin-config")}
+                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all border border-indigo-500/20 ${
+                  activeTab === "admin-config"
+                    ? "bg-indigo-600 text-white border-transparent"
+                    : "text-indigo-400 hover:bg-indigo-500/10"
+                }`}
+              >
+                <Settings size={16} />
+                <T en="System Config">Configuración</T>
               </button>
             )}
           </nav>
@@ -1177,6 +1237,78 @@ export default function ClientDashboard() {
                                     ))}
                                   </div>
                                 </div>
+
+                                {/* Configuración de Proyecto en Vercel */}
+                                <div className="pt-4 border-t border-[var(--color-border-subtle)]/20 mt-4 space-y-3">
+                                  <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                                    CONFIGURACIÓN DE DEPLOY CONTINUO
+                                  </h4>
+                                  <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="flex-1">
+                                      <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">ID del Proyecto (Nombre en GitHub/Vercel)</label>
+                                      <input 
+                                        type="text"
+                                        placeholder="ej: mi-proyecto-web"
+                                        defaultValue={project.vercelProjectId || ""}
+                                        onBlur={(e) => {
+                                          const val = e.target.value.trim();
+                                          // Guardar automáticamente al salir de foco
+                                          fetch(`/api/portal/projects/${project.id}/vercel`, {
+                                            method: "PUT",
+                                            headers: {
+                                              "Content-Type": "application/json",
+                                              Authorization: `Bearer ${token}`
+                                            },
+                                            body: JSON.stringify({
+                                              vercelProjectId: val,
+                                              vercelUrl: project.vercelUrl || ""
+                                            })
+                                          })
+                                            .then(res => {
+                                              if (res.ok) {
+                                                setSuccessMsg("Configuración de Vercel actualizada");
+                                                handleRefresh();
+                                              }
+                                            });
+                                        }}
+                                        className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
+                                      />
+                                    </div>
+                                    <div className="flex-1">
+                                      <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">URL de Producción</label>
+                                      <input 
+                                        type="text"
+                                        placeholder="ej: https://mi-proyecto-web.vercel.app"
+                                        defaultValue={project.vercelUrl || ""}
+                                        onBlur={(e) => {
+                                          const val = e.target.value.trim();
+                                          // Guardar automáticamente al salir de foco
+                                          fetch(`/api/portal/projects/${project.id}/vercel`, {
+                                            method: "PUT",
+                                            headers: {
+                                              "Content-Type": "application/json",
+                                              Authorization: `Bearer ${token}`
+                                            },
+                                            body: JSON.stringify({
+                                              vercelProjectId: project.vercelProjectId || "",
+                                              vercelUrl: val
+                                            })
+                                          })
+                                            .then(res => {
+                                              if (res.ok) {
+                                                setSuccessMsg("Configuración de Vercel actualizada");
+                                                handleRefresh();
+                                              }
+                                            });
+                                        }}
+                                        className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* END CONFIGURACIÓN VERCEL */}
+                                </div>
+
                               </div>
                             </div>
                           );
@@ -2192,6 +2324,89 @@ export default function ClientDashboard() {
             )}
 
             {/* ----------------------------------------------------
+                TAB: UPDATES (ACTUALIZACIONES EN VIVO)
+                ---------------------------------------------------- */}
+            {activeTab === "updates" && (
+              <div className="space-y-8">
+                <div className="flex justify-between items-center pb-4 border-b border-[var(--color-border-subtle)]/30">
+                  <h2 className="text-lg font-display font-bold flex items-center gap-2">
+                    <RefreshCw size={18} className="text-emerald-400 animate-spin-slow" />
+                    Actualizaciones en Vivo (Historial de Deploys)
+                  </h2>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* URL en vivo del sitio */}
+                  <div className="lg:col-span-1 space-y-6">
+                    <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
+                      <h3 className="font-bold text-sm tracking-wide text-zinc-300">SITIO EN PRODUCCIÓN</h3>
+                      {data?.projects?.[0]?.vercelUrl ? (
+                        <div className="space-y-3">
+                          <p className="text-xs text-zinc-400">Tu proyecto tiene una dirección activa e integrada con nuestro servidor de compilación continua.</p>
+                          <a 
+                            href={data.projects[0].vercelUrl} 
+                            target="_blank" 
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-all w-full justify-center"
+                          >
+                            <ExternalLink size={14} />
+                            Ver Sitio Web
+                          </a>
+                          <p className="text-[10px] font-mono text-zinc-500 break-all text-center">{data.projects[0].vercelUrl}</p>
+                        </div>
+                      ) : (
+                        <div className="text-zinc-500 text-xs py-4 text-center">
+                          Aún no hay URL de producción vinculada. Nuestro equipo está preparando tu entorno de despliegue.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Historial de deploys */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
+                      <h3 className="font-bold text-sm tracking-wide text-zinc-300">HISTORIAL DE ACTUALIZACIONES</h3>
+                      
+                      {deploys.length === 0 ? (
+                        <div className="text-zinc-500 text-xs py-12 text-center">
+                          No se han detectado despliegues en este proyecto todavía. Las actualizaciones automáticas se reflejarán aquí.
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {deploys.map((dep) => (
+                            <div key={dep.id} className="p-4 rounded-xl bg-zinc-900/60 border border-[var(--color-border-subtle)]/40 flex items-start gap-3 justify-between">
+                              <div className="space-y-1 select-text">
+                                <div className="flex items-center gap-2">
+                                  <span className={`w-2 h-2 rounded-full ${dep.state === 'ready' ? 'bg-emerald-500' : dep.state === 'building' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
+                                  <p className="text-xs font-bold text-zinc-200">
+                                    {language === "es" ? (dep.commitMessageEs || dep.commitMessageES || dep.commitMessage) : dep.commitMessage}
+                                  </p>
+                                </div>
+                                <p className="text-[10px] font-mono text-zinc-500">ID: {dep.vercelDeploymentId}</p>
+                                <p className="text-[10px] font-mono text-zinc-500">{new Date(dep.createdAt).toLocaleString()}</p>
+                              </div>
+                              {dep.state === 'ready' && dep.url && (
+                                <a 
+                                  href={dep.url} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all"
+                                  title="Ver preview de este deploy"
+                                >
+                                  <ExternalLink size={14} />
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ----------------------------------------------------
                 TAB 5: REGISTER CLIENTS (ADMIN ONLY - REGISTRAR CLIENTES)
                 ---------------------------------------------------- */}
             {activeTab === "admin-clients" && isAdmin && (
@@ -2391,6 +2606,101 @@ export default function ClientDashboard() {
                       </p>
                     </div>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === "admin-config" && isAdmin && (
+              <div className="space-y-6 max-w-xl">
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  Configuración del Sistema
+                </p>
+
+                {/* Webhook URL */}
+                <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3">
+                  <div>
+                    <p className="text-xs font-black text-[var(--color-text-primary)] mb-1">
+                      URL del Webhook
+                    </p>
+                    <p className="text-[11px] text-[var(--color-text-tertiary)] mb-3">
+                      Usa esta URL en GitHub → Settings → Webhooks de cada repo de cliente.
+                    </p>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                      <code className="flex-1 text-[11px] font-mono text-[var(--color-text-secondary)] break-all">
+                        {window.location.origin}/api/webhooks/github
+                      </code>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/github`);
+                          setSuccessMsg("URL copiada");
+                        }}
+                        className="shrink-0 flex items-center gap-1 px-2 py-1 rounded bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[10px] font-black text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition cursor-pointer"
+                      >
+                        <Copy size={10} /> Copiar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Secret Generator */}
+                <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3">
+                  <div>
+                    <p className="text-xs font-black text-[var(--color-text-primary)] mb-1">
+                      GitHub Webhook Secret
+                    </p>
+                    <p className="text-[11px] text-[var(--color-text-tertiary)] mb-3">
+                      Genera un secret seguro. Es el mismo para todos los repos de clientes — solo necesitas generarlo una vez.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                      Secret
+                    </span>
+                    <button
+                      type="button"
+                      onClick={generateWebhookSecret}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition cursor-pointer"
+                    >
+                      <RefreshCw size={10} />
+                      {generatedSecret ? "Regenerar" : "Generar"}
+                    </button>
+                  </div>
+
+                  {generatedSecret ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                        <code className="flex-1 text-[11px] font-mono text-[var(--color-text-secondary)] break-all leading-relaxed">
+                          {generatedSecret}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={copySecret}
+                          className={`shrink-0 flex items-center gap-1 px-2 py-1 rounded text-[10px] font-black transition-all cursor-pointer ${
+                            secretCopied
+                              ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/20"
+                              : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/40"
+                          }`}
+                        >
+                          {secretCopied ? <><Check size={10} /> Copiado</> : <><Copy size={10} /> Copiar</>}
+                        </button>
+                      </div>
+                      <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/15 space-y-1.5">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 font-black">
+                          ⚠️ Copia este secret ahora y pégalo en:
+                        </p>
+                        <ol className="text-[10px] text-amber-600/80 dark:text-amber-400/80 space-y-1 list-decimal list-inside">
+                          <li>GitHub → cada repo cliente → Settings → Webhooks → Secret</li>
+                          <li>Vercel → proyecto Polaris → Settings → Env Variables → <code className="font-mono">GITHUB_WEBHOOK_SECRET</code></li>
+                        </ol>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-[var(--color-text-tertiary)]">
+                      Genera un secret seguro para autenticar los webhooks de GitHub.
+                    </p>
+                  )}
                 </div>
               </div>
             )}

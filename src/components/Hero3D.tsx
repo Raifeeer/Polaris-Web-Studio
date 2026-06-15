@@ -69,7 +69,7 @@ export default function Hero3D() {
         top: "15%",
         animationName: "float-circle-1",
         duration: 14,
-        opacity: 0.22,
+        opacity: 0.38,
       },
       {
         background:
@@ -80,7 +80,7 @@ export default function Hero3D() {
         top: "10%",
         animationName: "float-circle-2",
         duration: 18,
-        opacity: 0.18,
+        opacity: 0.32,
       },
       {
         background:
@@ -91,7 +91,7 @@ export default function Hero3D() {
         top: "48%",
         animationName: "float-circle-3",
         duration: 20,
-        opacity: 0.24,
+        opacity: 0.40,
       },
       {
         background:
@@ -102,7 +102,7 @@ export default function Hero3D() {
         top: "42%",
         animationName: "float-circle-4",
         duration: 16,
-        opacity: 0.16,
+        opacity: 0.28,
       },
     ],
     [],
@@ -302,9 +302,13 @@ export default function Hero3D() {
         .gradient-mesh-blob {
           position: absolute;
           border-radius: 50%;
-          mix-blend-mode: screen;
+          mix-blend-mode: var(--blob-blend, normal);
           will-change: transform;
           filter: blur(80px);
+        }
+
+        .dark .gradient-mesh-blob {
+          --blob-blend: screen;
         }
       `}</style>
 
@@ -330,7 +334,11 @@ export default function Hero3D() {
       </div>
 
       {/* 3. Layered Gradient Mesh Blobs Container */}
-      <div className="absolute inset-0 w-full h-full opacity-90">
+      <div
+        data-mesh-container="true"
+        style={{ mixBlendMode: "normal" }}
+        className="absolute inset-0 w-full h-full opacity-60 dark:opacity-90"
+      >
         {blobs.map((blob, idx) => (
           <div
             key={idx}

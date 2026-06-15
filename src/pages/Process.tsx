@@ -281,11 +281,11 @@ export default function Process() {
 
       <main className="max-w-6xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
         {/* Header */}
-        <section className="text-center space-y-6 mb-16 md:mb-20">
-          <span className="inline-block text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-highlight)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+        <section className="text-center space-y-4 mb-16 md:mb-20 relative select-none">
+          <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] block">
             <T en="Agile engineering">Ingeniería Web Sin Fricciones</T>
           </span>
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
             <T
               en={
                 <>
@@ -302,7 +302,7 @@ export default function Process() {
               </span>
             </T>
           </h1>
-          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
             <T en="A systematic and transparent process designed to scale your brand with software reliability and world-class design standards.">
               Un proceso claro y sistemático diseñado para escalar tu marca y
               convertir visitantes en clientes de manera predecible.

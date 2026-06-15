@@ -312,6 +312,16 @@ const MOCKUP_CONTENT: Record<
 > = {
   "lumina-sky-concept": {
     browser: <LuminaSkyMockup />,
+    mobile: (
+      <div className="absolute inset-0 bg-[#121212] flex items-center justify-center overflow-hidden">
+        <img
+          src="https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Untitled%20design.png?alt=media&token=c62ffb99-a978-4565-a324-9fbd21e7aa12"
+          alt="Lumina Sky Mobile View"
+          className="w-full h-full object-cover"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    ),
   },
   "nexus-real-estate": {
     browser: <NexusRealtyMockup />,

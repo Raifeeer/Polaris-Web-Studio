@@ -32,99 +32,91 @@ import { T, useLanguage } from "../context/LanguageContext";
 
 function ProjectScreenshot({ project }: { project: Project }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
-  const [desktopError, setDesktopError] = useState(false);
-  const [mobileError, setMobileError] = useState(false);
+  const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+
+  React.useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  
+  const currentImg = view === "desktop" 
+    ? project.desktopImg 
+    : project.mobileImg;
+
+  let targetHeight = 220;
+  if (view === "mobile") {
+    targetHeight = windowWidth >= 1024 ? 600 : (windowWidth >= 768 ? 520 : 380);
+  } else {
+    targetHeight = windowWidth >= 1024 ? 500 : (windowWidth >= 768 ? 420 : 220);
+  }
 
   return (
-    <div className="relative w-full h-full min-h-[250px] flex flex-col justify-between bg-[var(--color-surface-base)] overflow-hidden">
-      {/* Toggle buttons top-right corner */}
-      <div className="absolute top-3 right-3 z-30 flex items-center gap-1 bg-[var(--color-surface-elevated)]/90 backdrop-blur-sm p-1 rounded-xl shadow-md border border-[var(--color-border-subtle)]">
+    <motion.div
+      animate={{ 
+        height: targetHeight
+      }}
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }}
+      className="relative w-full overflow-hidden bg-[var(--color-surface-base)] rounded-xl"
+    >
+      {/* Toggle */}
+      <div className="absolute top-2 right-2 z-10 flex gap-1 bg-[var(--color-surface-elevated)]/90 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-lg p-1">
         <button
           onClick={() => setView("desktop")}
-          className={`p-1.5 rounded-lg transition-all hover:bg-[var(--color-surface-base)] cursor-pointer ${
-            view === "desktop" ? "text-[var(--color-primary-base)] bg-[var(--color-surface-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+          className={`p-1.5 rounded-md transition-colors ${
+            view === "desktop"
+              ? "text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10"
+              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
           }`}
-          title="Desktop version"
         >
           <Monitor size={14} />
         </button>
         <button
           onClick={() => setView("mobile")}
-          className={`p-1.5 rounded-lg transition-all hover:bg-[var(--color-surface-base)] cursor-pointer ${
-            view === "mobile" ? "text-[var(--color-primary-base)] bg-[var(--color-surface-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+          className={`p-1.5 rounded-md transition-colors ${
+            view === "mobile"
+              ? "text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10"
+              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
           }`}
-          title="Mobile version"
         >
           <Smartphone size={14} />
         </button>
       </div>
 
-      <div className="flex-grow flex items-center justify-center p-4 pt-12 relative w-full h-full">
-        <AnimatePresence mode="wait">
-          {view === "desktop" ? (
-            <motion.div
-              key="desktop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="w-full flex flex-col rounded-t-xl overflow-hidden border border-[var(--color-border-subtle)] max-w-full"
-            >
-              {/* Browser bar */}
-              <div className="flex items-center gap-1.5 px-3 py-2 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] shrink-0 select-none">
-                <div className="w-2 h-2 rounded-full bg-red-500" />
-                <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-              </div>
-              <div className="flex-grow overflow-hidden relative min-h-[160px] flex items-center justify-center bg-neutral-900/10">
-                {desktopError || !project.desktopImg ? (
-                  <div className="absolute inset-0 bg-neutral-800/40 flex items-center justify-center text-center p-4">
-                    <span className="text-xs font-bold text-[var(--color-text-tertiary)] select-none">
-                      {project.title} (Desktop View)
-                    </span>
-                  </div>
-                ) : (
-                  <img
-                    src={project.desktopImg}
-                    alt={`${project.title} Desktop`}
-                    className="w-full object-cover object-top"
-                    onError={() => setDesktopError(true)}
-                  />
-                )}
-              </div>
-            </motion.div>
+      {/* Image */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={view}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="w-full h-full flex items-center justify-center"
+        >
+          {currentImg ? (
+            <img
+              src={currentImg}
+              alt={project.title}
+              className={`${
+                view === "desktop"
+                  ? "w-full h-full object-cover object-top"
+                  : "h-full w-auto max-w-[260px] object-contain mx-auto"
+              }`}
+            />
           ) : (
-            <motion.div
-              key="mobile"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="w-[170px] shrink-0 rounded-[2rem] border-4 border-[var(--color-border-strong)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden shadow-xl"
-            >
-              {/* Phone notch */}
-              <div className="w-16 h-1.5 bg-[var(--color-border-strong)] rounded-full mx-auto mt-2 mb-1 shrink-0" />
-              <div className="flex-grow overflow-hidden relative min-h-[220px] aspect-[9/16] flex items-center justify-center bg-neutral-900/10">
-                {mobileError || !project.mobileImg ? (
-                  <div className="absolute inset-0 bg-neutral-800/40 flex items-center justify-center text-center p-4">
-                    <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] select-none">
-                      {project.title} (Mobile)
-                    </span>
-                  </div>
-                ) : (
-                  <img
-                    src={project.mobileImg}
-                    alt={`${project.title} Mobile`}
-                    className="w-full object-cover object-top rounded-b-[1.5rem]"
-                    onError={() => setMobileError(true)}
-                  />
-                )}
-              </div>
-            </motion.div>
+            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
+              {view === "desktop" 
+                ? <Monitor size={20} /> 
+                : <Smartphone size={20} />}
+              <span className="text-xs">{project.title}</span>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
-    </div>
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 }
 
@@ -211,20 +203,17 @@ export default function Portfolio() {
       <main className="max-w-7xl mx-auto w-full px-4 md:px-10 py-12 md:py-20 relative z-10 flex-grow">
         
         {/* Header */}
-        <section className="text-center space-y-6 mb-12">
+        <section className="text-center space-y-4 mb-12 relative select-none">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-[var(--color-primary-base)]/10 to-purple-500/10 border border-[var(--color-primary-base)]/25 rounded-full"
+            className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] block"
           >
-            <Layers size={12} className="text-[var(--color-primary-base)]" />
-            <span className="text-[var(--color-primary-base)] text-[10px] sm:text-xs font-black uppercase tracking-[0.15em]">
-              <T en="Interactive Showcase">Galería Interactiva de Diseño y Desarrollo</T>
-            </span>
+            <T en="Interactive Showcase">Galería Interactiva de Diseño y Desarrollo</T>
           </motion.div>
           
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
             <T
               en={
                 <>
@@ -242,7 +231,7 @@ export default function Portfolio() {
             </T>
           </h1>
           
-          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
             <T en="Explore a selection of concepts, interfaces, and functional prototypes created to demonstrate the scope of our development and visual design.">
               Explora una selección de conceptos, interfaces y prototipos
               funcionales creados para demostrar el alcance de nuestro desarrollo y
@@ -537,7 +526,7 @@ export default function Portfolio() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
               {/* Left Column: Details */}
-              <div className="lg:col-span-5 space-y-6 relative z-10 ordered-last lg:order-first">
+              <div className="lg:col-span-5 space-y-6 relative z-10 order-last lg:order-first">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentCinemaProject.slug + "-info"}
@@ -609,7 +598,7 @@ export default function Portfolio() {
                     </div>
 
                     {/* Actions Panel */}
-                    <div className="flex flex-wrap gap-3 pt-4">
+                    <div className="flex flex-wrap gap-3 pt-4 items-center">
                       <button
                         onClick={() => navigate(`/portafolio/${currentCinemaProject.slug}`)}
                         className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
@@ -664,13 +653,14 @@ export default function Portfolio() {
                   </div>
 
                   {/* Mockup Frame presentation with custom responsive scale */}
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="wait" custom={direction}>
                     <motion.div
                       key={currentCinemaProject.slug}
-                      initial={{ opacity: 0, x: direction * 60 }}
+                      custom={direction}
+                      initial={{ opacity: 0, x: direction * 40 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: direction * -60 }}
-                      transition={{ duration: 0.35, ease: "easeInOut" }}
+                      exit={{ opacity: 0, x: direction * -40 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
                       className="transform transition-transform duration-500 hover:scale-[1.01]"
                     >
                       <ProjectScreenshot project={currentCinemaProject} />
@@ -695,6 +685,7 @@ export default function Portfolio() {
               </div>
 
             </div>
+
           </motion.div>
         )}
 
@@ -855,7 +846,7 @@ export default function Portfolio() {
 
         {/* CTA Footer Section */}
         <section className="mt-28 text-center space-y-10">
-          <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter leading-none bg-gradient-to-r from-[var(--color-primary-base)] to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-4xl md:text-7xl font-display font-black tracking-tighter leading-none bg-gradient-to-r from-blue-500 to-indigo-500 bg-clip-text text-transparent">
             <T en="Is your project next?">¿Tu proyecto es el siguiente?</T>
           </h2>
           <p className="text-[var(--color-text-secondary)] max-w-lg mx-auto text-sm sm:text-base">

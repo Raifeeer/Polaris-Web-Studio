@@ -92,11 +92,11 @@ export default function About() {
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-12 md:py-24 relative z-10 space-y-36">
         {/* HERO SECTION */}
-        <section className="flex flex-col items-center text-center gap-6 max-w-4xl mx-auto">
+        <section className="flex flex-col items-center text-center space-y-4 max-w-4xl mx-auto relative">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center px-4 py-1.5 rounded-full bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-xs font-mono font-black uppercase tracking-wider"
+            className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] block"
           >
             <T en="EXCLUSIVE DIGITAL STUDIO">ESTUDIO DIGITAL DE ÉLITE</T>
           </motion.div>
@@ -105,7 +105,7 @@ export default function About() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-5xl md:text-7xl font-display font-black leading-[1.1] md:leading-[1.05] tracking-tight text-[var(--color-text-primary)]"
+            className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]"
           >
             <T
               en={
@@ -128,7 +128,7 @@ export default function About() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-base sm:text-lg md:text-xl text-[var(--color-text-secondary)] leading-relaxed max-w-2xl mx-auto"
+            className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto"
           >
             <T en="Polaris Web Studio bridges the gap between beautiful aesthetics and professional web development. We craft bespoke digital machinery to maximize conversion and speed.">
               Polaris Web Studio cierra la brecha entre la estética impecable y el desarrollo web profesional. Diseñamos maquinaria digital a medida para maximizar conversiones y velocidad.

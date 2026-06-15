@@ -72,6 +72,16 @@ function ScrollHandler() {
   return null;
 }
 
+function ConditionalQuoteBot({ showBot }: { showBot: boolean }) {
+  const location = useLocation();
+  if (!showBot || location.pathname === "/cotizar") return null;
+  return (
+    <Suspense fallback={null}>
+      <QuoteBot />
+    </Suspense>
+  );
+}
+
 export default function App() {
   useTheme();
   const [showBot, setShowBot] = useState(false);
@@ -197,11 +207,7 @@ export default function App() {
               />
             </Routes>
           </Suspense>
-          {showBot && (
-            <Suspense fallback={null}>
-              <QuoteBot />
-            </Suspense>
-          )}
+          <ConditionalQuoteBot showBot={showBot} />
         </div>
       </Router>
     </LanguageProvider>
