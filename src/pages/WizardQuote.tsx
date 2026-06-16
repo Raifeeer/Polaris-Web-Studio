@@ -2389,110 +2389,23 @@ export default function WizardQuote() {
     if (!businessType || !sector) return;
     setAddonDescLoading(true);
 
-    const recommendedAddonIds = sectorRecommendations[sector]?.addons || [];
-
-    const allAddonIds = [
-      "bot_fast", "ai_agent", "semantic_search", "content_assistant",
-      "content_seo", "crm_connect", "multilingual", "copy", "branding", "hosting"
-    ];
-
-    const systemPrompt = `Eres un copywriter experto en marketing digital para pequeñas y medianas empresas en República Dominicana. Tu tarea es escribir descripciones cortas, específicas y convincentes de add-ons para sitios web, personalizadas para el tipo de negocio del cliente.
-
-REGLAS ESTRICTAS:
-- Cada descripción: máximo 22 palabras, mínimo 12 palabras
-- Habla directamente al dueño: usa "tus clientes", "tu negocio", "tu equipo"
-- Menciona situaciones CONCRETAS y REALES del tipo de negocio — nunca genérico
-- Tono conversacional, sin tecnicismos
-- NUNCA uses: "mejora tu presencia", "aumenta tus ventas", "potencia tu negocio", "optimiza"
-- DEBES devolver un objeto JSON con EXACTAMENTE estas 10 claves: bot_fast, ai_agent, semantic_search, content_assistant, content_seo, crm_connect, multilingual, copy, branding, hosting
-- Para add-ons irrelevantes devuelve null — EXCEPTO los recomendados que SIEMPRE deben tener descripción
-- Add-ons recomendados (NUNCA null): ${recommendedAddonIds.join(", ")}
-- Devuelve ÚNICAMENTE JSON válido, sin markdown, sin backticks, sin texto adicional
-
-EJEMPLO para una clínica dental con plan corporativo (recomendados: bot_fast, content_assistant):
-{
-  "bot_fast": "Responde a las 11pm cuando un paciente pregunta si aceptas su seguro médico o cuánto cuesta una limpieza",
-  "ai_agent": null,
-  "semantic_search": null,
-  "content_assistant": "Publica casos de antes y después, tips de higiene bucal y promociones de blanqueamiento con tu voz",
-  "content_seo": "Keywords para aparecer cuando alguien busca dentista en tu zona o emergencia dental cerca",
-  "crm_connect": "Cada paciente que agenda cita online queda registrado automáticamente en tu sistema",
-  "multilingual": "Atiende pacientes extranjeros o turistas que necesitan un dentista de confianza en el país",
-  "copy": "Textos que transmiten profesionalismo y confianza antes de que el paciente pise tu clínica",
-  "branding": null,
-  "hosting": "Tu agenda online y formulario de citas siempre disponibles, sin caídas en hora pico"
-}`;
-
-    const promptText = `Tipo de negocio: ${businessType}
-Sector: ${sector}
-Plan web seleccionado: ${planType || "corporate"}
-Add-ons que DEBES describir obligatoriamente (nunca null): ${recommendedAddonIds.join(", ")}
-Devuelve descripciones para los 10 add-ons: ${allAddonIds.join(", ")}`;
-
-    const parseAndValidate = (text: string): Record<string, string | null> => {
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      
-      // Verificar que los 10 addons existan y ninguno sea null o vacío
-      for (const id of allAddonIds) {
-        if (!parsed[id] || parsed[id] === null || parsed[id] === "") {
-          throw new Error(`Missing description for addon: ${id}`);
-        }
-      }
-      return parsed;
-    };
-
-    const saveDescriptions = (descriptions: Record<string, string | null>) => {
-      setAddonDescriptions(descriptions);
-      const cacheKey = `polaris_addon_desc_${businessType}_${planType}`;
-      localStorage.setItem(cacheKey, JSON.stringify(descriptions));
-      localStorage.setItem("polaris_addon_descriptions", JSON.stringify({ businessType, descriptions }));
-    };
-
     try {
-      const geminiRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ parts: [{ text: promptText }] }],
-            generationConfig: { temperature: 0.75, maxOutputTokens: 1200 }
-          })
-        }
+      const res = await fetch("/api/generate-addon-descriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessType, sector, planType })
+      });
+
+      if (!res.ok) throw new Error("API error");
+      const descriptions = await res.json();
+
+      setAddonDescriptions(descriptions);
+      localStorage.setItem(
+        "polaris_addon_descriptions",
+        JSON.stringify({ businessType, descriptions })
       );
-      if (!geminiRes.ok) throw new Error("Gemini error");
-      const geminiResult = await geminiRes.json();
-      const geminiText = geminiResult.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      saveDescriptions(parseAndValidate(geminiText));
-
     } catch {
-      try {
-        const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${import.meta.env.VITE_GROK_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "grok-4.3",
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: promptText }
-            ],
-            temperature: 0.75,
-            max_tokens: 1200
-          })
-        });
-        if (!grokRes.ok) throw new Error("Grok error");
-        const grokResult = await grokRes.json();
-        const grokText = grokResult.choices?.[0]?.message?.content || "";
-        saveDescriptions(parseAndValidate(grokText));
-
-      } catch {
-        // Ambos fallaron — se usan las descripciones hardcodeadas
-      }
+      // Silencioso — se usan descripciones hardcodeadas
     } finally {
       setAddonDescLoading(false);
     }
