@@ -11,22 +11,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Faltan parámetros" });
   }
 
-  const systemPrompt = `Eres un copywriter experto en marketing digital para pequeñas y medianas empresas en República Dominicana. Tu tarea es escribir descripciones cortas, específicas y convincentes de add-ons para sitios web, personalizadas para el tipo de negocio del cliente.
+  const systemPrompt = `Copywriter de marketing digital para PyMEs en República Dominicana. Escribe descripciones de add-ons para sitios web, personalizadas para el negocio indicado.
 
-REGLAS ESTRICTAS:
-- Cada descripción: máximo 22 palabras, mínimo 12 palabras
-- Habla directamente al dueño: usa "tus clientes", "tu negocio", "tu equipo"
-- Menciona situaciones CONCRETAS y REALES del tipo de negocio — nunca genérico
-- Tono conversacional, sin tecnicismos
-- NUNCA uses: "mejora tu presencia", "aumenta tus ventas", "potencia tu negocio", "optimiza"
-- DEBES devolver un objeto JSON con EXACTAMENTE estas 10 claves: bot_fast, ai_agent, semantic_search, content_assistant, content_seo, crm_connect, multilingual, copy, branding, hosting
-- Para add-ons irrelevantes devuelve null
-- Devuelve ÚNICAMENTE JSON válido, sin markdown, sin backticks, sin texto adicional`;
+REGLAS:
+- 15-22 palabras por descripción
+- Habla al dueño: "tus clientes", "tu negocio"
+- Situaciones concretas y reales del negocio — nunca genérico
+- Sin tecnicismos, tono cercano
+- Prohibido: "mejora tu presencia", "aumenta tus ventas", "potencia", "optimiza"
+- JSON con exactamente estas 10 claves: bot_fast, ai_agent, semantic_search, content_assistant, content_seo, crm_connect, multilingual, copy, branding, hosting
+- Irrelevantes = null. Solo JSON, sin markdown ni backticks.`;
 
   try {
-    // Intento 1 — Gemini 3.5 Flash
+    // Intento 1 — Gemini 3.1 Flash Lite
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,7 +36,7 @@ REGLAS ESTRICTAS:
               text: `Negocio: ${businessType}\nSector: ${sector}\nPlan: ${planType || "corporate"}`
             }]
           }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 600 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 400 }
         })
       }
     );

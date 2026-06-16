@@ -3,6 +3,7 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { dbInstance } from "./server-db";
+import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions";
 
 // Load environment variables
 dotenv.config();
@@ -158,6 +159,15 @@ async function startServer() {
 
     } catch (err: any) {
       return res.status(502).json({ error: "Could not verify domain availability." });
+    }
+  });
+
+  app.post("/api/generate-addon-descriptions", async (req, res) => {
+    try {
+      await generateAddonDescriptionsHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error generating addon descriptions:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
     }
   });
 
