@@ -2,8 +2,8 @@ import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
-import { dbInstance } from "./server-db";
-import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions";
+import { dbInstance } from "./server-db.js";
+import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 
 // Load environment variables
 dotenv.config();
