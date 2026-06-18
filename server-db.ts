@@ -146,6 +146,8 @@ const getInitialSeededData = (): DatabaseSchema => {
             detail: "Estimado: 10 de Noviembre.",
           },
         ],
+        vercelProjectId: "polaris-web-studio",
+        vercelUrl: "https://polaris-web-studio-eta.vercel.app"
       },
     ],
     tasks: [
