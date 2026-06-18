@@ -136,7 +136,20 @@ async function checkDomain(domain: string): Promise<boolean> {
 export const app = express();
 
 // Body parser middlewares for local API routes
-app.use(express.json());
+app.use((req, res, next) => {
+  if (req.path === '/api/webhooks/github') {
+    let data = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => { data += chunk; });
+    req.on('end', () => {
+      (req as any).rawBody = data;
+      try { req.body = JSON.parse(data); } catch { req.body = {}; }
+      next();
+    });
+  } else {
+    express.json()(req, res, next);
+  }
+});
 app.use(express.urlencoded({ extended: true }));
 
 const PORT = 3000;
@@ -741,7 +754,8 @@ const PORT = 3000;
       const signature = req.headers["x-hub-signature-256"] as string;
       if (!signature) return res.status(401).json({ error: "No signature" });
       const crypto = await import("crypto");
-      const expected = "sha256=" + crypto.createHmac("sha256", secret).update(JSON.stringify(req.body)).digest("hex");
+      const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+      const expected = "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
       if (signature !== expected) return res.status(401).json({ error: "Invalid signature" });
     }
 
@@ -749,6 +763,7 @@ const PORT = 3000;
     const commitMessage = req.body?.head_commit?.message || "Actualización del sitio";
     const pusher = req.body?.pusher?.name || "Polaris";
     const branch = req.body?.ref?.replace("refs/heads/", "") || "main";
+    console.log(`[Webhook] repo=${repoName} branch=${branch} secret=${!!secret} sig=${!!(req.headers["x-hub-signature-256"])}`);
 
     // Solo procesar push a main/master
     if (branch !== "main" && branch !== "master") {
@@ -759,12 +774,13 @@ const PORT = 3000;
       return res.status(200).json({ ok: true, noRepo: true });
     }
 
-    // Buscar proyecto en DB por vercelProjectId (mismo nombre que el repo)
     const allProjects = dbInstance.getProjects();
     const project = allProjects.find((p: any) =>
-      p.vercelProjectId === repoName ||
-      p.vercelUrl?.includes(repoName)
+      (p.vercelProjectId && p.vercelProjectId.toLowerCase() === repoName.toLowerCase()) ||
+      (p.vercelUrl && p.vercelUrl.toLowerCase().includes(repoName.toLowerCase()))
     );
+    console.log(`[Webhook] DB projects: ${allProjects.map((p: any) => `${p.name}(${p.vercelProjectId})`).join(", ")}`);
+    console.log(`[Webhook] Match: ${project?.name || "NONE"}`);
 
     if (!project) {
       console.log(`[GitHub Webhook] No project found for repo: ${repoName}`);
@@ -800,6 +816,42 @@ const PORT = 3000;
     const { projectId } = req.params;
     const deploys = dbInstance.getDeploys(projectId);
     res.json(deploys);
+  });
+
+  // Registro Manual de Deploys para un proyecto por parte del Administrador
+  app.post("/api/portal/projects/:id/deploys", authenticateToken, requireAdmin, async (req: any, res) => {
+    const { id } = req.params;
+    const { commitMessage, commitMessageEs, url, state } = req.body;
+
+    const project = dbInstance.getProjects().find((p: any) => p.id === id);
+    if (!project) {
+      return res.status(404).json({ error: "Proyecto no encontrado" });
+    }
+
+    let translatedMessage = commitMessageEs;
+    if (!translatedMessage && commitMessage) {
+      try {
+        translatedMessage = await askAI(
+          `Traduce este mensaje técnico de desarrollo web al español de forma clara y amigable para un cliente no técnico (máximo 1 oración, sin jerga técnica, sin mencionar nombres de archivos ni código): "${commitMessage}"`
+        );
+      } catch (_) {
+        translatedMessage = commitMessage;
+      }
+    }
+
+    const newDeploy = {
+      id: `dep-${Date.now()}`,
+      projectId: id,
+      vercelDeploymentId: `manual-${Date.now().toString().slice(-6)}`,
+      url: url || project.vercelUrl || "https://nexus-ecommerce.vercel.app",
+      commitMessage: commitMessage || "Actualización del sitio realizada manualmente",
+      commitMessageEs: translatedMessage || commitMessage || "Actualización de producción",
+      state: state || "ready",
+      createdAt: new Date().toISOString()
+    };
+
+    dbInstance.addDeploy(newDeploy);
+    res.json({ success: true, deploy: newDeploy });
   });
 
   app.put("/api/portal/projects/:id/vercel", authenticateToken, requireAdmin, (req: any, res) => {
