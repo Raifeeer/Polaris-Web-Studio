@@ -158,6 +158,13 @@ export default function ClientDashboard() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
 
+  // Change Password Modal States
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null);
+  const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
+  const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+
   const isAdmin = user?.role === "admin";
 
   // Auto-hide notifications
@@ -218,6 +225,52 @@ export default function ClientDashboard() {
   const handleLogout = () => {
     logout();
     navigate("/login");
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPasswordValue || newPasswordValue.length < 6) {
+      setPasswordChangeError(language === "es" ? "La contraseña debe tener al menos 6 caracteres." : "Password must be at least 6 characters.");
+      return;
+    }
+
+    setPasswordChangeLoading(true);
+    setPasswordChangeError(null);
+    setPasswordChangeSuccess(null);
+
+    try {
+      const { auth } = await import("../lib/firebase");
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const { updatePassword } = await import("firebase/auth");
+        await updatePassword(currentUser, newPasswordValue);
+        setPasswordChangeSuccess(language === "es" ? "¡Contraseña actualizada con éxito en Firebase!" : "Password updated successfully in Firebase Auth!");
+        setNewPasswordValue("");
+        setTimeout(() => {
+          setShowPasswordModal(false);
+          setPasswordChangeSuccess(null);
+        }, 2200);
+      } else {
+        setPasswordChangeError(
+          language === "es" 
+            ? "No se pudo cambiar la contraseña. Asegúrate de estar autenticado a través de Firebase Auth." 
+            : "Could not change password. Make sure you are authenticated with Firebase Auth."
+        );
+      }
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === "auth/requires-recent-login") {
+        setPasswordChangeError(
+          language === "es" 
+            ? "Por seguridad, para cambiar su contraseña debe haber iniciado sesión recientemente. Por favor, cierre e inicie sesión de nuevo." 
+            : "For security, changing password requires a recent login. Please log out and log back in."
+        );
+      } else {
+        setPasswordChangeError(err.message || "Error al actualizar contraseña.");
+      }
+    } finally {
+      setPasswordChangeLoading(false);
+    }
   };
 
   const handleRefresh = () => {
@@ -349,6 +402,23 @@ export default function ClientDashboard() {
 
       const resData = await response.json();
       if (response.ok) {
+        // Register user in Firebase Auth dynamically in background so they have immediate Auth credentials without admin logout
+        try {
+          const { initializeApp, deleteApp } = await import("firebase/app");
+          const { getAuth, createUserWithEmailAndPassword, signOut } = await import("firebase/auth");
+          const firebaseConfig = (await import("../../firebase-applet-config.json")).default;
+
+          const tempApp = initializeApp(firebaseConfig, `TempApp-${Date.now()}`);
+          const tempAuth = getAuth(tempApp);
+          
+          await createUserWithEmailAndPassword(tempAuth, newClientEmail.trim().toLowerCase(), newClientPassword);
+          await signOut(tempAuth);
+          await deleteApp(tempApp);
+          console.log("Pre-creación de cuenta Firebase Auth del cliente completada con éxito.");
+        } catch (fbCreateErr: any) {
+          console.warn("No se pudo pre-crear la cuenta de Firebase del cliente (se creará de forma dinámica en su primer inicio de sesión):", fbCreateErr);
+        }
+
         setSuccessMsg(
           language === "es"
             ? "¡Cliente registrado con éxito! Se ha generado su proyecto de forma automática con fases, entregable y factura de inicio."
@@ -954,6 +1024,19 @@ export default function ClientDashboard() {
           >
             <RefreshCw size={12} className="animate-hover-spin" />
             <T en="Refresh Hub">Sincronizar Panel</T>
+          </button>
+
+          <button
+            onClick={() => {
+              setPasswordChangeError(null);
+              setPasswordChangeSuccess(null);
+              setNewPasswordValue("");
+              setShowPasswordModal(true);
+            }}
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--color-surface-highlight)] hover:bg-[var(--color-surface-highlight)]/70 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-bold transition-all border border-[var(--color-border-subtle)]/40 hover:border-[var(--color-border-subtle)] cursor-pointer"
+          >
+            <Settings size={13} />
+            <T en="Change Password">Cambiar Contraseña</T>
           </button>
 
           <button
@@ -3067,6 +3150,92 @@ export default function ClientDashboard() {
               </div>
             </motion.div>
           )}
+          </AnimatePresence>
+
+          {/* Change Password Modal */}
+          <AnimatePresence>
+            {showPasswordModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowPasswordModal(false)}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  className="relative w-full max-w-md p-6 bg-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bento-shadow overflow-hidden"
+                >
+                  <div className="flex justify-between items-center mb-5 pb-3 border-b border-[var(--color-border-subtle)]/30">
+                    <h3 className="text-lg font-display font-black flex items-center gap-2 text-[var(--color-text-primary)]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--color-primary-base)]"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                      <T en="Change Password">Cambiar Contraseña</T>
+                    </h3>
+                    <button
+                      onClick={() => setShowPasswordModal(false)}
+                      className="p-1 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors"
+                      aria-label="Close"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {passwordChangeError && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs">
+                      {passwordChangeError}
+                    </div>
+                  )}
+
+                  {passwordChangeSuccess && (
+                    <div className="mb-4 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-500 text-xs">
+                      {passwordChangeSuccess}
+                    </div>
+                  )}
+
+                  <form onSubmit={handleChangePassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-[var(--color-text-secondary)]">
+                        <T en="New Password">Nueva Contraseña</T>
+                      </label>
+                      <input
+                        type="password"
+                        required
+                        value={newPasswordValue}
+                        onChange={(e) => setNewPasswordValue(e.target.value)}
+                        placeholder={language === "es" ? "Mínimo 6 caracteres" : "At least 6 characters"}
+                        className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)]"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswordModal(false)}
+                        className="flex-1 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-highlight)] transition-colors text-xs font-bold"
+                      >
+                        <T en="Cancel">Cancelar</T>
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={passwordChangeLoading}
+                        className="flex-1 py-3 rounded-xl bg-[var(--color-primary-base)] hover:opacity-90 text-white font-black transition-all disabled:opacity-50 text-xs flex justify-center items-center gap-1.5 cursor-pointer"
+                      >
+                        {passwordChangeLoading ? (
+                          <T en="Updating...">Actualizando...</T>
+                        ) : (
+                          <>
+                            <T en="Update Password">Actualizar</T>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            )}
           </AnimatePresence>
         </>
       )}

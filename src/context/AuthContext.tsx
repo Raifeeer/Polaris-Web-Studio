@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { auth } from "../lib/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
 
 export interface User {
   id: string;
@@ -58,27 +60,75 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      const emailClean = email.trim().toLowerCase();
+      let firebaseUserCred = null;
+      let fbErrorMsg = null;
+
+      try {
+        // 1. Try to login via Firebase Auth first
+        firebaseUserCred = await signInWithEmailAndPassword(auth, emailClean, password);
+      } catch (fbErr: any) {
+        console.warn("Firebase Auth login failed, checking fallback details:", fbErr.code);
+        fbErrorMsg = fbErr.message;
+        // If it's a critical error not related to auth, or is password/user error, fallback to Express
+      }
+
+      if (firebaseUserCred) {
+        const idToken = await firebaseUserCred.user.getIdToken();
+        const response = await fetch("/api/auth/me", {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem("portal_token", idToken);
+          setToken(idToken);
+          setUser(data.user);
+          return { success: true };
+        } else {
+          const errData = await response.json();
+          return { success: false, error: errData.error || "Error al obtener perfil desde el servidor." };
+        }
+      }
+
+      // 2. Fallback to Express Local DB login
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: emailClean, password }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        localStorage.setItem("portal_token", data.token);
-        setToken(data.token);
-        setUser(data.user);
-        return { success: true };
+        // Logged in successfully via server DB.
+        // Let's dynamically create the user in Firebase Auth so they can login via Firebase next time!
+        try {
+          const localUserCred = await createUserWithEmailAndPassword(auth, emailClean, password);
+          const idToken = await localUserCred.user.getIdToken();
+          localStorage.setItem("portal_token", idToken);
+          setToken(idToken);
+          setUser(data.user);
+          return { success: true };
+        } catch (createErr: any) {
+          console.error("On-the-fly Firebase user creation failed (will fallback to custom session):", createErr);
+          // If creation fails (e.g. password too short for Firebase, or network issue), use custom token fallback
+          localStorage.setItem("portal_token", data.token);
+          setToken(data.token);
+          setUser(data.user);
+          return { success: true };
+        }
       } else {
-        return { success: false, error: data.error || "Credenciales incorrectas" };
+        // Fallback also failed or returned invalid credentials
+        const displayError = data.error || fbErrorMsg || "Credenciales incorrectas";
+        return { success: false, error: displayError };
       }
     } catch (err) {
       console.error("Login request failed:", err);
-      return { success: false, error: "Error de red, por favor intente nuevamente." };
+      return { success: false, error: "Error de conexión, intente más tarde." };
     }
   };
 
@@ -87,6 +137,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     setUser(null);
     setLoading(false);
+    // Explicitly sign out of client-side Firebase Auth as well
+    try {
+      signOut(auth);
+    } catch (err) {
+      console.error("Error signing out of Firebase Auth:", err);
+    }
   };
 
   return (
@@ -95,6 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     </AuthContext.Provider>
   );
 }
+
 
 export function useAuth() {
   const context = useContext(AuthContext);

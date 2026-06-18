@@ -133,13 +133,13 @@ async function checkDomain(domain: string): Promise<boolean> {
   }
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+export const app = express();
 
-  // Body parser middlewares for local API routes
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+// Body parser middlewares for local API routes
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const PORT = 3000;
 
   /**
    * Safe Proxy Endpoint to Check Domain Availability and Pricing using Namecheap API.
@@ -178,16 +178,42 @@ async function startServer() {
     const token = authHeader && authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ error: "Debe iniciar sesión para acceder." });
 
-    if (!token.startsWith("user-")) {
-      return res.status(403).json({ error: "Token de sesión inválido." });
+    if (token.startsWith("user-")) {
+      const userId = token.replace("user-", "");
+      const user = dbInstance.getUsers().find((u) => u.id === userId);
+      if (!user) return res.status(404).json({ error: "Usuario para la sesión no encontrado." });
+
+      req.user = user;
+      return next();
     }
 
-    const userId = token.replace("user-", "");
-    const user = dbInstance.getUsers().find((u) => u.id === userId);
-    if (!user) return res.status(404).json({ error: "Usuario para la sesión no encontrado." });
+    // Try decoding as Firebase Auth ID Token (JWT)
+    const parts = token.split(".");
+    if (parts.length === 3) {
+      try {
+        const payloadJson = Buffer.from(parts[1], "base64").toString("utf-8");
+        const payload = JSON.parse(payloadJson);
+        const email = payload.email;
 
-    req.user = user;
-    next();
+        if (!email) {
+          return res.status(403).json({ error: "El token JWT no contiene una dirección de correo válida." });
+        }
+
+        const emailClean = email.trim().toLowerCase();
+        const user = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
+
+        if (!user) {
+          return res.status(404).json({ error: `Usuario con correo ${emailClean} no registrado en la base de datos local.` });
+        }
+
+        req.user = user;
+        return next();
+      } catch (err) {
+        return res.status(403).json({ error: "Token JWT de Firebase inválido o corrupto." });
+      }
+    }
+
+    return res.status(403).json({ error: "Token de sesión inválido o con formato desconocido." });
   }
 
   function requireAdmin(req: any, res: any, next: any) {
@@ -783,6 +809,7 @@ async function startServer() {
     res.json({ success: true });
   });
 
+async function startServer() {
   // Vite integration middleware config
   if (process.env.NODE_ENV !== "production") {
     console.log("[HMR] Mounting Vite middleware for active development environment...");
@@ -800,9 +827,11 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[Express Engine Active] Listening securely on: http://0.0.0.0:${PORT}`);
-  });
+  if (!process.env.VERCEL) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`[Express Engine Active] Listening securely on: http://0.0.0.0:${PORT}`);
+    });
+  }
 }
 
 startServer();

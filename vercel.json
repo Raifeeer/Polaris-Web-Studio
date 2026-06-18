@@ -1,6 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/api/check-domain", "destination": "/api/check-domain" },
+    { "source": "/api/generate-addon-descriptions", "destination": "/api/generate-addon-descriptions" },
+    { "source": "/api/(.*)", "destination": "/api/index.ts" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

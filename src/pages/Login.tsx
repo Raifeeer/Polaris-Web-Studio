@@ -34,11 +34,11 @@ export default function Login() {
     if (result.success) {
       navigate("/dashboard");
     } else {
-      setError(
+      setError(result.error || (
         language === "en" 
           ? "Invalid credentials. Please verify your email and password." 
           : "Credenciales inválidas. Por favor verifique sus datos de acceso."
-      );
+      ));
     }
   };
 
