@@ -11,16 +11,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Faltan parámetros" });
   }
 
-  const systemPrompt = `Copywriter de marketing digital para PyMEs en República Dominicana. Escribe descripciones de add-ons para sitios web, personalizadas para el negocio indicado.
+  const systemPrompt = `Eres un copywriter para Polaris Web Studio, agencia de desarrollo web en República Dominicana. Tu tarea es personalizar las descripciones de nuestros add-ons para el negocio específico del cliente.
+
+ESTO ES LO QUE HACE CADA ADD-ON (no inventes funciones que no existen):
+- bot_fast: Chatbot que responde preguntas frecuentes automáticamente 24/7 en la web
+- ai_agent: Agente de ventas con IA que guía al visitante hacia una compra o contacto
+- semantic_search: Buscador inteligente dentro de la tienda online que entiende lenguaje natural
+- content_assistant: Genera borradores de artículos de blog y posts para redes sociales
+- content_seo: Lista de keywords prioritarias y guía de estrategia SEO para su industria
+- crm_connect: Sincroniza los leads del formulario web con su CRM o lista de contactos
+- multilingual: Versión del sitio en inglés u otro idioma adicional
+- copy: Redacción profesional de todos los textos del sitio web
+- branding: Diseño o rediseño de logo y paleta de colores
+- hosting: Mantenimiento mensual, backups, actualizaciones y soporte técnico
 
 REGLAS:
-- 15-22 palabras por descripción
+- Personaliza SOLO el contexto del negocio — no cambies lo que hace el add-on
+- 15-20 palabras por descripción
 - Habla al dueño: "tus clientes", "tu negocio"
-- Situaciones concretas y reales del negocio — nunca genérico
-- Sin tecnicismos, tono cercano
+- Menciona una situación concreta y real de ese tipo de negocio
+- Sin tecnicismos, tono cercano y directo
 - Prohibido: "mejora tu presencia", "aumenta tus ventas", "potencia", "optimiza"
-- JSON con exactamente estas 10 claves: bot_fast, ai_agent, semantic_search, content_assistant, content_seo, crm_connect, multilingual, copy, branding, hosting
-- Irrelevantes = null. Solo JSON, sin markdown ni backticks.`;
+- Add-ons irrelevantes para este negocio = null
+- Devuelve ÚNICAMENTE JSON con exactamente estas 10 claves: bot_fast, ai_agent, semantic_search, content_assistant, content_seo, crm_connect, multilingual, copy, branding, hosting
+- Sin markdown, sin backticks, solo JSON válido`;
 
   try {
     // Intento 1 — Gemini 3.1 Flash Lite

@@ -29,6 +29,7 @@ export interface Project {
   liveUrl?: string;
   desktopImg?: string;
   mobileImg?: string;
+  cinemaColor?: string;
 
   // Case Study Details
   challenge: string;
@@ -50,6 +51,7 @@ export const projects: Project[] = [
   {
     slug: "lumina-sky-concept",
     title: "Lúmina Sky",
+    cinemaColor: "#D4AF37",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
@@ -108,6 +110,7 @@ export const projects: Project[] = [
   {
     slug: "nexus-real-estate",
     title: "Nexus Realty",
+    cinemaColor: "#1e3a5f",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
@@ -160,12 +163,13 @@ export const projects: Project[] = [
     ],
     techStack: ["React", "TypeScript", "Tailwind CSS"],
     liveUrl: "https://nexus-realty-demo.vercel.app/",
-    desktopImg: "/screenshots/nexus-real-estate-desktop.png",
-    mobileImg: "/screenshots/nexus-real-estate-mobile.png",
+    desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FNexusPC.PNG?alt=media&token=5550e8eb-4f3a-4cbd-b468-971651cc033d",
+    mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FNexusMovil.PNG?alt=media&token=a5b0944c-5d8f-4cb6-b4d8-c7652f5e6e45",
   },
   {
     slug: "chroma-store",
     title: "Chroma Tech Store",
+    cinemaColor: "#FF3366",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
@@ -212,8 +216,8 @@ export const projects: Project[] = [
       },
     ],
     techStack: ["Next.js", "Zustand", "Stripe (UI)", "Tailwind"],
-    desktopImg: "/screenshots/chroma-store-desktop.png",
-    mobileImg: "/screenshots/chroma-store-mobile.png",
+    desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FChromaPC.png?alt=media&token=7071ec72-9030-4227-bb96-c4359ceb3edd",
+    mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FChromaMobile.png?alt=media&token=4302a794-dad8-4ae7-9946-67144345315a",
   },
   {
     slug: "vitality-clinic",

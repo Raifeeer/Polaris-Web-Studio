@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -9,12 +9,76 @@ import {
   Trophy,
   ArrowRight,
   ExternalLink,
+  Monitor,
+  Smartphone,
 } from "lucide-react";
 import { projects } from "../constants/projects";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import MockupFrame from "../components/MockupFrame";
 import { T, useLanguage } from "../context/LanguageContext";
+
+function ProjectImageCarousel({
+  desktopImg,
+  mobileImg,
+  projectName,
+}: {
+  desktopImg?: string;
+  mobileImg?: string;
+  projectName: string;
+}) {
+  const [active, setActive] = useState<"desktop" | "mobile">("desktop");
+  const images = [
+    ...(desktopImg ? [{ type: "desktop" as const, src: desktopImg }] : []),
+    ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
+  ];
+
+  if (images.length === 0) return null;
+
+  const current = images.find(i => i.type === active) || images[0];
+
+  return (
+    <div className="w-full space-y-3">
+      {/* Toggle desktop/mobile */}
+      {images.length > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActive("desktop")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              active === "desktop"
+                ? "bg-[var(--color-primary-base)] text-white"
+                : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)]"
+            }`}
+          >
+            <Monitor size={12} />
+            <T en="Desktop">Desktop</T>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActive("mobile")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              active === "mobile"
+                ? "bg-[var(--color-primary-base)] text-white"
+                : "bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)]"
+            }`}
+          >
+            <Smartphone size={12} />
+            <T en="Mobile">Mobile</T>
+          </button>
+        </div>
+      )}
+
+      {/* Imagen directa sin ningún wrapper con borde o fondo */}
+      <img
+        key={current.src}
+        src={current.src}
+        alt={`${projectName} — ${current.type}`}
+        className="w-full h-auto block rounded-2xl"
+        loading="lazy"
+      />
+    </div>
+  );
+}
 
 export default function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -130,15 +194,10 @@ export default function ProjectDetail() {
             animate={{ opacity: 1, x: 0 }}
             className="relative"
           >
-            <MockupFrame
-              type={
-                project.size === "tall" ||
-                project.slug === "clinica-bienestar" ||
-                project.slug === "sabor-autentico"
-                  ? "mobile"
-                  : "browser"
-              }
-              projectSlug={project.slug}
+            <ProjectImageCarousel
+              desktopImg={project.desktopImg}
+              mobileImg={project.mobileImg}
+              projectName={project.title}
             />
           </motion.div>
         </section>

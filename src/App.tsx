@@ -13,6 +13,7 @@ import { useEffect, lazy, Suspense, useState } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
+import ScrollProgressBar from "./components/ScrollProgressBar";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -74,7 +75,7 @@ function ScrollHandler() {
 
 function ConditionalQuoteBot({ showBot }: { showBot: boolean }) {
   const location = useLocation();
-  if (!showBot || location.pathname === "/cotizar") return null;
+  if (!showBot || location.pathname === "/cotizar" || location.pathname === "/servicios") return null;
   return (
     <Suspense fallback={null}>
       <QuoteBot />
@@ -164,6 +165,7 @@ export default function App() {
       <LanguageProvider>
         <Router>
         <ScrollHandler />
+        <ScrollProgressBar />
         <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
           <Suspense fallback={<RouteLoader />}>
             <Routes>

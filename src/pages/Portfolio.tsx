@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Globe,
@@ -30,7 +30,7 @@ import Footer from "../components/Footer";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
-function ProjectScreenshot({ project }: { project: Project }) {
+function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () => void }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
 
@@ -39,84 +39,124 @@ function ProjectScreenshot({ project }: { project: Project }) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
-  const currentImg = view === "desktop" 
-    ? project.desktopImg 
-    : project.mobileImg;
+
+  // Preload desktop and mobile images automatically
+  React.useEffect(() => {
+    const desktop = new Image();
+    if (project.desktopImg) desktop.src = project.desktopImg;
+    const mobile = new Image();
+    if (project.mobileImg) mobile.src = project.mobileImg;
+  }, [project.desktopImg, project.mobileImg]);
 
   let targetHeight = 220;
   if (view === "mobile") {
-    targetHeight = windowWidth >= 1024 ? 600 : (windowWidth >= 768 ? 520 : 380);
+    targetHeight = windowWidth >= 1024 ? 560 : (windowWidth >= 768 ? 480 : 320);
   } else {
-    targetHeight = windowWidth >= 1024 ? 500 : (windowWidth >= 768 ? 420 : 220);
+    targetHeight = windowWidth >= 1024 ? 460 : (windowWidth >= 768 ? 380 : 200);
   }
 
   return (
-    <motion.div
-      animate={{ 
-        height: targetHeight
-      }}
-      transition={{ 
-        duration: 0.4, 
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }}
-      className="relative w-full overflow-hidden bg-[var(--color-surface-base)] rounded-xl"
-    >
-      {/* Toggle */}
-      <div className="absolute top-2 right-2 z-10 flex gap-1 bg-[var(--color-surface-elevated)]/90 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-lg p-1">
-        <button
-          onClick={() => setView("desktop")}
-          className={`p-1.5 rounded-md transition-colors ${
-            view === "desktop"
-              ? "text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10"
-              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
-          }`}
-        >
-          <Monitor size={14} />
-        </button>
-        <button
-          onClick={() => setView("mobile")}
-          className={`p-1.5 rounded-md transition-colors ${
-            view === "mobile"
-              ? "text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10"
-              : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
-          }`}
-        >
-          <Smartphone size={14} />
-        </button>
+    <div className="flex flex-col gap-4 w-full">
+      {/* Premium minimal floating HUD Bar above mockup */}
+      <div className="flex items-center justify-between w-full px-1">
+        {/* Device selection tabs with matching styling cues */}
+        <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
+          <button
+            onClick={() => setView("desktop")}
+            className="p-1.5 rounded-full transition-all cursor-pointer"
+            style={{
+              color: view === "desktop" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
+              backgroundColor: view === "desktop" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent"
+            }}
+          >
+            <Monitor size={13} />
+          </button>
+          <button
+            onClick={() => setView("mobile")}
+            className="p-1.5 rounded-full transition-all cursor-pointer"
+            style={{
+              color: view === "mobile" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
+              backgroundColor: view === "mobile" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent"
+            }}
+          >
+            <Smartphone size={13} />
+          </button>
+        </div>
+
+        {/* Exit cinema button cleanly separated with soft active feedback */}
+        {onExit && (
+          <button
+            onClick={onExit}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-surface-base)]/80 border border-[var(--color-border-subtle)] hover:border-red-500/20 hover:bg-red-500/10 text-[var(--color-text-tertiary)] hover:text-red-400 text-[10px] font-black uppercase tracking-wider transition-all duration-200 cursor-pointer shadow-sm z-15"
+          >
+            <X size={11} />
+            <span><T en="Exit">Salir</T></span>
+          </button>
+        )}
       </div>
 
-      {/* Image */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={view}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="w-full h-full flex items-center justify-center"
-        >
-          {currentImg ? (
-            <img
-              src={currentImg}
-              alt={project.title}
-              className={`${
-                view === "desktop"
-                  ? "w-full h-full object-cover object-top"
-                  : "h-full w-auto max-w-[260px] object-contain mx-auto"
-              }`}
-            />
-          ) : (
-            <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
-              {view === "desktop" 
-                ? <Monitor size={20} /> 
-                : <Smartphone size={20} />}
-              <span className="text-xs">{project.title}</span>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </motion.div>
+      <motion.div
+        animate={{ 
+          height: targetHeight
+        }}
+        transition={{ 
+          duration: 0.4, 
+          ease: [0.25, 0.46, 0.45, 0.94]
+        }}
+        className="relative w-full overflow-hidden rounded-xl bg-transparent"
+      >
+        {/* Concurrent image container with modern GPU crossfade transitions */}
+        <div className="w-full h-full relative flex items-center justify-center">
+          {/* Desktop View Wrapper */}
+          <motion.div
+            animate={{
+              opacity: view === "desktop" ? 1 : 0,
+              scale: view === "desktop" ? 1 : 0.96
+            }}
+            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ pointerEvents: view === "desktop" ? "auto" : "none" }}
+          >
+            {project.desktopImg ? (
+              <img
+                src={project.desktopImg}
+                alt={`${project.title} Desktop`}
+                className="w-full h-full object-contain object-center bg-transparent"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
+                <Monitor size={20} />
+                <span className="text-xs">{project.title}</span>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Mobile View Wrapper */}
+          <motion.div
+            animate={{
+              opacity: view === "mobile" ? 1 : 0,
+              scale: view === "mobile" ? 1 : 0.96
+            }}
+            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ pointerEvents: view === "mobile" ? "auto" : "none" }}
+          >
+            {project.mobileImg ? (
+              <img
+                src={project.mobileImg}
+                alt={`${project.title} Mobile`}
+                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent"
+              />
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
+                <Smartphone size={20} />
+                <span className="text-xs">{project.title}</span>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -192,18 +232,51 @@ export default function Portfolio() {
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
   };
 
+  useEffect(() => {
+    if (viewMode !== "cinema") {
+      document.documentElement.style.removeProperty("--cinema-color");
+      document.documentElement.style.removeProperty("--cinema-color-rgb");
+      return;
+    }
+    const color = currentCinemaProject?.cinemaColor || "#6366f1";
+    console.log("Cinema project:", currentCinemaProject?.slug, currentCinemaProject?.cinemaColor);
+    document.documentElement.style.setProperty("--cinema-color", color);
+    // Convertir hex a RGB para usar con opacity
+    const r = parseInt(color.slice(1,3), 16);
+    const g = parseInt(color.slice(3,5), 16);
+    const b = parseInt(color.slice(5,7), 16);
+    document.documentElement.style.setProperty("--cinema-color-rgb", `${r}, ${g}, ${b}`);
+    return () => {
+      document.documentElement.style.removeProperty("--cinema-color");
+      document.documentElement.style.removeProperty("--cinema-color-rgb");
+    };
+  }, [currentCinemaProject, viewMode, activeCinemaIndex]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
       <Navbar />
+
+
+
+      <AnimatePresence>
+      </AnimatePresence>
 
       {/* Decorative premium gradients in background */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[var(--color-primary-base)]/5 rounded-full blur-[140px] pointer-events-none z-0" />
       <div className="absolute bottom-1/3 right-1/4 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[160px] pointer-events-none z-0" />
 
       <main className="max-w-7xl mx-auto w-full px-4 md:px-10 py-12 md:py-20 relative z-10 flex-grow">
-        
-        {/* Header */}
-        <section className="text-center space-y-4 mb-12 relative select-none">
+        <motion.div
+          animate={{
+            opacity: viewMode === "cinema" ? 0 : 1,
+            height: viewMode === "cinema" ? 0 : "auto",
+            overflow: "hidden",
+            marginBottom: viewMode === "cinema" ? 0 : undefined,
+          }}
+          transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          {/* Header */}
+          <section className="text-center space-y-4 mb-12 relative select-none">
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -347,6 +420,7 @@ export default function Portfolio() {
             </div>
           </div>
         </div>
+        </motion.div>
 
         {/* Empty Search Result Warning */}
         {filteredProjects.length === 0 && (
@@ -495,7 +569,7 @@ export default function Portfolio() {
                   </div>
 
                   {/* Mockup Frame presentation with custom responsive scale */}
-                  <div className="relative z-10 w-full mt-6 rounded-t-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]">
+                  <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-transparent">
                     <ProjectScreenshot project={project} />
                   </div>
 
@@ -514,14 +588,50 @@ export default function Portfolio() {
         )}
 
         {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
+        <AnimatePresence>
+          {viewMode === "cinema" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-[var(--color-surface-base)]/75 backdrop-blur-sm z-10 pointer-events-none"
+            />
+          )}
+        </AnimatePresence>
         {viewMode === "cinema" && filteredProjects.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden bento-glow shadow-2xl pb-16"
-          >
+          <div className="relative">
+            <div className="relative z-20">
+              <motion.div
+                animate={{
+                  paddingTop: viewMode === "cinema" ? "0" : "2rem",
+                }}
+                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden shadow-2xl pb-16 z-20"
+                >
             {/* Background glowing ball matched to project accent */}
             <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-[130px] rounded-full pointer-events-none`} />
+
+            {/* Vignette izquierda */}
+            <div
+              className="absolute left-0 top-0 h-full w-40 z-10 pointer-events-none"
+              style={{ background: `linear-gradient(to right, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
+            />
+
+            {/* Vignette derecha */}
+            <div
+              className="absolute right-0 top-0 h-full w-40 z-10 pointer-events-none"
+              style={{ background: `linear-gradient(to left, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
+            />
+
+            {/* Vignette arriba */}
+            <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-black/30 to-transparent z-10 pointer-events-none" />
+
+            {/* Vignette abajo */}
+            <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-black/30 to-transparent z-10 pointer-events-none" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
@@ -538,9 +648,17 @@ export default function Portfolio() {
                   >
                     {/* Upper Badge Line */}
                     <div className="flex flex-wrap gap-2 items-center">
-                      <span className="px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[9px] font-black uppercase tracking-widest">
-                        <T en={`Plan ${currentCinemaProject.planEN || currentCinemaProject.plan}`}>
-                          Plan {currentCinemaProject.plan}
+                      <span
+                        className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                          currentCinemaProject.plan === "Nova"
+                            ? "bg-violet-500/10 border-violet-500/30 text-violet-400"
+                            : currentCinemaProject.plan === "Constelación"
+                            ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400"
+                            : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                        }`}
+                      >
+                        <T en={currentCinemaProject.planEN ? `Package ${currentCinemaProject.planEN}` : (currentCinemaProject.plan ? `Package ${currentCinemaProject.plan}` : "")}>
+                          {currentCinemaProject.plan ? `Paquete ${currentCinemaProject.plan}` : ""}
                         </T>
                       </span>
                       <span className="text-[var(--color-text-tertiary)] text-[9px] font-black uppercase tracking-widest">
@@ -563,17 +681,25 @@ export default function Portfolio() {
                     </p>
 
                     {/* Performance progress metrics in Cinema layout */}
-                    <div className="bg-[var(--color-surface-base)] rounded-2xl p-4 border border-[var(--color-border-subtle)] space-y-3">
-                      <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] pb-2 border-b border-[var(--color-border-subtle)]">
+                    <div className="rounded-2xl p-4 border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] space-y-3 relative z-20">
+                      <h4
+                        className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] pb-2 border-b border-[var(--color-border-subtle)]"
+                      >
                         <T en="Key Results">Resultados Clave</T>
                       </h4>
                       
                       {currentCinemaProject.results.map((res, idx) => (
-                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-[var(--color-border-subtle)]/40 last:border-0 last:pb-0">
+                        <div
+                          key={idx}
+                          className="flex justify-between items-center text-xs py-1 border-b border-[var(--color-border-subtle)] last:border-0 last:pb-0"
+                        >
                           <span className="font-bold text-[var(--color-text-secondary)]">
                             <T en={res.labelEN || res.label}>{res.label}</T>
                           </span>
-                          <span className="text-indigo-400 font-black text-sm">
+                          <span
+                            className="font-black text-sm"
+                            style={{ color: "var(--cinema-color)" }}
+                          >
                             <T en={res.valueEN || res.value}>{res.value}</T>
                           </span>
                         </div>
@@ -589,7 +715,8 @@ export default function Portfolio() {
                         {currentCinemaProject.techStack.map((tech) => (
                           <span
                             key={tech}
-                            className="px-2 py-1 rounded bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[10px] font-bold text-[var(--color-text-secondary)]"
+                            className="px-2 py-1 rounded border text-[10px] font-bold bg-[var(--color-surface-elevated)] border-[var(--color-border-strong)]"
+                            style={{ color: `var(--cinema-color)` }}
                           >
                             {tech}
                           </span>
@@ -631,27 +758,6 @@ export default function Portfolio() {
               <div className="lg:col-span-7 flex justify-center items-center relative z-10">
                 <div className="w-full max-w-[550px] relative">
                   
-                  {/* Left & Right floating navigation keys for carousel */}
-                  <div className="absolute top-1/2 -translate-y-1/2 left-[-15px] z-20">
-                    <button
-                      onClick={handlePrevCinema}
-                      className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] cursor-pointer shadow-lg"
-                      aria-label="Previous project"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                  </div>
-
-                  <div className="absolute top-1/2 -translate-y-1/2 right-[-15px] z-20">
-                    <button
-                      onClick={handleNextCinema}
-                      className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] cursor-pointer shadow-lg"
-                      aria-label="Next project"
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </div>
-
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <AnimatePresence mode="wait" custom={direction}>
                     <motion.div
@@ -661,24 +767,62 @@ export default function Portfolio() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: direction * -40 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="transform transition-transform duration-500 hover:scale-[1.01]"
+                      className="relative"
+                      style={{
+                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`
+                      }}
                     >
-                      <ProjectScreenshot project={currentCinemaProject} />
+                      <div className="relative">
+                        {/* Glow solo aquí, scope reducido al mockup */}
+                        <div
+                          className="absolute inset-0 pointer-events-none -z-10 rounded-3xl"
+                          style={{
+                            background: `radial-gradient(ellipse 80% 60% at 50% 50%, rgba(var(--cinema-color-rgb), 0.18) 0%, transparent 70%)`,
+                            transition: "background 0.8s ease"
+                          }}
+                        />
+                        {/* Mockup (laptop/imagen) va aquí, nada más */}
+                        <ProjectScreenshot 
+                          project={currentCinemaProject} 
+                          onExit={() => setViewMode("bento")} 
+                        />
+                      </div>
                     </motion.div>
                   </AnimatePresence>
                   
-                  {/* Step dots slider controls */}
-                  <div className="flex gap-1.5 justify-center mt-6">
-                    {cinemaProjects.map((proj, idx) => (
-                      <button
-                        key={proj.slug}
-                        onClick={() => setActiveCinemaIndex(idx)}
-                        className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
-                          idx === activeCinemaIndex ? "bg-indigo-500 w-6" : "bg-gray-700 hover:bg-gray-500"
-                        }`}
-                        title={proj.title}
-                      />
-                    ))}
+                  {/* Step dots slider controls + Navigation chevrons on both sides */}
+                  <div className="flex items-center justify-center gap-4 mt-6">
+                    <button
+                      onClick={handlePrevCinema}
+                      className="p-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer active:scale-90"
+                      aria-label="Previous project"
+                    >
+                      <ChevronLeft size={20} strokeWidth={1.5} />
+                    </button>
+
+                    <div className="flex gap-1.5 justify-center">
+                      {cinemaProjects.map((proj, idx) => (
+                        <button
+                          key={proj.slug}
+                          onClick={() => setActiveCinemaIndex(idx)}
+                          className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
+                            idx === activeCinemaIndex ? "w-6" : "bg-gray-700 hover:bg-gray-500"
+                          }`}
+                          style={{
+                            backgroundColor: idx === activeCinemaIndex ? "var(--cinema-color)" : undefined
+                          }}
+                          title={proj.title}
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={handleNextCinema}
+                      className="p-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer active:scale-90"
+                      aria-label="Next project"
+                    >
+                      <ChevronRight size={20} strokeWidth={1.5} />
+                    </button>
                   </div>
 
                 </div>
@@ -686,7 +830,10 @@ export default function Portfolio() {
 
             </div>
 
+            </motion.div>
           </motion.div>
+            </div>
+          </div>
         )}
 
         {/* Case Study Detail Quick view Modal */}

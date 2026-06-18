@@ -692,7 +692,7 @@ export default function WizardQuote() {
   };
 
   const [targetDate] = useState(() =>
-    new Date("2026-06-18T23:59:59Z").getTime(),
+    new Date("2026-07-18T23:59:59Z").getTime(),
   );
   const [timeLeft, setTimeLeft] = useState(targetDate - new Date().getTime());
   const [isOfferActive, setIsOfferActive] = useState(timeLeft > 0);

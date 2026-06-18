@@ -104,7 +104,7 @@ function PlanCard({
               {plan.desc}
             </p>
           </div>
-          <div className="mb-8 border-b border-[var(--color-border-subtle)] pb-8 mt-2 md:mt-0">
+          <div className="mb-8 border-b border-[var(--color-border-subtle)] pb-8 mt-4 md:mt-0">
             <div className="text-[var(--color-text-tertiary)] font-bold text-[10px] uppercase tracking-widest mb-1 h-3 flex items-end">
               {plan.prefix || "\u00A0"}
             </div>
@@ -279,6 +279,61 @@ export default function Services() {
   const navigate = useNavigate();
   const [showComparison, setShowComparison] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
+  const [activePricePlan, setActivePricePlan] = useState<string>("flash");
+  const isProgrammaticScroll = useRef(false);
+  const programmaticScrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const planIds = ["flash", "constellation", "nova"];
+    const observers: IntersectionObserver[] = [];
+
+    // En pantallas más altas (iPad) la zona de detección necesita
+    // ser más generosa en el bottom
+    const bottomMargin = window.innerHeight >= 900 ? "-40%" : "-60%";
+
+    planIds.forEach((id) => {
+      const el = document.getElementById(`plan-card-${id}`);
+      if (!el) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (isProgrammaticScroll.current) return;
+          if (entry.isIntersecting) setActivePricePlan(id);
+        },
+        {
+          threshold: 0,
+          rootMargin: `-20% 0px ${bottomMargin} 0px`
+        }
+      );
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
+  const scrollToPlan = (planId: string) => {
+    const el = document.getElementById(`plan-card-${planId}`);
+    if (!el) return;
+
+    // Bloquear observer durante scroll programático
+    isProgrammaticScroll.current = true;
+    setActivePricePlan(planId);
+
+    // Limpiar timer anterior si existe
+    if (programmaticScrollTimer.current) {
+      clearTimeout(programmaticScrollTimer.current);
+    }
+
+    const navbarHeight = 80;
+    const offset = 24;
+    const top = el.getBoundingClientRect().top + window.scrollY - navbarHeight - offset;
+    window.scrollTo({ top, behavior: "smooth" });
+
+    // Reactivar observer después de que termina el scroll (~800ms)
+    programmaticScrollTimer.current = setTimeout(() => {
+      isProgrammaticScroll.current = false;
+    }, 800);
+  };
 
   const stateFromTab = location.state?.fromTab;
 
@@ -315,7 +370,7 @@ export default function Services() {
   };
 
   const [targetDate] = useState(() => {
-    return new Date("2026-06-18T23:59:59Z").getTime();
+    return new Date("2026-07-18T23:59:59Z").getTime();
   });
 
   const [timeLeft, setTimeLeft] = useState(targetDate - new Date().getTime());
@@ -956,7 +1011,7 @@ export default function Services() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto pb-20 lg:pb-0">
               {plans.map((plan, i) => (
                 <PlanCard
                   key={i}
@@ -1451,6 +1506,83 @@ export default function Services() {
 
         <FinalCTA />
       </main>
+
+      {/* Sticky price bar — mobile only */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-t border-[var(--color-border-subtle)] shadow-xl rounded-t-2xl">
+        <div className="flex items-stretch divide-x divide-[var(--color-border-subtle)]">
+          
+          {/* Destello */}
+          <button
+            onClick={() => scrollToPlan("flash")}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all cursor-pointer ${
+              activePricePlan === "flash" ? "bg-amber-500/8" : ""
+            }`}
+          >
+            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+              activePricePlan === "flash" ? "text-amber-400" : "text-[var(--color-text-tertiary)]"
+            }`}>
+              <T en="Flash">Destello</T>
+            </span>
+            <span className={`text-sm font-black transition-colors ${
+              activePricePlan === "flash" ? "text-amber-400" : "text-[var(--color-text-secondary)]"
+            }`}>
+              $299
+            </span>
+            {activePricePlan === "flash" && (
+              <div className="w-4 h-0.5 rounded-full bg-amber-400 mt-1" />
+            )}
+          </button>
+
+          {/* Constelación */}
+          <button
+            onClick={() => scrollToPlan("constellation")}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all cursor-pointer relative ${
+              activePricePlan === "constellation" ? "bg-[var(--color-primary-base)]/8" : ""
+            }`}
+          >
+            {/* Más popular badge */}
+            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
+              <T en="Popular">Popular</T>
+            </div>
+            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+              activePricePlan === "constellation" ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"
+            }`}>
+              <T en="Constellation">Constelación</T>
+            </span>
+            <span className={`text-sm font-black transition-colors ${
+              activePricePlan === "constellation" ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-secondary)]"
+            }`}>
+              $699
+            </span>
+            {activePricePlan === "constellation" && (
+              <div className="w-4 h-0.5 rounded-full bg-[var(--color-primary-base)] mt-1" />
+            )}
+          </button>
+
+          {/* Nova */}
+          <button
+            onClick={() => scrollToPlan("nova")}
+            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all cursor-pointer ${
+              activePricePlan === "nova" ? "bg-violet-500/8" : ""
+            }`}
+          >
+            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+              activePricePlan === "nova" ? "text-violet-400" : "text-[var(--color-text-tertiary)]"
+            }`}>
+              Nova
+            </span>
+            <span className={`text-sm font-black transition-colors ${
+              activePricePlan === "nova" ? "text-violet-400" : "text-[var(--color-text-secondary)]"
+            }`}>
+              $1,299
+            </span>
+            {activePricePlan === "nova" && (
+              <div className="w-4 h-0.5 rounded-full bg-violet-400 mt-1" />
+            )}
+          </button>
+
+        </div>
+      </div>
 
       <Footer />
     </div>
