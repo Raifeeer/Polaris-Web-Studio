@@ -198,15 +198,6 @@ export default function ClientDashboard() {
       })
       .then((resData) => {
         setData(resData);
-        // Cargar deploys del proyecto
-        if (resData.projects?.[0]?.id) {
-          fetch(`/api/portal/deploys/${resData.projects[0].id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-            .then(r => r.json())
-            .then(d => Array.isArray(d) && setDeploys(d))
-            .catch(() => {});
-        }
         // Default select first project for admin tasks
         if (resData.projects && resData.projects.length > 0) {
           setSelectedProjectId((prev) => prev || resData.projects[0].id);
@@ -221,6 +212,26 @@ export default function ClientDashboard() {
         setLoading(false);
       });
   }, [token, refreshTrigger]);
+
+  // Fetch deploys when selectedProjectId changes
+  useEffect(() => {
+    if (!token || !selectedProjectId) return;
+    fetch(`/api/portal/deploys/${selectedProjectId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("No se pudieron cargar los despliegues");
+        return res.json();
+      })
+      .then((d) => {
+        if (Array.isArray(d)) {
+          setDeploys(d);
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching deploys:", err);
+      });
+  }, [token, selectedProjectId, refreshTrigger]);
 
   const handleLogout = () => {
     logout();
@@ -1386,6 +1397,75 @@ export default function ClientDashboard() {
                                         }}
                                         className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
                                       />
+                                    </div>
+                                  </div>
+
+                                  {/* Registro manual de despliegues para administradores */}
+                                  <div className="pt-3 border-t border-[var(--color-border-subtle)]/10 mt-3 space-y-2">
+                                    <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">Registrar actualización manual (producción)</label>
+                                    <div className="flex gap-2">
+                                      <input 
+                                        type="text"
+                                        id={`manual-deploy-msg-${project.id}`}
+                                        placeholder="ej: Agregamos pasarela de pago y catálogo"
+                                        className="glass-input flex-1 px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none placeholder-zinc-500"
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter") {
+                                            const inputEl = document.getElementById(`manual-deploy-msg-${project.id}`) as HTMLInputElement;
+                                            if (inputEl) {
+                                              const msg = inputEl.value.trim();
+                                              if (!msg) return;
+                                              fetch(`/api/portal/projects/${project.id}/deploys`, {
+                                                method: "POST",
+                                                headers: {
+                                                  "Content-Type": "application/json",
+                                                  Authorization: `Bearer ${token}`
+                                                },
+                                                body: JSON.stringify({ commitMessage: msg })
+                                              })
+                                                .then(res => {
+                                                  if (res.ok) {
+                                                    setSuccessMsg("¡Actualización manual registrada con éxito!");
+                                                    inputEl.value = "";
+                                                    handleRefresh();
+                                                  } else {
+                                                    setErrorMsg("Error al registrar actualización");
+                                                  }
+                                                });
+                                            }
+                                          }
+                                        }}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const inputEl = document.getElementById(`manual-deploy-msg-${project.id}`) as HTMLInputElement;
+                                          if (inputEl) {
+                                            const msg = inputEl.value.trim();
+                                            if (!msg) return;
+                                            fetch(`/api/portal/projects/${project.id}/deploys`, {
+                                              method: "POST",
+                                              headers: {
+                                                "Content-Type": "application/json",
+                                                Authorization: `Bearer ${token}`
+                                              },
+                                              body: JSON.stringify({ commitMessage: msg })
+                                            })
+                                              .then(res => {
+                                                if (res.ok) {
+                                                  setSuccessMsg("¡Actualización manual registrada con éxito!");
+                                                  inputEl.value = "";
+                                                  handleRefresh();
+                                                } else {
+                                                  setErrorMsg("Error al registrar actualización");
+                                                }
+                                              });
+                                          }
+                                        }}
+                                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
+                                      >
+                                        Publicar
+                                      </button>
                                     </div>
                                   </div>
 
