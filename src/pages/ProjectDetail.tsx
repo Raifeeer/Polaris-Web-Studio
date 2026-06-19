@@ -340,7 +340,7 @@ export default function ProjectDetail() {
             </T>
           </h2>
           <button
-            onClick={() => navigate("/?plan=Consulta#contacto")}
+            onClick={() => navigate("/cotizar")}
             className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg flex items-center gap-2 mx-auto"
           >
             <T en="Plan Project">Planifica tu Proyecto</T>{" "}
