@@ -30,7 +30,8 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  ChevronDown
+  ChevronDown,
+  Globe
 } from "lucide-react";
 import Logo from "../components/Logo";
 import { T, useLanguage } from "../context/LanguageContext";
@@ -78,6 +79,13 @@ export default function ClientDashboard() {
     await navigator.clipboard.writeText(generatedSecret);
     setSecretCopied(true);
     setTimeout(() => setSecretCopied(false), 2000);
+  };
+
+  const [urlCopied, setUrlCopied] = useState(false);
+  const copyProductionUrl = async (url: string) => {
+    await navigator.clipboard.writeText(url);
+    setUrlCopied(true);
+    setTimeout(() => setUrlCopied(false), 2000);
   };
 
   // Dashboard Data State
@@ -2532,24 +2540,63 @@ export default function ClientDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* URL en vivo del sitio */}
                   <div className="lg:col-span-1 space-y-6">
-                    <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
-                      <h3 className="font-bold text-sm tracking-wide text-zinc-300">SITIO EN PRODUCCIÓN</h3>
+                    <div className="relative overflow-hidden p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4 bento-glow shadow-sm">
+                      {data?.projects?.[0]?.vercelUrl && (
+                        <div className="absolute -top-12 -right-12 w-36 h-36 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+                      )}
+
+                      <div className="relative z-10 flex items-center justify-between">
+                        <h3 className="font-bold text-sm tracking-wide text-zinc-300 flex items-center gap-2">
+                          <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                            <Globe size={14} />
+                          </span>
+                          Sitio en Producción
+                        </h3>
+                        {data?.projects?.[0]?.vercelUrl && (
+                          <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-400">
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                            </span>
+                            En Línea
+                          </span>
+                        )}
+                      </div>
+
                       {data?.projects?.[0]?.vercelUrl ? (
-                        <div className="space-y-3">
+                        <div className="relative z-10 space-y-3">
                           <p className="text-xs text-zinc-400">Tu proyecto tiene una dirección activa e integrada con nuestro servidor de compilación continua.</p>
-                          <a 
-                            href={data.projects[0].vercelUrl} 
-                            target="_blank" 
+
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900/60 border border-[var(--color-border-subtle)]/40">
+                            <span
+                              className="flex-1 min-w-0 truncate text-[11px] font-mono text-zinc-300"
+                              title={data.projects[0].vercelUrl}
+                            >
+                              {data.projects[0].vercelUrl.replace(/^https?:\/\//, "")}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => copyProductionUrl(data.projects[0].vercelUrl)}
+                              className="shrink-0 text-zinc-500 hover:text-zinc-200 transition-all cursor-pointer"
+                              title="Copiar URL"
+                            >
+                              {urlCopied ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                            </button>
+                          </div>
+
+                          <a
+                            href={data.projects[0].vercelUrl}
+                            target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white transition-all w-full justify-center"
+                            className="group inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-lg bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white transition-all w-full justify-center shadow-[0_8px_20px_-8px_rgba(16,185,129,0.55)]"
                           >
-                            <ExternalLink size={14} />
+                            <ExternalLink size={14} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                             Ver Sitio Web
                           </a>
-                          <p className="text-[10px] font-mono text-zinc-500 break-all text-center">{data.projects[0].vercelUrl}</p>
                         </div>
                       ) : (
-                        <div className="text-zinc-500 text-xs py-4 text-center">
+                        <div className="relative z-10 flex flex-col items-center gap-2 text-zinc-500 text-xs py-4 text-center">
+                          <Globe size={20} className="text-zinc-600" />
                           Aún no hay URL de producción vinculada. Nuestro equipo está preparando tu entorno de despliegue.
                         </div>
                       )}
