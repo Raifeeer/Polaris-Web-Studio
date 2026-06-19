@@ -30,6 +30,23 @@ import Footer from "../components/Footer";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
+const CINEMA_STATE_KEY = "polaris_portfolio_cinema_state";
+
+// Si el usuario regresa desde la página de detalle (ver caso de estudio) u otra
+// ruta, restaura el proyecto/modo cine que estaba viendo en vez de reiniciar al mosaico.
+function readRestoredCinemaIndex(): number | null {
+  try {
+    const saved = sessionStorage.getItem(CINEMA_STATE_KEY);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved) as { viewMode?: "bento" | "cinema"; slug?: string };
+    if (parsed.viewMode !== "cinema" || !parsed.slug) return null;
+    const idx = projects.findIndex(p => p.slug === parsed.slug);
+    return idx >= 0 ? idx : null;
+  } catch {
+    return null;
+  }
+}
+
 function ProjectScreenshot({ project, onExit, compact }: { project: Project; onExit?: () => void; compact?: boolean }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
@@ -168,10 +185,11 @@ export default function Portfolio() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<string>("ALL");
-  const [viewMode, setViewMode] = useState<"bento" | "cinema">("bento");
+
+  const [viewMode, setViewMode] = useState<"bento" | "cinema">(() => readRestoredCinemaIndex() !== null ? "cinema" : "bento");
 
   // Cinema Showcase Slider State
-  const [activeCinemaIndex, setActiveCinemaIndex] = useState(0);
+  const [activeCinemaIndex, setActiveCinemaIndex] = useState(() => readRestoredCinemaIndex() ?? 0);
   const [direction, setDirection] = useState<1 | -1>(1);
 
   // Quick View Overlay State
@@ -234,6 +252,32 @@ export default function Portfolio() {
     setDirection(-1);
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
   };
+
+  // Guarda el proyecto/modo actual para poder restaurarlo si el usuario
+  // navega a "ver caso de estudio" y luego regresa al portafolio.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        CINEMA_STATE_KEY,
+        JSON.stringify(
+          viewMode === "cinema" && currentCinemaProject
+            ? { viewMode: "cinema", slug: currentCinemaProject.slug }
+            : { viewMode: "bento" }
+        )
+      );
+    } catch {
+      // sessionStorage no disponible (modo privado, etc.) — no es crítico
+    }
+  }, [viewMode, currentCinemaProject]);
+
+  // Si el modo cine se restauró al montar (usuario volviendo desde el caso
+  // de estudio), asegura que la vista quede dentro del rango visible.
+  useEffect(() => {
+    if (viewMode === "cinema") {
+      window.scrollTo({ top: 0 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (viewMode !== "cinema") {
