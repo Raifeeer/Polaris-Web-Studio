@@ -40,11 +40,6 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Reset to desktop view when project changes
-  React.useEffect(() => {
-    setView("desktop");
-  }, [project.slug]);
-
   // Preload desktop and mobile images automatically
   React.useEffect(() => {
     const desktop = new Image();
@@ -112,6 +107,7 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
         <div className="w-full h-full relative flex items-center justify-center">
           {/* Desktop View Wrapper */}
           <motion.div
+            initial={false}
             animate={{
               opacity: view === "desktop" ? 1 : 0,
               scale: view === "desktop" ? 1 : 0.96
@@ -136,6 +132,7 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
 
           {/* Mobile View Wrapper */}
           <motion.div
+            initial={false}
             animate={{
               opacity: view === "mobile" ? 1 : 0,
               scale: view === "mobile" ? 1 : 0.96
@@ -784,9 +781,9 @@ export default function Portfolio() {
                           }}
                         />
                         {/* Mockup (laptop/imagen) va aquí, nada más */}
-                        <ProjectScreenshot 
-                          project={currentCinemaProject} 
-                          onExit={() => setViewMode("bento")} 
+                        <ProjectScreenshot
+                          project={currentCinemaProject}
+                          onExit={() => setViewMode("bento")}
                         />
                       </div>
                     </motion.div>
