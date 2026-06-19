@@ -56,9 +56,9 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
   }
 
   return (
-    <div className={`flex flex-col gap-4 w-full ${compact ? "h-full min-h-0" : ""}`}>
+    <div className={compact ? "relative h-full min-h-0" : "flex flex-col gap-4 w-full"}>
       {/* Premium minimal floating HUD Bar above mockup */}
-      <div className="flex items-center justify-between w-full px-1">
+      <div className={compact ? "absolute top-2 left-2 z-20 flex items-center" : "flex items-center justify-between w-full px-1"}>
         {/* Device selection tabs with matching styling cues */}
         <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
           <button
@@ -101,7 +101,7 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
           duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${compact ? "flex-1 min-h-0" : ""}`}
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${compact ? "h-full" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
