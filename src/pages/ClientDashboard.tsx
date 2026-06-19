@@ -859,7 +859,7 @@ export default function ClientDashboard() {
   const clientProject = !isAdmin && data?.projects && data.projects.length > 0 ? data.projects[0] : null;
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-base)] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[var(--color-surface-base)] flex flex-col lg:flex-row">
       
       {/* Toast Notification HUD */}
       <AnimatePresence>
@@ -903,7 +903,7 @@ export default function ClientDashboard() {
       </AnimatePresence>
 
       {/* Sidebar navigation */}
-      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[var(--color-border-subtle)] glass-panel p-6 flex flex-col gap-8 shrink-0 justify-between">
+      <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-[var(--color-border-subtle)] glass-panel p-6 flex flex-col gap-8 shrink-0 justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Logo size={32} showText={true} />
