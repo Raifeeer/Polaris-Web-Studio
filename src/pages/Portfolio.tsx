@@ -592,7 +592,7 @@ export default function Portfolio() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-surface-base)]/75 backdrop-blur-sm z-10 pointer-events-none"
+              className="fixed inset-0 bg-[var(--color-surface-base)] z-10 pointer-events-none"
             />
           )}
         </AnimatePresence>
@@ -611,25 +611,10 @@ export default function Portfolio() {
                   className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden shadow-2xl pb-16 z-20"
                 >
             {/* Background glowing ball matched to project accent */}
-            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-[130px] rounded-full pointer-events-none`} />
+            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-3xl rounded-full pointer-events-none will-change-transform`} />
 
-            {/* Vignette izquierda */}
-            <div
-              className="absolute left-0 top-0 h-full w-40 z-10 pointer-events-none"
-              style={{ background: `linear-gradient(to right, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
-            />
-
-            {/* Vignette derecha */}
-            <div
-              className="absolute right-0 top-0 h-full w-40 z-10 pointer-events-none"
-              style={{ background: `linear-gradient(to left, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
-            />
-
-            {/* Vignette arriba */}
-            <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-black/30 to-transparent z-10 pointer-events-none" />
-
-            {/* Vignette abajo */}
-            <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-black/30 to-transparent z-10 pointer-events-none" />
+            {/* Vignette unified (simplified for performance) */}
+            <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-black/15 via-transparent to-black/15" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
@@ -642,7 +627,7 @@ export default function Portfolio() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="space-y-6"
+                    className="space-y-6 will-change-transform"
                   >
                     {/* Upper Badge Line */}
                     <div className="flex flex-wrap gap-2 items-center">
@@ -765,9 +750,9 @@ export default function Portfolio() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: direction * -40 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="relative"
+                      className="relative will-change-transform"
                       style={{
-                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`
+                        filter: `drop-shadow(0 0 50px rgba(var(--cinema-color-rgb), 0.45))`
                       }}
                     >
                       <div className="relative">
@@ -844,7 +829,7 @@ export default function Portfolio() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedProjectForQuickView(null)}
-                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/75"
               />
 
               {/* Modal Container */}
