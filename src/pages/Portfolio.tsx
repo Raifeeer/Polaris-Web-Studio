@@ -40,6 +40,11 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Reset to desktop view when project changes
+  React.useEffect(() => {
+    setView("desktop");
+  }, [project.slug]);
+
   // Preload desktop and mobile images automatically
   React.useEffect(() => {
     const desktop = new Image();
@@ -175,6 +180,9 @@ export default function Portfolio() {
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
 
+  // Cinema mode scroll state
+  const [cinemaScrollY, setCinemaScrollY] = useState(0);
+
   // Type definitions/categories for filter pills
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
@@ -249,6 +257,14 @@ export default function Portfolio() {
       document.documentElement.style.removeProperty("--cinema-color-rgb");
     };
   }, [currentCinemaProject, viewMode, activeCinemaIndex]);
+
+  // Track scroll position for cinema mode overlay fade
+  useEffect(() => {
+    if (viewMode !== "cinema") return;
+    const handleScroll = () => setCinemaScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [viewMode]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
@@ -354,7 +370,10 @@ export default function Portfolio() {
                 <T en="Bento Grid">Mosaico Bento</T>
               </button>
               <button
-                onClick={() => setViewMode("cinema")}
+                onClick={() => {
+                  setViewMode("cinema");
+                  setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all flex-1 justify-center ${
                   viewMode === "cinema"
                     ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md"
@@ -590,9 +609,9 @@ export default function Portfolio() {
           {viewMode === "cinema" && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              animate={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/85 z-10 pointer-events-none"
+              className="fixed inset-0 bg-black z-10 pointer-events-none"
             />
           )}
         </AnimatePresence>
