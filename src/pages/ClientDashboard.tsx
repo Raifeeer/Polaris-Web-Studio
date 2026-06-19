@@ -2557,44 +2557,108 @@ export default function ClientDashboard() {
                   </div>
 
                   {/* Historial de deploys */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
-                      <h3 className="font-bold text-sm tracking-wide text-zinc-300">HISTORIAL DE ACTUALIZACIONES</h3>
-                      
-                      {deploys.length === 0 ? (
-                        <div className="text-zinc-500 text-xs py-12 text-center">
-                          No se han detectado despliegues en este proyecto todavía. Las actualizaciones automáticas se reflejarán aquí.
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                        <T en="Update history">Historial de actualizaciones</T>
+                      </p>
+                      <span className="flex items-center gap-1.5 text-[10px] text-emerald-400 font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <T en="Live">En vivo</T>
+                      </span>
+                    </div>
+
+                    {deploys.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center gap-3 py-16 rounded-2xl border border-dashed border-[var(--color-border-subtle)]">
+                        <div className="w-10 h-10 rounded-full bg-[var(--color-surface-highlight)] flex items-center justify-center">
+                          <RefreshCw size={16} className="text-[var(--color-text-tertiary)]" />
                         </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {deploys.map((dep) => (
-                            <div key={dep.id} className="p-4 rounded-xl bg-zinc-900/60 border border-[var(--color-border-subtle)]/40 flex items-start gap-3 justify-between">
-                              <div className="space-y-1 select-text">
-                                <div className="flex items-center gap-2">
-                                  <span className={`w-2 h-2 rounded-full ${dep.state === 'ready' ? 'bg-emerald-500' : dep.state === 'building' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`} />
-                                  <p className="text-xs font-bold text-zinc-200">
-                                    {language === "es" ? (dep.commitMessageEs || dep.commitMessageES || dep.commitMessage) : dep.commitMessage}
-                                  </p>
-                                </div>
-                                <p className="text-[10px] font-mono text-zinc-500">ID: {dep.vercelDeploymentId}</p>
-                                <p className="text-[10px] font-mono text-zinc-500">{new Date(dep.createdAt).toLocaleString()}</p>
+                        <p className="text-sm font-bold text-[var(--color-text-secondary)]">
+                          <T en="No updates yet">Sin actualizaciones aún</T>
+                        </p>
+                        <p className="text-xs text-[var(--color-text-tertiary)] text-center max-w-xs leading-relaxed">
+                          <T en="Updates will appear here automatically after each deployment.">
+                            Las actualizaciones aparecerán aquí automáticamente después de cada despliegue.
+                          </T>
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {deploys.map((dep, idx) => (
+                          <div
+                            key={dep.id}
+                            className="group relative p-4 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)] transition-all duration-200"
+                          >
+                            {/* Línea de tiempo vertical */}
+                            {idx < deploys.length - 1 && (
+                              <div className="absolute left-[27px] top-full h-3 w-px bg-[var(--color-border-subtle)]" />
+                            )}
+
+                            <div className="flex items-start gap-3">
+                              {/* Indicador de estado */}
+                              <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                                dep.state === 'ready'
+                                  ? 'bg-emerald-500/15 border border-emerald-500/30'
+                                  : dep.state === 'building'
+                                  ? 'bg-amber-500/15 border border-amber-500/30'
+                                  : 'bg-red-500/15 border border-red-500/30'
+                              }`}>
+                                <span className={`w-2 h-2 rounded-full ${
+                                  dep.state === 'ready'
+                                    ? 'bg-emerald-400'
+                                    : dep.state === 'building'
+                                    ? 'bg-amber-400 animate-pulse'
+                                    : 'bg-red-400'
+                                }`} />
                               </div>
+
+                              {/* Contenido */}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-snug mb-1">
+                                  {language === "es"
+                                    ? (dep.commitMessageEs || dep.commitMessageES || dep.commitMessage)
+                                    : dep.commitMessage}
+                                </p>
+                                <div className="flex items-center gap-3 flex-wrap">
+                                  <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                                    dep.state === 'ready'
+                                      ? 'bg-emerald-500/10 text-emerald-400'
+                                      : dep.state === 'building'
+                                      ? 'bg-amber-500/10 text-amber-400'
+                                      : 'bg-red-500/10 text-red-400'
+                                  }`}>
+                                    {dep.state === 'ready'
+                                      ? (language === 'es' ? 'Publicado' : 'Published')
+                                      : dep.state === 'building'
+                                      ? (language === 'es' ? 'Compilando' : 'Building')
+                                      : (language === 'es' ? 'Error' : 'Error')}
+                                  </span>
+                                  <span className="text-[10px] text-[var(--color-text-tertiary)]">
+                                    {new Date(dep.createdAt).toLocaleDateString(
+                                      language === 'es' ? 'es-DO' : 'en-US',
+                                      { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Botón ver sitio */}
                               {dep.state === 'ready' && dep.url && (
-                                <a 
-                                  href={dep.url} 
-                                  target="_blank" 
+                                <a
+                                  href={dep.url}
+                                  target="_blank"
                                   rel="noreferrer"
-                                  className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-all"
-                                  title="Ver preview de este deploy"
+                                  className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[10px] font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-all opacity-0 group-hover:opacity-100"
                                 >
-                                  <ExternalLink size={14} />
+                                  <ExternalLink size={11} />
+                                  <T en="View">Ver</T>
                                 </a>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
