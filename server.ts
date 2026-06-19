@@ -186,14 +186,26 @@ const PORT = 3000;
 
   // --- Portal Authentication Middleware helper ---
 
-  function authenticateToken(req: any, res: any, next: any) {
+  // Wraps an async route/middleware so rejected promises become a 500 response
+  // instead of an unhandled rejection (Firestore calls are now async).
+  function asyncHandler(fn: (req: any, res: any, next: any) => Promise<any>) {
+    return (req: any, res: any, next: any) => {
+      fn(req, res, next).catch((err: any) => {
+        console.error("Error en endpoint:", err);
+        if (!res.headersSent) res.status(500).json({ error: err?.message || "Error interno del servidor." });
+      });
+    };
+  }
+
+  const authenticateToken = asyncHandler(async (req: any, res: any, next: any) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ error: "Debe iniciar sesión para acceder." });
 
     if (token.startsWith("user-")) {
       const userId = token.replace("user-", "");
-      const user = dbInstance.getUsers().find((u) => u.id === userId);
+      const users = await dbInstance.getUsers();
+      const user = users.find((u) => u.id === userId);
       if (!user) return res.status(404).json({ error: "Usuario para la sesión no encontrado." });
 
       req.user = user;
@@ -203,31 +215,33 @@ const PORT = 3000;
     // Try decoding as Firebase Auth ID Token (JWT)
     const parts = token.split(".");
     if (parts.length === 3) {
+      let email: string | undefined;
       try {
         const payloadJson = Buffer.from(parts[1], "base64").toString("utf-8");
         const payload = JSON.parse(payloadJson);
-        const email = payload.email;
-
-        if (!email) {
-          return res.status(403).json({ error: "El token JWT no contiene una dirección de correo válida." });
-        }
-
-        const emailClean = email.trim().toLowerCase();
-        const user = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
-
-        if (!user) {
-          return res.status(404).json({ error: `Usuario con correo ${emailClean} no registrado en la base de datos local.` });
-        }
-
-        req.user = user;
-        return next();
+        email = payload.email;
       } catch (err) {
         return res.status(403).json({ error: "Token JWT de Firebase inválido o corrupto." });
       }
+
+      if (!email) {
+        return res.status(403).json({ error: "El token JWT no contiene una dirección de correo válida." });
+      }
+
+      const emailClean = email.trim().toLowerCase();
+      const users = await dbInstance.getUsers();
+      const user = users.find((u) => u.email.trim().toLowerCase() === emailClean);
+
+      if (!user) {
+        return res.status(404).json({ error: `Usuario con correo ${emailClean} no registrado en la base de datos local.` });
+      }
+
+      req.user = user;
+      return next();
     }
 
     return res.status(403).json({ error: "Token de sesión inválido o con formato desconocido." });
-  }
+  });
 
   function requireAdmin(req: any, res: any, next: any) {
     if (req.user.role !== "admin") {
@@ -238,14 +252,15 @@ const PORT = 3000;
 
   // --- Portal Authentication Endpoints ---
 
-  app.post("/api/auth/login", (req, res) => {
+  app.post("/api/auth/login", asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ success: false, error: "El email y contraseña son obligatorios." });
     }
 
     const emailClean = email.trim().toLowerCase();
-    const user = dbInstance.getUsers().find(
+    const users = await dbInstance.getUsers();
+    const user = users.find(
       (u) => u.email.trim().toLowerCase() === emailClean && u.password === password
     );
 
@@ -256,7 +271,7 @@ const PORT = 3000;
     const { password: _, ...userWithoutPassword } = user;
     const token = `user-${user.id}`;
     res.json({ success: true, token, user: userWithoutPassword });
-  });
+  }));
 
   app.get("/api/auth/me", authenticateToken, (req: any, res) => {
     const { password: _, ...userWithoutPassword } = req.user;
@@ -265,21 +280,23 @@ const PORT = 3000;
 
   // --- Client Portal Core Operations (Multi-role support) ---
 
-  app.get("/api/portal/dashboard", authenticateToken, (req: any, res) => {
+  app.get("/api/portal/dashboard", authenticateToken, asyncHandler(async (req: any, res) => {
     const user = req.user;
 
     if (user.role === "admin") {
-      const allUsers = dbInstance.getUsers();
-      const allProjects = dbInstance.getProjects();
-      
+      const [allUsers, allProjects, tasks, invoices, meetings, nextProjectDisplayId] = await Promise.all([
+        dbInstance.getUsers(),
+        dbInstance.getProjects(),
+        dbInstance.getTasks(),
+        dbInstance.getInvoices(),
+        dbInstance.getMeetings(),
+        dbInstance.peekNextDisplayId(),
+      ]);
+
       const activeClients = allUsers.filter((u) => u.role === "client" && !u.deletedAt);
       const deletedClients = allUsers.filter((u) => u.role === "client" && !!u.deletedAt);
       const activeProjects = allProjects.filter((p) => !p.deletedAt);
       const deletedProjects = allProjects.filter((p) => !!p.deletedAt);
-      
-      const tasks = dbInstance.getTasks();
-      const invoices = dbInstance.getInvoices();
-      const meetings = dbInstance.getMeetings();
 
       res.json({
         success: true,
@@ -291,15 +308,22 @@ const PORT = 3000;
         tasks,
         invoices,
         meetings,
-        nextProjectDisplayId: dbInstance.peekNextDisplayId(),
+        nextProjectDisplayId,
       });
     } else {
-      const projects = dbInstance.getProjects().filter((p) => p.clientUserId === user.id);
+      const [allProjects, allTasks, allInvoices, allMeetings] = await Promise.all([
+        dbInstance.getProjects(),
+        dbInstance.getTasks(),
+        dbInstance.getInvoices(),
+        dbInstance.getMeetings(),
+      ]);
+
+      const projects = allProjects.filter((p) => p.clientUserId === user.id);
       const projectIds = projects.map((p) => p.id);
 
-      const tasks = dbInstance.getTasks().filter((t) => projectIds.includes(t.projectId));
-      const invoices = dbInstance.getInvoices().filter((i) => projectIds.includes(i.projectId));
-      const meetings = dbInstance.getMeetings().filter((m) => projectIds.includes(m.projectId));
+      const tasks = allTasks.filter((t) => projectIds.includes(t.projectId));
+      const invoices = allInvoices.filter((i) => projectIds.includes(i.projectId));
+      const meetings = allMeetings.filter((m) => projectIds.includes(m.projectId));
 
       res.json({
         success: true,
@@ -310,12 +334,12 @@ const PORT = 3000;
         meetings,
       });
     }
-  });
+  }));
 
   // --- Admin actions ---
 
   // 1. Create a client and their project & deliverables
-  app.post("/api/portal/clients", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/clients", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     const { email, password, name, companyName, projectName, projectDescription } = req.body;
 
     if (!email || !password || !name || !companyName || !projectName) {
@@ -323,7 +347,8 @@ const PORT = 3000;
     }
 
     const emailClean = email.trim().toLowerCase();
-    const existing = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
+    const existingUsers = await dbInstance.getUsers();
+    const existing = existingUsers.find((u) => u.email.trim().toLowerCase() === emailClean);
     if (existing) {
       return res.status(400).json({ error: "Ya existe un usuario registrado con este correo." });
     }
@@ -331,7 +356,7 @@ const PORT = 3000;
     const clientId = `usr-${Date.now()}`;
     const projectId = `proj-${Date.now()}`;
 
-    dbInstance.addUser({
+    await dbInstance.addUser({
       id: clientId,
       email: emailClean,
       password: password,
@@ -340,9 +365,9 @@ const PORT = 3000;
       companyName,
     });
 
-    const displayId = dbInstance.consumeNextDisplayId();
+    const displayId = await dbInstance.consumeNextDisplayId();
 
-    dbInstance.addProject({
+    await dbInstance.addProject({
       id: projectId,
       displayId,
       clientUserId: clientId,
@@ -370,7 +395,7 @@ const PORT = 3000;
       ]
     });
 
-    dbInstance.addTask({
+    await dbInstance.addTask({
       id: `task-${Date.now()}`,
       projectId: projectId,
       title: "Revisar Documento de Requerimientos de Software (SRS)",
@@ -379,10 +404,11 @@ const PORT = 3000;
       createdAt: new Date().toISOString(),
     });
 
-    dbInstance.addInvoice({
+    const existingInvoices = await dbInstance.getInvoices();
+    await dbInstance.addInvoice({
       id: `inv-${Date.now()}`,
       projectId: projectId,
-      invoiceNumber: generateInvoiceNumber(dbInstance.getInvoices()),
+      invoiceNumber: generateInvoiceNumber(existingInvoices),
       amount: 1500,
       currency: "USD",
       status: "pending",
@@ -392,39 +418,39 @@ const PORT = 3000;
     });
 
     res.json({ success: true, clientId, projectId });
-  });
+  }));
 
-  app.delete("/api/portal/clients/:id", authenticateToken, requireAdmin, (req, res) => {
-    dbInstance.deleteUser(req.params.id);
+  app.delete("/api/portal/clients/:id", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    await dbInstance.deleteUser(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
-  app.post("/api/portal/clients/:id/restore", authenticateToken, requireAdmin, (req, res) => {
-    dbInstance.restoreUser(req.params.id);
+  app.post("/api/portal/clients/:id/restore", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    await dbInstance.restoreUser(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
-  app.post("/api/portal/projects/:id/restore", authenticateToken, requireAdmin, (req, res) => {
-    dbInstance.restoreProject(req.params.id);
+  app.post("/api/portal/projects/:id/restore", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    await dbInstance.restoreProject(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
-  app.delete("/api/portal/projects/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.delete("/api/portal/projects/:id", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     console.log("Deleting project:", req.params.id);
-    dbInstance.deleteProject(req.params.id);
+    await dbInstance.deleteProject(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
-  app.post("/api/portal/projects/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/projects/:id", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     const { currentPhase, progress, phases, status } = req.body;
-    dbInstance.updateProject(req.params.id, {
+    await dbInstance.updateProject(req.params.id, {
       currentPhase,
       progress: Number(progress),
       phases,
       status,
     });
     res.json({ success: true });
-  });
+  }));
 
   function generateInvoiceNumber(existingInvoices: any[]): string {
     const year = new Date().getFullYear();
@@ -446,16 +472,16 @@ const PORT = 3000;
     return `POL-${year}-${String(nextNum).padStart(3, "0")}`;
   }
 
-  app.post("/api/portal/invoices", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/invoices", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     const { projectId, amount, description, status, date, dueDate } = req.body;
     if (!projectId || !amount) {
       return res.status(400).json({ error: "Faltan campos obligatorios para la factura." });
     }
 
-    const allInvoices = dbInstance.getInvoices();
+    const allInvoices = await dbInstance.getInvoices();
     const invoiceNumber = generateInvoiceNumber(allInvoices);
 
-    dbInstance.addInvoice({
+    await dbInstance.addInvoice({
       id: `inv-${Date.now()}`,
       projectId,
       invoiceNumber,
@@ -468,46 +494,47 @@ const PORT = 3000;
     });
 
     res.json({ success: true, invoiceNumber });
-  });
+  }));
 
-  app.post("/api/portal/invoices/:id/toggle-pay", authenticateToken, requireAdmin, (req, res) => {
-    const invoices = dbInstance.getInvoices();
+  app.post("/api/portal/invoices/:id/toggle-pay", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    const invoices = await dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
     if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
 
     const nextStatus = foundInvoice.status === "paid" ? "pending" : "paid";
-    dbInstance.updateInvoice(req.params.id, { status: nextStatus });
+    await dbInstance.updateInvoice(req.params.id, { status: nextStatus });
     res.json({ success: true, status: nextStatus });
-  });
+  }));
 
-  app.post("/api/portal/invoices/:id/pay", authenticateToken, (req: any, res) => {
-    const invoices = dbInstance.getInvoices();
+  app.post("/api/portal/invoices/:id/pay", authenticateToken, asyncHandler(async (req: any, res) => {
+    const invoices = await dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
     if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
 
-    const project = dbInstance.getProjects().find((p) => p.id === foundInvoice.projectId);
+    const projects = await dbInstance.getProjects();
+    const project = projects.find((p) => p.id === foundInvoice.projectId);
     if (!project) return res.status(404).json({ error: "Proyecto asociado inexistente." });
 
     if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
       return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre esta factura." });
     }
 
-    dbInstance.updateInvoice(req.params.id, { status: "paid" });
+    await dbInstance.updateInvoice(req.params.id, { status: "paid" });
     res.json({ success: true, status: "paid" });
-  });
+  }));
 
-  app.delete("/api/portal/invoices/:id", authenticateToken, requireAdmin, (req, res) => {
-    dbInstance.deleteInvoice(req.params.id);
+  app.delete("/api/portal/invoices/:id", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    await dbInstance.deleteInvoice(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
-  app.post("/api/portal/tasks", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/tasks", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     const { projectId, title, description, link } = req.body;
     if (!projectId || !title) {
       return res.status(400).json({ error: "Faltan campos obligatorios para la aprobación." });
     }
 
-    dbInstance.addTask({
+    await dbInstance.addTask({
       id: `task-${Date.now()}`,
       projectId,
       title,
@@ -517,20 +544,20 @@ const PORT = 3000;
       createdAt: new Date().toISOString(),
     });
     res.json({ success: true });
-  });
+  }));
 
-  app.delete("/api/portal/tasks/:id", authenticateToken, requireAdmin, (req, res) => {
-    dbInstance.deleteTask(req.params.id);
+  app.delete("/api/portal/tasks/:id", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    await dbInstance.deleteTask(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
-  app.post("/api/portal/meetings", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/meetings", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
     const { projectId, title, date, time, meetLink } = req.body;
     if (!projectId || !title || !date || !time) {
       return res.status(400).json({ error: "Faltan datos de la reunión." });
     }
 
-    dbInstance.addMeeting({
+    await dbInstance.addMeeting({
       id: `meet-${Date.now()}`,
       projectId,
       title,
@@ -540,39 +567,41 @@ const PORT = 3000;
       status: "upcoming",
     });
     res.json({ success: true });
-  });
+  }));
 
-  app.delete("/api/portal/meetings/:id", authenticateToken, requireAdmin, (req, res) => {
-    dbInstance.deleteMeeting(req.params.id);
+  app.delete("/api/portal/meetings/:id", authenticateToken, requireAdmin, asyncHandler(async (req, res) => {
+    await dbInstance.deleteMeeting(req.params.id);
     res.json({ success: true });
-  });
+  }));
 
   // --- Client-only actions (Respond to active deliverables) ---
 
-  app.post("/api/portal/tasks/:id/respond", authenticateToken, (req: any, res) => {
+  app.post("/api/portal/tasks/:id/respond", authenticateToken, asyncHandler(async (req: any, res) => {
     const { status, feedback } = req.body;
     if (status !== "approved" && status !== "rejected") {
       return res.status(400).json({ error: "Estado de respuesta inválido." });
     }
 
-    const task = dbInstance.getTasks().find((t) => t.id === req.params.id);
+    const tasks = await dbInstance.getTasks();
+    const task = tasks.find((t) => t.id === req.params.id);
     if (!task) return res.status(404).json({ error: "Entregable para aprobación no encontrado." });
 
-    const project = dbInstance.getProjects().find((p) => p.id === task.projectId);
+    const projects = await dbInstance.getProjects();
+    const project = projects.find((p) => p.id === task.projectId);
     if (!project) return res.status(404).json({ error: "Proyecto asociado inexistente." });
 
     if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
       return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
     }
 
-    dbInstance.updateTask(req.params.id, {
+    await dbInstance.updateTask(req.params.id, {
       status,
       feedback: feedback || "",
       respondedAt: new Date().toISOString(),
     });
 
     res.json({ success: true });
-  });
+  }));
 
   // --- AI Assistance Endpoints ---
 
@@ -740,7 +769,7 @@ const PORT = 3000;
   });
 
   // Webhook de GitHub — no requiere autenticación JWT, usa secret propio
-  app.post("/api/webhooks/github", async (req, res) => {
+  app.post("/api/webhooks/github", asyncHandler(async (req, res) => {
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
 
     // Verificar que sea un push event
@@ -774,7 +803,7 @@ const PORT = 3000;
       return res.status(200).json({ ok: true, noRepo: true });
     }
 
-    const allProjects = dbInstance.getProjects();
+    const allProjects = await dbInstance.getProjects();
     const project = allProjects.find((p: any) =>
       (p.vercelProjectId && p.vercelProjectId.toLowerCase() === repoName.toLowerCase()) ||
       (p.vercelUrl && p.vercelUrl.toLowerCase().includes(repoName.toLowerCase()))
@@ -797,7 +826,7 @@ const PORT = 3000;
     } catch (_) {}
 
     // Guardar el deploy
-    dbInstance.addDeploy({
+    await dbInstance.addDeploy({
       id: `dep-${Date.now()}`,
       projectId: project.id,
       vercelDeploymentId: req.body?.after || `gh-${Date.now()}`,
@@ -810,20 +839,21 @@ const PORT = 3000;
 
     console.log(`[GitHub Webhook] Push registrado para proyecto ${project.name}`);
     res.status(200).json({ ok: true });
-  });
+  }));
 
-  app.get("/api/portal/deploys/:projectId", authenticateToken, async (req: any, res) => {
+  app.get("/api/portal/deploys/:projectId", authenticateToken, asyncHandler(async (req: any, res) => {
     const { projectId } = req.params;
-    const deploys = dbInstance.getDeploys(projectId);
+    const deploys = await dbInstance.getDeploys(projectId);
     res.json(deploys);
-  });
+  }));
 
   // Registro Manual de Deploys para un proyecto por parte del Administrador
-  app.post("/api/portal/projects/:id/deploys", authenticateToken, requireAdmin, async (req: any, res) => {
+  app.post("/api/portal/projects/:id/deploys", authenticateToken, requireAdmin, asyncHandler(async (req: any, res) => {
     const { id } = req.params;
     const { commitMessage, commitMessageEs, url, state } = req.body;
 
-    const project = dbInstance.getProjects().find((p: any) => p.id === id);
+    const projects = await dbInstance.getProjects();
+    const project = projects.find((p: any) => p.id === id);
     if (!project) {
       return res.status(404).json({ error: "Proyecto no encontrado" });
     }
@@ -850,16 +880,16 @@ const PORT = 3000;
       createdAt: new Date().toISOString()
     };
 
-    dbInstance.addDeploy(newDeploy);
+    await dbInstance.addDeploy(newDeploy);
     res.json({ success: true, deploy: newDeploy });
-  });
+  }));
 
-  app.put("/api/portal/projects/:id/vercel", authenticateToken, requireAdmin, (req: any, res) => {
+  app.put("/api/portal/projects/:id/vercel", authenticateToken, requireAdmin, asyncHandler(async (req: any, res) => {
     const { id } = req.params;
     const { vercelProjectId, vercelUrl } = req.body;
-    dbInstance.updateProject(id, { vercelProjectId, vercelUrl });
+    await dbInstance.updateProject(id, { vercelProjectId, vercelUrl });
     res.json({ success: true });
-  });
+  }));
 
 async function startServer() {
   // Vite integration middleware config
