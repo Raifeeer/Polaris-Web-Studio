@@ -766,12 +766,13 @@ export default function Portfolio() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: direction * -40 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="relative will-change-transform"
+                      layout={false}
+                      className="relative will-change-transform w-full"
                       style={{
                         filter: `drop-shadow(0 0 50px rgba(var(--cinema-color-rgb), 0.45))`
                       }}
                     >
-                      <div className="relative">
+                      <div className="relative w-full">
                         {/* Glow solo aquí, scope reducido al mockup */}
                         <div
                           className="absolute inset-0 pointer-events-none -z-10 rounded-3xl"
