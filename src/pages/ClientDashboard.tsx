@@ -29,7 +29,8 @@ import {
   UserPlus,
   Eye,
   EyeOff,
-  Sparkles
+  Sparkles,
+  ChevronDown
 } from "lucide-react";
 import Logo from "../components/Logo";
 import { T, useLanguage } from "../context/LanguageContext";
@@ -49,6 +50,11 @@ export default function ClientDashboard() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "invoices" | "meetings" | "updates" | "admin-clients" | "admin-config">("overview");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const selectTab = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    setMobileNavOpen(false);
+  };
   const [deploys, setDeploys] = useState<any[]>([]);
   const [editVercelId, setEditVercelId] = useState("");
   const [generatedSecret, setGeneratedSecret] = useState("");
@@ -858,6 +864,16 @@ export default function ClientDashboard() {
 
   const clientProject = !isAdmin && data?.projects && data.projects.length > 0 ? data.projects[0] : null;
 
+  const tabMeta: Record<string, { icon: React.ReactNode; label: React.ReactNode }> = {
+    overview: { icon: <Clock size={16} />, label: <T en="Overview">Resumen de Avances</T> },
+    tasks: { icon: <CheckCircle2 size={16} />, label: <T en="Deliverables & Approvals">Entregables y Aprobación</T> },
+    invoices: { icon: <FileText size={16} />, label: <T en="Invoicing">Facturación y Pagos</T> },
+    meetings: { icon: <Calendar size={16} />, label: <T en="Meetings Schedule">Agenda de Reuniones</T> },
+    updates: { icon: <RefreshCw size={14} />, label: <T en="Updates">Actualizaciones</T> },
+    "admin-clients": { icon: <UserPlus size={16} />, label: <T en="Register Clients">Registrar Nuevos Clientes</T> },
+    "admin-config": { icon: <Settings size={16} />, label: <T en="System Config">Configuración</T> },
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-base)] flex flex-col lg:flex-row">
       
@@ -903,20 +919,34 @@ export default function ClientDashboard() {
       </AnimatePresence>
 
       {/* Sidebar navigation */}
-      <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-[var(--color-border-subtle)] glass-panel p-6 flex flex-col gap-8 shrink-0 justify-between">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <Logo size={32} showText={true} />
-            <div className={`px-2 py-1 flex items-center gap-1 rounded-full text-[9px] uppercase font-black tracking-widest ${
-              isAdmin 
-                ? "bg-indigo-500/10 text-indigo-400" 
-                : "bg-emerald-500/10 text-emerald-400"
-            }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-indigo-505 bg-indigo-400 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
-              {isAdmin ? "PM / Admin" : <T en="Client">Cliente</T>}
-            </div>
+      <aside className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-[var(--color-border-subtle)] glass-panel p-6 flex flex-col gap-4 lg:gap-8 shrink-0">
+        <div className="flex items-center justify-between">
+          <Logo size={32} showText={true} />
+          <div className={`px-2 py-1 flex items-center gap-1 rounded-full text-[9px] uppercase font-black tracking-widest ${
+            isAdmin
+              ? "bg-indigo-500/10 text-indigo-400"
+              : "bg-emerald-500/10 text-emerald-400"
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-indigo-505 bg-indigo-400 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
+            {isAdmin ? "PM / Admin" : <T en="Client">Cliente</T>}
           </div>
+        </div>
 
+        {/* Mobile/tablet-only collapsed nav toggle */}
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen((v) => !v)}
+          className="lg:hidden w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] transition-all"
+        >
+          <span className="flex items-center gap-2">
+            {tabMeta[activeTab]?.icon}
+            {tabMeta[activeTab]?.label}
+          </span>
+          <ChevronDown size={16} className={`transition-transform shrink-0 ${mobileNavOpen ? "rotate-180" : ""}`} />
+        </button>
+
+        <div className={`${mobileNavOpen ? "flex" : "hidden"} lg:flex flex-col gap-6 lg:gap-8 lg:flex-1 lg:justify-between`}>
+        <div className="space-y-6">
           <div className="p-3 bg-[var(--color-surface-highlight)] rounded-xl border border-[var(--color-border-subtle)]/50">
             <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-black tracking-wider leading-none mb-1">
               {isAdmin ? "Operador" : <T en="Company">Empresa</T>}
@@ -931,7 +961,7 @@ export default function ClientDashboard() {
 
           <nav className="space-y-1.5">
             <button
-              onClick={() => setActiveTab("overview")}
+              onClick={() => selectTab("overview")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "overview"
                   ? "bg-[var(--color-primary-base)] text-white"
@@ -943,7 +973,7 @@ export default function ClientDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("tasks")}
+              onClick={() => selectTab("tasks")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all relative ${
                 activeTab === "tasks"
                   ? "bg-[var(--color-primary-base)] text-white"
@@ -960,7 +990,7 @@ export default function ClientDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("invoices")}
+              onClick={() => selectTab("invoices")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all relative ${
                 activeTab === "invoices"
                   ? "bg-[var(--color-primary-base)] text-white"
@@ -975,7 +1005,7 @@ export default function ClientDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("meetings")}
+              onClick={() => selectTab("meetings")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "meetings"
                   ? "bg-[var(--color-primary-base)] text-white"
@@ -987,7 +1017,7 @@ export default function ClientDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("updates")}
+              onClick={() => selectTab("updates")}
               className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "updates"
                   ? "bg-[var(--color-primary-base)] text-white"
@@ -1000,7 +1030,7 @@ export default function ClientDashboard() {
 
             {isAdmin && (
               <button
-                onClick={() => setActiveTab("admin-clients")}
+                onClick={() => selectTab("admin-clients")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all border border-indigo-500/20 ${
                   activeTab === "admin-clients"
                     ? "bg-indigo-600 text-white border-transparent"
@@ -1014,7 +1044,7 @@ export default function ClientDashboard() {
 
             {isAdmin && (
               <button
-                onClick={() => setActiveTab("admin-config")}
+                onClick={() => selectTab("admin-config")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all border border-indigo-500/20 ${
                   activeTab === "admin-config"
                     ? "bg-indigo-600 text-white border-transparent"
@@ -1057,6 +1087,7 @@ export default function ClientDashboard() {
             <LogOut size={14} />
             <T en="Log Out">Cerrar Sesión</T>
           </button>
+        </div>
         </div>
       </aside>
 
