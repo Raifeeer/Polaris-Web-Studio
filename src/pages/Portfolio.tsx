@@ -592,7 +592,7 @@ export default function Portfolio() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-surface-base)] z-10 pointer-events-none"
+              className="fixed inset-0 bg-black/85 z-10 pointer-events-none"
             />
           )}
         </AnimatePresence>
