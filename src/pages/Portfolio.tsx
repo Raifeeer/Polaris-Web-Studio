@@ -30,7 +30,7 @@ import Footer from "../components/Footer";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
-function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () => void }) {
+function ProjectScreenshot({ project, onExit, compact }: { project: Project; onExit?: () => void; compact?: boolean }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
 
@@ -56,7 +56,7 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className={`flex flex-col gap-4 w-full ${compact ? "h-full min-h-0" : ""}`}>
       {/* Premium minimal floating HUD Bar above mockup */}
       <div className="flex items-center justify-between w-full px-1">
         {/* Device selection tabs with matching styling cues */}
@@ -96,14 +96,12 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
       </div>
 
       <motion.div
-        animate={{ 
-          height: targetHeight
-        }}
-        transition={{ 
-          duration: 0.4, 
+        animate={compact ? undefined : { height: targetHeight }}
+        transition={{
+          duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className="relative w-full overflow-hidden rounded-xl bg-transparent"
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${compact ? "flex-1 min-h-0" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
@@ -570,7 +568,7 @@ export default function Portfolio() {
 
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-transparent">
-                    <ProjectScreenshot project={project} />
+                    <ProjectScreenshot project={project} compact />
                   </div>
 
                   {/* Click to open full details banner on hover */}
