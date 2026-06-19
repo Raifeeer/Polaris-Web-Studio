@@ -239,7 +239,13 @@ export default function ProjectDetail() {
         {/* Case Study Grid */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-12 pt-16">
           <div className="md:col-span-2 space-y-16">
-            <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="space-y-6"
+            >
               <h2 className="text-3xl font-display font-black tracking-tight flex items-center gap-3">
                 <Layout
                   className="text-[var(--color-primary-base)]"
@@ -252,9 +258,15 @@ export default function ProjectDetail() {
                   {project.context}
                 </T>
               </p>
-            </div>
+            </motion.div>
 
-            <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="space-y-6"
+            >
               <h2 className="text-3xl font-display font-black tracking-tight flex items-center gap-3">
                 <Zap className="text-[var(--color-primary-base)]" size={24} />{" "}
                 <T en="Challenge & Technical Solution">
@@ -285,11 +297,17 @@ export default function ProjectDetail() {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
 
           <div className="space-y-12">
-            <div className="p-8 rounded-3xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-8">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="p-8 rounded-3xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-8"
+            >
               <h3 className="text-xl font-display font-black tracking-tight flex items-center gap-2">
                 <Trophy
                   className="text-[var(--color-primary-base)]"
@@ -312,9 +330,15 @@ export default function ProjectDetail() {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="space-y-4">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="space-y-4"
+            >
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-text-tertiary)]">
                 <T en="Technologies">Tecnologías</T>
               </h4>
@@ -328,12 +352,18 @@ export default function ProjectDetail() {
                   </span>
                 ))}
               </div>
-            </div>
+            </motion.div>
           </div>
         </section>
 
         {/* Closing CTA */}
-        <section className="text-center py-20 bg-[var(--color-surface-highlight)] rounded-[3rem] space-y-8">
+        <motion.section
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center py-20 bg-[var(--color-surface-highlight)] rounded-[3rem] space-y-8"
+        >
           <h2 className="text-3xl md:text-5xl font-display font-black tracking-tighter">
             <T en="Looking for a similar platform?">
               ¿Buscas una plataforma similar?
@@ -346,7 +376,7 @@ export default function ProjectDetail() {
             <T en="Plan Project">Planifica tu Proyecto</T>{" "}
             <ArrowRight size={20} />
           </button>
-        </section>
+        </motion.section>
       </main>
 
       <Footer />
