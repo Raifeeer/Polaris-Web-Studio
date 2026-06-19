@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -27,6 +27,14 @@ function ProjectImageCarousel({
   projectName: string;
 }) {
   const [active, setActive] = useState<"desktop" | "mobile">("desktop");
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const images = [
     ...(desktopImg ? [{ type: "desktop" as const, src: desktopImg }] : []),
     ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
@@ -34,7 +42,10 @@ function ProjectImageCarousel({
 
   if (images.length === 0) return null;
 
-  const current = images.find(i => i.type === active) || images[0];
+  const targetHeight =
+    active === "mobile"
+      ? windowWidth >= 1024 ? 480 : windowWidth >= 768 ? 440 : 340
+      : windowWidth >= 1024 ? 420 : windowWidth >= 768 ? 380 : 280;
 
   return (
     <div className="w-full space-y-3">
@@ -68,14 +79,37 @@ function ProjectImageCarousel({
         </div>
       )}
 
-      {/* Imagen directa sin ningún wrapper con borde o fondo */}
-      <img
-        key={current.src}
-        src={current.src}
-        alt={`${projectName} — ${current.type}`}
-        className="w-full h-auto block rounded-2xl"
-        loading="lazy"
-      />
+      {/* Crossfade entre vista desktop y mobile, igual que en el modo cine del Portafolio */}
+      <motion.div
+        animate={{ height: targetHeight }}
+        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className="relative w-full overflow-hidden rounded-2xl"
+      >
+        {images.map((img) => (
+          <motion.div
+            key={img.type}
+            initial={false}
+            animate={{
+              opacity: active === img.type ? 1 : 0,
+              scale: active === img.type ? 1 : 0.96,
+            }}
+            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className="absolute inset-0 flex items-center justify-center"
+            style={{ pointerEvents: active === img.type ? "auto" : "none" }}
+          >
+            <img
+              src={img.src}
+              alt={`${projectName} — ${img.type}`}
+              loading="lazy"
+              className={
+                img.type === "mobile"
+                  ? "h-full w-auto max-w-[240px] object-contain mx-auto rounded-2xl"
+                  : "w-full h-full object-contain rounded-2xl"
+              }
+            />
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 }

@@ -409,7 +409,9 @@ export default function Portfolio() {
                     onClick={() => setSelectedType(type)}
                     className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                       selectedType === type
-                        ? "bg-purple-500/15 text-purple-400 border border-purple-500/35"
+                        ? type === "ALL"
+                          ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/35"
+                          : "bg-purple-500/15 text-purple-400 border border-purple-500/35"
                         : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
