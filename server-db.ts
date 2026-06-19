@@ -1,11 +1,7 @@
-import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getFirestore, FieldValue, type Firestore } from "firebase-admin/firestore";
+import fs from "fs";
+import path from "path";
 
-// Mismo proyecto/base de datos de Firestore que usa el cliente (src/lib/firebase.ts).
-// No es información sensible: ya viaja embebida en el bundle del navegador.
-const FIRESTORE_DATABASE_ID = "ai-studio-8ddcd590-1853-43f8-9f2b-5252f1d50a75";
-
-// Define TypeScript structures for our portal database
+// Define TypeScript structures for our localized database
 export interface DbUser {
   id: string;
   email: string;
@@ -83,7 +79,7 @@ export interface DbDeploy {
   createdAt: string;
 }
 
-interface DatabaseSchema {
+export interface DatabaseSchema {
   users: DbUser[];
   projects: DbProject[];
   tasks: DbTask[];
@@ -93,17 +89,9 @@ interface DatabaseSchema {
   projectDisplayCounter: number;
 }
 
-const COLLECTIONS = {
-  users: "portal_users",
-  projects: "portal_projects",
-  tasks: "portal_tasks",
-  invoices: "portal_invoices",
-  meetings: "portal_meetings",
-  deploys: "portal_deploys",
-  meta: "portal_meta",
-} as const;
+const DB_FILE_PATH = path.join(process.cwd(), "portalDb.json");
 
-// Default initial state used to seed Firestore the very first time it's empty
+// Default initial state for self-seeding
 const getInitialSeededData = (): DatabaseSchema => {
   return {
     projectDisplayCounter: 1,
@@ -134,7 +122,7 @@ const getInitialSeededData = (): DatabaseSchema => {
     projects: [
       {
         id: "proj-1",
-        displayId: "000001",
+        displayId: "001",
         clientUserId: "usr-client-1",
         name: "Nexus E-commerce",
         currentPhase: "Fase 2: Desarrollo Frontend",
@@ -200,277 +188,321 @@ const getInitialSeededData = (): DatabaseSchema => {
   };
 };
 
-let firestoreDb: Firestore | null = null;
+class PortalDatabase {
+  private cache: DatabaseSchema | null = null;
 
-function getDb(): Firestore {
-  if (firestoreDb) return firestoreDb;
-
-  if (!getApps().length) {
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-    if (!projectId || !clientEmail || !privateKey) {
-      throw new Error(
-        "Faltan credenciales de Firebase Admin. Configura FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL y FIREBASE_PRIVATE_KEY en las variables de entorno."
-      );
-    }
-
-    initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+  constructor() {
+    this.ensureInitialized();
   }
 
-  firestoreDb = getFirestore(getApps()[0], FIRESTORE_DATABASE_ID);
-  return firestoreDb;
-}
+  private ensureInitialized() {
+    if (this.cache) return;
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
-class PortalDatabase {
-  private seeded = false;
-
-  // Ensures Firestore has at least the initial seed data the very first time it's used.
-  private async ensureSeeded() {
-    if (this.seeded) return;
-
-    const db = getDb();
-    const snap = await db.collection(COLLECTIONS.users).limit(1).get();
-    if (snap.empty) {
-      const data = getInitialSeededData();
-      const batch = db.batch();
-      data.users.forEach((u) => batch.set(db.collection(COLLECTIONS.users).doc(u.id), u));
-      data.projects.forEach((p) => batch.set(db.collection(COLLECTIONS.projects).doc(p.id), p));
-      data.tasks.forEach((t) => batch.set(db.collection(COLLECTIONS.tasks).doc(t.id), t));
-      data.invoices.forEach((i) => batch.set(db.collection(COLLECTIONS.invoices).doc(i.id), i));
-      data.meetings.forEach((m) => batch.set(db.collection(COLLECTIONS.meetings).doc(m.id), m));
-      batch.set(db.collection(COLLECTIONS.meta).doc("counters"), {
-        projectDisplayCounter: data.projectDisplayCounter,
-      });
-      await batch.commit();
-      console.log("[Firestore Seeded] Datos iniciales del portal creados.");
+    try {
+      if (fs.existsSync(DB_FILE_PATH)) {
+        const raw = fs.readFileSync(DB_FILE_PATH, "utf-8");
+        this.cache = JSON.parse(raw);
+        
+        // Safety check to ensure crucial fields are arrays
+        const c = this.cache!;
+        if (typeof c.projectDisplayCounter !== "number") {
+          let maxNum = 0;
+          if (Array.isArray(c.projects)) {
+            for (const p of c.projects) {
+              if (p.displayId) {
+                const num = parseInt(p.displayId, 10);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+              }
+            }
+          }
+          c.projectDisplayCounter = maxNum > 0 ? maxNum : 1;
+        }
+        if (!Array.isArray(c.users)) c.users = [];
+        if (!Array.isArray(c.projects)) c.projects = [];
+        if (!Array.isArray(c.tasks)) c.tasks = [];
+        if (!Array.isArray(c.invoices)) c.invoices = [];
+        if (!Array.isArray(c.meetings)) c.meetings = [];
+        if (!Array.isArray(c.deploys)) c.deploys = [];
+      } else {
+        this.cache = getInitialSeededData();
+        this.save();
+        console.log(`[Database Seeded] Generated persistent JSON database at ${DB_FILE_PATH}`);
+      }
+    } catch (err) {
+      console.error("Failed to initialize database, falling back to in-memory fallback", err);
+      this.cache = getInitialSeededData();
     }
+  }
 
-    this.seeded = true;
+  private save() {
+    if (!this.cache) return;
+    try {
+      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(this.cache, null, 2), "utf-8");
+    } catch (err) {
+      console.error("Error writing to persistent JSON db:", err);
+    }
+  }
+
+  private cleanupSoftDeleted() {
+    if (!this.cache) return;
+    const now = Date.now();
+    const ThirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+    
+    // Find users to hard delete
+    const usersToHardDelete = this.cache.users.filter(u => 
+      u.deletedAt && now - new Date(u.deletedAt).getTime() > ThirtyDaysMs
+    );
+    
+    if (usersToHardDelete.length > 0) {
+      usersToHardDelete.forEach(u => this.hardDeleteUser(u.id));
+    }
+    
+    // Find projects to hard delete
+    const projectsToHardDelete = this.cache.projects.filter(p => 
+      p.deletedAt && now - new Date(p.deletedAt).getTime() > ThirtyDaysMs
+    );
+    
+    if (projectsToHardDelete.length > 0) {
+      projectsToHardDelete.forEach(p => this.hardDeleteProject(p.id));
+    }
   }
 
   // ID Generator Methods
-  async peekNextDisplayId(): Promise<string> {
-    await this.ensureSeeded();
-    const snap = await getDb().collection(COLLECTIONS.meta).doc("counters").get();
-    const current = snap.exists ? (snap.data()!.projectDisplayCounter as number) : 0;
-    return (current + 1).toString().padStart(6, "0");
+  peekNextDisplayId(): string {
+    this.ensureInitialized();
+    return (this.cache!.projectDisplayCounter + 1).toString().padStart(6, "0");
   }
 
-  async consumeNextDisplayId(): Promise<string> {
-    await this.ensureSeeded();
-    const ref = getDb().collection(COLLECTIONS.meta).doc("counters");
-    const next = await getDb().runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      const current = snap.exists ? (snap.data()!.projectDisplayCounter as number) : 0;
-      const value = current + 1;
-      tx.set(ref, { projectDisplayCounter: value }, { merge: true });
-      return value;
-    });
-    return next.toString().padStart(6, "0");
+  consumeNextDisplayId(): string {
+    this.ensureInitialized();
+    this.cache!.projectDisplayCounter++;
+    const nextId = this.cache!.projectDisplayCounter.toString().padStart(6, "0");
+    this.save();
+    return nextId;
   }
 
   // Query Methods
-  async getUsers(): Promise<DbUser[]> {
-    await this.ensureSeeded();
-    const snap = await getDb().collection(COLLECTIONS.users).get();
-    let users = snap.docs.map((d) => d.data() as DbUser);
-
-    const now = Date.now();
-    const expired = users.filter((u) => u.deletedAt && now - new Date(u.deletedAt).getTime() > THIRTY_DAYS_MS);
-    if (expired.length) {
-      await Promise.all(expired.map((u) => this.hardDeleteUser(u.id)));
-      const expiredIds = new Set(expired.map((u) => u.id));
-      users = users.filter((u) => !expiredIds.has(u.id));
-    }
-
-    return users;
+  getUsers(): DbUser[] {
+    this.ensureInitialized();
+    this.cleanupSoftDeleted();
+    return this.cache!.users;
   }
 
-  async getProjects(): Promise<DbProject[]> {
-    await this.ensureSeeded();
-    const snap = await getDb().collection(COLLECTIONS.projects).get();
-    let projects = snap.docs.map((d) => d.data() as DbProject);
-
-    const now = Date.now();
-    const expired = projects.filter((p) => p.deletedAt && now - new Date(p.deletedAt).getTime() > THIRTY_DAYS_MS);
-    if (expired.length) {
-      await Promise.all(expired.map((p) => this.hardDeleteProject(p.id)));
-      const expiredIds = new Set(expired.map((p) => p.id));
-      projects = projects.filter((p) => !expiredIds.has(p.id));
-    }
-
-    return projects;
+  getProjects(): DbProject[] {
+    this.ensureInitialized();
+    this.cleanupSoftDeleted();
+    return this.cache!.projects;
   }
 
-  async getTasks(): Promise<DbTask[]> {
-    await this.ensureSeeded();
-    const snap = await getDb().collection(COLLECTIONS.tasks).get();
-    return snap.docs.map((d) => d.data() as DbTask);
+  getTasks(): DbTask[] {
+    this.ensureInitialized();
+    return this.cache!.tasks;
   }
 
-  async getInvoices(): Promise<DbInvoice[]> {
-    await this.ensureSeeded();
-    const snap = await getDb().collection(COLLECTIONS.invoices).get();
-    return snap.docs.map((d) => d.data() as DbInvoice);
+  getInvoices(): DbInvoice[] {
+    this.ensureInitialized();
+    return this.cache!.invoices;
   }
 
-  async getMeetings(): Promise<DbMeeting[]> {
-    await this.ensureSeeded();
-    const snap = await getDb().collection(COLLECTIONS.meetings).get();
-    return snap.docs.map((d) => d.data() as DbMeeting);
+  getMeetings(): DbMeeting[] {
+    this.ensureInitialized();
+    return this.cache!.meetings;
   }
 
   // Mutation Methods
-  async addUser(user: DbUser) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.users).doc(user.id).set(user);
+  addUser(user: DbUser) {
+    this.ensureInitialized();
+    this.cache!.users.push(user);
+    this.save();
   }
 
-  async updateUser(userId: string, updates: Partial<DbUser>) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.users).doc(userId).set(updates, { merge: true });
+  updateUser(userId: string, updates: Partial<DbUser>) {
+    this.ensureInitialized();
+    this.cache!.users = this.cache!.users.map((u) => {
+      if (u.id === userId) {
+        return { ...u, ...updates };
+      }
+      return u;
+    });
+    this.save();
   }
 
-  async deleteUser(userId: string) {
-    await this.ensureSeeded();
+  deleteUser(userId: string) {
+    this.ensureInitialized();
     // Soft delete
-    await this.updateUser(userId, { deletedAt: new Date().toISOString() });
-
-    // Cascade soft delete to the client's projects
-    const db = getDb();
-    const projectsSnap = await db.collection(COLLECTIONS.projects).where("clientUserId", "==", userId).get();
-    await Promise.all(
-      projectsSnap.docs.map((d) => this.updateProject(d.id, { deletedAt: new Date().toISOString() }))
-    );
+    this.updateUser(userId, { deletedAt: new Date().toISOString() });
+    
+    // Cascadely soft delete projects
+    const clientProjects = this.cache!.projects.filter((p) => p.clientUserId === userId);
+    clientProjects.forEach((p) => {
+      this.updateProject(p.id, { deletedAt: new Date().toISOString() });
+    });
+    this.save();
   }
 
-  async restoreUser(userId: string) {
-    await this.ensureSeeded();
-    const db = getDb();
-    await db.collection(COLLECTIONS.users).doc(userId).update({ deletedAt: FieldValue.delete() });
-
-    const projectsSnap = await db.collection(COLLECTIONS.projects).where("clientUserId", "==", userId).get();
-    await Promise.all(
-      projectsSnap.docs.map((d) => d.ref.update({ deletedAt: FieldValue.delete() }))
-    );
+  restoreUser(userId: string) {
+    this.ensureInitialized();
+    this.cache!.users = this.cache!.users.map(u => {
+      if (u.id === userId) {
+        const { deletedAt, ...rest } = u;
+        return rest;
+      }
+      return u;
+    });
+    
+    const clientProjects = this.cache!.projects.filter((p) => p.clientUserId === userId);
+    clientProjects.forEach((p) => {
+      this.cache!.projects = this.cache!.projects.map(proj => {
+        if (proj.id === p.id) {
+          const { deletedAt, ...rest } = proj;
+          return rest;
+        }
+        return proj;
+      });
+    });
+    this.save();
   }
 
-  async hardDeleteUser(userId: string) {
-    await this.ensureSeeded();
-    const db = getDb();
-    const projectsSnap = await db.collection(COLLECTIONS.projects).where("clientUserId", "==", userId).get();
-    await Promise.all(projectsSnap.docs.map((d) => this.hardDeleteProject(d.id)));
-    await db.collection(COLLECTIONS.users).doc(userId).delete();
+  hardDeleteUser(userId: string) {
+    this.ensureInitialized();
+    this.cache!.users = this.cache!.users.filter((u) => u.id !== userId);
+    const clientProjects = this.cache!.projects.filter((p) => p.clientUserId === userId);
+    clientProjects.forEach((p) => {
+      this.hardDeleteProject(p.id);
+    });
+    this.save();
   }
 
-  async addProject(project: DbProject) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.projects).doc(project.id).set(project);
+  addProject(project: DbProject) {
+    this.ensureInitialized();
+    this.cache!.projects.push(project);
+    this.save();
   }
 
-  async updateProject(projectId: string, updates: Partial<DbProject>) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.projects).doc(projectId).set(updates, { merge: true });
+  updateProject(projectId: string, updates: Partial<DbProject>) {
+    this.ensureInitialized();
+    this.cache!.projects = this.cache!.projects.map((p) => {
+      if (p.id === projectId) {
+        return { ...p, ...updates };
+      }
+      return p;
+    });
+    this.save();
   }
 
-  async deleteProject(projectId: string) {
-    await this.ensureSeeded();
+  deleteProject(projectId: string) {
+    this.ensureInitialized();
     console.log(`Soft deleting project: ${projectId}`);
-    await this.updateProject(projectId, { deletedAt: new Date().toISOString() });
+    this.updateProject(projectId, { deletedAt: new Date().toISOString() });
   }
 
-  async restoreProject(projectId: string) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.projects).doc(projectId).update({ deletedAt: FieldValue.delete() });
+  restoreProject(projectId: string) {
+    this.ensureInitialized();
+    this.cache!.projects = this.cache!.projects.map(p => {
+      if (p.id === projectId) {
+        const { deletedAt, ...rest } = p;
+        return rest;
+      }
+      return p;
+    });
+    this.save();
   }
 
-  async hardDeleteProject(projectId: string) {
-    await this.ensureSeeded();
-    const db = getDb();
-    const [tasksSnap, invoicesSnap, meetingsSnap] = await Promise.all([
-      db.collection(COLLECTIONS.tasks).where("projectId", "==", projectId).get(),
-      db.collection(COLLECTIONS.invoices).where("projectId", "==", projectId).get(),
-      db.collection(COLLECTIONS.meetings).where("projectId", "==", projectId).get(),
-    ]);
-    await Promise.all([
-      ...tasksSnap.docs.map((d) => d.ref.delete()),
-      ...invoicesSnap.docs.map((d) => d.ref.delete()),
-      ...meetingsSnap.docs.map((d) => d.ref.delete()),
-      db.collection(COLLECTIONS.projects).doc(projectId).delete(),
-    ]);
+  hardDeleteProject(projectId: string) {
+    this.ensureInitialized();
+    this.cache!.projects = this.cache!.projects.filter((p) => p.id !== projectId);
+    this.cache!.tasks = this.cache!.tasks.filter((t) => t.projectId !== projectId);
+    this.cache!.invoices = this.cache!.invoices.filter((i) => i.projectId !== projectId);
+    this.cache!.meetings = this.cache!.meetings.filter((m) => m.projectId !== projectId);
+    this.save();
   }
 
-  async addTask(task: DbTask) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.tasks).doc(task.id).set(task);
+  addTask(task: DbTask) {
+    this.ensureInitialized();
+    this.cache!.tasks.push(task);
+    this.save();
   }
 
-  async updateTask(taskId: string, updates: Partial<DbTask>) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.tasks).doc(taskId).set(updates, { merge: true });
+  updateTask(taskId: string, updates: Partial<DbTask>) {
+    this.ensureInitialized();
+    this.cache!.tasks = this.cache!.tasks.map((t) => {
+      if (t.id === taskId) {
+        return { ...t, ...updates };
+      }
+      return t;
+    });
+    this.save();
   }
 
-  async deleteTask(taskId: string) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.tasks).doc(taskId).delete();
+  deleteTask(taskId: string) {
+    this.ensureInitialized();
+    this.cache!.tasks = this.cache!.tasks.filter((t) => t.id !== taskId);
+    this.save();
   }
 
-  async addInvoice(invoice: DbInvoice) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.invoices).doc(invoice.id).set(invoice);
+  addInvoice(invoice: DbInvoice) {
+    this.ensureInitialized();
+    this.cache!.invoices.push(invoice);
+    this.save();
   }
 
-  async updateInvoice(invoiceId: string, updates: Partial<DbInvoice>) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.invoices).doc(invoiceId).set(updates, { merge: true });
+  updateInvoice(invoiceId: string, updates: Partial<DbInvoice>) {
+    this.ensureInitialized();
+    this.cache!.invoices = this.cache!.invoices.map((i) => {
+      if (i.id === invoiceId) {
+        return { ...i, ...updates };
+      }
+      return i;
+    });
+    this.save();
   }
 
-  async deleteInvoice(invoiceId: string) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.invoices).doc(invoiceId).delete();
+  deleteInvoice(invoiceId: string) {
+    this.ensureInitialized();
+    this.cache!.invoices = this.cache!.invoices.filter((i) => i.id !== invoiceId);
+    this.save();
   }
 
-  async getDeploys(projectId?: string): Promise<DbDeploy[]> {
-    await this.ensureSeeded();
-    const db = getDb();
-    const query = projectId
-      ? db.collection(COLLECTIONS.deploys).where("projectId", "==", projectId)
-      : db.collection(COLLECTIONS.deploys);
-    const snap = await query.get();
-    const deploys = snap.docs.map((d) => d.data() as DbDeploy);
-    return deploys.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  getDeploys(projectId?: string): DbDeploy[] {
+    this.ensureInitialized();
+    const all = this.cache!.deploys || [];
+    return projectId ? all.filter(d => d.projectId === projectId) : all;
   }
 
-  async addDeploy(deploy: DbDeploy) {
-    await this.ensureSeeded();
-    const db = getDb();
-    await db.collection(COLLECTIONS.deploys).doc(deploy.id).set(deploy);
-
+  addDeploy(deploy: DbDeploy) {
+    this.ensureInitialized();
+    if (!this.cache!.deploys) this.cache!.deploys = [];
+    this.cache!.deploys.unshift(deploy); // más reciente primero
     // Mantener solo los últimos 20 deploys por proyecto
-    const projectDeploys = await this.getDeploys(deploy.projectId);
+    const projectDeploys = this.cache!.deploys.filter(d => d.projectId === deploy.projectId);
     if (projectDeploys.length > 20) {
-      const toRemove = projectDeploys.slice(20);
-      await Promise.all(toRemove.map((d) => db.collection(COLLECTIONS.deploys).doc(d.id).delete()));
+      const toRemove = projectDeploys.slice(20).map(d => d.id);
+      this.cache!.deploys = this.cache!.deploys.filter(d => !toRemove.includes(d.id));
     }
+    this.save();
   }
 
-  async addMeeting(meeting: DbMeeting) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.meetings).doc(meeting.id).set(meeting);
+  addMeeting(meeting: DbMeeting) {
+    this.ensureInitialized();
+    this.cache!.meetings.push(meeting);
+    this.save();
   }
 
-  async updateMeeting(meetingId: string, updates: Partial<DbMeeting>) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.meetings).doc(meetingId).set(updates, { merge: true });
+  updateMeeting(meetingId: string, updates: Partial<DbMeeting>) {
+    this.ensureInitialized();
+    this.cache!.meetings = this.cache!.meetings.map((m) => {
+      if (m.id === meetingId) {
+        return { ...m, ...updates };
+      }
+      return m;
+    });
+    this.save();
   }
 
-  async deleteMeeting(meetingId: string) {
-    await this.ensureSeeded();
-    await getDb().collection(COLLECTIONS.meetings).doc(meetingId).delete();
+  deleteMeeting(meetingId: string) {
+    this.ensureInitialized();
+    this.cache!.meetings = this.cache!.meetings.filter((m) => m.id !== meetingId);
+    this.save();
   }
 }
 

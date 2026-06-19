@@ -30,24 +30,7 @@ import Footer from "../components/Footer";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
-const CINEMA_STATE_KEY = "polaris_portfolio_cinema_state";
-
-// Si el usuario regresa desde la página de detalle (ver caso de estudio) u otra
-// ruta, restaura el proyecto/modo cine que estaba viendo en vez de reiniciar al mosaico.
-function readRestoredCinemaIndex(): number | null {
-  try {
-    const saved = sessionStorage.getItem(CINEMA_STATE_KEY);
-    if (!saved) return null;
-    const parsed = JSON.parse(saved) as { viewMode?: "bento" | "cinema"; slug?: string };
-    if (parsed.viewMode !== "cinema" || !parsed.slug) return null;
-    const idx = projects.findIndex(p => p.slug === parsed.slug);
-    return idx >= 0 ? idx : null;
-  } catch {
-    return null;
-  }
-}
-
-function ProjectScreenshot({ project, onExit, compact }: { project: Project; onExit?: () => void; compact?: boolean }) {
+function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () => void }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
 
@@ -73,9 +56,9 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
   }
 
   return (
-    <div className={compact ? "relative h-full min-h-0" : "flex flex-col gap-4 w-full"}>
+    <div className="flex flex-col gap-4 w-full">
       {/* Premium minimal floating HUD Bar above mockup */}
-      <div className={compact ? "absolute top-2 left-2 z-20 flex items-center" : "flex items-center justify-between w-full px-1"}>
+      <div className="flex items-center justify-between w-full px-1">
         {/* Device selection tabs with matching styling cues */}
         <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
           <button
@@ -113,18 +96,19 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
       </div>
 
       <motion.div
-        animate={compact ? undefined : { height: targetHeight }}
-        transition={{
-          duration: 0.4,
+        animate={{ 
+          height: targetHeight
+        }}
+        transition={{ 
+          duration: 0.4, 
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${compact ? "h-full" : ""}`}
+        className="relative w-full overflow-hidden rounded-xl bg-transparent"
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
           {/* Desktop View Wrapper */}
           <motion.div
-            initial={false}
             animate={{
               opacity: view === "desktop" ? 1 : 0,
               scale: view === "desktop" ? 1 : 0.96
@@ -149,7 +133,6 @@ function ProjectScreenshot({ project, onExit, compact }: { project: Project; onE
 
           {/* Mobile View Wrapper */}
           <motion.div
-            initial={false}
             animate={{
               opacity: view === "mobile" ? 1 : 0,
               scale: view === "mobile" ? 1 : 0.96
@@ -185,18 +168,14 @@ export default function Portfolio() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<string>("ALL");
-
-  const [viewMode, setViewMode] = useState<"bento" | "cinema">(() => readRestoredCinemaIndex() !== null ? "cinema" : "bento");
+  const [viewMode, setViewMode] = useState<"bento" | "cinema">("bento");
 
   // Cinema Showcase Slider State
-  const [activeCinemaIndex, setActiveCinemaIndex] = useState(() => readRestoredCinemaIndex() ?? 0);
+  const [activeCinemaIndex, setActiveCinemaIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
 
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
-
-  // Cinema mode scroll state
-  const [cinemaScrollY, setCinemaScrollY] = useState(0);
 
   // Type definitions/categories for filter pills
   const availableTypes = useMemo(() => {
@@ -253,32 +232,6 @@ export default function Portfolio() {
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
   };
 
-  // Guarda el proyecto/modo actual para poder restaurarlo si el usuario
-  // navega a "ver caso de estudio" y luego regresa al portafolio.
-  useEffect(() => {
-    try {
-      sessionStorage.setItem(
-        CINEMA_STATE_KEY,
-        JSON.stringify(
-          viewMode === "cinema" && currentCinemaProject
-            ? { viewMode: "cinema", slug: currentCinemaProject.slug }
-            : { viewMode: "bento" }
-        )
-      );
-    } catch {
-      // sessionStorage no disponible (modo privado, etc.) — no es crítico
-    }
-  }, [viewMode, currentCinemaProject]);
-
-  // Si el modo cine se restauró al montar (usuario volviendo desde el caso
-  // de estudio), asegura que la vista quede dentro del rango visible.
-  useEffect(() => {
-    if (viewMode === "cinema") {
-      window.scrollTo({ top: 0 });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useEffect(() => {
     if (viewMode !== "cinema") {
       document.documentElement.style.removeProperty("--cinema-color");
@@ -298,14 +251,6 @@ export default function Portfolio() {
       document.documentElement.style.removeProperty("--cinema-color-rgb");
     };
   }, [currentCinemaProject, viewMode, activeCinemaIndex]);
-
-  // Track scroll position for cinema mode overlay fade
-  useEffect(() => {
-    if (viewMode !== "cinema") return;
-    const handleScroll = () => setCinemaScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [viewMode]);
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
@@ -411,10 +356,7 @@ export default function Portfolio() {
                 <T en="Bento Grid">Mosaico Bento</T>
               </button>
               <button
-                onClick={() => {
-                  setViewMode("cinema");
-                  setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 100);
-                }}
+                onClick={() => setViewMode("cinema")}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all flex-1 justify-center ${
                   viewMode === "cinema"
                     ? "bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md"
@@ -628,7 +570,7 @@ export default function Portfolio() {
 
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-transparent">
-                    <ProjectScreenshot project={project} compact />
+                    <ProjectScreenshot project={project} />
                   </div>
 
                   {/* Click to open full details banner on hover */}
@@ -650,9 +592,9 @@ export default function Portfolio() {
           {viewMode === "cinema" && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-10 pointer-events-none"
+              className="fixed inset-0 bg-[var(--color-surface-base)]/75 backdrop-blur-sm z-10 pointer-events-none"
             />
           )}
         </AnimatePresence>
@@ -671,10 +613,25 @@ export default function Portfolio() {
                   className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden shadow-2xl pb-16 z-20"
                 >
             {/* Background glowing ball matched to project accent */}
-            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-3xl rounded-full pointer-events-none will-change-transform`} />
+            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-[130px] rounded-full pointer-events-none`} />
 
-            {/* Vignette unified (simplified for performance) */}
-            <div className="absolute inset-0 z-10 pointer-events-none bg-gradient-to-b from-black/15 via-transparent to-black/15" />
+            {/* Vignette izquierda */}
+            <div
+              className="absolute left-0 top-0 h-full w-40 z-10 pointer-events-none"
+              style={{ background: `linear-gradient(to right, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
+            />
+
+            {/* Vignette derecha */}
+            <div
+              className="absolute right-0 top-0 h-full w-40 z-10 pointer-events-none"
+              style={{ background: `linear-gradient(to left, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
+            />
+
+            {/* Vignette arriba */}
+            <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-black/30 to-transparent z-10 pointer-events-none" />
+
+            {/* Vignette abajo */}
+            <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-black/30 to-transparent z-10 pointer-events-none" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
@@ -687,7 +644,7 @@ export default function Portfolio() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="space-y-6 will-change-transform"
+                    className="space-y-6"
                   >
                     {/* Upper Badge Line */}
                     <div className="flex flex-wrap gap-2 items-center">
@@ -810,13 +767,12 @@ export default function Portfolio() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: direction * -40 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      layout={false}
-                      className="relative will-change-transform w-full"
+                      className="relative"
                       style={{
-                        filter: `drop-shadow(0 0 50px rgba(var(--cinema-color-rgb), 0.45))`
+                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`
                       }}
                     >
-                      <div className="relative w-full">
+                      <div className="relative">
                         {/* Glow solo aquí, scope reducido al mockup */}
                         <div
                           className="absolute inset-0 pointer-events-none -z-10 rounded-3xl"
@@ -826,9 +782,9 @@ export default function Portfolio() {
                           }}
                         />
                         {/* Mockup (laptop/imagen) va aquí, nada más */}
-                        <ProjectScreenshot
-                          project={currentCinemaProject}
-                          onExit={() => setViewMode("bento")}
+                        <ProjectScreenshot 
+                          project={currentCinemaProject} 
+                          onExit={() => setViewMode("bento")} 
                         />
                       </div>
                     </motion.div>
@@ -890,7 +846,7 @@ export default function Portfolio() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setSelectedProjectForQuickView(null)}
-                className="absolute inset-0 bg-black/75"
+                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
               />
 
               {/* Modal Container */}
