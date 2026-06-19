@@ -269,10 +269,12 @@ export default function Portfolio() {
   }, [viewMode, currentCinemaProject]);
 
   // Si el modo cine se restauró al montar (usuario volviendo desde el caso
-  // de estudio), asegura que la vista quede dentro del rango visible.
+  // de estudio), no hay animación de colapso de header de por medio, así
+  // que el scroll puede hacerse de inmediato.
+  const cinemaPanelRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (viewMode === "cinema") {
-      window.scrollTo({ top: 0 });
+      cinemaPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -319,6 +321,14 @@ export default function Portfolio() {
             marginBottom: viewMode === "cinema" ? 0 : undefined,
           }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          onAnimationComplete={() => {
+            // Recién aquí el header terminó de colapsar (toggle manual a modo
+            // cine); antes de esto el panel todavía no está en su posición
+            // final, así que hacer scroll antes dejaría la vista descuadrada.
+            if (viewMode === "cinema") {
+              cinemaPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }}
         >
           {/* Header */}
           <section className="text-center space-y-4 mb-12 relative select-none">
@@ -636,17 +646,20 @@ export default function Portfolio() {
 
         {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
         <AnimatePresence>
-          {viewMode === "cinema" && (
+          {viewMode === "cinema" && filteredProjects.length > 0 && (
             <motion.div
+              ref={cinemaPanelRef}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-surface-base)]/75 backdrop-blur-sm z-10 pointer-events-none"
-            />
-          )}
-        </AnimatePresence>
-        {viewMode === "cinema" && filteredProjects.length > 0 && (
-          <div className="relative">
+              transition={{ duration: 0.4 }}
+              className="relative scroll-mt-20"
+            >
+              {/* Oscurece los alrededores del panel (efecto "sala de cine"). Va
+                  acoplado a esta sección (no fixed al viewport) para que se
+                  aclare apenas el usuario hace scroll más allá del modo cine. */}
+              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen bg-black/55 backdrop-blur-sm z-0 pointer-events-none" />
+
             <div className="relative z-20">
               <motion.div
                 animate={{
@@ -881,8 +894,9 @@ export default function Portfolio() {
             </motion.div>
           </motion.div>
             </div>
-          </div>
-        )}
+          </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Case Study Detail Quick view Modal */}
         <AnimatePresence>
