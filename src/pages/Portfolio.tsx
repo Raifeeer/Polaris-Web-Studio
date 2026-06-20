@@ -713,9 +713,6 @@ export default function Portfolio() {
               style={{ background: `linear-gradient(to left, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
             />
 
-            {/* Vignette arriba */}
-            <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-black/30 to-transparent z-10 pointer-events-none" />
-
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
               {/* Left Column: Details */}
