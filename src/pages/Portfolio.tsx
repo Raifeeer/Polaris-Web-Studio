@@ -196,6 +196,10 @@ export default function Portfolio() {
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
 
+  // Posición de scroll mientras está en modo cine, para que el overlay oscuro
+  // se desvanezca gradualmente a medida que el usuario baja.
+  const [cinemaScrollY, setCinemaScrollY] = useState(0);
+
   // Type definitions/categories for filter pills
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
@@ -278,6 +282,15 @@ export default function Portfolio() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Rastrea el scroll mientras está en modo cine para desvanecer el overlay
+  // oscuro a medida que el usuario avanza hacia la siguiente sección.
+  useEffect(() => {
+    if (viewMode !== "cinema") return;
+    const handleScroll = () => setCinemaScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [viewMode]);
 
   useEffect(() => {
     if (viewMode !== "cinema") {
@@ -645,6 +658,19 @@ export default function Portfolio() {
         )}
 
         {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
+        {/* Oscurece toda la pantalla (efecto "sala de cine"). Su opacidad está
+            ligada al scroll (cinemaScrollY) para que se aclare gradualmente
+            apenas el usuario empieza a bajar hacia la siguiente sección. */}
+        <AnimatePresence>
+          {viewMode === "cinema" && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black z-10 pointer-events-none"
+            />
+          )}
+        </AnimatePresence>
         <AnimatePresence>
           {viewMode === "cinema" && filteredProjects.length > 0 && (
             <motion.div
@@ -655,20 +681,6 @@ export default function Portfolio() {
               transition={{ duration: 0.4 }}
               className="relative scroll-mt-20"
             >
-              {/* Oscurece los alrededores del panel (efecto "sala de cine"). Va
-                  acoplado a esta sección (no fixed al viewport) para que se
-                  aclare apenas el usuario hace scroll más allá del modo cine.
-                  Se extiende un poco más allá del panel y se desvanece en los
-                  bordes (en vez de un bloque sólido) para evitar un corte
-                  brusco hacia las secciones vecinas. */}
-              <div
-                className="absolute -inset-y-20 left-1/2 -translate-x-1/2 w-screen z-0 pointer-events-none"
-                style={{
-                  background:
-                    "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 15%, rgba(0,0,0,0.55) 85%, transparent 100%)",
-                }}
-              />
-
             <div className="relative z-20">
               <motion.div
                 animate={{
