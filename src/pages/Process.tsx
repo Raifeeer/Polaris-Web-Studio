@@ -276,7 +276,7 @@ export default function Process() {
   ];
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
       <main className="max-w-6xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">

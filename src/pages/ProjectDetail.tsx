@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -27,14 +27,6 @@ function ProjectImageCarousel({
   projectName: string;
 }) {
   const [active, setActive] = useState<"desktop" | "mobile">("desktop");
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
-
-  useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const images = [
     ...(desktopImg ? [{ type: "desktop" as const, src: desktopImg }] : []),
     ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
@@ -42,10 +34,7 @@ function ProjectImageCarousel({
 
   if (images.length === 0) return null;
 
-  const targetHeight =
-    active === "mobile"
-      ? windowWidth >= 1024 ? 480 : windowWidth >= 768 ? 440 : 340
-      : windowWidth >= 1024 ? 420 : windowWidth >= 768 ? 380 : 280;
+  const current = images.find(i => i.type === active) || images[0];
 
   return (
     <div className="w-full space-y-3">
@@ -79,37 +68,14 @@ function ProjectImageCarousel({
         </div>
       )}
 
-      {/* Crossfade entre vista desktop y mobile, igual que en el modo cine del Portafolio */}
-      <motion.div
-        animate={{ height: targetHeight }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative w-full overflow-hidden rounded-2xl"
-      >
-        {images.map((img) => (
-          <motion.div
-            key={img.type}
-            initial={false}
-            animate={{
-              opacity: active === img.type ? 1 : 0,
-              scale: active === img.type ? 1 : 0.96,
-            }}
-            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: active === img.type ? "auto" : "none" }}
-          >
-            <img
-              src={img.src}
-              alt={`${projectName} — ${img.type}`}
-              loading="lazy"
-              className={
-                img.type === "mobile"
-                  ? "h-full w-auto max-w-[240px] object-contain mx-auto rounded-2xl"
-                  : "w-full h-full object-contain rounded-2xl"
-              }
-            />
-          </motion.div>
-        ))}
-      </motion.div>
+      {/* Imagen directa sin ningún wrapper con borde o fondo */}
+      <img
+        key={current.src}
+        src={current.src}
+        alt={`${projectName} — ${current.type}`}
+        className="w-full h-auto block rounded-2xl"
+        loading="lazy"
+      />
     </div>
   );
 }
@@ -122,7 +88,7 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-[var(--color-surface-base)]">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface-base)]">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-display font-black">
             <T en="Project not found">Proyecto no encontrado</T>
@@ -139,7 +105,7 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)]">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)]">
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-12 md:py-20 space-y-24">
@@ -167,7 +133,7 @@ export default function ProjectDetail() {
                   }`}
                 >
                   <T en={`Plan ${project.planEN || project.plan}`}>
-                    Paquete {project.plan}
+                    Plan {project.plan}
                   </T>
                 </span>
                 <span className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest">
@@ -239,13 +205,7 @@ export default function ProjectDetail() {
         {/* Case Study Grid */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-12 pt-16">
           <div className="md:col-span-2 space-y-16">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="space-y-6"
-            >
+            <div className="space-y-6">
               <h2 className="text-3xl font-display font-black tracking-tight flex items-center gap-3">
                 <Layout
                   className="text-[var(--color-primary-base)]"
@@ -258,15 +218,9 @@ export default function ProjectDetail() {
                   {project.context}
                 </T>
               </p>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="space-y-6"
-            >
+            <div className="space-y-6">
               <h2 className="text-3xl font-display font-black tracking-tight flex items-center gap-3">
                 <Zap className="text-[var(--color-primary-base)]" size={24} />{" "}
                 <T en="Challenge & Technical Solution">
@@ -297,17 +251,11 @@ export default function ProjectDetail() {
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
 
           <div className="space-y-12">
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="p-8 rounded-3xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-8"
-            >
+            <div className="p-8 rounded-3xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-8">
               <h3 className="text-xl font-display font-black tracking-tight flex items-center gap-2">
                 <Trophy
                   className="text-[var(--color-primary-base)]"
@@ -330,15 +278,9 @@ export default function ProjectDetail() {
                   </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="space-y-4"
-            >
+            <div className="space-y-4">
               <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-text-tertiary)]">
                 <T en="Technologies">Tecnologías</T>
               </h4>
@@ -352,31 +294,25 @@ export default function ProjectDetail() {
                   </span>
                 ))}
               </div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
         {/* Closing CTA */}
-        <motion.section
-          initial={{ opacity: 0, scale: 0.98 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center py-20 bg-[var(--color-surface-highlight)] rounded-[3rem] space-y-8"
-        >
+        <section className="text-center py-20 bg-[var(--color-surface-highlight)] rounded-[3rem] space-y-8">
           <h2 className="text-3xl md:text-5xl font-display font-black tracking-tighter">
             <T en="Looking for a similar platform?">
               ¿Buscas una plataforma similar?
             </T>
           </h2>
           <button
-            onClick={() => navigate("/cotizar")}
+            onClick={() => navigate("/?plan=Consulta#contacto")}
             className="px-10 py-5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xl hover:scale-105 transition-all shadow-lg flex items-center gap-2 mx-auto"
           >
             <T en="Plan Project">Planifica tu Proyecto</T>{" "}
             <ArrowRight size={20} />
           </button>
-        </motion.section>
+        </section>
       </main>
 
       <Footer />

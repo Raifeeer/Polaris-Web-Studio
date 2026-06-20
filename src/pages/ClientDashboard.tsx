@@ -859,7 +859,7 @@ export default function ClientDashboard() {
   const clientProject = !isAdmin && data?.projects && data.projects.length > 0 ? data.projects[0] : null;
 
   return (
-    <div className="min-h-dvh bg-[var(--color-surface-base)] flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[var(--color-surface-base)] flex flex-col md:flex-row">
       
       {/* Toast Notification HUD */}
       <AnimatePresence>

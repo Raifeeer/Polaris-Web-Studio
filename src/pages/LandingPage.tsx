@@ -362,7 +362,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
       {/* Hero Section */}

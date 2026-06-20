@@ -79,7 +79,7 @@ export default function About() {
   ];
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       {/* Premium Tech Background grids */}
       <div className="absolute inset-x-0 top-0 h-[800px] bg-gradient-to-b from-[var(--color-primary-base)]/5 via-transparent to-transparent pointer-events-none" />
       <div className="absolute top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-500/5 blur-[120px] pointer-events-none" />

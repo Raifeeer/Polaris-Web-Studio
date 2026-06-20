@@ -267,7 +267,7 @@ function PlanCard({
             : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
         }`}
       >
-        <T en="Choose this Plan">Elegir este Paquete</T>
+        <T en="Choose this Plan">Elegir este Plan</T>
       </button>
     </motion.div>
   );
@@ -309,21 +309,6 @@ export default function Services() {
     });
 
     return () => observers.forEach((o) => o.disconnect());
-  }, []);
-
-  // La barra fija de precios (mobile) se oculta al llegar al footer para no
-  // tapar los enlaces legales (Privacidad/Términos/Cookies).
-  const [hideStickyPriceBar, setHideStickyPriceBar] = useState(false);
-
-  useEffect(() => {
-    const footerEl = document.querySelector("footer");
-    if (!footerEl) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setHideStickyPriceBar(entry.isIntersecting),
-      { threshold: 0 }
-    );
-    observer.observe(footerEl);
-    return () => observer.disconnect();
   }, []);
 
   const scrollToPlan = (planId: string) => {
@@ -953,7 +938,7 @@ export default function Services() {
   ];
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
       <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
@@ -1005,7 +990,7 @@ export default function Services() {
           <section className="space-y-12 text-center">
             <div className="flex flex-col items-center gap-6">
               <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
-                <T en="Our Plans">Nuestros Paquetes</T>
+                <T en="Our Plans">Nuestros Planes</T>
               </span>
               <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
                 <T
@@ -1148,7 +1133,7 @@ export default function Services() {
                      {/* Action buttons row */}
                     <tr className="border-t border-[var(--color-border-subtle)]">
                       <td className="p-4 bg-[var(--color-surface-base)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] select-none">
-                        <T en="Select Plan">Seleccionar Paquete</T>
+                        <T en="Select Plan">Seleccionar Plan</T>
                       </td>
                       <td className="p-4 bg-[var(--color-surface-base)] text-center">
                         <div className="flex flex-col items-center gap-1.5">
@@ -1157,7 +1142,7 @@ export default function Services() {
                             style={{ cursor: "pointer" }}
                             className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
                           >
-                            <T en="Choose this Plan">Elegir este Paquete</T>
+                            <T en="Choose this Plan">Elegir este Plan</T>
                           </button>
                         </div>
                       </td>
@@ -1168,7 +1153,7 @@ export default function Services() {
                             style={{ cursor: "pointer" }}
                             className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md border-none whitespace-nowrap cursor-pointer"
                           >
-                            <T en="Choose this Plan">Elegir este Paquete</T>
+                            <T en="Choose this Plan">Elegir este Plan</T>
                           </button>
                         </div>
                       </td>
@@ -1179,7 +1164,7 @@ export default function Services() {
                             style={{ cursor: "pointer" }}
                             className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
                           >
-                            <T en="Choose this Plan">Elegir este Paquete</T>
+                            <T en="Choose this Plan">Elegir este Plan</T>
                           </button>
                         </div>
                       </td>
@@ -1522,13 +1507,8 @@ export default function Services() {
         <FinalCTA />
       </main>
 
-      {/* Sticky price bar — mobile only. Se oculta al llegar al footer para no tapar sus enlaces. */}
-      <div
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-t border-[var(--color-border-subtle)] shadow-xl rounded-t-2xl transition-all duration-300 ${
-          hideStickyPriceBar ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
-        }`}
-      >
-
+      {/* Sticky price bar — mobile only */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-t border-[var(--color-border-subtle)] shadow-xl rounded-t-2xl">
         <div className="flex items-stretch divide-x divide-[var(--color-border-subtle)]">
           
           {/* Destello */}

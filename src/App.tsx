@@ -9,7 +9,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { useEffect, useLayoutEffect, lazy, Suspense, useState } from "react";
+import { useEffect, lazy, Suspense, useState } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -48,22 +48,6 @@ function RouteLoader() {
 function ScrollHandler() {
   const { pathname, hash } = useLocation();
 
-  // useLayoutEffect (no useEffect) para que el scroll se corrija antes del
-  // primer pintado: si no, la página nueva monta con su altura final pero el
-  // scrollY heredado de la página anterior, lo que alcanza a pintarse un frame
-  // y dispara el salto de la barra de progreso (ver ScrollProgressBar.tsx).
-  useLayoutEffect(() => {
-    if (!hash) {
-      window.scrollTo(0, 0);
-    } else {
-      const id = hash.replace("#", "");
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
-      }
-    }
-  }, [pathname, hash]);
-
   useEffect(() => {
     if (GA_ID) {
       try {
@@ -72,6 +56,16 @@ function ScrollHandler() {
         });
       } catch (e) {
         console.warn("GA send deferred:", e);
+      }
+    }
+
+    if (!hash) {
+      window.scrollTo(0, 0);
+    } else {
+      const id = hash.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
       }
     }
   }, [pathname, hash]);
@@ -172,7 +166,7 @@ export default function App() {
         <Router>
         <ScrollHandler />
         <ScrollProgressBar />
-        <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+        <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
           <Suspense fallback={<RouteLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />
