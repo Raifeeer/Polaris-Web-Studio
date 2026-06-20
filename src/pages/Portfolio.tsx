@@ -662,14 +662,10 @@ export default function Portfolio() {
                   bordes (en vez de un bloque sólido) para evitar un corte
                   brusco hacia las secciones vecinas. */}
               <div
-                className="absolute -inset-y-20 left-1/2 -translate-x-1/2 w-screen z-0 pointer-events-none backdrop-blur-sm"
+                className="absolute -inset-y-20 left-1/2 -translate-x-1/2 w-screen z-0 pointer-events-none"
                 style={{
                   background:
                     "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 15%, rgba(0,0,0,0.55) 85%, transparent 100%)",
-                  WebkitMaskImage:
-                    "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
-                  maskImage:
-                    "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
                 }}
               />
 
