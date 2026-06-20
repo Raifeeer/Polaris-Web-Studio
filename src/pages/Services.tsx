@@ -311,6 +311,21 @@ export default function Services() {
     return () => observers.forEach((o) => o.disconnect());
   }, []);
 
+  // La barra fija de precios (mobile) se oculta al llegar al footer para no
+  // tapar los enlaces legales (Privacidad/Términos/Cookies).
+  const [hideStickyPriceBar, setHideStickyPriceBar] = useState(false);
+
+  useEffect(() => {
+    const footerEl = document.querySelector("footer");
+    if (!footerEl) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHideStickyPriceBar(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(footerEl);
+    return () => observer.disconnect();
+  }, []);
+
   const scrollToPlan = (planId: string) => {
     const el = document.getElementById(`plan-card-${planId}`);
     if (!el) return;
@@ -1507,8 +1522,13 @@ export default function Services() {
         <FinalCTA />
       </main>
 
-      {/* Sticky price bar — mobile only */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-t border-[var(--color-border-subtle)] shadow-xl rounded-t-2xl">
+      {/* Sticky price bar — mobile only. Se oculta al llegar al footer para no tapar sus enlaces. */}
+      <div
+        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-t border-[var(--color-border-subtle)] shadow-xl rounded-t-2xl transition-all duration-300 ${
+          hideStickyPriceBar ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
+        }`}
+      >
+
         <div className="flex items-stretch divide-x divide-[var(--color-border-subtle)]">
           
           {/* Destello */}
