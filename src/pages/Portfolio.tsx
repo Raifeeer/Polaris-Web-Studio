@@ -51,7 +51,7 @@ const MOCKUP_MIN_HEIGHT = 200;
 const MOCKUP_MAX_HEIGHT = 640;
 const MOCKUP_MOBILE_MAX_WIDTH = 260;
 
-function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () => void }) {
+function ProjectScreenshot({ project, onExit, fillParent }: { project: Project; onExit?: () => void; fillParent?: boolean }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
@@ -59,6 +59,7 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
   const [mobileAspect, setMobileAspect] = React.useState<number | null>(null);
 
   React.useEffect(() => {
+    if (fillParent) return;
     const el = containerRef.current;
     if (!el) return;
     const observer = new ResizeObserver(entries => {
@@ -67,7 +68,7 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [fillParent]);
 
   // Precarga las imágenes y captura su proporción real para que el recuadro
   // del mockup encaje exacto con la foto, sin franjas vacías (object-contain
@@ -96,9 +97,9 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
   targetHeight = Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, targetHeight));
 
   return (
-    <div className="flex flex-col gap-4 w-full" ref={containerRef}>
+    <div className={`flex flex-col gap-4 w-full ${fillParent ? "h-full min-h-0" : ""}`} ref={containerRef}>
       {/* Premium minimal floating HUD Bar above mockup */}
-      <div className="flex items-center justify-between w-full px-1">
+      <div className={`flex items-center justify-between w-full ${fillParent ? "px-3 pt-3" : "px-1"}`}>
         {/* Device selection tabs with matching styling cues */}
         <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
           <button
@@ -106,7 +107,8 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
             className="p-1.5 rounded-full transition-all cursor-pointer"
             style={{
               color: view === "desktop" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
-              backgroundColor: view === "desktop" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent"
+              backgroundColor: view === "desktop" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent",
+              boxShadow: view === "desktop" ? `0 0 0 1px rgba(var(--cinema-color-rgb), 0.3), 0 2px 6px rgba(var(--cinema-color-rgb), 0.25)` : "none"
             }}
           >
             <Monitor size={13} />
@@ -116,7 +118,8 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
             className="p-1.5 rounded-full transition-all cursor-pointer"
             style={{
               color: view === "mobile" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
-              backgroundColor: view === "mobile" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent"
+              backgroundColor: view === "mobile" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent",
+              boxShadow: view === "mobile" ? `0 0 0 1px rgba(var(--cinema-color-rgb), 0.3), 0 2px 6px rgba(var(--cinema-color-rgb), 0.25)` : "none"
             }}
           >
             <Smartphone size={13} />
@@ -137,14 +140,12 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
 
       <motion.div
         initial={false}
-        animate={{
-          height: targetHeight
-        }}
+        animate={fillParent ? { height: "100%" } : { height: targetHeight }}
         transition={{
           duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className="relative w-full overflow-hidden rounded-xl bg-transparent"
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "flex-1 min-h-0" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
@@ -523,9 +524,7 @@ export default function Portfolio() {
                     onClick={() => setSelectedType(type)}
                     className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                       selectedType === type
-                        ? type === "ALL"
-                          ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/35"
-                          : "bg-purple-500/15 text-purple-400 border border-purple-500/35"
+                        ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/35"
                         : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
@@ -616,7 +615,7 @@ export default function Portfolio() {
                     <div className="flex gap-2 items-start">
                       {project.isConcept && (
                         <span className="px-3 py-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full text-[9px] font-extrabold text-[var(--color-text-tertiary)] uppercase tracking-wider leading-none">
-                          <T en="Prototype">Demo Interactiva</T>
+                          <T en="Demo">Demo</T>
                         </span>
                       )}
                       
@@ -627,7 +626,7 @@ export default function Portfolio() {
                             e.stopPropagation();
                             window.open(project.liveUrl, "_blank");
                           }}
-                          className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-indigo-400 hover:border-indigo-400/30 transition-all cursor-pointer shadow-sm"
+                          className="p-2.5 rounded-full bg-indigo-500 text-white hover:bg-indigo-400 hover:scale-110 transition-all cursor-pointer shadow-md shadow-indigo-500/30"
                           title={language === "es" ? "Ver sitio en vivo" : "View live site"}
                         >
                           <ExternalLink size={16} />
@@ -686,7 +685,7 @@ export default function Portfolio() {
 
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-transparent">
-                    <ProjectScreenshot project={project} />
+                    <ProjectScreenshot project={project} fillParent />
                   </div>
 
                   {/* Click to open full details banner on hover */}

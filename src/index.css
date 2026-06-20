@@ -131,8 +131,10 @@
   .bento-glow {
     box-shadow: var(--shadow-bento);
   }
-  .bento-glow-hover:hover {
-    box-shadow: var(--shadow-bento-hover);
+  @media (hover: hover) {
+    .bento-glow-hover:hover {
+      box-shadow: var(--shadow-bento-hover);
+    }
   }
 }
 
