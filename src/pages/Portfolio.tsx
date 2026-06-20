@@ -47,33 +47,56 @@ function readRestoredCinemaIndex(): number | null {
   }
 }
 
+const MOCKUP_MIN_HEIGHT = 200;
+const MOCKUP_MAX_HEIGHT = 640;
+const MOCKUP_MOBILE_MAX_WIDTH = 260;
+
 function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () => void }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
-  const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = React.useState(0);
+  const [desktopAspect, setDesktopAspect] = React.useState<number | null>(null);
+  const [mobileAspect, setMobileAspect] = React.useState<number | null>(null);
 
   React.useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
   }, []);
 
-  // Preload desktop and mobile images automatically
+  // Precarga las imágenes y captura su proporción real para que el recuadro
+  // del mockup encaje exacto con la foto, sin franjas vacías (object-contain
+  // dentro de una caja con altura distinta a la foto se veía "metida en un div").
   React.useEffect(() => {
-    const desktop = new Image();
-    if (project.desktopImg) desktop.src = project.desktopImg;
-    const mobile = new Image();
-    if (project.mobileImg) mobile.src = project.mobileImg;
+    if (project.desktopImg) {
+      const img = new Image();
+      img.onload = () => setDesktopAspect(img.naturalWidth / img.naturalHeight);
+      img.src = project.desktopImg;
+    }
+    if (project.mobileImg) {
+      const img = new Image();
+      img.onload = () => setMobileAspect(img.naturalWidth / img.naturalHeight);
+      img.src = project.mobileImg;
+    }
   }, [project.desktopImg, project.mobileImg]);
 
-  let targetHeight = 220;
+  let targetHeight: number;
   if (view === "mobile") {
-    targetHeight = windowWidth >= 1024 ? 560 : (windowWidth >= 768 ? 480 : 320);
+    const renderWidth = Math.min(MOCKUP_MOBILE_MAX_WIDTH, containerWidth || MOCKUP_MOBILE_MAX_WIDTH);
+    targetHeight = mobileAspect ? renderWidth / mobileAspect : 480;
   } else {
-    targetHeight = windowWidth >= 1024 ? 460 : (windowWidth >= 768 ? 380 : 200);
+    const renderWidth = containerWidth || 760;
+    targetHeight = desktopAspect ? renderWidth / desktopAspect : 460;
   }
+  targetHeight = Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, targetHeight));
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className="flex flex-col gap-4 w-full" ref={containerRef}>
       {/* Premium minimal floating HUD Bar above mockup */}
       <div className="flex items-center justify-between w-full px-1">
         {/* Device selection tabs with matching styling cues */}
