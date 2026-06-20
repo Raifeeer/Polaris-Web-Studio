@@ -177,7 +177,7 @@ export default function Blog() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden" id="blog-section-main">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden" id="blog-section-main">
       <Navbar />
 
       {/* Hero Header */}

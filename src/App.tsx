@@ -166,7 +166,7 @@ export default function App() {
         <Router>
         <ScrollHandler />
         <ScrollProgressBar />
-        <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+        <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
           <Suspense fallback={<RouteLoader />}>
             <Routes>
               <Route path="/" element={<LandingPage />} />

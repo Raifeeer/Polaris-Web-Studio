@@ -122,7 +122,7 @@ export default function ProjectDetail() {
 
   if (!project) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--color-surface-base)]">
+      <div className="min-h-dvh flex items-center justify-center bg-[var(--color-surface-base)]">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-display font-black">
             <T en="Project not found">Proyecto no encontrado</T>
@@ -139,7 +139,7 @@ export default function ProjectDetail() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)]">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)]">
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-12 md:py-20 space-y-24">

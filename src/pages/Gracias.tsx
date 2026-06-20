@@ -61,7 +61,7 @@ export default function Gracias() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
       <Navbar />
 
       <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-24 md:py-32 flex flex-col items-center justify-center relative">

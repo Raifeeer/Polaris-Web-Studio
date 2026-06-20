@@ -445,7 +445,7 @@ export default function Portfolio() {
   }, [currentCinemaProject, viewMode, activeCinemaIndex]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
       <Navbar />
 
 
