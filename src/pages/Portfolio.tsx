@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   Globe,
@@ -105,30 +106,44 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
     <div className={`flex flex-col gap-4 w-full ${fillParent ? "h-full min-h-0" : ""}`} ref={containerRef}>
       {/* Premium minimal floating HUD Bar above mockup */}
       <div className={`flex items-center justify-between w-full ${fillParent ? "px-3 pt-3" : "px-1"}`}>
-        {/* Device selection tabs with matching styling cues */}
-        <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
-          <button
-            onClick={() => setView("desktop")}
-            className="p-1.5 rounded-full transition-all cursor-pointer"
-            style={{
-              color: view === "desktop" ? "white" : "var(--color-text-tertiary)",
-              backgroundColor: view === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
-              boxShadow: view === "desktop" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
-            }}
-          >
-            <Monitor size={13} />
-          </button>
-          <button
-            onClick={() => setView("mobile")}
-            className="p-1.5 rounded-full transition-all cursor-pointer"
-            style={{
-              color: view === "mobile" ? "white" : "var(--color-text-tertiary)",
-              backgroundColor: view === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
-              boxShadow: view === "mobile" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
-            }}
-          >
-            <Smartphone size={13} />
-          </button>
+        <div className="flex items-center gap-2">
+          {/* Device selection tabs with matching styling cues */}
+          <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
+            <button
+              onClick={() => setView("desktop")}
+              className="p-1.5 rounded-full transition-all cursor-pointer"
+              style={{
+                color: view === "desktop" ? "white" : "var(--color-text-tertiary)",
+                backgroundColor: view === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
+                boxShadow: view === "desktop" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
+              }}
+            >
+              <Monitor size={13} />
+            </button>
+            <button
+              onClick={() => setView("mobile")}
+              className="p-1.5 rounded-full transition-all cursor-pointer"
+              style={{
+                color: view === "mobile" ? "white" : "var(--color-text-tertiary)",
+                backgroundColor: view === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
+                boxShadow: view === "mobile" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
+              }}
+            >
+              <Smartphone size={13} />
+            </button>
+          </div>
+
+          {/* Abre el sitio en vivo del proyecto en una pestaña nueva */}
+          {project.liveUrl && (
+            <button
+              onClick={() => window.open(project.liveUrl, "_blank")}
+              className="p-1.5 rounded-full bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--cinema-color,_#6366f1)] hover:border-[var(--cinema-color,_#6366f1)]/40 transition-all cursor-pointer shadow-sm"
+              aria-label="Ver proyecto en una pestaña nueva"
+              title="Ver proyecto en vivo"
+            >
+              <ExternalLink size={13} />
+            </button>
+          )}
         </div>
 
         {/* Exit cinema button cleanly separated with soft active feedback */}
@@ -1044,9 +1059,17 @@ export default function Portfolio() {
         </AnimatePresence>
 
         {/* Case Study Detail Quick view Modal */}
-        <AnimatePresence>
-          {selectedProjectForQuickView && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Renderizado vía portal a document.body: <main> es z-10 y crea su propio
+            stacking context, así que un z-index alto puesto adentro (incluso z-50)
+            nunca podía superar al Navbar (z-50 pero fuera de <main>) — el modal
+            quedaba atrapado detrás y su botón de cerrar no recibía los clicks.
+            El portal va POR FUERA de AnimatePresence: si se devuelve un portal
+            como hijo directo de AnimatePresence, framer-motion lo descarta al
+            enumerar sus hijos y el modal no llega a montarse. */}
+        {ReactDOM.createPortal(
+          <AnimatePresence>
+            {selectedProjectForQuickView && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
               {/* Blur backdrop overlay */}
               <motion.div
                 initial={{ opacity: 0 }}
@@ -1194,9 +1217,11 @@ export default function Portfolio() {
                   </div>
                 </div>
               </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+              </div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* CTA Footer Section */}
         <section className="mt-28 text-center space-y-10">

@@ -42,10 +42,10 @@ function ProjectImageCarousel({
 
   if (images.length === 0) return null;
 
-  const targetHeight =
-    active === "mobile"
-      ? windowWidth >= 1024 ? 480 : windowWidth >= 768 ? 440 : 340
-      : windowWidth >= 1024 ? 420 : windowWidth >= 768 ? 380 : 280;
+  // Altura fija (no depende de `active`): así alternar desktop/mobile es un
+  // crossfade puro de opacidad sin animar el alto del contenedor, que es lo
+  // que causaba el delay/lag perceptible al cambiar de vista.
+  const containerHeight = windowWidth >= 1024 ? 480 : windowWidth >= 768 ? 440 : 340;
 
   return (
     <div className="w-full space-y-3">
@@ -80,10 +80,9 @@ function ProjectImageCarousel({
       )}
 
       {/* Crossfade entre vista desktop y mobile, igual que en el modo cine del Portafolio */}
-      <motion.div
-        animate={{ height: targetHeight }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative w-full overflow-hidden rounded-2xl"
+      <div
+        style={{ height: containerHeight }}
+        className="relative w-full overflow-hidden rounded-2xl transition-[height] duration-300"
       >
         {images.map((img) => (
           <motion.div
@@ -109,7 +108,7 @@ function ProjectImageCarousel({
             />
           </motion.div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }
@@ -143,17 +142,20 @@ export default function ProjectDetail() {
       <Navbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-12 md:py-20 space-y-24">
-        {/* Back Button */}
-        <Link
-          to="/portafolio"
-          className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] transition-colors"
-        >
-          <ArrowLeft size={16} />{" "}
-          <T en="Back to Portfolio">Volver al Portafolio</T>
-        </Link>
+        {/* Back Button + Hero agrupados para que el espacio entre ambos no
+            herede el space-y-24 de <main> (se veía como un vacío enorme,
+            sobre todo en mobile donde no hay nada más a los lados). */}
+        <div className="space-y-6 md:space-y-10">
+          <Link
+            to="/portafolio"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] transition-colors"
+          >
+            <ArrowLeft size={16} />{" "}
+            <T en="Back to Portfolio">Volver al Portafolio</T>
+          </Link>
 
-        {/* Hero Section */}
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {/* Hero Section */}
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div className="space-y-8">
             <div className="space-y-4">
               <div className="flex flex-col items-start gap-2.5">
@@ -234,7 +236,8 @@ export default function ProjectDetail() {
               projectName={project.title}
             />
           </motion.div>
-        </section>
+          </section>
+        </div>
 
         {/* Case Study Grid */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-12 pt-16">
