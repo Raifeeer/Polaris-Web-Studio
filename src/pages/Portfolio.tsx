@@ -122,9 +122,6 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className="relative w-full overflow-hidden rounded-xl bg-transparent"
-        style={{
-          boxShadow: `0 0 60px 0 rgba(var(--cinema-color-rgb), 0.55), 0 0 120px 0 rgba(var(--cinema-color-rgb), 0.25)`
-        }}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
@@ -876,7 +873,10 @@ export default function Portfolio() {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       layout={false}
                       className="relative w-full"
-                      style={{ willChange: "opacity, transform" }}
+                      style={{
+                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`,
+                        willChange: "opacity, transform"
+                      }}
                     >
                       <div className="relative w-full">
                         {/* Glow solo aquí, scope reducido al mockup */}
