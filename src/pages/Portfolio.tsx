@@ -113,11 +113,12 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
       </div>
 
       <motion.div
-        animate={{ 
+        initial={false}
+        animate={{
           height: targetHeight
         }}
-        transition={{ 
-          duration: 0.4, 
+        transition={{
+          duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className="relative w-full overflow-hidden rounded-xl bg-transparent"
