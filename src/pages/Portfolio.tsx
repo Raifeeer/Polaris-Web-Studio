@@ -256,6 +256,30 @@ export default function Portfolio() {
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
   };
 
+  // Precarga en segundo plano (idle) la captura del proyecto que se mostrará
+  // en modo cine. Antes esta precarga solo ocurría dentro de ProjectScreenshot,
+  // es decir, justo cuando se monta el panel — por eso la primera vez que se
+  // entra a modo cine se nota un pequeño tirón mientras la imagen se descarga
+  // y decodifica al mismo tiempo que corren las animaciones de entrada.
+  useEffect(() => {
+    const sources = [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg].filter(
+      (src): src is string => Boolean(src)
+    );
+    if (sources.length === 0) return;
+    const preload = () => {
+      sources.forEach((src) => {
+        const img = new Image();
+        img.src = src;
+      });
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(preload);
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(preload, 200);
+    return () => window.clearTimeout(id);
+  }, [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg]);
+
   // Guarda el proyecto/modo actual para poder restaurarlo si el usuario
   // navega a "ver caso de estudio" y luego regresa al portafolio.
   useEffect(() => {
@@ -299,7 +323,6 @@ export default function Portfolio() {
       return;
     }
     const color = currentCinemaProject?.cinemaColor || "#6366f1";
-    console.log("Cinema project:", currentCinemaProject?.slug, currentCinemaProject?.cinemaColor);
     document.documentElement.style.setProperty("--cinema-color", color);
     // Convertir hex a RGB para usar con opacity
     const r = parseInt(color.slice(1,3), 16);
