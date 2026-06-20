@@ -122,6 +122,9 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
         className="relative w-full overflow-hidden rounded-xl bg-transparent"
+        style={{
+          boxShadow: `0 0 60px 0 rgba(var(--cinema-color-rgb), 0.55), 0 0 120px 0 rgba(var(--cinema-color-rgb), 0.25)`
+        }}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
@@ -134,7 +137,7 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
             }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "desktop" ? "auto" : "none" }}
+            style={{ pointerEvents: view === "desktop" ? "auto" : "none", willChange: "opacity, transform" }}
           >
             {project.desktopImg ? (
               <img
@@ -159,7 +162,7 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
             }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "mobile" ? "auto" : "none" }}
+            style={{ pointerEvents: view === "mobile" ? "auto" : "none", willChange: "opacity, transform" }}
           >
             {project.mobileImg ? (
               <img
@@ -873,9 +876,7 @@ export default function Portfolio() {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       layout={false}
                       className="relative w-full"
-                      style={{
-                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`
-                      }}
+                      style={{ willChange: "opacity, transform" }}
                     >
                       <div className="relative w-full">
                         {/* Glow solo aquí, scope reducido al mockup */}
