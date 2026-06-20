@@ -10,9 +10,24 @@ plus an authenticated client/admin dashboard (`/dashboard`) backed by a custom E
 flat-file JSON "database". Originated from Google AI Studio scaffolding (see `README.md`), now
 deployed to Vercel.
 
-There is no repo-level branch/push policy file. Branch and push rules (which branch to develop on,
-when it's safe to push to `main`) come from the session's own harness/system instructions, not
-from anything in this repo — don't assume otherwise.
+The default repo-level workflow preference is documented below in "Instrucciones de trabajo". That
+said, if the session's own harness/system instructions explicitly assign a different working
+branch or push policy for that session, the harness instructions take precedence for that
+session — don't silently override an explicit harness-assigned branch just because this file says
+to use `main`.
+
+## Instrucciones de trabajo
+
+### Rama de trabajo
+
+- Siempre trabaja directamente en la rama `main`.
+- No crees ramas nuevas a menos que se indique explícitamente.
+- Haz commit directo a `main` con todos los cambios.
+
+### Commits
+
+- Usa mensajes de commit descriptivos en español.
+- Un solo commit por tarea completada.
 
 ## Tech stack
 
