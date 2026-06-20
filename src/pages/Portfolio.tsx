@@ -275,10 +275,9 @@ export default function Portfolio() {
   // Si el modo cine se restauró al montar (usuario volviendo desde el caso
   // de estudio), no hay animación de colapso de header de por medio, así
   // que el scroll puede hacerse de inmediato.
-  const cinemaPanelRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (viewMode === "cinema") {
-      cinemaPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -339,7 +338,7 @@ export default function Portfolio() {
             // cine); antes de esto el panel todavía no está en su posición
             // final, así que hacer scroll antes dejaría la vista descuadrada.
             if (viewMode === "cinema") {
-              cinemaPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }
           }}
         >
@@ -681,7 +680,6 @@ export default function Portfolio() {
         <AnimatePresence>
           {viewMode === "cinema" && filteredProjects.length > 0 && (
             <motion.div
-              ref={cinemaPanelRef}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
