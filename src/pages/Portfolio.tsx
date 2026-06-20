@@ -658,17 +658,24 @@ export default function Portfolio() {
         )}
 
         {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
-        {/* Oscurece toda la pantalla (efecto "sala de cine"). Su opacidad está
-            ligada al scroll (cinemaScrollY) para que se aclare gradualmente
-            apenas el usuario empieza a bajar hacia la siguiente sección. */}
+        {/* Oscurece toda la pantalla (efecto "sala de cine"). El contenedor
+            externo solo anima la entrada/salida al activar/desactivar el modo
+            cine; el div interno fija su opacidad directamente desde el scroll
+            (sin pasar por el motor de animación de Framer) para que siga el
+            scroll 1:1 y no se vea con retraso/inercia mientras se hace scroll. */}
         <AnimatePresence>
           {viewMode === "cinema" && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-10 pointer-events-none"
-            />
+              className="fixed inset-0 z-10 pointer-events-none"
+            >
+              <div
+                className="absolute inset-0 bg-black"
+                style={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
+              />
+            </motion.div>
           )}
         </AnimatePresence>
         <AnimatePresence>
