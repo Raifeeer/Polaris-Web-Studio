@@ -51,7 +51,7 @@ const MOCKUP_MIN_HEIGHT = 200;
 const MOCKUP_MAX_HEIGHT = 640;
 const MOCKUP_MOBILE_MAX_WIDTH = 260;
 
-function ProjectScreenshot({ project, onExit, fillParent, fixedHeights }: { project: Project; onExit?: () => void; fillParent?: boolean; fixedHeights?: { desktop: number; mobile: number } }) {
+function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeProject }: { project: Project; onExit?: () => void; fillParent?: boolean; fixedHeights?: { desktop: number; mobile: number }; onSwipeProject?: (direction: 1 | -1) => void }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
@@ -111,9 +111,9 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights }: { proj
             onClick={() => setView("desktop")}
             className="p-1.5 rounded-full transition-all cursor-pointer"
             style={{
-              color: view === "desktop" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
-              backgroundColor: view === "desktop" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent",
-              boxShadow: view === "desktop" ? `0 0 0 1px rgba(var(--cinema-color-rgb), 0.3), 0 2px 6px rgba(var(--cinema-color-rgb), 0.25)` : "none"
+              color: view === "desktop" ? "white" : "var(--color-text-tertiary)",
+              backgroundColor: view === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
+              boxShadow: view === "desktop" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
             }}
           >
             <Monitor size={13} />
@@ -122,9 +122,9 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights }: { proj
             onClick={() => setView("mobile")}
             className="p-1.5 rounded-full transition-all cursor-pointer"
             style={{
-              color: view === "mobile" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
-              backgroundColor: view === "mobile" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent",
-              boxShadow: view === "mobile" ? `0 0 0 1px rgba(var(--cinema-color-rgb), 0.3), 0 2px 6px rgba(var(--cinema-color-rgb), 0.25)` : "none"
+              color: view === "mobile" ? "white" : "var(--color-text-tertiary)",
+              backgroundColor: view === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
+              boxShadow: view === "mobile" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
             }}
           >
             <Smartphone size={13} />
@@ -150,7 +150,15 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights }: { proj
           duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "flex-1 min-h-0" : ""}`}
+        drag={onSwipeProject ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.15}
+        onDragEnd={onSwipeProject ? (e, { offset, velocity }) => {
+          const swipe = Math.abs(offset.x) * velocity.x;
+          if (swipe < -8000) onSwipeProject(1);
+          else if (swipe > 8000) onSwipeProject(-1);
+        } : undefined}
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "flex-1 min-h-0" : ""} ${onSwipeProject ? "cursor-grab active:cursor-grabbing" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
@@ -691,7 +699,7 @@ export default function Portfolio() {
                       </p>
                     </div>
 
-                    <div className="flex gap-2 items-start">
+                    <div className="flex gap-2 items-center">
                       {project.isConcept && (
                         <span className="px-3 py-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full text-[9px] font-extrabold text-[var(--color-text-tertiary)] uppercase tracking-wider leading-none">
                           <T en="Demo">Demo</T>
@@ -974,25 +982,15 @@ export default function Portfolio() {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       layout={false}
                       className="relative w-full"
-                      style={{
-                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`,
-                        willChange: "opacity, transform"
-                      }}
+                      style={{ willChange: "opacity, transform" }}
                     >
                       <div className="relative w-full">
-                        {/* Glow solo aquí, scope reducido al mockup */}
-                        <div
-                          className="absolute inset-0 pointer-events-none -z-10 rounded-3xl"
-                          style={{
-                            background: `radial-gradient(ellipse 80% 60% at 50% 50%, rgba(var(--cinema-color-rgb), 0.18) 0%, transparent 70%)`,
-                            transition: "background 0.8s ease"
-                          }}
-                        />
                         {/* Mockup (laptop/imagen) va aquí, nada más */}
                         <ProjectScreenshot
                           project={currentCinemaProject}
                           onExit={() => setViewMode("bento")}
                           fixedHeights={cinemaFixedHeights}
+                          onSwipeProject={(dir) => (dir === 1 ? handleNextCinema() : handlePrevCinema())}
                         />
                       </div>
                     </motion.div>

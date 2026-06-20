@@ -70,16 +70,16 @@ export default function Testimonials() {
                       if (swipe < -10000) handleNext();
                       else if (swipe > 10000) handlePrev();
                     }}
-                    initial={{ opacity: 0, x: isActive ? 0 : isPrev ? -90 : 90, scale: 0.85 }}
+                    initial={{ opacity: 0, x: isActive ? 0 : isPrev ? -90 : 90, scale: 0.65 }}
                     animate={{
-                      opacity: isActive ? 1 : 0.65,
+                      opacity: isActive ? 1 : 0.6,
                       x: isActive ? 0 : isPrev ? -100 : 100,
-                      scale: isActive ? 1 : 0.88,
+                      scale: isActive ? 1 : 0.7,
                       filter: isActive ? 'blur(0px)' : 'blur(1px)',
                       zIndex: isActive ? 10 : 5
                     }}
-                    exit={{ opacity: 0, scale: 0.85 }}
-                    transition={{ duration: 0.3 }}
+                    exit={{ opacity: 0, scale: 0.65 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute w-[80%] max-w-[280px] p-6 bg-[var(--color-surface-base)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm cursor-grab active:cursor-grabbing"
                   >
                     <p className="text-[var(--color-text-secondary)] italic mb-4 text-sm">"{t.text}"</p>
