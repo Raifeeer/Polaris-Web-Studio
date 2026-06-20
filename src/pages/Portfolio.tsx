@@ -30,43 +30,90 @@ import Footer from "../components/Footer";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
-function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () => void }) {
-  const [view, setView] = useState<"desktop" | "mobile">("desktop");
-  const [windowWidth, setWindowWidth] = React.useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+const CINEMA_STATE_KEY = "polaris_portfolio_cinema_state";
 
-  React.useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  // Preload desktop and mobile images automatically
-  React.useEffect(() => {
-    const desktop = new Image();
-    if (project.desktopImg) desktop.src = project.desktopImg;
-    const mobile = new Image();
-    if (project.mobileImg) mobile.src = project.mobileImg;
-  }, [project.desktopImg, project.mobileImg]);
-
-  let targetHeight = 220;
-  if (view === "mobile") {
-    targetHeight = windowWidth >= 1024 ? 560 : (windowWidth >= 768 ? 480 : 320);
-  } else {
-    targetHeight = windowWidth >= 1024 ? 460 : (windowWidth >= 768 ? 380 : 200);
+// Si el usuario regresa desde la página de detalle (ver caso de estudio) u otra
+// ruta, restaura el proyecto/modo cine que estaba viendo en vez de reiniciar al mosaico.
+function readRestoredCinemaIndex(): number | null {
+  try {
+    const saved = sessionStorage.getItem(CINEMA_STATE_KEY);
+    if (!saved) return null;
+    const parsed = JSON.parse(saved) as { viewMode?: "bento" | "cinema"; slug?: string };
+    if (parsed.viewMode !== "cinema" || !parsed.slug) return null;
+    const idx = projects.findIndex(p => p.slug === parsed.slug);
+    return idx >= 0 ? idx : null;
+  } catch {
+    return null;
   }
+}
+
+const MOCKUP_MIN_HEIGHT = 200;
+const MOCKUP_MAX_HEIGHT = 640;
+const MOCKUP_MOBILE_MAX_WIDTH = 260;
+
+function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeProject }: { project: Project; onExit?: () => void; fillParent?: boolean; fixedHeights?: { desktop: number; mobile: number }; onSwipeProject?: (direction: 1 | -1) => void }) {
+  const [view, setView] = useState<"desktop" | "mobile">("desktop");
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = React.useState(0);
+  const [desktopAspect, setDesktopAspect] = React.useState<number | null>(null);
+  const [mobileAspect, setMobileAspect] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    if (fillParent || fixedHeights) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setContainerWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [fillParent, fixedHeights]);
+
+  // Precarga las imágenes y captura su proporción real para que el recuadro
+  // del mockup encaje exacto con la foto, sin franjas vacías (object-contain
+  // dentro de una caja con altura distinta a la foto se veía "metida en un div").
+  // Si ya viene una altura fija (modo cine: calculada una sola vez en el padre
+  // para que no cambie de tamaño entre un proyecto y otro), esto no hace falta.
+  React.useEffect(() => {
+    if (fixedHeights) return;
+    if (project.desktopImg) {
+      const img = new Image();
+      img.onload = () => setDesktopAspect(img.naturalWidth / img.naturalHeight);
+      img.src = project.desktopImg;
+    }
+    if (project.mobileImg) {
+      const img = new Image();
+      img.onload = () => setMobileAspect(img.naturalWidth / img.naturalHeight);
+      img.src = project.mobileImg;
+    }
+  }, [project.desktopImg, project.mobileImg, fixedHeights]);
+
+  let targetHeight: number;
+  if (fixedHeights) {
+    targetHeight = view === "mobile" ? fixedHeights.mobile : fixedHeights.desktop;
+  } else if (view === "mobile") {
+    const renderWidth = Math.min(MOCKUP_MOBILE_MAX_WIDTH, containerWidth || MOCKUP_MOBILE_MAX_WIDTH);
+    targetHeight = mobileAspect ? renderWidth / mobileAspect : 480;
+  } else {
+    const renderWidth = containerWidth || 760;
+    targetHeight = desktopAspect ? renderWidth / desktopAspect : 460;
+  }
+  targetHeight = Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, targetHeight));
 
   return (
-    <div className="flex flex-col gap-4 w-full">
+    <div className={`flex flex-col gap-4 w-full ${fillParent ? "h-full min-h-0" : ""}`} ref={containerRef}>
       {/* Premium minimal floating HUD Bar above mockup */}
-      <div className="flex items-center justify-between w-full px-1">
+      <div className={`flex items-center justify-between w-full ${fillParent ? "px-3 pt-3" : "px-1"}`}>
         {/* Device selection tabs with matching styling cues */}
         <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
           <button
             onClick={() => setView("desktop")}
             className="p-1.5 rounded-full transition-all cursor-pointer"
             style={{
-              color: view === "desktop" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
-              backgroundColor: view === "desktop" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent"
+              color: view === "desktop" ? "white" : "var(--color-text-tertiary)",
+              backgroundColor: view === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
+              boxShadow: view === "desktop" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
             }}
           >
             <Monitor size={13} />
@@ -75,8 +122,9 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
             onClick={() => setView("mobile")}
             className="p-1.5 rounded-full transition-all cursor-pointer"
             style={{
-              color: view === "mobile" ? "var(--cinema-color)" : "var(--color-text-tertiary)",
-              backgroundColor: view === "mobile" ? `rgba(var(--cinema-color-rgb), 0.15)` : "transparent"
+              color: view === "mobile" ? "white" : "var(--color-text-tertiary)",
+              backgroundColor: view === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
+              boxShadow: view === "mobile" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
             }}
           >
             <Smartphone size={13} />
@@ -96,26 +144,34 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
       </div>
 
       <motion.div
-        animate={{ 
-          height: targetHeight
-        }}
-        transition={{ 
-          duration: 0.4, 
+        initial={false}
+        animate={fillParent ? { height: "100%" } : { height: targetHeight }}
+        transition={{
+          duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
         }}
-        className="relative w-full overflow-hidden rounded-xl bg-transparent"
+        drag={onSwipeProject ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.15}
+        onDragEnd={onSwipeProject ? (e, { offset, velocity }) => {
+          const swipe = Math.abs(offset.x) * velocity.x;
+          if (swipe < -8000) onSwipeProject(1);
+          else if (swipe > 8000) onSwipeProject(-1);
+        } : undefined}
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "flex-1 min-h-0" : ""} ${onSwipeProject ? "cursor-grab active:cursor-grabbing" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
           {/* Desktop View Wrapper */}
           <motion.div
+            initial={false}
             animate={{
               opacity: view === "desktop" ? 1 : 0,
               scale: view === "desktop" ? 1 : 0.96
             }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "desktop" ? "auto" : "none" }}
+            style={{ pointerEvents: view === "desktop" ? "auto" : "none", willChange: "opacity, transform" }}
           >
             {project.desktopImg ? (
               <img
@@ -133,13 +189,14 @@ function ProjectScreenshot({ project, onExit }: { project: Project; onExit?: () 
 
           {/* Mobile View Wrapper */}
           <motion.div
+            initial={false}
             animate={{
               opacity: view === "mobile" ? 1 : 0,
               scale: view === "mobile" ? 1 : 0.96
             }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "mobile" ? "auto" : "none" }}
+            style={{ pointerEvents: view === "mobile" ? "auto" : "none", willChange: "opacity, transform" }}
           >
             {project.mobileImg ? (
               <img
@@ -168,14 +225,18 @@ export default function Portfolio() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<string>("ALL");
   const [selectedType, setSelectedType] = useState<string>("ALL");
-  const [viewMode, setViewMode] = useState<"bento" | "cinema">("bento");
+  const [viewMode, setViewMode] = useState<"bento" | "cinema">(() => readRestoredCinemaIndex() !== null ? "cinema" : "bento");
 
   // Cinema Showcase Slider State
-  const [activeCinemaIndex, setActiveCinemaIndex] = useState(0);
+  const [activeCinemaIndex, setActiveCinemaIndex] = useState(() => readRestoredCinemaIndex() ?? 0);
   const [direction, setDirection] = useState<1 | -1>(1);
 
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
+
+  // Posición de scroll mientras está en modo cine, para que el overlay oscuro
+  // se desvanezca gradualmente a medida que el usuario baja.
+  const [cinemaScrollY, setCinemaScrollY] = useState(0);
 
   // Type definitions/categories for filter pills
   const availableTypes = useMemo(() => {
@@ -232,6 +293,138 @@ export default function Portfolio() {
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
   };
 
+  // Precarga en segundo plano (idle) la captura del proyecto que se mostrará
+  // en modo cine. Antes esta precarga solo ocurría dentro de ProjectScreenshot,
+  // es decir, justo cuando se monta el panel — por eso la primera vez que se
+  // entra a modo cine se nota un pequeño tirón mientras la imagen se descarga
+  // y decodifica al mismo tiempo que corren las animaciones de entrada.
+  useEffect(() => {
+    const sources = [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg].filter(
+      (src): src is string => Boolean(src)
+    );
+    if (sources.length === 0) return;
+    const preload = () => {
+      sources.forEach((src) => {
+        const img = new Image();
+        img.src = src;
+      });
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const id = window.requestIdleCallback(preload);
+      return () => window.cancelIdleCallback(id);
+    }
+    const id = window.setTimeout(preload, 200);
+    return () => window.clearTimeout(id);
+  }, [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg]);
+
+  // Altura del mockup en modo cine: se calcula una sola vez para TODO el
+  // portafolio (promedio real de proporción de cada captura) y se mide el
+  // ancho del panel en este componente padre, que nunca se desmonta al
+  // cambiar de proyecto. Así el alto queda fijo entre un proyecto y otro
+  // (solo cambia si el usuario alterna vista PC/móvil o cambia el tamaño de
+  // ventana), y el slide/fade al cambiar de proyecto no arrastra un resize.
+  const cinemaPanelRef = React.useRef<HTMLDivElement>(null);
+  const [cinemaPanelWidth, setCinemaPanelWidth] = React.useState(0);
+  const [cinemaAspect, setCinemaAspect] = React.useState<{ desktop: number | null; mobile: number | null }>({
+    desktop: null,
+    mobile: null
+  });
+
+  useEffect(() => {
+    const el = cinemaPanelRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setCinemaPanelWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let desktopSum = 0, desktopCount = 0, mobileSum = 0, mobileCount = 0;
+    const loaders = projects.flatMap(p => {
+      const tasks: Promise<void>[] = [];
+      if (p.desktopImg) {
+        tasks.push(
+          new Promise<void>(resolve => {
+            const img = new Image();
+            img.onload = () => { desktopSum += img.naturalWidth / img.naturalHeight; desktopCount++; resolve(); };
+            img.onerror = () => resolve();
+            img.src = p.desktopImg!;
+          })
+        );
+      }
+      if (p.mobileImg) {
+        tasks.push(
+          new Promise<void>(resolve => {
+            const img = new Image();
+            img.onload = () => { mobileSum += img.naturalWidth / img.naturalHeight; mobileCount++; resolve(); };
+            img.onerror = () => resolve();
+            img.src = p.mobileImg!;
+          })
+        );
+      }
+      return tasks;
+    });
+    Promise.all(loaders).then(() => {
+      if (cancelled) return;
+      setCinemaAspect({
+        desktop: desktopCount > 0 ? desktopSum / desktopCount : null,
+        mobile: mobileCount > 0 ? mobileSum / mobileCount : null
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const cinemaFixedHeights = useMemo(() => {
+    const desktopRenderWidth = cinemaPanelWidth || 760;
+    const mobileRenderWidth = Math.min(MOCKUP_MOBILE_MAX_WIDTH, cinemaPanelWidth || MOCKUP_MOBILE_MAX_WIDTH);
+    const desktop = cinemaAspect.desktop ? desktopRenderWidth / cinemaAspect.desktop : 460;
+    const mobile = cinemaAspect.mobile ? mobileRenderWidth / cinemaAspect.mobile : 480;
+    return {
+      desktop: Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, desktop)),
+      mobile: Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, mobile))
+    };
+  }, [cinemaPanelWidth, cinemaAspect]);
+
+  // Guarda el proyecto/modo actual para poder restaurarlo si el usuario
+  // navega a "ver caso de estudio" y luego regresa al portafolio.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(
+        CINEMA_STATE_KEY,
+        JSON.stringify(
+          viewMode === "cinema" && currentCinemaProject
+            ? { viewMode: "cinema", slug: currentCinemaProject.slug }
+            : { viewMode: "bento" }
+        )
+      );
+    } catch {
+      // sessionStorage no disponible (modo privado, etc.) — no es crítico
+    }
+  }, [viewMode, currentCinemaProject]);
+
+  // Si el modo cine se restauró al montar (usuario volviendo desde el caso
+  // de estudio), no hay animación de colapso de header de por medio, así
+  // que el scroll puede hacerse de inmediato.
+  useEffect(() => {
+    if (viewMode === "cinema") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rastrea el scroll mientras está en modo cine para desvanecer el overlay
+  // oscuro a medida que el usuario avanza hacia la siguiente sección.
+  useEffect(() => {
+    if (viewMode !== "cinema") return;
+    const handleScroll = () => setCinemaScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [viewMode]);
+
   useEffect(() => {
     if (viewMode !== "cinema") {
       document.documentElement.style.removeProperty("--cinema-color");
@@ -239,7 +432,6 @@ export default function Portfolio() {
       return;
     }
     const color = currentCinemaProject?.cinemaColor || "#6366f1";
-    console.log("Cinema project:", currentCinemaProject?.slug, currentCinemaProject?.cinemaColor);
     document.documentElement.style.setProperty("--cinema-color", color);
     // Convertir hex a RGB para usar con opacity
     const r = parseInt(color.slice(1,3), 16);
@@ -253,7 +445,7 @@ export default function Portfolio() {
   }, [currentCinemaProject, viewMode, activeCinemaIndex]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
       <Navbar />
 
 
@@ -274,6 +466,14 @@ export default function Portfolio() {
             marginBottom: viewMode === "cinema" ? 0 : undefined,
           }}
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+          onAnimationComplete={() => {
+            // Recién aquí el header terminó de colapsar (toggle manual a modo
+            // cine); antes de esto el panel todavía no está en su posición
+            // final, así que hacer scroll antes dejaría la vista descuadrada.
+            if (viewMode === "cinema") {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          }}
         >
           {/* Header */}
           <section className="text-center space-y-4 mb-12 relative select-none">
@@ -374,7 +574,7 @@ export default function Portfolio() {
             {/* Plan filter */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)] tracking-wider mr-2">
-                <T en="Scale Plan:">Plan de Escala:</T>
+                <T en="Scale Plan:">Paquete de Escala:</T>
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {plans.map((plan) => (
@@ -391,7 +591,9 @@ export default function Portfolio() {
                         : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
-                    {plan === "ALL" ? (language === "es" ? "Todos los Planes" : "All Plans") : `Plan ${plan}`}
+                    {plan === "ALL"
+                      ? (language === "es" ? "Todos los Paquetes" : "All Plans")
+                      : (language === "es" ? `Paquete ${plan}` : `Plan ${plan}`)}
                   </button>
                 ))}
               </div>
@@ -409,7 +611,7 @@ export default function Portfolio() {
                     onClick={() => setSelectedType(type)}
                     className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
                       selectedType === type
-                        ? "bg-purple-500/15 text-purple-400 border border-purple-500/35"
+                        ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/35"
                         : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
@@ -489,7 +691,7 @@ export default function Portfolio() {
                         }`}
                       >
                         <T en={`Plan ${project.planEN || project.plan}`}>
-                          Plan {project.plan}
+                          Paquete {project.plan}
                         </T>
                       </span>
                       <p className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest leading-none pt-0.5">
@@ -497,10 +699,10 @@ export default function Portfolio() {
                       </p>
                     </div>
 
-                    <div className="flex gap-2 items-start">
+                    <div className="flex gap-2 items-center">
                       {project.isConcept && (
                         <span className="px-3 py-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full text-[9px] font-extrabold text-[var(--color-text-tertiary)] uppercase tracking-wider leading-none">
-                          <T en="Prototype">Demo Interactiva</T>
+                          <T en="Demo">Demo</T>
                         </span>
                       )}
                       
@@ -511,7 +713,7 @@ export default function Portfolio() {
                             e.stopPropagation();
                             window.open(project.liveUrl, "_blank");
                           }}
-                          className="p-2.5 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-indigo-400 hover:border-indigo-400/30 transition-all cursor-pointer shadow-sm"
+                          className="p-2.5 rounded-full bg-indigo-500 text-white hover:bg-indigo-400 hover:scale-110 transition-all cursor-pointer shadow-md shadow-indigo-500/30"
                           title={language === "es" ? "Ver sitio en vivo" : "View live site"}
                         >
                           <ExternalLink size={16} />
@@ -570,7 +772,7 @@ export default function Portfolio() {
 
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-transparent">
-                    <ProjectScreenshot project={project} />
+                    <ProjectScreenshot project={project} fillParent />
                   </div>
 
                   {/* Click to open full details banner on hover */}
@@ -588,18 +790,35 @@ export default function Portfolio() {
         )}
 
         {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
+        {/* Oscurece toda la pantalla (efecto "sala de cine"). El contenedor
+            externo solo anima la entrada/salida al activar/desactivar el modo
+            cine; el div interno fija su opacidad directamente desde el scroll
+            (sin pasar por el motor de animación de Framer) para que siga el
+            scroll 1:1 y no se vea con retraso/inercia mientras se hace scroll. */}
         <AnimatePresence>
           {viewMode === "cinema" && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-[var(--color-surface-base)]/75 backdrop-blur-sm z-10 pointer-events-none"
-            />
+              className="fixed inset-0 z-10 pointer-events-none"
+            >
+              <div
+                className="absolute inset-0 bg-black"
+                style={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
+              />
+            </motion.div>
           )}
         </AnimatePresence>
-        {viewMode === "cinema" && filteredProjects.length > 0 && (
-          <div className="relative">
+        <AnimatePresence>
+          {viewMode === "cinema" && filteredProjects.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="relative scroll-mt-20"
+            >
             <div className="relative z-20">
               <motion.div
                 animate={{
@@ -626,12 +845,6 @@ export default function Portfolio() {
               className="absolute right-0 top-0 h-full w-40 z-10 pointer-events-none"
               style={{ background: `linear-gradient(to left, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
             />
-
-            {/* Vignette arriba */}
-            <div className="absolute top-0 left-0 w-full h-16 bg-gradient-to-b from-black/30 to-transparent z-10 pointer-events-none" />
-
-            {/* Vignette abajo */}
-            <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-black/30 to-transparent z-10 pointer-events-none" />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
@@ -756,7 +969,7 @@ export default function Portfolio() {
 
               {/* Right Column: Large Dynamic Interactive Mockup */}
               <div className="lg:col-span-7 flex justify-center items-center relative z-10">
-                <div className="w-full max-w-[550px] relative">
+                <div className="w-full max-w-[550px] relative" ref={cinemaPanelRef}>
                   
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <AnimatePresence mode="wait" custom={direction}>
@@ -767,24 +980,17 @@ export default function Portfolio() {
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: direction * -40 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="relative"
-                      style={{
-                        filter: `drop-shadow(0 0 60px rgba(var(--cinema-color-rgb), 0.55)) drop-shadow(0 0 120px rgba(var(--cinema-color-rgb), 0.25))`
-                      }}
+                      layout={false}
+                      className="relative w-full"
+                      style={{ willChange: "opacity, transform" }}
                     >
-                      <div className="relative">
-                        {/* Glow solo aquí, scope reducido al mockup */}
-                        <div
-                          className="absolute inset-0 pointer-events-none -z-10 rounded-3xl"
-                          style={{
-                            background: `radial-gradient(ellipse 80% 60% at 50% 50%, rgba(var(--cinema-color-rgb), 0.18) 0%, transparent 70%)`,
-                            transition: "background 0.8s ease"
-                          }}
-                        />
+                      <div className="relative w-full">
                         {/* Mockup (laptop/imagen) va aquí, nada más */}
-                        <ProjectScreenshot 
-                          project={currentCinemaProject} 
-                          onExit={() => setViewMode("bento")} 
+                        <ProjectScreenshot
+                          project={currentCinemaProject}
+                          onExit={() => setViewMode("bento")}
+                          fixedHeights={cinemaFixedHeights}
+                          onSwipeProject={(dir) => (dir === 1 ? handleNextCinema() : handlePrevCinema())}
                         />
                       </div>
                     </motion.div>
@@ -833,8 +1039,9 @@ export default function Portfolio() {
             </motion.div>
           </motion.div>
             </div>
-          </div>
-        )}
+          </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Case Study Detail Quick view Modal */}
         <AnimatePresence>
@@ -873,7 +1080,7 @@ export default function Portfolio() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <span className="px-3 py-1 text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-                          Plan {selectedProjectForQuickView.plan}
+                          {language === "es" ? "Paquete" : "Plan"} {selectedProjectForQuickView.plan}
                         </span>
                         <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)]">
                           <T en={selectedProjectForQuickView.typeEN || selectedProjectForQuickView.type}>

@@ -48,7 +48,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative pt-20">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative pt-20">
       <Navbar />
       <div className="flex-1 flex items-center justify-center p-4">
         <motion.div

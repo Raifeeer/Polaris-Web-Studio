@@ -438,7 +438,7 @@ export default function QuoteBot() {
                       onClick={resetChat}
                       className="w-full py-3 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-xl text-[var(--color-text-primary)] text-xs font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[var(--color-surface-highlight)] transition-colors"
                     >
-                      <T en="View Plans">Ver Planes</T> <ArrowRight size={14} />
+                      <T en="View Plans">Ver Paquetes</T> <ArrowRight size={14} />
                     </Link>
                     <a
                       href={`https://wa.me/18299200544?text=${encodeURIComponent(
