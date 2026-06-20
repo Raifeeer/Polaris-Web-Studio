@@ -657,8 +657,21 @@ export default function Portfolio() {
             >
               {/* Oscurece los alrededores del panel (efecto "sala de cine"). Va
                   acoplado a esta sección (no fixed al viewport) para que se
-                  aclare apenas el usuario hace scroll más allá del modo cine. */}
-              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-screen bg-black/55 backdrop-blur-sm z-0 pointer-events-none" />
+                  aclare apenas el usuario hace scroll más allá del modo cine.
+                  Se extiende un poco más allá del panel y se desvanece en los
+                  bordes (en vez de un bloque sólido) para evitar un corte
+                  brusco hacia las secciones vecinas. */}
+              <div
+                className="absolute -inset-y-20 left-1/2 -translate-x-1/2 w-screen z-0 pointer-events-none backdrop-blur-sm"
+                style={{
+                  background:
+                    "linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.55) 15%, rgba(0,0,0,0.55) 85%, transparent 100%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
+                  maskImage:
+                    "linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)",
+                }}
+              />
 
             <div className="relative z-20">
               <motion.div
