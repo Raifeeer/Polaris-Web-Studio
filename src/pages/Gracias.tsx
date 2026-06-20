@@ -126,7 +126,7 @@ export default function Gracias() {
             <div className="space-y-4 pt-4 md:pt-0">
               <div>
                 <span className="text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] font-bold block mb-1">
-                  <T en="Plan Chosen">Plan Seleccionado</T>
+                  <T en="Plan Chosen">Paquete Seleccionado</T>
                 </span>
                 <span className="font-bold text-base text-[var(--color-text-primary)]">
                   {state.planName ? state.planName : <T en="Custom Setup">Personalizado</T>}

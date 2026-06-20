@@ -167,7 +167,7 @@ export default function ProjectDetail() {
                   }`}
                 >
                   <T en={`Plan ${project.planEN || project.plan}`}>
-                    Plan {project.plan}
+                    Paquete {project.plan}
                   </T>
                 </span>
                 <span className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest">

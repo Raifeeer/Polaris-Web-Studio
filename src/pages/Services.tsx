@@ -267,7 +267,7 @@ function PlanCard({
             : "bg-[var(--color-surface-base)] border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)]"
         }`}
       >
-        <T en="Choose this Plan">Elegir este Plan</T>
+        <T en="Choose this Plan">Elegir este Paquete</T>
       </button>
     </motion.div>
   );
@@ -990,7 +990,7 @@ export default function Services() {
           <section className="space-y-12 text-center">
             <div className="flex flex-col items-center gap-6">
               <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
-                <T en="Our Plans">Nuestros Planes</T>
+                <T en="Our Plans">Nuestros Paquetes</T>
               </span>
               <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
                 <T
@@ -1133,7 +1133,7 @@ export default function Services() {
                      {/* Action buttons row */}
                     <tr className="border-t border-[var(--color-border-subtle)]">
                       <td className="p-4 bg-[var(--color-surface-base)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] select-none">
-                        <T en="Select Plan">Seleccionar Plan</T>
+                        <T en="Select Plan">Seleccionar Paquete</T>
                       </td>
                       <td className="p-4 bg-[var(--color-surface-base)] text-center">
                         <div className="flex flex-col items-center gap-1.5">
@@ -1142,7 +1142,7 @@ export default function Services() {
                             style={{ cursor: "pointer" }}
                             className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
                           >
-                            <T en="Choose this Plan">Elegir este Plan</T>
+                            <T en="Choose this Plan">Elegir este Paquete</T>
                           </button>
                         </div>
                       </td>
@@ -1153,7 +1153,7 @@ export default function Services() {
                             style={{ cursor: "pointer" }}
                             className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md border-none whitespace-nowrap cursor-pointer"
                           >
-                            <T en="Choose this Plan">Elegir este Plan</T>
+                            <T en="Choose this Plan">Elegir este Paquete</T>
                           </button>
                         </div>
                       </td>
@@ -1164,7 +1164,7 @@ export default function Services() {
                             style={{ cursor: "pointer" }}
                             className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
                           >
-                            <T en="Choose this Plan">Elegir este Plan</T>
+                            <T en="Choose this Plan">Elegir este Paquete</T>
                           </button>
                         </div>
                       </td>

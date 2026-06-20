@@ -51,7 +51,7 @@ const MOCKUP_MIN_HEIGHT = 200;
 const MOCKUP_MAX_HEIGHT = 640;
 const MOCKUP_MOBILE_MAX_WIDTH = 260;
 
-function ProjectScreenshot({ project, onExit, fillParent }: { project: Project; onExit?: () => void; fillParent?: boolean }) {
+function ProjectScreenshot({ project, onExit, fillParent, fixedHeights }: { project: Project; onExit?: () => void; fillParent?: boolean; fixedHeights?: { desktop: number; mobile: number } }) {
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
@@ -59,7 +59,7 @@ function ProjectScreenshot({ project, onExit, fillParent }: { project: Project; 
   const [mobileAspect, setMobileAspect] = React.useState<number | null>(null);
 
   React.useEffect(() => {
-    if (fillParent) return;
+    if (fillParent || fixedHeights) return;
     const el = containerRef.current;
     if (!el) return;
     const observer = new ResizeObserver(entries => {
@@ -68,12 +68,15 @@ function ProjectScreenshot({ project, onExit, fillParent }: { project: Project; 
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [fillParent]);
+  }, [fillParent, fixedHeights]);
 
   // Precarga las imágenes y captura su proporción real para que el recuadro
   // del mockup encaje exacto con la foto, sin franjas vacías (object-contain
   // dentro de una caja con altura distinta a la foto se veía "metida en un div").
+  // Si ya viene una altura fija (modo cine: calculada una sola vez en el padre
+  // para que no cambie de tamaño entre un proyecto y otro), esto no hace falta.
   React.useEffect(() => {
+    if (fixedHeights) return;
     if (project.desktopImg) {
       const img = new Image();
       img.onload = () => setDesktopAspect(img.naturalWidth / img.naturalHeight);
@@ -84,10 +87,12 @@ function ProjectScreenshot({ project, onExit, fillParent }: { project: Project; 
       img.onload = () => setMobileAspect(img.naturalWidth / img.naturalHeight);
       img.src = project.mobileImg;
     }
-  }, [project.desktopImg, project.mobileImg]);
+  }, [project.desktopImg, project.mobileImg, fixedHeights]);
 
   let targetHeight: number;
-  if (view === "mobile") {
+  if (fixedHeights) {
+    targetHeight = view === "mobile" ? fixedHeights.mobile : fixedHeights.desktop;
+  } else if (view === "mobile") {
     const renderWidth = Math.min(MOCKUP_MOBILE_MAX_WIDTH, containerWidth || MOCKUP_MOBILE_MAX_WIDTH);
     targetHeight = mobileAspect ? renderWidth / mobileAspect : 480;
   } else {
@@ -304,6 +309,78 @@ export default function Portfolio() {
     return () => window.clearTimeout(id);
   }, [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg]);
 
+  // Altura del mockup en modo cine: se calcula una sola vez para TODO el
+  // portafolio (promedio real de proporción de cada captura) y se mide el
+  // ancho del panel en este componente padre, que nunca se desmonta al
+  // cambiar de proyecto. Así el alto queda fijo entre un proyecto y otro
+  // (solo cambia si el usuario alterna vista PC/móvil o cambia el tamaño de
+  // ventana), y el slide/fade al cambiar de proyecto no arrastra un resize.
+  const cinemaPanelRef = React.useRef<HTMLDivElement>(null);
+  const [cinemaPanelWidth, setCinemaPanelWidth] = React.useState(0);
+  const [cinemaAspect, setCinemaAspect] = React.useState<{ desktop: number | null; mobile: number | null }>({
+    desktop: null,
+    mobile: null
+  });
+
+  useEffect(() => {
+    const el = cinemaPanelRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      const width = entries[0]?.contentRect.width;
+      if (width) setCinemaPanelWidth(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let desktopSum = 0, desktopCount = 0, mobileSum = 0, mobileCount = 0;
+    const loaders = projects.flatMap(p => {
+      const tasks: Promise<void>[] = [];
+      if (p.desktopImg) {
+        tasks.push(
+          new Promise<void>(resolve => {
+            const img = new Image();
+            img.onload = () => { desktopSum += img.naturalWidth / img.naturalHeight; desktopCount++; resolve(); };
+            img.onerror = () => resolve();
+            img.src = p.desktopImg!;
+          })
+        );
+      }
+      if (p.mobileImg) {
+        tasks.push(
+          new Promise<void>(resolve => {
+            const img = new Image();
+            img.onload = () => { mobileSum += img.naturalWidth / img.naturalHeight; mobileCount++; resolve(); };
+            img.onerror = () => resolve();
+            img.src = p.mobileImg!;
+          })
+        );
+      }
+      return tasks;
+    });
+    Promise.all(loaders).then(() => {
+      if (cancelled) return;
+      setCinemaAspect({
+        desktop: desktopCount > 0 ? desktopSum / desktopCount : null,
+        mobile: mobileCount > 0 ? mobileSum / mobileCount : null
+      });
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const cinemaFixedHeights = useMemo(() => {
+    const desktopRenderWidth = cinemaPanelWidth || 760;
+    const mobileRenderWidth = Math.min(MOCKUP_MOBILE_MAX_WIDTH, cinemaPanelWidth || MOCKUP_MOBILE_MAX_WIDTH);
+    const desktop = cinemaAspect.desktop ? desktopRenderWidth / cinemaAspect.desktop : 460;
+    const mobile = cinemaAspect.mobile ? mobileRenderWidth / cinemaAspect.mobile : 480;
+    return {
+      desktop: Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, desktop)),
+      mobile: Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, mobile))
+    };
+  }, [cinemaPanelWidth, cinemaAspect]);
+
   // Guarda el proyecto/modo actual para poder restaurarlo si el usuario
   // navega a "ver caso de estudio" y luego regresa al portafolio.
   useEffect(() => {
@@ -489,7 +566,7 @@ export default function Portfolio() {
             {/* Plan filter */}
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)] tracking-wider mr-2">
-                <T en="Scale Plan:">Plan de Escala:</T>
+                <T en="Scale Plan:">Paquete de Escala:</T>
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {plans.map((plan) => (
@@ -506,7 +583,9 @@ export default function Portfolio() {
                         : "bg-[var(--color-surface-base)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] hover:text-[var(--color-text-primary)]"
                     }`}
                   >
-                    {plan === "ALL" ? (language === "es" ? "Todos los Planes" : "All Plans") : `Plan ${plan}`}
+                    {plan === "ALL"
+                      ? (language === "es" ? "Todos los Paquetes" : "All Plans")
+                      : (language === "es" ? `Paquete ${plan}` : `Plan ${plan}`)}
                   </button>
                 ))}
               </div>
@@ -604,7 +683,7 @@ export default function Portfolio() {
                         }`}
                       >
                         <T en={`Plan ${project.planEN || project.plan}`}>
-                          Plan {project.plan}
+                          Paquete {project.plan}
                         </T>
                       </span>
                       <p className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest leading-none pt-0.5">
@@ -882,7 +961,7 @@ export default function Portfolio() {
 
               {/* Right Column: Large Dynamic Interactive Mockup */}
               <div className="lg:col-span-7 flex justify-center items-center relative z-10">
-                <div className="w-full max-w-[550px] relative">
+                <div className="w-full max-w-[550px] relative" ref={cinemaPanelRef}>
                   
                   {/* Mockup Frame presentation with custom responsive scale */}
                   <AnimatePresence mode="wait" custom={direction}>
@@ -910,9 +989,10 @@ export default function Portfolio() {
                           }}
                         />
                         {/* Mockup (laptop/imagen) va aquí, nada más */}
-                        <ProjectScreenshot 
-                          project={currentCinemaProject} 
-                          onExit={() => setViewMode("bento")} 
+                        <ProjectScreenshot
+                          project={currentCinemaProject}
+                          onExit={() => setViewMode("bento")}
+                          fixedHeights={cinemaFixedHeights}
                         />
                       </div>
                     </motion.div>
@@ -1002,7 +1082,7 @@ export default function Portfolio() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
                         <span className="px-3 py-1 text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
-                          Plan {selectedProjectForQuickView.plan}
+                          {language === "es" ? "Paquete" : "Plan"} {selectedProjectForQuickView.plan}
                         </span>
                         <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)]">
                           <T en={selectedProjectForQuickView.typeEN || selectedProjectForQuickView.type}>
