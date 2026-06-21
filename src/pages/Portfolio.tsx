@@ -133,11 +133,12 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             </button>
           </div>
 
-          {/* Abre el sitio en vivo del proyecto en una pestaña nueva */}
-          {project.liveUrl && (
+          {/* Abre el sitio en vivo del proyecto en una pestaña nueva — solo en
+              modo cine: en mosaico bento ya existe este botón afuera de la tarjeta. */}
+          {!fillParent && project.liveUrl && (
             <button
               onClick={() => window.open(project.liveUrl, "_blank")}
-              className="p-1.5 rounded-full bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--cinema-color,_#6366f1)] hover:border-[var(--cinema-color,_#6366f1)]/40 transition-all cursor-pointer shadow-sm"
+              className="p-2.5 rounded-full bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--cinema-color,_#6366f1)] hover:border-[var(--cinema-color,_#6366f1)]/40 transition-all cursor-pointer shadow-sm"
               aria-label="Ver proyecto en una pestaña nueva"
               title="Ver proyecto en vivo"
             >

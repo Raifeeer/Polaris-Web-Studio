@@ -90,9 +90,9 @@ function ProjectImageCarousel({
             initial={false}
             animate={{
               opacity: active === img.type ? 1 : 0,
-              scale: active === img.type ? 1 : 0.96,
+              scale: active === img.type ? 1 : 0.98,
             }}
-            transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: active === img.type ? "auto" : "none" }}
           >
