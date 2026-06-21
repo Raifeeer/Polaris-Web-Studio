@@ -79,6 +79,8 @@ export default function LandingPage() {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   const { language } = useLanguage();
   const [activeSection, setActiveSection] = useState<string>("inicio");
+  // Misma fecha límite de la oferta de lanzamiento usada en Services.tsx (25% de descuento)
+  const [isOfferActive] = useState(() => Date.now() < new Date("2026-07-18T23:59:59Z").getTime());
 
   useEffect(() => {
     const metaData: Record<
@@ -477,7 +479,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform transition-all"
+            className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform"
           >
             <Link
               to="/blog/landing-pages-conversion"
@@ -544,7 +546,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform transition-all"
+            className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform"
           >
             <Link
               to="/blog/ecommerce-alto-nivel"
@@ -614,7 +616,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform transition-all"
+            className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform"
           >
             <Link
               to="/blog/webs-corporativas-identidad"
@@ -758,7 +760,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 initial={{ opacity: 0, y: 20 }}
                 viewport={{ once: true }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -840,7 +842,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -926,7 +928,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.2 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -1053,7 +1055,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4 }}
-                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1124,7 +1126,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.15 }}
-                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1196,7 +1198,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: 0.3 }}
-                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform transition-all"
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1298,7 +1300,7 @@ export default function LandingPage() {
                 <div
                   key={i}
                   onClick={() => navigate(`/portafolio/${p.slug}`)}
-                  className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-all duration-300 cursor-pointer bento-glow-hover will-change-transform transition-all"
+                  className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 cursor-pointer bento-glow-hover will-change-transform"
                 >
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
@@ -1837,7 +1839,7 @@ export default function LandingPage() {
               <T en="Transparent Pricing">Inversión Transparente</T>
             </span>
             <h2 className="text-4xl md:text-6xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
-              <T en="The right plan">El plan correcto</T>
+              <T en="The right plan">El paquete correcto</T>
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)]">
                 <T en="for every stage">para cada etapa</T>
@@ -1859,16 +1861,25 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0 }}
-              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-amber-500/30 transition-all group"
+              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-amber-500/30 transition-colors group"
             >
               <div className="flex items-start justify-between">
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2 block">
-                    <T en="Flash Package">Plan Destello</T>
+                    <T en="Flash Package">Paquete Destello</T>
                   </span>
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">$299</span>
-                    <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                  <div className="flex flex-col gap-0.5">
+                    {isOfferActive && (
+                      <span className="text-base font-display font-medium line-through text-[var(--color-text-tertiary)] opacity-60">
+                        $299
+                      </span>
+                    )}
+                    <div className="flex items-end gap-1">
+                      <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">
+                        ${isOfferActive ? Math.round(299 * 0.75) : 299}
+                      </span>
+                      <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                    </div>
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
@@ -1886,6 +1897,7 @@ export default function LandingPage() {
                   { es: "Botón de WhatsApp integrado", en: "WhatsApp button integrated" },
                   { es: "SEO On-Page incluido", en: "On-Page SEO included" },
                   { es: "Entrega en 1–2 semanas", en: "Delivered in 1–2 weeks" },
+                  { es: "30 días de garantía post-lanzamiento", en: "30-day post-launch warranty" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-amber-500 shrink-0" />
@@ -1918,11 +1930,20 @@ export default function LandingPage() {
               <div className="flex items-start justify-between pt-2">
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-2 block">
-                    <T en="Constellation Package">Plan Constelación</T>
+                    <T en="Constellation Package">Paquete Constelación</T>
                   </span>
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">$699</span>
-                    <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                  <div className="flex flex-col gap-0.5">
+                    {isOfferActive && (
+                      <span className="text-base font-display font-medium line-through text-[var(--color-text-tertiary)] opacity-60">
+                        $699
+                      </span>
+                    )}
+                    <div className="flex items-end gap-1">
+                      <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">
+                        ${isOfferActive ? Math.round(699 * 0.75) : 699}
+                      </span>
+                      <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                    </div>
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 flex items-center justify-center">
@@ -1936,11 +1957,12 @@ export default function LandingPage() {
               </p>
               <ul className="space-y-2.5 flex-1">
                 {[
-                  { es: "Todo lo del Plan Destello", en: "Everything in Flash Plan" },
+                  { es: "Todo lo del Paquete Destello", en: "Everything in Flash Plan" },
                   { es: "Hasta 5 páginas independientes", en: "Up to 5 independent pages" },
                   { es: "Chatbot 24/7 con IA", en: "24/7 AI Chatbot" },
                   { es: "SEO Técnico + Search Console", en: "Technical SEO + Search Console" },
                   { es: "Google Analytics 4", en: "Google Analytics 4" },
+                  { es: "60 días de garantía post-lanzamiento", en: "60-day post-launch warranty" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-[var(--color-primary-base)] shrink-0" />
@@ -1962,16 +1984,25 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-violet-500/30 transition-all group"
+              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-violet-500/30 transition-colors group"
             >
               <div className="flex items-start justify-between">
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 mb-2 block">
-                    Plan Nova
+                    <T en="Nova Package">Paquete Nova</T>
                   </span>
-                  <div className="flex items-end gap-1">
-                    <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">$1,299</span>
-                    <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                  <div className="flex flex-col gap-0.5">
+                    {isOfferActive && (
+                      <span className="text-base font-display font-medium line-through text-[var(--color-text-tertiary)] opacity-60">
+                        $1,299
+                      </span>
+                    )}
+                    <div className="flex items-end gap-1">
+                      <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">
+                        ${isOfferActive ? Math.round(1299 * 0.75).toLocaleString() : "1,299"}
+                      </span>
+                      <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                    </div>
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
@@ -1985,11 +2016,12 @@ export default function LandingPage() {
               </p>
               <ul className="space-y-2.5 flex-1">
                 {[
-                  { es: "Todo lo del Plan Constelación", en: "Everything in Constellation Plan" },
+                  { es: "Todo lo del Paquete Constelación", en: "Everything in Constellation Plan" },
                   { es: "E-commerce + Stripe y PayPal", en: "E-commerce + Stripe & PayPal" },
                   { es: "Panel admin personalizado", en: "Custom admin panel" },
                   { es: "Schema Markup para Google", en: "Schema Markup for Google" },
                   { es: "1 herramienta IA incluida", en: "1 AI tool included" },
+                  { es: "90 días de garantía prioritaria", en: "90-day priority warranty" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-violet-400 shrink-0" />
@@ -2009,8 +2041,8 @@ export default function LandingPage() {
           {/* Bottom note */}
           <div className="text-center space-y-3">
             <p className="text-xs text-[var(--color-text-tertiary)]">
-              <T en="All plans include free domain (1st year), SSL, Vercel hosting and 30 days of post-launch support.">
-                Todos los planes incluyen dominio gratis (1er año), SSL, hosting en Vercel y 30 días de soporte post-lanzamiento.
+              <T en="All packages include a domain up to $15 USD (1st year), SSL and managed hosting.">
+                Todos los paquetes incluyen dominio web hasta $15 USD (1er año), SSL y hosting administrado.
               </T>
             </p>
             <button
