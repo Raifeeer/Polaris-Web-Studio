@@ -396,7 +396,7 @@ export default function QuoteBot() {
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-4"
                 >
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-primary-base)] to-[var(--color-primary-strong)] text-white shadow-xl">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[var(--color-primary-base)] to-[var(--color-primary-hover)] text-white shadow-xl">
                     <p className="text-sm leading-relaxed mb-4">
                       <T
                         en={

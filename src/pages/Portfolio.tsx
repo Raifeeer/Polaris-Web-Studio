@@ -53,6 +53,7 @@ const MOCKUP_MAX_HEIGHT = 640;
 const MOCKUP_MOBILE_MAX_WIDTH = 260;
 
 function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeProject }: { project: Project; onExit?: () => void; fillParent?: boolean; fixedHeights?: { desktop: number; mobile: number }; onSwipeProject?: (direction: 1 | -1) => void }) {
+  const { translate } = useLanguage();
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
@@ -139,8 +140,8 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             <button
               onClick={() => window.open(project.liveUrl, "_blank")}
               className="p-2.5 rounded-full bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--cinema-color,_#6366f1)] hover:border-[var(--cinema-color,_#6366f1)]/40 transition-all cursor-pointer shadow-sm"
-              aria-label="Ver proyecto en una pestaña nueva"
-              title="Ver proyecto en vivo"
+              aria-label={translate("Ver proyecto en una pestaña nueva", "Open project in a new tab")}
+              title={translate("Ver proyecto en vivo", "View live project")}
             >
               <ExternalLink size={13} />
             </button>
@@ -235,7 +236,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
 
 export default function Portfolio() {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, translate } = useLanguage();
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState("");
@@ -1019,7 +1020,7 @@ export default function Portfolio() {
                     <button
                       onClick={handlePrevCinema}
                       className="p-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer active:scale-90"
-                      aria-label="Previous project"
+                      aria-label={translate("Proyecto anterior", "Previous project")}
                     >
                       <ChevronLeft size={20} strokeWidth={1.5} />
                     </button>
@@ -1043,7 +1044,7 @@ export default function Portfolio() {
                     <button
                       onClick={handleNextCinema}
                       className="p-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer active:scale-90"
-                      aria-label="Next project"
+                      aria-label={translate("Siguiente proyecto", "Next project")}
                     >
                       <ChevronRight size={20} strokeWidth={1.5} />
                     </button>
@@ -1093,7 +1094,7 @@ export default function Portfolio() {
                 <button
                   onClick={() => setSelectedProjectForQuickView(null)}
                   className="absolute top-4 right-4 p-2 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-white cursor-pointer transition-all"
-                  aria-label="Cerrar detalles"
+                  aria-label={translate("Cerrar detalles", "Close details")}
                 >
                   <X size={18} />
                 </button>

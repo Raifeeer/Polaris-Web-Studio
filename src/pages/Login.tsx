@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, translate } = useLanguage();
   const { login, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -100,8 +100,8 @@ export default function Login() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={language === "es" ? "Contraseña" : "Password"}
-                  aria-label="Contraseña"
+                  placeholder={translate("Contraseña", "Password")}
+                  aria-label={translate("Contraseña", "Password")}
                   className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
               </div>

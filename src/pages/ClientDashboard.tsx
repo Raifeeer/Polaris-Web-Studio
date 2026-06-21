@@ -2979,7 +2979,7 @@ export default function ClientDashboard() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-bg-base)]/80 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--color-surface-base)]/80 backdrop-blur-sm"
             >
               <motion.div
                 initial={{ y: 20, scale: 0.95 }}
@@ -3038,7 +3038,7 @@ export default function ClientDashboard() {
                           placeholder="0000 0000 0000 0000"
                           value={ccNumber}
                           onChange={(e) => setCcNumber(e.target.value)}
-                          className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                          className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -3049,7 +3049,7 @@ export default function ClientDashboard() {
                             placeholder="MM/YY"
                             value={ccExpiry}
                             onChange={(e) => setCcExpiry(e.target.value)}
-                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                           />
                         </div>
                         <div className="space-y-1">
@@ -3059,7 +3059,7 @@ export default function ClientDashboard() {
                             placeholder="123"
                             value={ccCvc}
                             onChange={(e) => setCcCvc(e.target.value)}
-                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
                           />
                         </div>
                       </div>

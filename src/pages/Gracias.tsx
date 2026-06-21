@@ -87,7 +87,7 @@ export default function Gracias() {
             transition={{ delay: 0.1 }}
             className="text-4xl md:text-5xl font-display font-black tracking-tight"
           >
-            <T en="¡Thank you! We're ready.">¡Muchísimas Gracias!</T>
+            <T en="Thank you! We're ready.">¡Muchísimas Gracias!</T>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 15 }}

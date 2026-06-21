@@ -195,7 +195,7 @@ export const projects: Project[] = [
     challenge:
       "Hacer que el proceso de navegar, agregar al carrito y pagar sea tan fácil que el cliente no abandone la compra a la mitad, además de sugerir productos con inteligencia artificial.",
     challengeEN:
-      "Make diving, adding to cart, and paying so easy that the client doesn't abandon the purchase halfway, while also suggesting products with AI.",
+      "Make browsing, adding to cart, and paying so easy that the client doesn't abandon the purchase halfway, while also suggesting products with AI.",
     solution:
       "Una tienda online clara y atractiva, con un proceso de pago seguro y donde el cliente siempre encuentra fácilmente lo que busca gracias a un asistente virtual de IA.",
     solutionEN:

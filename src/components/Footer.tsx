@@ -193,7 +193,7 @@ export default function Footer({
                   <>
                     100% Remote Operation.
                     <br />
-                    Basados en República Dominicana.
+                    Based in the Dominican Republic.
                   </>
                 }
               >

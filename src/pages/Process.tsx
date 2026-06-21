@@ -247,7 +247,7 @@ export default function Process() {
         </T>
       ),
       desc: (
-        <T en="We deploy your custom solution to secure, global CDN-powered cloud hosting. We then submit sitemaps, verify SSL cert status, index directories, and trigger automated health watchdogs to ensure stable uptime and conversion readiness from second one.">
+        <T en="We deploy your site securely through a global content delivery network (CDN). We handle SEO indexing, automated SSL certificates, and server monitoring, then open your exclusive support period.">
           Desplegamos tu sitio de forma segura mediante redes de entrega global
           de datos (CDN). Nos encargamos de la indexación SEO, certificados SSL
           automatizados, monitoreo de servidor y abrimos tu periodo de soporte
@@ -603,7 +603,7 @@ export default function Process() {
                   }}
                   className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[var(--color-primary-base)] text-white font-bold text-xs uppercase tracking-wider hover:brightness-110 active:scale-[0.98] shadow-lg shadow-[var(--color-primary-base)]/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <T en="Book Live Consultation">
+                  <T en="Book Free Live Consultation">
                     Agendar Consultoría Gratuita
                   </T>
                   <ArrowRight size={14} />

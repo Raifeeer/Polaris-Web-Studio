@@ -26,7 +26,7 @@ import { T, useLanguage } from "../context/LanguageContext";
 export default function Blog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, translate } = useLanguage();
 
   // Search, Categories, Sort, Date range Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
@@ -223,7 +223,10 @@ export default function Blog() {
               <input
                 id="blog-search-input"
                 type="text"
-                placeholder={language === "en" ? "Search conceptually (e.g. 'speed', 'google ranking', 'shopify')..." : "Busca conceptualmente (ej: 'rapidez', 'posicionar en google', 'vender')..."}
+                placeholder={translate(
+                  "Busca conceptualmente (ej: 'rapidez', 'posicionar en google', 'vender')...",
+                  "Search conceptually (e.g. 'speed', 'google ranking', 'shopify')..."
+                )}
                 value={searchQuery}
                 onChange={(e) => handleQueryChange(e.target.value)}
                 className="glass-input w-full text-[var(--color-text-primary)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl py-3.5 pl-12 pr-28 text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all font-mono"

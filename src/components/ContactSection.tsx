@@ -106,7 +106,7 @@ export default function ContactSection() {
               </div>
               <div>
                 <p className="text-[var(--color-text-tertiary)] text-[9px] font-bold uppercase tracking-widest">
-                  WhatsApp Direct
+                  <T en="WhatsApp Direct">WhatsApp Directo</T>
                 </p>
                 <p className="font-bold text-xs sm:text-sm text-[var(--color-text-primary)]">
                   +1 (829) 920-0544
@@ -131,7 +131,7 @@ export default function ContactSection() {
               <T en="Configurator Assistant">Configure su propuesta</T>
             </h3>
             <p className="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
-              <T en="Choose your project's basic scope. The next step will customize modules, delivery milestones, and pricing transparently.">
+              <T en="Choose your project's basic scope. The next step will let you customize modules, integrations, and timelines transparently.">
                 Selecciona el tipo de proyecto para comenzar. En el siguiente
                 paso podrás personalizar módulos, integraciones y plazos a tu
                 medida de forma transparente.

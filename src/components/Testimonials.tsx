@@ -1,14 +1,36 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { T } from '../context/LanguageContext';
+import { T, useLanguage } from '../context/LanguageContext';
 
 export default function Testimonials() {
+  const { translate } = useLanguage();
   const [activeIndex, setActiveIndex] = useState(0);
   const testimonials = [
-    { name: "Juan P.", role: "Restaurante", text: "Aumenté mis reservas un 40% en 2 meses con la nueva landing." },
-    { name: "Maria L.", role: "Consultora", text: "Polaris transformó mi web corporativa, ahora transmito autoridad real." },
-    { name: "Carlos F.", role: "Tienda Online", text: "Las ventas automatizadas me ahorran 10 horas de trabajo semanal." },
+    {
+      name: "Juan P.",
+      role: translate("Restaurante", "Restaurant"),
+      text: translate(
+        "Aumenté mis reservas un 40% en 2 meses con la nueva landing.",
+        "I increased my reservations by 40% in 2 months with the new landing page."
+      ),
+    },
+    {
+      name: "Maria L.",
+      role: translate("Consultora", "Consultant"),
+      text: translate(
+        "Polaris transformó mi web corporativa, ahora transmito autoridad real.",
+        "Polaris transformed my corporate website, now I convey real authority."
+      ),
+    },
+    {
+      name: "Carlos F.",
+      role: translate("Tienda Online", "Online Store"),
+      text: translate(
+        "Las ventas automatizadas me ahorran 10 horas de trabajo semanal.",
+        "Automated sales save me 10 hours of work a week."
+      ),
+    },
   ];
 
   const handlePrev = () => setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
@@ -45,7 +67,7 @@ export default function Testimonials() {
 
           <button
             onClick={handlePrev}
-            aria-label="Previous testimonial"
+            aria-label={translate("Testimonio anterior", "Previous testimonial")}
             className="absolute left-1 z-40 p-1.5 rounded-full text-[var(--color-text-tertiary)] opacity-50 hover:opacity-100 hover:text-[var(--color-primary-base)] transition-all"
           >
             <ChevronLeft size={20} />
@@ -93,7 +115,7 @@ export default function Testimonials() {
 
           <button
             onClick={handleNext}
-            aria-label="Next testimonial"
+            aria-label={translate("Siguiente testimonio", "Next testimonial")}
             className="absolute right-1 z-40 p-1.5 rounded-full text-[var(--color-text-tertiary)] opacity-50 hover:opacity-100 hover:text-[var(--color-primary-base)] transition-all"
           >
             <ChevronRight size={20} />

@@ -14,7 +14,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, translate } = useLanguage();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -94,7 +94,7 @@ export default function Navbar() {
         <Link
           to="/"
           className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
-          aria-label="Polaris Web Studio - Inicio"
+          aria-label={translate("Polaris Web Studio - Inicio", "Polaris Web Studio - Home")}
         >
           <Logo size={44} />
         </Link>

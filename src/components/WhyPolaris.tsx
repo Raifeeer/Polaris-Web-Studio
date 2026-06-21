@@ -149,7 +149,7 @@ export default function WhyPolaris() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 glass-panel rounded-2xl p-5">
             <CompareBar
               label={language === 'es' ? 'Respuesta de comunicación' : 'Communication response'}
-              polarisVal={24} competitorVal={72} unit={language === 'es' ? 'h' : 'h'}
+              polarisVal={24} competitorVal={72} unit="h"
             />
             <CompareBar
               label={language === 'es' ? 'Tecnologías dominadas' : 'Technologies mastered'}

@@ -473,8 +473,8 @@ export default function About() {
                     </T>
                   </p>
                   <p>
-                    <T en="With an unwavering obsession for performance optimization, SEO, and visual cleanliness, we build web solutions that solve business critical needs. If there is a bottleneck, or a design that looks obsolete, we create the perfect remedy.">
-                      Con una inquebrantable obsesión por el rendimiento, la accesibilidad de primer nivel y la pulcritud estética, desarrollo soluciones de software que resuelven prioridades de negocio reales. No construyo páginas genéricas; configuro motores de captación y venta.
+                    <T en="With an unwavering obsession for performance optimization, SEO, and visual cleanliness, I build web solutions that solve business-critical needs. If there's a bottleneck, or a design that looks outdated, I create the perfect remedy.">
+                      Con una inquebrantable obsesión por el rendimiento, el SEO y la pulcritud estética, desarrollo soluciones de software que resuelven prioridades de negocio reales. No construyo páginas genéricas; configuro motores de captación y venta.
                     </T>
                   </p>
                 </div>
@@ -502,7 +502,7 @@ export default function About() {
                       99%
                     </div>
                     <div className="text-[9px] uppercase tracking-wider text-[var(--color-text-secondary)]">
-                      <T en="Satisfac.">Satisfac.</T>
+                      <T en="Satisf.">Satisfac.</T>
                     </div>
                   </div>
                 </div>

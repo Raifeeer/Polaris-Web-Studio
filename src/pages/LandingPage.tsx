@@ -420,7 +420,7 @@ export default function LandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: 0.2 }}
-                className="text-[2.5rem] sm:text-5xl md:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter"
+                className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter"
               >
                 <T en="We digitize the future of your business today">
                   Digitalizamos el futuro de tu negocio hoy
@@ -501,7 +501,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <Layers size={24} />
                   </div>
-                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-300 dark: px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-indigo-600 dark:text-indigo-300 px-2.5 py-1 rounded-full border border-indigo-200 dark:border-indigo-500/20 shrink-0">
                     <T en="CONVERSION">CONVERSIÓN</T>
                   </span>
                 </div>
@@ -568,7 +568,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <ShoppingCart size={24} />
                   </div>
-                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-300 dark: px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                     <T en="SELL 24/7">VENTAS 24/7</T>
                   </span>
                 </div>
@@ -638,7 +638,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 group-hover:border-[var(--color-primary-base)] transition-all duration-300">
                     <Briefcase size={24} />
                   </div>
-                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-violet-600 dark:text-violet-300 dark: px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] font-extrabold uppercase tracking-widest text-violet-600 dark:text-violet-300 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
                     <T en="AUTHORITY">AUTORIDAD</T>
                   </span>
                 </div>
@@ -780,7 +780,7 @@ export default function LandingPage() {
                       <Rocket size={24} />
                     </div>
                     <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-blue-400 px-2.5 py-1 rounded-full border border-blue-500/20 shrink-0">
-                      <T en="FASE INICIAL">FASE INICIAL</T>
+                      <T en="STARTING PHASE">FASE INICIAL</T>
                     </span>
                   </div>
 
@@ -947,7 +947,7 @@ export default function LandingPage() {
                     <div className="relative w-12 h-12 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:border-[var(--color-primary-base)] group-hover:scale-110 transition-all duration-300">
                       <ShoppingCart size={24} />
                     </div>
-                    <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 dark: px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
+                    <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                       <T en="E-COMMERCE">VENTA ONLINE</T>
                     </span>
                   </div>
@@ -1076,7 +1076,7 @@ export default function LandingPage() {
                       1
                     </div>
                   </div>
-                  <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 dark: px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-emerald-600 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/20 shrink-0">
                     <T en="2 MINUTES">2 MINUTOS</T>
                   </span>
                 </div>
@@ -1154,7 +1154,7 @@ export default function LandingPage() {
 
                 <div className="space-y-2 w-full">
                   <h3 className="text-xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors">
-                    <T en="Diseñamos">Diseñamos</T>
+                    <T en="We Design">Diseñamos</T>
                   </h3>
                   <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                     <T en="We craft fully customized interfaces and code with state-of-the-art web technologies for elite results.">
@@ -1219,14 +1219,14 @@ export default function LandingPage() {
                       3
                     </div>
                   </div>
-                  <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-violet-600 dark:text-violet-300 dark: px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
+                  <span className="glass-badge text-[9px] uppercase tracking-widest font-extrabold text-violet-600 dark:text-violet-300 px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 shrink-0">
                     <T en="SEO & ULTRA SPEED">ALTO IMPACTO</T>
                   </span>
                 </div>
 
                 <div className="space-y-2 w-full">
                   <h3 className="text-xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors">
-                    <T en="Lanzamos">Lanzamos</T>
+                    <T en="We Launch">Lanzamos</T>
                   </h3>
                   <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                     <T en="We launch your website meticulously configured for top performance, maximum speed, and ready to welcome users.">

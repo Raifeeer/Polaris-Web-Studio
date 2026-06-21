@@ -1322,7 +1322,7 @@ export default function Services() {
                     </T>
                   </h3>
                   <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="An AI with a 'brain' (like Gemini or Grok) trained on your business. It chats naturally, handles objections, and closes sales like a real employee.">
+                    <T en="An AI with a 'brain' (like Gemini or Grok) trained on your business. It chats naturally, handles objections, and answers complex questions like a real employee.">
                       Una IA con "cerebro" entrenada con los datos de tu
                       negocio. Conversa natural, maneja objeciones y atiende
                       dudas complejas como un empleado real.
@@ -1602,7 +1602,7 @@ export default function Services() {
             <span className={`text-sm font-black transition-colors ${
               activePricePlan === "flash" ? "text-amber-400" : "text-[var(--color-text-secondary)]"
             }`}>
-              $299
+              ${isOfferActive ? Math.round(299 * 0.75) : 299}
             </span>
             {activePricePlan === "flash" && (
               <div className="w-4 h-0.5 rounded-full bg-amber-400 mt-1" />
@@ -1628,7 +1628,7 @@ export default function Services() {
             <span className={`text-sm font-black transition-colors ${
               activePricePlan === "constellation" ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-secondary)]"
             }`}>
-              $699
+              ${isOfferActive ? Math.round(699 * 0.75) : 699}
             </span>
             {activePricePlan === "constellation" && (
               <div className="w-4 h-0.5 rounded-full bg-[var(--color-primary-base)] mt-1" />
@@ -1650,7 +1650,7 @@ export default function Services() {
             <span className={`text-sm font-black transition-colors ${
               activePricePlan === "nova" ? "text-violet-400" : "text-[var(--color-text-secondary)]"
             }`}>
-              $1,299
+              ${(isOfferActive ? Math.round(1299 * 0.75) : 1299).toLocaleString("en-US")}
             </span>
             {activePricePlan === "nova" && (
               <div className="w-4 h-0.5 rounded-full bg-violet-400 mt-1" />

@@ -2,16 +2,20 @@ import React from "react";
 import { Sun, Moon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../hooks/useTheme";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const { translate } = useLanguage();
 
   return (
     <button
       onClick={toggleTheme}
       className="p-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
       aria-label={
-        theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+        theme === "dark"
+          ? translate("Cambiar a modo claro", "Switch to light mode")
+          : translate("Cambiar a modo oscuro", "Switch to dark mode")
       }
     >
       <AnimatePresence mode="wait" initial={false}>

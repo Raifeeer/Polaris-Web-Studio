@@ -1,17 +1,24 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function WhatsAppButton() {
+  const { translate } = useLanguage();
+  const whatsappMessage = translate(
+    "Hola, vi tu página y me gustaría planificar un nuevo proyecto",
+    "Hi, I saw your page and I'd like to plan a new project"
+  );
+
   return (
     <div className="fixed bottom-6 right-6 z-[100]">
       <motion.a
-        href="https://wa.me/18299200544?text=Hola%2C%20vi%20tu%20página%20y%20me%20gustaría%20planificar%20un%20nuevo%20proyecto"
+        href={`https://wa.me/18299200544?text=${encodeURIComponent(whatsappMessage)}`}
         target="_blank"
         rel="noopener noreferrer"
         whileHover={{ scale: 1.1, y: -4 }}
         whileTap={{ scale: 0.95 }}
         className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center shadow-2xl text-white relative group"
-        aria-label="Contactar por WhatsApp"
+        aria-label={translate("Contactar por WhatsApp", "Contact via WhatsApp")}
       >
         {/* Ultra-smooth Breathing Pulse */}
         <motion.div

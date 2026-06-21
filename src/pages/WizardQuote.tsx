@@ -461,7 +461,7 @@ if (typeof window !== "undefined") {
 export default function WizardQuote() {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const { language } = useLanguage();
+  const { language, translate } = useLanguage();
   const calTheme = theme === "dark" ? "dark" : "light";
   const location = useLocation();
 
@@ -2797,7 +2797,7 @@ export default function WizardQuote() {
                             <input
                               type="text"
                               placeholder="miempresa.com"
-                              aria-label="Nombre de dominio a verificar"
+                              aria-label={translate("Nombre de dominio a verificar", "Domain name to check")}
                               value={domainName}
                               onChange={(e) => {
                                 const val = e.target.value;

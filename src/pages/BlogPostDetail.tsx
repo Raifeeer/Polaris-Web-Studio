@@ -245,7 +245,7 @@ export default function BlogPostDetail() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { language } = useLanguage();
+  const { language, translate } = useLanguage();
   const [copied, setCopied] = useState(false);
   const alreadyLinked = new Set<string>();
 
@@ -392,17 +392,17 @@ export default function BlogPostDetail() {
             id={`share-blog-btn-${post.slug}`}
             onClick={handleShare}
             className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] rounded-lg text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center gap-2 text-xs font-mono font-bold"
-            title={language === "en" ? "Copy Article URL" : "Copiar enlace del artículo"}
+            title={translate("Copiar enlace del artículo", "Copy Article URL")}
           >
             {copied ? (
               <>
                 <Check size={14} className="text-emerald-500 animate-scale" />
-                <span className="text-emerald-500">COPIED</span>
+                <span className="text-emerald-500"><T en="COPIED">COPIADO</T></span>
               </>
             ) : (
               <>
                 <Share2 size={14} />
-                <span>SHARE</span>
+                <span><T en="SHARE">COMPARTIR</T></span>
               </>
             )}
           </button>
@@ -419,7 +419,7 @@ export default function BlogPostDetail() {
               <span className="text-[var(--color-border-subtle)]">•</span>
               <span className="flex items-center gap-1 text-[var(--color-text-tertiary)]">
                 <Clock size={11} />
-                {post.readTime} MINS READ
+                {post.readTime} <T en="MIN READ">MIN LECTURA</T>
               </span>
             </span>
             <h1 className="text-3xl md:text-6xl font-display font-black tracking-tight leading-tight text-[var(--color-text-primary)]">
@@ -646,7 +646,7 @@ export default function BlogPostDetail() {
                     </h4>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border-subtle)]/20 text-[10px] font-mono uppercase text-[var(--color-text-tertiary)]">
-                    <span>{rp.readTime} MIN READ</span>
+                    <span>{rp.readTime} <T en="MIN READ">MIN LECTURA</T></span>
                     <ArrowRight size={10} className="text-[var(--color-text-secondary)]" />
                   </div>
                 </div>
