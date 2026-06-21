@@ -73,7 +73,7 @@ export default function About() {
 
   const coreCapabilities = [
     { name: <T en="Modern & Attractive Design">Diseño Visual Atractivo y Moderno</T>, value: "98%" },
-    { name: <T en="Google Visibility & SEO">Visibilidad y Posicionamiento en Google (SEO)</T>, value: "100%" },
+    { name: <T en="Technical SEO Setup">Estructura y Optimización Técnica SEO</T>, value: "100%" },
     { name: <T en="Ultra-fast Loading Speed">Velocidad de Carga Ultra Rápida</T>, value: "99%" },
     { name: <T en="Mobile & Tablet Optimization">Compatibilidad Perfecta con Celulares</T>, value: "100%" },
   ];
@@ -144,12 +144,12 @@ export default function About() {
             className="pt-4 flex flex-wrap gap-4 items-center justify-center text-xs font-mono text-[var(--color-text-secondary)]"
           >
             <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg glass-badge">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <T en="Clean, Optimized Code">Código Limpio y Optimizado</T>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <T en="Clean Code">Código Limpio</T>
             </span>
             <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg glass-badge">
-              <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-              <T en="100% Performance Driven">Enfoque de Alto Rendimiento</T>
+              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <T en="High Performance">Alto Rendimiento</T>
             </span>
           </motion.div>
         </section>
@@ -174,13 +174,8 @@ export default function About() {
 
             <div className="space-y-4 text-[var(--color-text-secondary)] leading-relaxed text-sm md:text-base">
               <p>
-                <T en="Polaris Web Studio was created with a clear, uncompromising standard: to eradicate sluggish templates, boring design, and fragile code. We believe your digital presence should be your strongest sales asset, not a digital liability.">
-                  Polaris Web Studio nació con un estándar firme y sin concesiones: erradicar las plantillas lentas, el diseño genérico y el código descuidado. Creamos soluciones donde cada pixel e interacción sirve a tus metas empresariales.
-                </T>
-              </p>
-              <p>
-                <T en="What started as an absolute obsession for clean, efficient technology has grown into an independent digital craft facility. Today, we build bespoke digital platforms for Dominican and Latin American businesses with a vision for growth.">
-                  Lo que comenzó como una obsesión absoluta por la velocidad y la eficiencia del software, se ha transformado en un taller de artesanía digital de alta tecnología que presta servicios a negocios dominicanos y latinoamericanos con visión de crecimiento.
+                <T en="Polaris Web Studio was created with a clear, uncompromising standard: to eradicate sluggish templates, boring design, and fragile code. What started as an obsession for clean, efficient technology has grown into an independent digital craft facility serving Dominican and Latin American businesses with a vision for growth.">
+                  Polaris Web Studio nació con un estándar firme y sin concesiones: erradicar las plantillas lentas, el diseño genérico y el código descuidado. Lo que comenzó como una obsesión por la velocidad y la eficiencia del software se transformó en un taller de artesanía digital que presta servicios a negocios dominicanos y latinoamericanos con visión de crecimiento.
                 </T>
               </p>
               <p className="font-semibold text-[var(--color-text-primary)]">
@@ -225,10 +220,10 @@ export default function About() {
                       <span className="text-[var(--color-text-secondary)] font-medium">
                         <T en="Average Lighthouse Score">Rendimiento Google Lighthouse</T>
                       </span>
-                      <span className="font-mono text-emerald-500 font-bold">100/100</span>
+                      <span className="font-mono text-emerald-500 font-bold">90+/100</span>
                     </div>
                     <div className="w-full bg-[var(--color-surface-base)] h-1.5 rounded-full overflow-hidden border border-[var(--color-border-subtle)]/30">
-                      <div className="bg-emerald-500 h-full rounded-full w-full" />
+                      <div className="bg-emerald-500 h-full rounded-full w-[92%]" />
                     </div>
                   </div>
 
@@ -238,7 +233,7 @@ export default function About() {
                       <span className="text-[var(--color-text-secondary)] font-medium">
                         <T en="Web Vitals Load Time">Velocidad de Carga Inicial</T>
                       </span>
-                      <span className="font-mono text-indigo-500 font-bold">&lt; 0.5s</span>
+                      <span className="font-mono text-indigo-500 font-bold">&lt; 1s</span>
                     </div>
                     <div className="w-full bg-[var(--color-surface-base)] h-1.5 rounded-full overflow-hidden border border-[var(--color-border-subtle)]/30">
                       <div className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-full rounded-full w-[95%]" />
@@ -273,7 +268,7 @@ export default function About() {
                       24/7
                     </div>
                     <div className="text-[10px] font-mono uppercase text-[var(--color-text-secondary)] mt-0.5">
-                      <T en="Online Asset">Activo Inteligente</T>
+                      <T en="Always Online">Siempre En Línea</T>
                     </div>
                   </div>
                 </div>
