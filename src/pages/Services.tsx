@@ -994,9 +994,9 @@ export default function Services() {
                 </>
               }
             >
-              Impulsa tu negocio con <br className="hidden md:block" />
+              Impulsa tu negocio <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                ingeniería digital a medida
+                con ingeniería digital a medida
               </span>
             </T>
           </h1>
