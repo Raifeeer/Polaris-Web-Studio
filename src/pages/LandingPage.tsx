@@ -695,7 +695,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.1 }}
             className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] py-4 md:py-8 glass-panel flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px]"
           >
@@ -740,6 +740,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6">
@@ -770,7 +771,7 @@ export default function LandingPage() {
               <motion.div
                 whileInView={{ opacity: 1, y: 0 }}
                 initial={{ opacity: 0, y: 20 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
                 <div className="space-y-5">
@@ -851,7 +852,7 @@ export default function LandingPage() {
               <motion.div
                 whileInView={{ opacity: 1, y: 0 }}
                 initial={{ opacity: 0, y: 20 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: 0.1 }}
                 className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
@@ -937,7 +938,7 @@ export default function LandingPage() {
               <motion.div
                 whileInView={{ opacity: 1, y: 0 }}
                 initial={{ opacity: 0, y: 20 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: 0.2 }}
                 className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
@@ -1064,7 +1065,7 @@ export default function LandingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 25 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4 }}
                 className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
@@ -1135,7 +1136,7 @@ export default function LandingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 25 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: 0.15 }}
                 className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
@@ -1207,7 +1208,7 @@ export default function LandingPage() {
               <motion.div
                 initial={{ opacity: 0, y: 25 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: 0.3 }}
                 className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform"
               >
@@ -1282,6 +1283,7 @@ export default function LandingPage() {
             id="portafolio"
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
+            viewport={{ once: true, amount: 0.2 }}
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
           >
             <div className="flex flex-col items-center text-center gap-6">
@@ -1397,7 +1399,7 @@ export default function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.1 }}
             className="md:col-span-2 lg:col-span-3 text-center"
           >
@@ -1870,7 +1872,7 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0 }}
               className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-amber-500/30 transition-colors group"
             >
@@ -1928,7 +1930,7 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               className="glass-panel border border-[var(--color-primary-base)]/50 rounded-2xl p-7 flex flex-col gap-5 relative shadow-lg shadow-[var(--color-primary-base)]/10 md:-translate-y-4"
             >
@@ -1993,7 +1995,7 @@ export default function LandingPage() {
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-violet-500/30 transition-colors group"
             >

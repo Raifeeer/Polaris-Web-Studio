@@ -102,7 +102,7 @@ function PlanCard({
     >
       {/* Absolute Badges */}
       {plan.highlight && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg z-20">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg z-20 whitespace-nowrap">
           <T en="Most Popular">Más Popular</T>
         </div>
       )}
@@ -1272,6 +1272,7 @@ export default function Services() {
             <motion.div
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true, amount: 0.2 }}
               className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover"
             >
               <div className="space-y-6">
@@ -1308,6 +1309,7 @@ export default function Services() {
             <motion.div
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.1 }}
               className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover"
             >
@@ -1347,6 +1349,7 @@ export default function Services() {
             <motion.div
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.2 }}
               className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover"
             >
@@ -1386,6 +1389,7 @@ export default function Services() {
             <motion.div
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.3 }}
               className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover"
             >

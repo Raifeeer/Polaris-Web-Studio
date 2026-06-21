@@ -159,7 +159,7 @@ export default function About() {
           <motion.div
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             className="lg:col-span-7 space-y-6"
           >
             <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-indigo-500 tracking-wider uppercase">
@@ -189,7 +189,7 @@ export default function About() {
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             className="lg:col-span-5 relative"
           >
             <div className="absolute inset-0 rounded-[var(--radius-bento)] bg-gradient-to-tr from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
@@ -306,7 +306,7 @@ export default function About() {
                 key={i}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
                 className={`p-8 rounded-[var(--radius-bento)] glass-panel transition-all duration-300 bento-glow-hover flex flex-col justify-between group h-full relative overflow-hidden`}
                 style={{ willChange: "transform" }}
@@ -420,7 +420,7 @@ export default function About() {
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 p-8 md:p-12 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden"
             >
               {/* Left Column: Visual Developer ID Badge / Interactive Container */}

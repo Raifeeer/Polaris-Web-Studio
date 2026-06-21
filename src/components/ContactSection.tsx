@@ -120,7 +120,7 @@ export default function ContactSection() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={{ once: true, amount: 0.2 }}
           className="flex-1 w-full glass-panel p-6 sm:p-8 md:p-10 rounded-[var(--radius-bento)] relative overflow-hidden flex flex-col gap-6"
         >
           {/* Top colored indicator line */}
