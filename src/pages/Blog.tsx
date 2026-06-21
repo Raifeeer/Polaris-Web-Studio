@@ -84,6 +84,8 @@ export default function Blog() {
     navigator.clipboard.writeText(url).then(() => {
       setCopiedId(post.id);
       setTimeout(() => setCopiedId(null), 2000);
+    }).catch(() => {
+      // Sin permiso de portapapeles: evitar rechazo de promesa no manejado.
     });
   };
 
@@ -112,7 +114,7 @@ export default function Blog() {
     }
 
     // Filter by Date window constraints
-    const now = new Date("2026-06-07T20:26:32Z"); // Context provided time
+    const now = new Date();
     list = list.filter(item => {
       const pubDate = new Date(item.post.publishedAt);
       const diffTime = Math.abs(now.getTime() - pubDate.getTime());

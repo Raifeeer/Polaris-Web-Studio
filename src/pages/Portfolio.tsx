@@ -299,6 +299,13 @@ export default function Portfolio() {
   const cinemaProjects = filteredProjects.length > 0 ? filteredProjects : projects;
   const currentCinemaProject = cinemaProjects[activeCinemaIndex % cinemaProjects.length] || cinemaProjects[0];
 
+  // Al cambiar los filtros, la lista del modo cine se acorta y activeCinemaIndex
+  // puede quedar fuera de rango: los dots (que comparan idx === activeCinemaIndex
+  // sin módulo) se desincronizan del slide visible. Lo reseteamos a 0 en ese caso.
+  useEffect(() => {
+    setActiveCinemaIndex((prev) => (prev >= cinemaProjects.length ? 0 : prev));
+  }, [cinemaProjects.length]);
+
   const handleNextCinema = () => {
     setDirection(1);
     setActiveCinemaIndex(prev => (prev + 1) % cinemaProjects.length);
@@ -463,11 +470,6 @@ export default function Portfolio() {
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden transition-colors duration-300">
       <Navbar />
-
-
-
-      <AnimatePresence>
-      </AnimatePresence>
 
       {/* Decorative premium gradients in background */}
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-[var(--color-primary-base)]/5 rounded-full blur-[140px] pointer-events-none z-0" />

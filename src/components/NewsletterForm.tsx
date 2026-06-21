@@ -10,12 +10,17 @@ export default function NewsletterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    const clean = email.trim().toLowerCase();
+    // Validación básica de formato antes de escribir en Firestore.
+    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      setStatus("error");
+      return;
+    }
 
     setStatus("loading");
     try {
       await addDoc(collection(db, "newsletter_subscribers"), {
-        email,
+        email: clean,
         source: "blog",
         subscribedAt: serverTimestamp(),
       });

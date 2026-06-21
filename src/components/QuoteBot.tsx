@@ -82,10 +82,6 @@ export default function QuoteBot() {
   const { translate } = useLanguage();
   const location = useLocation();
 
-  if (location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/login')) {
-    return null;
-  }
-
   const [isOpen, setIsOpen] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("atlas_bot_open");
@@ -218,6 +214,16 @@ export default function QuoteBot() {
   };
 
   const rec = currentStep === QUESTIONS.length ? getRecommendation() : null;
+
+  // Guard DESPUÉS de declarar todos los hooks (no antes) para no violar las
+  // Reglas de Hooks: el conteo de hooks debe ser estable entre renders al
+  // navegar entre rutas públicas y /dashboard|/login.
+  if (
+    location.pathname.startsWith("/dashboard") ||
+    location.pathname.startsWith("/login")
+  ) {
+    return null;
+  }
 
   return (
     <div className="fixed bottom-6 right-6 z-[100]">
@@ -481,7 +487,7 @@ export default function QuoteBot() {
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-5.5 h-5.5 bg-[var(--color-primary-base)] rounded-full border-2 border-white flex items-center justify-center"
+            className="absolute -top-1 -right-1 w-[22px] h-[22px] bg-[var(--color-primary-base)] rounded-full border-2 border-white flex items-center justify-center"
           >
             <span className="text-[10px] font-black text-white">1</span>
           </motion.div>

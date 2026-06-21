@@ -505,9 +505,18 @@ export default function WizardQuote() {
         rawMsg.toLowerCase().includes('load failed') ||
         rawMsg.toLowerCase().includes('failed to fetch')
       ) {
-        setDomainError('No se pudo comprobar la disponibilidad. Asegúrate de ingresar un dominio con formato válido (ejemplo.com) o intenta de nuevo.');
+        setDomainError(
+          language === "en"
+            ? "Could not check availability. Make sure to enter a valid domain (example.com) or try again."
+            : "No se pudo comprobar la disponibilidad. Asegúrate de ingresar un dominio con formato válido (ejemplo.com) o intenta de nuevo."
+        );
       } else {
-        setDomainError(rawMsg || 'No se pudo verificar la disponibilidad. Intenta nuevamente.');
+        setDomainError(
+          rawMsg ||
+            (language === "en"
+              ? "Could not verify availability. Please try again."
+              : "No se pudo verificar la disponibilidad. Intenta nuevamente.")
+        );
       }
     } finally {
       setCheckingDomain(false);
@@ -532,16 +541,9 @@ export default function WizardQuote() {
   });
 
   const [expandedThirdType, setExpandedThirdType] = useState(false);
-  const [addonDescriptions, setAddonDescriptions] = useState<Record<string, string | null>>(() => {
-    try {
-      const saved = localStorage.getItem("polaris_addon_descriptions");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return parsed.descriptions || {};
-      }
-    } catch {}
-    return {};
-  });
+  // La hidratación inicial queda en {}: el efecto de abajo rellena las
+  // descripciones desde la caché por-negocio (o pide a la IA) tras montar.
+  const [addonDescriptions, setAddonDescriptions] = useState<Record<string, string | null>>({});
   const [addonDescLoading, setAddonDescLoading] = useState(false);
 
   const [selections, setSelections] = useState(() => {
@@ -584,8 +586,11 @@ export default function WizardQuote() {
     try {
       const saved = localStorage.getItem(cacheKey);
       if (saved) {
-        setAddonDescriptions(JSON.parse(saved));
-        return;
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object") {
+          setAddonDescriptions(parsed);
+          return;
+        }
       }
     } catch {}
     generateAddonDescriptions(selections.businessType, selections.sector, currentPlanType);
@@ -2400,9 +2405,11 @@ export default function WizardQuote() {
       const descriptions = await res.json();
 
       setAddonDescriptions(descriptions);
+      // Misma clave que lee el efecto de hidratación (por negocio + plan),
+      // guardando el mapa de descripciones directamente para que la caché acierte.
       localStorage.setItem(
-        "polaris_addon_descriptions",
-        JSON.stringify({ businessType, descriptions })
+        `polaris_addon_desc_${businessType}_${planType}`,
+        JSON.stringify(descriptions)
       );
     } catch {
       // Silencioso — se usan descripciones hardcodeadas

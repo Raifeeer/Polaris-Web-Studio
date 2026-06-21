@@ -1,5 +1,7 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { dbInstance } from "./server-db.js";
@@ -7,6 +9,117 @@ import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.
 
 // Load environment variables
 dotenv.config();
+
+// --- Session token signing (HMAC) ---
+// Secreto para firmar los tokens de sesión locales. En producción DEBE definirse
+// PORTAL_SESSION_SECRET; si falta se genera uno efímero (invalida sesiones al reiniciar).
+const SESSION_SECRET =
+  process.env.PORTAL_SESSION_SECRET || crypto.randomBytes(32).toString("hex");
+if (!process.env.PORTAL_SESSION_SECRET) {
+  console.warn(
+    "[Auth] PORTAL_SESSION_SECRET no definido: usando secreto efímero. Defínelo en producción para mantener las sesiones."
+  );
+}
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
+
+// projectId de Firebase para validar la audiencia/issuer de los ID tokens.
+let FIREBASE_PROJECT_ID = "";
+try {
+  const cfgRaw = fs.readFileSync(
+    path.join(process.cwd(), "firebase-applet-config.json"),
+    "utf-8"
+  );
+  FIREBASE_PROJECT_ID = JSON.parse(cfgRaw).projectId || "";
+} catch {
+  console.warn("[Auth] No se pudo leer firebase-applet-config.json; verificación de tokens Firebase deshabilitada.");
+}
+
+/** Crea un token de sesión local firmado con HMAC-SHA256: pst_<payload>.<firma> */
+function createSessionToken(user: { id: string; role: string }): string {
+  const payload = {
+    uid: user.id,
+    role: user.role,
+    iat: Date.now(),
+    exp: Date.now() + SESSION_TTL_MS,
+  };
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const sig = crypto.createHmac("sha256", SESSION_SECRET).update(body).digest("base64url");
+  return `pst_${body}.${sig}`;
+}
+
+/** Verifica un token de sesión local. Devuelve el payload o null si es inválido/expirado. */
+function verifySessionToken(token: string): { uid: string; role: string } | null {
+  if (!token.startsWith("pst_")) return null;
+  const [body, sig] = token.slice(4).split(".");
+  if (!body || !sig) return null;
+  const expected = crypto.createHmac("sha256", SESSION_SECRET).update(body).digest("base64url");
+  const sigBuf = Buffer.from(sig);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null;
+  try {
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString("utf-8"));
+    if (!payload.exp || Date.now() > payload.exp) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+// Cache de certificados públicos de Google para verificar ID tokens de Firebase.
+let googleCertsCache: { certs: Record<string, string> | null; exp: number } = {
+  certs: null,
+  exp: 0,
+};
+async function getGoogleCerts(): Promise<Record<string, string>> {
+  if (googleCertsCache.certs && Date.now() < googleCertsCache.exp) {
+    return googleCertsCache.certs;
+  }
+  const res = await fetch(
+    "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+  );
+  if (!res.ok) throw new Error("No se pudieron obtener los certificados de Google");
+  const certs = (await res.json()) as Record<string, string>;
+  const cacheControl = res.headers.get("cache-control") || "";
+  const maxAge = cacheControl.match(/max-age=(\d+)/);
+  const ttl = maxAge ? parseInt(maxAge[1], 10) * 1000 : 3600 * 1000;
+  googleCertsCache = { certs, exp: Date.now() + ttl };
+  return certs;
+}
+
+/**
+ * Verifica criptográficamente un ID token de Firebase (RS256) contra las claves
+ * públicas de Google y valida audiencia/issuer/expiración. Devuelve el payload o null.
+ * Fail-closed: cualquier error de verificación o de red devuelve null (token rechazado).
+ */
+async function verifyFirebaseToken(token: string): Promise<any | null> {
+  if (!FIREBASE_PROJECT_ID) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const header = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf-8"));
+    if (header.alg !== "RS256" || !header.kid) return null;
+
+    const certs = await getGoogleCerts();
+    const cert = certs[header.kid];
+    if (!cert) return null;
+
+    const publicKey = crypto.createPublicKey(cert);
+    const signedData = Buffer.from(`${parts[0]}.${parts[1]}`);
+    const signature = Buffer.from(parts[2], "base64url");
+    const valid = crypto.verify("RSA-SHA256", signedData, publicKey, signature);
+    if (!valid) return null;
+
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (payload.aud !== FIREBASE_PROJECT_ID) return null;
+    if (payload.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`) return null;
+    if (!payload.exp || nowSec >= payload.exp) return null;
+    if (!payload.sub) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 async function askGrok(prompt: string): Promise<string> {
   const apiKey = process.env.GROK_API_KEY;
@@ -186,44 +299,36 @@ const PORT = 3000;
 
   // --- Portal Authentication Middleware helper ---
 
-  function authenticateToken(req: any, res: any, next: any) {
+  async function authenticateToken(req: any, res: any, next: any) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ error: "Debe iniciar sesión para acceder." });
 
-    if (token.startsWith("user-")) {
-      const userId = token.replace("user-", "");
-      const user = dbInstance.getUsers().find((u) => u.id === userId);
+    // 1. Token de sesión local firmado con HMAC (emitido por /api/auth/login)
+    const session = verifySessionToken(token);
+    if (session) {
+      const user = dbInstance.getUsers().find((u) => u.id === session.uid && !u.deletedAt);
       if (!user) return res.status(404).json({ error: "Usuario para la sesión no encontrado." });
-
       req.user = user;
       return next();
     }
 
-    // Try decoding as Firebase Auth ID Token (JWT)
-    const parts = token.split(".");
-    if (parts.length === 3) {
-      try {
-        const payloadJson = Buffer.from(parts[1], "base64").toString("utf-8");
-        const payload = JSON.parse(payloadJson);
-        const email = payload.email;
-
-        if (!email) {
-          return res.status(403).json({ error: "El token JWT no contiene una dirección de correo válida." });
-        }
-
-        const emailClean = email.trim().toLowerCase();
-        const user = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
-
-        if (!user) {
-          return res.status(404).json({ error: `Usuario con correo ${emailClean} no registrado en la base de datos local.` });
-        }
-
-        req.user = user;
-        return next();
-      } catch (err) {
-        return res.status(403).json({ error: "Token JWT de Firebase inválido o corrupto." });
+    // 2. ID token de Firebase (JWT) — verificado criptográficamente contra las
+    //    claves públicas de Google (firma RS256 + audiencia + issuer + expiración).
+    if (token.split(".").length === 3) {
+      const payload = await verifyFirebaseToken(token);
+      if (!payload || !payload.email) {
+        return res.status(403).json({ error: "Token de sesión inválido o expirado." });
       }
+      const emailClean = String(payload.email).trim().toLowerCase();
+      const user = dbInstance.getUsers().find(
+        (u) => u.email.trim().toLowerCase() === emailClean && !u.deletedAt
+      );
+      if (!user) {
+        return res.status(404).json({ error: "Usuario no registrado en la base de datos local." });
+      }
+      req.user = user;
+      return next();
     }
 
     return res.status(403).json({ error: "Token de sesión inválido o con formato desconocido." });
@@ -246,7 +351,7 @@ const PORT = 3000;
 
     const emailClean = email.trim().toLowerCase();
     const user = dbInstance.getUsers().find(
-      (u) => u.email.trim().toLowerCase() === emailClean && u.password === password
+      (u) => u.email.trim().toLowerCase() === emailClean && u.password === password && !u.deletedAt
     );
 
     if (!user) {
@@ -254,7 +359,7 @@ const PORT = 3000;
     }
 
     const { password: _, ...userWithoutPassword } = user;
-    const token = `user-${user.id}`;
+    const token = createSessionToken(user);
     res.json({ success: true, token, user: userWithoutPassword });
   });
 
@@ -580,6 +685,9 @@ const PORT = 3000;
   app.post("/api/ai/analyze-project", async (req, res) => {
     const { description } = req.body;
     if (!description) return res.status(400).json({ error: "Falta la descripción del proyecto." });
+    if (typeof description !== "string" || description.length > 2000) {
+      return res.status(400).json({ error: "Descripción inválida o demasiado larga." });
+    }
     try {
       const text = await askAI(
         `Eres el asistente de cotización de Polaris Web Studio, una agencia de desarrollo web en República Dominicana.

@@ -295,7 +295,9 @@ function NexusRealtyMockup() {
             <ChevronDown className="w-4 h-4 text-gray-400" />
           </div>
           <button
-            onClick={() => alert(`Buscando: ${search}`)}
+            type="button"
+            tabIndex={-1}
+            aria-hidden="true"
             className="flex w-full items-center justify-center gap-2 bg-[#D4AF37] text-white text-[9px] font-bold uppercase tracking-widest py-3 rounded-full"
           >
             <Compass className="w-3 h-3" /> EXPLORAR

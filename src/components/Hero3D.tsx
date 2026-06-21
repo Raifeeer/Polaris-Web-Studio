@@ -126,7 +126,15 @@ export default function Hero3D() {
     window.addEventListener("resize", updateRect, { passive: true });
     window.addEventListener("scroll", updateRect, { passive: true });
 
-    const handleMouseMove = (e: MouseEvent) => {
+    let rafId = 0;
+    let pendingEvent: MouseEvent | null = null;
+
+    // El cálculo se coalesce a un solo procesamiento por frame (rAF): así no se
+    // recalculan distancias ni se escriben CSS vars en cada evento de mousemove.
+    const processMove = () => {
+      rafId = 0;
+      const e = pendingEvent;
+      if (!e) return;
       const container = containerRef.current;
       if (!container) return;
 
@@ -175,6 +183,11 @@ export default function Hero3D() {
       });
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      pendingEvent = e;
+      if (!rafId) rafId = requestAnimationFrame(processMove);
+    };
+
     const handleMouseLeave = () => {
       const container = containerRef.current;
       if (!container) return;
@@ -189,15 +202,17 @@ export default function Hero3D() {
     };
 
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
-    window.addEventListener("mouseleave", handleMouseLeave, { passive: true });
-    window.addEventListener("mouseenter", handleMouseEnter, { passive: true });
+    // mouseleave/enter sobre document sí disparan de forma fiable al salir/entrar del viewport.
+    document.addEventListener("mouseleave", handleMouseLeave, { passive: true });
+    document.addEventListener("mouseenter", handleMouseEnter, { passive: true });
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener("resize", updateRect);
       window.removeEventListener("scroll", updateRect);
       window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("mouseleave", handleMouseLeave);
-      window.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseenter", handleMouseEnter);
     };
   }, []);
 

@@ -26,7 +26,11 @@ function ProjectImageCarousel({
   mobileImg?: string;
   projectName: string;
 }) {
-  const [active, setActive] = useState<"desktop" | "mobile">("desktop");
+  // Inicia en el primer tipo de imagen disponible: si un proyecto solo tiene
+  // captura mobile, arrancar en "desktop" dejaba un hueco en blanco.
+  const [active, setActive] = useState<"desktop" | "mobile">(
+    desktopImg ? "desktop" : "mobile"
+  );
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
 
   useEffect(() => {
@@ -187,7 +191,7 @@ export default function ProjectDetail() {
               <div className="pt-2">
                 {project.liveUrl ? (
                   <button
-                    onClick={() => window.open(project.liveUrl, "_blank")}
+                    onClick={() => window.open(project.liveUrl, "_blank", "noopener,noreferrer")}
                     className="px-8 py-3 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold flex items-center gap-2 transition-all hover:scale-105 shadow-lg"
                   >
                     <T en="View Project">Ver Proyecto</T>{" "}

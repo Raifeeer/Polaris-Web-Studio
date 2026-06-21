@@ -42,11 +42,6 @@ export default function Login() {
     }
   };
 
-  const fillCredentials = (demoEmail: string, demoPass: string) => {
-    setEmail(demoEmail);
-    setPassword(demoPass);
-  };
-
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative pt-20">
       <Navbar />
@@ -127,32 +122,6 @@ export default function Login() {
               )}
             </button>
           </form>
-
-          {/* Setup quick access help box for convenient testing */}
-          <div className="mt-6 p-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/70 text-xs space-y-2">
-            <div className="font-bold text-[var(--color-text-secondary)] uppercase tracking-wider text-[10px] pb-1 border-b border-[var(--color-border-subtle)]/30">
-              <T en="Quick Demo Access">Acceso Rápido Demo</T>
-            </div>
-            <button
-              type="button"
-              onClick={() => fillCredentials("cristian2200299@gmail.com", "admin123")}
-              className="w-full text-left flex justify-between items-center py-1 hover:text-[var(--color-primary-base)] transition-colors group cursor-pointer"
-            >
-              <span>🔑 Admin (Gestión)</span>
-              <span className="font-mono text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] underline">cristian...@gmail.com</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => fillCredentials("nexus@client.com", "client123")}
-              className="w-full text-left flex justify-between items-center py-1 hover:text-[var(--color-primary-base)] transition-colors group cursor-pointer"
-            >
-              <span>💼 Cliente (Vista Avances)</span>
-              <span className="font-mono text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] underline">nexus@client.com</span>
-            </button>
-            <p className="text-[10px] text-[var(--color-text-tertiary)] italic pt-1">
-              * El administrador puede crear, registrar y administrar nuevos clientes en vivo.
-            </p>
-          </div>
 
           <p className="text-center text-xs text-[var(--color-text-tertiary)] mt-6">
             <T en="Did you forget your password? Contact your assigned manager.">

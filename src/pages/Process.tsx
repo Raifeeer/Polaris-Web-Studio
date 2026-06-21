@@ -32,16 +32,18 @@ export default function Process() {
     if (!isSchedulerOpen) return;
 
     let active = true;
+    let calApi: any = null;
+    // Callback con referencia estable para poder desuscribirlo en el cleanup.
+    const onBookingSuccess = () => setIsSuccess(true);
     const initCal = async () => {
       try {
         const cal = await getCalApi();
         if (!active) return;
+        calApi = cal;
 
         cal("on", {
           action: "bookingSuccessful",
-          callback: (e) => {
-            setIsSuccess(true);
-          },
+          callback: onBookingSuccess,
         });
 
         cal("ui", {
@@ -98,6 +100,12 @@ export default function Process() {
     return () => {
       active = false;
       clearTimeout(timer);
+      // Desuscribir el listener para que no se acumulen callbacks al reabrir.
+      if (calApi) {
+        try {
+          calApi("off", { action: "bookingSuccessful", callback: onBookingSuccess });
+        } catch { /* noop */ }
+      }
     };
   }, [isSchedulerOpen, calTheme]);
 

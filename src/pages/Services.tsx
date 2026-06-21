@@ -243,7 +243,7 @@ function PlanCard({
       </div>
       <p
         onClick={() => navigate("/portafolio")}
-        className="text-center text-xs text-text-tertiary hover:text-primary-base hover:opacity-80 transition-all cursor-pointer mb-4 underline decoration-dotted underline-offset-4"
+        className="text-center text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:opacity-80 transition-all cursor-pointer mb-4 underline decoration-dotted underline-offset-4"
         style={{ cursor: "pointer" }}
       >
         <T en="See portfolio examples →">Ver ejemplos en el portafolio →</T>
@@ -270,6 +270,46 @@ function PlanCard({
         <T en="Choose this Plan">Elegir este Paquete</T>
       </button>
     </motion.div>
+  );
+}
+
+// Píldora de cuenta regresiva aislada: posee su propio estado/intervalo para que
+// el tick de cada segundo re-renderice SOLO este componente y no toda la página
+// de Servicios (que reconstruye arrays grandes de planes/comparativa).
+function CountdownPill({
+  targetDate,
+  onExpire,
+}: {
+  targetDate: number;
+  onExpire: () => void;
+}) {
+  const [timeLeft, setTimeLeft] = useState(targetDate - Date.now());
+  const onExpireRef = useRef(onExpire);
+  onExpireRef.current = onExpire;
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const remaining = targetDate - Date.now();
+      if (remaining <= 0) {
+        setTimeLeft(0);
+        clearInterval(timer);
+        onExpireRef.current();
+      } else {
+        setTimeLeft(remaining);
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+  return (
+    <div className="font-display font-black tracking-widest bg-[var(--color-surface-base)] border border-[var(--color-primary-base)] text-[var(--color-primary-base)] px-4 py-1.5 rounded-full shadow-inner tabular-nums text-xs md:text-sm uppercase">
+      {`${days}d ${hours.toString().padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`}
+    </div>
   );
 }
 
@@ -388,30 +428,11 @@ export default function Services() {
     return new Date("2026-07-18T23:59:59Z").getTime();
   });
 
-  const [timeLeft, setTimeLeft] = useState(targetDate - new Date().getTime());
-  const [isOfferActive, setIsOfferActive] = useState(timeLeft > 0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const remaining = targetDate - new Date().getTime();
-      if (remaining <= 0) {
-        setTimeLeft(0);
-        setIsOfferActive(false);
-        clearInterval(timer);
-      } else {
-        setTimeLeft(remaining);
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  const formatTime = (ms: number) => {
-    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((ms % (1000 * 60)) / 1000);
-    return `${days}d ${hours.toString().padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds.toString().padStart(2, "0")}s`;
-  };
+  // Solo guardamos si la oferta sigue activa (cambia una única vez). El conteo
+  // por segundo vive dentro de <CountdownPill> para no re-renderizar esta página.
+  const [isOfferActive, setIsOfferActive] = useState(
+    targetDate - Date.now() > 0
+  );
 
   const plans: {
     id: string;
@@ -996,9 +1017,7 @@ export default function Services() {
                   descuento!
                 </T>
               </span>
-              <div className="font-display font-black tracking-widest bg-[var(--color-surface-base)] border border-[var(--color-primary-base)] text-[var(--color-primary-base)] px-4 py-1.5 rounded-full shadow-inner tabular-nums text-xs md:text-sm uppercase">
-                {formatTime(timeLeft)}
-              </div>
+              <CountdownPill targetDate={targetDate} onExpire={() => setIsOfferActive(false)} />
             </div>
           )}
 

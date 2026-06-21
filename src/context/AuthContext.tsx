@@ -86,10 +86,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setToken(idToken);
           setUser(data.user);
           return { success: true };
-        } else {
-          const errData = await response.json();
-          return { success: false, error: errData.error || "Error al obtener perfil desde el servidor." };
         }
+        // Si el servidor rechaza el ID token de Firebase (p. ej. no se pudieron
+        // verificar las claves de Google), NO bloqueamos al usuario: continuamos
+        // al login local contra la base de datos, que emite un token firmado propio.
       }
 
       // 2. Fallback to Express Local DB login

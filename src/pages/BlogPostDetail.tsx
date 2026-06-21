@@ -268,6 +268,8 @@ export default function BlogPostDetail() {
     navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // Sin permiso de portapapeles (contexto no seguro, etc.): evitar rechazo no manejado.
     });
   };
 

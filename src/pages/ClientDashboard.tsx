@@ -35,6 +35,33 @@ import Logo from "../components/Logo";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 
+// Reloj en vivo aislado: tiene su propio estado/intervalo para que el tick de
+// cada segundo re-renderice SOLO este componente y no todo el dashboard.
+function LiveClock() {
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div className="text-xs text-[var(--color-text-tertiary)] font-mono flex items-center gap-2 glass-panel border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-lg self-start">
+      <div className="w-2 h-2 rounded-full overflow-hidden bg-emerald-500 animate-[pulse_1.5s_infinite]" />
+      <span>
+        RD: {new Intl.DateTimeFormat('es-DO', {
+          timeZone: 'America/Santo_Domingo',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true
+        }).format(currentTime)}
+      </span>
+    </div>
+  );
+}
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
   const { language } = useLanguage();
@@ -85,16 +112,6 @@ export default function ClientDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
-
-  // Real-time Clock State
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   // Password Visibility State for client creation
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -186,6 +203,7 @@ export default function ClientDashboard() {
   // Fetch data
   useEffect(() => {
     if (!token) return;
+    let active = true;
     if (!data) setLoading(true);
     fetch("/api/portal/dashboard", {
       headers: {
@@ -193,10 +211,16 @@ export default function ClientDashboard() {
       },
     })
       .then((res) => {
+        // Sesión expirada o inválida: cerrar sesión en vez de fallar en silencio.
+        if (res.status === 401 || res.status === 403) {
+          logout();
+          throw new Error("session-expired");
+        }
         if (!res.ok) throw new Error("No se pudo cargar el dashboard");
         return res.json();
       })
       .then((resData) => {
+        if (!active) return;
         setData(resData);
         // Default select first project for admin tasks
         if (resData.projects && resData.projects.length > 0) {
@@ -208,16 +232,25 @@ export default function ClientDashboard() {
         }
       })
       .catch((err) => {
+        if (!active || err?.message === "session-expired") return;
         console.error("Dashboard fetch error:", err);
         setLoading(false);
+        setErrorMsg(
+          language === "es"
+            ? "No se pudo cargar el panel. Verifica tu conexión y pulsa «Sincronizar» para reintentar."
+            : "Could not load the dashboard. Check your connection and press “Sync” to retry."
+        );
       });
+    return () => { active = false; };
   }, [token, refreshTrigger]);
 
   // Fetch deploys when selectedProjectId changes
   useEffect(() => {
     if (!token || !selectedProjectId) return;
+    const controller = new AbortController();
     fetch(`/api/portal/deploys/${selectedProjectId}`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
     })
       .then((res) => {
         if (!res.ok) throw new Error("No se pudieron cargar los despliegues");
@@ -229,8 +262,10 @@ export default function ClientDashboard() {
         }
       })
       .catch((err) => {
+        if (err?.name === "AbortError") return;
         console.error("Error fetching deploys:", err);
       });
+    return () => controller.abort();
   }, [token, selectedProjectId, refreshTrigger]);
 
   const handleLogout = () => {
@@ -558,8 +593,17 @@ export default function ClientDashboard() {
 
     // Auto set current active phase description text
     const activePhase = updatedPhases.find(p => p.status === "active") || updatedPhases[updatedPhases.length - 1];
-    const progressMap = [25, 65, 100];
-    const nextProgress = phaseIndex === 0 && nextStatus === "active" ? 25 : phaseIndex === 1 && nextStatus === "active" ? 65 : phaseIndex === 2 && nextStatus === "active" ? 90 : 100;
+
+    // El progreso se deriva del avance real de las fases: cada fase completada
+    // cuenta como 1 y la fase activa como media fase. Así marcar la fase 1 como
+    // "completada" en un proyecto de N fases ya no salta al 100%.
+    const total = updatedPhases.length || 1;
+    const completedCount = updatedPhases.filter(p => p.status === "completed").length;
+    const hasActive = updatedPhases.some(p => p.status === "active");
+    const nextProgress = Math.min(
+      100,
+      Math.round(((completedCount + (hasActive ? 0.5 : 0)) / total) * 100)
+    );
 
     handleUpdateProjectProgress(project.id, nextProgress, activePhase.name, updatedPhases).then(() => {
       const phaseLabels = language === "es"
@@ -912,7 +956,7 @@ export default function ClientDashboard() {
                 ? "bg-indigo-500/10 text-indigo-400" 
                 : "bg-emerald-500/10 text-emerald-400"
             }`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-indigo-505 bg-indigo-400 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
+              <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-indigo-400 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
               {isAdmin ? "PM / Admin" : <T en="Client">Cliente</T>}
             </div>
           </div>
@@ -1089,21 +1133,7 @@ export default function ClientDashboard() {
             </p>
           </div>
           
-          <div className="text-xs text-[var(--color-text-tertiary)] font-mono flex items-center gap-2 glass-panel border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-lg self-start">
-            <div className="w-2 h-2 rounded-full overflow-hidden bg-emerald-500 animate-[pulse_1.5s_infinite]" />
-            <span>
-              RD: {new Intl.DateTimeFormat('es-DO', {
-                timeZone: 'America/Santo_Domingo',
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-              }).format(currentTime)}
-            </span>
-          </div>
+          <LiveClock />
         </header>
 
         {/* LOADING STATE */}
@@ -1613,7 +1643,7 @@ export default function ClientDashboard() {
                               </div>
                               {hasAction && (
                                 <button 
-                                  onClick={() => setActiveTab(pendingInvoices.length > 0 ? "invoices" : "deliverables")}
+                                  onClick={() => setActiveTab(pendingInvoices.length > 0 ? "invoices" : "tasks")}
                                   className={`px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg whitespace-nowrap transition-all ${pendingInvoices.length > 0 ? 'bg-amber-500 hover:bg-amber-600 text-amber-950 shadow-amber-500/20' : 'bg-[var(--color-primary-base)] hover:opacity-90 text-white shadow-indigo-500/20'}`}
                                 >
                                   {pendingInvoices.length > 0 ? "Ir a Pagar" : "Revisar Entregables"}
@@ -2126,7 +2156,7 @@ export default function ClientDashboard() {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text(--color-text-tertiary)">Monto (USD)</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Monto (USD)</label>
                         <input
                           type="number"
                           required
@@ -2965,7 +2995,7 @@ export default function ClientDashboard() {
                       <Check size={32} />
                     </div>
                     <h2 className="text-xl font-bold text-[var(--color-text-primary)]">¡Pago Procesado con Éxito!</h2>
-                    <p className="text-sm text-[var(--color-text-secondary)]">La factura {payingInvoice.number} ha sido marcada como pagada.</p>
+                    <p className="text-sm text-[var(--color-text-secondary)]">La factura {payingInvoice.invoiceNumber} ha sido marcada como pagada.</p>
                     <button
                       onClick={() => setPayingInvoice(null)}
                       className="mt-6 px-6 py-2.5 bg-[var(--color-primary-base)] text-white font-bold text-sm rounded-xl hover:opacity-90 transition-all w-full"
@@ -2981,7 +3011,7 @@ export default function ClientDashboard() {
                       </div>
                       <div>
                         <h2 className="text-lg font-bold text-[var(--color-text-primary)]">Procesar Pago</h2>
-                        <p className="text-xs text-[var(--color-text-secondary)]">Factura {payingInvoice.number}</p>
+                        <p className="text-xs text-[var(--color-text-secondary)]">Factura {payingInvoice.invoiceNumber}</p>
                       </div>
                     </div>
 
