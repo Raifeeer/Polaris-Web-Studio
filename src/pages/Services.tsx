@@ -8,14 +8,12 @@ import {
   ArrowRight,
   CheckCircle2,
   MessageSquare,
-  Sparkles,
   BrainCircuit,
   Palette,
   Wrench,
   Headphones,
   BarChart3,
   Search,
-  Brain,
   Database,
   ChevronDown,
   Coins,
@@ -54,6 +52,28 @@ function StatisticUpIcon({
       <path d="M3 3v16a2 2 0 0 0 2 2h16" />
       <path d="m7 14l4-4l4 4l6-6" />
       <path d="M18 8h3v3" />
+    </svg>
+  );
+}
+
+// "AI Sparkle" (dos estrellas, una grande y una pequeña) en vez del Sparkles/Brain de lucide-react
+function AISparkleIcon({
+  size = 20,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={className}
+    >
+      <path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25z" />
+      <path d="M11.5 9.5L9 4L6.5 9.5L1 12l5.5 2.5L9 20l2.5-5.5L17 12z" />
     </svg>
   );
 }
@@ -119,7 +139,7 @@ function PlanCard({
             {plan.badge && (
               <div className="bg-[var(--color-surface-highlight)] border border-purple-500/20 text-[10px] rounded-full px-2.5 py-0.5 inline-flex items-center gap-1.5 mb-2 md:mb-4 uppercase tracking-wider shadow-inner w-fit">
                 {plan.badgeIcon && (
-                  <Sparkles size={12} className="text-indigo-500 animate-pulse" />
+                  <AISparkleIcon size={12} className="text-indigo-500 animate-pulse" />
                 )}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold">
                   {plan.badge}
@@ -645,7 +665,7 @@ export default function Services() {
         },
         {
           title: <T en="Artificial Intelligence">INTELIGENCIA ARTIFICIAL</T>,
-          icon: Brain,
+          icon: AISparkleIcon,
           items: [
             <T en="1 AI tool included¹">1 herramienta de IA incluida¹</T>,
             <T en="Chatbot trained on your catalog">Chatbot entrenado con tu catálogo</T>,
@@ -810,7 +830,7 @@ export default function Services() {
     },
     {
       title: <T en="ARTIFICIAL INTELLIGENCE">INTELIGENCIA ARTIFICIAL</T>,
-      icon: Brain,
+      icon: AISparkleIcon,
       rows: [
         {
           name: <T en="AI tool included">Herramienta de IA incluida</T>,
@@ -1392,7 +1412,7 @@ export default function Services() {
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400">
-                  <Sparkles size={24} />
+                  <AISparkleIcon size={24} />
                 </div>
                 <div>
                   <h3 className="text-xl font-display font-bold mb-2 tracking-tight">
