@@ -430,12 +430,15 @@ export default function About() {
                   {/* Decorative glowing border ring */}
                   <div className="absolute -inset-2 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 opacity-20 blur-sm animate-pulse" />
                   
-                  {/* Inner ID Initials Avatar */}
-                  <div className="relative w-40 h-40 rounded-full border-4 border-[var(--color-border-strong)] bg-[var(--color-surface-base)] mx-auto flex flex-col items-center justify-center text-5xl font-display font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 select-none shadow-2xl">
-                    <span>CD</span>
-                    <span className="text-[10px] font-mono tracking-widest text-[var(--color-text-tertiary)] uppercase mt-1">
-                      CRISTIAN
-                    </span>
+                  {/* Inner Avatar Photo */}
+                  <div className="relative w-40 h-40 rounded-full border-4 border-[var(--color-border-strong)] bg-[var(--color-surface-base)] mx-auto overflow-hidden shadow-2xl">
+                    <img
+                      src="/images/cristian-dicen.webp"
+                      alt="Cristian Dicen"
+                      width={160}
+                      height={160}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
 

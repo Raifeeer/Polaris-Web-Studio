@@ -37,7 +37,7 @@ export const BLOG_POSTS: BlogPost[] = [
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["google shopping", "e-commerce", "ventas", "productos", "seo", "merchant center"],
     concepts: ["visibilidad", "ventas", "merchant center", "feed", "titulos", "imagenes", "optimizacion"],
@@ -124,7 +124,7 @@ Finally, think coldly about this: the largest growing businesses never doubt imp
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["open graph", "redes sociales", "whatsapp", "seo", "meta tags", "compartir"],
     concepts: ["compartir", "link", "preview", "whatsapp", "instagram", "facebook", "imagen", "titulo", "descripcion"],
@@ -231,7 +231,7 @@ Finally, think coldly about this: the largest growing businesses never doubt imp
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["performance", "velocidad", "pagespeed", "lighthouse", "conversión", "ventas"],
     concepts: ["rapidez", "veloz", "lento", "optimizar", "tiempo de carga", "retencion", "google", "comprar"],
@@ -315,7 +315,7 @@ Finally, think coldly about this: the largest growing businesses never doubt imp
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "posicionamiento", "google", "semantica", "contenido", "visibilidad"],
     concepts: ["buscar", "aparecer", "encontrar", "redacción", "palabras clave", "rankear", "trafico", "estrategia"],
@@ -397,7 +397,7 @@ There, you not only answer the direct query, but all the peripheral concerns hov
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["arquitectura", "react", "vite", "spa", "estatico", "desarrollo"],
     concepts: ["programar", "estructura", "tecnología", "pagina", "rendimiento", "nextjs", "javascript"],
@@ -477,7 +477,7 @@ At Polaris, we don't sell you "magic templates"; **we sculpt the exact right arc
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["desarrollo", "diseno", "exclusivo", "personalizado", "wordpress", "optimizacion"],
     concepts: ["plantillas", "basura", "lento", "wordpress", "elementor", "rapidez", "marcar la diferencia", "exclusividad"],
@@ -555,7 +555,7 @@ Investing in a truly scalable digital platform isn't an elite luxury meant only 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["ecommerce", "ventas", "semantica", "buscador", "inteligente", "conversion"],
     concepts: ["buscar", "comprar", "tienda", "ventas", "conversión", "asistente", "clientes", "sinónimo"],
@@ -627,7 +627,7 @@ This unlocks absolute operational wonders:
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["performance", "cdn", "cloud", "cache", "velocidad", "desarrollo"],
     concepts: ["lento", "rapidez", "servidor", "distribucion", "global", "paises", "carga", "milisegundos"],
@@ -693,7 +693,7 @@ With brilliantly hyper-optimized cloud velocity strategies, you violently stop b
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["nextjs", "framework", "desarrollo", "react", "seo", "performance"],
     concepts: ["next.js", "nextjs", "servidor", "ssr", "ssg", "hibrido", "renderizado", "velocidad"],
@@ -770,7 +770,7 @@ For a business in the Dominican Republic aiming to grow, that stability has enor
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["react", "componentes", "desarrollo", "javascript", "interfaz"],
     concepts: ["react", "react.js", "componente", "declarativo", "virtual dom", "hooks", "libreria", "ui"],
@@ -849,7 +849,7 @@ That means when you want to redesign that button, you change it in one place and
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["tailwind", "css", "diseno", "web", "estilo", "performance"],
     concepts: ["tailwind", "tailwindcss", "estilos", "clases", "utilitario", "maquetar", "diseño", "responsive"],
@@ -922,7 +922,7 @@ At Polaris, we use Tailwind on all our projects precisely for that reason: devel
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["cloud", "firebase", "backend", "base-datos", "seguridad", "serverless"],
     concepts: ["nube", "firebase", "firestore", "auth", "servidores", "registro", "seguro", "base de datos"],
@@ -995,7 +995,7 @@ Firebase Authentication resolves it in hours. It includes login with email and p
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["vite", "compilacion", "desarrollo", "frontend", "velocidad", "herramientas"],
     concepts: ["vite", "compilador", "empaquetar", "esbuild", "desarrollar", "rapidez", "construir", "bundling"],
@@ -1072,7 +1072,7 @@ For the final build, Vite uses Rollup — one of the most efficient bundlers in 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["typescript", "tipado", "desarrollo", "javascript", "calidad", "seguridad"],
     concepts: ["typescript", "typado", "ts", "errores", "bugs", "interfaz", "seguro", "robusto", "javascript"],
@@ -1145,7 +1145,7 @@ That's especially critical when the project grows, when a second developer joins
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["ia", "gemini", "google", "inteligencia-artificial", "automatizacion", "nlp"],
     concepts: ["gemini", "ia", "inteligencia artificial", "llm", "google ai", "modelo", "api", "procesamiento"],
@@ -1216,7 +1216,7 @@ What distinguishes Gemini from simpler models is its multimodal reasoning capabi
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["ia", "grok", "modelo", "inteligencia-artificial", "agentes", "tiempo-real"],
     concepts: ["grok", "ia", "x", "inteligencia artificial", "automatización", "tiempo real", "modelo", "agente"],
@@ -1289,7 +1289,7 @@ At Polaris we evaluate which model to use based on each client's use case. For p
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["postgresql", "base-datos", "relacional", "sql", "backend", "seguridad"],
     concepts: ["postgresql", "sql", "postgres", "base de datos", "tablas", "relaciones", "consultas", "seguro"],
@@ -1362,7 +1362,7 @@ At Polaris we use it as the reference relational database for projects where dat
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "posicionamiento", "google", "optimizacion", "metatags", "marketing"],
     concepts: ["seo", "posicionamiento", "google", "buscar", "optimizar", "schema", "tags", "robots", "sitemap"],
@@ -1399,7 +1399,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["animacion", "framer", "motion", "frontend", "diseno", "interaccion"],
     concepts: ["framer", "motion", "animacion", "transiciones", "animar", "interactivo", "microinteracciones", "fluido"],
@@ -1436,7 +1436,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seguridad", "ssl", "https", "encriptacion", "confianza", "servidor"],
     concepts: ["ssl", "seguridad", "certificado", "candado", "https", "seguro", "proteger", "encriptar", "credenciales"],
@@ -1473,7 +1473,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["landing-pages", "conversión", "ventas", "diseño-ux", "clientes", "performance"],
     concepts: ["landing", "aterrizaje", "leads", "conversiones", "prospectos", "embudo", "whatsapp", "ventas"],
@@ -1547,7 +1547,7 @@ That's why all our landing pages go through Core Web Vitals optimization, image 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["corporativas", "identidad-digital", "autoridad", "marca", "negocios", "desarrollo"],
     concepts: ["corporativa", "empresa", "identidad", "marca", "portafolio", "secciones", "nosotros", "blog"],
@@ -1629,7 +1629,7 @@ At Polaris we build all corporate websites with information architecture designe
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["ecommerce", "tienda-online", "stripe", "ventas", "comercio-electronico", "desarrollo"],
     concepts: ["tienda", "vender", "transacciones", "stripe", "productos", "inventario", "comprar", "carrito", "checkout"],
@@ -1711,7 +1711,7 @@ The solution we implement at Polaris combines multiple methods: credit and debit
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["bot", "leads", "automatizacion", "conversion", "faq", "rapidez"],
     concepts: ["bot de respuestas rápidas", "lead capture bot", "respuestas rapidas", "capturar leads", "preguntas frecuentes", "faq", "automatizar", "bot", "respuestas", "instantaneas"],
@@ -1748,7 +1748,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["agente-ia", "ventas", "inteligencia-artificial", "gemini", "grok", "conversacion"],
     concepts: ["agente de ventas autonomo", "ia agent", "comercial", "cerrar ventas", "conversacion", "gemini", "grok", "ventas", "asistente", "agente de ventas"],
@@ -1785,7 +1785,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["buscador-semantico", "ia", "ecommerce", "embeddings", "conversion", "experiencia-usuario"],
     concepts: ["buscador semantico", "semantic search", "embeddings", "buscar", "tienda", "categoria", "intencion", "buscador inteligente", "buscador", "buscador semántico inteligente"],
@@ -1822,7 +1822,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["asistente-contenido", "ia", "seo", "reputacion", "copia-comercial", "copywriting"],
     concepts: ["asistente de contenido", "assistant", "escribir", "resenas", "reputacion", "comentarios", "copia", "seo", "asistente de contenido y reseñas"],
@@ -1859,7 +1859,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["drizzle", "orm", "typescript", "postgresql", "base-datos", "desarrollo"],
     concepts: ["drizzle", "orm", "tipado", "query", "migraciones", "esquema", "seguridad", "postgres", "sql", "rapidez"],
@@ -1937,7 +1937,7 @@ At Polaris we use Drizzle on all new projects that require a relational database
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["pwa", "movil", "ecommerce", "offline", "notificaciones", "ux"],
     concepts: ["pwa", "aplicacion", "móvil", "celular", "instalar", "descargar", "pantalla de inicio", "notificaciones push", "offline", "fuera de linea", "cache", "rapidez"],
@@ -2015,7 +2015,7 @@ At Polaris we implement PWA as an additional layer on top of the web platforms w
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["cicd", "cloud-run", "devops", "automatizacion", "google-cloud", "performance"],
     concepts: ["ci/cd", "cicd", "cloud run", "despliegue", "desplegar", "automatico", "servidor", "estabilidad", "cero caidas", "github", "pipeline", "docker"],
@@ -2097,7 +2097,7 @@ No servers to configure. No hosting plans that fall short. No emergency calls wh
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "on-page", "optimizacion", "google", "contenido", "palabras clave"],
     concepts: ["seo on-page", "titulos", "meta descriptions", "keywords", "h1", "h2"],
@@ -2134,7 +2134,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "tecnico", "sitemap", "velocidad", "core web vitals", "seguridad"],
     concepts: ["seo tecnico", "sitemap", "robots.txt", "https", "cloudflare", "schema markup", "vitals"],
@@ -2171,7 +2171,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "off-page", "backlinks", "autoridad", "enlaces", "reputacion"],
     concepts: ["seo off-page", "link building", "backlinks", "autoridad", "dominio", "menciones"],
@@ -2208,7 +2208,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "contenidos", "blog", "keywords", "estrategia", "inbound"],
     concepts: ["seo contenidos", "blog", "redaccion", "estrategia", "articulos", "palabras clave", "intencion"],
@@ -2245,7 +2245,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "schema markup", "datos estructurados", "rich snippets", "google", "codigo"],
     concepts: ["schema markup", "json-ld", "datos estructurados", "rich snippets", "resultados enriquecidos"],
@@ -2282,7 +2282,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "google business profile", "seo local", "google maps", "negocio local"],
     concepts: ["google business profile", "ficha de google", "mi negocio", "seo local", "maps", "ubicacion", "reseñas"],
@@ -2319,7 +2319,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "analitica", "ga4", "google analytics 4", "conversiones", "datos"],
     concepts: ["google analytics 4", "ga4", "analitica", "metricas", "eventos", "conversiones", "rastreo", "datos"],
@@ -2356,7 +2356,7 @@ A fin de cuentas, la pregunta más importante que debes hacerte hoy mismo no es 
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
       roleEn: "Lead Developer & Founder",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=256&auto=format&fit=crop"
+      avatar: "/images/cristian-dicen.webp"
     },
     tags: ["seo", "google search console", "gsc", "indexacion", "rastreo"],
     concepts: ["google search console", "search console", "gsc", "sitemap", "rastreo", "errores", "clics"],
