@@ -1618,7 +1618,7 @@ export default function Services() {
           >
             {/* Más popular badge */}
             <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full">
-              <T en="Popular">Popular</T>
+              <T en="Most Popular">Más Popular</T>
             </div>
             <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
               activePricePlan === "constellation" ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"
