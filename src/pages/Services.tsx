@@ -19,6 +19,7 @@ import {
   RefreshCw,
   ArrowLeft,
   Pointer,
+  Bot,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -28,7 +29,6 @@ import WhyPolaris from "../components/WhyPolaris";
 import FinalCTA from "../components/FinalCTA";
 import { T, useLanguage } from "../context/LanguageContext";
 import AISparkleIcon from "../components/AISparkleIcon";
-import BotIcon from "../components/BotIcon";
 
 // "Statistic Up" de Akar Icons (no existe en lucide-react)
 function StatisticUpIcon({
@@ -1276,7 +1276,7 @@ export default function Services() {
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
-                  <BotIcon size={24} />
+                  <Bot size={24} />
                 </div>
                 <div>
                   <h3 className="text-xl font-display font-bold mb-2 tracking-tight">
