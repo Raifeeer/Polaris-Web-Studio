@@ -8,8 +8,9 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigationType,
 } from "react-router-dom";
-import { useEffect, useLayoutEffect, lazy, Suspense, useState } from "react";
+import { useEffect, useLayoutEffect, lazy, Suspense, useState, useRef } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -46,23 +47,50 @@ function RouteLoader() {
 }
 
 function ScrollHandler() {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, key } = useLocation();
+  const navigationType = useNavigationType();
+  const scrollPositionsRef = useRef<Record<string, number>>({});
 
-  // useLayoutEffect (no useEffect) para que el scroll se corrija antes del
-  // primer pintado: si no, la página nueva monta con su altura final pero el
-  // scrollY heredado de la página anterior, lo que alcanza a pintarse un frame
-  // y dispara el salto de la barra de progreso (ver ScrollProgressBar.tsx).
+  useEffect(() => {
+    window.history.scrollRestoration = "manual";
+  }, []);
+
   useLayoutEffect(() => {
-    if (!hash) {
-      window.scrollTo(0, 0);
+    // Si es navegación POP (back/forward), restaurar scroll previo
+    if (navigationType === "POP") {
+      const savedPosition = sessionStorage.getItem(`scroll-${key}`);
+      if (savedPosition) {
+        const position = parseInt(savedPosition, 10);
+        window.scrollTo(0, position);
+      } else {
+        window.scrollTo(0, 0);
+      }
     } else {
-      const id = hash.replace("#", "");
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+      // Para PUSH/REPLACE, scroll a hash o al inicio
+      if (!hash) {
+        window.scrollTo(0, 0);
+      } else {
+        const id = hash.replace("#", "");
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
       }
     }
-  }, [pathname, hash]);
+  }, [pathname, hash, key, navigationType]);
+
+  // Guardar scroll position antes de que la página se desmonte
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem(`scroll-${key}`, String(window.scrollY));
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      sessionStorage.setItem(`scroll-${key}`, String(window.scrollY));
+    };
+  }, [key]);
 
   useEffect(() => {
     if (GA_ID) {

@@ -203,8 +203,18 @@ export default function LandingPage() {
     setOpenFaqIndex(openFaqIndex === index ? null : index);
   };
 
-  const [techStackExpanded, setTechStackExpanded] = useState(false);
+  const [techStackExpanded, setTechStackExpanded] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = sessionStorage.getItem("techStackExpanded");
+      return stored ? JSON.parse(stored) : false;
+    }
+    return false;
+  });
   const techStackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    sessionStorage.setItem("techStackExpanded", JSON.stringify(techStackExpanded));
+  }, [techStackExpanded]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -1547,7 +1557,7 @@ export default function LandingPage() {
                                   whileTap={{ scale: 0.95 }}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/blog/${tech.slug}`);
+                                    navigate(`/blog/${tech.slug}`, { state: { fromLanding: true } });
                                   }}
                                   style={{
                                     backgroundColor: `rgba(${tech.rgb}, 0.1)`,
@@ -1714,7 +1724,7 @@ export default function LandingPage() {
                               href="#"
                               onClick={(e) => {
                                 e.preventDefault();
-                                navigate(`/blog/${tech.slug}`);
+                                navigate(`/blog/${tech.slug}`, { state: { fromLanding: true } });
                               }}
                               initial={{ opacity: 0, y: 15 }}
                               animate={{ opacity: 1, y: 0 }}

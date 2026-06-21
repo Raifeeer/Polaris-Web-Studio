@@ -357,6 +357,15 @@ export default function BlogPostDetail() {
               <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
               <T en="RETURN TO PLANS">VOLVER A SERVICIOS</T>
             </Link>
+          ) : location.state && location.state.fromLanding ? (
+            <button
+              onClick={() => navigate(-1)}
+              className="px-3.5 py-1.5 border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] rounded-lg text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 transition-all"
+              id="blog-detail-back-landing-btn"
+            >
+              <ChevronLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+              <T en="BACK TO HOME">VOLVER AL INICIO</T>
+            </button>
           ) : location.state && location.state.fromArticle ? (
             <Link
               to={location.state.fromPath || "/blog"}
@@ -563,6 +572,15 @@ export default function BlogPostDetail() {
                   <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
                   <T en="Return to Services">VOLVER A SERVICIOS</T>
                 </Link>
+              ) : location.state && location.state.fromLanding ? (
+                <button
+                  id="blog-detail-cta-back-landing"
+                  onClick={() => navigate(-1)}
+                  className="px-6 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] text-xs font-bold uppercase tracking-wider text-center transition-all inline-flex items-center justify-center gap-2 group"
+                >
+                  <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                  <T en="Back to Home">VOLVER AL INICIO</T>
+                </button>
               ) : location.state && location.state.fromArticle ? (
                 <Link
                   id="blog-detail-cta-back"
