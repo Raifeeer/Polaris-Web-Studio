@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import { useLanguage, T } from "../context/LanguageContext";
+import { prefetchRoute } from "../lib/routePrefetch";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,6 +105,8 @@ export default function Navbar() {
             <Link
               key={link.path}
               to={link.path}
+              onMouseEnter={() => prefetchRoute(link.path)}
+              onFocus={() => prefetchRoute(link.path)}
               className={`hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
                 location.pathname === link.path
                   ? "text-[var(--color-primary-base)]"
@@ -127,6 +130,7 @@ export default function Navbar() {
           </div>
           <button
             onClick={() => navigate("/cotizar")}
+            onMouseEnter={() => prefetchRoute("/cotizar")}
             className="hidden sm:block px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-xs sm:text-sm hover:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-[var(--color-surface-base)] whitespace-nowrap"
           >
             <T en="Plan your Project">Planifica tu Proyecto</T>
@@ -181,6 +185,7 @@ export default function Navbar() {
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
+                  onTouchStart={() => prefetchRoute(link.path)}
                   className="text-lg font-bold uppercase tracking-widest hover:text-[var(--color-primary-base)] transition-colors"
                 >
                   {link.name}

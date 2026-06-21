@@ -11,10 +11,12 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { useEffect, useLayoutEffect, lazy, Suspense, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
+import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -122,11 +124,72 @@ function ConditionalQuoteBot({ showBot }: { showBot: boolean }) {
   );
 }
 
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.22, ease: "easeInOut" }}
+      >
+        <Suspense fallback={<RouteLoader />}>
+          <Routes location={location}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/servicios" element={<Services />} />
+            <Route path="/proceso" element={<Process />} />
+            <Route path="/portafolio" element={<Portfolio />} />
+            <Route path="/portafolio/:slug" element={<ProjectDetail />} />
+            <Route path="/nosotros" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<BlogPostDetail />} />
+            <Route path="/cotizar" element={<WizardQuote />} />
+            <Route path="/gracias" element={<Gracias />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<ClientDashboard />} />
+            <Route
+              path="/privacidad"
+              element={
+                <LegalPage
+                  title={<T en="Privacy Policy">Política de Privacidad</T>}
+                />
+              }
+            />
+            <Route
+              path="/terminos"
+              element={
+                <LegalPage
+                  title={<T en="Terms and Conditions">Términos y Condiciones</T>}
+                />
+              }
+            />
+            <Route
+              path="/cookies"
+              element={
+                <LegalPage
+                  title={<T en="Cookie Policy">Política de Cookies</T>}
+                />
+              }
+            />
+          </Routes>
+        </Suspense>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   useTheme();
   const [showBot, setShowBot] = useState(false);
 
   useEffect(() => {
+    // Calienta en segundo plano los chunks de las demás páginas, sin
+    // competir con la carga/render inicial (solo corre en tiempo ocioso).
+    prefetchAllRoutesIdle();
+
     // 1. Defer chatbot to save initial bundles & execution cycles
     const botTimer = setTimeout(() => {
       setShowBot(true);
@@ -206,48 +269,7 @@ export default function App() {
         <ScrollHandler />
         <ScrollProgressBar />
         <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
-          <Suspense fallback={<RouteLoader />}>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/servicios" element={<Services />} />
-              <Route path="/proceso" element={<Process />} />
-              <Route path="/portafolio" element={<Portfolio />} />
-              <Route path="/portafolio/:slug" element={<ProjectDetail />} />
-              <Route path="/nosotros" element={<About />} />
-              <Route path="/blog" element={<Blog />} />
-              <Route path="/blog/:slug" element={<BlogPostDetail />} />
-              <Route path="/cotizar" element={<WizardQuote />} />
-              <Route path="/gracias" element={<Gracias />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<ClientDashboard />} />
-              <Route
-                path="/privacidad"
-                element={
-                  <LegalPage
-                    title={<T en="Privacy Policy">Política de Privacidad</T>}
-                  />
-                }
-              />
-              <Route
-                path="/terminos"
-                element={
-                  <LegalPage
-                    title={
-                      <T en="Terms and Conditions">Términos y Condiciones</T>
-                    }
-                  />
-                }
-              />
-              <Route
-                path="/cookies"
-                element={
-                  <LegalPage
-                    title={<T en="Cookie Policy">Política de Cookies</T>}
-                  />
-                }
-              />
-            </Routes>
-          </Suspense>
+          <AnimatedRoutes />
           <ConditionalQuoteBot showBot={showBot} />
         </div>
       </Router>
