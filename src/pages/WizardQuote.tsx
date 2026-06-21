@@ -473,8 +473,6 @@ export default function WizardQuote() {
   const [domainStatus, setDomainStatus] = useState<{
     domain: string;
     available: boolean;
-    price: number;
-    isPremium: boolean;
   } | null>(null);
   const domainDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -494,8 +492,6 @@ export default function WizardQuote() {
       setDomainStatus({
         domain: target.toLowerCase(),
         available: data.available,
-        price: 0,
-        isPremium: false,
       });
     } catch (error: any) {
       let rawMsg = error.message || '';
@@ -646,9 +642,6 @@ export default function WizardQuote() {
       setCurrentStep(0);
     }
   }, [location.search]);
-
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const [estimateExpanded, setEstimateExpanded] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
@@ -2182,18 +2175,14 @@ export default function WizardQuote() {
   ].join("\n");
 
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      // Intercept before step 3 if lead not captured
-      if (currentStep === 2 && !leadCaptured) {
-        setShowLeadCapture(true);
-        return;
-      }
-      trackEvent("wizard_step_complete", { step: currentStep + 1 });
-      setCurrentStep((c) => c + 1);
-      scrollToProgress();
-    } else {
-      submitQuote();
+    // Intercept before step 3 if lead not captured
+    if (currentStep === 2 && !leadCaptured) {
+      setShowLeadCapture(true);
+      return;
     }
+    trackEvent("wizard_step_complete", { step: currentStep + 1 });
+    setCurrentStep((c) => c + 1);
+    scrollToProgress();
   };
 
   const handleBack = () => {
@@ -2218,29 +2207,6 @@ export default function WizardQuote() {
     trackEvent("wizard_step_complete", { step: 3 });
     setCurrentStep((c) => c + 1);
     scrollToProgress();
-  };
-
-  const submitQuote = () => {
-    setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      const selectedPlanName = getTypeName(selections.type);
-      const finalTotal = isOfferActive ? discountedTotal : estimatedTotal;
-      const statePayload = {
-        plan: selections.type,
-        planName: selectedPlanName,
-        total: finalTotal,
-        isMonthly: monthlyAddonsPrice > 0 ? monthlyAddonsPrice : null,
-        discountActive: isOfferActive,
-        addons: selections.addons.map(getAddonName),
-        domain: domainSummaryText,
-      };
-      localStorage.removeItem("wizardQuote_currentStep");
-      localStorage.removeItem("wizardQuote_selections");
-      localStorage.removeItem("polaris_addon_descriptions");
-      navigate("/gracias", { state: statePayload });
-    }, 1500);
   };
 
   const toggleAddon = (id: string) => {
@@ -2505,33 +2471,6 @@ export default function WizardQuote() {
         <div className="flex-1 flex flex-col md:flex-row gap-12">
           <div className="flex-1">
             <AnimatePresence mode="wait">
-              {success ? (
-                <motion.div
-                  key="success"
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="p-12 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-primary-base)]/30 text-center space-y-6 flex flex-col items-center justify-center min-h-[400px]"
-                >
-                  <div className="w-20 h-20 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mb-4">
-                    <Check size={40} />
-                  </div>
-                  <h2 className="text-3xl font-display font-black">
-                    <T en="Meeting Confirmed!">¡Reunión Agendada!</T>
-                  </h2>
-                  <p className="text-[var(--color-text-secondary)]">
-                    <T en="We have sent the invitation via Google Meet to your email. See you soon!">
-                      Hemos enviado la invitación vía Google Meet a tu correo.
-                      ¡Nos vemos pronto!
-                    </T>
-                  </p>
-                  <button
-                    onClick={() => navigate("/")}
-                    className="mt-8 px-8 py-3 bg-[var(--color-surface-highlight)] rounded-xl font-bold hover:bg-[var(--color-primary-base)] hover:text-white transition-colors"
-                  >
-                    <T en="Return to Home">Volver al Inicio</T>
-                  </button>
-                </motion.div>
-              ) : (
                 <motion.div
                   key={currentStep}
                   initial={{ opacity: 0, x: 20 }}
@@ -2848,7 +2787,7 @@ export default function WizardQuote() {
                               <T en="Domain Search">Buscador de Dominios</T>
                             </h3>
                             <p className="text-xs md:text-sm text-[var(--color-text-secondary)] mt-1 leading-relaxed">
-                              <T en="All of our web plans include a standard domain up to $15 USD. Check yours here! If it is a premium domain, we will credit the $15 USD and you will only pay the extra difference in your total project budget.">Todos nuestros planes web incluyen un dominio estándar de hasta $15 USD. ¡Verifica el tuyo aquí! Si es un dominio premium, te acreditamos los $15 USD y solo pagarás la diferencia extra en el presupuesto total de tu proyecto.</T>
+                              <T en="All of our web plans include a standard domain up to $15 USD. Check yours here to confirm it's available.">Todos nuestros planes web incluyen un dominio estándar de hasta $15 USD. ¡Verifica aquí si el tuyo está disponible!</T>
                             </p>
                           </div>
                         </div>
@@ -3167,11 +3106,9 @@ export default function WizardQuote() {
                     </div>
                   )}
                 </motion.div>
-              )}
             </AnimatePresence>
 
             {/* Footer Navigation */}
-            {!success && (
               <div className="mt-8 flex items-center justify-between pt-8 border-t border-[var(--color-border-subtle)]">
                 <div className="flex items-center gap-2">
                   <button
@@ -3198,21 +3135,13 @@ export default function WizardQuote() {
                     }
                     className="flex items-center gap-2 px-8 py-3 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-50 border-none ml-auto"
                   >
-                    {loading ? (
-                      <Loader2 className="animate-spin" size={18} />
-                    ) : (
-                      <>
-                        <T en="Next">Siguiente</T> <ArrowRight size={18} />
-                      </>
-                    )}
+                    <T en="Next">Siguiente</T> <ArrowRight size={18} />
                   </button>
                 )}
               </div>
-            )}
           </div>
 
           {/* Sidebar Estimator */}
-          {!success && (
             <div ref={sidebarRef} className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
             <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
               <T en="Live Estimate">Estimación en vivo</T>
@@ -3278,12 +3207,8 @@ export default function WizardQuote() {
                     <span className="text-[var(--color-text-secondary)] pr-4">
                       <T en="Domain Registry">Registro de Dominio</T> ({domainStatus.domain})
                     </span>
-                    <span className={`font-bold whitespace-nowrap flex-shrink-0 ${domainStatus.isPremium ? 'text-amber-500' : 'text-emerald-500'}`}>
-                      {domainStatus.isPremium ? (
-                        <T en="Premium">Premium</T>
-                      ) : (
-                        <T en="Free">Gratis</T>
-                      )}
+                    <span className="font-bold whitespace-nowrap flex-shrink-0 text-emerald-500">
+                      <T en="Free">Gratis</T>
                     </span>
                   </div>
                   <div className="text-[10px] text-emerald-500 font-bold bg-emerald-500/5 px-2 py-1 rounded inline-block w-fit mt-1">
@@ -3330,6 +3255,14 @@ export default function WizardQuote() {
                 <T en="* Final prices may vary based on exact requirements.">
                   * Los precios finales pueden variar según requisitos exactos.
                 </T>
+                {isOfferActive && estimatedTotal > 0 && monthlyAddonsPrice > 0 && (
+                  <>
+                    {" "}
+                    <T en="The -25% discount applies only to the one-time payment, not to the monthly fee.">
+                      El descuento del -25% aplica solo al pago único, no a la cuota mensual.
+                    </T>
+                  </>
+                )}
               </p>
             </div>
 
@@ -3377,11 +3310,9 @@ export default function WizardQuote() {
               </div>
             )}
           </div>
-          )}
         </div>
 
         {/* Barra sticky mobile — se oculta cuando el sidebar real es visible */}
-        {!success && (
           <AnimatePresence>
             {!sidebarVisible && (
               <motion.div
@@ -3451,6 +3382,13 @@ export default function WizardQuote() {
                             {selections.type === "ecommerce" && <T en="4–6 weeks">4–6 semanas</T>}
                           </div>
                         )}
+                        {isOfferActive && estimatedTotal > 0 && monthlyAddonsPrice > 0 && (
+                          <p className="text-[10px] text-[var(--color-text-tertiary)]">
+                            <T en="The -25% discount applies only to the one-time payment, not to the monthly fee.">
+                              El descuento del -25% aplica solo al pago único, no a la cuota mensual.
+                            </T>
+                          </p>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -3514,7 +3452,6 @@ export default function WizardQuote() {
               </motion.div>
             )}
           </AnimatePresence>
-        )}
       </main>
       <Footer />
 

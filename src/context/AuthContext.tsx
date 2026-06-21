@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth } from "../lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onIdTokenChanged } from "firebase/auth";
 
 export interface User {
   id: string;
@@ -34,6 +34,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    // El SDK de Firebase renueva el ID token internamente antes de que expire
+    // (cada ~60 min); este listener captura ese refresh y lo sincroniza con el
+    // token que usamos para autenticar contra nuestra propia API, evitando que
+    // una sesión activa termine cerrándose sola por expiración del token.
+    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) return;
+      try {
+        const freshToken = await firebaseUser.getIdToken();
+        localStorage.setItem("portal_token", freshToken);
+        setToken(freshToken);
+      } catch (err) {
+        console.error("Error al renovar el ID token de Firebase:", err);
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
   const fetchUserInfo = async (authToken: string) => {

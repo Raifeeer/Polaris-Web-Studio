@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -174,6 +174,11 @@ export default function ClientDashboard() {
   const [chatMessages, setChatMessages] = useState<{role: "user"|"assistant", text: string}[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatMessages, chatLoading]);
 
   // Change Password Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -3262,6 +3267,7 @@ export default function ClientDashboard() {
                     </div>
                   </div>
                 )}
+                <div ref={chatEndRef} />
               </div>
       
               {/* Soporte WhatsApp */}

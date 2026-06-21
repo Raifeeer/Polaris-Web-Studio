@@ -22,9 +22,9 @@ function XIcon({ size = 18, ...props }: { size?: number } & React.SVGProps<SVGSV
 }
 
 export default function Footer({
-  twitterUrl = "https://x.com",
-  instagramUrl = "https://instagram.com",
-  linkedinUrl = "https://linkedin.com",
+  twitterUrl,
+  instagramUrl,
+  linkedinUrl,
 }: FooterProps) {
   const { language, setLanguage, translate } = useLanguage();
 
