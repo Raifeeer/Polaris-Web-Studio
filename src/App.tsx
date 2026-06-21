@@ -10,7 +10,7 @@ import {
   useLocation,
   useNavigationType,
 } from "react-router-dom";
-import { useEffect, useLayoutEffect, lazy, Suspense, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, lazy, Suspense, useState } from "react";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -47,9 +47,8 @@ function RouteLoader() {
 }
 
 function ScrollHandler() {
-  const { pathname, hash, key } = useLocation();
+  const { pathname, hash } = useLocation();
   const navigationType = useNavigationType();
-  const scrollPositionsRef = useRef<Record<string, number>>({});
 
   useEffect(() => {
     window.history.scrollRestoration = "manual";
@@ -58,7 +57,7 @@ function ScrollHandler() {
   useLayoutEffect(() => {
     // Si es navegación POP (back/forward), restaurar scroll previo
     if (navigationType === "POP") {
-      const savedPosition = sessionStorage.getItem(`scroll-${key}`);
+      const savedPosition = sessionStorage.getItem(`scroll-pos-${pathname}`);
       if (savedPosition) {
         const position = parseInt(savedPosition, 10);
         window.scrollTo(0, position);
@@ -77,20 +76,26 @@ function ScrollHandler() {
         }
       }
     }
-  }, [pathname, hash, key, navigationType]);
+  }, [pathname, hash, navigationType]);
 
-  // Guardar scroll position antes de que la página se desmonte
+  // Guardar scroll position cuando el usuario scrollea (solo posiciones > 0)
+  // Esto evita sobrescribir con 0 cuando ScrollHandler hace scrollTo(0,0)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem(`scroll-${key}`, String(window.scrollY));
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      // Solo guardar si hay scroll positivo (usuario scrolleó hacia abajo)
+      // Esto previene overwrite cuando se resetea a 0 en navegación
+      if (currentScroll > 0) {
+        sessionStorage.setItem(`scroll-pos-${pathname}`, String(currentScroll));
+      }
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      sessionStorage.setItem(`scroll-${key}`, String(window.scrollY));
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, [key]);
+  }, [pathname]);
 
   useEffect(() => {
     if (GA_ID) {
