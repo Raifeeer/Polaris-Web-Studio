@@ -1825,6 +1825,204 @@ export default function LandingPage() {
 
       <ContactSection />
 
+      {/* Pricing Preview Section */}
+      <section className="py-24 px-6 md:px-12 relative overflow-hidden">
+        {/* Background glow */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--color-primary-base)]/3 via-transparent to-transparent pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto relative z-10">
+          {/* Header */}
+          <div className="text-center mb-16 space-y-4">
+            <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)] inline-block">
+              <T en="Transparent Pricing">Inversión Transparente</T>
+            </span>
+            <h2 className="text-4xl md:text-6xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+              <T en="The right plan">El plan correcto</T>
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)]">
+                <T en="for every stage">para cada etapa</T>
+              </span>
+            </h2>
+            <p className="text-[var(--color-text-secondary)] text-sm md:text-base max-w-md mx-auto">
+              <T en="Fixed prices, no hidden costs. One payment, your site live in weeks.">
+                Precios fijos, sin costos ocultos. Un pago y tu sitio en línea en semanas.
+              </T>
+            </p>
+          </div>
+
+          {/* Plans Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+
+            {/* Destello */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0 }}
+              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-amber-500/30 transition-all group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2 block">
+                    <T en="Flash Package">Plan Destello</T>
+                  </span>
+                  <div className="flex items-end gap-1">
+                    <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">$299</span>
+                    <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <Zap size={18} className="text-amber-500" />
+                </div>
+              </div>
+              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                <T en="One page designed to convert visitors into clients from the first scroll.">
+                  Una página diseñada para convertir visitantes en clientes desde el primer scroll.
+                </T>
+              </p>
+              <ul className="space-y-2.5 flex-1">
+                {[
+                  { es: "Diseño exclusivo y responsivo", en: "Exclusive responsive design" },
+                  { es: "Botón de WhatsApp integrado", en: "WhatsApp button integrated" },
+                  { es: "SEO On-Page incluido", en: "On-Page SEO included" },
+                  { es: "Entrega en 1–2 semanas", en: "Delivered in 1–2 weeks" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
+                    <CheckCircle2 size={14} className="text-amber-500 shrink-0" />
+                    <T en={item.en}>{item.es}</T>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate("/servicios")}
+                className="w-full py-2.5 rounded-xl border border-amber-500/30 text-amber-500 text-sm font-bold hover:bg-amber-500/10 transition-all"
+              >
+                <T en="See details →">Ver detalles →</T>
+              </button>
+            </motion.div>
+
+            {/* Constelación — destacado */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="glass-panel border border-[var(--color-primary-base)]/50 rounded-2xl p-7 flex flex-col gap-5 relative shadow-lg shadow-[var(--color-primary-base)]/10 md:-translate-y-4"
+            >
+              {/* Most popular badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
+                <span className="bg-[var(--color-primary-base)] text-white text-[10px] font-black uppercase tracking-widest px-4 py-1.5 rounded-full shadow-lg shadow-[var(--color-primary-base)]/30">
+                  <T en="Most Popular">Más Popular</T>
+                </span>
+              </div>
+              <div className="flex items-start justify-between pt-2">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-2 block">
+                    <T en="Constellation Package">Plan Constelación</T>
+                  </span>
+                  <div className="flex items-end gap-1">
+                    <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">$699</span>
+                    <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 flex items-center justify-center">
+                  <Globe size={18} className="text-[var(--color-primary-base)]" />
+                </div>
+              </div>
+              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                <T en="Complete corporate site up to 5 pages with AI chatbot, blog and Analytics.">
+                  Sitio corporativo completo de hasta 5 páginas con chatbot IA, blog y Analytics.
+                </T>
+              </p>
+              <ul className="space-y-2.5 flex-1">
+                {[
+                  { es: "Todo lo del Plan Destello", en: "Everything in Flash Plan" },
+                  { es: "Hasta 5 páginas independientes", en: "Up to 5 independent pages" },
+                  { es: "Chatbot 24/7 con IA", en: "24/7 AI Chatbot" },
+                  { es: "SEO Técnico + Search Console", en: "Technical SEO + Search Console" },
+                  { es: "Google Analytics 4", en: "Google Analytics 4" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
+                    <CheckCircle2 size={14} className="text-[var(--color-primary-base)] shrink-0" />
+                    <T en={item.en}>{item.es}</T>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate("/servicios")}
+                className="w-full py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:bg-[var(--color-primary-base)]/90 transition-all shadow-lg shadow-[var(--color-primary-base)]/20"
+              >
+                <T en="See details →">Ver detalles →</T>
+              </button>
+            </motion.div>
+
+            {/* Nova */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-violet-500/30 transition-all group"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-violet-400 mb-2 block">
+                    Plan Nova
+                  </span>
+                  <div className="flex items-end gap-1">
+                    <span className="text-4xl font-display font-black text-[var(--color-text-primary)]">$1,299</span>
+                    <span className="text-[var(--color-text-tertiary)] text-sm mb-1">USD</span>
+                  </div>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                  <Sparkles size={18} className="text-violet-400" />
+                </div>
+              </div>
+              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                <T en="Complete sales platform with payments, admin panel and AI tool included.">
+                  Plataforma de ventas completa con pagos, panel admin y herramienta IA incluida.
+                </T>
+              </p>
+              <ul className="space-y-2.5 flex-1">
+                {[
+                  { es: "Todo lo del Plan Constelación", en: "Everything in Constellation Plan" },
+                  { es: "E-commerce + Stripe y PayPal", en: "E-commerce + Stripe & PayPal" },
+                  { es: "Panel admin personalizado", en: "Custom admin panel" },
+                  { es: "Schema Markup para Google", en: "Schema Markup for Google" },
+                  { es: "1 herramienta IA incluida", en: "1 AI tool included" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
+                    <CheckCircle2 size={14} className="text-violet-400 shrink-0" />
+                    <T en={item.en}>{item.es}</T>
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={() => navigate("/servicios")}
+                className="w-full py-2.5 rounded-xl border border-violet-500/30 text-violet-400 text-sm font-bold hover:bg-violet-500/10 transition-all"
+              >
+                <T en="See details →">Ver detalles →</T>
+              </button>
+            </motion.div>
+          </div>
+
+          {/* Bottom note */}
+          <div className="text-center space-y-3">
+            <p className="text-xs text-[var(--color-text-tertiary)]">
+              <T en="All plans include free domain (1st year), SSL, Vercel hosting and 30 days of post-launch support.">
+                Todos los planes incluyen dominio gratis (1er año), SSL, hosting en Vercel y 30 días de soporte post-lanzamiento.
+              </T>
+            </p>
+            <button
+              onClick={() => navigate("/servicios")}
+              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-primary-base)] hover:underline transition-all"
+            >
+              <T en="Compare all features in detail →">Comparar todas las funcionalidades en detalle →</T>
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Bottom CTA Section */}
       <section className="py-24 px-6 md:px-12 bg-[var(--color-surface-base)] relative overflow-hidden border-t border-[var(--color-border-subtle)]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--color-primary-base)]/5 opacity-50 pointer-events-none" />
