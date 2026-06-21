@@ -9,7 +9,6 @@ import {
   Calendar,
   Clock,
   Loader2,
-  Globe,
   Cloud,
   Info,
   RotateCcw,
@@ -19,6 +18,7 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AISparkleIcon from "../components/AISparkleIcon";
+import GlobeSearchIcon from "../components/GlobeSearchIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 
@@ -2780,7 +2780,7 @@ export default function WizardQuote() {
                       <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel space-y-5 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-all duration-300 will-change-transform transition-all">
                         <div className="flex items-start gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] flex items-center justify-center shrink-0 shadow-inner">
-                            <Globe size={22} className="opacity-90" />
+                            <GlobeSearchIcon size={22} className="opacity-90" />
                           </div>
                           <div>
                             <h3 className="text-lg md:text-xl font-display font-black text-[var(--color-text-primary)]">
