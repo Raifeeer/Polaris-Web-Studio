@@ -1550,9 +1550,9 @@ export default function LandingPage() {
                                     navigate(`/blog/${tech.slug}`);
                                   }}
                                   style={{
-                                    backgroundColor: `rgba(${tech.rgb}, 0.08)`,
-                                    borderColor: `rgba(${tech.rgb}, 0.25)`,
-                                    boxShadow: `0 0 15px rgba(${tech.rgb}, 0.12)`,
+                                    backgroundColor: `rgba(${tech.rgb}, 0.1)`,
+                                    borderColor: `rgba(${tech.rgb}, 0.4)`,
+                                    boxShadow: `0 0 10px rgba(${tech.rgb}, 0.35), 0 0 28px rgba(${tech.rgb}, 0.18)`,
                                   }}
                                   className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-300 cursor-pointer select-none group/tech shrink-0 whitespace-nowrap min-w-max"
                                 >
@@ -1722,9 +1722,9 @@ export default function LandingPage() {
                               whileHover={{ scale: 1.05, y: -4 }}
                               whileTap={{ scale: 0.95 }}
                               style={{
-                                backgroundColor: `rgba(${tech.rgb}, 0.08)`,
-                                borderColor: `rgba(${tech.rgb}, 0.25)`,
-                                boxShadow: `0 0 15px rgba(${tech.rgb}, 0.12)`,
+                                backgroundColor: `rgba(${tech.rgb}, 0.1)`,
+                                borderColor: `rgba(${tech.rgb}, 0.4)`,
+                                boxShadow: `0 0 10px rgba(${tech.rgb}, 0.35), 0 0 28px rgba(${tech.rgb}, 0.18)`,
                               }}
                               className="flex flex-col items-center justify-center p-5 rounded-2xl border transition-all duration-300 group/tech cursor-pointer text-center relative overflow-hidden"
                             >
