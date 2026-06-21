@@ -7,7 +7,6 @@ import {
   Rocket,
   ArrowRight,
   Check,
-  Sparkles,
   Calculator,
   Calendar,
   X,
@@ -15,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AISparkleIcon from "../components/AISparkleIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 import Cal, { getCalApi } from "@calcom/embed-react";
@@ -509,7 +509,7 @@ export default function Process() {
                       </span>
                       <div className="flex items-center gap-2">
                         <div className="w-4.5 h-4.5 rounded bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
-                          <Sparkles size={10} className="fill-amber-500/10" />
+                          <AISparkleIcon size={10} className="fill-amber-500/10" />
                         </div>
                         <p className="text-[11px] sm:text-xs font-bold text-[var(--color-text-primary)] leading-tight">
                           {steps[activeStep].polarismethod}

@@ -13,12 +13,12 @@ import {
   Cloud,
   Info,
   RotateCcw,
-  Sparkles,
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AISparkleIcon from "../components/AISparkleIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 
@@ -2276,7 +2276,7 @@ export default function WizardQuote() {
                 <span>{a.title}</span>
                 {a.isAi && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[var(--color-surface-highlight)] border border-purple-500/20 text-[10px] uppercase font-bold tracking-wider leading-none">
-                    <Sparkles size={10} className="text-indigo-500 animate-pulse" />
+                    <AISparkleIcon size={10} className="text-indigo-500 animate-pulse" />
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 font-extrabold">
                       <T en="AI">IA</T>
                     </span>

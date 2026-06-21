@@ -7,9 +7,8 @@ import {
   ArrowRight, 
   BookOpen, 
   Tag, 
-  SlidersHorizontal, 
-  Sparkles, 
-  Command, 
+  SlidersHorizontal,
+  Command,
   Share2, 
   Check, 
   ChevronLeft,
@@ -20,6 +19,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AISparkleIcon from "../components/AISparkleIcon";
 import { BLOG_POSTS, querySemanticBlog, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 
@@ -229,7 +229,7 @@ export default function Blog() {
                 className="glass-input w-full text-[var(--color-text-primary)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl py-3.5 pl-12 pr-28 text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all font-mono"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg text-[9px] font-mono tracking-widest font-black uppercase">
-                <Sparkles size={8} className="animate-spin" style={{ animationDuration: "3s" }} />
+                <AISparkleIcon size={8} className="animate-spin" style={{ animationDuration: "3s" }} />
                 SEMANTIC
               </span>
             </div>
@@ -370,7 +370,7 @@ export default function Blog() {
             id="semantic-intelligence-hud"
           >
             <div className="p-2 bg-indigo-500 text-white rounded-lg shrink-0 mt-0.5">
-              <Sparkles size={16} />
+              <AISparkleIcon size={16} />
             </div>
             <div className="space-y-1">
               <h4 className="text-xs font-mono font-black text-indigo-500 uppercase tracking-widest flex items-center gap-1">
@@ -439,7 +439,7 @@ export default function Blog() {
                   {/* Semantic Reasoning Footer Log (If matching searchQuery) */}
                   {searchQuery.trim() && matchReason && (
                     <div className="text-[10px] bg-slate-100 dark:bg-slate-900/60 text-[var(--color-text-tertiary)] dark:text-[var(--color-text-secondary)] p-2.5 rounded-lg border border-[var(--color-border-subtle)]/40 font-mono scale-[0.98] origin-left italic flex items-start gap-1.5">
-                      <Sparkles size={11} className="text-indigo-500 shrink-0 mt-0.5" />
+                      <AISparkleIcon size={11} className="text-indigo-500 shrink-0 mt-0.5" />
                       <span>{language === "en" ? matchReasonEn : matchReason}</span>
                     </div>
                   )}

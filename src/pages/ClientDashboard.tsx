@@ -28,10 +28,10 @@ import {
   Send,
   UserPlus,
   Eye,
-  EyeOff,
-  Sparkles
+  EyeOff
 } from "lucide-react";
 import Logo from "../components/Logo";
+import AISparkleIcon from "../components/AISparkleIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -1603,7 +1603,7 @@ export default function ClientDashboard() {
                         {(aiSummaryLoading || aiSummary) && (
                           <div className="p-5 rounded-[var(--radius-bento)] bg-[var(--color-primary-base)]/5 border border-[var(--color-primary-base)]/15 flex items-start gap-3">
                             <div className="w-8 h-8 rounded-lg bg-[var(--color-primary-base)]/15 text-[var(--color-primary-base)] flex items-center justify-center shrink-0 mt-0.5">
-                              <Sparkles size={16} />
+                              <AISparkleIcon size={16} />
                             </div>
                             <div className="flex-1">
                               <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-primary-base)] mb-1">
@@ -1851,7 +1851,7 @@ export default function ClientDashboard() {
                           >
                             {aiLoadingTaskTitle ? (
                               <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                            ) : <Sparkles size={14} />}
+                            ) : <AISparkleIcon size={14} />}
                             Generar
                           </button>
                         </div>
@@ -1900,7 +1900,7 @@ export default function ClientDashboard() {
                           >
                             {aiLoadingTaskDesc ? (
                               <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                            ) : <Sparkles size={14} />}
+                            ) : <AISparkleIcon size={14} />}
                             Generar
                           </button>
                         </div>
@@ -2201,7 +2201,7 @@ export default function ClientDashboard() {
                         >
                           {aiLoadingInvoiceDesc ? (
                             <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                          ) : <Sparkles size={14} />}
+                          ) : <AISparkleIcon size={14} />}
                           Generar
                         </button>
                       </div>
@@ -2820,7 +2820,7 @@ export default function ClientDashboard() {
                             >
                               {aiLoadingProjectDesc ? (
                                 <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                              ) : <Sparkles size={14} />}
+                              ) : <AISparkleIcon size={14} />}
                               Generar con IA
                             </button>
                           </div>

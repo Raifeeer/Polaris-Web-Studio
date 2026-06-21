@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle2, ArrowRight, BookOpen, Calendar, Sparkles, ShieldCheck } from "lucide-react";
+import { CheckCircle2, ArrowRight, BookOpen, Calendar, ShieldCheck } from "lucide-react";
+import AISparkleIcon from "../components/AISparkleIcon";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T } from "../context/LanguageContext";
@@ -114,11 +115,11 @@ export default function Gracias() {
           className="w-full glass-panel rounded-[var(--radius-bento)] p-6 md:p-8 mb-16 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-            <Sparkles size={80} />
+            <AISparkleIcon size={80} />
           </div>
 
           <h3 className="text-lg font-display font-bold mb-4 flex items-center gap-2 text-[var(--color-primary-base)]">
-            <Sparkles size={18} />
+            <AISparkleIcon size={18} />
             <T en="Project Summary">Resumen de tu Cotización</T>
           </h3>
 

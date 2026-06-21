@@ -4,8 +4,7 @@ import {
   Clock, 
   ChevronLeft, 
   Check, 
-  Share2, 
-  Sparkles,
+  Share2,
   BookMarked,
   ArrowRight,
   ArrowLeft
@@ -13,6 +12,7 @@ import {
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AISparkleIcon from "../components/AISparkleIcon";
 import NewsletterForm from "../components/NewsletterForm";
 import { BLOG_POSTS, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
@@ -611,7 +611,7 @@ export default function BlogPostDetail() {
         {relatedPosts.length > 0 && (
           <section className="mt-20 pt-10 border-t border-[var(--color-border-subtle)]/40 space-y-8" id="blog-detail-related-section">
             <h3 className="text-xl md:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] text-left flex items-center gap-2">
-              <Sparkles size={18} className="text-indigo-500" />
+              <AISparkleIcon size={18} className="text-indigo-500" />
               <T en="Recommended Insights">Lecturas Recomendadas</T>
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

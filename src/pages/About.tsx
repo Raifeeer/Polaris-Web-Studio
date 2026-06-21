@@ -11,7 +11,6 @@ import {
   Code2,
   Award,
   Zap,
-  Sparkles,
   Command,
   Check,
   CheckCircle2,
