@@ -962,7 +962,7 @@ export default function Services() {
           <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">
             <T en="Solutions that Convert">Soluciones que Convierten</T>
           </span>
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
+          <h1 className="text-2xl sm:text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
             <T
               en={
                 <>

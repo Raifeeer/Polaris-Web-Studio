@@ -2429,7 +2429,7 @@ export default function WizardQuote() {
             <T en="Build Your Digital Presence">Construye tu Presencia Digital</T>
           </span>
 
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)] pb-4 border-b border-[var(--color-border-subtle)] w-full">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)] pb-4 border-b border-[var(--color-border-subtle)] w-full">
             <T
               en={
                 <>

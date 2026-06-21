@@ -219,8 +219,8 @@ export default function ContactSection() {
               className="w-full py-4 px-6 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-xs sm:text-sm uppercase tracking-wider hover:scale-[1.01] hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-between gap-3 shadow-xl shadow-[var(--color-primary-base)]/15 cursor-pointer"
             >
               <span>
-                <T en={`Plan project for ${currentOpt.en} →`}>
-                  {`Iniciar planificación de ${currentOpt.es} →`}
+                <T en={`Plan project for ${currentOpt.en}`}>
+                  {`Iniciar planificación de ${currentOpt.es}`}
                 </T>
               </span>
               <ArrowRight size={16} className="shrink-0" />
