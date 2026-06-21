@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   ShieldCheck,
   Lock,
-  Sparkles,
+  Orbit,
+  Eclipse,
   Cpu,
   Brain,
   Database,
@@ -1947,7 +1948,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 flex items-center justify-center">
-                  <Globe size={18} className="text-[var(--color-primary-base)]" />
+                  <Orbit size={18} className="text-[var(--color-primary-base)]" />
                 </div>
               </div>
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
@@ -2006,7 +2007,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
-                  <Sparkles size={18} className="text-violet-400" />
+                  <Eclipse size={18} className="text-violet-400" />
                 </div>
               </div>
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
