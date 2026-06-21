@@ -90,7 +90,7 @@ export default function About() {
 
       <Navbar />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-12 md:py-24 relative z-10 space-y-36">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-12 md:py-24 relative z-10 space-y-20 md:space-y-36">
         {/* HERO SECTION */}
         <section className="flex flex-col items-center text-center space-y-4 max-w-4xl mx-auto relative">
           <motion.div
@@ -105,19 +105,21 @@ export default function About() {
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.5 }}
-            className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]"
+            className="text-3xl sm:text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]"
           >
             <T
               en={
                 <>
-                  Developing web with pure <br />
+                  Developing web <br className="md:hidden" />
+                  with pure <br className="hidden md:block" />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
                     precision
                   </span>
                 </>
               }
             >
-              Desarrollo web con pura <br />
+              Desarrollo web <br className="md:hidden" />
+              con pura <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
                 precisión
               </span>
