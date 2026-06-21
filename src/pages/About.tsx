@@ -160,7 +160,7 @@ export default function About() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="lg:col-span-7 space-y-6 opacity-0"
+            className="lg:col-span-7 space-y-6 opacity-0 [transform:translateX(-30px)]"
           >
             <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-indigo-500 tracking-wider uppercase">
               <span>01 /</span>
@@ -190,7 +190,7 @@ export default function About() {
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="lg:col-span-5 relative opacity-0"
+            className="lg:col-span-5 relative opacity-0 [transform:translateX(30px)]"
           >
             <div className="absolute inset-0 rounded-[var(--radius-bento)] bg-gradient-to-tr from-indigo-500/10 via-purple-500/5 to-transparent pointer-events-none" />
             <div className="p-6 md:p-8 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden space-y-6">
@@ -308,7 +308,7 @@ export default function About() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: i * 0.1, duration: 0.5 }}
-                className={`p-8 rounded-[var(--radius-bento)] glass-panel transition-all duration-300 bento-glow-hover flex flex-col justify-between group h-full relative overflow-hidden will-change-transform opacity-0`}
+                className={`p-8 rounded-[var(--radius-bento)] glass-panel transition-all duration-300 bento-glow-hover flex flex-col justify-between group h-full relative overflow-hidden will-change-transform opacity-0 [transform:translateY(30px)]`}
               >
                 {/* Visual Number top right */}
                 <span className="absolute top-6 right-8 font-mono text-3xl font-black text-indigo-500/5 group-hover:text-indigo-500/10 transition-colors pointer-events-none">
@@ -420,7 +420,7 @@ export default function About() {
               initial={{ opacity: 0, scale: 0.98 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true, amount: 0.2 }}
-              className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 p-8 md:p-12 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden opacity-0"
+              className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 p-8 md:p-12 rounded-[var(--radius-bento)] glass-panel relative overflow-hidden opacity-0 [transform:scale(0.98)]"
             >
               {/* Left Column: Visual Developer ID Badge / Interactive Container */}
               <div className="md:col-span-5 flex flex-col items-center justify-center space-y-6">

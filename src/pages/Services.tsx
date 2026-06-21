@@ -1273,7 +1273,7 @@ export default function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               initial={{ opacity: 0, y: 20 }}
               viewport={{ once: true, amount: 0.2 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover opacity-0"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover opacity-0 [transform:translateY(20px)]"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
@@ -1311,7 +1311,7 @@ export default function Services() {
               initial={{ opacity: 0, y: 20 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.1 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover opacity-0"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover opacity-0 [transform:translateY(20px)]"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
@@ -1351,7 +1351,7 @@ export default function Services() {
               initial={{ opacity: 0, y: 20 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.2 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover opacity-0"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover opacity-0 [transform:translateY(20px)]"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 dark:text-blue-400">
@@ -1391,7 +1391,7 @@ export default function Services() {
               initial={{ opacity: 0, y: 20 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.3 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover opacity-0"
+              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover opacity-0 [transform:translateY(20px)]"
             >
               <div className="space-y-6">
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400">
