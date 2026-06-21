@@ -22,7 +22,6 @@ import {
   RefreshCw,
   ArrowLeft,
   Pointer,
-  TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -31,6 +30,33 @@ import Testimonials from "../components/Testimonials";
 import WhyPolaris from "../components/WhyPolaris";
 import FinalCTA from "../components/FinalCTA";
 import { T, useLanguage } from "../context/LanguageContext";
+
+// "Statistic Up" de Akar Icons (no existe en lucide-react)
+function StatisticUpIcon({
+  size = 20,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M3 3v16a2 2 0 0 0 2 2h16" />
+      <path d="m7 14l4-4l4 4l6-6" />
+      <path d="M18 8h3v3" />
+    </svg>
+  );
+}
 
 interface PlanItem {
   id: string;
@@ -1474,7 +1500,7 @@ export default function Services() {
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                    <TrendingUp className="text-indigo-500" size={20} />
+                    <StatisticUpIcon className="text-indigo-500" size={20} />
                     <T en="Monthly Performance Report">Informe mensual de rendimiento</T>
                   </div>
                   <p className="text-sm text-[var(--color-text-secondary)]">
