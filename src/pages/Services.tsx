@@ -1403,9 +1403,21 @@ export default function Services() {
               <span className="glass-badge inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-emerald-500/20">
                 <T en="Post-Launch">Post-Lanzamiento</T>
               </span>
-              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight mt-4">
-                <T en="Premium Maintenance & Support">
-                  Mantenimiento y Soporte Premium
+              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">
+                <T
+                  en={
+                    <>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-[var(--color-accent-blue)]">
+                        Premium
+                      </span>{" "}
+                      Maintenance & Support
+                    </>
+                  }
+                >
+                  Mantenimiento y Soporte{" "}
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-[var(--color-accent-blue)]">
+                    Premium
+                  </span>
                 </T>
               </h2>
               <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl">
