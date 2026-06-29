@@ -1382,7 +1382,7 @@ At Polaris we use it as the reference relational database for projects where dat
     },
     tags: ["seo", "posicionamiento", "google", "optimizacion", "metatags", "marketing"],
     concepts: ["seo", "posicionamiento", "google", "buscar", "optimizar", "schema", "tags", "robots", "sitemap"],
-    content: `Un cliente de Santiago nos escribió preocupado: "llevo seis meses pagando anuncios y en cuanto los apago, las visitas se van a cero". Ese es el problema central que resuelve el **SEO Core**: construir una base técnica que Google pueda leer e indexar sin que dependas de pagar por cada clic.
+    content: `¿Llevas meses pagando anuncios y, en cuanto los apagas, las visitas se van a cero? Ese es el problema central que resuelve el **SEO Core**: construir una base técnica que Google pueda leer e indexar sin que dependas de pagar por cada clic.
 
 ### Qué significa realmente "optimizar el core"
 
@@ -1401,7 +1401,7 @@ Cada página necesita un \`title\` único y una \`meta description\` que resuma 
 Un archivo \`robots.txt\` mal configurado puede bloquear, sin que el dueño lo sepa, las páginas más importantes del sitio. Parte de nuestro trabajo es revisar que ningún bloqueo accidental esté escondiendo tu negocio de los buscadores.
 
 *Cuando tu sitio le habla claro a Google, dejas de rentar visibilidad y empiezas a ser dueño de ella.*`,
-    contentEn: `A client in Santiago told us something familiar: "I've been paying for ads for six months, and the moment I pause them, traffic drops to zero." That's exactly the problem **Core SEO** solves — building a technical foundation Google can actually read and index, so you stop renting every single visitor.
+    contentEn: `Have you been paying for ads for months, only to watch traffic drop to zero the moment you pause them? That's exactly the problem **Core SEO** solves — building a technical foundation Google can actually read and index, so you stop renting every single visitor.
 
 ### What "optimizing the core" really means
 
@@ -1440,7 +1440,7 @@ A misconfigured \`robots.txt\` file can silently block your most important pages
     },
     tags: ["animacion", "framer", "motion", "frontend", "diseno", "interaccion"],
     concepts: ["framer", "motion", "animacion", "transiciones", "animar", "interactivo", "microinteracciones", "fluido"],
-    content: `Un cliente que vende mobiliario de oficina nos dijo algo que se nos quedó grabado: "mi web funciona, pero se siente muerta". Tenía razón: todo cargaba de golpe, sin transición, sin respiración visual. Ahí es donde entra **Framer Motion**.
+    content: `Imagina una tienda de mobiliario de oficina cuya web funciona, pero se siente muerta: todo carga de golpe, sin transición, sin respiración visual. Ahí es donde entra **Framer Motion**.
 
 ### Animación con propósito, no decoración
 
@@ -1459,7 +1459,7 @@ Una de las herramientas que más usamos es \`whileInView\`, que activa una anima
 Demasiada animación cansa; muy poca se siente plana. Nuestro trabajo es calibrar duración, retraso y curva de movimiento para que cada transición dure lo justo, generalmente entre 300 y 600 milisegundos, sin que el usuario perciba espera.
 
 *Una interfaz que se mueve con intención no solo se ve mejor: comunica que detrás del diseño hay alguien que cuidó cada detalle.*`,
-    contentEn: `A client who sells office furniture said something that stuck with us: "my website works, but it feels dead." He was right — everything loaded all at once, with no transition, no visual breathing room. That's exactly where **Framer Motion** comes in.
+    contentEn: `Picture an office furniture store whose website works, but feels dead: everything loads all at once, with no transition, no visual breathing room. That's exactly where **Framer Motion** comes in.
 
 ### Animation with purpose, not decoration
 
@@ -1794,7 +1794,7 @@ The solution we implement at Polaris combines multiple methods: credit and debit
     },
     tags: ["bot", "leads", "automatizacion", "conversion", "faq", "rapidez"],
     concepts: ["bot de respuestas rápidas", "lead capture bot", "respuestas rapidas", "capturar leads", "preguntas frecuentes", "faq", "automatizar", "bot", "respuestas", "instantaneas"],
-    content: `Un cliente que ofrece servicios de mudanza nos contó que perdía clientes simplemente porque tardaba horas en responder un WhatsApp. Para cuando contestaba, la persona ya había contratado a otro. Ese es exactly el vacío que llena un **Lead Capture Bot**.
+    content: `¿Tu negocio de mudanzas pierde clientes simplemente porque tarda horas en responder un WhatsApp? Para cuando contestas, la persona ya contrató a otro. Ese es exactamente el vacío que llena un **Lead Capture Bot**.
 
 ### Responder en segundos, no en horas
 
@@ -1813,7 +1813,7 @@ Los estudios sobre tiempos de respuesta en ventas son claros: contactar a un cli
 A diferencia de un equipo humano, el bot trabaja **24 horas**, los fines de semana y feriados. Esto es especialmente valioso para negocios donde los clientes navegan de noche, después de su trabajo, que es cuando muchas decisiones de compra se toman.
 
 *Cada minuto que un cliente espera respuesta es una ventana abierta para que tu competencia entre primero.*`,
-    contentEn: `A client offering moving services told us he was losing customers simply because he took hours to reply to a WhatsApp message. By the time he answered, the person had already hired someone else. That's exactly the gap a **Lead Capture Bot** fills.
+    contentEn: `Imagine a moving company losing customers simply because it takes hours to reply to a WhatsApp message. By the time it answers, the person has already hired someone else. That's exactly the gap a **Lead Capture Bot** fills.
 
 ### Responding in seconds, not hours
 
@@ -1852,7 +1852,7 @@ Unlike a human team, the bot works **24 hours a day**, including weekends and ho
     },
     tags: ["agente-ia", "ventas", "inteligencia-artificial", "gemini", "grok", "conversacion"],
     concepts: ["agente de ventas autonomo", "ia agent", "comercial", "cerrar ventas", "conversacion", "gemini", "grok", "ventas", "asistente", "agente de ventas"],
-    content: `Un cliente que vende repuestos de motocicleta nos preguntó si era posible que su web "vendiera sola" mientras él estaba en el taller atendiendo clientes presenciales. La respuesta es sí, y se llama **Agente de Ventas Autónomo**.
+    content: `¿Es posible que tu web "venda sola" mientras estás en el taller atendiendo clientes presenciales? Si vendes repuestos de motocicleta, o cualquier otro producto, la respuesta es sí, y se llama **Agente de Ventas Autónomo**.
 
 ### Más que un chatbot, un vendedor que conoce tu catálogo
 
@@ -1871,7 +1871,7 @@ Con el tiempo, el agente identifica qué preguntas se repiten y qué objeciones 
 El objetivo no es eliminar a tu equipo de ventas, sino liberarlo de las preguntas repetitivas para que se enfoque en negociaciones grandes, clientes corporativos o casos que de verdad requieren un criterio humano.
 
 *Un negocio que vende mientras su dueño duerme ya no depende solo de las horas del día para crecer.*`,
-    contentEn: `A client who sells motorcycle parts asked if his website could "sell on its own" while he was busy helping customers at the shop. The answer is yes, and it's called an **Autonomous Sales Agent**.
+    contentEn: `Could your website "sell on its own" while you're busy helping customers at the shop? If you sell motorcycle parts, or anything else, the answer is yes, and it's called an **Autonomous Sales Agent**.
 
 ### More than a chatbot — a salesperson who knows your catalog
 
@@ -1910,7 +1910,7 @@ The goal isn't replacing your sales team, but freeing it from repetitive questio
     },
     tags: ["buscador-semantico", "ia", "ecommerce", "embeddings", "conversion", "experiencia-usuario"],
     concepts: ["buscador semantico", "semantic search", "embeddings", "buscar", "tienda", "categoria", "intencion", "buscador inteligente", "buscador", "buscador semántico inteligente"],
-    content: `Una clienta con una tienda de ropa nos mostró algo revelador: sus clientes buscaban "vestido para boda de día" en su buscador y obtenían cero resultados, aunque ella tenía exactamente eso en stock. El buscador solo entendía palabras exactas, no intenciones.
+    content: `Imagina una tienda de ropa donde un cliente busca "vestido para boda de día" en el buscador y obtiene cero resultados, aunque la tienda tiene exactamente eso en stock. El buscador solo entiende palabras exactas, no intenciones.
 
 ### La diferencia entre buscar palabras y buscar intenciones
 
@@ -1929,7 +1929,7 @@ En tiendas pequeñas, la diferencia ya se nota. En catálogos de cientos o miles
 Cada búsqueda sin resultados es información valiosa: te dice qué espera tu cliente y qué no tienes todavía. Con el tiempo, ese historial se convierte en una guía real para decidir qué agregar a tu inventario.
 
 *Un cliente que encuentra rápido lo que busca compra; uno que se frustra buscando, se va a otra tienda.*`,
-    contentEn: `A client with a clothing store showed us something telling: her customers searched "dress for a daytime wedding" in her site search and got zero results, even though she had exactly that in stock. The search only matched exact words, never intent.
+    contentEn: `Picture a clothing store where a customer searches "dress for a daytime wedding" in the site search and gets zero results, even though the store has exactly that in stock. The search only matches exact words, never intent.
 
 ### The difference between searching words and searching intent
 
@@ -1968,7 +1968,7 @@ Every search with no results is valuable information — it tells you what your 
     },
     tags: ["asistente-contenido", "ia", "seo", "reputacion", "copia-comercial", "copywriting"],
     concepts: ["asistente de contenido", "assistant", "escribir", "resenas", "reputacion", "comentarios", "copia", "seo", "asistente de contenido y reseñas"],
-    content: `Un cliente que administra un consultorio dental nos confesó que llevaba meses sin responder reseñas en Google porque "nunca encontraba las palabras correctas" y le daba pena improvisar. Esa demora silenciosa estaba afectando su reputación más de lo que imaginaba.
+    content: `¿Llevas meses sin responder reseñas en Google porque nunca encuentras las palabras correctas y te da pena improvisar? Si administras un consultorio, o cualquier negocio que vive de su reputación, esa demora silenciosa puede estar afectándote más de lo que imaginas.
 
 ### Escribir no debería ser el cuello de botella
 
@@ -1987,7 +1987,7 @@ Cuando un negocio crece, mantener el mismo tono en la web, redes sociales y resp
 La IA propone el primer borrador; la **decisión final** de publicarlo, ajustarlo o descartarlo siempre queda contigo. Es una herramienta de velocidad, no un reemplazo de tu criterio sobre tu propio negocio.
 
 *Una reseña respondida a tiempo no solo tranquiliza a quien la escribió: le muestra a todos los demás que ahí los escuchan.*`,
-    contentEn: `A client who runs a dental clinic admitted he'd gone months without responding to Google reviews because "I never found the right words" and felt awkward improvising. That silent delay was hurting his reputation more than he realized.
+    contentEn: `Have you gone months without responding to Google reviews because you never find the right words and feel awkward improvising? If you run a dental clinic, or any business that lives off its reputation, that silent delay could be hurting you more than you realize.
 
 ### Writing shouldn't be the bottleneck
 
@@ -2264,7 +2264,7 @@ No servers to configure. No hosting plans that fall short. No emergency calls wh
     },
     tags: ["seo", "on-page", "optimizacion", "google", "contenido", "palabras clave"],
     concepts: ["seo on-page", "titulos", "meta descriptions", "keywords", "h1", "h2"],
-    content: `Un cliente con una panadería artesanal nos dijo: "tengo la mejor receta de la zona, pero en Google ni aparezco en la segunda página". Revisamos su sitio y el problema era clásico: contenido bueno, pero sin estructura que Google pudiera entender.
+    content: `Imagina una panadería artesanal con la mejor receta de la zona, pero que en Google ni aparece en la segunda página. Es un problema clásico: contenido bueno, pero sin estructura que Google pueda entender.
 
 ### El SEO On-Page empieza dentro de tu propia página
 
@@ -2283,7 +2283,7 @@ Repetir una palabra clave artificialmente ya no funciona, y de hecho puede penal
 Cada imagen necesita un texto alternativo (\`alt\`) que describa lo que muestra. Además de accesibilidad, esto le da a Google una pista adicional sobre el tema de la página, y puede traerte tráfico extra desde la búsqueda de imágenes.
 
 *El SEO On-Page no es magia: es ordenar tu casa para que el visitante correcto, y Google, sepan exactamente dónde está cada cosa.*`,
-    contentEn: `A client who runs an artisan bakery told us: "I have the best recipe in town, and I don't even show up on Google's second page." We checked his site and the problem was classic: good content, no structure Google could understand.
+    contentEn: `Picture an artisan bakery with the best recipe in town, yet it doesn't even show up on Google's second page. It's a classic problem: good content, no structure Google can understand.
 
 ### On-Page SEO starts inside your own page
 
@@ -2322,7 +2322,7 @@ Every image needs alt text describing what it shows. Beyond accessibility, this 
     },
     tags: ["seo", "tecnico", "sitemap", "velocidad", "core web vitals", "seguridad"],
     concepts: ["seo tecnico", "sitemap", "robots.txt", "https", "cloudflare", "schema markup", "vitals"],
-    content: `Un cliente con una tienda de electrodomésticos pagaba por anuncios que funcionaban bien, pero su tráfico orgánico no crecía nunca. Al revisar su sitio encontramos la causa: tardaba casi siete segundos en cargar desde el celular, y eso era invisible para él como dueño.
+    content: `¿Pagas por anuncios que funcionan bien, pero tu tráfico orgánico nunca crece? Si vendes electrodomésticos, o cualquier otro producto, la causa suele ser la misma: el sitio tarda casi siete segundos en cargar desde el celular, algo invisible para el dueño del negocio.
 
 ### Lo que Google no perdona
 
@@ -2341,7 +2341,7 @@ Google indexa primero la **versión móvil** de tu sitio, no la de escritorio. S
 Una dirección como \`/producto-12345?ref=xyz&temp=true\` le dice menos a Google que \`/productos/lavadora-automatica-16kg\`. Las URLs descriptivas ayudan tanto al posicionamiento como a que el usuario entienda dónde está antes de hacer clic.
 
 *El SEO Técnico no se ve, pero es la diferencia entre un sitio que Google recomienda y uno que ignora silenciosamente.*`,
-    contentEn: `A client running an appliance store was paying for ads that worked fine, but his organic traffic never grew. When we checked his site, we found the cause: it took nearly seven seconds to load on mobile, something completely invisible to him as the owner.
+    contentEn: `Are you paying for ads that work fine, yet your organic traffic never grows? If you run an appliance store, or sell anything else online, the cause is usually the same: the site takes nearly seven seconds to load on mobile, something completely invisible to the owner.
 
 ### What Google doesn't forgive
 
@@ -2380,7 +2380,7 @@ An address like \`/product-12345?ref=xyz&temp=true\` tells Google far less than 
     },
     tags: ["seo", "off-page", "backlinks", "autoridad", "enlaces", "reputacion"],
     concepts: ["seo off-page", "link building", "backlinks", "autoridad", "dominio", "menciones"],
-    content: `Un cliente con un estudio de abogados nos preguntó por qué un competidor más pequeño aparecía arriba de él en Google, con un sitio web visiblemente más simple. La respuesta estaba fuera de su propio sitio: ese competidor tenía menciones y enlaces desde medios locales confiables.
+    content: `¿Por qué un competidor más pequeño aparece arriba de ti en Google, con un sitio web visiblemente más simple? Si tienes un estudio de abogados, o cualquier negocio profesional, la respuesta suele estar fuera de tu propio sitio: ese competidor tiene menciones y enlaces desde medios locales confiables.
 
 ### Lo que pasa fuera de tu sitio también cuenta
 
@@ -2399,7 +2399,7 @@ Google también detecta cuando tu negocio es mencionado en otros sitios, incluso
 Las estrategias que funcionan a largo plazo incluyen colaborar con otros negocios locales, aparecer en medios relevantes a tu industria, y crear contenido tan útil que otros quieran enlazarlo de forma natural, sin pedirlo.
 
 *Tu sitio puede ser perfecto por dentro, pero si nadie afuera habla bien de él, Google tiene poca razón para confiar en ti más que en otros.*`,
-    contentEn: `A client running a law firm asked us why a smaller competitor with a visibly simpler website ranked above him on Google. The answer was outside his own site: that competitor had mentions and links from trusted local media.
+    contentEn: `Why does a smaller competitor with a visibly simpler website rank above you on Google? If you run a law firm, or any professional practice, the answer is usually outside your own site: that competitor has mentions and links from trusted local media.
 
 ### What happens outside your site counts too
 
@@ -2438,7 +2438,7 @@ Long-term strategies that actually work include partnering with other local busi
     },
     tags: ["seo", "contenidos", "blog", "keywords", "estrategia", "inbound"],
     concepts: ["seo contenidos", "blog", "redaccion", "estrategia", "articulos", "palabras clave", "intencion"],
-    content: `Una clienta con un vivero de plantas nos contó que publicaba en redes todos los días, pero su web seguía sin recibir visitas desde Google. El problema: nunca había escrito contenido pensado para resolver dudas reales de búsqueda, solo fotos bonitas.
+    content: `¿Publicas en redes todos los días, pero tu web sigue sin recibir visitas desde Google? Si tienes un vivero de plantas, o cualquier otro negocio, el problema suele ser el mismo: nunca se escribió contenido pensado para resolver dudas reales de búsqueda, solo fotos bonitas.
 
 ### Contenido que responde antes de que te pregunten
 
@@ -2457,7 +2457,7 @@ El contenido publicado hace tres años pierde relevancia si la industria cambió
 Enlazar tus propios artículos relacionados, por ejemplo de "cuidado de ficus" hacia "tipos de macetas recomendadas", ayuda a Google a entender que tu sitio cubre el tema a fondo, y mantiene al visitante navegando más tiempo dentro de tu web.
 
 *El contenido que de verdad funciona no busca venderte algo en la primera línea: busca ayudarte primero, y vender después, casi sin que lo notes.*`,
-    contentEn: `A client running a plant nursery told us she posted on social media every single day, yet her website still got zero visits from Google. The problem: she'd never written content designed to answer real search questions, just pretty photos.
+    contentEn: `Do you post on social media every single day, yet your website still gets zero visits from Google? If you run a plant nursery, or any other business, the problem is usually the same: no content was ever written to answer real search questions, just pretty photos.
 
 ### Content that answers before you even ask
 
@@ -2496,7 +2496,7 @@ Linking your own related articles, say from "ficus care" to "recommended pot typ
     },
     tags: ["seo", "schema markup", "datos estructurados", "rich snippets", "google", "codigo"],
     concepts: ["schema markup", "json-ld", "datos estructurados", "rich snippets", "resultados enriquecidos"],
-    content: `Un cliente con un restaurante nos preguntó por qué el de la esquina aparecía en Google con estrellas, precio y horario visibles directamente en el resultado de búsqueda, mientras el suyo era solo un enlace azul simple. La diferencia era el **Schema Markup**.
+    content: `¿Por qué el restaurante de la esquina aparece en Google con estrellas, precio y horario visibles directamente en el resultado de búsqueda, mientras el tuyo es solo un enlace azul simple? La diferencia es el **Schema Markup**.
 
 ### Un idioma que solo entienden las máquinas
 
@@ -2515,7 +2515,7 @@ Para restaurantes, tiendas online, eventos y artículos de blog, el **Schema cor
 Marcar información que no coincide con lo que el usuario ve realmente en la página, por ejemplo un precio desactualizado, puede generar penalizaciones. El Schema debe reflejar la realidad exacta de tu negocio, siempre actualizada.
 
 *Hablarle a Google en su propio idioma técnico es la forma más directa de que tu negocio destaque entre resultados que se ven todos iguales.*`,
-    contentEn: `A client who runs a restaurant asked why the place on the corner showed up on Google with stars, price, and hours visible right in the search result, while his was just a plain blue link. The difference was **Schema Markup**.
+    contentEn: `Why does the restaurant on the corner show up on Google with stars, price, and hours visible right in the search result, while yours is just a plain blue link? The difference is **Schema Markup**.
 
 ### A language only machines understand
 
@@ -2554,7 +2554,7 @@ Marking up information that doesn't match what the user actually sees on the pag
     },
     tags: ["seo", "google business profile", "seo local", "google maps", "negocio local"],
     concepts: ["google business profile", "ficha de google", "mi negocio", "seo local", "maps", "ubicacion", "reseñas"],
-    content: `Un cliente con una ferretería en Santo Domingo nos dijo que recibía llamadas preguntando "¿están abiertos?" varias veces al día, aunque su horario estaba publicado en su web. El problema era que su negocio casi no aparecía en el mapa de Google cuando alguien buscaba "ferretería cerca de mí".
+    content: `¿Tu ferretería en Santo Domingo recibe llamadas preguntando "¿están abiertos?" varias veces al día, aunque el horario está publicado en tu web? El problema suele ser que el negocio casi no aparece en el mapa de Google cuando alguien busca "ferretería cerca de mí".
 
 ### Tu ficha gratuita más importante
 
@@ -2573,7 +2573,7 @@ Las reseñas no solo influyen en el cliente que las lee: también afectan direct
 Subir fotos reales del local, productos o equipo de trabajo, y publicar actualizaciones periódicas, le indica a Google que el negocio está activo. Una ficha abandonada durante meses pierde posiciones frente a una que se actualiza con regularidad.
 
 *Cuando alguien busca tu tipo de negocio cerca de su ubicación, tu ficha de Google es, muchas veces, la primera y única impresión que recibe de ti.*`,
-    contentEn: `A client who runs a hardware store in Santo Domingo told us he got phone calls asking "are you open?" several times a day, even though his hours were posted on his website. The problem: his business barely showed up on Google's map when someone searched "hardware store near me."
+    contentEn: `Does your hardware store in Santo Domingo get phone calls asking "are you open?" several times a day, even though your hours are posted on your website? The problem is usually that the business barely shows up on Google's map when someone searches "hardware store near me."
 
 ### Your most important free listing
 
@@ -2612,7 +2612,7 @@ Uploading real photos of your location, products, or team, and posting regular u
     },
     tags: ["seo", "analitica", "ga4", "google analytics 4", "conversiones", "datos"],
     concepts: ["google analytics 4", "ga4", "analitica", "metricas", "eventos", "conversiones", "rastreo", "datos"],
-    content: `Un cliente con una academia de inglés online nos dijo con orgullo que tenía "miles de visitas al mes" en su web. Cuando revisamos sus datos reales, descubrimos que casi nadie llegaba hasta el formulario de inscripción: las visitas existían, pero no se traducían en nada.
+    content: `¿Tu academia de inglés online tiene "miles de visitas al mes"? Eso suena bien, pero al revisar los datos reales suele descubrirse que casi nadie llega hasta el formulario de inscripción: las visitas existen, pero no se traducen en nada.
 
 ### Medir visitas no es lo mismo que medir resultados
 
@@ -2631,7 +2631,7 @@ Configurar un **embudo de conversión** permite ver, paso por paso, en qué mome
 El verdadero valor de GA4 no es el panel en sí, sino las decisiones que permite tomar con datos reales: qué campaña de anuncios trae clientes que realmente compran, y cuál solo trae visitas que nunca convierten.
 
 *Sin medir lo correcto, es imposible saber si tu sitio está funcionando o solo está ocupado.*`,
-    contentEn: `A client running an online English academy proudly told us he had "thousands of visits a month" on his site. When we checked his actual data, we found almost nobody made it to the enrollment form — the visits existed, but they translated into nothing.
+    contentEn: `Does your online English academy get "thousands of visits a month"? That sounds great, but checking the actual data usually reveals that almost nobody makes it to the enrollment form — the visits exist, but they translate into nothing.
 
 ### Measuring visits isn't the same as measuring results
 
@@ -2670,7 +2670,7 @@ The real value of GA4 isn't the dashboard itself, but the decisions it enables w
     },
     tags: ["seo", "google search console", "gsc", "indexacion", "rastreo"],
     concepts: ["google search console", "search console", "gsc", "sitemap", "rastreo", "errores", "clics"],
-    content: `Un cliente con un taller de reparación de celulares nos preguntó por qué Google "no sabía" que tenía una nueva página de servicios, publicada hacía dos semanas. La respuesta estaba en una herramienta que nunca había usado: **Google Search Console**.
+    content: `¿Por qué Google "no sabe" que publicaste una nueva página de servicios hace dos semanas? Si tienes un taller de reparación de celulares, o cualquier otro negocio, la respuesta suele estar en una herramienta que nunca has usado: **Google Search Console**.
 
 ### La central de comando que casi nadie revisa
 
@@ -2689,7 +2689,7 @@ Enlaces rotos, páginas bloqueadas por error, o problemas de velocidad detectado
 La sección de rendimiento muestra exactamente qué escribió la gente en Google antes de llegar a tu sitio. Esto revela oportunidades de contenido que de otra forma serían pura adivinanza: preguntas reales que tus clientes ya están haciendo.
 
 *Search Console no mejora tu sitio por sí sola, pero es la única fuente confiable que te dice exactamente qué arreglar primero.*`,
-    contentEn: `A client running a phone repair shop asked us why Google "didn't know" about his new services page, published two weeks earlier. The answer was in a tool he'd never used: **Google Search Console**.
+    contentEn: `Why doesn't Google "know" about the services page you published two weeks ago? If you run a phone repair shop, or any other business, the answer is usually in a tool you've never used: **Google Search Console**.
 
 ### The command center almost nobody checks
 
