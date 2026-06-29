@@ -2784,21 +2784,26 @@ export function querySemanticBlog(query: string): SemanticSearchResult[] {
     const clean2 = w2.toLowerCase().trim();
     if (!clean1 || !clean2) return false;
     if (clean1 === clean2) return true;
-    if (clean1.includes(clean2) || clean2.includes(clean1)) return true;
 
     const len1 = clean1.length;
     const len2 = clean2.length;
     const minLength = Math.min(len1, len2);
-    if (minLength < 3) return false; // short words must match exactly or be substring
+    // Words of 1-2 letters (articles, prepositions like "a", "de", "el") would trivially appear
+    // as a "substring" of almost any longer word, so they only ever count as an exact match.
+    if (minLength < 3) return false;
+    if (clean1.includes(clean2) || clean2.includes(clean1)) return true;
+
+    // Words of 4 letters or fewer require an exact match or substring (checked above) — short
+    // tech acronyms like SSL/SQL/SSR/SSG or CDN/CMS differ by a single letter but mean
+    // completely different things, so allowing 1-edit fuzziness here causes false matches.
+    if (minLength < 5) return false;
 
     const dist = getLevenshteinDistance(clean1, clean2);
     const maxLength = Math.max(len1, len2);
-    
+
     // For words of lengths:
-    // 3 to 4: allow 1 error
     // 5 to 7: allow 2 errors
     // 8+: allow 3 errors
-    if (maxLength <= 4) return dist <= 1;
     if (maxLength <= 7) return dist <= 2;
     return dist <= 3;
   };

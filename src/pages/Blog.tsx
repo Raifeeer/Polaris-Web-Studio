@@ -53,7 +53,13 @@ export default function Blog() {
   }, [searchParams, searchQuery, navigate]);
 
   const handleQueryChange = (val: string) => {
+    const hadQuery = searchQuery.trim().length > 0;
     setSearchQuery(val);
+    if (val.trim() && !hadQuery) {
+      setSortBy("relevance");
+    } else if (!val.trim() && sortBy === "relevance") {
+      setSortBy("newest");
+    }
     const newParams = new URLSearchParams(searchParams);
     if (val) {
       newParams.set("q", val);
@@ -279,6 +285,9 @@ export default function Blog() {
                         onChange={(e) => setSortBy(e.target.value)}
                         className="glass-input w-full border border-[var(--color-border-subtle)] focus:border-indigo-500 focus:outline-none rounded-xl p-3 text-xs font-medium text-[var(--color-text-primary)]"
                       >
+                        {searchQuery.trim() && (
+                          <option value="relevance">{language === "en" ? "Relevance: Best Match First" : "Relevancia: Mejor Coincidencia"}</option>
+                        )}
                         <option value="newest">{language === "en" ? "Publication Date: Newest First" : "Fecha de publicación: Más Reciente"}</option>
                         <option value="oldest">{language === "en" ? "Publication Date: Oldest First" : "Fecha de publicación: Más Antiguo"}</option>
                         <option value="readTimeAsc">{language === "en" ? "Read Time: Shortest First" : "Tiempo de lectura: Más Corto"}</option>
