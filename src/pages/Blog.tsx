@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useNavigationType } from "react-router-dom";
 import { 
   Search, 
   Calendar, 
@@ -23,9 +23,64 @@ import AISparkleIcon from "../components/AISparkleIcon";
 import { BLOG_POSTS, querySemanticBlog, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 
+// Words (2+ letters) from the search query used to highlight matches in titles/previews
+const getHighlightWords = (query: string): string[] => {
+  return Array.from(new Set(query.trim().split(/\s+/).filter((w) => w.length >= 2)));
+};
+
+// Wraps any occurrence of a highlight word in `text` with an indigo <span>
+const highlightMatches = (text: string, words: string[]): React.ReactNode => {
+  if (words.length === 0) return text;
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const regex = new RegExp(`(${escaped.join("|")})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, idx) =>
+    words.some((w) => w.toLowerCase() === part.toLowerCase()) ? (
+      <span key={idx} className="text-indigo-500 font-bold">
+        {part}
+      </span>
+    ) : (
+      part
+    )
+  );
+};
+
+// Finds a short excerpt of `text` centered on the first highlight-word match, for use as
+// a search-result preview ("...bla bla SSL bla bla...") instead of the generic summary
+const getMatchSnippet = (text: string, words: string[], context = 70): string | null => {
+  // Strip markdown markup (headings, bold, italics) and collapse line breaks so the
+  // preview reads as a single clean sentence instead of leaking "###"/"**" markers
+  const clean = text
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const lower = clean.toLowerCase();
+  let bestIndex = -1;
+  let bestLength = 0;
+  for (const w of words) {
+    const idx = lower.indexOf(w.toLowerCase());
+    if (idx !== -1 && (bestIndex === -1 || idx < bestIndex)) {
+      bestIndex = idx;
+      bestLength = w.length;
+    }
+  }
+  if (bestIndex === -1) return null;
+
+  const start = Math.max(0, bestIndex - context);
+  const end = Math.min(clean.length, bestIndex + bestLength + context);
+  let snippet = clean.slice(start, end);
+  if (start > 0) snippet = `…${snippet}`;
+  if (end < clean.length) snippet = `${snippet}…`;
+  return snippet;
+};
+
 export default function Blog() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const { language, translate } = useLanguage();
 
   // Search, Categories, Sort, Date range Filter states
@@ -36,21 +91,47 @@ export default function Blog() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Sync state to URL params for query parameter sharing & backward-compatibility redirect
+  // Sync state FROM URL only on real back/forward navigation (POP), never on our own
+  // pushes below — otherwise the round-trip races with fast typing and drops keystrokes,
+  // since setSearchParams resolves a render behind the locally-typed value.
   useEffect(() => {
-    const q = searchParams.get("q");
-    if (q !== null && q !== searchQuery) {
-      setSearchQuery(q);
-    }
-    const cat = searchParams.get("category");
-    if (cat) {
-      setActiveCategory(cat);
+    if (navigationType === "POP") {
+      const q = searchParams.get("q");
+      if (q !== null) {
+        setSearchQuery((prev) => (q !== prev ? q : prev));
+      }
+      const cat = searchParams.get("category");
+      if (cat) {
+        setActiveCategory(cat);
+      }
     }
     const postSlug = searchParams.get("read");
     if (postSlug) {
       navigate(`/blog/${postSlug}`, { replace: true });
     }
-  }, [searchParams, searchQuery, navigate]);
+    // Intentionally excludes `searchQuery` — this effect must only react to actual
+    // navigation events (URL/history changes), not to local keystroke-driven state
+    // changes, or it re-fires on every keystroke and can stomp on fast typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, navigationType, navigate]);
+
+  // Push the query into the URL on a short debounce instead of on every keystroke — a
+  // router-triggered re-render is heavier than a local setState, so doing it per keystroke
+  // can lag behind fast typing and drop characters from the controlled input.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        if (searchQuery) {
+          next.set("q", searchQuery);
+        } else {
+          next.delete("q");
+        }
+        return next;
+      }, { replace: true });
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [searchQuery, setSearchParams]);
 
   const handleQueryChange = (val: string) => {
     const hadQuery = searchQuery.trim().length > 0;
@@ -60,13 +141,6 @@ export default function Blog() {
     } else if (!val.trim() && sortBy === "relevance") {
       setSortBy("newest");
     }
-    const newParams = new URLSearchParams(searchParams);
-    if (val) {
-      newParams.set("q", val);
-    } else {
-      newParams.delete("q");
-    }
-    setSearchParams(newParams);
   };
 
   const handleCategoryChange = (cat: string) => {
@@ -77,7 +151,7 @@ export default function Blog() {
     } else {
       newParams.delete("category");
     }
-    setSearchParams(newParams);
+    setSearchParams(newParams, { replace: true });
   };
 
   const handlePostClick = (post: BlogPost) => {
@@ -408,7 +482,15 @@ export default function Blog() {
         {/* Core Articles Grid */}
         {processedPosts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16">
-            {processedPosts.map(({ post, score, matchReason, matchReasonEn }, i) => (
+            {(() => {
+              const highlightWords = searchQuery.trim() ? getHighlightWords(searchQuery) : [];
+              return processedPosts.map(({ post, score }, i) => {
+                const title = language === "en" ? post.titleEn : post.title;
+                const summary = language === "en" ? post.summaryEn : post.summary;
+                const content = language === "en" ? post.contentEn : post.content;
+                const snippet = highlightWords.length > 0 ? getMatchSnippet(content, highlightWords) : null;
+                const previewText = snippet || summary;
+                return (
               <motion.article
                 id={`blog-post-card-${post.id}`}
                 key={post.id}
@@ -441,20 +523,12 @@ export default function Blog() {
                   {/* Title & metadata */}
                   <div className="space-y-2 flex-grow">
                     <h3 className="text-lg md:text-xl font-display font-black group-hover:text-indigo-500 transition-colors leading-tight text-[var(--color-text-primary)]">
-                      {language === "en" ? post.titleEn : post.title}
+                      {highlightWords.length > 0 ? highlightMatches(title, highlightWords) : title}
                     </h3>
                     <p className="text-xs md:text-sm text-[var(--color-text-secondary)] leading-relaxed line-clamp-3">
-                      {language === "en" ? post.summaryEn : post.summary}
+                      {highlightWords.length > 0 ? highlightMatches(previewText, highlightWords) : previewText}
                     </p>
                   </div>
-
-                  {/* Semantic Reasoning Footer Log (If matching searchQuery) */}
-                  {searchQuery.trim() && matchReason && (
-                    <div className="text-[10px] bg-slate-100 dark:bg-slate-900/60 text-[var(--color-text-tertiary)] dark:text-[var(--color-text-secondary)] p-2.5 rounded-lg border border-[var(--color-border-subtle)]/40 font-mono scale-[0.98] origin-left italic flex items-start gap-1.5">
-                      <AISparkleIcon size={11} className="text-indigo-500 shrink-0 mt-0.5" />
-                      <span>{language === "en" ? matchReasonEn : matchReason}</span>
-                    </div>
-                  )}
 
                   {/* Bottom Author Line */}
                   <div className="pt-4 border-t border-[var(--color-border-subtle)]/30 flex items-center justify-between">
@@ -481,7 +555,9 @@ export default function Blog() {
                   </div>
                 </div>
               </motion.article>
-            ))}
+                );
+              });
+            })()}
           </div>
         ) : (
           /* Empty search state */
