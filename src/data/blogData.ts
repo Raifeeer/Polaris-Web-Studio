@@ -2860,6 +2860,402 @@ The performance report shows exactly what people typed into Google before landin
 While reviewing Search Console, the shop from the example discovered its "screen repair" page had been marked "excluded" for weeks, because a recent site change had blocked that section without anyone noticing. After fixing the block and requesting **manual indexing**, the page reappeared in results within forty-eight hours. Without checking this report, the shop would have kept wondering why a page that used to bring in customers had simply stopped generating calls.
 
 *Search Console doesn't improve your site by itself, but it's the only reliable source telling you exactly what to fix first.*`
+  },
+  {
+    id: "post-addon-seo-strategy",
+    slug: "guia-estrategia-seo-personalizada",
+    title: "Guía de Estrategia SEO: El Plan Antes del Contenido",
+    titleEn: "SEO Strategy Guide: The Plan Before the Content",
+    summary: "Antes de escribir una sola página, una guía de estrategia SEO define qué palabras clave perseguir, qué contenido crear primero y en qué orden, basado en datos reales de búsqueda.",
+    summaryEn: "Before writing a single page, an SEO strategy guide defines which keywords to chase, what content to create first, and in what order, based on real search data.",
+    category: "SEO",
+    categoryEn: "SEO",
+    publishedAt: "2026-06-24",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["seo", "estrategia", "keywords", "plan de contenido", "roadmap"],
+    concepts: ["guia de estrategia seo", "estrategia seo personalizada", "plan seo", "keywords", "roadmap seo", "investigacion de palabras clave"],
+    content: `¿Tu sitio web está listo, pero no tienes ni idea de qué escribir primero para que Google te encuentre? Si tienes una clínica dental, o cualquier otro negocio, ese vacío es exactamente lo que resuelve una **Guía de Estrategia SEO** personalizada.
+
+### Un plan, no solo una lista de palabras clave
+
+A diferencia de una lista genérica de términos, una guía de estrategia SEO real cruza tu negocio específico (ubicación, especialidad, competencia) con datos reales de búsqueda, y entrega un documento ordenado: qué palabras clave perseguir primero, qué páginas crear, y en qué orden.
+
+### Investigación de palabras clave con intención real
+
+Antes de definir nada, se analiza qué escribe la gente cuando busca algo como lo que ofreces: no solo "dentista", sino frases más específicas como "dentista urgencia fin de semana", que tienen menos competencia y más probabilidad de convertirse en cliente.
+
+### Un calendario de contenido, no una idea suelta
+
+La guía no se queda en teoría: incluye un calendario con temas concretos para blog, páginas de servicio y preguntas frecuentes, ordenados por cuál atraerá clientes más rápido. Esto evita el problema común de "saber que necesitas contenido" pero no saber por dónde empezar.
+
+### Una checklist técnica que acompaña el plan
+
+También se incluye una revisión de aspectos técnicos básicos —títulos, meta descripciones, estructura de encabezados— para que el contenido nuevo no compita contra errores técnicos que ya existían en el sitio.
+
+### El caso de la clínica dental del ejemplo
+
+Al recibir su guía de estrategia, la clínica del ejemplo descubrió que la mayoría de sus competidores ignoraba por completo las búsquedas relacionadas con "urgencias dentales nocturnas", un término con menos competencia pero búsquedas constantes. Priorizar esa página en su calendario de contenido, en vez de competir de inmediato por "dentista" a nivel general, le trajo sus primeras citas nuevas desde Google en menos de un mes.
+
+*Sin un plan escrito, cada pieza de contenido que publiques es una apuesta; con una guía de estrategia, cada pieza tiene un propósito medible.*`,
+    contentEn: `Your website is ready, but you have no idea what to write first to get Google to notice you? If you run a dental clinic, or any other business, that gap is exactly what a personalized **SEO Strategy Guide** solves.
+
+### A plan, not just a list of keywords
+
+Unlike a generic list of terms, a real SEO strategy guide cross-references your specific business (location, specialty, competition) with actual search data, and delivers an organized document: which keywords to chase first, which pages to build, and in what order.
+
+### Keyword research with real intent
+
+Before defining anything, the guide analyzes what people actually type when searching for something like what you offer: not just "dentist," but more specific phrases like "weekend emergency dentist," which have less competition and a higher chance of turning into an actual client.
+
+### A content calendar, not a loose idea
+
+The guide doesn't stop at theory: it includes a calendar with concrete topics for the blog, service pages, and FAQs, ordered by which will attract customers fastest. That avoids the common problem of "knowing you need content" without knowing where to start.
+
+### A technical checklist that comes with the plan
+
+It also includes a review of basic technical elements — titles, meta descriptions, heading structure — so new content isn't competing against technical errors that already existed on the site.
+
+### The case of the dental clinic from the example
+
+After receiving its strategy guide, the clinic from the example discovered that most of its competitors completely ignored searches related to "late-night dental emergencies," a term with less competition but steady search volume. Prioritizing that page in its content calendar, instead of immediately competing for the broad term "dentist," brought in its first new appointments from Google in under a month.
+
+*Without a written plan, every piece of content you publish is a gamble; with a strategy guide, every piece has a measurable purpose.*`
+  },
+  {
+    id: "post-addon-crm-connect",
+    slug: "crm-connect-sincronizacion-leads",
+    title: "CRM Connect: Cero Leads Perdidos Entre tu Sitio y tu Equipo de Ventas",
+    titleEn: "CRM Connect: Zero Lost Leads Between Your Site and Your Sales Team",
+    summary: "Conecta los formularios y el chat de tu sitio directamente a tu CRM para que cada lead aparezca en tu pipeline de ventas en segundos, sin copiar y pegar nada a mano.",
+    summaryEn: "Connect your site's forms and chat directly to your CRM so every lead lands in your sales pipeline within seconds, with nothing copied by hand.",
+    category: "Desarrollo",
+    categoryEn: "Development",
+    publishedAt: "2026-06-25",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["crm", "integracion", "automatizacion", "leads", "ventas"],
+    concepts: ["crm connect", "integracion crm", "sincronizacion de leads", "pipeline de ventas", "automatizar leads"],
+    content: `¿Cuántos leads se pierden porque alguien olvidó copiar un formulario a la hoja de cálculo del equipo de ventas? Si tienes una inmobiliaria, o cualquier negocio donde cada lead cuenta, ese error manual es justo lo que elimina **CRM Connect**.
+
+### Sincronización automática, sin copiar y pegar
+
+CRM Connect conecta los formularios y el chat de tu sitio directamente con tu CRM —HubSpot, Pipedrive o el sistema que ya uses— para que cada nuevo contacto aparezca automáticamente en tu pipeline de ventas, sin que nadie tenga que transcribirlo a mano.
+
+### Información completa, no solo un nombre y un correo
+
+Cada lead llega con contexto: qué página visitó, qué formulario llenó, qué preguntó si pasó por el chatbot. Tu equipo de ventas no empieza la conversación desde cero, sino con datos reales para personalizar el primer contacto.
+
+### Sin retrasos entre el sitio web y el cierre de venta
+
+Cuando el lead se registra a mano, suelen pasar horas o incluso días antes de que alguien lo ingrese al CRM. Con la sincronización automática, ese lead está visible para el vendedor asignado en segundos, justo cuando el interés del cliente está más fresco.
+
+### Compatible con el sistema que ya usas
+
+No es necesario migrar todo tu proceso de ventas a una herramienta nueva: CRM Connect se adapta a la plataforma que tu equipo ya conoce, evitando la resistencia natural a cambiar de sistema.
+
+### Lo que cambió para la inmobiliaria del ejemplo
+
+Antes de instalar la integración, la inmobiliaria del ejemplo perdía en promedio dos o tres leads por semana simplemente porque nadie revisaba a tiempo el correo donde llegaban los formularios. Tras conectar su sitio directamente al CRM, cada solicitud de visita a una propiedad apareció de inmediato en el pipeline del agente correspondiente, y el tiempo de primer contacto bajó de casi un día a minutos.
+
+*Un lead que tarda en llegar a tu CRM es un lead que tu competencia puede contactar primero.*`,
+    contentEn: `How many leads slip through the cracks because someone forgot to copy a form submission into the sales team's spreadsheet? If you run a real estate agency, or any business where every lead counts, that manual error is exactly what **CRM Connect** eliminates.
+
+### Automatic sync, no copy-pasting
+
+CRM Connect links your site's forms and chat directly to your CRM — HubSpot, Pipedrive, or whatever system you already use — so every new contact shows up automatically in your sales pipeline, with nobody having to transcribe it by hand.
+
+### Full context, not just a name and an email
+
+Every lead arrives with context: which page they visited, which form they filled out, what they asked if they went through the chatbot. Your sales team doesn't start the conversation from zero — they start with real data to personalize that first contact.
+
+### No lag between your website and closing the sale
+
+When a lead gets entered by hand, hours or even days can pass before anyone logs it into the CRM. With automatic syncing, that lead is visible to the assigned salesperson within seconds, right when the customer's interest is freshest.
+
+### Works with the system you already have
+
+You don't need to migrate your entire sales process to a new tool: CRM Connect adapts to the platform your team already knows, avoiding the natural resistance to switching systems.
+
+### What changed for the real estate agency from the example
+
+Before installing the integration, the agency from the example was losing an average of two or three leads a week simply because nobody checked the inbox where form submissions landed in time. After connecting its site directly to the CRM, every property visit request appeared instantly in the right agent's pipeline, and first-contact time dropped from almost a day to minutes.
+
+*A lead that takes too long to reach your CRM is a lead your competitor can reach first.*`
+  },
+  {
+    id: "post-addon-multilingual",
+    slug: "sitio-web-multilingue-alcance-global",
+    title: "Sitio Web Multilingüe: La Diferencia Entre Visitarte e Irse",
+    titleEn: "Multilingual Website: The Difference Between Staying and Leaving",
+    summary: "Un sitio multilingüe adapta diseño, tono y SEO a cada idioma para captar clientes internacionales que de otra forma cerrarían tu sitio en los primeros segundos.",
+    summaryEn: "A multilingual website adapts design, tone, and SEO to each language to capture international customers who would otherwise close your site within seconds.",
+    category: "Desarrollo",
+    categoryEn: "Development",
+    publishedAt: "2026-06-26",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["multilingue", "internacionalizacion", "traduccion", "alcance global"],
+    concepts: ["sitio web multilingue", "multilingual website", "traduccion de sitio", "alcance internacional", "idiomas"],
+    content: `¿Cuántos huéspedes potenciales cierran tu sitio en los primeros segundos porque no entienden una palabra de lo que ofreces? Si tienes un hotel boutique en zona turística, o cualquier negocio con clientes extranjeros, ese cierre silencioso es justo lo que evita un **Sitio Web Multilingüe**.
+
+### Más que traducir, adaptar el mensaje
+
+Un sitio multilingüe no es simplemente correr tu texto por un traductor automático. Cada versión de idioma respeta el mismo diseño y la misma estructura, pero adapta el tono, las unidades (precios, fechas, medidas) y hasta las imágenes según el público al que se dirige.
+
+### El visitante elige, el sitio recuerda
+
+El cambio de idioma se detecta automáticamente según la ubicación o el navegador del visitante, pero siempre queda visible un selector manual. Una vez elegido, el sitio recuerda esa preferencia en visitas futuras, sin obligar a repetir la selección cada vez.
+
+### SEO en cada idioma, no solo en el principal
+
+Cada versión de idioma se indexa por separado en buscadores, lo que significa que tu sitio puede aparecer en resultados de Google tanto para búsquedas en español como en inglés (u otro idioma), duplicando tus oportunidades de ser encontrado.
+
+### Una sola plataforma, no sitios separados que mantener
+
+A diferencia de mantener dos sitios web completamente distintos, el contenido multilingüe vive en la misma plataforma: actualizar un precio o una foto se refleja, con su respectiva traducción, en todas las versiones de idioma a la vez.
+
+### Lo que descubrió el hotel boutique del ejemplo
+
+Tras agregar la versión en inglés de su sitio, el hotel del ejemplo notó que casi el cuarenta por ciento de sus nuevas reservas en temporada alta llegaban de visitantes que habían navegado directamente la versión en inglés, un segmento de huéspedes que antes simplemente abandonaba el sitio sin completar una reserva por no entender la descripción de las habitaciones.
+
+*Un cliente que no entiende tu sitio no es un cliente que "lo piensa": es un cliente que ya se fue a la competencia.*`,
+    contentEn: `How many potential guests close your site in the first few seconds because they don't understand a word you're offering? If you run a boutique hotel in a tourist area, or any business with international customers, that silent bounce is exactly what a **Multilingual Website** prevents.
+
+### More than translation — adapting the message
+
+A multilingual site isn't just running your text through an automatic translator. Each language version keeps the same design and structure, but adapts tone, units (prices, dates, measurements), and even images to the audience it's speaking to.
+
+### The visitor chooses, the site remembers
+
+Language is detected automatically based on the visitor's location or browser, but a manual selector always stays visible. Once chosen, the site remembers that preference on future visits, instead of forcing the same choice every time.
+
+### SEO in every language, not just the main one
+
+Each language version gets indexed separately by search engines, which means your site can show up in Google results for searches in Spanish and in English (or another language), doubling your chances of being found.
+
+### One platform, not separate sites to maintain
+
+Unlike running two completely separate websites, multilingual content lives on the same platform: updating a price or a photo gets reflected, with its corresponding translation, across every language version at once.
+
+### What the boutique hotel from the example discovered
+
+After adding the English version of its site, the hotel from the example found that nearly forty percent of its new high-season bookings came from visitors who had browsed the English version directly — a segment of guests that used to simply abandon the site without booking, because they couldn't understand the room descriptions.
+
+*A customer who can't understand your site isn't a customer who's "thinking it over" — they're a customer who already left for a competitor.*`
+  },
+  {
+    id: "post-addon-copywriting",
+    slug: "copywriting-profesional-textos-que-venden",
+    title: "Copywriting Profesional: Cuando el Diseño Atrae pero los Textos no Venden",
+    titleEn: "Professional Copywriting: When Design Attracts but the Words Don't Sell",
+    summary: "El copywriting profesional reemplaza frases genéricas por textos que explican beneficios concretos, estructurando cada sección del sitio para guiar al visitante hacia la compra.",
+    summaryEn: "Professional copywriting replaces generic phrases with text that explains concrete benefits, structuring every section of the site to guide visitors toward a purchase.",
+    category: "Comercio Electrónico",
+    categoryEn: "E-commerce",
+    publishedAt: "2026-06-27",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["copywriting", "conversion", "textos persuasivos", "ventas"],
+    concepts: ["copywriting profesional", "textos que venden", "copy persuasivo", "conversion de textos", "redaccion publicitaria"],
+    content: `¿Tu sitio se ve increíble, pero los visitantes lo recorren entero y se van sin comprar? Si tienes una tienda online de productos artesanales, o cualquier negocio con buen diseño y textos genéricos, ese silencio en las ventas suele resolverse con **Copywriting Profesional**.
+
+### El diseño atrae, las palabras convencen
+
+Un sitio bien diseñado capta la atención, pero es el texto el que responde la pregunta real del visitante: "¿por qué debería comprar esto, y por qué ahora?". Sin esa respuesta clara, incluso el diseño más bonito se queda en una galería de imágenes.
+
+### Escribir para tu cliente, no para sonar elegante
+
+El copywriting profesional evita frases genéricas como "calidad y tradición" que no dicen nada concreto, y las reemplaza con beneficios específicos: qué problema resuelve el producto, para quién, y qué pasa si no lo compra ahora.
+
+### Cada sección con un propósito claro
+
+Un título capta atención, un subtítulo explica el beneficio, una llamada a la acción guía el siguiente paso. El copywriting profesional estructura cada parte del sitio para que el visitante sepa exactamente qué hacer a continuación, sin tener que adivinarlo.
+
+### Adaptado al tono de tu marca, no a una fórmula genérica
+
+El texto se ajusta a cómo realmente habla tu negocio: cercano y directo para una marca joven, formal y técnico para una consultoría. No se trata de aplicar una fórmula de ventas agresiva igual para todos los negocios.
+
+### Lo que cambió para la tienda artesanal del ejemplo
+
+Al reemplazar frases como "productos hechos con calidad y tradición" por textos que explicaban el proceso real detrás de cada pieza —quién la hace, cuánto tiempo toma, por qué eso justifica el precio— la tienda del ejemplo vio que el tiempo promedio en su página de producto subió, y con él, su tasa de conversión, sin cambiar ni el diseño ni los precios.
+
+*Un visitante no compra lo que ve bonito, compra lo que entiende que necesita.*`,
+    contentEn: `Your site looks incredible, but visitors browse the whole thing and leave without buying? If you run an online store selling handmade goods, or any business with great design and generic copy, that silent lack of sales is usually solved with **Professional Copywriting**.
+
+### Design attracts, words convince
+
+A well-designed site captures attention, but it's the text that answers the visitor's real question: "why should I buy this, and why now?" Without that clear answer, even the prettiest design ends up being just an image gallery.
+
+### Writing for your customer, not to sound fancy
+
+Professional copywriting drops generic phrases like "quality and tradition" that say nothing concrete, and replaces them with specific benefits: what problem the product solves, for whom, and what happens if they don't buy it now.
+
+### Every section with a clear purpose
+
+A headline grabs attention, a subheading explains the benefit, a call to action guides the next step. Professional copywriting structures every part of the site so the visitor knows exactly what to do next, without having to guess.
+
+### Tuned to your brand's voice, not a generic formula
+
+The copy adapts to how your business actually talks: warm and direct for a young brand, formal and technical for a consultancy. It's not about applying the same aggressive sales formula to every business.
+
+### What changed for the handmade goods store from the example
+
+After replacing phrases like "products made with quality and tradition" with text explaining the real process behind each piece — who makes it, how long it takes, why that justifies the price — the store from the example saw its average time on the product page go up, and with it, its conversion rate, without changing the design or the prices at all.
+
+*A visitor doesn't buy what looks pretty — they buy what they understand they need.*`
+  },
+  {
+    id: "post-addon-branding",
+    slug: "kit-branding-basico-identidad-visual",
+    title: "Kit de Branding Básico: Una Marca, no Tres Logos Distintos",
+    titleEn: "Basic Branding Kit: One Brand, Not Three Different Logos",
+    summary: "Un kit de branding básico define logo, paleta de colores y tipografía para que tu negocio se vea como la misma marca en el sitio, las redes y cualquier otro lugar donde aparezca.",
+    summaryEn: "A basic branding kit defines logo, color palette, and typography so your business looks like the same brand on the website, social media, and everywhere else it shows up.",
+    category: "Desarrollo",
+    categoryEn: "Development",
+    publishedAt: "2026-06-28",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["branding", "identidad visual", "logo", "marca"],
+    concepts: ["kit de branding", "identidad visual", "branding basico", "logo profesional", "paleta de colores"],
+    content: `¿Tu negocio se ve diferente en cada lugar donde aparece —un logo en el local, otro en redes, otro en el sitio web? Si tienes un gimnasio nuevo, o cualquier negocio que creció sin un diseño de marca definido, esa inconsistencia es justo lo que resuelve un **Kit de Branding Básico**.
+
+### Una identidad, no un logo suelto
+
+El kit no se limita a entregar un logo: define una paleta de colores, una tipografía y reglas básicas de uso, para que tu marca se vea como la misma marca sin importar dónde aparezca: el sitio, las redes sociales o una tarjeta de presentación.
+
+### Consistencia que genera confianza
+
+Cuando los colores y el estilo cambian entre el local físico, el empaque y el sitio web, los clientes lo perciben, aunque no sepan explicar por qué, como una señal de informalidad. Una identidad consistente comunica, sin palabras, que el negocio es serio y está aquí para quedarse.
+
+### Pensado para usarse, no solo para verse bonito
+
+El kit incluye versiones del logo para fondo claro y oscuro, formatos para redes sociales y variantes simplificadas para espacios pequeños como íconos de aplicación, evitando el problema común de un logo que se ve perfecto en una presentación pero ilegible en un favicon.
+
+### La base sobre la que se construye todo lo demás
+
+Antes de escribir una sola línea de copy o diseñar una sola página, tener definidos los colores y la tipografía de marca acelera cada decisión de diseño posterior, porque ya no hay que improvisar con cada pieza nueva.
+
+### Lo que cambió para el gimnasio del ejemplo
+
+El gimnasio del ejemplo llegó con un logo distinto en cada red social y un nombre escrito de tres formas diferentes en su fachada, sus flyers y su sitio. Tras recibir su kit de branding, unificó los tres bajo la misma paleta y tipografía, y sus propios clientes comenzaron a reconocer sus publicaciones en redes sin necesidad de leer el nombre completo.
+
+*Una marca que se ve distinta en cada lugar no se recuerda como varias marcas: se recuerda como ninguna.*`,
+    contentEn: `Does your business look different everywhere it shows up — one logo at the storefront, another on social media, a third on the website? If you run a new gym, or any business that grew without a defined brand design, that inconsistency is exactly what a **Basic Branding Kit** solves.
+
+### An identity, not a standalone logo
+
+The kit doesn't just hand you a logo: it defines a color palette, a typography, and basic usage rules, so your brand looks like the same brand no matter where it shows up — the website, social media, or a business card.
+
+### Consistency that builds trust
+
+When colors and style shift between the physical location, the packaging, and the website, customers notice, even if they can't explain why, and read it as a sign of informality. A consistent identity communicates, without words, that the business is serious and here to stay.
+
+### Built to be used, not just to look nice
+
+The kit includes logo versions for light and dark backgrounds, social media formats, and simplified variants for small spaces like app icons, avoiding the common problem of a logo that looks perfect in a presentation but unreadable as a favicon.
+
+### The foundation everything else gets built on
+
+Before writing a single line of copy or designing a single page, having brand colors and typography already defined speeds up every design decision that follows, because nothing has to be improvised piece by piece.
+
+### What changed for the gym from the example
+
+The gym from the example showed up with a different logo on every social network and its name written three different ways across its storefront, flyers, and website. After receiving its branding kit, it unified all three under the same palette and typography, and its own customers started recognizing its posts on social media without needing to read the full name.
+
+*A brand that looks different everywhere isn't remembered as several brands — it's remembered as none.*`
+  },
+  {
+    id: "post-addon-hosting-support",
+    slug: "mantenimiento-soporte-premium-webs",
+    title: "Mantenimiento y Soporte Premium: Lo que Pasa Cuando Nadie Está Mirando",
+    titleEn: "Premium Maintenance & Support: What Happens When Nobody's Watching",
+    summary: "El mantenimiento y soporte premium monitorea tu sitio fuera de horario de oficina y resuelve fallas antes de que un cliente real las note y se vaya a la competencia.",
+    summaryEn: "Premium maintenance and support monitors your site outside office hours and resolves failures before a real customer notices and walks away to a competitor.",
+    category: "Performance",
+    categoryEn: "Performance",
+    publishedAt: "2026-06-29",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["mantenimiento", "soporte", "hosting", "actualizaciones", "monitoreo"],
+    concepts: ["mantenimiento y soporte premium", "soporte tecnico web", "monitoreo de sitio", "actualizaciones de seguridad", "uptime"],
+    content: `¿Qué pasa si tu sitio web se cae un sábado a mediodía y nadie se entera hasta el lunes? Si tienes una clínica veterinaria, o cualquier negocio que no revisa su web todos los días, esa pregunta es justo lo que responde el **Mantenimiento y Soporte Premium**.
+
+### Monitoreo que nunca se toma el fin de semana libre
+
+El servicio vigila tu sitio de forma constante, no solo en horario de oficina. Si el sitio se cae, hay un error de carga, o el certificado de seguridad está por expirar, la alerta llega antes de que un cliente real lo note y se vaya a la competencia.
+
+### Actualizaciones que no esperan a que algo se rompa
+
+Las dependencias de un sitio web —desde librerías hasta certificados de seguridad— necesitan actualizarse con regularidad. Sin mantenimiento activo, esas actualizaciones se postergan indefinidamente hasta que una de ellas, finalmente, rompe algo en producción.
+
+### Soporte real cuando aparece un problema
+
+Más allá del monitoreo automático, el plan incluye soporte humano directo: alguien que responde cuando reportas un problema, en vez de un formulario de contacto que se pierde en una bandeja de entrada genérica.
+
+### Pequeños cambios sin abrir un proyecto nuevo
+
+Actualizar un precio, corregir un texto, o subir una nueva foto no debería requerir contratar un proyecto completo cada vez. El soporte premium incluye una cuota de ajustes menores recurrentes, para que el sitio se mantenga al día sin fricción.
+
+### Lo que vivió la clínica veterinaria del ejemplo
+
+Durante una campaña de vacunación gratuita, el sitio de la clínica del ejemplo dejó de responder un sábado por la tarde, justo cuando más visitas recibía. Gracias al monitoreo activo, el equipo de soporte detectó la caída en minutos y restauró el servicio esa misma tarde, antes de que la clínica perdiera ni una sola cita agendada por ese fin de semana.
+
+*Un sitio web no necesita mantenimiento solo cuando algo ya se rompió: necesita mantenimiento, sobre todo, en los días en que nadie está mirando.*`,
+    contentEn: `What happens if your website goes down on a Saturday afternoon and nobody notices until Monday? If you run a veterinary clinic, or any business that doesn't check its website every day, that question is exactly what **Premium Maintenance & Support** answers.
+
+### Monitoring that never takes the weekend off
+
+The service watches your site continuously, not just during office hours. If the site goes down, a page throws a loading error, or the security certificate is about to expire, the alert arrives before a real customer notices and walks away to a competitor.
+
+### Updates that don't wait for something to break
+
+A website's dependencies — from libraries to security certificates — need regular updates. Without active maintenance, those updates get postponed indefinitely until one of them finally breaks something in production.
+
+### Real support when a problem actually shows up
+
+Beyond automated monitoring, the plan includes direct human support: someone who responds when you report a problem, instead of a contact form that disappears into a generic inbox.
+
+### Small changes without opening a whole new project
+
+Updating a price, fixing a typo, or uploading a new photo shouldn't require commissioning an entire project every time. Premium support includes an allowance for recurring minor adjustments, so the site stays current without friction.
+
+### What the veterinary clinic from the example went through
+
+During a free vaccination campaign, the clinic's site from the example stopped responding on a Saturday afternoon, right when it was getting the most traffic. Thanks to active monitoring, the support team caught the outage within minutes and restored service that same afternoon, before the clinic lost a single appointment booked over that weekend.
+
+*A website doesn't only need maintenance once something has already broken — it needs maintenance, most of all, on the days when nobody's watching.*`
   }
 ];
 
