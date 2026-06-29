@@ -33,7 +33,7 @@ const LINK_DEFINITIONS: LinkDef[] = [
   },
   {
     slug: "agente-de-ventas-ia-autonomo",
-    terms: ["agente de ventas autónomo", "agente de ventas autonomo", "agente de ventas", "ia agent"]
+    terms: ["agente de ventas autónomo", "agente de ventas autonomo", "agente de ventas", "ai sales agent", "autonomous sales agent"]
   },
   {
     slug: "buscador-semantico-ia-experiencia-compra",
@@ -61,11 +61,11 @@ const LINK_DEFINITIONS: LinkDef[] = [
   },
   {
     slug: "seo-semantico-google",
-    terms: ["seo semántico", "seo semantico", "seo"]
+    terms: ["seo semántico", "seo semantico"]
   },
   {
     slug: "core-web-vitals-ventas",
-    terms: ["core web vitals", "web vitals", "vitals", "velocidad de carga"]
+    terms: ["core web vitals", "web vitals", "vitals"]
   },
   {
     slug: "postgresql-base-datos",
@@ -77,11 +77,11 @@ const LINK_DEFINITIONS: LinkDef[] = [
   },
   {
     slug: "framer-motion-animaciones",
-    terms: ["framer motion", "animaciones"]
+    terms: ["framer motion"]
   },
   {
     slug: "gemini-inteligencia-artificial",
-    terms: ["gemini", "inteligencia artificial"]
+    terms: ["gemini", "google gemini"]
   },
   {
     slug: "grok-modelo-ia",
@@ -93,7 +93,7 @@ const LINK_DEFINITIONS: LinkDef[] = [
   },
   {
     slug: "webs-corporativas-identidad",
-    terms: ["web corporativa", "webs corporativas", "sitio web corporativo", "sitios web corporativos"]
+    terms: ["web corporativa", "webs corporativas", "sitio web corporativo", "sitios web corporativos", "corporate website"]
   },
   {
     slug: "typescript-codigo-seguro",
@@ -126,6 +126,54 @@ const LINK_DEFINITIONS: LinkDef[] = [
   {
     slug: "google-search-console-guia-completa",
     terms: ["google search console", "search console", "gsc"]
+  },
+  {
+    slug: "google-shopping-guia-completa",
+    terms: ["google shopping", "merchant center"]
+  },
+  {
+    slug: "open-graph-redes-sociales",
+    terms: ["open graph"]
+  },
+  {
+    slug: "arquitectura-web-estatico-spa",
+    terms: ["single page application", "sitio estático", "sitios estáticos", "sitio estatico", "sitios estaticos"]
+  },
+  {
+    slug: "muerte-plantillas-genericas",
+    terms: ["plantillas genéricas", "plantillas genericas", "código hecho a medida", "codigo hecho a medida", "código a medida", "codigo a medida", "custom code"]
+  },
+  {
+    slug: "buscadores-semanticos-ecommerce",
+    terms: ["buscadores semánticos", "buscadores semanticos"]
+  },
+  {
+    slug: "estrategias-cache-cdn-global",
+    terms: ["cdn", "red de distribución de contenido", "red de distribucion de contenido"]
+  },
+  {
+    slug: "seo-core-optimizacion-busqueda",
+    terms: ["seo core"]
+  },
+  {
+    slug: "ssl-seguridad-certificado",
+    terms: ["certificado ssl", "certificados ssl", "ssl"]
+  },
+  {
+    slug: "drizzle-orm-bases-datos-robustas",
+    terms: ["drizzle", "drizzle orm"]
+  },
+  {
+    slug: "pwas-aplicaciones-moviles-instalables",
+    terms: ["pwa", "progressive web app", "aplicación web progresiva", "aplicacion web progresiva"]
+  },
+  {
+    slug: "ci-cd-cloud-run-despliegues-automaticos",
+    terms: ["ci/cd", "cicd", "cloud run"]
+  },
+  {
+    slug: "schema-markup-guia-completa",
+    terms: ["schema markup", "datos estructurados", "rich snippets"]
   }
 ];
 
