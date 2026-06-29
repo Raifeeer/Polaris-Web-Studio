@@ -1400,6 +1400,10 @@ Cada página necesita un \`title\` único y una \`meta description\` que resuma 
 
 Un archivo \`robots.txt\` mal configurado puede bloquear, sin que el dueño lo sepa, las páginas más importantes del sitio. Parte de nuestro trabajo es revisar que ningún bloqueo accidental esté escondiendo tu negocio de los buscadores.
 
+### Un caso real: de invisible a visible en semanas
+
+Una ferretería online que arregló su sitemap, corrigió los \`title\` duplicados en doce páginas de producto y eliminó un bloqueo accidental en su \`robots.txt\` empezó a aparecer en búsquedas como "tornillos para drywall" que antes ni siquiera indexaba. En seis semanas, el **tráfico orgánico** hacia esas páginas de producto creció de forma sostenida sin haber cambiado una sola palabra del contenido visible: solo se corrigió la base técnica que Google necesitaba para encontrarlas y confiar en ellas. Ese es el patrón que se repite una y otra vez: el problema casi nunca es la falta de contenido, sino una base técnica que nadie revisó.
+
 *Cuando tu sitio le habla claro a Google, dejas de rentar visibilidad y empiezas a ser dueño de ella.*`,
     contentEn: `Have you been paying for ads for months, only to watch traffic drop to zero the moment you pause them? That's exactly the problem **Core SEO** solves — building a technical foundation Google can actually read and index, so you stop renting every single visitor.
 
@@ -1418,6 +1422,10 @@ Every page needs a unique \`title\` and a \`meta description\` that honestly sum
 ### Robots.txt and what Google can see
 
 A misconfigured \`robots.txt\` file can silently block your most important pages from search engines without the owner ever knowing. Part of our job is checking that no accidental rule is hiding your business from the people looking for it.
+
+### A real case: from invisible to visible in weeks
+
+An online hardware store that fixed its sitemap, corrected duplicate \`title\` tags across a dozen product pages, and removed an accidental block in its \`robots.txt\` started showing up for searches like "drywall screws" that it previously wasn't even indexed for. Within six weeks, **organic traffic** to those product pages grew steadily without changing a single word of visible content — only the technical foundation Google needed to find and trust them. That's the pattern that repeats over and over: the problem is almost never a lack of content, but a technical base nobody ever checked.
 
 *When your site speaks clearly to Google, you stop renting visibility and start owning it.*`
   },
@@ -1458,6 +1466,10 @@ Una de las herramientas que más usamos es \`whileInView\`, que activa una anima
 
 Demasiada animación cansa; muy poca se siente plana. Nuestro trabajo es calibrar duración, retraso y curva de movimiento para que cada transición dure lo justo, generalmente entre 300 y 600 milisegundos, sin que el usuario perciba espera.
 
+### Un ejemplo concreto: el carrito que no se sentía terminado
+
+En la tienda de muebles del ejemplo, el botón de "agregar al carrito" no tenía ninguna respuesta visual: el usuario hacía clic y, durante una fracción de segundo, no sabía si había funcionado. Agregamos una animación de **confirmación instantánea**: el ícono del carrito se agranda brevemente y un pequeño contador aparece con un rebote suave. Ese detalle de menos de medio segundo eliminó los clics repetidos por duda y, según los datos de la tienda, redujo notablemente los carritos abandonados por simple desconfianza en la interfaz.
+
 *Una interfaz que se mueve con intención no solo se ve mejor: comunica que detrás del diseño hay alguien que cuidó cada detalle.*`,
     contentEn: `Picture an office furniture store whose website works, but feels dead: everything loads all at once, with no transition, no visual breathing room. That's exactly where **Framer Motion** comes in.
 
@@ -1476,6 +1488,10 @@ One of the tools we use most is \`whileInView\`, which triggers an animation the
 ### Finding the right balance
 
 Too much animation feels exhausting; too little feels flat. Our job is calibrating duration, delay, and easing so every transition lasts just long enough, usually between 300 and 600 milliseconds, without the user ever perceiving a wait.
+
+### A concrete example: the cart that didn't feel finished
+
+On the furniture store from the opening example, the "add to cart" button gave no visual response at all — users would click and, for a split second, have no idea whether it had worked. We added an **instant confirmation animation**: the cart icon briefly scales up and a small counter appears with a soft bounce. That detail, lasting less than half a second, eliminated repeated clicks out of doubt and, according to the store's own data, noticeably reduced cart abandonment caused by simple distrust in the interface.
 
 *An interface that moves with intention doesn't just look better — it tells visitors someone cared about every detail behind the design.*`
   },
@@ -1516,6 +1532,10 @@ Google confirmó hace años que usa **HTTPS** como factor de posicionamiento. No
 
 La mayoría de los certificados modernos se renuevan automáticamente cada 90 días mediante servicios como **Let's Encrypt**, pero solo si la configuración del servidor está correcta. Parte de nuestro trabajo es verificar esa automatización para que nunca vuelva a aparecer la advertencia roja sin avisar.
 
+### Un error común: el candado que desaparece a mitad de camino
+
+Es frecuente encontrar sitios con SSL activo en la página principal, pero que cargan imágenes o scripts desde direcciones \`http://\` antiguas. El navegador detecta ese **contenido mixto** y, aunque el certificado sea válido, igual muestra una advertencia o quita el candado verde justo en la página de pago. Para una tienda online, eso ocurre exactamente en el peor momento: cuando el cliente está sacando su tarjeta de crédito. Revisar que absolutamente todos los recursos de la página, sin excepción, viajen por HTTPS es un paso pequeño que evita perder ventas por una advertencia evitable.
+
 *La confianza de un cliente se construye en segundos y se destruye en uno: un candado roto en el navegador es suficiente para perderla.*`,
     contentEn: `Picture a handmade jewelry store that gets a red "not secure" warning from Chrome right before a big sales weekend. The problem is simple — its **SSL certificate** expired without anyone noticing.
 
@@ -1534,6 +1554,10 @@ Google confirmed years ago that it uses **HTTPS** as a ranking signal. It's not 
 ### Auto-renewal, the detail almost nobody checks
 
 Most modern certificates renew automatically every 90 days through services like **Let's Encrypt**, but only if the server configuration is correct. Part of our job is verifying that automation so that red warning never shows up unannounced again.
+
+### A common mistake: the padlock that disappears halfway through
+
+It's common to find sites with active SSL on the homepage that still load images or scripts from old \`http://\` addresses. The browser detects that **mixed content** and, even with a valid certificate, still shows a warning or drops the green padlock right on the checkout page. For an online store, that happens at exactly the worst possible moment — while the customer has their card out. Making sure absolutely every resource on the page, no exceptions, travels over HTTPS is a small fix that prevents losing sales over an avoidable warning.
 
 *Customer trust is built in seconds and destroyed in one — a broken padlock in the browser is enough to lose it for good.*`
   },
@@ -2346,6 +2370,10 @@ Repetir una palabra clave artificialmente ya no funciona, y de hecho puede penal
 
 Cada imagen necesita un texto alternativo (\`alt\`) que describa lo que muestra. Además de accesibilidad, esto le da a Google una pista adicional sobre el tema de la página, y puede traerte tráfico extra desde la búsqueda de imágenes.
 
+### Cómo se ve aplicado: la panadería del ejemplo
+
+Volviendo a la panadería del inicio: su página de "pan de masa madre" tenía un \`H1\` genérico que decía solo "Productos", el mismo \`title\` que el resto del sitio, y ninguna imagen con texto alternativo. Después de cambiar el \`H1\` a "Pan de masa madre artesanal en su ciudad", escribir un \`title\` único por producto y agregar \`alt\` descriptivo a cada foto, esa página específica empezó a aparecer entre los primeros resultados para búsquedas locales de ese producto. Nada del diseño visual cambió: solo la forma en que el código le habla a Google.
+
 *El SEO On-Page no es magia: es ordenar tu casa para que el visitante correcto, y Google, sepan exactamente dónde está cada cosa.*`,
     contentEn: `Picture an artisan bakery with the best recipe in town, yet it doesn't even show up on Google's second page. It's a classic problem: good content, no structure Google can understand.
 
@@ -2364,6 +2392,10 @@ Repeating a keyword artificially doesn't work anymore, and can actually hurt you
 ### Images that talk to Google too
 
 Every image needs alt text describing what it shows. Beyond accessibility, this gives Google an extra clue about the page's topic, and can bring in extra traffic from image search.
+
+### How it looks in practice: the bakery from the intro
+
+Back to the bakery from the opening: its "sourdough bread" page had a generic \`H1\` that just said "Products," the same \`title\` as every other page on the site, and no alt text on a single image. After changing the \`H1\` to "Artisan sourdough bread, baked locally," writing a unique \`title\` per product, and adding descriptive \`alt\` text to every photo, that specific page started showing up among the top results for local searches for that product. Nothing about the visual design changed — only how the code talks to Google.
 
 *On-Page SEO isn't magic — it's tidying your own house so the right visitor, and Google, know exactly where everything is.*`
   },
@@ -2404,6 +2436,10 @@ Google indexa primero la **versión móvil** de tu sitio, no la de escritorio. S
 
 Una dirección como \`/producto-12345?ref=xyz&temp=true\` le dice menos a Google que \`/productos/lavadora-automatica-16kg\`. Las URLs descriptivas ayudan tanto al posicionamiento como a que el usuario entienda dónde está antes de hacer clic.
 
+### El caso de la tienda de electrodomésticos
+
+La tienda del ejemplo inicial tardaba casi siete segundos en mostrar su página de lavadoras desde un celular, principalmente por imágenes de producto sin comprimir y scripts de terceros cargando antes que el contenido principal. Comprimir esas imágenes, diferir scripts no esenciales y servir el sitio desde un servidor más cercano al usuario redujo el tiempo de carga a menos de dos segundos. El tráfico de anuncios pagados no cambió, pero el **tráfico orgánico** hacia esas mismas páginas de producto creció de forma constante en los meses siguientes, una vez que Google dejó de penalizar la lentitud del sitio.
+
 *El SEO Técnico no se ve, pero es la diferencia entre un sitio que Google recomienda y uno que ignora silenciosamente.*`,
     contentEn: `Are you paying for ads that work fine, yet your organic traffic never grows? If you run an appliance store, or sell anything else online, the cause is usually the same: the site takes nearly seven seconds to load on mobile, something completely invisible to the owner.
 
@@ -2422,6 +2458,10 @@ Google indexes the **mobile version** of your site first, not the desktop one. I
 ### Clean URLs, a quality signal
 
 An address like \`/product-12345?ref=xyz&temp=true\` tells Google far less than \`/products/16kg-automatic-washer\`. Descriptive URLs help both ranking and helping the user understand where they are before they even click.
+
+### The case of the appliance store
+
+The store from the opening example took nearly seven seconds to load its washing machine page on mobile, mostly because of uncompressed product images and third-party scripts loading ahead of the main content. Compressing those images, deferring non-essential scripts, and serving the site from a server closer to the user cut load time to under two seconds. Paid ad traffic stayed flat, but **organic traffic** to those same product pages grew steadily over the following months, once Google stopped penalizing the site's slowness.
 
 *Technical SEO is invisible, but it's the difference between a site Google recommends and one it quietly ignores.*`
   },
@@ -2462,6 +2502,10 @@ Google también detecta cuando tu negocio es mencionado en otros sitios, incluso
 
 Las estrategias que funcionan a largo plazo incluyen colaborar con otros negocios locales, aparecer en medios relevantes a tu industria, y crear contenido tan útil que otros quieran enlazarlo de forma natural, sin pedirlo.
 
+### Lo que cambió para el estudio de abogados del ejemplo
+
+El estudio de abogados del inicio empezó a colaborar con dos asociaciones profesionales locales y participó en una nota de un periódico digital sobre cambios en una ley relevante para sus clientes. Esos dos enlaces, junto con tres menciones de marca sin enlace en directorios profesionales, bastaron para que su dominio empezara a competir de igual a igual con despachos que llevaban años más en línea. No se trató de conseguir cientos de enlaces, sino de un puñado de **menciones relevantes** desde fuentes que Google ya consideraba confiables.
+
 *Tu sitio puede ser perfecto por dentro, pero si nadie afuera habla bien de él, Google tiene poca razón para confiar en ti más que en otros.*`,
     contentEn: `Why does a smaller competitor with a visibly simpler website rank above you on Google? If you run a law firm, or any professional practice, the answer is usually outside your own site: that competitor has mentions and links from trusted local media.
 
@@ -2480,6 +2524,10 @@ Google also detects when your business is mentioned on other sites, even without
 ### How authority is earned honestly
 
 Long-term strategies that actually work include partnering with other local businesses, getting featured in media relevant to your industry, and creating content so useful that others want to link to it naturally, without being asked.
+
+### What changed for the law firm from the example
+
+The law firm from the opening started partnering with two local professional associations and got featured in a digital newspaper piece about a legal change relevant to its clients. Those two links, plus three unlinked brand mentions in professional directories, were enough for its domain to start competing on equal footing with firms that had been online for years longer. It wasn't about chasing hundreds of links — just a handful of **relevant mentions** from sources Google already considered trustworthy.
 
 *Your site can be perfect on the inside, but if nobody outside is vouching for it, Google has little reason to trust you more than anyone else.*`
   },
@@ -2520,6 +2568,10 @@ El contenido publicado hace tres años pierde relevancia si la industria cambió
 
 Enlazar tus propios artículos relacionados, por ejemplo de "cuidado de ficus" hacia "tipos de macetas recomendadas", ayuda a Google a entender que tu sitio cubre el tema a fondo, y mantiene al visitante navegando más tiempo dentro de tu web.
 
+### El vivero de plantas, paso a paso
+
+El vivero del ejemplo inicial escribió un solo artículo respondiendo "por qué se le caen las hojas a un ficus", con fotos propias y pasos concretos para solucionarlo. Ese artículo, de más de mil palabras y con ejemplos reales, empezó a recibir visitas constantes desde Google semanas después de publicarse, sin necesidad de pagar un solo anuncio. A los tres meses, ese mismo artículo generaba más consultas de clientes nuevos que las publicaciones diarias en redes sociales combinadas, simplemente porque respondía una pregunta que la gente ya estaba escribiendo en el buscador.
+
 *El contenido que de verdad funciona no busca venderte algo en la primera línea: busca ayudarte primero, y vender después, casi sin que lo notes.*`,
     contentEn: `Do you post on social media every single day, yet your website still gets zero visits from Google? If you run a plant nursery, or any other business, the problem is usually the same: no content was ever written to answer real search questions, just pretty photos.
 
@@ -2538,6 +2590,10 @@ Content published three years ago loses relevance once an industry shifts. Revie
 ### Connecting articles to each other
 
 Linking your own related articles, say from "ficus care" to "recommended pot types," helps Google understand your site covers the topic in depth, and keeps visitors browsing longer within your site.
+
+### The plant nursery, step by step
+
+The nursery from the opening example wrote a single article answering "why is my ficus losing its leaves," with their own photos and concrete steps to fix it. That article, over a thousand words long with real examples, started getting steady visits from Google weeks after publishing, without a single paid ad. Three months in, that one article was generating more new-customer inquiries than all their daily social media posts combined, simply because it answered a question people were already typing into the search bar.
 
 *Content that truly works doesn't try to sell you something in the first line — it tries to help first, and sell almost without you noticing.*`
   },
@@ -2578,6 +2634,10 @@ Para restaurantes, tiendas online, eventos y artículos de blog, el **Schema cor
 
 Marcar información que no coincide con lo que el usuario ve realmente en la página, por ejemplo un precio desactualizado, puede generar penalizaciones. El Schema debe reflejar la realidad exacta de tu negocio, siempre actualizada.
 
+### Lo que ve el usuario al buscar ese restaurante
+
+Volviendo al restaurante de la esquina: con el **Schema Markup** correcto, el resultado de Google para "restaurante italiano cerca de mí" puede mostrar directamente cuatro estrellas de reseñas, el rango de precios y la etiqueta "abierto ahora", todo antes de que el usuario haga clic. Un restaurante sin ese marcado aparece como un enlace azul simple, con el mismo título y descripción que cualquier otro resultado. Frente a dos opciones iguales en distancia y calidad, la mayoría de las personas elige la que ya le mostró más información en la pantalla de resultados, sin necesidad de comparar nada más.
+
 *Hablarle a Google en su propio idioma técnico es la forma más directa de que tu negocio destaque entre resultados que se ven todos iguales.*`,
     contentEn: `Why does the restaurant on the corner show up on Google with stars, price, and hours visible right in the search result, while yours is just a plain blue link? The difference is **Schema Markup**.
 
@@ -2596,6 +2656,10 @@ For restaurants, online stores, events, and blog articles, **correctly implement
 ### Common mistakes that cancel the benefit
 
 Marking up information that doesn't match what the user actually sees on the page, like an outdated price, can trigger penalties. Schema needs to reflect your business's exact, always-current reality.
+
+### What the user actually sees when searching for that restaurant
+
+Back to the corner restaurant: with correctly implemented **Schema Markup**, the Google result for "Italian restaurant near me" can show four review stars, the price range, and an "open now" tag directly, before the user ever clicks. A restaurant without that markup shows up as a plain blue link, with the same title and description as any other result. Faced with two equally close, equally good options, most people pick the one that already showed more information right on the results page, without needing to compare anything further.
 
 *Speaking to Google in its own technical language is the most direct way for your business to stand out among results that otherwise all look the same.*`
   },
@@ -2636,6 +2700,10 @@ Las reseñas no solo influyen en el cliente que las lee: también afectan direct
 
 Subir fotos reales del local, productos o equipo de trabajo, y publicar actualizaciones periódicas, le indica a Google que el negocio está activo. Una ficha abandonada durante meses pierde posiciones frente a una que se actualiza con regularidad.
 
+### La ferretería del ejemplo, antes y después
+
+La ferretería de Santo Domingo del inicio tenía su ficha de Google con el horario antiguo, sin fotos del local y sin responder ninguna reseña desde hacía más de un año. Después de actualizar el horario, subir fotos reales de los pasillos y productos, y responder tanto las reseñas buenas como las malas, las llamadas preguntando "¿están abiertos?" prácticamente desaparecieron. Más importante aún: la ficha empezó a aparecer entre las primeras tres opciones del mapa cuando alguien buscaba "ferretería cerca de mí" en esa zona, superando a competidores con un local más grande pero una ficha completamente abandonada.
+
 *Cuando alguien busca tu tipo de negocio cerca de su ubicación, tu ficha de Google es, muchas veces, la primera y única impresión que recibe de ti.*`,
     contentEn: `Does your hardware store in Santo Domingo get phone calls asking "are you open?" several times a day, even though your hours are posted on your website? The problem is usually that the business barely shows up on Google's map when someone searches "hardware store near me."
 
@@ -2654,6 +2722,10 @@ Reviews don't just influence the customer reading them — they directly affect 
 ### Photos and posts, activity Google rewards
 
 Uploading real photos of your location, products, or team, and posting regular updates, signals to Google that the business is active. A listing left untouched for months loses ground to one updated regularly.
+
+### The hardware store from the example, before and after
+
+The Santo Domingo hardware store from the opening had a Google listing with outdated hours, no photos of the store, and no review responses in over a year. After updating the hours, uploading real photos of the aisles and products, and responding to both positive and negative reviews, the calls asking "are you open?" practically disappeared. More importantly, the listing started showing up among the top three options on the map whenever someone searched "hardware store near me" in that area, outranking competitors with a bigger physical location but a completely abandoned listing.
 
 *When someone searches for your type of business near their location, your Google listing is often the first and only impression they get of you.*`
   },
@@ -2694,6 +2766,10 @@ Configurar un **embudo de conversión** permite ver, paso por paso, en qué mome
 
 El verdadero valor de GA4 no es el panel en sí, sino las decisiones que permite tomar con datos reales: qué campaña de anuncios trae clientes que realmente compran, y cuál solo trae visitas que nunca convierten.
 
+### Lo que descubrió la academia de inglés
+
+Al configurar correctamente los **eventos** en GA4, la academia del ejemplo descubrió que el 70% de las personas que iniciaban el formulario de inscripción lo abandonaban justo en el campo donde se pedía el número de tarjeta antes de confirmar una clase de prueba gratuita. Quitar ese campo del primer paso, y pedirlo solo después de la clase gratuita, triplicó las inscripciones completadas en el mes siguiente. Sin GA4 configurado a nivel de eventos, ese problema habría sido invisible: el panel solo mostraba "muchas visitas", sin decir en qué momento exacto se perdían.
+
 *Sin medir lo correcto, es imposible saber si tu sitio está funcionando o solo está ocupado.*`,
     contentEn: `Does your online English academy get "thousands of visits a month"? That sounds great, but checking the actual data usually reveals that almost nobody makes it to the enrollment form — the visits exist, but they translate into nothing.
 
@@ -2712,6 +2788,10 @@ Setting up a **conversion funnel** lets you see, step by step, exactly where mos
 ### Data to decide with, not just to look at
 
 The real value of GA4 isn't the dashboard itself, but the decisions it enables with real data: which ad campaign brings customers who actually buy, and which one just brings visits that never convert.
+
+### What the English academy discovered
+
+After properly configuring **events** in GA4, the academy from the example discovered that 70% of people who started the enrollment form abandoned it right at the field asking for a card number before confirming a free trial class. Removing that field from the first step, and only asking for it after the trial class, tripled completed enrollments the following month. Without GA4 configured at the event level, that problem would have stayed invisible — the dashboard only showed "lots of visits," with no indication of exactly where people were dropping off.
 
 *Without measuring the right things, it's impossible to know if your site is actually working, or just busy.*`
   },
@@ -2752,6 +2832,10 @@ Enlaces rotos, páginas bloqueadas por error, o problemas de velocidad detectado
 
 La sección de rendimiento muestra exactamente qué escribió la gente en Google antes de llegar a tu sitio. Esto revela oportunidades de contenido que de otra forma serían pura adivinanza: preguntas reales que tus clientes ya están haciendo.
 
+### Lo que encontró el taller de reparación de celulares
+
+Al revisar Search Console, el taller del ejemplo descubrió que su página de "reparación de pantallas" llevaba semanas marcada como "excluida" porque un cambio reciente en el sitio había bloqueado esa sección sin que nadie lo notara. Tras corregir el bloqueo y solicitar la **indexación manual**, la página volvió a aparecer en los resultados en menos de cuarenta y ocho horas. Sin revisar este reporte, el taller hubiera seguido preguntándose por qué esa página, que antes traía clientes, simplemente dejó de generar llamadas.
+
 *Search Console no mejora tu sitio por sí sola, pero es la única fuente confiable que te dice exactamente qué arreglar primero.*`,
     contentEn: `Why doesn't Google "know" about the services page you published two weeks ago? If you run a phone repair shop, or any other business, the answer is usually in a tool you've never used: **Google Search Console**.
 
@@ -2770,6 +2854,10 @@ Broken links, pages accidentally blocked, or speed issues Google detects all sho
 ### Real search terms, not guesswork
 
 The performance report shows exactly what people typed into Google before landing on your site. That reveals content opportunities that would otherwise be pure guesswork: real questions your customers are already asking.
+
+### What the phone repair shop found
+
+While reviewing Search Console, the shop from the example discovered its "screen repair" page had been marked "excluded" for weeks, because a recent site change had blocked that section without anyone noticing. After fixing the block and requesting **manual indexing**, the page reappeared in results within forty-eight hours. Without checking this report, the shop would have kept wondering why a page that used to bring in customers had simply stopped generating calls.
 
 *Search Console doesn't improve your site by itself, but it's the only reliable source telling you exactly what to fix first.*`
   }
