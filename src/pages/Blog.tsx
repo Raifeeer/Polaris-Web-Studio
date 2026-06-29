@@ -304,16 +304,15 @@ export default function Blog() {
                 id="blog-search-input"
                 type="text"
                 placeholder={translate(
-                  "Busca conceptualmente (ej: 'rapidez', 'posicionar en google', 'vender')...",
-                  "Search conceptually (e.g. 'speed', 'google ranking', 'shopify')..."
+                  "Busca por tema, ej: 'rapidez', 'SEO', 'vender'...",
+                  "Search by topic, e.g. 'speed', 'SEO', 'sell'..."
                 )}
                 value={searchQuery}
                 onChange={(e) => handleQueryChange(e.target.value)}
-                className="glass-input w-full text-[var(--color-text-primary)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl py-3.5 pl-12 pr-28 text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all font-mono"
+                className="glass-input w-full text-[var(--color-text-primary)] border border-[var(--color-border-subtle)] focus:border-indigo-500 rounded-xl py-3.5 pl-12 pr-12 text-sm placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 px-2.5 py-1 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg text-[9px] font-mono tracking-widest font-black uppercase">
-                <AISparkleIcon size={8} className="animate-spin" style={{ animationDuration: "3s" }} />
-                SEMANTIC
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-lg">
+                <AISparkleIcon size={12} />
               </span>
             </div>
 
@@ -324,7 +323,7 @@ export default function Blog() {
                 onClick={() => setShowFilters(!showFilters)}
                 className={`w-full md:w-auto px-4 py-3.5 rounded-xl border flex items-center justify-center gap-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${
                   showFilters || dateRange !== "all" || sortBy !== "newest"
-                    ? "bg-indigo-550 border-indigo-500 text-white dark:bg-indigo-950/40 dark:text-indigo-400"
+                    ? "bg-indigo-500 border-indigo-500 text-white shadow-sm"
                     : "bg-[var(--color-surface-base)] border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-elevated)]"
                 }`}
               >
@@ -397,25 +396,25 @@ export default function Blog() {
                   {/* Active Diagnostics Panel */}
                   <div className="sm:col-span-2 lg:col-span-1 border border-indigo-500/10 bg-indigo-500/[0.02] rounded-xl p-4 flex flex-col justify-between space-y-2">
                     <div>
-                      <div className="flex items-center gap-1.5 text-[9px] font-mono font-black text-indigo-500 uppercase tracking-widest">
-                        <Command size={10} className="animate-spin" />
-                        SYSTEM LOGS: SEMANTIC RESOLVER
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-500 uppercase tracking-widest">
+                        <Command size={12} />
+                        <T en="Smart Search">Búsqueda Inteligente</T>
                       </div>
                       <p className="text-[11px] text-[var(--color-text-secondary)] mt-1.5 leading-relaxed">
                         {searchQuery.trim() ? (
-                          <T en={`Decoded query '${searchQuery}' using localized synonyms. Mapped relevance to content tokens, implicit concepts, and specific categories.`}>
-                            Query '{searchQuery}' decodificada mediante mapeo léxico y sinonimia conceptual. Puntuando concordancia en etiquetas, descripciones y categorías.
+                          <T en={`Showing articles related to "${searchQuery}", matched by title, tags, and category.`}>
+                            Mostrando artículos relacionados con "{searchQuery}", según coincidencias en título, etiquetas y categoría.
                           </T>
                         ) : (
-                          <T en="Awaiting user search query... The compiler evaluates search intent, token densities, and mapped tags automatically.">
-                            Esperando término de consulta... El compilador evaluará semántica, densidad de tokens y relaciones lógicas integradas.
+                          <T en="Type a topic and we'll automatically show you the most relevant articles.">
+                            Escribe un tema y te mostraremos automáticamente los artículos más relevantes.
                           </T>
                         )}
                       </p>
                     </div>
                     {searchQuery.trim() && (
-                      <span className="glass-badge inline-flex max-w-fit items-center gap-1 text-[9px] px-2 py-0.5 rounded text-emerald-500 border border-emerald-500/20 font-mono font-bold uppercase mt-2">
-                        STATE: FULLY ALIGNED
+                      <span className="glass-badge inline-flex max-w-fit items-center gap-1 text-[9px] px-2 py-0.5 rounded text-emerald-500 border border-emerald-500/20 font-bold uppercase mt-2">
+                        <T en="Results sorted by relevance">Resultados ordenados por relevancia</T>
                       </span>
                     )}
                   </div>
