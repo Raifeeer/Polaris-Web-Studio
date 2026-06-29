@@ -1785,7 +1785,7 @@ The solution we implement at Polaris combines multiple methods: credit and debit
     category: "Inteligencia Artificial",
     categoryEn: "AI Addons",
     publishedAt: "2026-06-08",
-    readTime: 4,
+    readTime: 5,
     author: {
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
@@ -1803,6 +1803,14 @@ Un **bot de captura de leads** es un asistente automatizado que recibe al visita
 ### Captura estructurada, no solo un chat genérico
 
 La diferencia con un chat básico es que este bot guarda cada respuesta en una estructura clara: nombre, necesidad, urgencia, presupuesto estimado. Esa información llega a tu panel ya ordenada, lista para que tu equipo priorice a quién llamar primero.
+
+### Se integra donde ya trabajas
+
+El bot no obliga a tu equipo a aprender una herramienta nueva: vive en tu sitio web y, si lo necesitas, también en WhatsApp. Cada conversación capturada llega directo a tu correo, a una hoja de cálculo o al panel de administración de Polaris, según cómo lo configures, sin que nadie tenga que copiar datos a mano de un chat a otro sistema.
+
+### Un ejemplo cotidiano
+
+Piensa en un cliente que escribe a las 11 de la noche: "Necesito cotizar una mudanza para el sábado, departamento de 2 habitaciones". El bot responde al instante, confirma la fecha, pide la dirección de origen y destino, y guarda todo en una tarjeta de lead lista para que, al abrir el día siguiente, tu equipo solo tenga que llamar y cerrar.
 
 ### El costo real de la lentitud
 
@@ -1822,6 +1830,14 @@ A **lead capture bot** is an automated assistant that greets a visitor the insta
 ### Structured capture, not just a generic chat
 
 The difference from a basic chat widget is that this bot stores every answer in a clear structure: name, need, urgency, estimated budget. That information lands in your dashboard already sorted, ready for your team to prioritize who to call first.
+
+### It fits into tools you already use
+
+The bot doesn't force your team to learn a new platform: it lives on your website and, if you need it, inside WhatsApp too. Every captured conversation lands directly in your inbox, a spreadsheet, or the Polaris admin panel, depending on how you set it up, with nobody copying data by hand from one place to another.
+
+### An everyday example
+
+Picture a customer writing at 11 PM: "I need a quote to move a 2-bedroom apartment this Saturday." The bot replies instantly, confirms the date, asks for the pickup and drop-off address, and saves everything as a ready-to-call lead card — so when your team opens up the next morning, all that's left to do is call and close.
 
 ### The real cost of being slow
 
@@ -1843,7 +1859,7 @@ Unlike a human team, the bot works **24 hours a day**, including weekends and ho
     category: "Inteligencia Artificial",
     categoryEn: "AI Addons",
     publishedAt: "2026-06-08",
-    readTime: 5,
+    readTime: 6,
     author: {
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
@@ -1857,6 +1873,14 @@ Unlike a human team, the bot works **24 hours a day**, including weekends and ho
 ### Más que un chatbot, un vendedor que conoce tu catálogo
 
 Un **agente de ventas con IA** no se limita a responder preguntas frecuentes. Conoce tu inventario, tus precios y tus políticas, y puede mantener una conversación real con el cliente: recomendar el producto correcto según lo que describe, explicar diferencias entre modelos, y guiar hacia el checkout sin que un humano tenga que intervenir.
+
+### Razona en vez de solo recitar un guion
+
+A diferencia de un árbol de decisiones con respuestas fijas, el agente usa modelos de razonamiento (**Gemini**, con respaldo de **Grok**) para entender preguntas ambiguas. Si un cliente dice "no sé exactamente qué repuesto necesito, mi moto es una FZ del 2019", el agente hace las preguntas correctas para acotar la búsqueda, en vez de devolver una lista genérica de productos.
+
+### Un ejemplo de conversación
+
+Cliente: "Está muy caro ese filtro, ¿hay algo más económico?". Agente: explica que existe una alternativa genérica más barata, pero aclara la diferencia de durabilidad y compatibilidad, y deja la decisión final en manos del cliente, sin presionar ni mentir sobre las especificaciones. Esa misma conversación, mal manejada por un bot rígido, normalmente termina con el cliente cerrando la pestaña.
 
 ### Disponible para cada visitante, al mismo tiempo
 
@@ -1876,6 +1900,14 @@ El objetivo no es eliminar a tu equipo de ventas, sino liberarlo de las pregunta
 ### More than a chatbot — a salesperson who knows your catalog
 
 An **AI sales agent** doesn't just answer FAQs. It knows your inventory, pricing, and policies, and can hold a real conversation with a customer: recommending the right product based on what they describe, explaining differences between models, and guiding them to checkout without a human needing to step in.
+
+### Reasoning, not reciting a script
+
+Unlike a fixed decision tree, the agent uses reasoning models (**Gemini**, with a **Grok** fallback) to make sense of ambiguous questions. If a customer says "I'm not sure exactly which part I need, my bike is a 2019 FZ," the agent asks the right follow-up questions to narrow things down, instead of dumping a generic product list.
+
+### A conversation in practice
+
+Customer: "That filter is pretty expensive, is there a cheaper option?" Agent: explains there's a cheaper generic alternative, but clarifies the difference in durability and fit, leaving the final call to the customer without pressuring them or misrepresenting the specs. That same exchange, handled by a rigid bot, usually ends with the customer just closing the tab.
 
 ### Available to every visitor, at the same time
 
@@ -1901,7 +1933,7 @@ The goal isn't replacing your sales team, but freeing it from repetitive questio
     category: "Inteligencia Artificial",
     categoryEn: "AI Addons",
     publishedAt: "2026-06-08",
-    readTime: 4,
+    readTime: 5,
     author: {
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
@@ -1915,6 +1947,14 @@ The goal isn't replacing your sales team, but freeing it from repetitive questio
 ### La diferencia entre buscar palabras y buscar intenciones
 
 Un **buscador semántico con IA** no compara texto letra por letra: entiende el **significado** detrás de lo que el cliente escribe. Si alguien busca "algo cómodo para trabajar desde casa", el sistema entiende que probablemente busca ropa casual o mobiliario ergonómico, según tu catálogo, aunque ninguna de esas palabras aparezca literalmente en la ficha del producto.
+
+### Cómo "entiende" el buscador, en simple
+
+Detrás de esto hay un proceso llamado **embeddings**: cada producto y cada búsqueda se convierten en una especie de huella numérica que representa su significado, no su ortografía. Dos frases distintas que significan lo mismo ("ropa para el frío" y "abrigos de invierno") terminan con huellas muy parecidas, así el sistema sabe que debe mostrar los mismos productos para ambas.
+
+### Un ejemplo concreto
+
+Un cliente busca "algo para regalarle a mi mamá que le gusta cocinar". Ningún producto de tu catálogo tiene esas palabras exactas en su título, pero el buscador semántico entiende la intención y muestra delantales, sets de cuchillos o libros de recetas, exactamente lo que esa persona esperaba encontrar.
 
 ### Por qué esto cambia la experiencia de compra
 
@@ -1934,6 +1974,14 @@ Cada búsqueda sin resultados es información valiosa: te dice qué espera tu cl
 ### The difference between searching words and searching intent
 
 A **semantic AI search** doesn't compare text letter by letter — it understands the **meaning** behind what a customer types. If someone searches "something comfortable for working from home," the system understands they're likely after casual clothing or ergonomic furniture, depending on your catalog, even if none of those exact words appear in the product listing.
+
+### How it "understands," in plain terms
+
+Behind this is a process called **embeddings**: every product and every search gets converted into a kind of numeric fingerprint that represents its meaning, not its spelling. Two different phrases that mean the same thing ("clothes for the cold" and "winter coats") end up with very similar fingerprints, so the system knows to show the same products for both.
+
+### A concrete example
+
+A customer searches for "something to give my mom who loves cooking." No product in your catalog has those exact words in its title, but semantic search understands the intent and surfaces aprons, knife sets, or cookbooks — exactly what that shopper was hoping to find.
 
 ### Why this changes the shopping experience
 
@@ -1959,7 +2007,7 @@ Every search with no results is valuable information — it tells you what your 
     category: "Inteligencia Artificial",
     categoryEn: "AI Addons",
     publishedAt: "2026-06-08",
-    readTime: 4,
+    readTime: 5,
     author: {
       name: "Cristian Dicen",
       role: "Desarrollador Principal & Fundador",
@@ -1974,9 +2022,17 @@ Every search with no results is valuable information — it tells you what your 
 
 Un **asistente de contenido con IA** ayuda a redactar descripciones de productos, publicaciones para redes y respuestas a reseñas, manteniendo el **tono de tu marca** en cada texto. No se trata de generar contenido genérico, sino de partir de la información real de tu negocio para producir textos que suenan a ti.
 
+### Antes y después de una descripción
+
+Sin asistente: "Camiseta de algodón, talla M, color azul." Con el asistente entrenado en el tono de tu marca: "Camiseta 100% algodón premium, corte relajado y ese azul profundo que no destiñe con cada lavado, ideal para el uso diario que de verdad le vas a dar." Mismo producto, pero una versión vende y la otra apenas informa.
+
 ### Responder reseñas también es parte del negocio
 
 Una reseña negativa sin respuesta se queda ahí, visible para siempre, como si el negocio no le importara. Una respuesta rápida, profesional y empática, aunque la haya redactado un asistente con IA y luego revisado por ti, cambia por completo cómo se percibe esa interacción pública.
+
+### Tampoco te deja sin ideas para el blog
+
+Cuando no sabes qué escribir esta semana, el asistente propone temas relevantes para tu sector basados en lo que tus clientes preguntan y buscan, y arma un primer borrador completo con estructura de títulos y subtítulos, para que solo tengas que revisar y publicar en vez de empezar desde una hoja en blanco.
 
 ### Consistencia en todos los canales
 
@@ -1993,9 +2049,17 @@ La IA propone el primer borrador; la **decisión final** de publicarlo, ajustarl
 
 An **AI content assistant** helps draft product descriptions, social posts, and review responses while keeping your **brand's tone** consistent across every piece. It's not about generating generic filler — it starts from your real business information to produce text that actually sounds like you.
 
+### A before-and-after of a description
+
+Without the assistant: "Cotton t-shirt, size M, blue." With an assistant trained on your brand's tone: "100% premium cotton tee, relaxed fit, in a deep blue that won't fade wash after wash, built for the everyday wear you'll actually put it through." Same product, but one version sells and the other just informs.
+
 ### Responding to reviews is part of the business too
 
 An unanswered negative review just sits there, visible forever, as if the business didn't care. A fast, professional, empathetic reply, even one drafted by an AI assistant and reviewed by you, completely changes how that public interaction is perceived.
+
+### It won't leave you stuck on blog ideas either
+
+When you don't know what to write about this week, the assistant suggests topics relevant to your industry based on what your customers actually ask and search for, and drafts a full first version with headings and subheadings already structured, so all that's left is to review and publish instead of starting from a blank page.
 
 ### Consistency across every channel
 
