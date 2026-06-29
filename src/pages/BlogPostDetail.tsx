@@ -174,6 +174,30 @@ const LINK_DEFINITIONS: LinkDef[] = [
   {
     slug: "schema-markup-guia-completa",
     terms: ["schema markup", "datos estructurados", "rich snippets"]
+  },
+  {
+    slug: "guia-estrategia-seo-personalizada",
+    terms: ["guía de estrategia seo", "guia de estrategia seo", "estrategia seo personalizada", "seo strategy guide"]
+  },
+  {
+    slug: "crm-connect-sincronizacion-leads",
+    terms: ["crm connect", "integración crm", "integracion crm", "crm"]
+  },
+  {
+    slug: "sitio-web-multilingue-alcance-global",
+    terms: ["sitio web multilingüe", "sitio web multilingue", "multilingual website"]
+  },
+  {
+    slug: "copywriting-profesional-textos-que-venden",
+    terms: ["copywriting profesional", "professional copywriting", "copywriting"]
+  },
+  {
+    slug: "kit-branding-basico-identidad-visual",
+    terms: ["kit de branding", "branding kit", "branding"]
+  },
+  {
+    slug: "mantenimiento-soporte-premium-webs",
+    terms: ["mantenimiento y soporte premium", "premium maintenance & support", "premium maintenance and support"]
   }
 ];
 
