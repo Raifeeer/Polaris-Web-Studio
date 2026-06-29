@@ -1498,7 +1498,7 @@ Too much animation feels exhausting; too little feels flat. Our job is calibrati
     },
     tags: ["seguridad", "ssl", "https", "encriptacion", "confianza", "servidor"],
     concepts: ["ssl", "seguridad", "certificado", "candado", "https", "seguro", "proteger", "encriptar", "credenciales"],
-    content: `Una clienta que vende joyería artesanal nos llamó angustiada: Chrome le había puesto una advertencia roja de "sitio no seguro" justo antes de un fin de semana de ventas altas. El problema era simple: su **certificado SSL** había expirado sin que nadie se enterara.
+    content: `Imagina una tienda de joyería artesanal a la que Chrome le pone una advertencia roja de "sitio no seguro" justo antes de un fin de semana de ventas altas. El problema es simple: su **certificado SSL** expiró sin que nadie se enterara.
 
 ### Qué hace en realidad un certificado SSL
 
@@ -1517,7 +1517,7 @@ Google confirmó hace años que usa **HTTPS** como factor de posicionamiento. No
 La mayoría de los certificados modernos se renuevan automáticamente cada 90 días mediante servicios como **Let's Encrypt**, pero solo si la configuración del servidor está correcta. Parte de nuestro trabajo es verificar esa automatización para que nunca vuelva a aparecer la advertencia roja sin avisar.
 
 *La confianza de un cliente se construye en segundos y se destruye en uno: un candado roto en el navegador es suficiente para perderla.*`,
-    contentEn: `A client who sells handmade jewelry called us in a panic: Chrome had just slapped a red "not secure" warning on her site right before a big sales weekend. The problem was simple — her **SSL certificate** had expired without anyone noticing.
+    contentEn: `Picture a handmade jewelry store that gets a red "not secure" warning from Chrome right before a big sales weekend. The problem is simple — its **SSL certificate** expired without anyone noticing.
 
 ### What an SSL certificate actually does
 
