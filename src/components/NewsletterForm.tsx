@@ -3,10 +3,12 @@ import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Mail, Check, AlertCircle } from "lucide-react";
 import { db } from "../lib/firebase";
 import { T } from "../context/LanguageContext";
+import { useToast } from "../context/ToastContext";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const { success, error: toastError } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,6 +16,9 @@ export default function NewsletterForm() {
     // Validación básica de formato antes de escribir en Firestore.
     if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
       setStatus("error");
+      toastError(
+        <T en="Please enter a valid email address.">Por favor, ingresa un correo electrónico válido.</T>
+      );
       return;
     }
 
@@ -26,9 +31,15 @@ export default function NewsletterForm() {
       });
       setStatus("success");
       setEmail("");
+      success(
+        <T en="Successfully subscribed to our newsletter! 🎉">¡Suscripción al boletín confirmada con éxito! 🎉</T>
+      );
     } catch (error) {
       console.error("Error subscribing: ", error);
       setStatus("error");
+      toastError(
+        <T en="An error occurred while subscribing. Please try again.">Ocurrió un error al suscribirte. Intenta nuevamente.</T>
+      );
     }
   };
 

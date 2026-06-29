@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Instagram, Linkedin, Mail, Globe } from "lucide-react";
 import Logo from "./Logo";
 import { useLanguage, T } from "../context/LanguageContext";
+import FooterTerminal from "./FooterTerminal";
 
 interface FooterProps {
   twitterUrl?: string;
@@ -236,6 +237,10 @@ export default function Footer({
             <T en="Cookies">Cookies</T>
           </Link>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto">
+        <FooterTerminal />
       </div>
     </footer>
   );

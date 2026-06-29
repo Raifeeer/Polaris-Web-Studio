@@ -10,13 +10,15 @@ import {
   useLocation,
   useNavigationType,
 } from "react-router-dom";
-import { useEffect, useLayoutEffect, lazy, Suspense, useState } from "react";
+import { useEffect, useLayoutEffect, lazy, Suspense, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider, T } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
+import EasterEgg from "./components/EasterEgg";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -33,6 +35,7 @@ const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const Gracias = lazy(() => import("./pages/Gracias"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
+import TerminalPage from "./pages/TerminalPage";
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
@@ -150,6 +153,7 @@ function AnimatedRoutes() {
             <Route path="/gracias" element={<Gracias />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ClientDashboard />} />
+            <Route path="/terminal" element={<TerminalPage />} />
             <Route
               path="/privacidad"
               element={
@@ -181,9 +185,129 @@ function AnimatedRoutes() {
   );
 }
 
+function PolarisLoader({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(0);
+  const [phase, setPhase] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setProgress((p) => {
+        if (p >= 100) {
+          clearInterval(timer);
+          setTimeout(onComplete, 300);
+          return 100;
+        }
+        // Acelera al final
+        const increment = p < 60 ? 3 : p < 85 ? 5 : 8;
+        return Math.min(p + increment, 100);
+      });
+    }, 40);
+    return () => clearInterval(timer);
+  }, [onComplete]);
+
+  useEffect(() => {
+    const phases = [
+      setTimeout(() => setPhase(1), 400),
+      setTimeout(() => setPhase(2), 800),
+      setTimeout(() => setPhase(3), 1200),
+    ];
+    return () => phases.forEach(clearTimeout);
+  }, []);
+
+  const language = navigator.language.startsWith("es") ? "es" : "en";
+
+  return (
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 0.98, filter: "blur(8px)" }}
+      transition={{ duration: 0.5, ease: "easeInOut" }}
+      className="fixed inset-0 z-[99999] bg-[var(--color-surface-base)] flex flex-col items-center justify-center gap-6 select-none"
+    >
+      {/* Logo */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4 }}
+      >
+        <svg
+          width="48"
+          height="48"
+          viewBox="0 0 200 200"
+          fill="none"
+          className="opacity-80"
+        >
+          <defs>
+            <linearGradient id="loader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#818cf8" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M100 10 L108 85 L130 60 L115 92 L190 100 L115 108 L130 140 L108 115 L100 190 L92 115 L70 140 L85 108 L10 100 L85 92 L70 60 L92 85 Z"
+            fill="url(#loader-grad)"
+          />
+          <circle cx="100" cy="100" r="8" fill="white" opacity="0.9" />
+        </svg>
+      </motion.div>
+
+      {/* Brand */}
+      <div className="text-center space-y-1">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: phase >= 0 ? 1 : 0 }}
+          className="text-sm font-black tracking-[0.3em] uppercase text-[var(--color-text-primary)]"
+        >
+          Polaris
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: phase >= 1 ? 0.4 : 0 }}
+          className="text-[10px] font-mono tracking-widest text-[var(--color-text-tertiary)] uppercase"
+        >
+          Web Studio · v1.0
+        </motion.p>
+      </div>
+
+      {/* Progress bar */}
+      <div className="w-48">
+        <div className="h-[2px] w-full bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-[var(--color-primary-base)] rounded-full"
+            initial={{ width: "0%" }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.1 }}
+          />
+        </div>
+        <div className="flex justify-between mt-2">
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: phase >= 2 ? 0.3 : 0 }}
+            className="text-[9px] font-mono text-[var(--color-text-tertiary)]"
+          >
+            {phase === 2 && (language === "es" ? "Iniciando sistema..." : "Initializing...")}
+            {phase === 3 && (language === "es" ? "Punta Cana, RD" : "Punta Cana, DR")}
+          </motion.span>
+          <span className="text-[9px] font-mono text-[var(--color-text-tertiary)] opacity-30">
+            {progress}%
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function App() {
   useTheme();
   const [showBot, setShowBot] = useState(false);
+  const [showLoader, setShowLoader] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !sessionStorage.getItem("polaris_loaded");
+  });
+
+  const handleLoaderComplete = useCallback(() => {
+    sessionStorage.setItem("polaris_loaded", "1");
+    setShowLoader(false);
+  }, []);
 
   useEffect(() => {
     // Calienta en segundo plano los chunks de las demás páginas, sin
@@ -263,17 +387,34 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <Router>
-        <ScrollHandler />
-        <ScrollProgressBar />
-        <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
-          <AnimatedRoutes />
-          <ConditionalQuoteBot showBot={showBot} />
-        </div>
-      </Router>
-    </LanguageProvider>
-    </AuthProvider>
+    <>
+      <AnimatePresence mode="wait">
+        {showLoader && <PolarisLoader onComplete={handleLoaderComplete} />}
+      </AnimatePresence>
+
+      {!showLoader && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <AuthProvider>
+            <LanguageProvider>
+              <ToastProvider>
+                <Router>
+                  <ScrollHandler />
+                  <ScrollProgressBar />
+                  <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+                    <AnimatedRoutes />
+                    <ConditionalQuoteBot showBot={showBot} />
+                    <EasterEgg />
+                  </div>
+                </Router>
+              </ToastProvider>
+            </LanguageProvider>
+          </AuthProvider>
+        </motion.div>
+      )}
+    </>
   );
 }

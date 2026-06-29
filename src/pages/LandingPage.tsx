@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useRef, lazy, Suspense, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
@@ -22,10 +22,9 @@ import {
   Database,
   Cloud,
 } from "lucide-react";
-import { motion, AnimatePresence, useInView } from "framer-motion"; // Tree-shaking: solo se usan estos 3 exports
+import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useScroll, useTransform } from "framer-motion"; // Tree-shaking: solo se usan estos 7 exports
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import ContactSection from "../components/ContactSection";
 import Logo from "../components/Logo";
 import MockupFrame from "../components/MockupFrame";
 import { T, useLanguage } from "../context/LanguageContext";
@@ -75,6 +74,34 @@ function Counter({
   );
 }
 
+function ParallaxElement({
+  children,
+  speed = 0.2,
+  className = "",
+  style = {},
+}: {
+  children?: React.ReactNode;
+  speed?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+
+  const isMd = typeof window !== "undefined" && window.innerWidth >= 768;
+  // Translate up to 120 pixels depending on speed and viewport width
+  const y = useTransform(scrollYProgress, [0, 1], isMd ? [120 * speed, -120 * speed] : [0, 0]);
+
+  return (
+    <motion.div ref={ref} style={{ ...style, y }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
+
 export default function LandingPage() {
   const navigate = useNavigate();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
@@ -82,6 +109,46 @@ export default function LandingPage() {
   const [activeSection, setActiveSection] = useState<string>("inicio");
   // Misma fecha límite de la oferta de lanzamiento usada en Services.tsx (25% de descuento)
   const [isOfferActive] = useState(() => Date.now() < new Date("2026-07-18T23:59:59Z").getTime());
+
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+  const [cursorVisible, setCursorVisible] = useState(false);
+  const [cursorLabel, setCursorLabel] = useState("");
+
+  const handleProjectMouseMove = (e: React.MouseEvent) => {
+    cursorX.set(e.clientX);
+    cursorY.set(e.clientY);
+  };
+
+  const magneticX = useMotionValue(0);
+  const magneticY = useMotionValue(0);
+  const springX = useSpring(magneticX, { stiffness: 150, damping: 15, mass: 0.1 });
+  const springY = useSpring(magneticY, { stiffness: 150, damping: 15, mass: 0.1 });
+
+  const handleMagneticMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const deltaX = (e.clientX - centerX) * 0.3;
+    const deltaY = (e.clientY - centerY) * 0.3;
+    magneticX.set(deltaX);
+    magneticY.set(deltaY);
+  };
+
+  const handleMagneticLeave = () => {
+    magneticX.set(0);
+    magneticY.set(0);
+  };
+
+  const pricingRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: pricingScroll } = useScroll({
+    target: pricingRef,
+    offset: ["start end", "end start"],
+  });
+  const isMd = typeof window !== 'undefined' && window.innerWidth >= 768;
+  const destelloY = useTransform(pricingScroll, [0, 1], isMd ? [40, -40] : [0, 0]);
+  const constelaY = useTransform(pricingScroll, [0, 1], isMd ? [20, -20] : [0, 0]);
+  const novaY = useTransform(pricingScroll, [0, 1], isMd ? [40, -40] : [0, 0]);
 
   useEffect(() => {
     const metaData: Record<
@@ -210,6 +277,22 @@ export default function LandingPage() {
     }
     return false;
   });
+  const [activeSlide, setActiveSlide] = useState(0);
+  const slideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startSlideTimer = useCallback(() => {
+    if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
+    slideIntervalRef.current = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % featuredProjects.length);
+    }, 3500);
+  }, []);
+
+  useEffect(() => {
+    startSlideTimer();
+    return () => {
+      if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
+    };
+  }, [startSlideTimer]);
   const techStackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -236,6 +319,7 @@ export default function LandingPage() {
     {
       title: "Lúmina Sky",
       slug: "lumina-sky-concept",
+      desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20PC.PNG?alt=media&token=26caed50-0c21-4386-913f-ce3f31b0384c",
       type: <T en="Tourism · Immersive Web">Turismo · Web Inmersiva</T>,
       desc: (
         <T en="Luxury boutique hotel prototype with a custom booking engine and fine-tuned interactive animations.">
@@ -244,22 +328,12 @@ export default function LandingPage() {
         </T>
       ),
       stack: ["React", "Framer Motion", "Vite", "Tailwind CSS"],
-      metrics: [
-        {
-          label: <T en="Google PageSpeed">Google PageSpeed</T>,
-          value: "99/100",
-        },
-        { label: <T en="Load Time">Carga Inicial</T>, value: "0.4s" },
-        {
-          label: <T en="Engagement">Interactividad</T>,
-          value: <T en="Excellent">Excelente</T>,
-        },
-      ],
       colorClass: "from-cyan-500/20 to-indigo-500/5 hover:border-cyan-500/40",
     },
     {
       title: "Nexus Realty",
       slug: "nexus-real-estate",
+      desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FNexusPC.PNG?alt=media&token=5550e8eb-4f3a-4cbd-b468-971651cc033d",
       type: <T en="Real Estate · Platform">Inmobiliaria · Plataforma</T>,
       desc: (
         <T en="Real estate platform catalog showing rapid, zero-lag filters to browse elite properties on mobile.">
@@ -268,19 +342,12 @@ export default function LandingPage() {
         </T>
       ),
       stack: ["React", "TypeScript", "Tailwind CSS"],
-      metrics: [
-        {
-          label: <T en="Search Engine">Buscador Inteligente</T>,
-          value: <T en="Instant">Instantáneo</T>,
-        },
-        { label: <T en="Mobile Perf">Puntaje Celular</T>, value: "100/100" },
-        { label: <T en="Speed Index">Índice velocidad</T>, value: "0.8s" },
-      ],
       colorClass: "from-amber-500/20 to-orange-500/5 hover:border-amber-500/40",
     },
     {
       title: "Chroma Tech Store",
       slug: "chroma-store",
+      desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FChromaPC.png?alt=media&token=7071ec72-9030-4227-bb96-c4359ceb3edd",
       type: <T en="E-commerce · Technology">E-commerce · Tecnología</T>,
       desc: (
         <T en="High-performance automated digital store prototype with smart cart, AI assistant and secure gateway.">
@@ -289,17 +356,6 @@ export default function LandingPage() {
         </T>
       ),
       stack: ["Next.js", "Zustand", "Stripe (UI)", "Tailwind CSS"],
-      metrics: [
-        {
-          label: <T en="Payment Flow">Trámite Pago</T>,
-          value: <T en="100% Secure">100% Seguro</T>,
-        },
-        { label: <T en="Uptime">Uptime</T>, value: "24/7/365" },
-        {
-          label: <T en="AI Assistant">Asistente de IA</T>,
-          value: <T en="Integrated">Integrado</T>,
-        },
-      ],
       colorClass:
         "from-violet-500/20 to-fuchsia-500/5 hover:border-violet-500/40",
     },
@@ -378,14 +434,40 @@ export default function LandingPage() {
     <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
+      {/* Floating Parallax Background Orbs & Shapes */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {/* Hero Section: Glowing Purple/Indigo Orb (Slower, negative speed) */}
+        <ParallaxElement speed={-0.3} className="absolute top-[5%] right-[-10%] w-[300px] h-[300px] md:w-[600px] md:h-[600px] rounded-full bg-indigo-500/10 dark:bg-indigo-500/5 blur-[80px] md:blur-[120px]" />
+        
+        {/* Services Section: Glowing Blue Orb (Positive speed) */}
+        <ParallaxElement speed={0.4} className="absolute top-[25%] left-[-10%] w-[250px] h-[250px] md:w-[500px] md:h-[500px] rounded-full bg-blue-500/8 dark:bg-blue-500/5 blur-[70px] md:blur-[100px]" />
+        
+        {/* Proceso Section: Decorative Floating Star or Sparkle Accent */}
+        <ParallaxElement speed={-0.5} className="absolute top-[48%] right-[5%] text-[var(--color-primary-base)]/15 hidden md:block">
+          <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin-slow">
+            <path d="M12 2v20M2 12h20M5.03 5.03l13.94 13.94M18.97 5.03L5.03 18.97" />
+          </svg>
+        </ParallaxElement>
+        
+        {/* Process Section: Glowing Emerald/Cyan Orb (Negative speed) */}
+        <ParallaxElement speed={-0.4} className="absolute top-[52%] right-[-5%] w-[300px] h-[300px] md:w-[550px] md:h-[550px] rounded-full bg-emerald-500/8 dark:bg-emerald-500/4 blur-[80px] md:blur-[110px]" />
+
+        {/* Portafolio Section: Glowing Violet Orb (Positive speed) */}
+        <ParallaxElement speed={0.3} className="absolute top-[72%] left-[-5%] w-[350px] h-[350px] md:w-[600px] md:h-[600px] rounded-full bg-violet-500/8 dark:bg-violet-500/4 blur-[90px] md:blur-[120px]" />
+        
+        {/* FAQ Section: Glowing Amber/Orange Orb (Negative speed) */}
+        <ParallaxElement speed={-0.2} className="absolute top-[88%] right-[-8%] w-[250px] h-[250px] md:w-[450px] md:h-[450px] rounded-full bg-amber-500/8 dark:bg-amber-500/4 blur-[70px] md:blur-[100px]" />
+      </div>
+
       {/* Hero Section */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-10 py-4 md:py-20 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
           {/* Main Hero Card */}
           <motion.div
             id="inicio"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{ type: "spring", stiffness: 45, damping: 14 }}
             className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 glass-panel flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px] bg-gradient-to-br from-indigo-50/40 via-transparent to-violet-50/30 dark:from-transparent dark:to-transparent"
           >
             <div className="absolute top-1/2 -translate-y-1/2 right-[-150px] sm:right-[-250px] md:right-[-200px] opacity-[0.07] dark:opacity-[0.15] group-hover:opacity-[0.18] dark:group-hover:opacity-[0.28] group-hover:-translate-x-4 transition-all duration-500 pointer-events-none">
@@ -418,9 +500,22 @@ export default function LandingPage() {
               </motion.span>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, delay: 0.2 }}
-                className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-tighter"
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  letterSpacing: ["-0.04em", "-0.025em", "-0.04em"],
+                }}
+                transition={{
+                  opacity: { duration: 0.55, delay: 0.2 },
+                  y: { duration: 0.55, delay: 0.2 },
+                  letterSpacing: {
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                    delay: 1,
+                  },
+                }}
+                className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[1]"
               >
                 <T en="We digitize the future of your business today">
                   Digitalizamos el futuro de tu negocio hoy
@@ -443,7 +538,12 @@ export default function LandingPage() {
                 className="pt-2"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
-                  <div className="relative group shrink-0">
+                  <motion.div
+                    className="relative group shrink-0"
+                    onMouseMove={handleMagneticMove}
+                    onMouseLeave={handleMagneticLeave}
+                    style={{ x: springX, y: springY }}
+                  >
                     {/* Static subtle glow */}
                     <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/20 pointer-events-none" style={{ filter: "blur(8px)" }} />
 
@@ -468,7 +568,7 @@ export default function LandingPage() {
                         className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
                       />
                     </RippleButton>
-                  </div>
+                  </motion.div>
                   <div className="flex flex-col text-left space-y-0.5">
                     <span className="text-xs font-black text-[var(--color-primary-base)] tracking-wider uppercase font-mono">
                       <T en="From $299 USD">Proyectos desde $299 USD</T>
@@ -487,9 +587,9 @@ export default function LandingPage() {
           {/* Landing Pages Card */}
           <motion.div
             id="servicios"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
+            initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
             className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform"
           >
             <Link
@@ -554,9 +654,9 @@ export default function LandingPage() {
 
           {/* Commerce Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
+            initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.2 }}
             className="rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform"
           >
             <Link
@@ -624,9 +724,9 @@ export default function LandingPage() {
 
           {/* Corporate Card */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+            animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.3 }}
             className="md:col-span-2 lg:col-span-1 rounded-[var(--radius-bento)] glass-panel group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover flex flex-col will-change-transform"
           >
             <Link
@@ -693,11 +793,11 @@ export default function LandingPage() {
 
           {/* Metrics Card - Multi-Stats */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.1 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] py-4 md:py-8 glass-panel flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px] opacity-0 [transform:translateY(20px)]"
+            transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
+            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] py-4 md:py-8 glass-panel flex items-center justify-center relative overflow-hidden bento-glow min-h-[100px] opacity-0"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-[var(--color-accent-blue)]/10 to-transparent blur-3xl opacity-50" />
 
@@ -738,9 +838,10 @@ export default function LandingPage() {
 
           {/* Target Audience Section */}
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
+            initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+            whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ type: "spring", stiffness: 45, damping: 14 }}
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12 opacity-0"
           >
             <div className="flex flex-col items-center text-center gap-6">
@@ -769,10 +870,11 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Card 1 */}
               <motion.div
-                whileInView={{ opacity: 1, y: 0 }}
-                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
                 viewport={{ once: true, amount: 0.2 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0 [transform:translateY(20px)]"
+                transition={{ type: "spring", stiffness: 45, damping: 14 }}
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -850,11 +952,11 @@ export default function LandingPage() {
 
               {/* Card 2 */}
               <motion.div
-                whileInView={{ opacity: 1, y: 0 }}
-                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ delay: 0.1 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0 [transform:translateY(20px)]"
+                transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -936,11 +1038,11 @@ export default function LandingPage() {
 
               {/* Card 3 */}
               <motion.div
-                whileInView={{ opacity: 1, y: 0 }}
-                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ delay: 0.2 }}
-                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0 [transform:translateY(20px)]"
+                transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.2 }}
+                className="p-6 sm:p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0"
               >
                 <div className="space-y-5">
                   {/* Card Header with Icon and Highlight Badge */}
@@ -1020,9 +1122,10 @@ export default function LandingPage() {
           {/* Compact 3-Step Process Section */}
           <motion.div
             id="proceso"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
+            initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+            whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
+            transition={{ type: "spring", stiffness: 45, damping: 14 }}
             className="md:col-span-2 lg:col-span-3 py-16 space-y-12 border-t border-b border-[var(--color-border-subtle)]/50 my-12 opacity-0"
           >
             <div className="flex flex-col items-center text-center gap-4">
@@ -1055,19 +1158,13 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-              {/* Connector line for desktop */}
-              <div className="hidden md:block absolute top-[2.5rem] left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-[var(--color-primary-base)]/50 via-[var(--color-primary-base)]/20 to-[var(--color-primary-base)]/50 z-0" />
-
-              {/* Connector line for mobile (timeline style behind numbers) */}
-              <div className="absolute left-[2.5rem] top-12 bottom-12 w-[1px] bg-gradient-to-b from-[var(--color-primary-base)]/40 via-[var(--color-primary-base)]/10 to-[var(--color-primary-base)]/40 z-0 md:hidden" />
-
               {/* Step 1 */}
               <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+                whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4 }}
-                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0 [transform:translateY(25px)]"
+                transition={{ type: "spring", stiffness: 45, damping: 14 }}
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1134,11 +1231,11 @@ export default function LandingPage() {
 
               {/* Step 2 */}
               <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+                whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0 [transform:translateY(25px)]"
+                transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1206,11 +1303,11 @@ export default function LandingPage() {
 
               {/* Step 3 */}
               <motion.div
-                initial={{ opacity: 0, y: 25 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+                whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.4, delay: 0.3 }}
-                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0 [transform:translateY(25px)]"
+                transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.2 }}
+                className="glass-panel p-6 sm:p-8 rounded-[var(--radius-bento)] flex flex-col items-start md:items-center text-left md:text-center space-y-4 relative z-10 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover will-change-transform opacity-0"
               >
                 {/* Number and Badge Header Row */}
                 <div className="flex items-center justify-between w-full md:flex-col md:gap-3">
@@ -1281,9 +1378,10 @@ export default function LandingPage() {
           {/* Featured Projects - "Lo que construimos" */}
           <motion.div
             id="portafolio"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
+            initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+            whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ type: "spring", stiffness: 45, damping: 14 }}
             className="md:col-span-2 lg:col-span-3 py-20 space-y-12 opacity-0"
           >
             <div className="flex flex-col items-center text-center gap-6">
@@ -1308,100 +1406,247 @@ export default function LandingPage() {
                 </T>
               </h2>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Desktop: grid original */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-8">
               {featuredProjects.map((p, i) => (
-                <div
+                <motion.div
                   key={i}
+                  initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+                  whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+                  viewport={{ once: true, amount: 0.15 }}
+                  transition={{ type: "spring", stiffness: 45, damping: 14, delay: i * 0.15 }}
                   onClick={() => navigate(`/portafolio/${p.slug}`)}
-                  className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 cursor-pointer bento-glow-hover will-change-transform"
+                  onMouseMove={handleProjectMouseMove}
+                  onMouseEnter={() => {
+                    setCursorVisible(true);
+                    setCursorLabel(language === "es" ? "Ver proyecto" : "View project");
+                  }}
+                  onMouseLeave={() => setCursorVisible(false)}
+                  className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 md:cursor-none cursor-pointer bento-glow-hover will-change-transform opacity-0"
                 >
+                  {/* CONTENIDO ORIGINAL DE CADA CARD — no cambiar nada adentro */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
-                      <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">
-                        {p.type}
-                      </span>
+                      <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">{p.type}</span>
                       <span className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
                         <T en="Concept Demo">Prototipo</T>
                       </span>
                     </div>
-
-                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors">
-                      {p.title}
-                    </h3>
-
-                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">
-                      {p.desc}
-                    </p>
-
-                    {/* Tech Stack Badges */}
+                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors">{p.title}</h3>
+                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{p.desc}</p>
                     <div className="flex flex-wrap gap-1.5 pt-2">
                       {p.stack.map((tech, tIdx) => (
-                        <span
-                          key={tIdx}
-                          className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)] transition-colors group-hover:border-[var(--color-primary-base)]/20"
-                        >
-                          {tech}
-                        </span>
+                        <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)] transition-colors group-hover:border-[var(--color-primary-base)]/20">{tech}</span>
                       ))}
                     </div>
-
-                    {/* Interactive Mockup Preview */}
-                    <div className="pt-4 overflow-hidden rounded-lg">
+                    <motion.div
+                      className="pt-4 overflow-hidden rounded-lg"
+                      initial={{ clipPath: "inset(0 100% 0 0)" }}
+                      whileInView={{ clipPath: "inset(0 0% 0 0)" }}
+                      viewport={{ once: true, amount: 0.3 }}
+                      transition={{ duration: 0.8, delay: 0.2 + i * 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
                       <div className="relative w-full overflow-hidden rounded-lg transition-transform duration-500 group-hover:scale-[1.03]">
-                        {p.slug === "nexus-real-estate" ||
-                        p.slug === "chroma-store" ? (
-                          <div className="h-[160px] w-full overflow-hidden relative flex justify-center items-start bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] pt-6 rounded-lg border border-[var(--color-border-subtle)]">
-                            <div className="scale-[0.45] origin-top translate-y-[-10px] transition-transform duration-500 group-hover:scale-[0.48]">
-                              <MockupFrame type="mobile" projectSlug={p.slug} />
-                            </div>
+                        {p.desktopImg ? (
+                          <div className="relative w-full overflow-hidden rounded-xl bg-transparent h-[200px]">
+                            <img
+                              src={p.desktopImg}
+                              alt={p.title}
+                              className="w-full h-full object-contain object-center rounded-lg"
+                            />
                           </div>
                         ) : (
-                          <MockupFrame type="browser" projectSlug={p.slug} />
+                          <div className="h-[200px] w-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-subtle)]" />
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   </div>
-
-                  {/* Real Numbers Metrics */}
                   <div className="pt-6 border-t border-[var(--color-border-subtle)] space-y-4">
-                    <div className="grid grid-cols-3 gap-2 text-center bg-[var(--color-surface-base)] p-3 rounded-xl border border-[var(--color-border-subtle)]/50 divide-x divide-[var(--color-border-subtle)]/30">
-                      {p.metrics.map((metric, mIdx) => (
-                        <div
-                          key={mIdx}
-                          className="flex flex-col justify-between p-1 min-h-[72px]"
-                        >
-                          <span className="text-[10px] text-[var(--color-text-secondary)] uppercase font-bold tracking-wider leading-tight mb-2 block">
-                            {metric.label}
-                          </span>
-                          <span className="text-xs sm:text-sm font-black font-mono text-[var(--color-primary-base)] leading-normal block mt-auto">
-                            {metric.value}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
                     <div className="flex justify-between items-center w-full pt-1">
                       <span className="text-xs font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors inline-flex items-center gap-1.5">
                         <T en="View Details">Ver Detalles</T>
-                        <ArrowRight
-                          size={14}
-                          className="group-hover:translate-x-1 transition-transform duration-300"
-                        />
+                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
                       </span>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
+            </div>
+
+            {/* Mobile: carrusel automático */}
+            <div className="lg:hidden relative">
+              <div className="overflow-hidden rounded-[var(--radius-bento)]" style={{ height: '560px' }}>
+                <AnimatePresence mode="wait">
+                  {featuredProjects.map((p, i) =>
+                    i === activeSlide ? (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: 40 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -40 }}
+                        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        onClick={() => navigate(`/portafolio/${p.slug}`)}
+                        className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 cursor-pointer border border-[var(--color-border-subtle)] h-full w-full"
+                        onTouchStart={() => {
+                          if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
+                        }}
+                        onTouchEnd={() => startSlideTimer()}
+                      >
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start">
+                            <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">{p.type}</span>
+                            <span className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
+                              <T en="Concept Demo">Prototipo</T>
+                            </span>
+                          </div>
+                          <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">{p.title}</h3>
+                          <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{p.desc}</p>
+                          <div className="flex flex-wrap gap-1.5 pt-2">
+                            {p.stack.map((tech, tIdx) => (
+                              <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)]">{tech}</span>
+                            ))}
+                          </div>
+                          <div className="pt-4 overflow-hidden rounded-lg">
+                            <div className="relative w-full overflow-hidden rounded-lg">
+                              {p.desktopImg ? (
+                                <div className="relative w-full overflow-hidden rounded-xl bg-transparent h-[200px]">
+                                  <img
+                                    src={p.desktopImg}
+                                    alt={p.title}
+                                    className="w-full h-full object-contain object-center rounded-lg"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="h-[200px] w-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-subtle)]" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="pt-6 border-t border-[var(--color-border-subtle)] space-y-4">
+                          <div className="flex justify-between items-center w-full pt-1">
+                            <span className="text-xs font-bold text-[var(--color-text-primary)] inline-flex items-center gap-1.5">
+                              <T en="View Details">Ver Detalles</T>
+                              <ArrowRight size={14} />
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : null
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Dots de navegación */}
+              <div className="flex justify-center gap-2 mt-5">
+                {featuredProjects.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setActiveSlide(i);
+                      startSlideTimer();
+                    }}
+                    className={`transition-all duration-300 rounded-full ${
+                      i === activeSlide
+                        ? "w-6 h-2 bg-[var(--color-primary-base)]"
+                        : "w-2 h-2 bg-[var(--color-border-strong)] hover:bg-[var(--color-primary-base)]/50"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Atlas Terminal Preview */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+            whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ type: "spring", stiffness: 45, damping: 14 }}
+            className="md:col-span-2 lg:col-span-3 opacity-0"
+          >
+            <div className="rounded-[var(--radius-bento)] overflow-hidden border border-white/5 bg-[#0a0a0f]">
+              {/* Title bar */}
+              <div className="flex items-center justify-between px-4 py-2.5 bg-[#111118] border-b border-white/5">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+                </div>
+                <div className="flex items-center gap-1 select-none">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400 font-black text-xs tracking-tight">Atlas Term</span>
+                  <motion.span
+                    animate={{ opacity: [1, 1, 0, 0], scale: [1, 1.2, 1.2, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.2, times: [0, 0.4, 0.5, 1] }}
+                    className="text-cyan-400 font-black text-xs"
+                  >✦</motion.span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400 font-black text-xs tracking-tight">nal</span>
+                </div>
+                <span className="text-white/20 text-[10px] font-mono">preview</span>
+              </div>
+
+              {/* Preview body */}
+              <div className="p-4 space-y-3 font-mono text-xs min-h-[200px]">
+                <div className="text-cyan-400/70 space-y-1">
+                  <p className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400 font-black">
+                    ✦ Atlas Terminal v1.0 — Polaris Web Studio
+                  </p>
+                  <p className="text-white/30 text-[11px]">
+                    <T en='Type "help" to explore or try a command below.'>
+                      Escribe "help" para explorar o prueba un comando abajo.
+                    </T>
+                  </p>
+                </div>
+
+                {/* Quick command chips */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {["whoami", "services", "matrix", "neofetch"].map(cmd => (
+                    <button
+                      key={cmd}
+                      onClick={() => navigate("/terminal")}
+                      className="px-3 py-1 rounded-md border border-white/10 text-white/50 hover:border-cyan-400/40 hover:text-cyan-400 transition-all text-[11px] font-mono bg-white/5"
+                    >
+                      {cmd}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Fake input line */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold shrink-0">atlas@polaris:~$</span>
+                  <span className="text-white/30 text-[11px]">
+                    <T en="Click to open full terminal...">Haz clic para abrir la terminal completa...</T>
+                  </span>
+                  <motion.span
+                    animate={{ opacity: [1, 1, 0, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.0, times: [0, 0.5, 0.5, 1], ease: "linear" }}
+                    className="text-cyan-400 font-black"
+                  >✦</motion.span>
+                </div>
+              </div>
+
+              {/* CTA banner */}
+              <button
+                onClick={() => navigate("/terminal")}
+                className="w-full flex items-center justify-between px-4 py-3 bg-gradient-to-r from-cyan-500/10 via-violet-500/10 to-rose-500/10 border-t border-white/5 hover:from-cyan-500/20 hover:via-violet-500/20 hover:to-rose-500/20 transition-all group"
+              >
+                <span className="text-white/40 text-[11px] font-mono">
+                  <T en="Interactive experience · AI included">Experiencia interactiva · IA incluida</T>
+                </span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 text-[11px] font-black group-hover:gap-2 transition-all flex items-center gap-1">
+                  <T en="Open Atlas Terminal">Abrir Atlas Terminal</T>
+                  <ArrowRight size={12} className="text-cyan-400 group-hover:translate-x-1 transition-transform" />
+                </span>
+              </button>
             </div>
           </motion.div>
 
           {/* Social Proof/Tech Stack */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.1 }}
-            className="md:col-span-2 lg:col-span-3 text-center opacity-0 [transform:translateY(20px)]"
+            initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
+            whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
+            viewport={{ once: true, amount: 0.15 }}
+            transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
+            className="md:col-span-2 lg:col-span-3 text-center opacity-0"
           >
             <div
               ref={techStackRef}
@@ -1776,69 +2021,9 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
-          {/* FAQ Section */}
-          <div
-            id="faq"
-            className="md:col-span-2 lg:col-span-3 py-20 space-y-12"
-          >
-            <div className="flex flex-col items-center text-center gap-6 mb-8">
-              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
-                <T en="Common Questions">Dudas Comunes</T>
-              </span>
-              <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
-                <T en="Frequently Asked Questions">Preguntas Frecuentes</T>
-              </h2>
-            </div>
-            <div className="max-w-3xl mx-auto space-y-4">
-              {faqs.map((faq, i) => (
-                <div
-                  key={i}
-                  onClick={() => toggleFaq(i)}
-                  className={`p-6 rounded-2xl glass-panel transition-colors cursor-pointer ${
-                    openFaqIndex === i
-                      ? "border-[var(--color-primary-base)] shadow-lg"
-                      : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50"
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-lg">{faq.q}</h3>
-                    <motion.div
-                      animate={{ rotate: openFaqIndex === i ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <ChevronDown
-                        size={18}
-                        className={
-                          openFaqIndex === i
-                            ? "text-[var(--color-primary-base)]"
-                            : "text-[var(--color-text-tertiary)]"
-                        }
-                      />
-                    </motion.div>
-                  </div>
-                  <AnimatePresence>
-                    {openFaqIndex === i && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        className="overflow-hidden"
-                      >
-                        <p className="text-sm text-[var(--color-text-secondary)] pt-4 leading-relaxed">
-                          {faq.a}
-                        </p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
-          </div>
+
         </div>
       </main>
-
-      <ContactSection />
 
       {/* Pricing Preview Section */}
       <section className="py-24 px-6 md:px-12 relative overflow-hidden">
@@ -1866,15 +2051,16 @@ export default function LandingPage() {
           </div>
 
           {/* Plans Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div ref={pricingRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
             {/* Destello */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)" }}
+              whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: 0 }}
-              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-amber-500/30 transition-colors group opacity-0 [transform:translateY(24px)]"
+              transition={{ type: "spring", stiffness: 45, damping: 14 }}
+              style={{ y: destelloY }}
+              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-amber-500/30 transition-colors group"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -1919,20 +2105,21 @@ export default function LandingPage() {
                 ))}
               </ul>
               <button
-                onClick={() => navigate("/servicios")}
+                onClick={() => navigate("/cotizar")}
                 className="w-full py-2.5 rounded-xl border border-amber-500/30 text-amber-500 text-sm font-bold hover:bg-amber-500/10 transition-all"
               >
-                <T en="See details →">Ver detalles →</T>
+                <T en="Start with this plan →">Comenzar con este plan →</T>
               </button>
             </motion.div>
 
             {/* Constelación — destacado */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)" }}
+              whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="glass-panel border border-[var(--color-primary-base)]/50 rounded-2xl p-7 flex flex-col gap-5 relative shadow-lg shadow-[var(--color-primary-base)]/10 md:-translate-y-4 opacity-0 [transform:translateY(24px)]"
+              transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
+              style={{ y: constelaY }}
+              className="glass-panel border border-[var(--color-primary-base)]/50 rounded-2xl p-7 flex flex-col gap-5 relative shadow-lg shadow-[var(--color-primary-base)]/10 md:-translate-y-4"
             >
               {/* Most popular badge */}
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
@@ -1984,20 +2171,21 @@ export default function LandingPage() {
                 ))}
               </ul>
               <button
-                onClick={() => navigate("/servicios")}
+                onClick={() => navigate("/cotizar")}
                 className="w-full py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:bg-[var(--color-primary-base)]/90 transition-all shadow-lg shadow-[var(--color-primary-base)]/20"
               >
-                <T en="See details →">Ver detalles →</T>
+                <T en="Start with this plan →">Comenzar con este plan →</T>
               </button>
             </motion.div>
 
             {/* Nova */}
             <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)" }}
+              whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-violet-500/30 transition-colors group opacity-0 [transform:translateY(24px)]"
+              transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.2 }}
+              style={{ y: novaY }}
+              className="glass-panel border border-[var(--color-border-subtle)] rounded-2xl p-7 flex flex-col gap-5 hover:border-violet-500/30 transition-colors group"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -2043,10 +2231,10 @@ export default function LandingPage() {
                 ))}
               </ul>
               <button
-                onClick={() => navigate("/servicios")}
+                onClick={() => navigate("/cotizar")}
                 className="w-full py-2.5 rounded-xl border border-violet-500/30 text-violet-400 text-sm font-bold hover:bg-violet-500/10 transition-all"
               >
-                <T en="See details →">Ver detalles →</T>
+                <T en="Start with this plan →">Comenzar con este plan →</T>
               </button>
             </motion.div>
           </div>
@@ -2068,6 +2256,65 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="py-24 px-6 md:px-12" id="faq">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col items-center text-center gap-6 mb-8">
+            <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <T en="Common Questions">Dudas Comunes</T>
+            </span>
+            <h2 className="text-3xl md:text-5xl font-display font-bold tracking-tight">
+              <T en="Frequently Asked Questions">Preguntas Frecuentes</T>
+            </h2>
+          </div>
+          <div className="max-w-3xl mx-auto space-y-4">
+            {faqs.map((faq, i) => (
+              <div
+                key={i}
+                onClick={() => toggleFaq(i)}
+                className={`p-6 rounded-2xl glass-panel transition-colors cursor-pointer ${
+                  openFaqIndex === i
+                    ? "!border-[var(--color-primary-base)] shadow-lg"
+                    : "hover:!border-[var(--color-primary-base)]/50"
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold text-lg">{faq.q}</h3>
+                  <motion.div
+                    animate={{ rotate: openFaqIndex === i ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown
+                      size={18}
+                      className={
+                        openFaqIndex === i
+                          ? "text-[var(--color-primary-base)]"
+                          : "text-[var(--color-text-tertiary)]"
+                      }
+                    />
+                  </motion.div>
+                </div>
+                <AnimatePresence>
+                  {openFaqIndex === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <p className="text-sm text-[var(--color-text-secondary)] pt-4 leading-relaxed">
+                        {faq.a}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Bottom CTA Section */}
       <section className="py-24 px-6 md:px-12 bg-[var(--color-surface-base)] relative overflow-hidden border-t border-[var(--color-border-subtle)]">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[var(--color-primary-base)]/5 opacity-50 pointer-events-none" />
@@ -2075,22 +2322,13 @@ export default function LandingPage() {
           <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
             <T en="Ready to Start?">¿Listo para comenzar?</T>
           </span>
-          <h2 className="text-5xl md:text-7xl font-display font-black tracking-tight max-w-2xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
-            <T
-              en={
-                <>
-                  Let's build a digital experience <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                    that drives results.
-                  </span>
-                </>
-              }
-            >
-              Construyamos una experiencia digital <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                que multiplique tus resultados.
-              </span>
-            </T>
+          <h2 className="text-[var(--color-text-primary)] font-display font-black tracking-tight max-w-2xl mx-auto leading-[1.1]">
+            <span className="block text-4xl md:text-6xl mb-1">
+              <T en="Let's build something">Construyamos algo</T>
+            </span>
+            <span className="block text-4xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] pb-1">
+              <T en="Extraordinary">Extraordinario</T>
+            </span>
           </h2>
           <p className="text-[var(--color-text-secondary)] text-sm md:text-lg max-w-lg mx-auto leading-relaxed">
             <T en="Plan your project today and get a personalized proposal in less than 24 hours. No obligation.">
@@ -2128,6 +2366,27 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Custom Portfolio Cursor */}
+      <motion.div
+        className="hidden md:flex fixed top-0 left-0 z-[9999] pointer-events-none items-center justify-center"
+        style={{
+          x: cursorX,
+          y: cursorY,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
+        animate={{
+          scale: cursorVisible ? 1 : 0,
+          opacity: cursorVisible ? 1 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      >
+        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-primary-base)] text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-[var(--color-primary-base)]/30">
+          <span>{cursorLabel}</span>
+          <ArrowRight size={12} />
+        </div>
+      </motion.div>
 
       <Footer />
     </div>

@@ -700,8 +700,8 @@ export default function Portfolio() {
                   {/* Header metadata */}
                   <div className="relative z-10 flex justify-between items-start">
                     <div className="space-y-1">
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                      <div
+                        className={`text-[10px] font-black uppercase tracking-[0.2em] flex flex-col leading-none ${
                           project.plan === "Destello"
                             ? "text-amber-500"
                             : project.plan === "Constelación"
@@ -709,10 +709,13 @@ export default function Portfolio() {
                               : "text-purple-400"
                         }`}
                       >
-                        <T en={`Plan ${project.planEN || project.plan}`}>
-                          Paquete {project.plan}
-                        </T>
-                      </span>
+                        <span>
+                          <T en="Plan">Paquete</T>
+                        </span>
+                        <span className="mt-[2px]">
+                          <T en={project.planEN || project.plan}>{project.plan}</T>
+                        </span>
+                      </div>
                       <p className="text-[var(--color-text-tertiary)] text-[10px] font-black uppercase tracking-widest leading-none pt-0.5">
                         <T en={project.typeEN || project.type}>{project.type}</T>
                       </p>

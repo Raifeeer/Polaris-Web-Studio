@@ -117,31 +117,55 @@ export default function WhyPolaris() {
         {/* Título */}
         <motion.div
           className="text-center space-y-3"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5 }}
+          transition={{ type: "spring", stiffness: 45, damping: 14 }}
         >
           <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">
             <T en="Performance & Results">Rendimiento & Resultados</T>
           </span>
           <h2 className="text-4xl md:text-5xl font-display font-black tracking-tighter">
-            <T en="Why choose Polaris?">¿Por qué elegir Polaris?</T>
+            {(language === "es" 
+              ? "¿Por qué elegir Polaris?" 
+              : "Why choose Polaris?"
+            ).split(" ").map((word, i) => (
+              <motion.span
+                key={i}
+                initial={{ opacity: 0, y: 20, filter: "blur(4px)" }}
+                whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{
+                  duration: 0.4,
+                  delay: i * 0.08,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+                className="inline-block mr-[0.25em]"
+              >
+                {word}
+              </motion.span>
+            ))}
           </h2>
-          <p className="text-[var(--color-text-secondary)] max-w-xl mx-auto">
+          <motion.p
+            className="text-[var(--color-text-secondary)] max-w-xl mx-auto"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             <T en="Numbers don't lie. See how we compare.">
               Los números no mienten. Mira cómo nos comparamos.
             </T>
-          </p>
+          </motion.p>
         </motion.div>
 
         {/* A: Barras comparativas */}
         <motion.div
           className="space-y-6"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
         >
           <p className="text-xs font-black uppercase tracking-widest text-center text-[var(--color-text-tertiary)] mb-8">
             <T en="Head-to-head comparison">Comparación directa</T>
@@ -160,10 +184,10 @@ export default function WhyPolaris() {
 
         {/* B: Círculos de progreso */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.2 }}
         >
           <p className="text-xs font-black uppercase tracking-widest text-center text-[var(--color-text-tertiary)] mb-8">
             <T en="Our standards">Nuestros estándares</T>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import AISparkleIcon from "../components/AISparkleIcon";
 import GlobeSearchIcon from "../components/GlobeSearchIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
+import { useToast } from "../context/ToastContext";
 
 function AnimatedNumber({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -462,6 +463,7 @@ export default function WizardQuote() {
   const navigate = useNavigate();
   const { theme } = useTheme();
   const { language, translate } = useLanguage();
+  const { success: toastSuccess, error: toastError } = useToast();
   const calTheme = theme === "dark" ? "dark" : "light";
   const location = useLocation();
 
@@ -2203,6 +2205,9 @@ export default function WizardQuote() {
     localStorage.setItem("wizardQuote_leadCaptured", "1");
     setLeadCaptured(true);
     setShowLeadCapture(false);
+    toastSuccess(
+      <T en="Contact details saved! Continue to schedule your session.">¡Datos de contacto guardados! Continúa para agendar tu sesión.</T>
+    );
     trackEvent("lead_captured", { method: "wizard_pre_schedule" });
     trackEvent("wizard_step_complete", { step: 3 });
     setCurrentStep((c) => c + 1);
@@ -2427,13 +2432,78 @@ export default function WizardQuote() {
           </p>
         </section>
 
-        {/* Progress Bar */}
-        <div ref={progressRef} className="flex items-start gap-2 mb-12">
-          {steps.map((step, idx) => {
-            const isClickable = idx < currentStep;
-            return (
-              <React.Fragment key={idx}>
+        {/* Progress Bar — Thread Style */}
+        <div ref={progressRef} className="mb-12">
+          {/* SVG Thread Line */}
+          <div className="relative h-3 mb-3">
+            <svg
+              className="absolute inset-0 w-full h-full"
+              viewBox="0 0 100 12"
+              preserveAspectRatio="none"
+              fill="none"
+            >
+              {/* Background thread */}
+              <line
+                x1="0" y1="6" x2="100" y2="6"
+                stroke="var(--color-border-subtle)"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              {/* Animated progress thread */}
+              <motion.line
+                x1="0" y1="6"
+                x2="100" y2="6"
+                stroke="var(--color-primary-base)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: (currentStep + 1) / steps.length,
+                }}
+                transition={{
+                  duration: 0.6,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                }}
+              />
+            </svg>
+
+            {/* Step dots on the thread */}
+            <div className="absolute inset-0 flex items-center justify-between px-[2px]">
+              {steps.map((_, idx) => (
+                <motion.div
+                  key={idx}
+                  className="relative z-10"
+                  animate={{
+                    scale: idx === currentStep ? 1.3 : 1,
+                  }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <div
+                    className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
+                      idx <= currentStep
+                        ? "bg-[var(--color-primary-base)] border-[var(--color-primary-base)] shadow-md shadow-[var(--color-primary-base)]/30"
+                        : "bg-[var(--color-surface-base)] border-[var(--color-border-strong)]"
+                    }`}
+                  />
+                  {idx === currentStep && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full border-2 border-[var(--color-primary-base)]/40"
+                      animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+
+          {/* Step labels */}
+          <div className="flex items-start gap-2">
+            {steps.map((step, idx) => {
+              const isClickable = idx < currentStep;
+              return (
                 <button
+                  key={idx}
                   disabled={!isClickable}
                   onClick={() => {
                     if (isClickable) {
@@ -2441,17 +2511,10 @@ export default function WizardQuote() {
                       scrollToProgress();
                     }
                   }}
-                  className={`flex-1 flex flex-col gap-2 text-left focus:outline-none transition-all ${
+                  className={`flex-1 text-left focus:outline-none transition-all ${
                     isClickable ? "cursor-pointer hover:opacity-80" : "cursor-default"
                   }`}
                 >
-                  <div
-                    className={`h-2 w-full rounded-full transition-all border ${
-                      idx <= currentStep
-                        ? "bg-[var(--color-primary-base)] border-transparent"
-                        : "glass-panel border-[var(--color-border-subtle)]"
-                    }`}
-                  />
                   <span
                     className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${
                       idx <= currentStep
@@ -2462,9 +2525,9 @@ export default function WizardQuote() {
                     {step.title}
                   </span>
                 </button>
-              </React.Fragment>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Dynamic Content */}

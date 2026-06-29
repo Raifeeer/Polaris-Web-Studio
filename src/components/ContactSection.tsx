@@ -44,7 +44,13 @@ export default function ContactSection() {
 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-16 items-center">
         {/* Left Side: Text Area & Direct Channels */}
-        <div className="flex-1 space-y-8 lg:pr-6">
+        <motion.div
+          initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ type: "spring", stiffness: 45, damping: 14 }}
+          className="flex-1 space-y-8 lg:pr-6 opacity-0"
+        >
           <div className="space-y-4">
             <span className="inline-block text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-highlight)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
               <T en="Zero compromise estimates">Estimaciones transparentes</T>
@@ -57,8 +63,8 @@ export default function ContactSection() {
                   </>
                 }
               >
-                Diseñemos el presupuesto <br className="hidden md:block" /> de
-                tu proyecto.
+                Diseñemos el presupuesto <br className="hidden md:block" /> del
+                proyecto.
               </T>
             </h2>
             <p className="text-[var(--color-text-secondary)] text-base md:text-lg max-w-lg leading-relaxed">
@@ -73,7 +79,7 @@ export default function ContactSection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-lg pt-2">
             <a
               href="mailto:hola@polarisweb.studio"
-              className="flex items-center gap-4 p-4 rounded-xl glass-panel group hover:border-[var(--color-primary-base)] transition-colors will-change-transform transition-all"
+              className="flex items-center gap-4 p-4 rounded-xl glass-panel group hover:border-[var(--color-primary-base)] transition-colors"
             >
               <div className="w-10 h-10 rounded-lg bg-[var(--color-surface-base)] flex items-center justify-center text-[var(--color-primary-base)] group-hover:scale-110 transition-transform">
                 <Mail size={18} />
@@ -92,7 +98,7 @@ export default function ContactSection() {
               href="https://wa.me/18299200544?text=Hola%2C%20vi%20tu%20p%C3%A1gina%20y%20me%20gustar%C3%ADa%20planificar%20un%20proyecto%20con%20Polaris%20Web%20Studio."
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-4 p-4 rounded-xl glass-panel group hover:border-[#25D366] transition-all duration-300 will-change-transform transition-all"
+              className="flex items-center gap-4 p-4 rounded-xl glass-panel group hover:border-[#25D366] transition-all duration-300"
             >
               <div className="w-10 h-10 rounded-full bg-[#25D366]/10 text-[#25D366] flex items-center justify-center group-hover:scale-110 group-hover:bg-[#25D366] group-hover:text-white transition-all duration-300 shrink-0">
                 <svg
@@ -114,14 +120,15 @@ export default function ContactSection() {
               </div>
             </a>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Side: Simple Configurator Panel */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
+          whileInView={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
           viewport={{ once: true, amount: 0.2 }}
-          className="flex-1 w-full glass-panel p-6 sm:p-8 md:p-10 rounded-[var(--radius-bento)] relative overflow-hidden flex flex-col gap-6 opacity-0 [transform:translateY(30px)]"
+          transition={{ type: "spring", stiffness: 45, damping: 14, delay: 0.1 }}
+          className="flex-1 w-full glass-panel p-6 sm:p-8 md:p-10 rounded-[var(--radius-bento)] relative overflow-hidden flex flex-col gap-6 opacity-0"
         >
           {/* Top colored indicator line */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[var(--color-primary-base)]/10 via-[var(--color-primary-base)] to-[var(--color-primary-base)]/10" />

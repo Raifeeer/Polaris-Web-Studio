@@ -23,9 +23,37 @@ export function useTheme() {
     localStorage.setItem("polaris-theme", theme);
   }, [theme]);
 
+  // Synchronize with system preferences automatically
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      const savedTheme = localStorage.getItem("polaris-theme");
+      // If there is no saved user preference, synchronize with system theme automatically
+      if (!savedTheme) {
+        setTheme(e.matches ? "dark" : "light");
+      }
+    };
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    } else {
+      mediaQuery.addListener(handleChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
   const toggleTheme = () => {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return { theme, toggleTheme };
 }
+

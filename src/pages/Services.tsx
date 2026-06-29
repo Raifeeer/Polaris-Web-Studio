@@ -1159,19 +1159,35 @@ export default function Services() {
                     {tableCategories.map((cat, catIdx) => (
                       <React.Fragment key={catIdx}>
                         {/* Category Row */}
-                        <tr className="bg-[var(--color-primary-base)]/[0.04] dark:bg-[var(--color-primary-base)]/[0.06] border-y border-[var(--color-border-subtle)]/70">
+                        <motion.tr
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={showComparison ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                          transition={{
+                            duration: 0.4,
+                            delay: catIdx * 0.1,
+                            ease: [0.25, 0.46, 0.45, 0.94],
+                          }}
+                          className="bg-[var(--color-primary-base)]/[0.04] dark:bg-[var(--color-primary-base)]/[0.06] border-y border-[var(--color-border-subtle)]/70 font-sans"
+                        >
                           <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-black uppercase tracking-wider text-[var(--color-text-primary)] select-none">
                             <span className="flex items-center gap-3 relational-heading">
                               {cat.icon && <cat.icon className="text-indigo-600 dark:text-indigo-400 w-5 h-5 flex-shrink-0" />}
                               {cat.title}
                             </span>
                           </td>
-                        </tr>
+                        </motion.tr>
                         {/* Features Rows */}
                         {cat.rows.map((row, rowIdx) => (
-                          <tr
+                          <motion.tr
                             key={rowIdx}
-                            className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50" : ""}
+                            initial={{ opacity: 0 }}
+                            animate={showComparison ? { opacity: 1 } : { opacity: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: catIdx * 0.08 + rowIdx * 0.04,
+                              ease: "easeOut",
+                            }}
+                            className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50 font-sans" : "font-sans"}
                           >
                             <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none min-w-[260px] w-[260px]">
                               {row.name}
@@ -1185,7 +1201,7 @@ export default function Services() {
                             <td className="p-4 text-center text-sm font-bold">
                               {row.v3}
                             </td>
-                          </tr>
+                          </motion.tr>
                         ))}
                       </React.Fragment>
                     ))}

@@ -6,6 +6,7 @@ import AISparkleIcon from "../components/AISparkleIcon";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T } from "../context/LanguageContext";
+import { useToast } from "../context/ToastContext";
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
@@ -13,10 +14,17 @@ export default function Gracias() {
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state || {};
+  const { success: toastSuccess } = useToast();
 
   useEffect(() => {
     // Scroll to top
     window.scrollTo(0, 0);
+
+    // Show a premium global toast confirmation
+    toastSuccess(
+      <T en="Quote successfully submitted & strategic session scheduled! 🎉">¡Cotización enviada con éxito y sesión estratégica agendada! 🎉</T>,
+      6000
+    );
 
     // Track conversion event in Google Analytics 4 (GA4)
     if (GA_ID) {
