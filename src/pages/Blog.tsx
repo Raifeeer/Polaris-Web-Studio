@@ -28,7 +28,7 @@ const getHighlightWords = (query: string): string[] => {
   return Array.from(new Set(query.trim().split(/\s+/).filter((w) => w.length >= 2)));
 };
 
-// Wraps any occurrence of a highlight word in `text` with an indigo <span>
+// Wraps any occurrence of a highlight word in `text` with a "selected"-style indigo background mark
 const highlightMatches = (text: string, words: string[]): React.ReactNode => {
   if (words.length === 0) return text;
   const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
@@ -36,9 +36,9 @@ const highlightMatches = (text: string, words: string[]): React.ReactNode => {
   const parts = text.split(regex);
   return parts.map((part, idx) =>
     words.some((w) => w.toLowerCase() === part.toLowerCase()) ? (
-      <span key={idx} className="text-indigo-500 font-bold">
+      <mark key={idx} className="bg-indigo-500 text-white rounded px-0.5 not-italic">
         {part}
-      </span>
+      </mark>
     ) : (
       part
     )
