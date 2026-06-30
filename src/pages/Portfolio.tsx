@@ -104,9 +104,11 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   targetHeight = Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, targetHeight));
 
   return (
-    <div className={`flex flex-col gap-4 w-full ${fillParent ? "h-full min-h-0" : ""}`} ref={containerRef}>
-      {/* Premium minimal floating HUD Bar above mockup */}
-      <div className={`flex items-center justify-between w-full ${fillParent ? "px-3 pt-3" : "px-1"}`}>
+    <div className={`w-full ${fillParent ? "relative h-full min-h-0" : "flex flex-col gap-4"}`} ref={containerRef}>
+      {/* Premium minimal floating HUD Bar above mockup. En bento (fillParent) flota
+          superpuesta sobre la imagen para no robarle alto al mockup dentro de la
+          tarjeta, que ya tiene poco espacio vertical disponible. */}
+      <div className={`flex items-center justify-between w-full ${fillParent ? "absolute top-0 left-0 right-0 z-10 px-3 pt-3" : "px-1"}`}>
         <div className="flex items-center gap-2">
           {/* Device selection tabs with matching styling cues */}
           <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
@@ -175,7 +177,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
           if (swipe < -8000) onSwipeProject(1);
           else if (swipe > 8000) onSwipeProject(-1);
         } : undefined}
-        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "flex-1 min-h-0" : ""} ${onSwipeProject ? "cursor-grab active:cursor-grabbing" : ""}`}
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "h-full" : ""} ${onSwipeProject ? "cursor-grab active:cursor-grabbing" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
