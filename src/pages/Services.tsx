@@ -1169,7 +1169,7 @@ export default function Services() {
                           }}
                           className="bg-[var(--color-primary-base)]/[0.04] dark:bg-[var(--color-primary-base)]/[0.06] border-y border-[var(--color-border-subtle)]/70 font-sans"
                         >
-                          <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-black uppercase tracking-wider text-[var(--color-text-primary)] select-none">
+                          <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-display font-black uppercase tracking-wider text-[var(--color-text-primary)] select-none">
                             <span className="flex items-center gap-3 relational-heading">
                               {cat.icon && <cat.icon className="text-indigo-600 dark:text-indigo-400 w-5 h-5 flex-shrink-0" />}
                               {cat.title}
