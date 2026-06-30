@@ -795,7 +795,7 @@ export default function Portfolio() {
                   </div>
 
                   {/* Mockup Frame presentation with custom responsive scale */}
-                  <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-b-0 border-[var(--color-border-subtle)] bg-transparent">
+                  <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-[var(--color-border-subtle)] bg-transparent">
                     <ProjectScreenshot project={project} fillParent />
                   </div>
 
