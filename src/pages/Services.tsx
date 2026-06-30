@@ -1126,10 +1126,10 @@ export default function Services() {
                         <th className="bg-[var(--color-surface-base)]" />
                       </tr>
                       <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-base)] z-10">
-                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] select-none min-w-[260px] w-[260px]">
+                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] min-w-[260px] w-[260px]">
                           <T en="Characteristics">Características</T>
                         </th>
-                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)]">
+                      <th className="p-6 py-8 text-center bg-[var(--color-surface-base)]">
                         <div className="font-display font-black text-amber-500 text-lg md:text-2xl tracking-tight">
                           <T en="Flash">Destello</T>
                         </div>
@@ -1137,7 +1137,7 @@ export default function Services() {
                           ${isOfferActive ? Math.round(299 * 0.75) : 299} USD
                         </div>
                       </th>
-                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5">
+                      <th className="p-6 py-8 text-center bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5">
                         <div className="font-display font-black text-[var(--color-primary-base)] text-lg md:text-2xl tracking-tight">
                           <T en="Constellation">Constelación</T>
                         </div>
@@ -1145,7 +1145,7 @@ export default function Services() {
                           ${isOfferActive ? Math.round(699 * 0.75) : 699} USD
                         </div>
                       </th>
-                      <th className="p-6 py-8 text-center select-none bg-[var(--color-surface-base)]">
+                      <th className="p-6 py-8 text-center bg-[var(--color-surface-base)]">
                         <div className="font-display font-black text-violet-500 text-lg md:text-2xl tracking-tight">
                           <T en="Nova">Nova</T>
                         </div>
@@ -1169,7 +1169,7 @@ export default function Services() {
                           }}
                           className="bg-[var(--color-primary-base)]/[0.04] dark:bg-[var(--color-primary-base)]/[0.06] border-y border-[var(--color-border-subtle)]/70 font-sans"
                         >
-                          <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-display font-black uppercase tracking-wider text-[var(--color-text-primary)] select-none">
+                          <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-display font-black uppercase tracking-wider text-[var(--color-text-primary)]">
                             <span className="flex items-center gap-3 relational-heading">
                               {cat.icon && <cat.icon className="text-indigo-600 dark:text-indigo-400 w-5 h-5 flex-shrink-0" />}
                               {cat.title}
@@ -1189,7 +1189,7 @@ export default function Services() {
                             }}
                             className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50 font-sans" : "font-sans"}
                           >
-                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium select-none min-w-[260px] w-[260px]">
+                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium min-w-[260px] w-[260px]">
                               {row.name}
                             </td>
                             <td className="p-4 text-center text-sm font-bold">
@@ -1207,7 +1207,7 @@ export default function Services() {
                     ))}
                      {/* Action buttons row */}
                     <tr className="border-t border-[var(--color-border-subtle)]">
-                      <td className="p-4 bg-[var(--color-surface-base)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] select-none">
+                      <td className="p-4 bg-[var(--color-surface-base)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
                         <T en="Select Plan">Seleccionar Paquete</T>
                       </td>
                       <td className="p-4 bg-[var(--color-surface-base)] text-center">

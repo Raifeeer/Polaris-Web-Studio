@@ -122,6 +122,11 @@
     font-family: var(--font-display);
     @apply tracking-tight;
   }
+
+  ::selection {
+    background-color: var(--color-primary-base);
+    color: #ffffff;
+  }
 }
 
 @layer utilities {
