@@ -198,6 +198,10 @@ const LINK_DEFINITIONS: LinkDef[] = [
   {
     slug: "mantenimiento-soporte-premium-webs",
     terms: ["mantenimiento y soporte premium", "premium maintenance & support", "premium maintenance and support"]
+  },
+  {
+    slug: "react-vite-arquitectura-spa-paneles",
+    terms: ["react + vite", "react y vite", "arquitectura react + vite"]
   }
 ];
 

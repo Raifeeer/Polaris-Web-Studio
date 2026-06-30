@@ -774,8 +774,8 @@ For a business in the Dominican Republic aiming to grow, that stability has enor
   {
     id: "tech-react",
     slug: "react-libreria-componentes",
-    title: "¿Qué tienen en común Instagram, Airbnb y tu próxima tienda online?",
-    titleEn: "What do Instagram, Airbnb, and your next online store have in common?",
+    title: "¿Qué tienen en común Instagram, Airbnb y tu próxima tienda online? La respuesta es React",
+    titleEn: "What do Instagram, Airbnb, and your next online store have in common? The answer is React",
     summary: "La librería de diseño declarativo que cambió el desarrollo web. Aprende a crear componentes dinámicos de alto rendimiento.",
     summaryEn: "The declarative UI library that changed web development. Learn how reusable components and Virtual DOM speed up user experiences.",
     category: "Desarrollo",
@@ -853,8 +853,8 @@ That means when you want to redesign that button, you change it in one place and
   {
     id: "tech-tailwind",
     slug: "tailwind-diseno-rapido",
-    title: "¿Cuánto pesa el CSS de tu web? Probablemente demasiado",
-    titleEn: "How heavy is your website's CSS? Probably too much",
+    title: "¿Cuánto pesa el CSS de tu web sin Tailwind? Probablemente demasiado",
+    titleEn: "How heavy is your website's CSS without Tailwind? Probably too much",
     summary: "Se acabaron los archivos CSS enormes de megabytes. Sácale provecho a la velocidad adaptando clases directamente en tu código.",
     summaryEn: "No more multi-megabyte style sheets. Leverage utility-first design directly inside your markup to implement responsive layouts.",
     category: "Desarrollo",
@@ -926,8 +926,8 @@ At Polaris, we use Tailwind on all our projects precisely for that reason: **dev
   {
     id: "tech-cloud",
     slug: "cloud-firebase-servidores",
-    title: "¿Qué pasa con tu web cuando de repente la menciona un famoso en Instagram?",
-    titleEn: "What happens to your website when a celebrity suddenly mentions it on Instagram?",
+    title: "¿Qué pasa con tu web cuando de repente la menciona un famoso en Instagram? Firebase tiene la respuesta",
+    titleEn: "What happens to your website when a celebrity suddenly mentions it on Instagram? Firebase has the answer",
     summary: "Despliega bases de datos instantáneas y controladores de seguridad centralizados sin gestionar servidores físicos ni lidiar con configuraciones complejas.",
     summaryEn: "Deploy real-time databases and advanced authentication layers without renting virtual boxes or configuring heavy infrastructure.",
     category: "Desarrollo",
@@ -999,8 +999,8 @@ Building a secure login system from scratch — with session management, passwor
   {
     id: "tech-vite",
     slug: "vite-desarrollo-veloz",
-    title: "Antes tardaba 40 segundos en ver mis cambios. Ahora tarda menos de uno",
-    titleEn: "It used to take 40 seconds to see my changes. Now it takes less than one",
+    title: "Antes tardaba 40 segundos en ver mis cambios. Con Vite, ahora tarda menos de uno",
+    titleEn: "It used to take 40 seconds to see my changes. With Vite, now it takes less than one",
     summary: "Se acabaron las esperas interminables en el desarrollo. Conoce cómo Vite utiliza ESM nativos en el navegador para entregarte compilaciones ultra-rápidas.",
     summaryEn: "Long bundle wait times are over. Discover how Vite utilizes native ES Modules to serve local files and bundle production builds.",
     category: "Desarrollo",
@@ -1076,8 +1076,8 @@ For the final build, Vite uses **Rollup** — one of the most efficient bundlers
   {
     id: "tech-typescript",
     slug: "typescript-codigo-seguro",
-    title: "El bug que le costó $440 millones a Knight Capital en 45 minutos",
-    titleEn: "The bug that cost Knight Capital $440 million in 45 minutes",
+    title: "El bug que le costó $440 millones a Knight Capital en 45 minutos (TypeScript lo habría evitado)",
+    titleEn: "The bug that cost Knight Capital $440 million in 45 minutes (TypeScript would have caught it)",
     summary: "Evita el 80% de los errores lógicos del navegador antes de desplegar tu código. Descubre el superconjunto de JavaScript preferido por la industria.",
     summaryEn: "Prevent over 80% of client-side code crash bugs before compiling. Discover why enterprise teams prefer this typing super-set of JavaScript.",
     category: "Desarrollo",
@@ -1149,8 +1149,8 @@ That's especially critical when the project grows, when a second developer joins
   {
     id: "tech-gemini",
     slug: "gemini-inteligencia-artificial",
-    title: "Contratar a un asistente que trabaja 24 horas y nunca olvida nada",
-    titleEn: "Hiring an assistant who works 24 hours and never forgets anything",
+    title: "Contratar a Gemini: un asistente que trabaja 24 horas y nunca olvida nada",
+    titleEn: "Hiring Gemini: an assistant who works 24 hours and never forgets anything",
     summary: "Conecta tu flujo de trabajo o aplicación web directa a la IA de Google para automatizar contenido, traducir y responder preguntas conceptuales.",
     summaryEn: "Link your business workflows directly to Google's advanced LLM models to handle document parsing and automated customer inquiries.",
     category: "Desarrollo",
@@ -1220,8 +1220,8 @@ What distinguishes Gemini from simpler models is its multimodal reasoning capabi
   {
     id: "tech-grok",
     slug: "grok-modelo-ia",
-    title: "Hay una IA que tiene acceso a lo que está pasando en internet ahora mismo",
-    titleEn: "There's an AI that has access to what's happening on the internet right now",
+    title: "Hay una IA llamada Grok que tiene acceso a lo que está pasando en internet ahora mismo",
+    titleEn: "There's an AI called Grok that has access to what's happening on the internet right now",
     summary: "Sistemas inteligentes con acceso en tiempo real a tendencias globales. Descubre qué es Grok, cómo difiere de la IA corporativa y cómo potencia tu negocio.",
     summaryEn: "Intelligent systems with real-time access to global social contexts. Discover what Grok is, how it differs from traditional AIs and how to leverage it.",
     category: "Desarrollo",
@@ -1293,8 +1293,8 @@ At Polaris we evaluate which model to use based on each client's use case. For p
   {
     id: "tech-postgresql",
     slug: "postgresql-base-datos",
-    title: "Una tienda vendió el mismo producto dos veces. Así es como eso pasa",
-    titleEn: "A store sold the same product twice. Here's how that happens",
+    title: "Una tienda vendió el mismo producto dos veces. Así evita PostgreSQL que vuelva a pasar",
+    titleEn: "A store sold the same product twice. Here's how PostgreSQL keeps it from happening again",
     summary: "Estructura tus datos financieros, perfiles de usuario e inventarios bajo la robustez del motor relacional más potente del mercado.",
     summaryEn: "Store financial ledger paths, user data profiles, and product catalogs using the industry's most robust ACID-compliant relational engine.",
     category: "Desarrollo",
@@ -2098,8 +2098,8 @@ The AI proposes the first draft; the **final call** to publish, tweak, or discar
   {
     id: "tech-drizzle",
     slug: "drizzle-orm-bases-datos-robustas",
-    title: "El día que el desarrollador anterior dejó de responder mensajes",
-    titleEn: "The day the previous developer stopped responding to messages",
+    title: "El día que el desarrollador anterior dejó de responder mensajes (así evita Drizzle que se repita)",
+    titleEn: "The day the previous developer stopped responding to messages (here's how Drizzle prevents it)",
     summary: "Conoce por qué los equipos de desarrollo modernos están migrando de ORMs lentos y pesados a Drizzle para obtener consultas SQL nativas y tipado perfecto.",
     summaryEn: "Learn why modern engineering teams are migrating from heavy ORMs to Drizzle to achieve Type-Safe queries and millisecond-level speeds.",
     category: "Desarrollo",
@@ -2254,8 +2254,8 @@ At Polaris we implement PWA as an additional layer on top of the web platforms w
   {
     id: "tech-cicd",
     slug: "ci-cd-cloud-run-despliegues-automaticos",
-    title: "Actualizar tu web no debería significar que esté caída dos horas",
-    titleEn: "Updating your website shouldn't mean it's down for two hours",
+    title: "Actualizar tu web no debería significar que esté caída dos horas: así funciona CI/CD",
+    titleEn: "Updating your website shouldn't mean it's down for two hours: that's what CI/CD does",
     summary: "Conoce la infraestructura moderna que actualiza tu aplicación en producción al segundo de guardar código, garantizando estabilidad total sin caídas del portal.",
     summaryEn: "Explore modern pipeline structures that update live production code on every push, ensuring automatic rollback shields and high availability.",
     category: "Performance",
@@ -2294,7 +2294,7 @@ Para una tienda online, eso puede significar la diferencia entre corregir un err
 
 ### Cloud Run: infraestructura que escala sola
 
-En Polaris implementamos CI/CD usando GitHub Actions como motor de automatización y Google **Cloud Run** como plataforma de ejecución. Cloud Run tiene una característica que lo hace ideal para negocios con tráfico variable: escala automáticamente según la demanda.
+En los proyectos que lo requieren, en Polaris implementamos CI/CD usando GitHub Actions como motor de automatización y Google **Cloud Run** como plataforma de ejecución. Cloud Run tiene una característica que lo hace ideal para negocios con tráfico variable: escala automáticamente según la demanda.
 
 Si un día normal tienes 100 visitas simultáneas y un lunes de campaña publicitaria tienes 2,000, **Cloud Run** añade capacidad en segundos sin que tengas que hacer nada. Cuando el tráfico baja, reduce la capacidad para no generar costos innecesarios.
 
@@ -2325,7 +2325,7 @@ For an online store, that can mean the difference between fixing a checkout erro
 
 ### Cloud Run: infrastructure that scales itself
 
-At Polaris we implement CI/CD using GitHub Actions as the automation engine and Google **Cloud Run** as the execution platform. Cloud Run has a characteristic that makes it ideal for businesses with variable traffic: it scales automatically based on demand.
+On projects that require it, at Polaris we implement CI/CD using GitHub Actions as the automation engine and Google **Cloud Run** as the execution platform. Cloud Run has a characteristic that makes it ideal for businesses with variable traffic: it scales automatically based on demand.
 
 If on a normal day you have 100 simultaneous visits and on a Monday advertising campaign you have 2,000, **Cloud Run** adds capacity in seconds without you having to do anything. When traffic drops, it reduces capacity to avoid unnecessary costs.
 
@@ -3256,6 +3256,72 @@ Updating a price, fixing a typo, or uploading a new photo shouldn't require comm
 During a free vaccination campaign, the clinic's site from the example stopped responding on a Saturday afternoon, right when it was getting the most traffic. Thanks to active monitoring, the support team caught the outage within minutes and restored service that same afternoon, before the clinic lost a single appointment booked over that weekend.
 
 *A website doesn't only need maintenance once something has already broken — it needs maintenance, most of all, on the days when nobody's watching.*`
+  },
+  {
+    id: "tech-react-vite",
+    slug: "react-vite-arquitectura-spa-paneles",
+    title: "No todas las páginas de tu sitio necesitan la misma arquitectura: por qué tu panel usa React + Vite",
+    titleEn: "Not every page on your site needs the same architecture: why your dashboard runs on React + Vite",
+    summary: "Next.js brilla en páginas públicas que necesitan SEO. Pero un panel de administración privado tiene otras prioridades — descubre por qué React + Vite es la arquitectura correcta para esa otra mitad de tu plataforma.",
+    summaryEn: "Next.js shines on public pages that need SEO. But a private admin dashboard has different priorities — discover why React + Vite is the right architecture for that other half of your platform.",
+    category: "Desarrollo",
+    categoryEn: "Development",
+    publishedAt: "2026-06-30",
+    readTime: 5,
+    author: {
+      name: "Cristian Dicen",
+      role: "Desarrollador Principal & Fundador",
+      roleEn: "Lead Developer & Founder",
+      avatar: "/images/cristian-dicen.webp"
+    },
+    tags: ["react", "vite", "arquitectura", "spa", "desarrollo", "performance"],
+    concepts: ["react", "vite", "spa", "single page application", "arquitectura", "panel de administracion", "dashboard", "next.js"],
+    content: `Cuando alguien visita la página de inicio de tu negocio, lo primero que importa es la velocidad de la primera pantalla y que Google pueda indexar cada palabra. Pero cuando ese mismo negocio entra a su panel de administración a revisar pedidos o actualizar precios, ya inició sesión, ya confía en la plataforma, y lo que necesita es que cada clic se sienta instantáneo — no que Google lo indexe.
+
+Son dos trabajos distintos. Por eso en Polaris no usamos la misma arquitectura para ambos.
+
+### Next.js donde el SEO manda
+
+Las páginas públicas — inicio, servicios, portafolio, blog — viven detrás de Next.js porque ahí el posicionamiento orgánico y el primer impacto visual determinan si un visitante se queda o se va. Cada palabra tiene que estar lista para el buscador desde el primer milisegundo.
+
+### React + Vite donde manda la velocidad de interacción
+
+El panel de administración es harina de otro costal. Nadie llega ahí desde Google, nadie necesita ver el contenido sin JavaScript, y cada usuario ya está autenticado. Lo que sí importa: que cambiar de pestaña, abrir un modal o actualizar una tabla se sienta inmediato.
+
+Ahí es donde entra **Vite**. Su servidor de desarrollo arranca en milisegundos y recarga cambios sin recompilar toda la aplicación, lo que acelera directamente cuánto tiempo le toma a nuestro equipo construir y pulir cada función del panel. En producción, genera un bundle optimizado que el navegador descarga una sola vez — después de eso, navegar entre secciones del panel no recarga la página, solo actualiza componentes de **React**.
+
+### Una sola aplicación, sin recargas
+
+Esa es la idea central de una **SPA (Single Page Application)**: el navegador carga el panel una vez y luego React se encarga de actualizar partes específicas de la pantalla según lo que el usuario hace, sin pedirle al servidor una página nueva cada vez que hace clic.
+
+### Dos arquitecturas, un mismo negocio
+
+Un cliente de Polaris con un sitio de marketing en Next.js y un panel de administración en React + Vite no está usando dos productos distintos: está usando la herramienta correcta para cada mitad de su plataforma, en lugar de forzar una sola arquitectura a hacer dos trabajos que requieren prioridades opuestas.
+
+*La pregunta correcta nunca es qué tecnología es mejor — es qué tecnología responde a lo que esa pantalla específica necesita hacer.*`,
+    contentEn: `When someone visits your business's homepage, what matters most is how fast the first screen loads and whether Google can index every word on it. But when that same business logs into its admin dashboard to check orders or update prices, they're already authenticated, they already trust the platform, and what they need is for every click to feel instant — not for Google to crawl it.
+
+Those are two different jobs. That's why at Polaris we don't use the same architecture for both.
+
+### Next.js where SEO calls the shots
+
+Public pages — home, services, portfolio, blog — run on Next.js because organic ranking and first visual impact determine whether a visitor stays or leaves. Every word needs to be ready for the search engine from the first millisecond.
+
+### React + Vite where interaction speed calls the shots
+
+The admin dashboard is a different animal entirely. Nobody arrives there from Google, nobody needs to see the content without JavaScript, and every user is already logged in. What matters instead: switching tabs, opening a modal, or refreshing a table has to feel immediate.
+
+That's where **Vite** comes in. Its development server starts in milliseconds and reloads changes without recompiling the whole application, which directly speeds up how long it takes our team to build and polish every feature in the dashboard. In production, it generates an optimized bundle the browser downloads once — after that, navigating between sections of the panel never reloads the page, it just updates **React** components.
+
+### One application, zero reloads
+
+That's the core idea behind a **SPA (Single Page Application)**: the browser loads the dashboard once, and React takes over updating specific parts of the screen based on what the user does, without asking the server for a brand-new page on every click.
+
+### Two architectures, one business
+
+A Polaris client with a marketing site on Next.js and an admin dashboard on React + Vite isn't running two different products — they're running the right tool for each half of their platform, instead of forcing a single architecture to do two jobs with opposite priorities.
+
+*The right question is never which technology is better — it's which technology answers what that specific screen actually needs to do.*`
   }
 ];
 
