@@ -459,6 +459,17 @@ if (typeof window !== "undefined") {
   }, 100);
 }
 
+// Una cotización guardada hace más de 30 días probablemente refleje precios u
+// ofertas ya vencidas, así que se descarta en vez de retomarla silenciosamente.
+const WIZARD_RESUME_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+
+function isSavedWizardStale(): boolean {
+  const savedAt = localStorage.getItem("wizardQuote_savedAt");
+  if (!savedAt) return false;
+  const ts = parseInt(savedAt, 10);
+  return !Number.isNaN(ts) && Date.now() - ts > WIZARD_RESUME_TTL_MS;
+}
+
 export default function WizardQuote() {
   const navigate = useNavigate();
   const { theme } = useTheme();
@@ -525,6 +536,7 @@ export default function WizardQuote() {
     setCurrentStep(0);
     localStorage.removeItem("wizardQuote_currentStep");
     localStorage.removeItem("wizardQuote_selections");
+    localStorage.removeItem("wizardQuote_savedAt");
     localStorage.removeItem("wizardQuote_leadCaptured");
     localStorage.removeItem("wizardQuote_selectedType");
     localStorage.removeItem("wizardQuote_selectedAddons");
@@ -534,6 +546,7 @@ export default function WizardQuote() {
   };
 
   const [currentStep, setCurrentStep] = useState(() => {
+    if (isSavedWizardStale()) return 0;
     const saved = localStorage.getItem("wizardQuote_currentStep");
     return saved !== null ? parseInt(saved, 10) : 0;
   });
@@ -545,15 +558,17 @@ export default function WizardQuote() {
   const [addonDescLoading, setAddonDescLoading] = useState(false);
 
   const [selections, setSelections] = useState(() => {
-    const saved = localStorage.getItem("wizardQuote_selections");
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(
-          "Failed to parse wizard selections from local storage",
-          e,
-        );
+    if (!isSavedWizardStale()) {
+      const saved = localStorage.getItem("wizardQuote_selections");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error(
+            "Failed to parse wizard selections from local storage",
+            e,
+          );
+        }
       }
     }
     return {
@@ -571,10 +586,12 @@ export default function WizardQuote() {
 
   useEffect(() => {
     localStorage.setItem("wizardQuote_currentStep", currentStep.toString());
+    localStorage.setItem("wizardQuote_savedAt", Date.now().toString());
   }, [currentStep]);
 
   useEffect(() => {
     localStorage.setItem("wizardQuote_selections", JSON.stringify(selections));
+    localStorage.setItem("wizardQuote_savedAt", Date.now().toString());
   }, [selections]);
 
   useEffect(() => {
@@ -645,6 +662,23 @@ export default function WizardQuote() {
     }
   }, [location.search]);
 
+  // Avisa que se retomó una cotización en progreso, pero no si llegó por un
+  // enlace con parámetros propios (?type=, ?step=, etc.), ya que ese efecto
+  // de arriba sobreescribe el paso/selecciones restaurados con los de la URL.
+  useEffect(() => {
+    const hasResumedProgress =
+      currentStep > 0 || !!selections.sector || !!selections.businessType;
+    if (!location.search && hasResumedProgress) {
+      toastSuccess(
+        <T en="Welcome back! We picked up your quote where you left off.">
+          ¡Bienvenido de nuevo! Retomamos tu cotización donde la dejaste.
+        </T>
+      );
+    }
+    // Solo debe evaluarse una vez, con el estado ya restaurado del montaje inicial.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [estimateExpanded, setEstimateExpanded] = useState(false);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -677,7 +711,7 @@ export default function WizardQuote() {
 
   // Lead capture state
   const [leadCaptured, setLeadCaptured] = useState(() =>
-    !!localStorage.getItem("wizardQuote_leadCaptured")
+    !isSavedWizardStale() && !!localStorage.getItem("wizardQuote_leadCaptured")
   );
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadName, setLeadName] = useState(selections.name || "");
