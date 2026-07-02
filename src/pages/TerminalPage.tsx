@@ -247,14 +247,37 @@ function PolarisEgg() {
 // ── TypedText ─────────────────────────────────────────────────────────────
 function TypedText({ text, speed = 4, onComplete }: { text: string; speed?: number; onComplete?: () => void }) {
   const [displayed, setDisplayed] = useState("");
+  // Ref en vez de dependencia directa: si el padre pasa un onComplete nuevo en
+  // cada render, no debe reiniciar la animación de tipeo a medio camino.
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   useEffect(() => {
-    let i = 0; setDisplayed("");
+    setDisplayed("");
     const iv = setInterval(() => {
-      setDisplayed(prev => prev + text.charAt(i)); i++;
-      if (i >= text.length) { clearInterval(iv); onComplete?.(); }
+      // Se deriva el siguiente prefijo directamente de `text` y la longitud ya
+      // mostrada (estado autoritativo de React) en vez de un contador externo
+      // mutado por separado: eso permitía que, si dos ticks del interval se
+      // ejecutaban muy próximos entre sí (a 2ms de intervalo el navegador
+      // puede encadenarlos), el closure leyera el índice ya incrementado por
+      // el siguiente tick antes de que React aplicara la actualización,
+      // saltándose el carácter intermedio (p. ej. "Comandos" → "Cmandos").
+      setDisplayed(prev => {
+        if (prev.length >= text.length) {
+          clearInterval(iv);
+          return prev;
+        }
+        const next = text.slice(0, prev.length + 1);
+        if (next.length >= text.length) {
+          clearInterval(iv);
+          onCompleteRef.current?.();
+        }
+        return next;
+      });
     }, speed);
     return () => clearInterval(iv);
-  }, [text, speed, onComplete]);
+  }, [text, speed]);
+
   return <span className="whitespace-pre-wrap leading-relaxed">{displayed}</span>;
 }
 
