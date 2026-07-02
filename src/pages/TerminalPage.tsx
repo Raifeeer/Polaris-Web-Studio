@@ -65,10 +65,28 @@ const FORTUNES_EN = [
 ];
 
 // ── BuildSimulator ────────────────────────────────────────────────────────
-function BuildSimulator({ es, onComplete }: { es: boolean; onComplete: () => void }) {
+function BuildSimulator({ es, onComplete, onBusyChange }: { es: boolean; onComplete: () => void; onBusyChange?: (busy: boolean) => void }) {
   const [step, setStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  // Deps vacías a propósito: el padre re-renderiza cada ~2s (telemetría del
+  // HUD) pasando un onComplete/onBusyChange con referencia nueva cada vez; si
+  // entraran en las deps, la simulación se reiniciaría desde 0% en cada tick.
   useEffect(() => {
+    onBusyChange?.(true);
+    // Dispara onBusyChange(false) una sola vez, con lo que ocurra primero: la
+    // finalización natural de la simulación o el desmontaje del componente.
+    // Antes solo se avisaba "libre" al desmontar — pero estas tarjetas se
+    // quedan montadas en el historial para siempre, así que la telemetría del
+    // HUD se quedaba "ocupada" (CPU alta) de forma permanente tras un build.
+    let idleSignaled = false;
+    const signalIdle = () => {
+      if (idleSignaled) return;
+      idleSignaled = true;
+      onBusyChange?.(false);
+    };
     let p = 0;
     const iv = setInterval(() => {
       const inc = Math.floor(Math.random() * 12) + 6;
@@ -78,10 +96,11 @@ function BuildSimulator({ es, onComplete }: { es: boolean; onComplete: () => voi
       else if (p < 65) setStep(1);
       else if (p < 85) setStep(2);
       else if (p < 100) setStep(3);
-      else { setStep(4); clearInterval(iv); setTimeout(onComplete, 400); }
+      else { setStep(4); clearInterval(iv); setTimeout(() => onCompleteRef.current?.(), 400); signalIdle(); }
     }, 150);
-    return () => clearInterval(iv);
-  }, [onComplete]);
+    return () => { clearInterval(iv); signalIdle(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const bar = (n: number) => "█".repeat(Math.floor(n / 10)) + "░".repeat(10 - Math.floor(n / 10));
   const steps = es
     ? ["Inicializando proyecto...","Instalando dependencias...","Compilando React + Vite...","Desplegando en Vercel..."]
@@ -105,8 +124,13 @@ function BuildSimulator({ es, onComplete }: { es: boolean; onComplete: () => voi
 }
 
 // ── MatrixRain ────────────────────────────────────────────────────────────
-function MatrixRain({ onComplete }: { onComplete: () => void }) {
+function MatrixRain({ onComplete, onBusyChange }: { onComplete: () => void; onBusyChange?: (busy: boolean) => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  // Deps vacías a propósito (ver BuildSimulator): evita que la lluvia se
+  // reinicie desde cero cada ~2s por el re-render de la telemetría del HUD.
   useEffect(() => {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext("2d"); if (!ctx) return;
@@ -119,9 +143,30 @@ function MatrixRain({ onComplete }: { onComplete: () => void }) {
     const dropSnippets = Array(cols).fill("").map(() => snippets[Math.floor(Math.random() * snippets.length)]);
     ctx.fillStyle = "rgba(10,10,15,1)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    onBusyChange?.(true);
+    // Ver comentario equivalente en BuildSimulator: sin esto, la telemetría
+    // se quedaba "ocupada" para siempre tras la finalización natural de la
+    // lluvia (el componente sigue montado en el historial, no se desmonta).
+    let idleSignaled = false;
+    const signalIdle = () => {
+      if (idleSignaled) return;
+      idleSignaled = true;
+      onBusyChange?.(false);
+    };
     let fId: number;
-    const timer = setTimeout(onComplete, 8000);
+    let stopped = false;
+    // Antes la animación seguía corriendo indefinidamente en segundo plano
+    // (requestAnimationFrame sin condición de salida) por cada vez que se
+    // ejecutaba "matrix", incluso ya scrolleada fuera de vista. Ahora se
+    // detiene sola a los 8s.
+    const stopTimer = setTimeout(() => {
+      stopped = true;
+      cancelAnimationFrame(fId);
+      onCompleteRef.current?.();
+      signalIdle();
+    }, 8000);
     const draw = () => {
+      if (stopped) return;
       ctx.fillStyle = "rgba(10,10,15,0.12)";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.font = `${fontSize}px "Fira Code", monospace`;
@@ -135,8 +180,9 @@ function MatrixRain({ onComplete }: { onComplete: () => void }) {
       fId = requestAnimationFrame(draw);
     };
     fId = requestAnimationFrame(draw);
-    return () => { cancelAnimationFrame(fId); clearTimeout(timer); };
-  }, [onComplete]);
+    return () => { stopped = true; cancelAnimationFrame(fId); clearTimeout(stopTimer); signalIdle(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <div className="relative rounded overflow-hidden border border-white/5 bg-[#0a0a0f] h-[200px]">
       <canvas ref={canvasRef} className="w-full h-full block" />
@@ -176,8 +222,16 @@ function NeofetchDisplay() {
 }
 
 // ── HackAnimation ─────────────────────────────────────────────────────────
-function HackAnimation({ es, onComplete }: { es: boolean; onComplete: () => void }) {
+function HackAnimation({ es, onComplete, onBusyChange }: { es: boolean; onComplete: () => void; onBusyChange?: (busy: boolean) => void }) {
   const [lines, setLines] = useState<string[]>([]);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
+  // onComplete queda fuera de las deps a propósito (ver BuildSimulator): con
+  // el padre re-renderizando cada ~2s por la telemetría, este efecto se
+  // reiniciaba en cada tick — pero como `lines` solo se acumulaba (nunca se
+  // vaciaba en el reinicio), la secuencia de 9 líneas se repetía sin parar,
+  // empujando el input hacia abajo hasta sacarlo de la pantalla.
   useEffect(() => {
     const sequence = es ? [
       "> Iniciando secuencia de acceso...",
@@ -200,14 +254,39 @@ function HackAnimation({ es, onComplete }: { es: boolean; onComplete: () => void
       "> Nothing to hack here.",
       "> Just clean code and React.",
     ];
-    let i = 0;
+    onBusyChange?.(true);
+    // Ver comentario equivalente en BuildSimulator/MatrixRain: sin esto la
+    // telemetría se quedaba "ocupada" para siempre tras terminar la secuencia.
+    let idleSignaled = false;
+    const signalIdle = () => {
+      if (idleSignaled) return;
+      idleSignaled = true;
+      onBusyChange?.(false);
+    };
+    setLines([]);
     const iv = setInterval(() => {
-      if (i >= sequence.length) { clearInterval(iv); setTimeout(onComplete, 300); return; }
-      setLines(prev => [...prev, sequence[i]]);
-      i++;
+      // Índice derivado de prev.length (no un `let i` externo mutado aparte):
+      // ese patrón permitía que, si el closure del updater se resolvía después
+      // de que un tick posterior ya hubiera incrementado `i`, se leyera o
+      // repitiera la línea equivocada de `sequence` (mismo tipo de condición de
+      // carrera que afectaba a TypedText con "Comandos" → "Cmandos").
+      setLines(prev => {
+        if (prev.length >= sequence.length) {
+          clearInterval(iv);
+          return prev;
+        }
+        const next = [...prev, sequence[prev.length]];
+        if (next.length >= sequence.length) {
+          clearInterval(iv);
+          setTimeout(() => onCompleteRef.current?.(), 300);
+          signalIdle();
+        }
+        return next;
+      });
     }, 400);
-    return () => clearInterval(iv);
-  }, [es, onComplete]);
+    return () => { clearInterval(iv); signalIdle(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [es]);
   return (
     <div className="pl-4 font-mono text-xs space-y-0.5">
       {lines.map((l, i) => {
@@ -319,6 +398,14 @@ export default function TerminalPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiConvHistory, setAiConvHistory] = useState<{ role: string; content: string }[]>([]);
 
+  // Cantidad de "efectos pesados" corriendo a la vez (build/matrix/hack) —
+  // permite que el panel de telemetría reaccione de verdad al trabajo en
+  // curso en vez de solo fluctuar al azar sin relación con lo que se ejecuta.
+  const [activeFx, setActiveFx] = useState(0);
+  const handleFxBusyChange = useCallback((busy: boolean) => {
+    setActiveFx(c => Math.max(0, c + (busy ? 1 : -1)));
+  }, []);
+
   // Telemetría simulada en tiempo real
   const [metrics, setMetrics] = useState({
     cpu: 14,
@@ -331,6 +418,15 @@ export default function TerminalPage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Ref en vez de leer activeFx/isAiLoading directo dentro del interval de
+  // abajo: ese efecto solo se monta una vez ([] deps) para no reiniciar el
+  // reloj de uptime, así que necesita una vía sin closures obsoletos para
+  // enterarse del estado "busy" más reciente en cada tick.
+  const busyRef = useRef(false);
+  useEffect(() => {
+    busyRef.current = activeFx > 0 || isAiLoading;
+  }, [activeFx, isAiLoading]);
+
   // Reloj de uptime y actualización de telemetría
   useEffect(() => {
     const start = Date.now();
@@ -340,13 +436,17 @@ export default function TerminalPage() {
       const mins = Math.floor(diff / 60000) % 60;
       const hrs = Math.floor(diff / 3600000);
       const uptimeStr = `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-      
+
+      // Con un comando "pesado" corriendo (build/matrix/hack) o Atlas
+      // procesando, el HUD sube a rangos de carga real en vez de fluctuar
+      // random sin relación con lo que está pasando en la consola.
+      const busy = busyRef.current;
       setMetrics(prev => ({
         ...prev,
-        cpu: Math.floor(Math.random() * 26) + 8,
-        ping: Math.floor(Math.random() * 18) + 24,
-        temp: Math.floor(Math.random() * 4) + 31,
-        ram: parseFloat((8.1 + Math.random() * 0.4).toFixed(2)),
+        cpu: busy ? Math.floor(Math.random() * 25) + 55 : Math.floor(Math.random() * 26) + 8,
+        ping: busy ? Math.floor(Math.random() * 30) + 42 : Math.floor(Math.random() * 18) + 24,
+        temp: busy ? Math.floor(Math.random() * 6) + 37 : Math.floor(Math.random() * 4) + 31,
+        ram: busy ? parseFloat((9.4 + Math.random() * 1.1).toFixed(2)) : parseFloat((8.1 + Math.random() * 0.4).toFixed(2)),
         uptime: uptimeStr
       }));
     }, 2000);
@@ -700,11 +800,11 @@ export default function TerminalPage() {
                     <AtlasTyped text={entry.text} es={es} />
                   ) : entry.type === "build" ? (
                     <div className="my-2 p-3 border border-cyan-500/10 bg-cyan-950/5 rounded-xl">
-                      <BuildSimulator es={es} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                      <BuildSimulator es={es} onBusyChange={handleFxBusyChange} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
                     </div>
                   ) : entry.type === "matrix" ? (
                     <div className="my-2">
-                      <MatrixRain onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                      <MatrixRain onBusyChange={handleFxBusyChange} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
                     </div>
                   ) : entry.type === "neofetch" ? (
                     <div className="my-2 p-4 border border-violet-500/10 bg-violet-950/5 rounded-xl">
@@ -712,7 +812,7 @@ export default function TerminalPage() {
                     </div>
                   ) : entry.type === "hack" ? (
                     <div className="my-2 p-4 border border-red-500/10 bg-red-950/5 rounded-xl">
-                      <HackAnimation es={es} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                      <HackAnimation es={es} onBusyChange={handleFxBusyChange} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
                     </div>
                   ) : entry.type === "polaris-egg" ? (
                     <PolarisEgg />
