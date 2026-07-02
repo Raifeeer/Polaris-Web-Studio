@@ -345,29 +345,8 @@ export default function ClientDashboard() {
   };
 
   const askAIFrontend = async (prompt: string): Promise<string> => {
-    const geminiKey = import.meta.env.VITE_GEMINI_API_KEY || "";
-  
-    // Intentar Gemini directo primero
-    if (geminiKey) {
-      try {
-        const res = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${geminiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: { maxOutputTokens: 400, temperature: 0.7 }
-            })
-          }
-        );
-        const data = await res.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-        if (text) return text;
-      } catch (_) {}
-    }
-  
-    // Fallback seguro: pasar por el servidor (tiene Gemini + Grok sin exponer keys)
+    // Todas las llamadas de IA pasan por el servidor, que custodia las API keys
+    // (Gemini + Grok). Nunca se expone ninguna clave en el bundle del cliente.
     const res = await fetch("/api/ai/chat", {
       method: "POST",
       headers: {

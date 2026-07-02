@@ -4,7 +4,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
-import { dbInstance } from "./server-db.js";
+import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 
 // Load environment variables
@@ -21,6 +21,40 @@ if (!process.env.PORTAL_SESSION_SECRET) {
   );
 }
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
+
+// Hash scrypt de un valor aleatorio, usado para igualar el coste de verificación
+// cuando el email no existe (evita distinguir usuarios válidos por temporización).
+const DUMMY_PASSWORD_HASH = hashPassword(crypto.randomBytes(24).toString("hex"));
+
+// --- Rate limiting en memoria (por IP + clave) ---
+// Suficiente para un backend Express de instancia única; frena fuerza bruta de
+// login y abuso de los endpoints de IA sin dependencias externas.
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimit(key: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(key);
+  if (!bucket || now > bucket.resetAt) {
+    rateBuckets.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  if (bucket.count >= max) return false;
+  bucket.count++;
+  return true;
+}
+
+// Limpieza periódica de buckets expirados para no crecer sin límite.
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of rateBuckets) {
+    if (now > v.resetAt) rateBuckets.delete(k);
+  }
+}, 10 * 60 * 1000).unref?.();
+
+function clientIp(req: any): string {
+  const fwd = (req.headers["x-forwarded-for"] as string) || "";
+  return fwd.split(",")[0].trim() || req.socket?.remoteAddress || "unknown";
+}
 
 // projectId de Firebase para validar la audiencia/issuer de los ID tokens.
 let FIREBASE_PROJECT_ID = "";
@@ -247,23 +281,50 @@ async function checkDomain(domain: string): Promise<boolean> {
 }
 
 export const app = express();
+app.disable("x-powered-by");
+
+// Endurece cabeceras de respuesta (defensa básica sin depender de helmet).
+// No se fija una CSP estricta para no romper Firebase/Cal.com/estilos inline.
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+  res.setHeader("X-DNS-Prefetch-Control", "off");
+  res.removeHeader("X-Powered-By");
+  next();
+});
+
+const MAX_BODY_BYTES = 100 * 1024; // 100 KB: suficiente para el portal, corta abusos.
 
 // Body parser middlewares for local API routes
 app.use((req, res, next) => {
   if (req.path === '/api/webhooks/github') {
+    // El webhook necesita el cuerpo crudo para verificar la firma HMAC, pero
+    // se acota el tamaño para evitar consumo de memoria no acotado.
     let data = '';
+    let aborted = false;
     req.setEncoding('utf8');
-    req.on('data', (chunk) => { data += chunk; });
+    req.on('data', (chunk) => {
+      if (aborted) return;
+      data += chunk;
+      if (data.length > MAX_BODY_BYTES) {
+        aborted = true;
+        res.status(413).json({ error: "Payload demasiado grande" });
+        req.destroy();
+      }
+    });
     req.on('end', () => {
+      if (aborted) return;
       (req as any).rawBody = data;
       try { req.body = JSON.parse(data); } catch { req.body = {}; }
       next();
     });
   } else {
-    express.json()(req, res, next);
+    express.json({ limit: MAX_BODY_BYTES })(req, res, next);
   }
 });
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: MAX_BODY_BYTES }));
 
 const PORT = 3000;
 
@@ -344,18 +405,37 @@ const PORT = 3000;
   // --- Portal Authentication Endpoints ---
 
   app.post("/api/auth/login", (req, res) => {
+    // Máx. 10 intentos por IP cada 15 min para frenar fuerza bruta de credenciales.
+    if (!rateLimit(`login:${clientIp(req)}`, 10, 15 * 60 * 1000)) {
+      return res.status(429).json({ success: false, error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." });
+    }
+
     const { email, password } = req.body;
-    if (!email || !password) {
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
       return res.status(400).json({ success: false, error: "El email y contraseña son obligatorios." });
     }
 
-    const emailClean = email.trim().toLowerCase();
+    const emailClean = String(email).trim().toLowerCase();
     const user = dbInstance.getUsers().find(
-      (u) => u.email.trim().toLowerCase() === emailClean && u.password === password && !u.deletedAt
+      (u) => u.email.trim().toLowerCase() === emailClean && !u.deletedAt
     );
 
-    if (!user) {
+    // Verificación de contraseña en tiempo constante. Se verifica siempre contra
+    // un hash (real o dummy) para no filtrar por temporización si el email existe.
+    const stored = user?.password || DUMMY_PASSWORD_HASH;
+    const { valid, legacy } = verifyPassword(
+      stored,
+      String(password)
+    );
+
+    if (!user || !valid) {
       return res.status(401).json({ success: false, error: "El correo o contraseña ingresados son incorrectos." });
+    }
+
+    // Migración perezosa: si la contraseña estaba en texto plano heredado,
+    // la reescribimos como hash scrypt tras un inicio de sesión exitoso.
+    if (legacy) {
+      dbInstance.updateUser(user.id, { password: hashPassword(String(password)) });
     }
 
     const { password: _, ...userWithoutPassword } = user;
@@ -439,7 +519,7 @@ const PORT = 3000;
     dbInstance.addUser({
       id: clientId,
       email: emailClean,
-      password: password,
+      password: hashPassword(String(password)),
       name,
       role: "client",
       companyName,
@@ -683,6 +763,10 @@ const PORT = 3000;
 
   // IA: Analizar descripción de proyecto pública para el cotizador
   app.post("/api/ai/analyze-project", async (req, res) => {
+    // Endpoint público (cotizador): rate limit por IP para evitar abuso/costes de IA.
+    if (!rateLimit(`ai-public:${clientIp(req)}`, 20, 10 * 60 * 1000)) {
+      return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento e inténtalo de nuevo." });
+    }
     const { description } = req.body;
     if (!description) return res.status(400).json({ error: "Falta la descripción del proyecto." });
     if (typeof description !== "string" || description.length > 2000) {
@@ -837,8 +921,13 @@ const PORT = 3000;
   });
 
   app.post("/api/ai/chat", authenticateToken, async (req: any, res) => {
+    // Aun autenticado, se limita para que no se use como proxy de IA gratuito.
+    if (!rateLimit(`ai-chat:${req.user.id}`, 30, 10 * 60 * 1000)) {
+      return res.status(429).json({ error: "Demasiadas solicitudes de IA. Espera un momento." });
+    }
     const { prompt } = req.body;
-    if (!prompt) return res.status(400).json({ error: "Falta el prompt" });
+    if (!prompt || typeof prompt !== "string") return res.status(400).json({ error: "Falta el prompt" });
+    if (prompt.length > 4000) return res.status(400).json({ error: "El prompt es demasiado largo." });
     try {
       const text = await askAI(prompt);
       res.json({ text });
@@ -857,14 +946,22 @@ const PORT = 3000;
       return res.status(200).json({ ok: true, skipped: true });
     }
 
-    // Verificar secret si está configurado
-    if (secret) {
-      const signature = req.headers["x-hub-signature-256"] as string;
-      if (!signature) return res.status(401).json({ error: "No signature" });
-      const crypto = await import("crypto");
-      const rawBody = (req as any).rawBody || JSON.stringify(req.body);
-      const expected = "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
-      if (signature !== expected) return res.status(401).json({ error: "Invalid signature" });
+    // Fail-closed: sin secret configurado el webhook queda deshabilitado. De lo
+    // contrario cualquiera podría inyectar registros de deploy falsos en la BD.
+    if (!secret) {
+      console.warn("[Webhook] GITHUB_WEBHOOK_SECRET no configurado: webhook rechazado.");
+      return res.status(503).json({ error: "Webhook no configurado" });
+    }
+
+    const signature = req.headers["x-hub-signature-256"] as string;
+    if (!signature) return res.status(401).json({ error: "No signature" });
+    const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+    const expected = "sha256=" + crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
+    // Comparación en tiempo constante para evitar ataques de temporización sobre la firma.
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return res.status(401).json({ error: "Invalid signature" });
     }
 
     const repoName = req.body?.repository?.name; // ej: "tano-excursions"
@@ -922,6 +1019,14 @@ const PORT = 3000;
 
   app.get("/api/portal/deploys/:projectId", authenticateToken, async (req: any, res) => {
     const { projectId } = req.params;
+
+    // Un cliente solo puede ver los deploys de sus propios proyectos (evita IDOR).
+    const project = dbInstance.getProjects().find((p) => p.id === projectId);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+
     const deploys = dbInstance.getDeploys(projectId);
     res.json(deploys);
   });

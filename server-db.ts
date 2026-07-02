@@ -1,15 +1,67 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 
 // Define TypeScript structures for our localized database
 export interface DbUser {
   id: string;
   email: string;
-  password?: string; // Stored securely
+  password?: string; // Almacenada como hash scrypt (ver hashPassword). Nunca en texto plano.
   name: string;
   role: "admin" | "client";
   companyName?: string;
   deletedAt?: string;
+}
+
+// --- Password hashing (scrypt, sin dependencias externas) ---
+// Formato del hash almacenado:  scrypt$<saltHex>$<derivedKeyHex>
+const SCRYPT_KEYLEN = 64;
+
+/** Genera un hash scrypt con salt aleatorio para almacenar una contraseña. */
+export function hashPassword(password: string): string {
+  const salt = crypto.randomBytes(16);
+  const derived = crypto.scryptSync(password, salt, SCRYPT_KEYLEN);
+  return `scrypt$${salt.toString("hex")}$${derived.toString("hex")}`;
+}
+
+/** Indica si un valor almacenado ya está en formato hash scrypt. */
+export function isHashedPassword(stored: string | undefined): boolean {
+  return !!stored && stored.startsWith("scrypt$");
+}
+
+/**
+ * Verifica una contraseña contra el valor almacenado en tiempo constante.
+ * Acepta hashes scrypt y, por compatibilidad con datos heredados, también
+ * contraseñas en texto plano (para poder migrarlas de forma perezosa al
+ * primer inicio de sesión). Devuelve además si el valor era heredado.
+ */
+export function verifyPassword(
+  stored: string | undefined,
+  provided: string
+): { valid: boolean; legacy: boolean } {
+  if (!stored) return { valid: false, legacy: false };
+
+  if (isHashedPassword(stored)) {
+    const [, saltHex, hashHex] = stored.split("$");
+    if (!saltHex || !hashHex) return { valid: false, legacy: false };
+    try {
+      const salt = Buffer.from(saltHex, "hex");
+      const expected = Buffer.from(hashHex, "hex");
+      const derived = crypto.scryptSync(provided, salt, expected.length);
+      const valid =
+        expected.length === derived.length &&
+        crypto.timingSafeEqual(expected, derived);
+      return { valid, legacy: false };
+    } catch {
+      return { valid: false, legacy: false };
+    }
+  }
+
+  // Valor heredado en texto plano: comparación en tiempo constante.
+  const a = Buffer.from(stored);
+  const b = Buffer.from(provided);
+  const valid = a.length === b.length && crypto.timingSafeEqual(a, b);
+  return { valid, legacy: true };
 }
 
 export interface DbProjectPhase {
@@ -99,21 +151,22 @@ const getInitialSeededData = (): DatabaseSchema => {
       {
         id: "usr-admin-1",
         email: "cristian2200299@gmail.com",
-        password: "admin123",
+        // Hash scrypt de la contraseña por defecto. Cámbiala tras el primer acceso.
+        password: "scrypt$c43f7c6c320c4604a9f7965c8369559c$ea715a1884e7764e9ec68fa17ae590b910a5f9152d27328476ab6c61bdc39849ce5e973746466b4a25794947182e1ab65fbbc1eb9c725e1f3b4906caae21fd97",
         name: "Cristian Dicen",
         role: "admin",
       },
       {
         id: "usr-admin-2",
         email: "admin@agencia.com",
-        password: "admin123",
+        password: "scrypt$eba78592b92220f46489e0d30c690804$11fedf38b0d872b151ee3bb95d2ea75c32707d9096db53e93028fcce506a1fe11b6ffacc65cf19c1d86a3dd703d3fb284e92226e2d3cc2679888a7363ef27514",
         name: "Director de Proyectos",
         role: "admin",
       },
       {
         id: "usr-client-1",
         email: "nexus@client.com",
-        password: "client123",
+        password: "scrypt$7205c6e4520049eea25892f1a4c20577$ad4a245e141e1ea623d88f7194ad1edcaf04fdc6828beffd118159b1bd0b2ad68b252f248cbfd6d678373fe0c996aa840f912912782e1b1f63390dcbc32ce413",
         name: "Juan Pérez",
         role: "client",
         companyName: "Nexus Inc.",
