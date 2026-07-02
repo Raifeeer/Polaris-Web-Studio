@@ -1,7 +1,30 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { 
+  ArrowLeft, 
+  Terminal as TerminalIcon, 
+  Cpu, 
+  Layers, 
+  HelpCircle, 
+  Zap, 
+  Code, 
+  Activity, 
+  User, 
+  Globe, 
+  Wifi, 
+  Compass, 
+  DollarSign, 
+  Briefcase, 
+  Clock, 
+  Sparkles,
+  Download,
+  Flame,
+  FileText,
+  MousePointerClick,
+  Lock,
+  Phone
+} from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
@@ -236,12 +259,25 @@ function TypedText({ text, speed = 4, onComplete }: { text: string; speed?: numb
 }
 
 // ── AtlasTyped (respuesta IA con indicador) ───────────────────────────────
-function AtlasTyped({ text }: { text: string }) {
+function AtlasTyped({ text, es }: { text: string; es: boolean }) {
   return (
-    <div className="pl-4">
-      <span className="text-cyan-400 font-bold font-mono text-xs">✦ Atlas &gt; </span>
-      <TypedText text={text} speed={12} />
-    </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="my-3 border border-cyan-500/20 bg-cyan-950/10 rounded-xl p-4 relative overflow-hidden backdrop-blur-md shadow-lg shadow-cyan-950/20"
+    >
+      <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-cyan-400 to-indigo-500" />
+      <div className="flex items-center justify-between mb-2 text-[10px] uppercase tracking-widest text-cyan-400 font-bold select-none border-b border-cyan-500/10 pb-1.5">
+        <div className="flex items-center gap-2">
+          <Sparkles size={12} className="animate-pulse text-cyan-400" />
+          <span>▲ {es ? "CANAL ATLAS COPROCESADOR" : "ATLAS COPROCESSOR LINK"}</span>
+        </div>
+        <span className="text-white/30 text-[9px]">DEC_CORE_V1.1</span>
+      </div>
+      <div className="text-white/90 pl-1 leading-relaxed text-xs">
+        <TypedText text={text} speed={8} />
+      </div>
+    </motion.div>
   );
 }
 
@@ -260,8 +296,39 @@ export default function TerminalPage() {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiConvHistory, setAiConvHistory] = useState<{ role: string; content: string }[]>([]);
 
+  // Telemetría simulada en tiempo real
+  const [metrics, setMetrics] = useState({
+    cpu: 14,
+    ram: 8.35,
+    ping: 36,
+    temp: 32,
+    uptime: "00:00:00"
+  });
+
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Reloj de uptime y actualización de telemetría
+  useEffect(() => {
+    const start = Date.now();
+    const interval = setInterval(() => {
+      const diff = Date.now() - start;
+      const secs = Math.floor(diff / 1000) % 60;
+      const mins = Math.floor(diff / 60000) % 60;
+      const hrs = Math.floor(diff / 3600000);
+      const uptimeStr = `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      
+      setMetrics(prev => ({
+        ...prev,
+        cpu: Math.floor(Math.random() * 26) + 8,
+        ping: Math.floor(Math.random() * 18) + 24,
+        temp: Math.floor(Math.random() * 4) + 31,
+        ram: parseFloat((8.1 + Math.random() * 0.4).toFixed(2)),
+        uptime: uptimeStr
+      }));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => { inputRef.current?.focus(); }, []);
   useEffect(() => {
@@ -471,122 +538,389 @@ export default function TerminalPage() {
     }
   };
 
+  const handleQuickCommand = (cmdStr: string) => {
+    processCommand(cmdStr);
+    inputRef.current?.focus();
+  };
+
+  // Botones de accesos rápidos para móvil y panel lateral
+  const QUICK_CHIPS = [
+    { cmd: "help", label: "help", icon: <HelpCircle size={12} className="text-cyan-400" />, desc: es ? "Comandos" : "Commands" },
+    { cmd: "neofetch", label: "neofetch", icon: <Cpu size={12} className="text-violet-400" />, desc: es ? "Especificaciones" : "System specs" },
+    { cmd: "matrix", label: "matrix", icon: <Code size={12} className="text-emerald-400" />, desc: es ? "Lluvia código" : "Matrix rain" },
+    { cmd: "build", label: "build", icon: <Zap size={12} className="text-amber-400" />, desc: es ? "Despliegue" : "Sim build" },
+    { cmd: "services", label: "services", icon: <Layers size={12} className="text-indigo-400" />, desc: es ? "Precios y planes" : "Services info" },
+    { cmd: "estimate", label: "estimate", icon: <DollarSign size={12} className="text-rose-400" />, desc: es ? "Calculador" : "Quick estimate" },
+    { cmd: "hack", label: "hack", icon: <Lock size={12} className="text-red-400" />, desc: es ? "Secuencia hack" : "Bypass firewall" },
+    { cmd: "fortune", label: "fortune", icon: <Sparkles size={12} className="text-teal-400" />, desc: es ? "Dato aleatorio" : "Random tip" },
+    { cmd: "contact", label: "contact", icon: <Phone size={12} className="text-sky-400" />, desc: es ? "WhatsApp" : "Direct reach" },
+  ];
+
   return (
     <div
-      className="min-h-dvh bg-[#0a0a0f] flex flex-col font-mono text-xs overflow-hidden"
+      className="min-h-dvh bg-[#020205] text-[#d1d5db] flex flex-col font-mono text-xs overflow-hidden relative selection:bg-cyan-500/30 selection:text-white"
       onClick={() => inputRef.current?.focus()}
       style={{ transform: isFlipped ? "rotate(180deg)" : "none", transition: "transform 0.5s ease" }}
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-[#111118] shrink-0">
+      {/* Patrones de rejilla de fondo para un efecto cyberpunk holográfico */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,_rgba(0,0,0,0.2)_50%)] bg-[size:100%_4px] pointer-events-none opacity-40 z-10" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.06)_0%,rgba(0,0,0,0)_80%)] pointer-events-none z-0" />
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none z-0" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-violet-500/5 blur-[100px] rounded-full pointer-events-none z-0" />
+
+      {/* Header unificado con aspecto HUD */}
+      <header className="flex items-center justify-between px-4 py-3.5 border-b border-white/5 bg-[#08080f]/90 backdrop-blur-md shrink-0 z-20">
         <button
           onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-          className="flex items-center gap-2 text-white/40 hover:text-white/80 transition-colors text-[11px]"
+          className="flex items-center gap-2 text-white/50 hover:text-cyan-400 transition-all duration-300 text-[11px] border border-white/10 hover:border-cyan-500/30 rounded-lg px-2.5 py-1.5 bg-white/5 active:scale-95"
         >
-          <ArrowLeft size={14} />
-          <span>{es ? "Volver" : "Back"}</span>
+          <ArrowLeft size={13} className="text-cyan-400" />
+          <span className="tracking-wide uppercase text-[10px] font-bold">{es ? "Volver" : "Back"}</span>
         </button>
 
         {/* Atlas Terminal title */}
-        <div className="flex items-center gap-1.5 select-none">
-          <span className="text-white/70 font-black text-sm tracking-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400">Atlas Term</span>
+        <div className="flex items-center gap-2 select-none">
+          <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+          <span className="text-white/80 font-black text-sm tracking-widest uppercase">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-rose-400 font-bold">ATLAS TERMINAL</span>
           </span>
           <motion.span
             animate={{ opacity: [1, 1, 0, 0], scale: [1, 1.2, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 1.2, times: [0, 0.4, 0.5, 1], ease: "linear" }}
-            className="text-cyan-400 font-black text-sm"
+            transition={{ repeat: Infinity, duration: 1.5, times: [0, 0.4, 0.5, 1], ease: "linear" }}
+            className="text-cyan-400 font-bold text-xs"
           >✦</motion.span>
-          <span className="text-white/70 font-black text-sm tracking-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400">nal</span>
-          </span>
         </div>
 
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
+        {/* System signals */}
+        <div className="flex items-center gap-4 text-[10px] text-white/30 select-none">
+          <div className="hidden sm:flex items-center gap-1.5 border-r border-white/10 pr-3">
+            <Wifi size={11} className="text-emerald-400" />
+            <span className="text-[10px] text-emerald-400/80 font-bold uppercase tracking-wider">SECURE_LINK</span>
+          </div>
+          <div className="flex gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-red-500/70 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+            <div className="w-2 h-2 rounded-full bg-yellow-500/70 shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
+            <div className="w-2 h-2 rounded-full bg-green-500/70 shadow-[0_0_8px_rgba(34,197,94,0.5)] animate-pulse" />
+          </div>
         </div>
-      </div>
+      </header>
 
-      {/* Terminal body */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-        {/* Welcome */}
-        <div className="text-cyan-400/80 space-y-1">
-          <p className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-violet-400 to-rose-400 font-black text-sm">
-            ✦ Atlas Terminal v1.0 — Polaris Web Studio
-          </p>
-          <p className="text-white/30 text-[11px]">
-            {es
-              ? 'Escribe "help" para explorar comandos. Prueba "neofetch", "hack", "matrix" o simplemente escribe lo que necesitas.'
-              : 'Type "help" to explore. Try "neofetch", "hack", "matrix" or just type what you need.'}
-          </p>
-        </div>
+      {/* Main Layout Area */}
+      <div className="flex-1 flex overflow-hidden z-15 relative">
+        
+        {/* PANEL IZQUIERDO: La pantalla del terminal retro */}
+        <div className="flex-1 flex flex-col p-3 md:p-4 overflow-hidden">
+          
+          {/* El marco simulado de pantalla CRT */}
+          <div className="flex-1 flex flex-col bg-[#040409]/95 border border-cyan-500/10 rounded-2xl relative overflow-hidden shadow-[inset_0_0_30px_rgba(6,182,212,0.06),0_12px_40px_rgba(0,0,0,0.8)] backdrop-blur-sm">
+            
+            {/* Esquinas decorativas Cyberpunk */}
+            <div className="absolute top-2 left-2 text-[10px] font-bold text-cyan-400/30 select-none">┌</div>
+            <div className="absolute top-2 right-2 text-[10px] font-bold text-cyan-400/30 select-none">┐</div>
+            <div className="absolute bottom-2 left-2 text-[10px] font-bold text-cyan-400/30 select-none">└</div>
+            <div className="absolute bottom-2 right-2 text-[10px] font-bold text-cyan-400/30 select-none">┘</div>
 
-        {/* History */}
-        {history.map(entry => (
-          <div key={entry.id} className="space-y-1">
-            {entry.type === "input" ? (
+            {/* Micro-visor status bar */}
+            <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#06060c]/80 text-[10px] text-white/40 select-none shrink-0">
               <div className="flex items-center gap-2">
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold">atlas@polaris:~$</span>
-                <span className="text-white/80">{entry.text}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                <span>SHELL: <span className="text-cyan-400">atlas_sh_v1.0</span></span>
               </div>
-            ) : entry.type === "atlas" ? (
-              <AtlasTyped text={entry.text} />
-            ) : entry.type === "build" ? (
-              <BuildSimulator es={es} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
-            ) : entry.type === "matrix" ? (
-              <MatrixRain onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
-            ) : entry.type === "neofetch" ? (
-              <NeofetchDisplay />
-            ) : entry.type === "hack" ? (
-              <HackAnimation es={es} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
-            ) : entry.type === "polaris-egg" ? (
-              <PolarisEgg />
-            ) : (
-              <div className="text-white/60 pl-4">
-                <TypedText text={entry.text} speed={3} />
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:inline">TTY: <span className="text-white/60">pts/0</span></span>
+                <span>MODEL: <span className="text-violet-400 font-bold">GEMINI_FLASH_LITE</span></span>
               </div>
-            )}
-          </div>
-        ))}
-
-        {/* Loading indicator */}
-        {isAiLoading && (
-          <div className="pl-4 flex items-center gap-2 text-cyan-400/60">
-            <motion.span animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }}>✦</motion.span>
-            <span>{es ? "Atlas procesando..." : "Atlas thinking..."}</span>
-          </div>
-        )}
-
-        {/* Input line */}
-        <div className="flex items-center gap-2 relative">
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-violet-400 font-bold shrink-0 select-none">
-            atlas@polaris:~$
-          </span>
-          <div className="flex-1 relative flex items-center min-h-[1.5rem]">
-            <input
-              ref={inputRef}
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isAiLoading}
-              className="w-full bg-transparent text-transparent outline-none caret-transparent z-10 font-mono text-xs py-0.5"
-              spellCheck={false}
-              autoComplete="off"
-            />
-            <div className="absolute left-0 top-0 bottom-0 right-0 pointer-events-none select-none flex items-center z-0 whitespace-pre overflow-hidden font-mono text-xs py-0.5">
-              <span className="text-white/80">{input}</span>
-              <motion.span
-                animate={{ opacity: [1, 1, 0, 0] }}
-                transition={{ repeat: Infinity, duration: 1.0, times: [0, 0.5, 0.5, 1], ease: "linear" }}
-                className="text-cyan-400 font-black mx-[1px]"
-              >✦</motion.span>
-              {suggestion && <span className="text-white/20">{suggestion}</span>}
             </div>
+
+            {/* Cuerpo del terminal con scroll */}
+            <div 
+              ref={scrollRef} 
+              className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4 font-mono leading-relaxed relative bg-gradient-to-b from-transparent to-cyan-950/2"
+              style={{ contentVisibility: "auto" }}
+            >
+              
+              {/* Mensaje de bienvenida super premium */}
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-2 border-b border-white/5 pb-4"
+              >
+                <div className="flex items-center gap-2">
+                  <TerminalIcon className="text-cyan-400 animate-pulse" size={16} />
+                  <h1 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-indigo-400 to-rose-400 font-black text-sm tracking-widest">
+                    ATLAS COMMAND CONSOLE v1.0
+                  </h1>
+                </div>
+                <p className="text-white/40 text-[11px] leading-relaxed max-w-2xl">
+                  {es
+                    ? 'Explora las capacidades de Polaris Web Studio con comandos interactivos. Escribe "help" para ver un catálogo de servicios, estimaciones rápidas de costos, simulaciones de despliegues o habla directamente con el coprocesador de Inteligencia Artificial.'
+                    : 'Explore Polaris Web Studio via interactive terminal commands. Type "help" to list capabilities, project pricing estimates, simulate compiled builds, or dialogue with the AI Coprocessor.'}
+                </p>
+                <div className="flex flex-wrap gap-2 text-[9px] text-cyan-400/60 font-bold uppercase select-none mt-1">
+                  <span className="bg-cyan-950/40 border border-cyan-500/20 px-2 py-0.5 rounded">⚡ React 19</span>
+                  <span className="bg-cyan-950/40 border border-cyan-500/20 px-2 py-0.5 rounded">🧱 Vite 6</span>
+                  <span className="bg-cyan-950/40 border border-cyan-500/20 px-2 py-0.5 rounded">✨ Premium UX</span>
+                </div>
+              </motion.div>
+
+              {/* Historial de Comandos ejecutados */}
+              {history.map(entry => (
+                <div key={entry.id} className="space-y-1">
+                  {entry.type === "input" ? (
+                    <div className="flex items-start gap-2.5 my-2">
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 font-bold select-none shrink-0">
+                        atlas@polaris:~$
+                      </span>
+                      <span className="text-white font-bold tracking-wide break-all">{entry.text}</span>
+                    </div>
+                  ) : entry.type === "atlas" ? (
+                    <AtlasTyped text={entry.text} es={es} />
+                  ) : entry.type === "build" ? (
+                    <div className="my-2 p-3 border border-cyan-500/10 bg-cyan-950/5 rounded-xl">
+                      <BuildSimulator es={es} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                    </div>
+                  ) : entry.type === "matrix" ? (
+                    <div className="my-2">
+                      <MatrixRain onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                    </div>
+                  ) : entry.type === "neofetch" ? (
+                    <div className="my-2 p-4 border border-violet-500/10 bg-violet-950/5 rounded-xl">
+                      <NeofetchDisplay />
+                    </div>
+                  ) : entry.type === "hack" ? (
+                    <div className="my-2 p-4 border border-red-500/10 bg-red-950/5 rounded-xl">
+                      <HackAnimation es={es} onComplete={() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }} />
+                    </div>
+                  ) : entry.type === "polaris-egg" ? (
+                    <PolarisEgg />
+                  ) : (
+                    <div className="text-gray-300 pl-4 border-l border-white/5 whitespace-pre-wrap text-xs font-mono my-2 py-1 leading-relaxed">
+                      <TypedText text={entry.text} speed={2} />
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Indicador de carga de IA */}
+              {isAiLoading && (
+                <div className="pl-4 flex items-center gap-2.5 text-cyan-400/70 font-bold select-none my-3 bg-cyan-950/10 py-2 px-3 rounded-lg border border-cyan-500/10 inline-flex">
+                  <motion.div 
+                    animate={{ rotate: 360 }} 
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                    className="w-3.5 h-3.5 border-2 border-t-transparent border-cyan-400 rounded-full shrink-0"
+                  />
+                  <span>{es ? "Atlas decodificando señal..." : "Atlas deciphering signal..."}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Dock de comandos rápidos (scrollable horizontalmente) */}
+            <div className="px-4 py-2 border-t border-white/5 bg-[#06060b]/90 backdrop-blur-md select-none">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9px] uppercase tracking-wider text-white/30 font-bold flex items-center gap-1">
+                  <MousePointerClick size={10} className="text-cyan-400" />
+                  {es ? "Acciones rápidas (1-tap)" : "Quick macro execution"}
+                </span>
+                <span className="text-[9px] text-cyan-400/50">TAB / ARROW_RIGHT</span>
+              </div>
+              <div className="flex gap-1.5 overflow-x-auto pb-1.5 pt-0.5 no-scrollbar scroll-smooth -mx-2 px-2">
+                {QUICK_CHIPS.map(chip => (
+                  <button
+                    key={chip.cmd}
+                    onClick={(e) => { e.stopPropagation(); handleQuickCommand(chip.cmd); }}
+                    className="flex items-center gap-1.5 shrink-0 px-2.5 py-1.5 rounded-lg border border-white/5 hover:border-cyan-500/30 bg-white/5 text-[10px] text-white/80 hover:text-cyan-400 transition-all duration-300 font-bold active:scale-95 hover:shadow-[0_0_12px_rgba(6,182,212,0.1)]"
+                  >
+                    {chip.icon}
+                    <span>{chip.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Input Line Area */}
+            <div className="p-3 md:p-4 border-t border-white/5 bg-[#06060b] shrink-0">
+              <div className="flex items-center gap-2.5 relative bg-white/[0.02] border border-white/5 rounded-xl px-3 py-2.5 focus-within:border-cyan-500/30 focus-within:shadow-[0_0_15px_rgba(6,182,212,0.06)] transition-all duration-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 font-bold shrink-0 select-none font-mono">
+                  atlas@polaris:~$
+                </span>
+                <div className="flex-1 relative flex items-center min-h-[1.5rem]">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isAiLoading}
+                    className="w-full bg-transparent text-transparent outline-none caret-transparent z-10 font-mono text-xs py-0.5"
+                    spellCheck={false}
+                    autoComplete="off"
+                  />
+                  <div className="absolute left-0 top-0 bottom-0 right-0 pointer-events-none select-none flex items-center z-0 whitespace-pre overflow-hidden font-mono text-xs py-0.5">
+                    <span className="text-white/90 font-medium">{input}</span>
+                    <motion.span
+                      animate={{ opacity: [1, 1, 0, 0] }}
+                      transition={{ repeat: Infinity, duration: 0.9, times: [0, 0.5, 0.5, 1], ease: "linear" }}
+                      className="text-cyan-400 font-bold mx-[1px]"
+                    >█</motion.span>
+                    {suggestion && <span className="text-white/20 select-none">{suggestion}</span>}
+                  </div>
+                </div>
+                {/* Send Button */}
+                <button
+                  onClick={() => { if (input.trim() || pendingInputType) processCommand(input); }}
+                  disabled={isAiLoading || (!input.trim() && !pendingInputType)}
+                  className="px-2.5 py-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/20 text-[10px] font-bold uppercase transition-all duration-300 active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                >
+                  {es ? "Enviar" : "Send"}
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
+
+        {/* PANEL DERECHO: El panel de control HUD interactivo de telemetría (Oculto en móvil) */}
+        <aside className="hidden lg:flex w-80 xl:w-96 border-l border-white/5 bg-[#030307]/90 backdrop-blur-md p-4 flex-col justify-between shrink-0 z-10 overflow-y-auto">
+          
+          <div className="space-y-5">
+            {/* Cabecera del Panel */}
+            <div className="border-b border-white/5 pb-3">
+              <span className="text-[10px] uppercase tracking-widest text-white/30 font-bold flex items-center gap-1.5">
+                <Activity size={12} className="text-cyan-400" />
+                {es ? "Panel de Control HUD" : "Tactical HUD Dashboard"}
+              </span>
+              <h2 className="text-white/80 font-bold text-xs uppercase tracking-wider mt-1">{es ? "Monitor de Telemetría" : "System Telemetry"}</h2>
+            </div>
+
+            {/* Métricas del Sistema Interactivos */}
+            <div className="space-y-3 bg-white/[0.01] border border-white/5 rounded-xl p-3">
+              <span className="text-[9px] uppercase tracking-widest text-white/30 font-bold block mb-1">{es ? "Hardware Virtual" : "Virtual Hardware Core"}</span>
+              
+              {/* CPU Meter */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-white/50 flex items-center gap-1.5"><Cpu size={11} className="text-cyan-400" /> CPU Core</span>
+                  <span className="text-cyan-400 font-bold">{metrics.cpu}%</span>
+                </div>
+                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    animate={{ width: `${metrics.cpu}%` }}
+                    transition={{ duration: 0.5 }}
+                    className="h-full bg-gradient-to-r from-cyan-400 to-indigo-500 rounded-full"
+                  />
+                </div>
+              </div>
+
+              {/* Memory Pool */}
+              <div className="space-y-1 mt-2">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-white/50 flex items-center gap-1.5"><Layers size={11} className="text-violet-400" /> MEM Pool</span>
+                  <span className="text-violet-400 font-bold">{metrics.ram} GB / 16.0 GB</span>
+                </div>
+                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    animate={{ width: `${(metrics.ram / 16) * 100}%` }}
+                    className="h-full bg-gradient-to-r from-violet-400 to-rose-400 rounded-full"
+                  />
+                </div>
+              </div>
+
+              {/* Grid 2-column info */}
+              <div className="grid grid-cols-2 gap-2.5 pt-2 text-[10px] border-t border-white/5 mt-3 select-none">
+                <div className="bg-[#05050b] p-2 rounded border border-white/5">
+                  <span className="text-white/30 block text-[9px] uppercase">{es ? "Latencia" : "Latency"}</span>
+                  <span className="text-white/80 font-bold text-xs mt-0.5 block flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-ping" />
+                    {metrics.ping} ms
+                  </span>
+                </div>
+                <div className="bg-[#05050b] p-2 rounded border border-white/5">
+                  <span className="text-white/30 block text-[9px] uppercase">{es ? "Temp Núcleo" : "Core Temp"}</span>
+                  <span className="text-white/80 font-bold text-xs mt-0.5 block flex items-center gap-1">
+                    <Flame size={11} className="text-amber-500 animate-pulse" />
+                    {metrics.temp}°C
+                  </span>
+                </div>
+                <div className="bg-[#05050b] p-2 rounded border border-white/5">
+                  <span className="text-white/30 block text-[9px] uppercase">Node GPS</span>
+                  <span className="text-white/70 font-semibold block text-[10px] truncate">18.56°N, 68.37°W</span>
+                </div>
+                <div className="bg-[#05050b] p-2 rounded border border-white/5">
+                  <span className="text-white/30 block text-[9px] uppercase">Uptime</span>
+                  <span className="text-cyan-400 font-bold block text-[10px] font-mono">{metrics.uptime}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Árbol Ejecutable de Comandos (Directorio interactivo de scripts) */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-widest text-white/30 font-bold flex items-center gap-1.5">
+                  <Code size={12} className="text-cyan-400" />
+                  {es ? "Ejecutables (/bin)" : "Executables (/bin)"}
+                </span>
+                <span className="text-[9px] bg-cyan-500/10 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/20 font-bold">ACTIVE</span>
+              </div>
+
+              <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 no-scrollbar text-[11px]">
+                {QUICK_CHIPS.map(chip => (
+                  <button
+                    key={chip.cmd}
+                    onClick={(e) => { e.stopPropagation(); handleQuickCommand(chip.cmd); }}
+                    className="w-full flex items-center justify-between p-2 rounded-xl bg-white/[0.01] border border-white/5 hover:border-cyan-500/30 hover:bg-cyan-950/10 transition-all duration-300 text-left group active:scale-[0.98]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="p-1 rounded bg-white/5 text-white/60 group-hover:text-cyan-400 transition-colors">
+                        {chip.icon}
+                      </span>
+                      <div>
+                        <span className="font-bold text-white/80 group-hover:text-cyan-300 transition-colors">{chip.cmd}</span>
+                        <span className="block text-[9px] text-white/30 group-hover:text-cyan-400/50 transition-colors leading-none mt-0.5">{chip.desc}</span>
+                      </div>
+                    </div>
+                    <span className="text-[9px] text-white/30 uppercase opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center gap-0.5 bg-cyan-950/40 border border-cyan-500/20 px-1 py-0.5 rounded font-black text-cyan-400">
+                      RUN
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Coordenadas o dato aleatorio del día */}
+            <div className="bg-[#05050b]/80 border border-white/5 p-3 rounded-xl select-none relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 blur-xl rounded-full" />
+              <span className="text-[9px] uppercase tracking-widest text-white/30 font-bold flex items-center gap-1 mb-1">
+                <Compass size={11} className="text-violet-400" />
+                {es ? "Ubicación Geodésica" : "Geodesic Location"}
+              </span>
+              <p className="text-[10px] text-white/60 leading-relaxed font-semibold">
+                Punta Cana, Rep. Dominicana <br />
+                <span className="text-white/30 font-mono text-[9px]">PUNTA_CANA_OFFICE_EAST_COAST</span>
+              </p>
+            </div>
+
+          </div>
+
+          {/* Footer del HUD */}
+          <div className="border-t border-white/5 pt-3.5 space-y-2 text-[10px]">
+            <div className="flex items-center justify-between text-white/40">
+              <span>{es ? "Estado de Enlace" : "Link Connection"}</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                {es ? "ONLINE" : "ESTABLISHED"}
+              </span>
+            </div>
+            
+            <button
+              onClick={() => navigate("/cotizar")}
+              className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-bold uppercase tracking-wider text-[10px] transition-all duration-300 hover:shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:opacity-90 active:scale-95"
+            >
+              <Briefcase size={12} />
+              <span>{es ? "Iniciar Cotización" : "Start Project Quote"}</span>
+            </button>
+          </div>
+
+        </aside>
       </div>
     </div>
   );

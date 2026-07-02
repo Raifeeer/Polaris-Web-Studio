@@ -488,6 +488,7 @@ export default function WizardQuote() {
     available: boolean;
   } | null>(null);
   const domainDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const toastShownRef = useRef(false);
 
   const checkDomainAvailability = async (domainToCheck?: string) => {
     const target = (domainToCheck || domainName).trim();
@@ -668,7 +669,8 @@ export default function WizardQuote() {
   useEffect(() => {
     const hasResumedProgress =
       currentStep > 0 || !!selections.sector || !!selections.businessType;
-    if (!location.search && hasResumedProgress) {
+    if (!location.search && hasResumedProgress && !toastShownRef.current) {
+      toastShownRef.current = true;
       toastSuccess(
         <T en="Welcome back! We picked up your quote where you left off.">
           ¡Bienvenido de nuevo! Retomamos tu cotización donde la dejaste.
@@ -2531,36 +2533,16 @@ export default function WizardQuote() {
             </div>
           </div>
 
-          {/* Step labels */}
-          <div className="flex items-start gap-2">
-            {steps.map((step, idx) => {
-              const isClickable = idx < currentStep;
-              return (
-                <button
-                  key={idx}
-                  disabled={!isClickable}
-                  onClick={() => {
-                    if (isClickable) {
-                      setCurrentStep(idx);
-                      scrollToProgress();
-                    }
-                  }}
-                  className={`flex-1 text-left focus:outline-none transition-all ${
-                    isClickable ? "cursor-pointer hover:opacity-80" : "cursor-default"
-                  }`}
-                >
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-widest transition-colors ${
-                      idx <= currentStep
-                        ? "text-[var(--color-primary-base)]"
-                        : "text-[var(--color-text-tertiary)]"
-                    }`}
-                  >
-                    {step.title}
-                  </span>
-                </button>
-              );
-            })}
+          {/* Step label */}
+          <div className="flex items-center justify-start mt-3 px-1">
+            <span className="text-xs md:text-sm font-bold text-[var(--color-text-primary)]">
+              <span className="text-[var(--color-primary-base)] font-extrabold">
+                <T en={`Step ${currentStep + 1} of ${steps.length} — `}>
+                  Paso {currentStep + 1} de {steps.length} —{" "}
+                </T>
+              </span>
+              <span>{steps[currentStep].title}</span>
+            </span>
           </div>
         </div>
 
