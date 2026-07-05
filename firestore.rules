@@ -13,11 +13,26 @@ service cloud.firestore {
              data.source is string && data.source.size() <= 50;
     }
 
+    function isValidWizardLead(data) {
+      return data.keys().hasAll(["name", "email", "type", "addons", "domain", "createdAt"]) &&
+             data.keys().size() == 6 &&
+             data.name is string && data.name.size() <= 200 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.type is string &&
+             data.addons is list &&
+             (data.domain == null || data.domain is string) &&
+             data.createdAt == request.time;
+    }
+
     match /newsletter_subscribers/{subscriberId} {
       // Allow any user (even unauthenticated) to subscribe via the form.
       // We only allow create. We don't allow read, update, or delete.
       allow create: if isValidNewsletterSubscriber(request.resource.data) &&
                     request.resource.data.subscribedAt == request.time;
+    }
+
+    match /wizardLeads/{leadId} {
+      allow create: if isValidWizardLead(request.resource.data);
     }
   }
 }
