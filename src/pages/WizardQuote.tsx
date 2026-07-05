@@ -22,6 +22,8 @@ import GlobeSearchIcon from "../components/GlobeSearchIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 import { useToast } from "../context/ToastContext";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 function AnimatedNumber({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -2237,6 +2239,14 @@ export default function WizardQuote() {
       return;
     }
     setLeadEmailError("");
+    addDoc(collection(db, "wizardLeads"), {
+      name: leadName,
+      email: leadEmail,
+      type: selections.type,
+      addons: selections.addons,
+      domain: domainSummaryText || null,
+      createdAt: serverTimestamp(),
+    }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
     setSelections((s) => ({ ...s, name: leadName, email: leadEmail }));
     localStorage.setItem("wizardQuote_leadCaptured", "1");
     setLeadCaptured(true);
