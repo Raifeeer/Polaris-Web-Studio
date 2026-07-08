@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -561,6 +561,27 @@ export default function WizardQuote() {
   const [pdfSent, setPdfSent] = useState(false);
   const [pdfEmailError, setPdfEmailError] = useState("");
 
+  const fetchDomainSuggestions = useCallback(async (domain: string, sector: string | null, businessType: string | null) => {
+    try {
+      const response = await fetch("/api/suggest-domains", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ domain, sector, businessType }),
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || response.statusText);
+      }
+      const data = await response.json();
+      setDomainSuggestions(data.suggestions || []);
+    } catch (error) {
+      console.error("Error fetching domain suggestions:", error);
+      setDomainSuggestions([]);
+    }
+  }, [setDomainSuggestions]);
+
   const checkDomainAvailability = async (domainToCheck?: string) => {
     const target = (domainToCheck || domainName).trim();
     if (!target || !target.includes('.')) return;
@@ -578,6 +599,12 @@ export default function WizardQuote() {
         domain: target.toLowerCase(),
         available: data.available,
       });
+
+      if (!data.available) {
+        fetchDomainSuggestions(target.toLowerCase(), selectedSector?.id || null, selectedBusinessType || null);
+      } else {
+        setDomainSuggestions([]); // Clear suggestions if domain is available
+      }
     } catch (error: any) {
       let rawMsg = error.message || '';
       if (
@@ -3287,13 +3314,38 @@ export default function WizardQuote() {
                             {!domainStatus.available && (
                               <div className="text-xs md:text-sm text-[var(--color-text-secondary)] leading-relaxed pt-1.5 border-t border-[var(--color-border-subtle)]">
                                 <T 
-                                  en="This domain is already registered. You can search for other extensions (like .net, .co, .org) or try a different branding variation."
-                                >
+                                  en="This domain is already registered. You can search for other extensions (like .net, .co, .org) or try a different branding variation.">
                                   Este dominio ya está registrado. Puedes intentar buscando otras extensiones (como .net, .org, .co) o probar una variación de tu marca.
                                 </T>
                               </div>
                             )}
                           </div>
+                        )}
+
+                        {domainStatus && !domainStatus.available && domainSuggestions.length > 0 && (
+                          <div className="mt-6">
+                            <h4 className="font-bold text-lg mb-3">
+                              <T en="Suggested Domains">Dominios Sugeridos</T>
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {domainSuggestions.map((suggestion: {domain: string, available: boolean}) => (
+                                <button
+                                  key={suggestion.domain}
+                                  onClick={() => setDomainName(suggestion.domain)}
+                                  className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] hover:bg-[var(--color-surface-hover)] transition-colors duration-200"
+                                >
+                                  <span className="font-medium text-sm text-[var(--color-text-primary)]">{suggestion.domain}</span>
+                                  {suggestion.available ? (
+                                    <span className="px-2 py-1 bg-emerald-500 text-white rounded-md text-xs font-bold">AVAILABLE</span>
+                                  ) : (
+                                    <span className="px-2 py-1 bg-red-500 text-white rounded-md text-xs font-bold">TAKEN</span>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         )}
                       </div>
 
