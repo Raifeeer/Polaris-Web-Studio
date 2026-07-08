@@ -583,6 +583,7 @@ export default function WizardQuote() {
       time: "",
       name: "",
       email: "",
+      phone: "",
       notes: "",
     };
   });
@@ -720,6 +721,7 @@ export default function WizardQuote() {
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadName, setLeadName] = useState(selections.name || "");
   const [leadEmail, setLeadEmail] = useState(selections.email || "");
+  const [leadPhone, setLeadPhone] = useState(selections.phone || "");
   const [leadEmailError, setLeadEmailError] = useState("");
 
   // GA4 helper
@@ -2242,12 +2244,13 @@ export default function WizardQuote() {
     addDoc(collection(db, "wizardLeads"), {
       name: leadName,
       email: leadEmail,
+      phone: leadPhone,
       type: selections.type,
       addons: selections.addons,
       domain: domainSummaryText || null,
       createdAt: serverTimestamp(),
     }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
-    setSelections((s) => ({ ...s, name: leadName, email: leadEmail }));
+    setSelections((s) => ({ ...s, name: leadName, email: leadEmail, phone: leadPhone }));
     localStorage.setItem("wizardQuote_leadCaptured", "1");
     setLeadCaptured(true);
     setShowLeadCapture(false);
@@ -3596,6 +3599,16 @@ export default function WizardQuote() {
                   {leadEmailError && (
                     <p className="glass-input text-xs text-red-500 mt-1">{leadEmailError}</p>
                   )}
+                </div>
+                <div>
+                  <input
+                    type="tel"
+                    placeholder={t("WhatsApp / Celular (Optional)", "WhatsApp / Celular (Opcional)")}
+                    value={leadPhone}
+                    onChange={(e) => setLeadPhone(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
+                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                  />
                 </div>
               </div>
 

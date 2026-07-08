@@ -18,11 +18,19 @@ function useCountUp(target: number, isActive: boolean, duration = 1.5) {
 }
 
 // Componente de barra comparativa individual
-function CompareBar({ label, polarisVal, competitorVal, unit }: any) {
+function CompareBar({ label, polarisVal, competitorVal, unit, lessIsBetter }: any) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
-  const polarisPct = (polarisVal / Math.max(polarisVal, competitorVal)) * 100;
-  const competitorPct = (competitorVal / Math.max(polarisVal, competitorVal)) * 100;
+  
+  let polarisPct = (polarisVal / Math.max(polarisVal, competitorVal)) * 100;
+  let competitorPct = (competitorVal / Math.max(polarisVal, competitorVal)) * 100;
+
+  if (lessIsBetter) {
+    const minVal = Math.min(polarisVal, competitorVal);
+    polarisPct = (minVal / polarisVal) * 100;
+    competitorPct = (minVal / competitorVal) * 100;
+  }
+
   const polarisDisplay = useCountUp(polarisVal, isInView);
   const compDisplay = useCountUp(competitorVal, isInView);
 
