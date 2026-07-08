@@ -2367,7 +2367,6 @@ export default function WizardQuote() {
       if (nextStep < steps.length) {
         trackEvent("wizard_step_complete", { step: nextStep });
         setCurrentStep(nextStep);
-        scrollToProgress();
       }
     } catch (error) {
       console.error("Error in handleNext:", error);
