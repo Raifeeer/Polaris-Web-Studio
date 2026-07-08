@@ -66,7 +66,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {/* Toast Portal Container */}
       <div 
         id="toast-container"
-        className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 w-full max-w-sm pointer-events-none px-4 sm:px-0"
+        className="fixed bottom-24 md:bottom-6 right-6 z-50 flex flex-col gap-3 w-full max-w-sm pointer-events-none px-4 sm:px-0"
       >
         <AnimatePresence mode="popLayout">
           {toasts.map((t) => (

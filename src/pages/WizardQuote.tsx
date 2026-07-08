@@ -23,7 +23,54 @@ import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 import { useToast } from "../context/ToastContext";
 import { collection, doc, addDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db, auth } from "../lib/firebase";
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid,
+      email: auth?.currentUser?.email,
+      emailVerified: auth?.currentUser?.emailVerified,
+      isAnonymous: auth?.currentUser?.isAnonymous,
+      tenantId: auth?.currentUser?.tenantId,
+      providerInfo: auth?.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 interface QuoteSession {
   sessionId: string;
@@ -559,6 +606,7 @@ export default function WizardQuote() {
 
   // Session tracking
   const [sessionId, setSessionId] = useState<string>("");
+  const [sessionInitialized, setSessionInitialized] = useState<boolean>(false);
 
   useEffect(() => {
     let currentSessionId = localStorage.getItem("polaris_quote_session");
@@ -571,12 +619,22 @@ export default function WizardQuote() {
     // Initialize Firestore session on mount
     const initializeSession = async () => {
       if (currentSessionId) {
-        await setDoc(doc(db, "quoteSessions", currentSessionId), {
-          sessionId: currentSessionId,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          status: "in_progress",
-        } as QuoteSession, { merge: true });
+        try {
+          await setDoc(doc(db, "quoteSessions", currentSessionId), {
+            sessionId: currentSessionId,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            status: "in_progress",
+          } as QuoteSession, { merge: true });
+          setSessionInitialized(true);
+        } catch (error) {
+          console.error("Failed to initialize session in Firestore:", error);
+          try {
+            handleFirestoreError(error, OperationType.WRITE, `quoteSessions/${currentSessionId}`);
+          } catch (e) {
+            // Keep going, but we logged the formatted error
+          }
+        }
       }
     };
     initializeSession();
@@ -632,7 +690,7 @@ export default function WizardQuote() {
     return saved !== null ? parseInt(saved, 10) : 0;
   });
 
-  const [expandedThirdType, setExpandedThirdType] = useState(false);
+  const [expandedThirdTypes, setExpandedThirdTypes] = useState<Set<string>>(new Set());
   // La hidratación inicial queda en {}: el efecto de abajo rellena las
   // descripciones desde la caché por-negocio (o pide a la IA) tras montar.
   const [addonDescriptions, setAddonDescriptions] = useState<Record<string, string | null>>({});
@@ -763,6 +821,10 @@ export default function WizardQuote() {
   }, []);
 
   const [estimateExpanded, setEstimateExpanded] = useState(false);
+  // Rastrea qué sector terminó su animación de expansión, para poder
+  // dejar de recortar (overflow-hidden) una vez que ya no hace falta
+  // y así no cortar el hover/shadow de los botones de tipo de negocio.
+  const [expandedSectorDone, setExpandedSectorDone] = useState<string | null>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
@@ -863,22 +925,31 @@ export default function WizardQuote() {
 
   // Firestore session update effect
   useEffect(() => {
-    if (sessionId) {
+    if (sessionId && sessionInitialized) {
       const updateFirestoreSession = async () => {
-        const sessionRef = doc(db, "quoteSessions", sessionId);
-        await setDoc(sessionRef, {
-          currentStep: currentStep,
-          sector: selections.sector || null,
-          businessType: selections.businessType || null,
-          webType: selections.type || null,
-          addons: selections.addons || [],
-          estimatedPrice: calculateTotalPrice,
-          updatedAt: serverTimestamp(),
-        } as Partial<QuoteSession>, { merge: true });
+        try {
+          const sessionRef = doc(db, "quoteSessions", sessionId);
+          await setDoc(sessionRef, {
+            currentStep: currentStep,
+            sector: selections.sector || null,
+            businessType: selections.businessType || null,
+            webType: selections.type || null,
+            addons: selections.addons || [],
+            estimatedPrice: calculateTotalPrice,
+            updatedAt: serverTimestamp(),
+          } as Partial<QuoteSession>, { merge: true });
+        } catch (error) {
+          console.error("Failed to update quote session in Firestore:", error);
+          try {
+            handleFirestoreError(error, OperationType.WRITE, `quoteSessions/${sessionId}`);
+          } catch (e) {
+            // Logged the error
+          }
+        }
       };
       updateFirestoreSession();
     }
-  }, [sessionId, selections, currentStep, calculateTotalPrice]);
+  }, [sessionId, sessionInitialized, selections, currentStep, calculateTotalPrice]);
 
   useEffect(() => {
     if (currentStep !== 3) return;
@@ -2353,20 +2424,24 @@ export default function WizardQuote() {
         }));
       }
 
-      if (nextStep === steps.length -1) { // steps.length is 5, final step is index 4
+      if (nextStep === steps.length - 1) { // steps.length is 5, final step is index 4
         if (sessionId) {
           const sessionRef = doc(db, "quoteSessions", sessionId);
-          await setDoc(sessionRef, {
+          const updateData: any = {
             status: "completed",
             updatedAt: serverTimestamp(),
-            email: emailForFirestore || undefined, // Use the prepared value
-          } as Partial<QuoteSession>, { merge: true }).catch(console.error);
+          };
+          if (emailForFirestore) {
+            updateData.email = emailForFirestore;
+          }
+          await setDoc(sessionRef, updateData, { merge: true }).catch(console.error);
         }
       }
 
       if (nextStep < steps.length) {
         trackEvent("wizard_step_complete", { step: nextStep });
         setCurrentStep(nextStep);
+        scrollToProgress();
       }
     } catch (error) {
       console.error("Error in handleNext:", error);
@@ -2664,31 +2739,51 @@ export default function WizardQuote() {
 
             {/* Step dots on the thread */}
             <div className="absolute inset-0 flex items-center justify-between px-[2px]">
-              {steps.map((_, idx) => (
-                <motion.div
-                  key={idx}
-                  className="relative z-10"
-                  animate={{
-                    scale: idx === currentStep ? 1.3 : 1,
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <div
-                    className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
-                      idx <= currentStep
-                        ? "bg-[var(--color-primary-base)] border-[var(--color-primary-base)] shadow-md shadow-[var(--color-primary-base)]/30"
-                        : "bg-[var(--color-surface-base)] border-[var(--color-border-strong)]"
+              {steps.map((_, idx) => {
+                const isClickable = idx < currentStep;
+                return (
+                  <motion.button
+                    key={idx}
+                    type="button"
+                    onClick={() => {
+                      if (isClickable) {
+                        setCurrentStep(idx);
+                        scrollToProgress();
+                      }
+                    }}
+                    disabled={!isClickable}
+                    className={`relative z-10 p-2 -m-2 bg-transparent border-none rounded-full outline-none transition-all duration-300 focus:scale-110 flex items-center justify-center ${
+                      isClickable ? "cursor-pointer hover:scale-125" : "cursor-default"
                     }`}
-                  />
-                  {idx === currentStep && (
-                    <motion.div
-                      className="absolute inset-0 rounded-full border-2 border-[var(--color-primary-base)]/40"
-                      animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    animate={{
+                      scale: idx === currentStep ? 1.3 : 1,
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    title={
+                      isClickable
+                        ? language === "es"
+                          ? `Regresar al paso ${idx + 1}`
+                          : `Go back to step ${idx + 1}`
+                        : undefined
+                    }
+                  >
+                    <div
+                      className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
+                        idx <= currentStep
+                          ? "bg-[var(--color-primary-base)] border-[var(--color-primary-base)] shadow-md shadow-[var(--color-primary-base)]/30"
+                          : "bg-[var(--color-surface-base)] border-[var(--color-border-strong)]"
+                      }`}
                     />
-                  )}
-                </motion.div>
-              ))}
+                    {idx === currentStep && (
+                      <motion.div
+                        className="absolute inset-0 rounded-full border-2 border-[var(--color-primary-base)]/40 pointer-events-none"
+                        animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
+                  </motion.button>
+                );
+              })}
             </div>
           </div>
 
@@ -2752,6 +2847,7 @@ export default function WizardQuote() {
                               whileTap={!isSelected ? { scale: 0.99 } : undefined}
                               onClick={() => {
                                 if (!isSelected) {
+                                  setExpandedSectorDone(null);
                                   setSelections((prev) => {
                                     const newSector = s.id;
 
@@ -2775,10 +2871,10 @@ export default function WizardQuote() {
                                   });
                                 }
                               }}
-                                                            className={`rounded-[var(--radius-bento)] border transition-[background-color,border-color,box-shadow] duration-200 text-left flex flex-col relative overflow-hidden ${
+                                                            className={`rounded-[var(--radius-bento)] border transition-[background-color,border-color,box-shadow] duration-200 text-left flex flex-col relative ${
                                 isSelected
                                   ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)] shadow-md col-span-full h-auto p-6"
-                                  : "glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50 cursor-pointer h-auto min-h-[140px] sm:min-h-[160px] p-6 justify-between flex-row sm:flex-col"
+                                  : "overflow-hidden glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50 cursor-pointer h-auto min-h-[140px] sm:min-h-[160px] p-6 justify-between flex-row sm:flex-col"
                               }`}
                             >
                               {!isSelected ? (
@@ -2816,7 +2912,8 @@ export default function WizardQuote() {
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     transition={{ duration: 0.35, ease: "easeInOut" }}
-                                    className="space-y-4 w-full overflow-hidden"
+                                    onAnimationComplete={() => setExpandedSectorDone(s.id)}
+                                    className={`space-y-4 w-full ${expandedSectorDone === s.id ? "overflow-visible" : "overflow-hidden"}`}
                                   >
                                     <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-secondary)]">
                                       <T en="What specific business are you?">
@@ -2845,10 +2942,10 @@ export default function WizardQuote() {
                                                 scrollToProgress();
                                               }, 300);
                                             }}
-                                            className={`px-4 py-2.5 rounded-full border text-xs font-bold transition-all hover:scale-105 active:scale-95 cursor-pointer ${
+                                            className={`px-4 py-2.5 rounded-full border text-xs font-bold transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer ${
                                               isBizSelected
                                                 ? "bg-[var(--color-primary-base)] text-white border-[var(--color-primary-base)] shadow-sm"
-                                                : "glass-panel border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)] hover:text-white"
+                                                : "glass-panel border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)] hover:text-[var(--color-primary-base)]"
                                             }`}
                                           >
                                             {b}
@@ -2887,15 +2984,28 @@ export default function WizardQuote() {
                           ) => {
                             const isSelected = selections.type === type.id;
                             const isThird = variant === "third";
-                            const isExpanded = !isThird || expandedThirdType;
+                            const isCardExpanded = expandedThirdTypes.has(type.id);
+                            const isExpanded = !isThird || isCardExpanded;
                             const { explanation } = getBadgeAndExplanation(type.id, selections.sector);
+
+                            const toggleThirdExpanded = () => {
+                              setExpandedThirdTypes(prev => {
+                                const next = new Set(prev);
+                                if (next.has(type.id)) {
+                                  next.delete(type.id);
+                                } else {
+                                  next.add(type.id);
+                                }
+                                return next;
+                              });
+                            };
 
                             return (
                               <div
                                 key={type.id}
                                 onClick={() => {
-                                  if (isThird && !expandedThirdType) {
-                                    setExpandedThirdType(true);
+                                  if (isThird && !isCardExpanded) {
+                                    toggleThirdExpanded();
                                     return;
                                   }
                                   setSelections(prev => {
@@ -2951,34 +3061,50 @@ export default function WizardQuote() {
                                       </span>
                                     </div>
 
-                                    {/* Contenido expandible */}
-                                    {isExpanded && (
-                                      <div className="mt-3 space-y-2">
-                                        <p className="text-[var(--color-text-secondary)] text-sm">{type.desc}</p>
-                                        {explanation && (
-                                          <div className="border-t border-[var(--color-border-subtle)]/70 my-3" />
-                                        )}
-                                        {explanation}
+                                    {/* Descripción breve: siempre visible */}
+                                    <p className="mt-3 text-[var(--color-text-secondary)] text-sm">{type.desc}</p>
+
+                                    {/* Contenido expandible (solo aplica a las cards "third") */}
+                                    <div
+                                      className={`grid transition-all duration-300 ease-in-out ${
+                                        isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                                      }`}
+                                    >
+                                      <div className="overflow-hidden">
+                                        <div className="space-y-2 pt-2">
+                                          {explanation && (
+                                            <div className="border-t border-[var(--color-border-subtle)]/70 my-3" />
+                                          )}
+                                          {explanation}
+                                        </div>
                                       </div>
-                                    )}
+                                    </div>
                                   </div>
 
                                   <div className="flex items-center gap-2 mt-1 shrink-0">
                                     {isThird && (
-                                      <ChevronDown
-                                        size={16}
-                                        className={`text-[var(--color-text-tertiary)] transition-transform ${expandedThirdType ? "rotate-180" : ""}`}
-                                      />
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleThirdExpanded();
+                                        }}
+                                        aria-label={isCardExpanded ? translate("Contraer", "Collapse") : translate("Expandir", "Expand")}
+                                        className="p-1 -m-1 rounded-full hover:bg-[var(--color-primary-base)]/10 transition-colors"
+                                      >
+                                        <ChevronDown
+                                          size={16}
+                                          className={`text-[var(--color-text-tertiary)] transition-transform duration-300 ease-in-out ${isCardExpanded ? "rotate-180" : ""}`}
+                                        />
+                                      </button>
                                     )}
-                                    {isExpanded && (
-                                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                        isSelected
-                                          ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]"
-                                          : "border-[var(--color-border-strong)]"
-                                      }`}>
-                                        {isSelected && <Check size={12} className="text-white" />}
-                                      </div>
-                                    )}
+                                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors duration-200 ${
+                                      isSelected
+                                        ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]"
+                                        : "border-[var(--color-border-strong)]"
+                                    }`}>
+                                      {isSelected && <Check size={12} className="text-white" />}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -3276,9 +3402,9 @@ export default function WizardQuote() {
 
                   {/* STEP 3: PDF QUOTE */}
                   {currentStep === 3 && (
-                    <div className="space-y-6 w-full max-w-xl mx-auto">
+                    <div className="space-y-6 w-full max-w-xl mx-auto animate-fade-in">
                       <div className="text-center space-y-2">
-                        <h2 className="text-2xl font-display font-black">
+                        <h2 className="text-2xl font-display font-black text-[var(--color-text-primary)]">
                           <T en="Save your quote details">Guarda los detalles de tu cotización</T>
                         </h2>
                         <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
@@ -3288,7 +3414,7 @@ export default function WizardQuote() {
                         </p>
                       </div>
 
-                      <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] space-y-4">
+                      <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel space-y-5 bento-glow shadow-sm">
                         {!pdfSent ? (
                           <div className="space-y-4">
                             <div>
@@ -3300,7 +3426,7 @@ export default function WizardQuote() {
                                 value={pdfName}
                                 onChange={(e) => setPdfName(e.target.value)}
                                 placeholder="Juan Pérez"
-                                className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
                               />
                             </div>
 
@@ -3316,8 +3442,8 @@ export default function WizardQuote() {
                                   setPdfEmailError("");
                                 }}
                                 placeholder="tu@correo.com"
-                                className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm ${
-                                  pdfEmailError ? "border-red-500/50 focus:ring-red-500/10" : "border-[var(--color-border)]"
+                                className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all ${
+                                  pdfEmailError ? "border-red-500/50 focus:ring-red-500/10" : "border-[var(--color-border-strong)]"
                                 }`}
                               />
                               {pdfEmailError && (
@@ -3360,26 +3486,35 @@ export default function WizardQuote() {
                                 setSendingPdf(false);
                                 setPdfSent(true);
                               }}
-                              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-70 disabled:hover:from-blue-600 disabled:hover:to-indigo-600 text-white font-medium rounded-xl transition-all shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/15 text-sm cursor-pointer"
+                              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none"
                             >
                               {sendingPdf ? (
                                 <>
                                   <Loader2 className="animate-spin" size={18} />
-                                  <T en="Generating & Sending PDF...">Generando y Enviando PDF...</T>
+                                  <T en="Generating & Sending PDF...">Generando y enviando PDF...</T>
                                 </>
                               ) : (
-                                <T en="Get My PDF Quote">Obtener mi Cotización PDF</T>
+                                <T en="Get My PDF Quote">Obtener mi cotización PDF</T>
                               )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={handleNext}
+                              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-transparent border border-[var(--color-border-subtle)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-secondary)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-semibold rounded-xl transition-all text-sm cursor-pointer mt-2"
+                            >
+                              <T en="Skip & Book Call">Saltar y agendar llamada</T>
+                              <ArrowRight size={16} />
                             </button>
                           </div>
                         ) : (
-                          <div className="py-6 text-center space-y-4">
+                          <div className="py-6 text-center space-y-4 animate-fade-in">
                             <div className="inline-flex p-3 rounded-full bg-green-500/10 text-green-500 animate-bounce">
                               <CheckCircle2 size={32} />
                             </div>
                             <div className="space-y-1">
                               <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
-                                <T en="Quote Sent Successfully!">¡Cotización Enviada con Éxito!</T>
+                                <T en="Quote Sent Successfully!">¡Cotización enviada con éxito!</T>
                               </h3>
                               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed max-w-sm mx-auto">
                                 <T en="Check your inbox at">Hemos enviado el PDF con el desglose detallado a</T>{" "}
@@ -3387,36 +3522,17 @@ export default function WizardQuote() {
                                 <T en="It should arrive in a couple of minutes.">Debería llegar en un par de minutos.</T>
                               </p>
                             </div>
+
+                            <button
+                              type="button"
+                              onClick={handleNext}
+                              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none mt-4"
+                            >
+                              <T en="Continue to Schedule">Continuar a la llamada</T>
+                              <ArrowRight size={18} />
+                            </button>
                           </div>
                         )}
-                      </div>
-
-                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
-                        <button
-                          type="button"
-                          onClick={() => setCurrentStep(prev => prev - 1)}
-                          className="flex items-center justify-center gap-1.5 py-3 px-5 border border-[var(--color-border)] rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-all order-2 sm:order-1 cursor-pointer"
-                        >
-                          <ArrowLeft size={16} />
-                          <T en="Go Back">Atrás</T>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleNext}
-                          className="flex items-center justify-center gap-1.5 py-3 px-5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-blue-500/30 hover:bg-blue-500/5 hover:text-blue-500 rounded-xl text-sm font-medium text-[var(--color-text-primary)] transition-all order-1 sm:order-2 cursor-pointer"
-                        >
-                          {pdfSent ? (
-                            <>
-                              <T en="Continue to Schedule">Continuar a la Llamada</T>
-                              <ArrowRight size={16} />
-                            </>
-                          ) : (
-                            <>
-                              <T en="Skip & Book Call">Saltar y Agendar Llamada</T>
-                              <ArrowRight size={16} />
-                            </>
-                          )}
-                        </button>
                       </div>
                     </div>
                   )}
@@ -3517,7 +3633,7 @@ export default function WizardQuote() {
                       (currentStep === 0 && (!selections.sector || !selections.businessType)) ||
                       (currentStep === 1 && !selections.type)
                     }
-                    className="flex items-center gap-2 px-8 py-3 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-50 border-none ml-auto"
+                    className="flex items-center gap-2 px-8 py-3 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all disabled:opacity-50 border-none ml-auto cursor-pointer"
                   >
                     <T en="Next">Siguiente</T> <ArrowRight size={18} />
                   </button>
@@ -3779,59 +3895,77 @@ export default function WizardQuote() {
                 </AnimatePresence>
 
                 {/* Barra compacta siempre visible */}
-                <div
-                  onClick={() => setEstimateExpanded(prev => !prev)}
-                  className="w-full flex items-center justify-between px-5 py-3.5 bg-[var(--color-surface-elevated)] border-t border-[var(--color-border-subtle)] cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex flex-col items-start">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                <div className="w-full flex items-center gap-2 px-3 py-2.5 bg-[var(--color-surface-elevated)] border-t border-[var(--color-border-subtle)]">
+                  {/* Atrás + Reiniciar */}
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {currentStep > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleBack}
+                        title={language === "es" ? "Atrás" : "Back"}
+                        className="w-8 h-8 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] flex items-center justify-center transition-all cursor-pointer"
+                      >
+                        <ArrowLeft size={14} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={resetWizard}
+                      title={language === "es" ? "Reiniciar planificador" : "Reset planner"}
+                      className="w-8 h-8 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-all cursor-pointer"
+                    >
+                      <RotateCcw size={12} />
+                    </button>
+                  </div>
+
+                  {/* Estimado — tocable para expandir detalles */}
+                  <div
+                    onClick={() => setEstimateExpanded(prev => !prev)}
+                    className={`flex-1 min-w-0 flex items-center gap-1.5 cursor-pointer ${currentStep === 3 ? "justify-center" : ""}`}
+                  >
+                    <div className={`flex flex-col min-w-0 ${currentStep === 3 ? "items-center" : "items-start"}`}>
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
                         <T en="Estimate">Estimado</T>
                       </span>
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-xl font-display font-black text-[var(--color-primary-base)]">
+                      <div className="flex items-baseline gap-1 flex-wrap">
+                        <span className="text-lg font-display font-black text-[var(--color-primary-base)]">
                           $<AnimatedNumber value={isOfferActive && estimatedTotal > 0 ? discountedTotal : estimatedTotal} />
                         </span>
                         {monthlyAddonsPrice > 0 && (
-                          <span className="text-xs text-[var(--color-text-tertiary)] font-bold">
+                          <span className="text-[10px] text-[var(--color-text-tertiary)] font-bold">
                             +$<AnimatedNumber value={monthlyAddonsPrice} />/mes
                           </span>
                         )}
                         {isOfferActive && estimatedTotal > 0 && (
-                          <span className="text-[10px] bg-emerald-500/15 text-emerald-500 font-black px-1.5 py-0.5 rounded">
+                          <span className="text-[9px] bg-emerald-500/15 text-emerald-500 font-black px-1 py-0.5 rounded">
                             -25%
                           </span>
                         )}
                       </div>
                     </div>
+                    <motion.div
+                      animate={{ rotate: estimateExpanded ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="flex-shrink-0"
+                    >
+                      <ChevronUp size={14} className="text-[var(--color-text-tertiary)]" />
+                    </motion.div>
                   </div>
-                  <div className="flex items-center gap-3">
+
+                  {/* Siguiente — oculto en el paso 3 (PDF) porque ya tiene sus propios CTAs inline */}
+                  {currentStep < 3 && (
                     <button
                       type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        resetWizard();
-                      }}
-                      title={language === "es" ? "Reiniciar planificador" : "Reset planner"}
-                      className="w-7 h-7 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-all cursor-pointer"
+                      onClick={handleNext}
+                      disabled={
+                        (currentStep === 0 && (!selections.sector || !selections.businessType)) ||
+                        (currentStep === 1 && !selections.type)
+                      }
+                      className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 bg-[var(--color-primary-base)] text-white rounded-xl font-bold text-sm hover:scale-105 active:scale-95 transition-all disabled:opacity-40 disabled:hover:scale-100 border-none cursor-pointer"
                     >
-                      <RotateCcw size={12} />
+                      <span className="hidden xs:inline"><T en="Next">Siguiente</T></span> <ArrowRight size={16} />
                     </button>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold text-[var(--color-text-tertiary)]">
-                        {estimateExpanded
-                          ? <T en="Close">Cerrar</T>
-                          : <T en="Details">Detalles</T>
-                        }
-                      </span>
-                      <motion.div
-                        animate={{ rotate: estimateExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <ChevronUp size={16} className="text-[var(--color-text-tertiary)]" />
-                      </motion.div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
             )}

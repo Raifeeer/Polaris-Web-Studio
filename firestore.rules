@@ -6,6 +6,10 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
     function isValidNewsletterSubscriber(data) {
       return data.keys().hasAll(['email', 'source', 'subscribedAt']) && 
              data.keys().size() == 3 &&
@@ -14,25 +18,51 @@ service cloud.firestore {
     }
 
     function isValidWizardLead(data) {
-      return data.keys().hasAll(["name", "email", "type", "addons", "domain", "createdAt"]) &&
-             data.keys().size() == 6 &&
+      return data.keys().hasAll(["name", "email", "phone", "type", "addons", "domain", "createdAt"]) &&
+             data.keys().size() == 7 &&
              data.name is string && data.name.size() <= 200 &&
              data.email is string && data.email.size() <= 200 &&
+             data.phone is string && data.phone.size() <= 100 &&
              data.type is string &&
              data.addons is list &&
              (data.domain == null || data.domain is string) &&
              data.createdAt == request.time;
     }
 
+    function isValidQuoteSession(data) {
+      return (!data.keys().hasAny(['sessionId']) || (data.sessionId is string && data.sessionId.size() <= 100)) &&
+             (!data.keys().hasAny(['status']) || (data.status is string && (data.status == 'in_progress' || data.status == 'abandoned' || data.status == 'completed'))) &&
+             (!data.keys().hasAny(['currentStep']) || (data.currentStep is number && data.currentStep >= 0 && data.currentStep <= 10)) &&
+             (!data.keys().hasAny(['sector']) || (data.sector == null || (data.sector is string && data.sector.size() <= 100))) &&
+             (!data.keys().hasAny(['businessType']) || (data.businessType == null || (data.businessType is string && data.businessType.size() <= 100))) &&
+             (!data.keys().hasAny(['webType']) || (data.webType == null || (data.webType is string && data.webType.size() <= 100))) &&
+             (!data.keys().hasAny(['addons']) || data.addons is list) &&
+             (!data.keys().hasAny(['estimatedPrice']) || (data.estimatedPrice is number && data.estimatedPrice >= 0)) &&
+             (!data.keys().hasAny(['email']) || (data.email is string && data.email.size() <= 200)) &&
+             (!data.keys().hasAny(['createdAt']) || data.createdAt == request.time || (resource != null && data.createdAt == resource.data.createdAt)) &&
+             (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time);
+    }
+
     match /newsletter_subscribers/{subscriberId} {
-      // Allow any user (even unauthenticated) to subscribe via the form.
-      // We only allow create. We don't allow read, update, or delete.
-      allow create: if isValidNewsletterSubscriber(request.resource.data) &&
+      allow create: if isValidId(subscriberId) &&
+                    isValidNewsletterSubscriber(request.resource.data) &&
                     request.resource.data.subscribedAt == request.time;
     }
 
     match /wizardLeads/{leadId} {
-      allow create: if isValidWizardLead(request.resource.data);
+      allow create: if isValidId(leadId) &&
+                    isValidWizardLead(request.resource.data);
+    }
+
+    match /quoteSessions/{sessionId} {
+      allow get: if isValidId(sessionId);
+      allow create: if isValidId(sessionId) &&
+                    request.resource.data.keys().hasAll(['sessionId', 'status', 'createdAt', 'updatedAt']) &&
+                    request.resource.data.keys().size() == 4 &&
+                    request.resource.data.sessionId == sessionId &&
+                    isValidQuoteSession(request.resource.data);
+      allow update: if isValidId(sessionId) &&
+                    isValidQuoteSession(request.resource.data);
     }
   }
 }
