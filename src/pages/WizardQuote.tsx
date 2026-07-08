@@ -2769,7 +2769,6 @@ export default function WizardQuote() {
                                     return {
                                       ...prev,
                                       sector: newSector,
-                                      businessType: "",
                                       type: newType,
                                       addons: updatedAddons,
                                     };
