@@ -16,8 +16,8 @@ const RDAP_SERVERS: Record<string, string> = {
   me:  'https://rdap.nic.me/domain/',
 };
 
-// Cloudflare's RDAP is a good generic fallback for many TLDs not explicitly listed.
-const DEFAULT_RDAP = 'https://rdap.cloudflare.com/rdap/v1/domain/';
+// All generic RDAP queries are redirected to the authoritative registry server via IANA bootstrap.
+const DEFAULT_RDAP = 'https://rdap.net/domain/';
 
 // ccTLDs that do not support RDAP or have poor RDAP support
 const CCTLD_DNS_ONLY = new Set(['co', 'io']);
