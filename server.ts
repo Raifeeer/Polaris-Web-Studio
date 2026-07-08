@@ -247,38 +247,7 @@ function getXmlError(xml: string): string | null {
   return errorMatch ? errorMatch[1].trim() : null;
 }
 
-const RDAP_SERVERS: Record<string, string> = {
-  com: 'https://rdap.verisign.com/com/v1/domain/',
-  net: 'https://rdap.verisign.com/net/v1/domain/',
-  org: 'https://rdap.org/domain/',
-  io:  'https://rdap.nic.io/domain/',
-  co:  'https://rdap.nic.co/domain/',
-  app: 'https://rdap.nic.google/domain/',
-  dev: 'https://rdap.nic.google/domain/',
-  info: 'https://rdap.afilias.net/rdap/info/domain/',
-  biz: 'https://rdap.nic.biz/domain/',
-  me:  'https://rdap.nic.me/domain/',
-};
-
-const DEFAULT_RDAP = 'https://rdap.cloudflare.com/rdap/v1/domain/';
-
-async function checkDomain(domain: string): Promise<boolean> {
-  const ext = domain.split('.').pop()?.toLowerCase() || 'com';
-  const baseUrl = RDAP_SERVERS[ext] || DEFAULT_RDAP;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-  try {
-    const response = await fetch(`${baseUrl}${encodeURIComponent(domain)}`, {
-      headers: { Accept: 'application/rdap+json' },
-      signal: controller.signal,
-    });
-    return response.status === 404;
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
+import { checkDomainAvailability } from "./src/lib/domain-utils";
 
 export const app = express();
 app.disable("x-powered-by");
@@ -341,7 +310,7 @@ const PORT = 3000;
     }
 
     try {
-      const available = await checkDomain(domain);
+      const available = await checkDomainAvailability(domain);
       return res.json({ available });
 
     } catch (err: any) {
