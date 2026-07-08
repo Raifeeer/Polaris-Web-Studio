@@ -2337,7 +2337,15 @@ export default function WizardQuote() {
   const handleNext = async () => {
     const nextStep = currentStep + 1;
 
-    // If we're at the final step, mark the session as completed
+    // If we're on the PDF step and skipping, update selections with current PDF form data
+    if (currentStep === 3 && nextStep === 4) {
+      setSelections(prev => ({
+        ...prev,
+        email: pdfEmail.trim(),
+        name: pdfName.trim()
+      }));
+    }
+
     if (nextStep === steps.length -1) { // steps.length is 5, final step is index 4
       if (sessionId) {
         const sessionRef = doc(db, "quoteSessions", sessionId);
@@ -3266,8 +3274,8 @@ export default function WizardQuote() {
                           <T en="Save your quote details">Guarda los detalles de tu cotización</T>
                         </h2>
                         <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                          <T en="Enter your email to receive a detailed PDF breakdown of your quote and custom recommendations directly in your inbox. No strings attached.">
-                            Ingresa tu correo para recibir un desglose detallado en PDF de tu cotización y recomendaciones personalizadas directamente en tu bandeja de entrada. Sin compromisos.
+                          <T en="Receive a PDF breakdown of your quote and recommendations by email. No commitments.">
+                            Recibe un desglose detallado de tu cotización y recomendaciones por correo. Sin compromisos.
                           </T>
                         </p>
                       </div>
@@ -3283,7 +3291,7 @@ export default function WizardQuote() {
                                 type="text"
                                 value={pdfName}
                                 onChange={(e) => setPdfName(e.target.value)}
-                                placeholder="John Doe"
+                                placeholder="Juan Pérez"
                                 className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
                               />
                             </div>
@@ -3299,7 +3307,7 @@ export default function WizardQuote() {
                                   setPdfEmail(e.target.value);
                                   setPdfEmailError("");
                                 }}
-                                placeholder="john@example.com"
+                                placeholder="tu@correo.com"
                                 className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm ${
                                   pdfEmailError ? "border-red-500/50 focus:ring-red-500/10" : "border-[var(--color-border)]"
                                 }`}
