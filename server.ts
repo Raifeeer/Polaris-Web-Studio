@@ -6,6 +6,7 @@ import { createServer as createViteServer } from "vite";
 import dotenv from "dotenv";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
+import suggestDomainsHandler from "./api/suggest-domains.js";
 
 // Load environment variables
 dotenv.config();
@@ -323,6 +324,15 @@ const PORT = 3000;
       await generateAddonDescriptionsHandler(req as any, res as any);
     } catch (error: any) {
       console.error("Error generating addon descriptions:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
+  app.post("/api/suggest-domains", async (req, res) => {
+    try {
+      await suggestDomainsHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error suggesting domains:", error);
       res.status(500).json({ error: error?.message || "Internal server error" });
     }
   });
