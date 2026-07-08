@@ -3270,7 +3270,7 @@ export default function WizardQuote() {
                   {currentStep === 3 && (
                     <div className="space-y-6 w-full max-w-xl mx-auto">
                       <div className="text-center space-y-2">
-                        <h2 className="text-2xl font-display font-bold">
+                        <h2 className="text-2xl font-display font-black">
                           <T en="Save your quote details">Guarda los detalles de tu cotización</T>
                         </h2>
                         <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
