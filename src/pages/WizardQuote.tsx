@@ -2335,32 +2335,42 @@ export default function WizardQuote() {
   ].join("\n");
 
   const handleNext = async () => {
-    const nextStep = currentStep + 1;
+    try {
+      const nextStep = currentStep + 1;
 
-    // If we're on the PDF step and skipping, update selections with current PDF form data
-    if (currentStep === 3 && nextStep === 4) {
-      setSelections(prev => ({
-        ...prev,
-        email: pdfEmail.trim(),
-        name: pdfName.trim()
-      }));
-    }
+      let emailForFirestore = selections.email;
+      let nameForFirestore = selections.name;
 
-    if (nextStep === steps.length -1) { // steps.length is 5, final step is index 4
-      if (sessionId) {
-        const sessionRef = doc(db, "quoteSessions", sessionId);
-        await setDoc(sessionRef, {
-          status: "completed",
-          updatedAt: serverTimestamp(),
-          email: selections.email || undefined, // Capture email from selections if provided
-        } as Partial<QuoteSession>, { merge: true }).catch(console.error);
+      // If we're on the PDF step and skipping, prepare data for selections update and Firestore
+      if (currentStep === 3 && nextStep === 4) {
+        emailForFirestore = pdfEmail.trim();
+        nameForFirestore = pdfName.trim();
+
+        setSelections(prev => ({
+          ...prev,
+          email: emailForFirestore,
+          name: nameForFirestore
+        }));
       }
-    }
 
-    if (nextStep < steps.length) {
-      trackEvent("wizard_step_complete", { step: nextStep });
-      setCurrentStep(nextStep);
-      scrollToProgress();
+      if (nextStep === steps.length -1) { // steps.length is 5, final step is index 4
+        if (sessionId) {
+          const sessionRef = doc(db, "quoteSessions", sessionId);
+          await setDoc(sessionRef, {
+            status: "completed",
+            updatedAt: serverTimestamp(),
+            email: emailForFirestore || undefined, // Use the prepared value
+          } as Partial<QuoteSession>, { merge: true }).catch(console.error);
+        }
+      }
+
+      if (nextStep < steps.length) {
+        trackEvent("wizard_step_complete", { step: nextStep });
+        setCurrentStep(nextStep);
+        scrollToProgress();
+      }
+    } catch (error) {
+      console.error("Error in handleNext:", error);
     }
   };
 
