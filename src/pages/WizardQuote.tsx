@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -22,8 +22,22 @@ import GlobeSearchIcon from "../components/GlobeSearchIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 import { useToast } from "../context/ToastContext";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, doc, addDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
+
+interface QuoteSession {
+  sessionId: string;
+  sector: string | null;
+  businessType: string | null;
+  webType: string | null;
+  addons: string[];
+  estimatedPrice: number;
+  currentStep: number;
+  status: "in_progress" | "abandoned" | "completed";
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  email?: string;
+}
 
 function AnimatedNumber({ value }: { value: number }) {
   const [displayValue, setDisplayValue] = useState(value);
@@ -182,6 +196,7 @@ const steps = [
   { id: "sector", title: <T en="Sector">Sector</T> },
   { id: "type", title: <T en="Web Type">Tipo de Web</T> },
   { id: "addons", title: <T en="AI & Add-ons">IA y Complementos</T> },
+  { id: "pdf", title: <T en="PDF Quote">Cotización PDF</T> },
   { id: "schedule", title: <T en="Schedule Meeting">Agendar Reunión</T> },
 ];
 
@@ -492,6 +507,13 @@ export default function WizardQuote() {
   const domainDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastShownRef = useRef(false);
 
+  // States for step 3: PDF Quote
+  const [pdfEmail, setPdfEmail] = useState("");
+  const [pdfName, setPdfName] = useState("");
+  const [sendingPdf, setSendingPdf] = useState(false);
+  const [pdfSent, setPdfSent] = useState(false);
+  const [pdfEmailError, setPdfEmailError] = useState("");
+
   const checkDomainAvailability = async (domainToCheck?: string) => {
     const target = (domainToCheck || domainName).trim();
     if (!target || !target.includes('.')) return;
@@ -535,8 +557,48 @@ export default function WizardQuote() {
     }
   };
 
+  // Session tracking
+  const [sessionId, setSessionId] = useState<string>("");
+
+  useEffect(() => {
+    let currentSessionId = localStorage.getItem("polaris_quote_session");
+    if (!currentSessionId) {
+      currentSessionId = crypto.randomUUID();
+      localStorage.setItem("polaris_quote_session", currentSessionId);
+    }
+    setSessionId(currentSessionId);
+
+    // Initialize Firestore session on mount
+    const initializeSession = async () => {
+      if (currentSessionId) {
+        await setDoc(doc(db, "quoteSessions", currentSessionId), {
+          sessionId: currentSessionId,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          status: "in_progress",
+        } as QuoteSession, { merge: true });
+      }
+    };
+    initializeSession();
+  }, []); // Run only once on mount
+
   const resetWizard = () => {
-    setCurrentStep(0);
+    // 1. Mark current session as "abandoned" in Firestore
+    if (sessionId) {
+      const sessionRef = doc(db, "quoteSessions", sessionId);
+      setDoc(sessionRef, {
+        status: "abandoned",
+        updatedAt: serverTimestamp(),
+      } as Partial<QuoteSession>, { merge: true }).catch(console.error);
+    }
+
+    // 2. Generate a new sessionId
+    const newSessionId = crypto.randomUUID();
+
+    // 3. Overwrite localStorage with the new sessionId
+    localStorage.setItem("polaris_quote_session", newSessionId);
+
+    // Reset all local storage items related to the wizard's state
     localStorage.removeItem("wizardQuote_currentStep");
     localStorage.removeItem("wizardQuote_selections");
     localStorage.removeItem("wizardQuote_savedAt");
@@ -545,7 +607,23 @@ export default function WizardQuote() {
     localStorage.removeItem("wizardQuote_selectedAddons");
     localStorage.removeItem("wizardQuote_domainName");
     localStorage.removeItem("polaris_addon_descriptions");
-    window.location.reload();
+    
+    // 4. Reset frontend state
+    setCurrentStep(0);
+    setSelections({ // Reset selections to initial state
+      sector: "",
+      businessType: "",
+      type: "",
+      addons: ["hosting"] as string[],
+      date: null as Date | null,
+      time: "",
+      name: "",
+      email: "",
+      phone: "",
+      notes: "",
+    });
+    setSessionId(newSessionId); // Update sessionId state
+    window.location.reload(); // Hard refresh to ensure full state reset and new session tracking
   };
 
   const [currentStep, setCurrentStep] = useState(() => {
@@ -583,6 +661,7 @@ export default function WizardQuote() {
       time: "",
       name: "",
       email: "",
+      phone: "",
       notes: "",
     };
   });
@@ -720,6 +799,7 @@ export default function WizardQuote() {
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadName, setLeadName] = useState(selections.name || "");
   const [leadEmail, setLeadEmail] = useState(selections.email || "");
+  const [leadPhone, setLeadPhone] = useState(selections.phone || "");
   const [leadEmailError, setLeadEmailError] = useState("");
 
   // GA4 helper
@@ -749,16 +829,56 @@ export default function WizardQuote() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
+  const calculateTotalPrice = useMemo(() => {
+    let basePrice = 0;
+    const selectedType = types.find((t) => t.id === selections.type);
+    if (selectedType) {
+      basePrice += selectedType.price;
+    }
+
+    const addonsPrice = selections.addons.reduce((sum, addonId) => {
+      const addon = addons.find((a) => a.id === addonId);
+      return sum + (addon ? addon.price : 0);
+    }, 0);
+
+    let total = basePrice + addonsPrice;
+
+    // Apply 25% discount if active
+    if (isOfferActive) {
+      total *= 0.75;
+    }
+    return Math.max(0, total);
+  }, [selections, isOfferActive]);
+
   const [CalComponent, setCalComponent] = useState<any>(null);
 
   useEffect(() => {
     // Solo cargar Cal cuando el usuario llegue al último paso
-    if (currentStep === 3 && !CalComponent) {
+    if (currentStep === 4 && !CalComponent) {
       import('@calcom/embed-react').then((mod) => {
         setCalComponent(() => mod.default);
       });
     }
   }, [currentStep, CalComponent]);
+
+  // Firestore session update effect
+  useEffect(() => {
+    if (sessionId) {
+      const updateFirestoreSession = async () => {
+        const sessionRef = doc(db, "quoteSessions", sessionId);
+        await setDoc(sessionRef, {
+          currentStep: currentStep,
+          sector: selections.sector || null,
+          businessType: selections.businessType || null,
+          webType: selections.type || null,
+          addons: selections.addons || [],
+          estimatedPrice: calculateTotalPrice,
+          updatedAt: serverTimestamp(),
+        } as Partial<QuoteSession>, { merge: true });
+      };
+      updateFirestoreSession();
+    }
+  }, [sessionId, selections, currentStep, calculateTotalPrice]);
 
   useEffect(() => {
     if (currentStep !== 3) return;
@@ -2214,15 +2334,26 @@ export default function WizardQuote() {
     ),
   ].join("\n");
 
-  const handleNext = () => {
-    // Intercept before step 3 if lead not captured
-    if (currentStep === 2 && !leadCaptured) {
-      setShowLeadCapture(true);
-      return;
+  const handleNext = async () => {
+    const nextStep = currentStep + 1;
+
+    // If we're at the final step, mark the session as completed
+    if (nextStep === steps.length -1) { // steps.length is 5, final step is index 4
+      if (sessionId) {
+        const sessionRef = doc(db, "quoteSessions", sessionId);
+        await setDoc(sessionRef, {
+          status: "completed",
+          updatedAt: serverTimestamp(),
+          email: selections.email || undefined, // Capture email from selections if provided
+        } as Partial<QuoteSession>, { merge: true }).catch(console.error);
+      }
     }
-    trackEvent("wizard_step_complete", { step: currentStep + 1 });
-    setCurrentStep((c) => c + 1);
-    scrollToProgress();
+
+    if (nextStep < steps.length) {
+      trackEvent("wizard_step_complete", { step: nextStep });
+      setCurrentStep(nextStep);
+      scrollToProgress();
+    }
   };
 
   const handleBack = () => {
@@ -2242,12 +2373,13 @@ export default function WizardQuote() {
     addDoc(collection(db, "wizardLeads"), {
       name: leadName,
       email: leadEmail,
+      phone: leadPhone,
       type: selections.type,
       addons: selections.addons,
       domain: domainSummaryText || null,
       createdAt: serverTimestamp(),
     }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
-    setSelections((s) => ({ ...s, name: leadName, email: leadEmail }));
+    setSelections((s) => ({ ...s, name: leadName, email: leadEmail, phone: leadPhone }));
     localStorage.setItem("wizardQuote_leadCaptured", "1");
     setLeadCaptured(true);
     setShowLeadCapture(false);
@@ -3126,8 +3258,155 @@ export default function WizardQuote() {
                     </div>
                   )}
 
-                  {/* STEP 3: SCHEDULE */}
+                  {/* STEP 3: PDF QUOTE */}
                   {currentStep === 3 && (
+                    <div className="space-y-6 w-full max-w-xl mx-auto">
+                      <div className="text-center space-y-2">
+                        <h2 className="text-2xl font-display font-bold">
+                          <T en="Save your quote details">Guarda los detalles de tu cotización</T>
+                        </h2>
+                        <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                          <T en="Enter your email to receive a detailed PDF breakdown of your quote and custom recommendations directly in your inbox. No strings attached.">
+                            Ingresa tu correo para recibir un desglose detallado en PDF de tu cotización y recomendaciones personalizadas directamente en tu bandeja de entrada. Sin compromisos.
+                          </T>
+                        </p>
+                      </div>
+
+                      <div className="p-6 rounded-2xl bg-[var(--color-bg-secondary)] border border-[var(--color-border)] space-y-4">
+                        {!pdfSent ? (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
+                                <T en="Full Name (Optional)">Nombre Completo (Opcional)</T>
+                              </label>
+                              <input
+                                type="text"
+                                value={pdfName}
+                                onChange={(e) => setPdfName(e.target.value)}
+                                placeholder="John Doe"
+                                className="w-full px-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
+                                <T en="Email Address">Correo Electrónico</T>
+                              </label>
+                              <input
+                                type="email"
+                                value={pdfEmail}
+                                onChange={(e) => {
+                                  setPdfEmail(e.target.value);
+                                  setPdfEmailError("");
+                                }}
+                                placeholder="john@example.com"
+                                className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm ${
+                                  pdfEmailError ? "border-red-500/50 focus:ring-red-500/10" : "border-[var(--color-border)]"
+                                }`}
+                              />
+                              {pdfEmailError && (
+                                <p className="mt-1.5 text-xs text-red-500">{pdfEmailError}</p>
+                              )}
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={sendingPdf}
+                              onClick={async () => {
+                                if (!pdfEmail.trim()) {
+                                  setPdfEmailError(
+                                    language === "en"
+                                      ? "Please enter your email address"
+                                      : "Por favor, ingresa tu correo electrónico"
+                                  );
+                                  return;
+                                }
+                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                if (!emailRegex.test(pdfEmail.trim())) {
+                                  setPdfEmailError(
+                                    language === "en"
+                                      ? "Please enter a valid email address"
+                                      : "Por favor, ingresa un correo electrónico válido"
+                                  );
+                                  return;
+                                }
+
+                                setSendingPdf(true);
+                                // Sync selections email/name so it's tracked in session
+                                setSelections(prev => ({
+                                  ...prev,
+                                  email: pdfEmail.trim(),
+                                  name: pdfName.trim()
+                                }));
+
+                                // Simulated send
+                                await new Promise(resolve => setTimeout(resolve, 2000));
+                                setSendingPdf(false);
+                                setPdfSent(true);
+                              }}
+                              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-70 disabled:hover:from-blue-600 disabled:hover:to-indigo-600 text-white font-medium rounded-xl transition-all shadow-md shadow-blue-500/10 hover:shadow-lg hover:shadow-blue-500/15 text-sm cursor-pointer"
+                            >
+                              {sendingPdf ? (
+                                <>
+                                  <Loader2 className="animate-spin" size={18} />
+                                  <T en="Generating & Sending PDF...">Generando y Enviando PDF...</T>
+                                </>
+                              ) : (
+                                <T en="Get My PDF Quote">Obtener mi Cotización PDF</T>
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center space-y-4">
+                            <div className="inline-flex p-3 rounded-full bg-green-500/10 text-green-500 animate-bounce">
+                              <CheckCircle2 size={32} />
+                            </div>
+                            <div className="space-y-1">
+                              <h3 className="text-lg font-bold text-[var(--color-text-primary)]">
+                                <T en="Quote Sent Successfully!">¡Cotización Enviada con Éxito!</T>
+                              </h3>
+                              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed max-w-sm mx-auto">
+                                <T en="Check your inbox at">Hemos enviado el PDF con el desglose detallado a</T>{" "}
+                                <strong className="text-[var(--color-text-primary)]">{pdfEmail}</strong>.{" "}
+                                <T en="It should arrive in a couple of minutes.">Debería llegar en un par de minutos.</T>
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(prev => prev - 1)}
+                          className="flex items-center justify-center gap-1.5 py-3 px-5 border border-[var(--color-border)] rounded-xl text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-secondary)] transition-all order-2 sm:order-1 cursor-pointer"
+                        >
+                          <ArrowLeft size={16} />
+                          <T en="Go Back">Atrás</T>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleNext}
+                          className="flex items-center justify-center gap-1.5 py-3 px-5 bg-[var(--color-bg-secondary)] border border-[var(--color-border)] hover:border-blue-500/30 hover:bg-blue-500/5 hover:text-blue-500 rounded-xl text-sm font-medium text-[var(--color-text-primary)] transition-all order-1 sm:order-2 cursor-pointer"
+                        >
+                          {pdfSent ? (
+                            <>
+                              <T en="Continue to Schedule">Continuar a la Llamada</T>
+                              <ArrowRight size={16} />
+                            </>
+                          ) : (
+                            <>
+                              <T en="Skip & Book Call">Saltar y Agendar Llamada</T>
+                              <ArrowRight size={16} />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* STEP 4: SCHEDULE */}
+                  {currentStep === 4 && (
                     <div className="space-y-6 w-full">
                       <h2 className="text-2xl font-display font-bold">
                         <T en="Let's build it together">Vamos a construirlo</T>
@@ -3596,6 +3875,16 @@ export default function WizardQuote() {
                   {leadEmailError && (
                     <p className="glass-input text-xs text-red-500 mt-1">{leadEmailError}</p>
                   )}
+                </div>
+                <div>
+                  <input
+                    type="tel"
+                    placeholder={t("WhatsApp / Celular (Optional)", "WhatsApp / Celular (Opcional)")}
+                    value={leadPhone}
+                    onChange={(e) => setLeadPhone(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
+                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                  />
                 </div>
               </div>
 
