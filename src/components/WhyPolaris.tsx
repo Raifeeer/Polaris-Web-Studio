@@ -182,6 +182,7 @@ export default function WhyPolaris() {
             <CompareBar
               label={language === 'es' ? 'Respuesta de comunicación' : 'Communication response'}
               polarisVal={24} competitorVal={72} unit="h"
+              lessIsBetter={true}
             />
             <CompareBar
               label={language === 'es' ? 'Tecnologías dominadas' : 'Technologies mastered'}
