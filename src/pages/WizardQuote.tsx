@@ -601,7 +601,7 @@ export default function WizardQuote() {
       });
 
       if (!data.available) {
-        fetchDomainSuggestions(target.toLowerCase(), selectedSector?.id || null, selectedBusinessType || null);
+        fetchDomainSuggestions(target.toLowerCase(), selections.sector || null, selections.businessType || null);
       } else {
         setDomainSuggestions([]); // Clear suggestions if domain is available
       }
@@ -3344,8 +3344,6 @@ export default function WizardQuote() {
                               ))}
                             </div>
                           </div>
-                        )}
-
                         )}
                       </div>
 
