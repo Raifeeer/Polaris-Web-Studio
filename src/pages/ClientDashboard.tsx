@@ -28,12 +28,420 @@ import {
   Send,
   UserPlus,
   Eye,
-  EyeOff
+  EyeOff,
+  Lock,
+  ChevronDown,
+  Archive,
+  Inbox,
+  Receipt,
+  Sparkles
 } from "lucide-react";
 import Logo from "../components/Logo";
 import AISparkleIcon from "../components/AISparkleIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
+import { collection, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
+import { db } from "../lib/firebase";
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {},
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+const formatTimeTo12h = (timeStr: string) => {
+  if (!timeStr) return "";
+  if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
+  
+  const parts = timeStr.split(":");
+  if (parts.length >= 2) {
+    const h = parseInt(parts[0], 10);
+    const m = parts[1];
+    if (isNaN(h)) return timeStr;
+    const ampm = h >= 12 ? "PM" : "AM";
+    const displayHour = h % 12 === 0 ? 12 : h % 12;
+    return `${displayHour}:${m} ${ampm}`;
+  }
+  return timeStr;
+};
+
+interface CustomSelectOption {
+  id: string;
+  label: string;
+}
+
+interface CustomSelectProps {
+  options: CustomSelectOption[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  buttonClassName?: string;
+}
+
+function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder = "Seleccionar...",
+  className = "",
+  buttonClassName = ""
+}: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">("bottom");
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      // Estimar la altura real del dropdown según el número de opciones.
+      // Cada opción mide aproximadamente 36px, más 16px de padding/borde. Máximo de 240px (max-h-60).
+      const estimatedHeight = Math.min(options.length * 36 + 16, 240);
+      
+      if (spaceBelow < estimatedHeight && spaceAbove > spaceBelow) {
+        setDropdownPosition("top");
+      } else {
+        setDropdownPosition("bottom");
+      }
+    }
+  }, [isOpen, options.length]);
+
+  const selectedOption = options.find(opt => opt.id === value);
+
+  return (
+    <div ref={containerRef} className={`relative ${className} ${isOpen ? "z-[160]" : "z-10"}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={buttonClassName || "glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none flex items-center justify-between cursor-pointer hover:bg-[var(--color-surface-hover)] transition-all select-none text-left"}
+      >
+        <span className={value ? "truncate text-[var(--color-text-primary)]" : "truncate text-[var(--color-text-tertiary)]/50"}>
+          {selectedOption ? selectedOption.label : placeholder}
+        </span>
+        <ChevronDown
+          size={14}
+          className={`text-[var(--color-text-tertiary)] transition-transform duration-200 flex-shrink-0 ml-2 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.ul
+            initial={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute z-[150] w-full max-h-60 overflow-y-auto rounded-lg bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none scrollbar-thin left-0 ${dropdownPosition === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+          >
+            {options.map((opt) => {
+              const isSelected = opt.id === value;
+              return (
+                <li
+                  key={opt.id}
+                  onClick={() => {
+                    onChange(opt.id);
+                    setIsOpen(false);
+                  }}
+                  className={`px-4 py-2 text-xs flex items-center justify-between cursor-pointer transition-colors ${
+                    isSelected
+                      ? "bg-indigo-500/10 text-indigo-400 font-bold"
+                      : "text-[var(--color-text-secondary)] hover:bg-indigo-500/10 hover:text-indigo-400"
+                  }`}
+                >
+                  <span className="truncate">{opt.label}</span>
+                  {isSelected && <Check size={12} className="text-indigo-400 flex-shrink-0 ml-2" />}
+                </li>
+              );
+            })}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+
+}
+
+function CopyInvoiceButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Error al copiar al portapapeles:", err);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="ml-1.5 p-0.5 rounded hover:bg-indigo-500/20 text-indigo-400/70 hover:text-indigo-400 transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
+      title="Copiar código"
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        {copied ? (
+          <motion.span
+            key="check"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center justify-center"
+          >
+            <Check size={11} className="text-emerald-400" />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="copy"
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center justify-center"
+          >
+            <Copy size={11} />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </button>
+  );
+}
+
+function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", className = "" }: { value: string, onChange: (val: string) => void, placeholder?: string, className?: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [currentMonth, setCurrentMonth] = useState(() => value ? new Date(value + 'T00:00:00') : new Date());
+  const [view, setView] = useState<"days" | "months" | "years">("days");
+  const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">("bottom");
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      
+      if (spaceBelow < 300 && spaceAbove > spaceBelow) {
+        setDropdownPosition("top");
+      } else {
+        setDropdownPosition("bottom");
+      }
+    }
+  }, [isOpen]);
+
+  const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDay = getFirstDayOfMonth(year, month);
+  
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanks = Array.from({ length: firstDay }, (_, i) => i); 
+
+  const handlePrevMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(new Date(year, month - 1, 1));
+  };
+  const handleNextMonth = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(new Date(year, month + 1, 1));
+  };
+
+  const monthNames = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const shortMonthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+  const dayNames = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
+  const startYear = Math.floor(year / 10) * 10;
+  const years = Array.from({ length: 12 }, (_, i) => startYear - 1 + i);
+
+  const handleSelectDate = (day: number) => {
+    const formattedMonth = String(month + 1).padStart(2, '0');
+    const formattedDay = String(day).padStart(2, '0');
+    onChange(`${year}-${formattedMonth}-${formattedDay}`);
+    setIsOpen(false);
+  };
+
+  const handleSelectMonth = (m: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(new Date(year, m, 1));
+    setView("days");
+  };
+
+  const handleSelectYear = (y: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentMonth(new Date(y, month, 1));
+    setView("months");
+  };
+
+  const formattedValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : placeholder;
+
+  return (
+    <div ref={containerRef} className={`relative ${className} ${isOpen ? "z-[160]" : "z-10"}`}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none flex items-center justify-between cursor-pointer hover:bg-[var(--color-surface-hover)] transition-all select-none text-left"
+      >
+        <span className={value ? "text-[var(--color-text-primary)]" : "text-[var(--color-text-tertiary)]/50"}>
+          {formattedValue}
+        </span>
+        <Calendar size={14} className="text-[var(--color-text-tertiary)] flex-shrink-0 ml-2" />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
+            transition={{ duration: 0.15 }}
+            className={`absolute z-[160] w-full min-w-[260px] p-3 rounded-xl bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none left-0 ${dropdownPosition === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+          >
+            {view === "days" && (
+              <>
+                 <div className="flex items-center justify-between mb-3">
+                   <button type="button" onClick={handlePrevMonth} className="p-1 rounded-md hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"><ChevronDown size={14} className="rotate-90" /></button>
+                   <button type="button" onClick={(e) => { e.stopPropagation(); setView("months"); }} className="text-xs font-bold text-[var(--color-text-primary)] hover:text-indigo-400 transition-colors">
+                     {monthNames[month]} {year}
+                   </button>
+                   <button type="button" onClick={handleNextMonth} className="p-1 rounded-md hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"><ChevronDown size={14} className="-rotate-90" /></button>
+                 </div>
+                 <div className="grid grid-cols-7 gap-1 mb-1 text-center">
+                   {dayNames.map(d => <div key={d} className="text-[10px] font-bold text-[var(--color-text-tertiary)] p-1">{d}</div>)}
+                 </div>
+                 <div className="grid grid-cols-7 gap-1 text-center">
+                   {blanks.map(b => <div key={`blank-${b}`} className="p-1.5"></div>)}
+                   {days.map(d => {
+                     const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                     const isSelected = value === dStr;
+                     const isToday = new Date().toISOString().split('T')[0] === dStr;
+                     return (
+                       <button 
+                         key={d} 
+                         type="button"
+                         onClick={() => handleSelectDate(d)}
+                         className={`p-1.5 text-xs rounded-md flex items-center justify-center cursor-pointer transition-colors ${isSelected ? 'bg-indigo-600 text-white font-bold' : isToday ? 'text-indigo-400 font-bold hover:bg-indigo-500/10 hover:text-indigo-400' : 'text-[var(--color-text-secondary)] hover:bg-indigo-500/10 hover:text-indigo-400'}`}
+                       >
+                         {d}
+                       </button>
+                     );
+                   })}
+                 </div>
+              </>
+            )}
+
+            {view === "months" && (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                   <button type="button" onClick={(e) => { e.stopPropagation(); setCurrentMonth(new Date(year - 1, month, 1)); }} className="p-1 rounded-md hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"><ChevronDown size={14} className="rotate-90" /></button>
+                   <button type="button" onClick={(e) => { e.stopPropagation(); setView("years"); }} className="text-xs font-bold text-[var(--color-text-primary)] hover:text-indigo-400 transition-colors">
+                     {year}
+                   </button>
+                   <button type="button" onClick={(e) => { e.stopPropagation(); setCurrentMonth(new Date(year + 1, month, 1)); }} className="p-1 rounded-md hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"><ChevronDown size={14} className="-rotate-90" /></button>
+                 </div>
+                 <div className="grid grid-cols-3 gap-2 text-center">
+                   {shortMonthNames.map((m, i) => (
+                     <button 
+                       key={m} 
+                       type="button"
+                       onClick={(e) => handleSelectMonth(i, e)}
+                       className={`p-2 text-xs rounded-md flex items-center justify-center cursor-pointer transition-colors ${i === month ? 'bg-indigo-600 text-white font-bold' : 'text-[var(--color-text-secondary)] hover:bg-indigo-500/10 hover:text-indigo-400'}`}
+                     >
+                       {m}
+                     </button>
+                   ))}
+                 </div>
+              </>
+            )}
+
+            {view === "years" && (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                   <button type="button" onClick={(e) => { e.stopPropagation(); setCurrentMonth(new Date(startYear - 10, month, 1)); }} className="p-1 rounded-md hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"><ChevronDown size={14} className="rotate-90" /></button>
+                   <span className="text-xs font-bold text-[var(--color-text-primary)]">
+                     {startYear} - {startYear + 9}
+                   </span>
+                   <button type="button" onClick={(e) => { e.stopPropagation(); setCurrentMonth(new Date(startYear + 10, month, 1)); }} className="p-1 rounded-md hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"><ChevronDown size={14} className="-rotate-90" /></button>
+                 </div>
+                 <div className="grid grid-cols-3 gap-2 text-center">
+                   {years.map(y => (
+                     <button 
+                       key={y} 
+                       type="button"
+                       onClick={(e) => handleSelectYear(y, e)}
+                       className={`p-2 text-xs rounded-md flex items-center justify-center cursor-pointer transition-colors ${y === year ? 'bg-indigo-600 text-white font-bold' : y < startYear || y > startYear + 9 ? 'text-[var(--color-text-tertiary)] hover:bg-indigo-500/10 hover:text-indigo-400' : 'text-[var(--color-text-secondary)] hover:bg-indigo-500/10 hover:text-indigo-400'}`}
+                     >
+                       {y}
+                     </button>
+                   ))}
+                 </div>
+              </>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 
 // Reloj en vivo aislado: tiene su propio estado/intervalo para que el tick de
 // cada segundo re-renderice SOLO este componente y no todo el dashboard.
@@ -43,21 +451,75 @@ function LiveClock() {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+  const formattedTime = new Intl.DateTimeFormat('es-DO', {
+    timeZone: 'America/Santo_Domingo',
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }).format(currentTime);
+
+  const capitalizedTime = formattedTime.charAt(0).toUpperCase() + formattedTime.slice(1);
+
   return (
-    <div className="text-xs text-[var(--color-text-tertiary)] font-mono flex items-center gap-2 glass-panel border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-lg self-start">
+    <div className="text-xs text-[var(--color-text-secondary)] font-medium font-sans flex items-center gap-2 glass-panel border border-[var(--color-border-subtle)] px-3 py-1.5 rounded-lg self-start">
       <div className="w-2 h-2 rounded-full overflow-hidden bg-emerald-500 animate-[pulse_1.5s_infinite]" />
-      <span>
-        RD: {new Intl.DateTimeFormat('es-DO', {
-          timeZone: 'America/Santo_Domingo',
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-          hour12: true
-        }).format(currentTime)}
-      </span>
+      <span>{capitalizedTime}</span>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+      {/* Resumen IA Skeleton */}
+      <div className="p-5 rounded-[var(--radius-bento)] bg-[var(--color-surface-soft)]/50 border border-[var(--color-border-subtle)]/45 flex items-start gap-3">
+        <div className="w-8 h-8 rounded-lg bg-[var(--color-surface-hover)] shrink-0" />
+        <div className="flex-1 space-y-2 mt-1">
+          <div className="h-3 w-1/4 bg-[var(--color-surface-hover)] rounded" />
+          <div className="h-4 w-3/4 bg-[var(--color-surface-hover)] rounded" />
+        </div>
+      </div>
+
+      {/* Bento Layout Skeletons */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main large card */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="h-48 rounded-[var(--radius-bento)] bg-[var(--color-surface-soft)]/50 border border-[var(--color-border-subtle)]/45 p-6 space-y-4">
+            <div className="h-4 bg-[var(--color-surface-hover)] rounded w-1/3" />
+            <div className="h-8 bg-[var(--color-surface-hover)] rounded w-2/3" />
+            <div className="space-y-2">
+              <div className="h-3 bg-[var(--color-surface-hover)] rounded w-full" />
+              <div className="h-3 bg-[var(--color-surface-hover)] rounded w-5/6" />
+            </div>
+          </div>
+
+          <div className="h-32 rounded-[var(--radius-bento)] bg-[var(--color-surface-soft)]/50 border border-[var(--color-border-subtle)]/45 p-6 space-y-4">
+            <div className="h-4 bg-[var(--color-surface-hover)] rounded w-1/4" />
+            <div className="h-3 bg-[var(--color-surface-hover)] rounded w-full" />
+            <div className="h-3 bg-[var(--color-surface-hover)] rounded w-4/5" />
+          </div>
+        </div>
+
+        {/* Sidebar cards */}
+        <div className="space-y-8">
+          <div className="h-40 rounded-[var(--radius-bento)] bg-[var(--color-surface-soft)]/50 border border-[var(--color-border-subtle)]/45 p-6 space-y-4">
+            <div className="h-4 bg-[var(--color-surface-hover)] rounded w-1/2" />
+            <div className="h-3 bg-[var(--color-surface-hover)] rounded w-full" />
+            <div className="h-10 bg-[var(--color-surface-hover)] rounded w-full" />
+          </div>
+
+          <div className="h-40 rounded-[var(--radius-bento)] bg-[var(--color-surface-soft)]/50 border border-[var(--color-border-subtle)]/45 p-6 space-y-4">
+            <div className="h-4 bg-[var(--color-surface-hover)] rounded w-1/3" />
+            <div className="h-3 bg-[var(--color-surface-hover)] rounded w-full" />
+            <div className="h-3 bg-[var(--color-surface-hover)] rounded w-2/3" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -66,6 +528,7 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const { user, logout, token } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -76,6 +539,11 @@ export default function ClientDashboard() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "invoices" | "meetings" | "updates" | "admin-clients" | "admin-config">("overview");
+
+  // Scroll to top when changing tabs
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [activeTab]);
   const [deploys, setDeploys] = useState<any[]>([]);
   const [editVercelId, setEditVercelId] = useState("");
   const [generatedSecret, setGeneratedSecret] = useState("");
@@ -112,13 +580,76 @@ export default function ClientDashboard() {
 
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [firestoreArchivedTasks, setFirestoreArchivedTasks] = useState<any[]>([]);
+
+  // Custom Confirmation Dialog States
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    isDanger?: boolean;
+    confirmText?: string;
+    cancelText?: string;
+  }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+  });
+
+  const showConfirmation = (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    isDanger: boolean = true,
+    confirmText?: string,
+    cancelText?: string
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      message,
+      onConfirm: () => {
+        onConfirm();
+        setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
+      },
+      isDanger,
+      confirmText: confirmText || (language === "es" ? "Confirmar" : "Confirm"),
+      cancelText: cancelText || (language === "es" ? "Cancelar" : "Cancel"),
+    });
+  };
+
+  useEffect(() => {
+    let active = true;
+    const fetchArchivedFromFirestore = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, "archived_tasks"));
+        const archivedList: any[] = [];
+        querySnapshot.forEach((doc) => {
+          archivedList.push({ id: doc.id, ...doc.data() });
+        });
+        if (active) {
+          setFirestoreArchivedTasks(archivedList);
+        }
+      } catch (error) {
+        console.error("Error loading archived tasks from Firestore:", error);
+      }
+    };
+    fetchArchivedFromFirestore();
+    return () => { active = false; };
+  }, [refreshTrigger, data]);
 
   // Password Visibility State for client creation
   const [showRegPassword, setShowRegPassword] = useState(false);
 
   // Pagination States (5 items per page)
   const [tasksPage, setTasksPage] = useState(1);
+  const [archivedTasksPage, setArchivedTasksPage] = useState(1);
+  const [showArchivedTasks, setShowArchivedTasks] = useState(false);
   const [invoicesPage, setInvoicesPage] = useState(1);
+  const [selectedInvoiceFilterProject, setSelectedInvoiceFilterProject] = useState("all");
+  const [openInvoiceStatusDropdown, setOpenInvoiceStatusDropdown] = useState<string | null>(null);
   const [meetingsPage, setMeetingsPage] = useState(1);
   const [projectsPage, setProjectsPage] = useState(1);
   const itemsPerPage = 5;
@@ -158,6 +689,27 @@ export default function ClientDashboard() {
   const [newInvoiceAmount, setNewInvoiceAmount] = useState("");
   const [newInvoiceDesc, setNewInvoiceDesc] = useState("");
   const [aiLoadingInvoiceDesc, setAiLoadingInvoiceDesc] = useState(false);
+  const [dopExchangeRate, setDopExchangeRate] = useState<string>("59.35");
+  const [loadingDopRate, setLoadingDopRate] = useState(false);
+
+  const handleFetchDopRate = async () => {
+    setLoadingDopRate(true);
+    const minLoadTime = new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const res = await fetch("/api/exchange-rate/usd-dop");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.rate) {
+          setDopExchangeRate(Number(data.rate).toFixed(2));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      await minLoadTime;
+      setLoadingDopRate(false);
+    }
+  };
 
   // AI Progress form
   const [aiLoadingProgress, setAiLoadingProgress] = useState<string | null>(null);
@@ -168,13 +720,103 @@ export default function ClientDashboard() {
   const [newMeetTime, setNewMeetTime] = useState("");
   const [newMeetLink, setNewMeetLink] = useState("");
 
+  const [selectedClientProjectId, setSelectedClientProjectId] = useState<string | null>(null);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{role: "user"|"assistant", text: string}[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
+  const [mobileTabDropdownOpen, setMobileTabDropdownOpen] = useState(false);
+  const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>({});
+  const [deliverableFormOpen, setDeliverableFormOpen] = useState(false);
+  const [invoiceFormOpen, setInvoiceFormOpen] = useState(false);
+  const [meetingFormOpen, setMeetingFormOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+  const deliverableHeaderRef = useRef<HTMLButtonElement>(null);
+  const invoiceHeaderRef = useRef<HTMLButtonElement>(null);
+  const meetingHeaderRef = useRef<HTMLButtonElement>(null);
+  const invoiceDescRef = useRef<HTMLTextAreaElement>(null);
+  const mobileTabDropdownRef = useRef<HTMLDivElement | null>(null);
+  const mobileActionsDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: TouchEvent | MouseEvent) {
+      if (mobileTabDropdownOpen && mobileTabDropdownRef.current && !mobileTabDropdownRef.current.contains(event.target as Node)) {
+        setMobileTabDropdownOpen(false);
+      }
+      if (mobileActionsOpen && mobileActionsDropdownRef.current && !mobileActionsDropdownRef.current.contains(event.target as Node)) {
+        setMobileActionsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [mobileTabDropdownOpen, mobileActionsOpen]);
+
+  useEffect(() => {
+    if (invoiceDescRef.current) {
+      setTimeout(() => {
+        if (invoiceDescRef.current) {
+          invoiceDescRef.current.style.height = "auto";
+          invoiceDescRef.current.style.height = `${invoiceDescRef.current.scrollHeight}px`;
+        }
+      }, 100);
+    }
+  }, [newInvoiceDesc]);
+
+  const clientProject = !isAdmin && data?.projects && data.projects.length > 0
+    ? (data.projects.find((p: any) => p.id === selectedClientProjectId) || data.projects[0])
+    : null;
+
+  // Sync client selected project when data loads
+  useEffect(() => {
+    if (!isAdmin && data?.projects && data.projects.length > 0 && !selectedClientProjectId) {
+      setSelectedClientProjectId(data.projects[0].id);
+    }
+  }, [data, isAdmin, selectedClientProjectId]);
+
+  // Synchronize chat with localStorage for the active project
+  useEffect(() => {
+    if (clientProject?.id) {
+      const saved = localStorage.getItem(`portal_chat_${clientProject.id}`);
+      if (saved) {
+        try {
+          setChatMessages(JSON.parse(saved));
+        } catch (e) {
+          setChatMessages([]);
+        }
+      } else {
+        // Default welcoming message if no history exists yet
+        setChatMessages([
+          {
+            role: "assistant",
+            text: `¡Hola, ${user?.name || "cliente"}! Soy Atlas, tu asistente de IA en Polaris Web Studio. ¿En qué puedo ayudarte hoy con tu proyecto "${clientProject.name}"?`
+          }
+        ]);
+      }
+    }
+  }, [clientProject?.id]);
+
+  // Persist chat helper
+  const saveChatMessages = (messages: typeof chatMessages) => {
+    setChatMessages(messages);
+    if (clientProject?.id) {
+      localStorage.setItem(`portal_chat_${clientProject.id}`, JSON.stringify(messages));
+    }
+  };
+
+  // Automatically trigger summary regeneration when client project changes
+  useEffect(() => {
+    if (clientProject && !isAdmin) {
+      setAiSummary(null);
+      generateClientSummary(clientProject);
+    }
+  }, [clientProject?.id, isAdmin]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -186,8 +828,6 @@ export default function ClientDashboard() {
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null);
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
-
-  const isAdmin = user?.role === "admin";
 
   // Auto-hide notifications
   useEffect(() => {
@@ -226,15 +866,21 @@ export default function ClientDashboard() {
       })
       .then((resData) => {
         if (!active) return;
+        
+        // Filter void invoices for non-admins
+        if (!isAdmin && resData.invoices) {
+          resData.invoices = resData.invoices.filter(i => i.status !== "void");
+        }
+        
         setData(resData);
         // Default select first project for admin tasks
         if (resData.projects && resData.projects.length > 0) {
           setSelectedProjectId((prev) => prev || resData.projects[0].id);
+          if (!isAdmin) {
+            setSelectedClientProjectId((prev) => prev || resData.projects[0].id);
+          }
         }
         setLoading(false);
-        if (resData.projects && resData.projects.length > 0 && !isAdmin) {
-          generateClientSummary(resData.projects[0]);
-        }
       })
       .catch((err) => {
         if (!active || err?.message === "session-expired") return;
@@ -344,7 +990,7 @@ export default function ClientDashboard() {
     return data.text || JSON.stringify(data);
   };
 
-  const askAIFrontend = async (prompt: string): Promise<string> => {
+  const askAIFrontend = async (payload: { prompt?: string; projectId?: string; message?: string; action?: string }): Promise<string> => {
     // Todas las llamadas de IA pasan por el servidor, que custodia las API keys
     // (Gemini + Grok). Nunca se expone ninguna clave en el bundle del cliente.
     const res = await fetch("/api/ai/chat", {
@@ -353,7 +999,7 @@ export default function ClientDashboard() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify(payload),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error de IA");
@@ -362,27 +1008,13 @@ export default function ClientDashboard() {
   };
 
   const generateClientSummary = async (project: any) => {
-    if (isAdmin || !project || aiSummary) return;
+    if (isAdmin || !project) return;
     setAiSummaryLoading(true);
     try {
-      const approved = data?.tasks.filter((t: any) => t.projectId === project.id && t.status === "approved").length || 0;
-      const pending = data?.tasks.filter((t: any) => t.projectId === project.id && t.status === "pending").length || 0;
-      const pendingInvoices = data?.invoices.filter((i: any) => i.projectId === project.id && i.status === "pending").length || 0;
-      const completedPhases = project.phases.filter((p: any) => p.status === "completed").length;
-      const totalPhases = project.phases.length;
-      const remainingPhases = totalPhases - completedPhases;
-  
-      const weeksEstimate = remainingPhases <= 0 ? 0 : remainingPhases * 2;
-  
-      const text = await askAIFrontend(
-        `Eres el asistente amigable de Polaris Web Studio. Escribe un resumen breve en español 
-         (máximo 2 oraciones, tono cercano y positivo, tutéalo) para el cliente dueño del proyecto 
-         "${project.name}" que está al ${project.progress}% en la fase "${project.currentPhase}".
-         Tiene ${approved} entregables aprobados${pending > 0 ? `, ${pending} pendiente(s) de revisar` : ""
-         }${pendingInvoices > 0 ? ` y ${pendingInvoices} factura(s) por pagar` : ""}.
-         ${weeksEstimate > 0 ? `Estima que faltan aproximadamente ${weeksEstimate} semanas para completar.` : "El proyecto está casi terminado."}
-         Sé específico con los datos, no genérico.`
-      );
+      const text = await askAIFrontend({
+        projectId: project.id,
+        action: "summary"
+      });
       setAiSummary(text);
     } catch (e) {
       setAiSummary(null);
@@ -473,46 +1105,56 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!window.confirm("¿Seguro que deseas eliminar este proyecto? Pasará a la papelera por 30 días.")) return;
-    try {
-      const response = await fetch(`/api/portal/projects/${projectId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (response.ok) {
-        setRefreshTrigger((prev) => prev + 1);
-      } else {
-        const errorText = await response.text();
-        console.error("Delete project failed:", response.status, errorText);
-        alert(`Error: ${errorText}`);
+    const title = language === "es" ? "¿Eliminar Proyecto?" : "Delete Project?";
+    const msg = language === "es"
+      ? "¿Seguro que deseas eliminar este proyecto? Pasará a la papelera por 30 días."
+      : "Are you sure you want to delete this project? It will go to the Recycle Bin for 30 days.";
+    showConfirmation(title, msg, async () => {
+      try {
+        const response = await fetch(`/api/portal/projects/${projectId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          setRefreshTrigger((prev) => prev + 1);
+        } else {
+          const errorText = await response.text();
+          console.error("Delete project failed:", response.status, errorText);
+          setErrorMsg(`Error: ${errorText}`);
+        }
+      } catch (err) {
+        console.error(err);
+        setErrorMsg(`Error: ${err}`);
       }
-    } catch (err) {
-      console.error(err);
-      alert(`Error: ${err}`);
-    }
+    });
   };
 
   // 2. Delete Client Account
   const handleDeleteClient = async (clientId: string) => {
-    if (!window.confirm("¿Seguro que deseas eliminar esta cuenta y proyecto? Pasará a la papelera por 30 días, en donde luego se borrará permanentemente.")) return;
-    console.log("Delete client clicked for ID:", clientId);
-    try {
-      const response = await fetch(`/api/portal/clients/${clientId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      console.log("Delete client response:", response.status);
-      if (response.ok) {
-        setRefreshTrigger((prev) => prev + 1);
-      } else {
-        const errorText = await response.text();
-        console.error("Delete client failed:", response.status, errorText);
-        alert(`Error: ${errorText}`);
+    const title = language === "es" ? "¿Eliminar Cuenta?" : "Delete Account?";
+    const msg = language === "es"
+      ? "¿Seguro que deseas eliminar esta cuenta y proyecto? Pasará a la papelera por 30 días, en donde luego se borrará permanentemente."
+      : "Are you sure you want to delete this account and project? It will go to the Recycle Bin for 30 days, after which it will be permanently deleted.";
+    showConfirmation(title, msg, async () => {
+      console.log("Delete client clicked for ID:", clientId);
+      try {
+        const response = await fetch(`/api/portal/clients/${clientId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log("Delete client response:", response.status);
+        if (response.ok) {
+          setRefreshTrigger((prev) => prev + 1);
+        } else {
+          const errorText = await response.text();
+          console.error("Delete client failed:", response.status, errorText);
+          setErrorMsg(`Error: ${errorText}`);
+        }
+      } catch (err) {
+        console.error(err);
+        setErrorMsg(`Error: ${err}`);
       }
-    } catch (err) {
-      console.error(err);
-      alert(`Error: ${err}`);
-    }
+    });
   };
 
   const handleRestoreClient = async (clientId: string) => {
@@ -564,26 +1206,54 @@ export default function ClientDashboard() {
     }
   };
 
-  // Toggle active phase item
+  // Toggle active phase item with linear sequential behavior (much simpler and intuitive)
   const togglePhaseStatus = (project: any, phaseIndex: number) => {
-    const updatedPhases = [...project.phases];
-    const currentStatus = updatedPhases[phaseIndex].status;
-    let nextStatus: "pending" | "active" | "completed" = "pending";
-    if (currentStatus === "pending") nextStatus = "active";
-    else if (currentStatus === "active") nextStatus = "completed";
-    else nextStatus = "pending";
+    const updatedPhases = project.phases.map((ph: any) => ({ ...ph }));
+    const clickedPhase = updatedPhases[phaseIndex];
+    const currentStatus = clickedPhase.status;
 
-    updatedPhases[phaseIndex].status = nextStatus;
+    let nextStatus: "pending" | "active" | "completed" = "active";
+
+    if (currentStatus === "pending") {
+      // If it was pending, it becomes the active phase (In Progress)
+      nextStatus = "active";
+      // Auto-complete all previous phases
+      for (let i = 0; i < phaseIndex; i++) {
+        updatedPhases[i].status = "completed";
+      }
+      updatedPhases[phaseIndex].status = "active";
+      // Mark all subsequent phases as pending
+      for (let i = phaseIndex + 1; i < updatedPhases.length; i++) {
+        updatedPhases[i].status = "pending";
+      }
+    } else if (currentStatus === "active") {
+      // If it was already active, clicking it marks it as completed (Listo)
+      nextStatus = "completed";
+      for (let i = 0; i <= phaseIndex; i++) {
+        updatedPhases[i].status = "completed";
+      }
+      for (let i = phaseIndex + 1; i < updatedPhases.length; i++) {
+        updatedPhases[i].status = "pending";
+      }
+    } else {
+      // If it was completed, clicking it rolls back to make it the active phase
+      nextStatus = "active";
+      for (let i = 0; i < phaseIndex; i++) {
+        updatedPhases[i].status = "completed";
+      }
+      updatedPhases[phaseIndex].status = "active";
+      for (let i = phaseIndex + 1; i < updatedPhases.length; i++) {
+        updatedPhases[i].status = "pending";
+      }
+    }
 
     // Auto set current active phase description text
-    const activePhase = updatedPhases.find(p => p.status === "active") || updatedPhases[updatedPhases.length - 1];
+    const activePhase = updatedPhases.find((p: any) => p.status === "active") || updatedPhases[updatedPhases.length - 1];
 
-    // El progreso se deriva del avance real de las fases: cada fase completada
-    // cuenta como 1 y la fase activa como media fase. Así marcar la fase 1 como
-    // "completada" en un proyecto de N fases ya no salta al 100%.
+    // Compute progress percentage: each completed phase counts as 1, active phase counts as 0.5.
     const total = updatedPhases.length || 1;
-    const completedCount = updatedPhases.filter(p => p.status === "completed").length;
-    const hasActive = updatedPhases.some(p => p.status === "active");
+    const completedCount = updatedPhases.filter((p: any) => p.status === "completed").length;
+    const hasActive = updatedPhases.some((p: any) => p.status === "active");
     const nextProgress = Math.min(
       100,
       Math.round(((completedCount + (hasActive ? 0.5 : 0)) / total) * 100)
@@ -620,8 +1290,12 @@ export default function ClientDashboard() {
         setNewTaskTitle("");
         setNewTaskDesc("");
         setNewTaskLink("");
+        setDeliverableFormOpen(false);
         setRefreshTrigger((prev) => prev + 1);
         setSuccessMsg(language === "es" ? "¡Entregable creado con éxito y notificado!" : "Deliverable created successfully and notified!");
+        setTimeout(() => {
+          deliverableHeaderRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 100);
       }
     } catch (err) {
       console.error(err);
@@ -629,12 +1303,67 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteTask = async (taskId: string) => {
-    if (!window.confirm("¿Eliminar este entregable?")) return;
+    const title = language === "es" ? "¿Eliminar Entregable?" : "Delete Deliverable?";
+    const msg = language === "es" 
+      ? "¿Seguro que deseas eliminar este entregable permanentemente? Se eliminará de la base de datos y del historial de Firestore." 
+      : "Are you sure you want to permanently delete this deliverable? It will be removed from the database and Firestore archives.";
+    showConfirmation(title, msg, async () => {
+      try {
+        await fetch(`/api/portal/tasks/${taskId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // Eliminar de Firestore
+        try {
+          const docRef = doc(db, "archived_tasks", taskId);
+          await deleteDoc(docRef);
+        } catch (firestoreErr) {
+          console.error("Firestore Error in deleting task:", firestoreErr);
+        }
+
+        setRefreshTrigger((prev) => prev + 1);
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  };
+
+  const handleArchiveTask = async (taskId: string, archived: boolean) => {
     try {
-      await fetch(`/api/portal/tasks/${taskId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+      await fetch(`/api/portal/tasks/${taskId}/archive`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ archived }),
       });
+
+      // Guardar en Firestore
+      try {
+        const docRef = doc(db, "archived_tasks", taskId);
+        if (archived) {
+          const taskToArchive = data?.tasks?.find((t: any) => t.id === taskId);
+          if (taskToArchive) {
+            await setDoc(docRef, {
+              id: taskToArchive.id,
+              projectId: taskToArchive.projectId,
+              title: taskToArchive.title,
+              description: taskToArchive.description || "",
+              status: taskToArchive.status,
+              archived: true,
+              archivedAt: new Date().toISOString()
+            });
+          }
+        } else {
+          await deleteDoc(docRef);
+        }
+      } catch (firestoreErr) {
+        console.error("Firestore Error in archiving task:", firestoreErr);
+        handleFirestoreError(firestoreErr, OperationType.WRITE, `archived_tasks/${taskId}`);
+      }
+
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       console.error(err);
@@ -671,24 +1400,15 @@ export default function ClientDashboard() {
     }
   };
 
-  const handleToggleInvoicePaid = async (invoiceId: string) => {
+  const handleUpdateInvoiceStatus = async (invoiceId: string, status: string) => {
     try {
-      await fetch(`/api/portal/invoices/${invoiceId}/toggle-pay`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeleteInvoice = async (invoiceId: string) => {
-    if (!window.confirm("¿Eliminar esta factura?")) return;
-    try {
-      await fetch(`/api/portal/invoices/${invoiceId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+      await fetch(`/api/portal/invoices/${invoiceId}/status`, {
+        method: "PUT",
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
       });
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
@@ -730,16 +1450,19 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteMeeting = async (meetingId: string) => {
-    if (!window.confirm("¿Eliminar esta reunión de la agenda?")) return;
-    try {
-      await fetch(`/api/portal/meetings/${meetingId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRefreshTrigger((prev) => prev + 1);
-    } catch (err) {
-      console.error(err);
-    }
+    const title = language === "es" ? "¿Eliminar Reunión?" : "Delete Meeting?";
+    const msg = language === "es" ? "¿Eliminar esta reunión de la agenda?" : "Delete this meeting from the schedule?";
+    showConfirmation(title, msg, async () => {
+      try {
+        await fetch(`/api/portal/meetings/${meetingId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setRefreshTrigger((prev) => prev + 1);
+      } catch (err) {
+        console.error(err);
+      }
+    });
   };
 
   // ----------------------------------------------------
@@ -781,11 +1504,11 @@ export default function ClientDashboard() {
     return new Intl.NumberFormat("es-US", { style: "currency", currency: "USD" }).format(amount);
   };
 
-  if (!user || loading) {
+  if (!user) {
     return (
       <div className="fixed inset-0 bg-[var(--color-surface-base)] flex flex-col items-center justify-center gap-4 z-50">
         <div className="w-12 h-12 rounded-full border-2 border-[var(--color-primary-base)] border-t-transparent animate-spin" />
-        <p className="text-xs text-[var(--color-text-secondary)] font-mono tracking-wider">
+        <p className="text-xs text-[var(--color-text-secondary)] font-medium tracking-wider">
           <T en="Loading your workspace...">Cargando tu área de trabajo por favor espera...</T>
         </p>
       </div>
@@ -812,7 +1535,7 @@ export default function ClientDashboard() {
           .invoice-meta { text-align: right; }
           .invoice-num { font-size: 20px; font-weight: 900; color: #6366f1; }
           .invoice-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-          .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; background: ${inv.status === "paid" ? "#dcfce7" : "#fef9c3"}; color: ${inv.status === "paid" ? "#15803d" : "#854d0e"}; }
+          .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; background: ${inv.status === "paid" ? "#dcfce7" : inv.status === "void" ? "#fee2e2" : "#fef9c3"}; color: ${inv.status === "paid" ? "#15803d" : inv.status === "void" ? "#b91c1c" : "#854d0e"}; }
           .section { margin-bottom: 32px; }
           .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 12px; }
           .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -836,7 +1559,7 @@ export default function ClientDashboard() {
           <div class="invoice-meta">
             <div class="invoice-label">Número de Factura</div>
             <div class="invoice-num">${inv.invoiceNumber}</div>
-            <div class="status-badge">${inv.status === "paid" ? "Pagada" : "Pendiente"}</div>
+            <div class="status-badge">${inv.status === "paid" ? "Pagada" : inv.status === "void" ? "Invalidada" : "Pendiente"}</div>
           </div>
         </div>
   
@@ -884,8 +1607,6 @@ export default function ClientDashboard() {
     printWindow.document.close();
   };
 
-  const clientProject = !isAdmin && data?.projects && data.projects.length > 0 ? data.projects[0] : null;
-
   return (
     <div className="min-h-dvh bg-[var(--color-surface-base)] flex flex-col md:flex-row">
       
@@ -930,8 +1651,191 @@ export default function ClientDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Sidebar navigation */}
-      <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-[var(--color-border-subtle)] glass-panel p-6 flex flex-col gap-8 shrink-0 justify-between">
+      {/* Mobile Navigation Header */}
+      <aside className="block md:hidden border-b border-[var(--color-border-subtle)] glass-panel p-4 sticky top-0 z-40">
+        <div className="flex items-center justify-between">
+          <Logo size={28} showText={true} />
+          <div className="flex items-center gap-2">
+            <div className={`px-2 py-0.5 flex items-center gap-1 rounded-full text-[9px] uppercase font-black tracking-widest ${
+              isAdmin 
+                ? "bg-indigo-500/10 text-indigo-400" 
+                : "bg-emerald-500/10 text-emerald-400"
+            }`}>
+              <div className={`w-1 h-1 rounded-full ${isAdmin ? "bg-indigo-400 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
+              {isAdmin ? "ADMIN" : <T en="Client">Cliente</T>}
+            </div>
+          </div>
+        </div>
+
+        {/* Dropdown Selector for Active View */}
+        <div className="mt-4 flex gap-2">
+          <div className="relative flex-1" ref={mobileTabDropdownRef}>
+            {/* Custom styled select button */}
+            <button
+              onClick={() => setMobileTabDropdownOpen(!mobileTabDropdownOpen)}
+              className="w-full bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-2.5 flex items-center justify-between text-sm font-bold text-[var(--color-text-primary)] cursor-pointer hover:bg-[var(--color-surface-hover)] transition-all select-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            >
+              <div className="flex items-center gap-2.5">
+                {activeTab === "overview" && <Clock size={16} className="text-[var(--color-primary-base)]" />}
+                {activeTab === "tasks" && <CheckCircle2 size={16} className="text-emerald-400" />}
+                {activeTab === "invoices" && <FileText size={16} className="text-indigo-400" />}
+                {activeTab === "meetings" && <Calendar size={16} className="text-pink-400" />}
+                {activeTab === "updates" && <RefreshCw size={14} className="text-cyan-400 animate-spin-slow" />}
+                {activeTab === "admin-clients" && <UserPlus size={16} className="text-indigo-400" />}
+                {activeTab === "admin-config" && <Settings size={16} className="text-indigo-400" />}
+
+                <span>
+                  {activeTab === "overview" && "Resumen de Avances"}
+                  {activeTab === "tasks" && "Entregables y Aprobación"}
+                  {activeTab === "invoices" && "Facturación y Pagos"}
+                  {activeTab === "meetings" && "Agenda de Reuniones"}
+                  {activeTab === "updates" && "Actualizaciones"}
+                  {activeTab === "admin-clients" && "Registrar Nuevos Clientes"}
+                  {activeTab === "admin-config" && "Configuración"}
+                </span>
+
+                {activeTab === "tasks" && data?.tasks.filter((t) => t.status === "pending").length > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                )}
+                {activeTab === "invoices" && data?.invoices.filter((i) => i.status === "pending").length > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                )}
+              </div>
+              <ChevronDown size={16} className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${mobileTabDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Custom Dropdown Options Overlay */}
+            <AnimatePresence>
+              {mobileTabDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute left-0 right-0 mt-2 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-xl shadow-xl py-1 z-50 overflow-hidden max-h-[80vh] overflow-y-auto"
+                >
+                  {[
+                    { id: "overview", label: "Resumen de Avances", icon: Clock, iconColor: "text-[var(--color-primary-base)]" },
+                    { 
+                      id: "tasks", 
+                      label: "Entregables y Aprobación", 
+                      icon: CheckCircle2, 
+                      iconColor: "text-emerald-400",
+                      badge: data?.tasks.filter((t) => t.status === "pending").length || null
+                    },
+                    { 
+                      id: "invoices", 
+                      label: "Facturación y Pagos", 
+                      icon: FileText, 
+                      iconColor: "text-indigo-400",
+                      dot: data?.invoices.filter((i) => i.status === "pending").length > 0
+                    },
+                    { id: "meetings", label: "Agenda de Reuniones", icon: Calendar, iconColor: "text-pink-400" },
+                    { id: "updates", label: "Actualizaciones", icon: RefreshCw, iconColor: "text-cyan-400" },
+                    ...(isAdmin ? [
+                      { id: "admin-clients", label: "Registrar Nuevos Clientes", icon: UserPlus, iconColor: "text-indigo-400" },
+                      { id: "admin-config", label: "Configuración", icon: Settings, iconColor: "text-indigo-400" }
+                    ] : [])
+                  ].map((tab) => {
+                    const IconComponent = tab.icon;
+                    const isSelected = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id);
+                          setMobileTabDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-all text-left ${
+                          isSelected
+                            ? "bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] border-l-4 border-[var(--color-primary-base)] pl-3"
+                            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] border-l-4 border-transparent"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <IconComponent size={16} className={tab.iconColor} />
+                          <span>{tab.label}</span>
+                        </div>
+
+                        {tab.badge && (
+                          <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full leading-none flex items-center justify-center min-w-[18px] h-[18px]">
+                            {tab.badge}
+                          </span>
+                        )}
+                        {tab.dot && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Quick Action Popover Button */}
+          <div className="relative" ref={mobileActionsDropdownRef}>
+            <button
+              onClick={() => setMobileActionsOpen(!mobileActionsOpen)}
+              className="h-full bg-[var(--color-surface-highlight)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-2.5 text-sm font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Settings size={16} />
+            </button>
+
+            {mobileActionsOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-xl shadow-xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-3 py-2 border-b border-[var(--color-border-subtle)]/50 mb-1">
+                    <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-black tracking-wider leading-none">
+                      {isAdmin ? "Operador" : "Empresa"}
+                    </p>
+                    <p className="font-bold text-xs text-[var(--color-text-primary)] truncate mt-1">
+                      {user.name}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setMobileActionsOpen(false);
+                      handleRefresh();
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] transition-all text-left"
+                  >
+                    <RefreshCw size={12} />
+                    Sincronizar Panel
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setMobileActionsOpen(false);
+                      setPasswordChangeError(null);
+                      setPasswordChangeSuccess(null);
+                      setNewPasswordValue("");
+                      setShowPasswordModal(true);
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-xs text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] transition-all text-left"
+                  >
+                    <Lock size={12} />
+                    Cambiar Contraseña
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setMobileActionsOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2 text-xs text-red-500 hover:bg-red-500/10 transition-all text-left"
+                  >
+                    <LogOut size={12} />
+                    Cerrar Sesión
+                  </button>
+                </div>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Sidebar navigation (Desktop only) */}
+      <aside className="hidden md:flex w-64 border-r border-[var(--color-border-subtle)] glass-panel p-6 flex-col gap-8 shrink-0 justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <Logo size={32} showText={true} />
@@ -941,7 +1845,7 @@ export default function ClientDashboard() {
                 : "bg-emerald-500/10 text-emerald-400"
             }`}>
               <div className={`w-1.5 h-1.5 rounded-full ${isAdmin ? "bg-indigo-400 animate-pulse" : "bg-emerald-500 animate-pulse"}`} />
-              {isAdmin ? "PM / Admin" : <T en="Client">Cliente</T>}
+              {isAdmin ? "ADMIN" : <T en="Client">Cliente</T>}
             </div>
           </div>
 
@@ -1059,7 +1963,7 @@ export default function ClientDashboard() {
         <div className="pt-6 border-t border-[var(--color-border-subtle)]/30 space-y-3">
           <button
             onClick={handleRefresh}
-            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-mono transition-all border border-[var(--color-border-subtle)]/40 hover:border-[var(--color-border-subtle)] cursor-pointer"
+            className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] text-xs font-bold transition-all border border-[var(--color-border-subtle)]/40 hover:border-[var(--color-border-subtle)] cursor-pointer"
           >
             <RefreshCw size={12} className="animate-hover-spin" />
             <T en="Refresh Hub">Sincronizar Panel</T>
@@ -1098,9 +2002,26 @@ export default function ClientDashboard() {
               {isAdmin ? (
                 <T en="Elite Project Operations">Panel de Control</T>
               ) : (
-                <>
-                  <T en="Your Project">Tu Proyecto</T>
-                </>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <span><T en="Your Project">Tu Proyecto</T></span>
+                  {data?.projects && data.projects.length > 1 ? (
+                    <CustomSelect
+                      options={data.projects.map((p: any) => ({
+                        id: p.id,
+                        label: p.name
+                      }))}
+                      value={selectedClientProjectId || ""}
+                      onChange={(val) => {
+                        setSelectedClientProjectId(val);
+                        setAiSummary(null);
+                      }}
+                      className="inline-block min-w-[200px]"
+                      buttonClassName="font-sans font-bold bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-xl px-4 py-1.5 pr-10 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-base md:text-sm text-[var(--color-text-primary)] cursor-pointer hover:bg-[var(--color-surface-hover)] transition-all flex items-center justify-between text-left"
+                    />
+                  ) : (
+                    <span className="text-indigo-400 font-bold">: {clientProject?.name || "Cargando..."}</span>
+                  )}
+                </div>
               )}
             </h1>
             <p className="text-[var(--color-text-secondary)] text-sm">
@@ -1122,10 +2043,7 @@ export default function ClientDashboard() {
 
         {/* LOADING STATE */}
         {loading && (
-          <div className="py-20 flex flex-col items-center justify-center gap-3">
-            <div className="w-10 h-10 border-2 border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-            <p className="text-xs font-mono text-[var(--color-text-tertiary)]">Sincronizando estado...</p>
-          </div>
+          <DashboardSkeleton />
         )}
 
         {/* RENDER ACTIVE VIEWS */}
@@ -1145,7 +2063,7 @@ export default function ClientDashboard() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-indigo-500/25 will-change-transform transition-all">
                         <div className="flex justify-between items-center text-[var(--color-text-tertiary)]">
-                          <span className="text-[10px] font-black uppercase tracking-widest font-mono">Clientes Totales</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">Clientes Totales</span>
                           <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400">
                             <Users size={16} />
                           </div>
@@ -1158,7 +2076,7 @@ export default function ClientDashboard() {
 
                       <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-amber-500/25 will-change-transform transition-all">
                         <div className="flex justify-between items-center text-[var(--color-text-tertiary)]">
-                          <span className="text-[10px] font-black uppercase tracking-widest font-mono">Balances Pendientes</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">Balances Pendientes</span>
                           <div className="p-2 rounded-lg bg-amber-500/10 text-amber-500">
                             <DollarSign size={16} />
                           </div>
@@ -1175,7 +2093,7 @@ export default function ClientDashboard() {
 
                       <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-3 bento-glow shadow-sm transition-all hover:border-emerald-500/25 will-change-transform transition-all">
                         <div className="flex justify-between items-center text-[var(--color-text-tertiary)]">
-                          <span className="text-[10px] font-black uppercase tracking-widest font-mono">Aprobaciones Pendientes</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest">Aprobaciones Pendientes</span>
                           <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
                             <CheckCircle2 size={16} />
                           </div>
@@ -1206,14 +2124,19 @@ export default function ClientDashboard() {
                       <div className="grid grid-cols-1 gap-6">
                         {data.projects.slice((projectsPage - 1) * itemsPerPage, projectsPage * itemsPerPage).map((project) => {
                           const clientUser = data.clients?.find(u => u.id === project.clientUserId);
+                          const isExpanded = !!expandedProjects[project.id];
                           return (
                             <div
                               key={project.id}
-                              className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-6 hover:border-indigo-500/20 transition-all bento-glow shadow-sm will-change-transform transition-all"
+                              className="rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] overflow-hidden hover:border-indigo-500/20 transition-all bento-glow shadow-sm"
                             >
-                              <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                              {/* Header del proyecto (Siempre Visible) */}
+                              <div
+                                onClick={() => setExpandedProjects(prev => ({ ...prev, [project.id]: !prev[project.id] }))}
+                                className="p-6 flex flex-col md:flex-row justify-between md:items-center gap-4 cursor-pointer select-none bg-[var(--color-surface-base)]/40 hover:bg-[var(--color-surface-hover)] transition-all"
+                              >
                                 <div>
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex flex-wrap items-center gap-2">
                                     <h3 className="font-display font-black text-lg text-[var(--color-text-primary)]">
                                       {project.displayId ? `${project.displayId} - ` : ""}{project.name}
                                     </h3>
@@ -1221,274 +2144,330 @@ export default function ClientDashboard() {
                                       {clientUser?.companyName || "Empresa"}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-[var(--color-text-secondary)] mt-1">
-                                    <strong>Contacto / Email:</strong> {clientUser?.name} ({clientUser?.email})
+                                  <p className="text-xs text-[var(--color-text-secondary)] mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                                    <span><strong>Contacto:</strong> {clientUser?.name}</span>
+                                    <span className="text-[var(--color-border-subtle)]">•</span>
+                                    <span>{clientUser?.email}</span>
                                   </p>
+
+                                  {/* Quick progress stats badges */}
+                                  <div className="flex flex-wrap items-center gap-2 mt-3">
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 font-bold px-2 py-0.5 rounded uppercase tracking-wider">
+                                      Fase: {project.currentPhase}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1.5 text-[10px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded tracking-wider">
+                                      Progreso: {project.progress}%
+                                    </span>
+                                  </div>
                                 </div>
-                                <div className="text-right flex items-center gap-3">
-                                  
-                                  <button
-                                    onClick={() => handleDeleteProject(project.id)}
-                                    className="p-2 text-xs text-orange-400 hover:text-orange-300 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/15 hover:border-orange-500/30 rounded-lg transition-all flex items-center gap-1.5"
-                                    title="Remover Proyecto"
-                                  >
-                                    <Trash2 size={13} />
-                                    <span>Eliminar Proyecto</span>
-                                  </button>
 
-                                  <button
-                                    onClick={() => handleDeleteClient(project.clientUserId)}
-                                    className="p-2 text-xs text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 border border-red-500/15 hover:border-red-500/30 rounded-lg transition-all flex items-center gap-1.5"
-                                    title="Remover Cliente"
-                                  >
-                                    <Trash2 size={13} />
-                                    <span>Eliminar Cuenta</span>
-                                  </button>
-                                </div>
-                              </div>
-
-                              <p className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-highlight)] p-3 rounded-lg border border-[var(--color-border-subtle)]/40">
-                                <strong>Descripción del Proyecto:</strong> {project.description}
-                              </p>
-
-                              {/* Progress bar and milestone controller */}
-                              <div className="space-y-4">
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center justify-between md:justify-end gap-3 border-t md:border-t-0 border-[var(--color-border-subtle)]/10 pt-3 md:pt-0">
                                   <button
                                     type="button"
-                                    disabled={!!aiLoadingProgress}
-                                    onClick={async () => {
-                                      setAiLoadingProgress(project.id);
-                                      try {
-                                        const approvedTasks = data.tasks.filter(
-                                          t => t.projectId === project.id && t.status === "approved"
-                                        ).length;
-                                        const pendingTasks = data.tasks.filter(
-                                          t => t.projectId === project.id && t.status === "pending"
-                                        ).length;
-                                        const suggestion = await callAI("/api/ai/suggest-progress", {
-                                          projectName: project.name,
-                                          currentPhase: project.currentPhase,
-                                          progress: project.progress,
-                                          approvedTasks,
-                                          pendingTasks,
-                                        });
-                                        const parsed = JSON.parse(suggestion);
-                                        const updatedPhases = project.phases.map((ph: any, i: number) => ({
-                                          ...ph,
-                                          status: i < parsed.phaseIndex ? "completed" 
-                                                 : i === parsed.phaseIndex ? "active" 
-                                                 : "pending"
-                                        }));
-                                        await handleUpdateProjectProgress(
-                                          project.id, 
-                                          parsed.suggestedProgress, 
-                                          parsed.suggestedPhase,
-                                          updatedPhases
-                                        );
-                                        setSuccessMsg(`IA sugirió: ${parsed.reason}`);
-                                      } catch (e) {
-                                        setErrorMsg("No se pudo calcular el avance con IA.");
-                                      } finally {
-                                        setAiLoadingProgress(null);
-                                      }
-                                    }}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black hover:bg-indigo-500/20 transition disabled:opacity-40 w-fit"
+                                    className="px-4 py-2 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all flex items-center gap-1.5 cursor-pointer"
                                   >
-                                    {aiLoadingProgress === project.id ? (
-                                      <div className="w-3 h-3 border border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                                    ) : "🤖"}
-                                    Auto-avanzar fase
+                                    <span>{isExpanded ? "Ocultar Detalles" : "Ver Detalles"}</span>
+                                    <ChevronDown size={14} className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                                   </button>
                                 </div>
-                                <div className="flex items-center justify-between text-xs font-bold font-mono">
-                                  <span className="text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 px-2 py-1 rounded">
-                                    {project.currentPhase}
-                                  </span>
-                                  <span className="text-[var(--color-text-primary)]">{project.progress}%</span>
-                                </div>
-
-                                <div className="h-2.5 w-full bg-[var(--color-surface-highlight)] rounded-full overflow-hidden border border-[var(--color-border-subtle)]/40 shadow-inner">
-                                  <div
-                                    className="h-full bg-gradient-to-r from-indigo-500 to-[var(--color-primary-base)] shadow-[0_0_10px_var(--color-primary-base)] transition-all duration-500"
-                                    style={{ width: `${project.progress}%` }}
-                                  />
-                                </div>
-
-                                {/* Checklist of Phases for clickable manual updates */}
-                                <div className="pt-2">
-                                  <p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)] mb-2">
-                                    Control del Ciclo de Vida (Haz clic para alternar estado de fase)
-                                  </p>
-                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {project.phases.map((phase: any, index: number) => (
-                                      <button
-                                        type="button"
-                                        key={phase.name}
-                                        onClick={() => togglePhaseStatus(project, index)}
-                                        className={`p-3.5 rounded-xl border text-left transition-all ${
-                                          phase.status === "completed"
-                                            ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-400"
-                                            : phase.status === "active"
-                                            ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-400 font-bold bento-glow shadow shadow-indigo-500/5"
-                                            : "bg-[var(--color-surface-highlight)] border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:border-white/25"
-                                        } cursor-pointer`}
-                                      >
-                                        <div className="flex justify-between items-center mb-1">
-                                          <span className="text-[10px] uppercase font-black font-mono tracking-widest">
-                                            {phase.status === "completed" ? "✔ Listo" : phase.status === "active" ? "⚡ En Curso" : "⏳ Pendiente"}
-                                          </span>
-                                        </div>
-                                        <p className="text-xs font-bold text-[var(--color-text-primary)] truncate">{phase.name}</p>
-                                        <p className="text-[10px] opacity-80 mt-1 line-clamp-1">{phase.detail}</p>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                {/* Configuración de Proyecto en Vercel */}
-                                <div className="pt-4 border-t border-[var(--color-border-subtle)]/20 mt-4 space-y-3">
-                                  <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
-                                    CONFIGURACIÓN DE DEPLOY CONTINUO
-                                  </h4>
-                                  <div className="flex flex-col sm:flex-row gap-3">
-                                    <div className="flex-1">
-                                      <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">ID del Proyecto (Nombre en GitHub/Vercel)</label>
-                                      <input 
-                                        type="text"
-                                        placeholder="ej: mi-proyecto-web"
-                                        key={`vercel-id-${project.id}-${project.vercelProjectId}`}
-                                        defaultValue={project.vercelProjectId || ""}
-                                        onBlur={(e) => {
-                                          const val = e.target.value.trim();
-                                          // Guardar automáticamente al salir de foco
-                                          fetch(`/api/portal/projects/${project.id}/vercel`, {
-                                            method: "PUT",
-                                            headers: {
-                                              "Content-Type": "application/json",
-                                              Authorization: `Bearer ${token}`
-                                            },
-                                            body: JSON.stringify({
-                                              vercelProjectId: val,
-                                              vercelUrl: project.vercelUrl || ""
-                                            })
-                                          })
-                                            .then(res => {
-                                              if (res.ok) {
-                                                setSuccessMsg("Configuración de Vercel actualizada");
-                                                handleRefresh();
-                                              }
-                                            });
-                                        }}
-                                        className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
-                                      />
-                                    </div>
-                                    <div className="flex-1">
-                                      <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">URL de Producción</label>
-                                      <input 
-                                        type="text"
-                                        placeholder="ej: https://mi-proyecto-web.vercel.app"
-                                        key={`vercel-url-${project.id}-${project.vercelUrl}`}
-                                        defaultValue={project.vercelUrl || ""}
-                                        onBlur={(e) => {
-                                          const val = e.target.value.trim();
-                                          // Guardar automáticamente al salir de foco
-                                          fetch(`/api/portal/projects/${project.id}/vercel`, {
-                                            method: "PUT",
-                                            headers: {
-                                              "Content-Type": "application/json",
-                                              Authorization: `Bearer ${token}`
-                                            },
-                                            body: JSON.stringify({
-                                              vercelProjectId: project.vercelProjectId || "",
-                                              vercelUrl: val
-                                            })
-                                          })
-                                            .then(res => {
-                                              if (res.ok) {
-                                                setSuccessMsg("Configuración de Vercel actualizada");
-                                                handleRefresh();
-                                              }
-                                            });
-                                        }}
-                                        className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* Registro manual de despliegues para administradores */}
-                                  <div className="pt-3 border-t border-[var(--color-border-subtle)]/10 mt-3 space-y-2">
-                                    <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">Registrar actualización manual (producción)</label>
-                                    <div className="flex gap-2">
-                                      <input 
-                                        type="text"
-                                        id={`manual-deploy-msg-${project.id}`}
-                                        placeholder="ej: Agregamos pasarela de pago y catálogo"
-                                        className="glass-input flex-1 px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none placeholder-zinc-500"
-                                        onKeyDown={(e) => {
-                                          if (e.key === "Enter") {
-                                            const inputEl = document.getElementById(`manual-deploy-msg-${project.id}`) as HTMLInputElement;
-                                            if (inputEl) {
-                                              const msg = inputEl.value.trim();
-                                              if (!msg) return;
-                                              fetch(`/api/portal/projects/${project.id}/deploys`, {
-                                                method: "POST",
-                                                headers: {
-                                                  "Content-Type": "application/json",
-                                                  Authorization: `Bearer ${token}`
-                                                },
-                                                body: JSON.stringify({ commitMessage: msg })
-                                              })
-                                                .then(res => {
-                                                  if (res.ok) {
-                                                    setSuccessMsg("¡Actualización manual registrada con éxito!");
-                                                    inputEl.value = "";
-                                                    handleRefresh();
-                                                  } else {
-                                                    setErrorMsg("Error al registrar actualización");
-                                                  }
-                                                });
-                                            }
-                                          }
-                                        }}
-                                      />
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const inputEl = document.getElementById(`manual-deploy-msg-${project.id}`) as HTMLInputElement;
-                                          if (inputEl) {
-                                            const msg = inputEl.value.trim();
-                                            if (!msg) return;
-                                            fetch(`/api/portal/projects/${project.id}/deploys`, {
-                                              method: "POST",
-                                              headers: {
-                                                "Content-Type": "application/json",
-                                                Authorization: `Bearer ${token}`
-                                              },
-                                              body: JSON.stringify({ commitMessage: msg })
-                                            })
-                                              .then(res => {
-                                                if (res.ok) {
-                                                  setSuccessMsg("¡Actualización manual registrada con éxito!");
-                                                  inputEl.value = "";
-                                                  handleRefresh();
-                                                } else {
-                                                  setErrorMsg("Error al registrar actualización");
-                                                }
-                                              });
-                                          }
-                                        }}
-                                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
-                                      >
-                                        Publicar
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* END CONFIGURACIÓN VERCEL */}
-                                </div>
-
                               </div>
+
+                              {/* Detalles del proyecto (Desplegables) */}
+                              <AnimatePresence initial={false}>
+                                {isExpanded && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                    className="border-t border-[var(--color-border-subtle)]/30 bg-[var(--color-surface-base)]/10"
+                                  >
+                                    <div className="p-6 space-y-6">
+                                      <p className="text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-highlight)] p-3 rounded-lg border border-[var(--color-border-subtle)]/40">
+                                        <strong>Descripción del Proyecto:</strong> {project.description}
+                                      </p>
+
+                                      {/* Progress bar and milestone controller */}
+                                      <div className="space-y-4">
+                                        <div className="flex items-center gap-3">
+                                          <button
+                                            type="button"
+                                            disabled={!!aiLoadingProgress}
+                                            onClick={async (e) => {
+                                              e.stopPropagation();
+                                              setAiLoadingProgress(project.id);
+                                              try {
+                                                const approvedTasks = data.tasks.filter(
+                                                  t => t.projectId === project.id && t.status === "approved"
+                                                ).length;
+                                                const pendingTasks = data.tasks.filter(
+                                                  t => t.projectId === project.id && t.status === "pending"
+                                                ).length;
+                                                const suggestion = await callAI("/api/ai/suggest-progress", {
+                                                  projectName: project.name,
+                                                  currentPhase: project.currentPhase,
+                                                  progress: project.progress,
+                                                  approvedTasks,
+                                                  pendingTasks,
+                                                });
+                                                const parsed = JSON.parse(suggestion);
+                                                const updatedPhases = project.phases.map((ph: any, i: number) => ({
+                                                  ...ph,
+                                                  status: i < parsed.phaseIndex ? "completed" 
+                                                         : i === parsed.phaseIndex ? "active" 
+                                                         : "pending"
+                                                }));
+                                                await handleUpdateProjectProgress(
+                                                  project.id, 
+                                                  parsed.suggestedProgress, 
+                                                  parsed.suggestedPhase,
+                                                  updatedPhases
+                                                );
+                                                setSuccessMsg(`IA sugirió: ${parsed.reason}`);
+                                              } catch (e) {
+                                                setErrorMsg("No se pudo calcular el avance con IA.");
+                                              } finally {
+                                                setAiLoadingProgress(null);
+                                              }
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-black hover:bg-indigo-500/20 transition disabled:opacity-40 w-fit cursor-pointer"
+                                          >
+                                            {aiLoadingProgress === project.id ? (
+                                              <div className="w-3 h-3 border border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                                            ) : "🤖"}
+                                            Auto-avanzar fase
+                                          </button>
+                                        </div>
+                                        <div className="flex items-center justify-between text-xs font-bold">
+                                          <span className="text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 px-2 py-1 rounded">
+                                            {project.currentPhase}
+                                          </span>
+                                          <span className="text-[var(--color-text-primary)]">{project.progress}%</span>
+                                        </div>
+
+                                        <div className="h-2.5 w-full bg-[var(--color-surface-highlight)] rounded-full overflow-hidden border border-[var(--color-border-subtle)]/40 shadow-inner">
+                                          <div
+                                            className="h-full bg-gradient-to-r from-indigo-500 to-[var(--color-primary-base)] shadow-[0_0_10px_var(--color-primary-base)] transition-all duration-500"
+                                            style={{ width: `${project.progress}%` }}
+                                          />
+                                        </div>
+
+                                        {/* Checklist of Phases for clickable manual updates */}
+                                        <div className="pt-2">
+                                          <div className="mb-2">
+                                            <p className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                                              Control Secuencial del Proyecto
+                                            </p>
+                                            <p className="text-[10px] text-[var(--color-text-secondary)] mt-0.5">
+                                              Haz clic en cualquier fase para establecerla como activa. El sistema marcará los pasos anteriores automáticamente como completados.
+                                            </p>
+                                          </div>
+                                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                            {project.phases.map((phase: any, index: number) => (
+                                              <button
+                                                type="button"
+                                                key={phase.name}
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  togglePhaseStatus(project, index);
+                                                }}
+                                                className={`p-3.5 rounded-xl border text-left transition-all ${
+                                                  phase.status === "completed"
+                                                    ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-400"
+                                                    : phase.status === "active"
+                                                    ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-400 font-bold bento-glow shadow shadow-indigo-500/5"
+                                                    : "bg-[var(--color-surface-highlight)] border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:border-white/25"
+                                                } cursor-pointer`}
+                                              >
+                                                <div className="flex justify-between items-center mb-1">
+                                                  <span className="text-[10px] uppercase font-black tracking-widest">
+                                                    {phase.status === "completed" ? "✔ Listo" : phase.status === "active" ? "⚡ En Curso" : "⏳ Pendiente"}
+                                                  </span>
+                                                </div>
+                                                <p className="text-xs font-bold text-[var(--color-text-primary)] truncate">{phase.name}</p>
+                                                <p className="text-[10px] opacity-80 mt-1 line-clamp-1">{phase.detail}</p>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        </div>
+
+                                        {/* Configuración de Proyecto en Vercel */}
+                                        <div className="pt-4 border-t border-[var(--color-border-subtle)]/20 mt-4 space-y-3">
+                                          <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                                            CONFIGURACIÓN DE DEPLOY CONTINUO
+                                          </h4>
+                                          <div className="flex flex-col sm:flex-row gap-3">
+                                            <div className="flex-1">
+                                              <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">ID del Proyecto (Nombre en GitHub/Vercel)</label>
+                                              <input 
+                                                type="text"
+                                                placeholder="ej: mi-proyecto-web"
+                                                key={`vercel-id-${project.id}-${project.vercelProjectId}`}
+                                                defaultValue={project.vercelProjectId || ""}
+                                                onBlur={(e) => {
+                                                  const val = e.target.value.trim();
+                                                  // Guardar automáticamente al salir de foco
+                                                  fetch(`/api/portal/projects/${project.id}/vercel`, {
+                                                    method: "PUT",
+                                                    headers: {
+                                                      "Content-Type": "application/json",
+                                                      Authorization: `Bearer ${token}`
+                                                    },
+                                                    body: JSON.stringify({
+                                                      vercelProjectId: val,
+                                                      vercelUrl: project.vercelUrl || ""
+                                                    })
+                                                  })
+                                                    .then(res => {
+                                                      if (res.ok) {
+                                                        setSuccessMsg("Configuración de Vercel actualizada");
+                                                        handleRefresh();
+                                                      }
+                                                    });
+                                                }}
+                                                className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
+                                              />
+                                            </div>
+                                            <div className="flex-1">
+                                              <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">URL de Producción</label>
+                                              <input 
+                                                type="text"
+                                                placeholder="ej: https://mi-proyecto-web.vercel.app"
+                                                key={`vercel-url-${project.id}-${project.vercelUrl}`}
+                                                defaultValue={project.vercelUrl || ""}
+                                                onBlur={(e) => {
+                                                  const val = e.target.value.trim();
+                                                  // Guardar automáticamente al salir de foco
+                                                  fetch(`/api/portal/projects/${project.id}/vercel`, {
+                                                    method: "PUT",
+                                                    headers: {
+                                                      "Content-Type": "application/json",
+                                                      Authorization: `Bearer ${token}`
+                                                    },
+                                                    body: JSON.stringify({
+                                                      vercelProjectId: project.vercelProjectId || "",
+                                                      vercelUrl: val
+                                                    })
+                                                  })
+                                                    .then(res => {
+                                                      if (res.ok) {
+                                                        setSuccessMsg("Configuración de Vercel actualizada");
+                                                        handleRefresh();
+                                                      }
+                                                    });
+                                                }}
+                                                className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
+                                              />
+                                            </div>
+                                          </div>
+
+                                          {/* Registro manual de despliegues para administradores */}
+                                          <div className="pt-3 border-t border-[var(--color-border-subtle)]/10 mt-3 space-y-2">
+                                            <label className="block text-[10px] text-zinc-400 font-bold mb-1 uppercase">Registrar actualización manual (producción)</label>
+                                            <div className="flex gap-2">
+                                              <input 
+                                                type="text"
+                                                id={`manual-deploy-msg-${project.id}`}
+                                                placeholder="ej: Agregamos pasarela de pago y catálogo"
+                                                className="glass-input flex-1 px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none placeholder-zinc-500"
+                                                onKeyDown={(e) => {
+                                                  if (e.key === "Enter") {
+                                                    const inputEl = document.getElementById(`manual-deploy-msg-${project.id}`) as HTMLInputElement;
+                                                    if (inputEl) {
+                                                      const msg = inputEl.value.trim();
+                                                      if (!msg) return;
+                                                      fetch(`/api/portal/projects/${project.id}/deploys`, {
+                                                        method: "POST",
+                                                        headers: {
+                                                          "Content-Type": "application/json",
+                                                          Authorization: `Bearer ${token}`
+                                                        },
+                                                        body: JSON.stringify({ commitMessage: msg })
+                                                      })
+                                                        .then(res => {
+                                                          if (res.ok) {
+                                                            setSuccessMsg("¡Actualización manual registrada con éxito!");
+                                                            inputEl.value = "";
+                                                            handleRefresh();
+                                                          } else {
+                                                            setErrorMsg("Error al registrar actualización");
+                                                          }
+                                                        });
+                                                    }
+                                                  }
+                                                }}
+                                              />
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  const inputEl = document.getElementById(`manual-deploy-msg-${project.id}`) as HTMLInputElement;
+                                                  if (inputEl) {
+                                                    const msg = inputEl.value.trim();
+                                                    if (!msg) return;
+                                                    fetch(`/api/portal/projects/${project.id}/deploys`, {
+                                                      method: "POST",
+                                                      headers: {
+                                                        "Content-Type": "application/json",
+                                                        Authorization: `Bearer ${token}`
+                                                      },
+                                                      body: JSON.stringify({ commitMessage: msg })
+                                                    })
+                                                      .then(res => {
+                                                        if (res.ok) {
+                                                          setSuccessMsg("¡Actualización manual registrada con éxito!");
+                                                          inputEl.value = "";
+                                                          handleRefresh();
+                                                        } else {
+                                                          setErrorMsg("Error al registrar actualización");
+                                                        }
+                                                      });
+                                                  }
+                                                }}
+                                                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
+                                              >
+                                                Publicar
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+
+                                      {/* Danger Zone */}
+                                      <div className="pt-5 border-t border-red-500/10 mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-red-500/[0.02] -mx-6 -mb-6 p-6 rounded-b-[var(--radius-bento)]">
+                                        <div>
+                                          <h4 className="text-[10px] font-black uppercase tracking-wider text-red-400">Zona de Peligro</h4>
+                                          <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">Eliminación permanente del proyecto o de la cuenta de cliente.</p>
+                                        </div>
+                                        <div className="flex flex-wrap items-center gap-3">
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteProject(project.id);
+                                            }}
+                                            className="p-2 text-xs text-orange-400 hover:text-orange-300 bg-orange-500/5 hover:bg-orange-500/10 border border-orange-500/15 hover:border-orange-500/30 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                                            title="Remover Proyecto"
+                                          >
+                                            <Trash2 size={13} />
+                                            <span>Eliminar Proyecto</span>
+                                          </button>
+
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleDeleteClient(project.clientUserId);
+                                            }}
+                                            className="p-2 text-xs text-red-400 hover:text-red-300 bg-red-500/5 hover:bg-red-500/10 border border-red-500/15 hover:border-red-500/30 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer"
+                                            title="Remover Cliente"
+                                          >
+                                            <Trash2 size={13} />
+                                            <span>Eliminar Cuenta</span>
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
                             </div>
                           );
                         })}
@@ -1503,7 +2482,7 @@ export default function ClientDashboard() {
                             >
                               Anterior
                             </button>
-                            <span className="text-xs text-[var(--color-text-tertiary)] font-mono">
+                            <span className="text-xs text-[var(--color-text-tertiary)] font-medium">
                               Pág {projectsPage} de {Math.ceil(data.projects.length / itemsPerPage)}
                             </span>
                             <button
@@ -1526,7 +2505,7 @@ export default function ClientDashboard() {
                             <Trash2 size={18} className="text-red-400" />
                             Papelera de Reciclaje ({data.deletedProjects.length})
                           </h2>
-                          <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--color-text-tertiary)]">Se eliminan auto. en 30 días</p>
+                          <p className="text-[10px] uppercase font-bold tracking-widest text-[var(--color-text-tertiary)]">Se eliminan auto. en 30 días</p>
                         </div>
 
                         <div className="grid grid-cols-1 gap-6">
@@ -1668,7 +2647,7 @@ export default function ClientDashboard() {
                                       ) : isActive ? (
                                         <div className="w-1.5 h-1.5 bg-white rounded-full" />
                                       ) : (
-                                        <span className="text-[9px] font-mono leading-none">{index + 1}</span>
+                                        <span className="text-[9px] font-bold leading-none">{index + 1}</span>
                                       )}
                                     </div>
                                     <div className="flex-1">
@@ -1732,7 +2711,7 @@ export default function ClientDashboard() {
                           <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
                             <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)] flex justify-between items-center">
                               Facturación Reciente
-                              <span className="text-[10px] font-mono lowercase">Fase Inicial</span>
+                              <span className="text-[10px] font-bold lowercase">Fase Inicial</span>
                             </h3>
 
                             {data.invoices.length > 0 ? (
@@ -1744,9 +2723,11 @@ export default function ClientDashboard() {
                                   <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded ${
                                     data.invoices[0].status === "paid" 
                                       ? "bg-emerald-500/10 text-emerald-400" 
+                                      : data.invoices[0].status === "void"
+                                      ? "bg-red-500/10 text-red-400"
                                       : "bg-amber-500/10 text-amber-500"
                                   }`}>
-                                    {data.invoices[0].status === "paid" ? "Pagada" : "Pendiente"}
+                                    {data.invoices[0].status === "paid" ? "Pagada" : data.invoices[0].status === "void" ? "Invalidada" : "Pendiente"}
                                   </span>
                                 </div>
                                 <div className="text-xs text-[var(--color-text-secondary)] space-y-1">
@@ -1787,307 +2768,516 @@ export default function ClientDashboard() {
 
                 {/* MANAGER ONLY: Form to create deliverables for approvals */}
                 {isAdmin && (
-                  <form onSubmit={handleCreateTask} className="p-6 rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 space-y-4">
-                    <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-1.5 mb-2">
-                      <PlusCircle size={16} />
-                      Subir Nuevo Entregable para Revisión
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Proyecto Objetivo</label>
-                        <select
-                          value={selectedProjectId}
-                          onChange={(e) => setSelectedProjectId(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        >
-                          {data.projects.map(p => (
-                            <option key={p.id} value={p.id}>{p.displayId ? `${p.displayId} - ` : ""}{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Título del Entregable</label>
-                          <button
-                            type="button"
-                            disabled={!newTaskTitle || aiLoadingTaskTitle}
-                            onClick={async () => {
-                              setAiLoadingTaskTitle(true);
-                              try {
-                                const text = await askAIFrontend(
-                                  `Mejora este título de entregable para que sea corto, profesional y claro: '${newTaskTitle}'. Devuelve SOLO el título mejorado sin comillas ni texto adicional.`
-                                );
-                                setNewTaskTitle(text);
-                              } catch (e) {
-                                setErrorMsg("No se pudo generar con IA.");
-                              } finally {
-                                setAiLoadingTaskTitle(false);
-                              }
-                            }}
-                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            {aiLoadingTaskTitle ? (
-                              <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                            ) : <AISparkleIcon size={14} />}
-                            Generar
-                          </button>
-                        </div>
-                        <textarea
-                          required
-                          rows={1}
-                          ref={(el) => {
-                            if (el) {
-                              el.style.height = 'auto';
-                              el.style.height = `${el.scrollHeight}px`;
-                            }
-                          }}
-                          placeholder="Ej: Mockups de Panel de Control Web"
-                          value={newTaskTitle}
-                          onChange={(e) => setNewTaskTitle(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
-                            Descripción / Instrucciones
-                          </label>
-                          <button
-                            type="button"
-                            disabled={!newTaskTitle || aiLoadingTaskDesc}
-                            onClick={async () => {
-                              setAiLoadingTaskDesc(true);
-                              try {
-                                const projectName = data?.projects.find(p => p.id === selectedProjectId)?.name || "";
-                                const text = await callAI("/api/ai/task-description", {
-                                  taskTitle: newTaskTitle,
-                                  projectName,
-                                });
-                                setNewTaskDesc(text);
-                              } catch (e) {
-                                setErrorMsg("No se pudo generar con IA.");
-                              } finally {
-                                setAiLoadingTaskDesc(false);
-                              }
-                            }}
-                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                          >
-                            {aiLoadingTaskDesc ? (
-                              <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                            ) : <AISparkleIcon size={14} />}
-                            Generar
-                          </button>
-                        </div>
-                        <textarea
-                          rows={1}
-                          ref={(el) => {
-                            if (el) {
-                              el.style.height = 'auto';
-                              el.style.height = `${el.scrollHeight}px`;
-                            }
-                          }}
-                          placeholder="Breve reseña de qué revisar..."
-                          value={newTaskDesc}
-                          onChange={(e) => setNewTaskDesc(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
-                        />
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Enlace Externo (Opcional)</label>
-                        <input
-                          type="url"
-                          placeholder="https://..."
-                          value={newTaskLink}
-                          onChange={(e) => setNewTaskLink(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
+                  <div className="rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 overflow-hidden">
+                    {/* Botón de cabecera interactivo */}
                     <button
-                      type="submit"
-                      className="w-full px-6 py-3 mt-2 rounded-xl bg-[var(--color-primary-base)] text-white text-xs font-bold font-mono tracking-wider hover:opacity-95 cursor-pointer flex items-center justify-center gap-1.5"
+                      type="button"
+                      ref={deliverableHeaderRef}
+                      onClick={() => setDeliverableFormOpen(prev => !prev)}
+                      className="w-full py-3 px-4 flex items-center justify-between gap-3 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer select-none text-left"
                     >
-                      <Send size={15} />
-                      ENVIAR PARA APROBACIÓN
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <PlusCircle size={15} className="flex-shrink-0" />
+                        <span className="truncate">Subir nuevo entregable para revisión</span>
+                      </span>
+                      <ChevronDown
+                        size={15}
+                        className={`text-[var(--color-text-tertiary)] flex-shrink-0 transition-transform duration-200 ${deliverableFormOpen ? "rotate-180" : ""}`}
+                      />
                     </button>
-                  </form>
+
+                    <AnimatePresence initial={false}>
+                      {deliverableFormOpen && (
+                        <motion.form
+                          onSubmit={handleCreateTask}
+                          initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+                          animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+                          exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="px-4 pb-4 space-y-4"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Proyecto Objetivo</label>
+                              <CustomSelect
+                                options={data.projects.map(p => ({
+                                  id: p.id,
+                                  label: `${p.displayId ? `${p.displayId} - ` : ""}${p.name}`
+                                }))}
+                                value={selectedProjectId}
+                                onChange={(val) => setSelectedProjectId(val)}
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Título del Entregable</label>
+                                <button
+                                  type="button"
+                                  disabled={!newTaskTitle || aiLoadingTaskTitle}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setAiLoadingTaskTitle(true);
+                                    try {
+                                      const text = await askAIFrontend({
+                                        prompt: `Mejora este título de entregable para que sea corto, profesional y claro: '${newTaskTitle}'. Devuelve SOLO el título mejorado sin comillas ni texto adicional.`
+                                      });
+                                      setNewTaskTitle(text);
+                                    } catch (e) {
+                                      setErrorMsg("No se pudo generar con IA.");
+                                    } finally {
+                                      setAiLoadingTaskTitle(false);
+                                    }
+                                  }}
+                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                  <AISparkleIcon size={14} className={aiLoadingTaskTitle ? "animate-spin" : ""} />
+                                  Generar
+                                </button>
+                              </div>
+                              <textarea
+                                required
+                                rows={1}
+                                ref={(el) => {
+                                  if (el) {
+                                    el.style.height = 'auto';
+                                    el.style.height = `${el.scrollHeight}px`;
+                                  }
+                                }}
+                                placeholder="Ej: Mockups de Panel de Control Web"
+                                value={newTaskTitle}
+                                onChange={(e) => setNewTaskTitle(e.target.value)}
+                                className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                                  Descripción / Instrucciones
+                                </label>
+                                <button
+                                  type="button"
+                                  disabled={!newTaskTitle || aiLoadingTaskDesc}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setAiLoadingTaskDesc(true);
+                                    try {
+                                      const projectName = data?.projects.find(p => p.id === selectedProjectId)?.name || "";
+                                      const text = await callAI("/api/ai/task-description", {
+                                        taskTitle: newTaskTitle,
+                                        projectName,
+                                        draft: newTaskDesc,
+                                      });
+                                      setNewTaskDesc(text);
+                                    } catch (e) {
+                                      setErrorMsg("No se pudo generar con IA.");
+                                    } finally {
+                                      setAiLoadingTaskDesc(false);
+                                    }
+                                  }}
+                                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                                >
+                                  <AISparkleIcon size={14} className={aiLoadingTaskDesc ? "animate-spin" : ""} />
+                                  Generar
+                                </button>
+                              </div>
+                              <textarea
+                                rows={1}
+                                ref={(el) => {
+                                  if (el) {
+                                    el.style.height = 'auto';
+                                    el.style.height = `${el.scrollHeight}px`;
+                                  }
+                                }}
+                                placeholder="Breve reseña de qué revisar..."
+                                value={newTaskDesc}
+                                onChange={(e) => setNewTaskDesc(e.target.value)}
+                                className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Enlace Externo (Opcional)</label>
+                              <input
+                                type="url"
+                                placeholder="https://..."
+                                value={newTaskLink}
+                                onChange={(e) => setNewTaskLink(e.target.value)}
+                                className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none min-w-0 appearance-none"
+                              />
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="w-full px-6 py-3 mt-2 rounded-xl bg-[var(--color-primary-base)] text-white text-xs font-bold tracking-wider hover:opacity-95 cursor-pointer flex items-center justify-center gap-1.5"
+                          >
+                            <Send size={15} />
+                            ENVIAR PARA APROBACIÓN
+                          </button>
+                        </motion.form>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
 
                 {/* List dynamic deliverables */}
-                {data.tasks.length === 0 ? (
-                  <div className="p-10 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm animate-fade-in w-full">
-                    <CheckCircle2 size={36} className="mx-auto text-indigo-400/80 animate-pulse" />
-                    <h3 className="font-display font-medium text-sm text-[var(--color-text-primary)]">¡Todo en Orden!</h3>
-                    <p className="text-xs text-[var(--color-text-secondary)]">
-                      No hay entregables o requerimientos pendientes de revisión asignados a sus proyectos.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4 animate-fade-in">
-                    {data.tasks.slice((tasksPage - 1) * itemsPerPage, tasksPage * itemsPerPage).map((task) => {
-                      const associatedProj = data.projects.find(p => p.id === task.projectId);
-                      return (
-                        <div
-                          key={task.id}
-                          className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between md:items-center gap-4 transition-all ${
-                            task.status === "approved"
-                              ? "bg-emerald-500/5 border-emerald-500/15"
-                              : task.status === "rejected"
-                              ? "bg-red-500/5 border-red-500/15"
-                              : "glass-panel border-[var(--color-border-subtle)]"
-                          }`}
-                        >
-                          <div className="space-y-1 md:max-w-2xl">
-                            <div className="flex items-center gap-2 flex-wrap mb-2">
-                              {task.createdAt && (
-                                <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-mono">
-                                  <Clock size={10} />
-                                  <span>Enviado: {new Date(task.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                </span>
-                              )}
-                              {task.respondedAt && (
-                                <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-mono">
-                                  <Check size={10} />
-                                  <span>Respondido: {new Date(task.respondedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="px-2 py-0.5 bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[10px] text-[var(--color-text-secondary)] font-mono rounded">
-                                {associatedProj ? (associatedProj.displayId ? `${associatedProj.displayId} - ${associatedProj.name}` : associatedProj.name) : "Proyecto"}
-                              </span>
-                              
-                              {task.status === "approved" && (
-                                <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-emerald-400 px-2 py-0.5 rounded">
-                                  ✔ Aprobado Oficialmente
-                                </span>
-                              )}
-                              {task.status === "rejected" && (
-                                <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
-                                  ❌ Observado (Requiere Cambios)
-                                </span>
-                              )}
-                              {task.status === "pending" && (
-                                <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-blue-400 px-2 py-0.5 rounded animate-pulse">
-                                  ⏳ {isAdmin ? "Esperando Aprobación del Cliente" : "Esperando Tu Aprobación"}
-                                </span>
-                              )}
-                            </div>
-
-                            <p className="font-bold text-sm text-[var(--color-text-primary)] mt-1">{task.title}</p>
-                            <p className="text-xs text-[var(--color-text-secondary)]">{task.description}</p>
-                            
-                            {task.feedback && (
-                              <div className="mt-2 text-xs bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg text-red-300">
-                                <strong>Correcciones solicitadas:</strong> {task.feedback}
-                              </div>
-                            )}
-
-                            {task.link && (
-                              <a
-                                href={task.link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-[var(--color-primary-base)] hover:underline pt-1.5"
+                {(() => {
+                  const firestoreArchivedIds = firestoreArchivedTasks.map((t) => t.id);
+                  const activeTasks = data.tasks.filter((t) => !t.archived && !firestoreArchivedIds.includes(t.id));
+                  
+                  const clientProjectIds = data.projects.map((p) => p.id);
+                  const archivedTasks = firestoreArchivedTasks.filter((t) => {
+                    if (isAdmin) return true;
+                    return clientProjectIds.includes(t.projectId);
+                  });
+                  
+                  return (
+                    <div className="space-y-6">
+                      {activeTasks.length === 0 ? (
+                        <div className="p-10 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm animate-fade-in w-full">
+                          <CheckCircle2 size={36} className="mx-auto text-indigo-400/80 animate-pulse" />
+                          <h3 className="font-display font-medium text-sm text-[var(--color-text-primary)]">¡Todo en Orden!</h3>
+                          <p className="text-xs text-[var(--color-text-secondary)]">
+                            {language === "es" 
+                              ? "No hay entregables activos pendientes de revisión o aprobados en la vista principal."
+                              : "There are no active deliverables pending review or approved on the main view."}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-4 animate-fade-in">
+                          {activeTasks.slice((tasksPage - 1) * itemsPerPage, tasksPage * itemsPerPage).map((task) => {
+                            const associatedProj = data.projects.find(p => p.id === task.projectId);
+                            return (
+                              <div
+                                key={task.id}
+                                className={`p-5 rounded-xl border flex flex-col md:flex-row justify-between md:items-center gap-4 transition-all ${
+                                  task.status === "approved"
+                                    ? "bg-emerald-500/5 border-emerald-500/15"
+                                    : task.status === "rejected"
+                                    ? "bg-red-500/5 border-red-500/15"
+                                    : "glass-panel border-[var(--color-border-subtle)]"
+                                }`}
                               >
-                                <span>Ver entregable técnico</span>
-                                <ExternalLink size={12} />
-                              </a>
-                            )}
-                          </div>
+                                <div className="space-y-1 md:max-w-2xl">
+                                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                                    {task.createdAt && (
+                                      <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
+                                        <Clock size={10} />
+                                        <span>Enviado: {new Date(task.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                      </span>
+                                    )}
+                                    {task.respondedAt && (
+                                      <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
+                                        <Check size={10} />
+                                        <span>Respondido: {new Date(task.respondedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="px-2 py-0.5 bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[10px] font-medium text-[var(--color-text-secondary)] rounded-md">
+                                      {associatedProj ? (associatedProj.displayId ? `${associatedProj.displayId} - ${associatedProj.name}` : associatedProj.name) : "Proyecto"}
+                                    </span>
+                                    
+                                    {task.status === "approved" && (
+                                      <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-emerald-400 px-2 py-0.5 rounded">
+                                        ✔ Aprobado Oficialmente
+                                      </span>
+                                    )}
+                                    {task.status === "rejected" && (
+                                      <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
+                                        ❌ Observado (Requiere Cambios)
+                                      </span>
+                                    )}
+                                    {task.status === "pending" && (
+                                      <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-blue-400 px-2 py-0.5 rounded animate-pulse">
+                                        ⏳ {isAdmin ? "Esperando Aprobación del Cliente" : "Esperando Tu Aprobación"}
+                                      </span>
+                                    )}
+                                  </div>
 
-                          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
-                            {isAdmin ? (
-                              <button
-                                onClick={() => handleDeleteTask(task.id)}
-                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
-                                title="Remover"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            ) : (
-                              task.status === "pending" && (
-                                <div className="space-y-2 text-right w-full sm:w-auto">
-                                  {feedbackTaskId === task.id ? (
-                                    <div className="space-y-2">
-                                      <textarea
-                                        value={feedbackText}
-                                        onChange={(e) => setFeedbackText(e.target.value)}
-                                        placeholder="Agrega tus comentarios para realizar ajustes..."
-                                        className="glass-input w-full min-w-[200px] p-2 rounded bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)]"
-                                        rows={2}
-                                      />
-                                      <div className="flex gap-2 justify-end">
-                                        <button
-                                          onClick={() => setFeedbackTaskId(null)}
-                                          className="px-2.5 py-1 text-[11px] font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-                                        >
-                                          Cancelar
-                                        </button>
-                                        <button
-                                          onClick={() => handleClientRespondTask(task.id, "rejected")}
-                                          className="px-3 py-1 text-[11px] font-bold rounded bg-red-500 text-white hover:bg-red-600"
-                                        >
-                                          Confirmar Ajustes
-                                        </button>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end">
-                                      <button
-                                        onClick={() => setFeedbackTaskId(task.id)}
-                                        className="px-3 py-1.5 text-xs font-bold border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg transition whitespace-nowrap"
-                                      >
-                                        Pedir Ajustes
-                                      </button>
-                                      <button
-                                        onClick={() => handleClientRespondTask(task.id, "approved")}
-                                        className="px-4 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition shadow-lg shadow-emerald-500/10 flex items-center gap-1 cursor-pointer whitespace-nowrap"
-                                      >
-                                        <Check size={12} className="stroke-[3]" />
-                                        Aprobar
-                                      </button>
+                                  <p className="font-bold text-sm text-[var(--color-text-primary)] mt-1">{task.title}</p>
+                                  <p className="text-xs text-[var(--color-text-secondary)]">{task.description}</p>
+                                  
+                                  {task.feedback && (
+                                    <div className="mt-2 text-xs bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg text-red-300">
+                                      <strong>Correcciones solicitadas:</strong> {task.feedback}
                                     </div>
                                   )}
-                                </div>
-                              )
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
 
-                    {/* Pagination Controls */}
-                    {data.tasks.length > itemsPerPage && (
-                      <div className="flex justify-center items-center gap-2 mt-6 pt-4 border-t border-[var(--color-border-subtle)]/30">
-                        <button
-                          onClick={() => setTasksPage(p => Math.max(1, p - 1))}
-                          disabled={tasksPage === 1}
-                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
-                        >
-                          Anterior
-                        </button>
-                        <span className="text-xs text-[var(--color-text-tertiary)] font-mono">
-                          Pág {tasksPage} de {Math.ceil(data.tasks.length / itemsPerPage)}
-                        </span>
-                        <button
-                          onClick={() => setTasksPage(p => Math.min(Math.ceil(data.tasks.length / itemsPerPage), p + 1))}
-                          disabled={tasksPage === Math.ceil(data.tasks.length / itemsPerPage)}
-                          className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
-                        >
-                          Siguiente
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                                  {task.link && (
+                                    <a
+                                      href={task.link}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 text-xs text-[var(--color-primary-base)] hover:underline pt-1.5"
+                                    >
+                                      <span>Ver entregable técnico</span>
+                                      <ExternalLink size={12} />
+                                    </a>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                                  {isAdmin ? (
+                                    task.status !== "pending" ? (
+                                      <button
+                                        onClick={() => handleArchiveTask(task.id, true)}
+                                        className="px-3 py-1.5 rounded-lg border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                                        title={language === "es" ? "Archivar entregable para limpiar la pantalla" : "Archive deliverable to clean screen"}
+                                      >
+                                        <Archive size={14} />
+                                        <span>{language === "es" ? "Archivar" : "Archive"}</span>
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleDeleteTask(task.id)}
+                                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                                        title="Remover"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    )
+                                  ) : (
+                                    task.status === "pending" ? (
+                                      <div className="space-y-2 text-right w-full sm:w-auto">
+                                        {feedbackTaskId === task.id ? (
+                                          <div className="space-y-2">
+                                            <textarea
+                                              value={feedbackText}
+                                              onChange={(e) => setFeedbackText(e.target.value)}
+                                              placeholder="Agrega tus comentarios para realizar ajustes..."
+                                              className="glass-input w-full min-w-[200px] p-2 rounded bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)]"
+                                              rows={2}
+                                            />
+                                            <div className="flex gap-2 justify-end">
+                                              <button
+                                                onClick={() => setFeedbackTaskId(null)}
+                                                className="px-2.5 py-1 text-[11px] font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                                              >
+                                                Cancelar
+                                              </button>
+                                              <button
+                                                onClick={() => handleClientRespondTask(task.id, "rejected")}
+                                                className="px-3 py-1 text-[11px] font-bold rounded bg-red-500 text-white hover:bg-red-600"
+                                              >
+                                                Confirmar Ajustes
+                                              </button>
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap justify-end">
+                                            <button
+                                              onClick={() => setFeedbackTaskId(task.id)}
+                                              className="px-3 py-1.5 text-xs font-bold border border-red-500/20 text-red-400 hover:bg-red-500/10 rounded-lg transition whitespace-nowrap"
+                                            >
+                                              Pedir Ajustes
+                                            </button>
+                                            <button
+                                              onClick={() => handleClientRespondTask(task.id, "approved")}
+                                              className="px-4 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition shadow-lg shadow-emerald-500/10 flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                                            >
+                                              <Check size={12} className="stroke-[3]" />
+                                              Aprobar
+                                            </button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleArchiveTask(task.id, true)}
+                                        className="px-3 py-1.5 rounded-lg border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                                        title={language === "es" ? "Archivar entregable para limpiar la pantalla" : "Archive deliverable to clean screen"}
+                                      >
+                                        <Archive size={14} />
+                                        <span>{language === "es" ? "Archivar" : "Archive"}</span>
+                                      </button>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* Active tasks Pagination Controls */}
+                          {activeTasks.length > itemsPerPage && (
+                            <div className="flex justify-center items-center gap-2 mt-6 pt-4 border-t border-[var(--color-border-subtle)]/30">
+                              <button
+                                onClick={() => setTasksPage(p => Math.max(1, p - 1))}
+                                disabled={tasksPage === 1}
+                                className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
+                              >
+                                Anterior
+                              </button>
+                              <span className="text-xs text-[var(--color-text-tertiary)] font-medium">
+                                Pág {tasksPage} de {Math.ceil(activeTasks.length / itemsPerPage)}
+                              </span>
+                              <button
+                                onClick={() => setTasksPage(p => Math.min(Math.ceil(activeTasks.length / itemsPerPage), p + 1))}
+                                disabled={tasksPage === Math.ceil(activeTasks.length / itemsPerPage)}
+                                className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
+                              >
+                                Siguiente
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Section: Archived Deliverables Collapsible */}
+                      {archivedTasks.length > 0 && (
+                        <div className="mt-8 pt-6 border-t border-[var(--color-border-subtle)]/30">
+                          <button
+                            type="button"
+                            onClick={() => setShowArchivedTasks(!showArchivedTasks)}
+                            className="flex items-center justify-between w-full py-3 px-4 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer select-none"
+                          >
+                            <span className="flex items-center gap-2">
+                              <Archive size={15} className="text-indigo-400" />
+                              <span>
+                                {language === "es" 
+                                  ? `Historial de Entregables Archivados (${archivedTasks.length})` 
+                                  : `Archived Deliverables History (${archivedTasks.length})`}
+                              </span>
+                            </span>
+                            <ChevronDown
+                              size={16}
+                              className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${showArchivedTasks ? "rotate-180" : ""}`}
+                            />
+                          </button>
+
+                          <AnimatePresence>
+                            {showArchivedTasks && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden mt-4 space-y-4"
+                              >
+                                <div className="grid grid-cols-1 gap-4">
+                                  {archivedTasks.slice((archivedTasksPage - 1) * itemsPerPage, archivedTasksPage * itemsPerPage).map((task) => {
+                                    const associatedProj = data.projects.find(p => p.id === task.projectId);
+                                    return (
+                                      <div
+                                        key={task.id}
+                                        className="p-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-soft)]/40 flex flex-col md:flex-row justify-between md:items-center gap-4 transition-all opacity-85 hover:opacity-100"
+                                      >
+                                        <div className="space-y-1 md:max-w-2xl">
+                                          <div className="flex items-center gap-2 flex-wrap mb-2">
+                                            {task.createdAt && (
+                                              <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
+                                                <Clock size={10} />
+                                                <span>Enviado: {new Date(task.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                              </span>
+                                            )}
+                                            {task.respondedAt && (
+                                              <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
+                                                <Check size={10} />
+                                                <span>Respondido: {new Date(task.respondedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                              </span>
+                                            )}
+                                            <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                                              {language === "es" ? "Archivado" : "Archived"}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2 flex-wrap">
+                                            <span className="px-2 py-0.5 bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[10px] font-medium text-[var(--color-text-secondary)] rounded-md">
+                                              {associatedProj ? (associatedProj.displayId ? `${associatedProj.displayId} - ${associatedProj.name}` : associatedProj.name) : "Proyecto"}
+                                            </span>
+                                            
+                                            {task.status === "approved" && (
+                                              <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-emerald-400 px-2 py-0.5 rounded">
+                                                ✔ Aprobado Oficialmente
+                                              </span>
+                                            )}
+                                            {task.status === "rejected" && (
+                                              <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
+                                                ❌ Observado (Requiere Cambios)
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          <p className="font-bold text-sm text-[var(--color-text-primary)] mt-1">{task.title}</p>
+                                          <p className="text-xs text-[var(--color-text-secondary)]">{task.description}</p>
+                                          
+                                          {task.feedback && (
+                                            <div className="mt-2 text-xs bg-red-500/5 border border-red-500/10 p-2.5 rounded-lg text-red-300">
+                                              <strong>Correcciones solicitadas:</strong> {task.feedback}
+                                            </div>
+                                          )}
+
+                                          {task.link && (
+                                            <a
+                                              href={task.link}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="inline-flex items-center gap-1 text-xs text-[var(--color-primary-base)] hover:underline pt-1.5"
+                                            >
+                                              <span>Ver entregable técnico</span>
+                                              <ExternalLink size={12} />
+                                            </a>
+                                          )}
+                                        </div>
+
+                                        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-end">
+                                          <div className="flex items-center gap-2">
+                                            <button
+                                              onClick={() => handleArchiveTask(task.id, false)}
+                                              className="px-3 py-1.5 rounded-lg border border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
+                                              title={language === "es" ? "Restaurar a activos" : "Restore to active list"}
+                                            >
+                                              <Inbox size={13} />
+                                              <span>{language === "es" ? "Restaurar" : "Restore"}</span>
+                                            </button>
+                                            {isAdmin && (
+                                              <button
+                                                onClick={() => handleDeleteTask(task.id)}
+                                                className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+                                                title={language === "es" ? "Eliminar permanentemente" : "Delete permanently"}
+                                              >
+                                                <Trash2 size={14} />
+                                              </button>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Archived Pagination Controls */}
+                                {archivedTasks.length > itemsPerPage && (
+                                  <div className="flex justify-center items-center gap-2 mt-4 pt-4 border-t border-[var(--color-border-subtle)]/30">
+                                    <button
+                                      onClick={() => setArchivedTasksPage(p => Math.max(1, p - 1))}
+                                      disabled={archivedTasksPage === 1}
+                                      className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                                    >
+                                      Anterior
+                                    </button>
+                                    <span className="text-xs text-[var(--color-text-tertiary)] font-medium">
+                                      Pág {archivedTasksPage} de {Math.ceil(archivedTasks.length / itemsPerPage)}
+                                    </span>
+                                    <button
+                                      onClick={() => setArchivedTasksPage(p => Math.min(Math.ceil(archivedTasks.length / itemsPerPage), p + 1))}
+                                      disabled={archivedTasksPage === Math.ceil(archivedTasks.length / itemsPerPage)}
+                                      className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer"
+                                    >
+                                      Siguiente
+                                    </button>
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
@@ -2105,107 +3295,197 @@ export default function ClientDashboard() {
 
                 {/* MANAGER ONLY: Form to create invoices */}
                 {isAdmin && (
-                  <form onSubmit={handleCreateInvoice} className="p-6 rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 space-y-4">
-                    <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-1.5 mb-2">
-                      <PlusCircle size={16} />
-                      Añadir Registro de Factura
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Proyecto Relacionado</label>
-                        <select
-                          value={selectedProjectId}
-                          onChange={(e) => setSelectedProjectId(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        >
-                          {data.projects.map(p => (
-                            <option key={p.id} value={p.id}>{p.displayId ? `${p.displayId} - ` : ""}{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
-                          Número de Factura
-                        </label>
-                        <div className="px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/50 border-dashed flex items-center gap-2">
-                          <span className="text-xs font-mono font-bold text-[var(--color-primary-base)]">
-                            POL-{new Date().getFullYear()}-###
-                          </span>
-                          <span className="text-[10px] text-[var(--color-text-tertiary)]">
-                            — generado automáticamente en secuencia
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Monto (USD)</label>
-                        <input
-                          type="number"
-                          required
-                          placeholder="Ej: 1500"
-                          value={newInvoiceAmount}
-                          onChange={(e) => setNewInvoiceAmount(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-1">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
-                          Glosa / Concepto Detallado
-                        </label>
-                        <button
-                          type="button"
-                          disabled={!newInvoiceAmount || aiLoadingInvoiceDesc}
-                          onClick={async () => {
-                            setAiLoadingInvoiceDesc(true);
-                            try {
-                              const project = data?.projects.find(p => p.id === selectedProjectId);
-                              const text = await callAI("/api/ai/invoice-description", {
-                                projectName: project?.name || "",
-                                amount: newInvoiceAmount,
-                                phase: project?.currentPhase || "",
-                              });
-                              setNewInvoiceDesc(text);
-                            } catch (e) {
-                              setErrorMsg("No se pudo generar con IA.");
-                            } finally {
-                              setAiLoadingInvoiceDesc(false);
-                            }
-                          }}
-                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                          {aiLoadingInvoiceDesc ? (
-                            <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                          ) : <AISparkleIcon size={14} />}
-                          Generar
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Ej: Cobro correspondiente a la etapa 2 del desarrollo frontend."
-                        value={newInvoiceDesc}
-                        onChange={(e) => setNewInvoiceDesc(e.target.value)}
-                        className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                      />
-                    </div>
-
+                  <div className="rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 overflow-hidden">
+                    {/* Botón de cabecera interactivo */}
                     <button
-                      type="submit"
-                      className="px-6 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-xs font-bold font-mono tracking-wider float-right hover:opacity-95 cursor-pointer flex items-center gap-1.5"
+                      type="button"
+                      ref={invoiceHeaderRef}
+                      onClick={() => setInvoiceFormOpen(prev => !prev)}
+                      className="w-full py-3 px-4 flex items-center justify-between gap-3 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer select-none text-left"
                     >
-                      <Plus size={12} />
-                      EMITIR FACTURA
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <PlusCircle size={15} className="flex-shrink-0" />
+                        <span className="truncate">Añadir registro de factura</span>
+                      </span>
+                      <ChevronDown
+                        size={15}
+                        className={`text-[var(--color-text-tertiary)] flex-shrink-0 transition-transform duration-200 ${invoiceFormOpen ? "rotate-180" : ""}`}
+                      />
                     </button>
-                    <div className="clear-both" />
-                  </form>
+
+                    <AnimatePresence initial={false}>
+                      {invoiceFormOpen && (
+                        <motion.form
+                          onSubmit={handleCreateInvoice}
+                          initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+                          animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+                          exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="px-4 pb-4 space-y-4"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Proyecto Relacionado</label>
+                              <CustomSelect
+                                options={data.projects.map(p => ({
+                                  id: p.id,
+                                  label: `${p.displayId ? `${p.displayId} - ` : ""}${p.name}`
+                                }))}
+                                value={selectedProjectId}
+                                onChange={(val) => setSelectedProjectId(val)}
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                                Número de Factura
+                              </label>
+                              <div className="px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/50 border-dashed flex flex-nowrap items-center gap-1.5 overflow-hidden">
+                                <span className="text-xs font-semibold text-[var(--color-primary-base)] whitespace-nowrap">
+                                  POL-{new Date().getFullYear()}-###
+                                </span>
+                                <span className="text-[10px] text-[var(--color-text-tertiary)] truncate">
+                                  — generado automáticamente
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Monto (USD)</label>
+                              <input
+                                type="number"
+                                required
+                                placeholder="Ej: 1500"
+                                value={newInvoiceAmount}
+                                onChange={(e) => setNewInvoiceAmount(e.target.value)}
+                                className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none min-w-0 appearance-none"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <div className="flex justify-between items-center">
+                                <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Equivalente (DOP)</label>
+                                <div className="flex items-center gap-1">
+                                  <input
+                                    type="number"
+                                    value={dopExchangeRate}
+                                    onChange={(e) => setDopExchangeRate(e.target.value)}
+                                    className="w-14 px-1.5 py-0.5 rounded bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[10px] text-center focus:outline-none"
+                                    title="Tasa de cambio"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleFetchDopRate}
+                                    disabled={loadingDopRate}
+                                    className="p-1 rounded bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/20 transition cursor-pointer"
+                                    title="Actualizar con Google Finance"
+                                  >
+                                    <RefreshCw size={10} className={loadingDopRate ? "animate-spin" : ""} />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/50 border-dashed text-xs text-[var(--color-text-tertiary)] flex items-center">
+                                {newInvoiceAmount && !isNaN(parseFloat(newInvoiceAmount)) && !isNaN(parseFloat(dopExchangeRate))
+                                  ? `RD$ ${(parseFloat(newInvoiceAmount) * parseFloat(dopExchangeRate)).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                  : "RD$ 0.00"}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex justify-between items-center">
+                              <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                                CONCEPTO
+                              </label>
+                              <button
+                                type="button"
+                                disabled={!newInvoiceAmount || aiLoadingInvoiceDesc}
+                                onClick={async () => {
+                                  setAiLoadingInvoiceDesc(true);
+                                  try {
+                                    const project = data?.projects.find(p => p.id === selectedProjectId);
+                                    const text = await callAI("/api/ai/invoice-description", {
+                                      projectName: project?.name || "",
+                                      amount: newInvoiceAmount,
+                                      phase: project?.currentPhase || "",
+                                      draft: newInvoiceDesc,
+                                    });
+                                    setNewInvoiceDesc(text);
+                                  } catch (e) {
+                                    setErrorMsg("No se pudo generar con IA.");
+                                  } finally {
+                                    setAiLoadingInvoiceDesc(false);
+                                  }
+                                }}
+                                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <AISparkleIcon size={14} className={aiLoadingInvoiceDesc ? "animate-spin" : ""} />
+                                Generar
+                              </button>
+                            </div>
+                            <textarea
+                              ref={invoiceDescRef}
+                              rows={2}
+                              placeholder="Ej: Cobro correspondiente a la etapa 2 del desarrollo frontend."
+                              value={newInvoiceDesc}
+                              onChange={(e) => {
+                                setNewInvoiceDesc(e.target.value);
+                                e.target.style.height = "auto";
+                                e.target.style.height = `${e.target.scrollHeight}px`;
+                              }}
+                              className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none resize-none overflow-hidden placeholder:whitespace-normal"
+                            />
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="px-6 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-xs font-bold tracking-wider float-right hover:opacity-95 cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Receipt size={14} />
+                            EMITIR FACTURA
+                          </button>
+                          <div className="clear-both" />
+                        </motion.form>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
 
                 {/* Invoices List */}
-                {data.invoices.length === 0 ? (
+                {(() => {
+                  const filteredInvoices = (selectedInvoiceFilterProject === "all" 
+                    ? data.invoices 
+                    : data.invoices.filter((inv) => inv.projectId === selectedInvoiceFilterProject))
+                    .filter(inv => isAdmin || inv.status !== "void");
+
+                  return (
+                    <>
+                      {data.projects.length > 0 && (
+                        <div className="mb-4 space-y-1 w-full max-w-sm relative z-[10]">
+                          <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)] ml-1">Filtrar por proyecto</label>
+                          <CustomSelect
+                            value={selectedInvoiceFilterProject}
+                            onChange={(val) => {
+                              setSelectedInvoiceFilterProject(val);
+                              setInvoicesPage(1);
+                            }}
+                            options={[
+                              { id: "all", label: "Todos los proyectos" },
+                              ...data.projects
+                                .slice()
+                                .sort((a, b) => (a.displayId || "").localeCompare(b.displayId || ""))
+                                .map(p => ({
+                                  id: p.id,
+                                  label: p.displayId ? `${p.displayId} - ${p.name}` : p.name
+                                }))
+                            ]}
+                            className="rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 z-10"
+                            buttonClassName="w-full py-3 px-4 flex items-center justify-between gap-3 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer select-none text-left rounded-[var(--radius-bento)]"
+                          />
+                        </div>
+                      )}
+
+                      {filteredInvoices.length === 0 ? (
                   <div className="p-10 rounded-[var(--radius-bento)] glass-panel border border-dashed border-[var(--color-border-subtle)] text-center space-y-3 max-w-lg mx-auto my-4 shadow-sm">
                     <DollarSign size={36} className="mx-auto text-indigo-400/80 animate-pulse" />
                     <h3 className="font-display font-medium text-sm text-[var(--color-text-primary)]">Sin Transacciones Pendientes</h3>
@@ -2213,45 +3493,117 @@ export default function ClientDashboard() {
                       No se han emitido facturas de cobro ni transacciones para sus desarrollos activos en este periodo.
                     </p>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {data.invoices.slice((invoicesPage - 1) * itemsPerPage, invoicesPage * itemsPerPage).map((inv) => {
+                      ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                          {filteredInvoices.slice((invoicesPage - 1) * itemsPerPage, invoicesPage * itemsPerPage).map((inv) => {
                       const project = data.projects.find(p => p.id === inv.projectId);
                       return (
                         <div
                           key={inv.id}
-                          className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-500/10 transition-all will-change-transform transition-all"
+                          className={`p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-500/10 transition-all will-change-transform ${
+                            openInvoiceStatusDropdown === inv.id ? "relative z-30" : "relative z-10"
+                          }`}
                         >
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono text-xs font-bold text-[var(--color-text-primary)]">Factura {inv.invoiceNumber}</span>
-                              <span className="px-2 py-0.5 bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[9px] text-[var(--color-text-tertiary)] rounded font-mono">
-                                {project ? (project.displayId ? `${project.displayId} - ${project.name}` : project.name) : "Proyecto"}
+                          <div className="space-y-1.5 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                                {inv.invoiceNumber}
                               </span>
+                              <CopyInvoiceButton text={inv.invoiceNumber} />
                             </div>
-                            <p className="text-xs text-[var(--color-text-secondary)] font-medium mt-1">{inv.description}</p>
+                            <div className="text-[11px] text-[var(--color-text-secondary)] font-bold leading-relaxed">
+                              {project ? (project.displayId ? `${project.displayId} - ${project.name}` : project.name) : "Proyecto"}
+                            </div>
+                            {inv.description && (
+                              <p className="text-xs text-[var(--color-text-tertiary)] font-medium mt-0.5">{inv.description}</p>
+                            )}
                             <p className="text-[10px] text-[var(--color-text-tertiary)]">
                               Fecha de Emisión: <strong>{inv.date}</strong> | Expiración: <strong>{inv.dueDate}</strong>
                             </p>
                           </div>
 
                           <div className="flex items-center justify-between md:justify-end gap-4 text-left md:text-right w-full md:w-auto shrink-0 mt-2 md:mt-0">
-                            <div>
+                            <div className="flex flex-col items-start md:items-end">
                               <p className="text-lg font-display font-black text-[var(--color-text-primary)]">{formatMoney(inv.amount)}</p>
                               
-                              <button
-                                type="button"
-                                disabled={!isAdmin}
-                                onClick={() => handleToggleInvoicePaid(inv.id)}
-                                className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded cursor-pointer ${
+                              {isAdmin ? (
+                                <div className="relative mt-1">
+                                  <button
+                                    onClick={() => setOpenInvoiceStatusDropdown(openInvoiceStatusDropdown === inv.id ? null : inv.id)}
+                                    className={`text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded cursor-pointer appearance-none outline-none inline-flex items-center gap-1 w-fit ${
+                                      inv.status === "paid"
+                                        ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                        : inv.status === "void"
+                                        ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                        : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                                    }`}
+                                  >
+                                    {inv.status === "paid" ? "Pagada" : inv.status === "void" ? "Invalidada" : "Pendiente"}
+                                    <ChevronDown size={10} />
+                                  </button>
+                                  
+                                  <AnimatePresence>
+                                    {openInvoiceStatusDropdown === inv.id && (
+                                      <motion.ul
+                                        initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="absolute z-[100] mt-1 py-1 w-max min-w-36 left-0 md:left-auto md:right-0 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none"
+                                      >
+                                        <li>
+                                          <button
+                                            onClick={() => {
+                                              handleUpdateInvoiceStatus(inv.id, "pending");
+                                              setOpenInvoiceStatusDropdown(null);
+                                            }}
+                                            className="w-full whitespace-nowrap text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-amber-500 hover:bg-amber-500/10 transition-colors"
+                                          >Pendiente</button>
+                                        </li>
+                                        <li>
+                                          <button
+                                            onClick={() => {
+                                              handleUpdateInvoiceStatus(inv.id, "paid");
+                                              setOpenInvoiceStatusDropdown(null);
+                                            }}
+                                            className="w-full whitespace-nowrap text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                                          >Pagada</button>
+                                        </li>
+                                        <li>
+                                          <button
+                                            onClick={() => {
+                                              setOpenInvoiceStatusDropdown(null);
+                                              setConfirmDialog({
+                                                isOpen: true,
+                                                title: "Invalidar Factura",
+                                                message: "¿Está seguro de que desea invalidar esta factura? Esta acción no se puede deshacer.",
+                                                confirmText: "Invalidar Factura",
+                                                cancelText: "Cancelar",
+                                                isDanger: true,
+                                                onConfirm: () => {
+                                                  handleUpdateInvoiceStatus(inv.id, "void");
+                                                  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+                                                }
+                                              });
+                                            }}
+                                            className="w-full whitespace-nowrap text-left px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-red-400 hover:bg-red-500/10 transition-colors"
+                                          >Invalidada</button>
+                                        </li>
+                                      </motion.ul>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              ) : (
+                                <span className={`inline-block text-[9px] uppercase font-bold tracking-widest px-2 py-0.5 rounded w-fit ${
                                   inv.status === "paid"
                                     ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                    : inv.status === "void"
+                                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
                                     : "bg-amber-500/10 text-amber-500 border border-amber-500/20"
-                                }`}
-                              >
-                                {inv.status === "paid" ? "Pagada Oficial" : "Pendiente"}
-                                {isAdmin && " (Alternar)"}
-                              </button>
+                                }`}>
+                                  {inv.status === "paid" ? "Pagada" : inv.status === "void" ? "Invalidada" : "Pendiente"}
+                                </span>
+                              )}
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -2259,23 +3611,17 @@ export default function ClientDashboard() {
                               <>
                                 <button
                                   onClick={() => printInvoice(inv)}
-                                  className="p-1.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/10 rounded transition font-mono"
+                                  className="p-1.5 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/10 rounded transition"
                                   title="Imprimir / Guardar PDF"
                                 >
                                   <Download size={14} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteInvoice(inv.id)}
-                                  className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition font-mono"
-                                >
-                                  <Trash2 size={14} />
                                 </button>
                               </>
                             ) : (
                               <>
                                 <button
                                   onClick={() => printInvoice(inv)}
-                                  className="p-1.5 mr-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/10 rounded transition tracking-widest font-mono"
+                                  className="p-1.5 mr-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/10 rounded transition tracking-widest"
                                   title="Imprimir / Guardar PDF"
                                 >
                                   <Download size={18} />
@@ -2290,7 +3636,7 @@ export default function ClientDashboard() {
                                       setPaymentSuccess(false);
                                       setPayingInvoice(inv);
                                     }}
-                                    className="p-2 bg-[var(--color-primary-base)] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:opacity-90 transition cursor-pointer font-mono"
+                                    className="p-2 bg-[var(--color-primary-base)] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:opacity-90 transition cursor-pointer"
                                   >
                                     <span>Pagar</span>
                                     <ExternalLink size={10} />
@@ -2305,7 +3651,7 @@ export default function ClientDashboard() {
                     })}
 
                     {/* Pagination Controls */}
-                    {data.invoices.length > itemsPerPage && (
+                    {filteredInvoices.length > itemsPerPage && (
                       <div className="flex justify-center items-center gap-2 mt-6 pt-4 border-t border-[var(--color-border-subtle)]/30">
                         <button
                           onClick={() => setInvoicesPage(p => Math.max(1, p - 1))}
@@ -2314,12 +3660,12 @@ export default function ClientDashboard() {
                         >
                           Anterior
                         </button>
-                        <span className="text-xs text-[var(--color-text-tertiary)] font-mono">
-                          Pág {invoicesPage} de {Math.ceil(data.invoices.length / itemsPerPage)}
+                        <span className="text-xs text-[var(--color-text-tertiary)] font-medium">
+                          Pág {invoicesPage} de {Math.ceil(filteredInvoices.length / itemsPerPage)}
                         </span>
                         <button
-                          onClick={() => setInvoicesPage(p => Math.min(Math.ceil(data.invoices.length / itemsPerPage), p + 1))}
-                          disabled={invoicesPage === Math.ceil(data.invoices.length / itemsPerPage)}
+                          onClick={() => setInvoicesPage(p => Math.min(Math.ceil(filteredInvoices.length / itemsPerPage), p + 1))}
+                          disabled={invoicesPage === Math.ceil(filteredInvoices.length / itemsPerPage)}
                           className="px-3 py-1.5 rounded-lg glass-panel border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] disabled:opacity-40 transition-all cursor-pointer will-change-transform transition-all"
                         >
                           Siguiente
@@ -2328,6 +3674,9 @@ export default function ClientDashboard() {
                     )}
                   </div>
                 )}
+                    </>
+                  );
+                })()}
               </div>
             )}
 
@@ -2339,64 +3688,97 @@ export default function ClientDashboard() {
                 <div className="flex justify-between items-center pb-4 border-b border-[var(--color-border-subtle)]/30">
                   <h2 className="text-lg font-display font-bold flex items-center gap-2">
                     <Calendar size={18} className="text-indigo-400" />
-                    Agenda de Reuniones y Syncs
+                    Agenda de Reuniones
                   </h2>
                 </div>
 
                 {/* MANAGER ONLY: Form to schedule meetings */}
                 {isAdmin && (
-                  <form onSubmit={handleCreateMeeting} className="p-6 rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 space-y-4">
-                    <h3 className="text-sm font-bold text-indigo-400 flex items-center gap-1.5 mb-2">
-                      <PlusCircle size={16} />
-                      Agendar Videollamada Técnica (Google Meet)
-                    </h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className={`rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 transition-all ${meetingFormOpen ? "relative z-[100]" : "relative z-10"}`}>
+                    <button
+                      type="button"
+                      ref={meetingHeaderRef}
+                      onClick={() => setMeetingFormOpen(prev => !prev)}
+                      className="w-full py-3 px-4 flex items-center justify-between gap-3 text-xs font-bold text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer select-none text-left"
+                    >
+                      <span className="flex items-center gap-1.5 min-w-0">
+                        <PlusCircle size={15} className="flex-shrink-0" />
+                        <span className="truncate">Agendar videollamada técnica</span>
+                      </span>
+                      <ChevronDown
+                        size={15}
+                        className={`text-[var(--color-text-tertiary)] flex-shrink-0 transition-transform duration-200 ${meetingFormOpen ? "rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {meetingFormOpen && (
+                        <motion.form
+                          onSubmit={(e) => {
+                             handleCreateMeeting(e);
+                             setMeetingFormOpen(false);
+                          }}
+                          initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+                          animate={{ height: "auto", opacity: 1, transitionEnd: { overflow: "visible" } }}
+                          exit={{ height: 0, opacity: 0, overflow: "hidden" }}
+                          transition={{ duration: 0.2, ease: "easeInOut" }}
+                          className="px-4 pb-4 space-y-4"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-2">
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Proyecto</label>
-                        <select
+                        <CustomSelect
+                          options={data.projects.map(p => ({
+                            id: p.id,
+                            label: `${p.displayId ? `${p.displayId} - ` : ""}${p.name}`
+                          }))}
                           value={selectedProjectId}
-                          onChange={(e) => setSelectedProjectId(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        >
-                          {data.projects.map(p => (
-                            <option key={p.id} value={p.id}>{p.displayId ? `${p.displayId} - ` : ""}{p.name}</option>
-                          ))}
-                        </select>
+                          onChange={(val) => setSelectedProjectId(val)}
+                        />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Tema / Título</label>
+                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Título</label>
                         <input
                           type="text"
                           required
-                          placeholder="Ej: Demo Avances Sprint 2"
+                          placeholder="Ej: Revisión de proyecto"
                           value={newMeetTitle}
                           onChange={(e) => setNewMeetTitle(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none min-w-0 appearance-none"
                         />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Fecha</label>
-                        <input
-                          type="date"
-                          required
-                          value={newMeetDate}
-                          onChange={(e) => setNewMeetDate(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        />
+                        <CustomDatePicker value={newMeetDate} onChange={(val) => setNewMeetDate(val)} placeholder="Ej: 8/7/2026" />
                       </div>
 
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Hora</label>
-                        <input
-                          type="time"
-                          required
-                          value={newMeetTime}
-                          onChange={(e) => setNewMeetTime(e.target.value)}
-                          className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                        />
+                        
+                      {(() => {
+                        const timeOptions = [];
+                        const formatLabel = (h: number, m: string) => {
+                          const ampm = h >= 12 ? "PM" : "AM";
+                          const displayHour = h % 12 === 0 ? 12 : h % 12;
+                          return `${displayHour}:${m} ${ampm}`;
+                        };
+                        for (let i = 8; i <= 20; i++) {
+                          const hStr = String(i).padStart(2, '0');
+                          timeOptions.push({ id: `${hStr}:00`, label: formatLabel(i, "00") });
+                          timeOptions.push({ id: `${hStr}:30`, label: formatLabel(i, "30") });
+                        }
+                        return (
+                          <CustomSelect
+                            options={timeOptions}
+                            value={newMeetTime}
+                            onChange={(val) => setNewMeetTime(val)}
+                            placeholder="Ej: 2:00 PM"
+                          />
+                        );
+                      })()}
+
                       </div>
                     </div>
 
@@ -2407,19 +3789,22 @@ export default function ClientDashboard() {
                         placeholder="https://meet.google.com/..."
                         value={newMeetLink}
                         onChange={(e) => setNewMeetLink(e.target.value)}
-                        className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                        className="glass-input w-full px-4 py-2.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none min-w-0 appearance-none"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      className="px-6 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-xs font-bold font-mono tracking-wider float-right hover:opacity-95 cursor-pointer flex items-center gap-1.5"
+                      className="px-6 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-xs font-bold tracking-wider float-right hover:opacity-95 cursor-pointer flex items-center gap-1.5"
                     >
                       <Calendar size={12} />
                       CREAR EVENTO
                     </button>
                     <div className="clear-both" />
-                  </form>
+                        </motion.form>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 )}
 
                 {/* Meetings List */}
@@ -2441,7 +3826,7 @@ export default function ClientDashboard() {
                         >
                           <div className="space-y-1">
                             <div className="flex justify-between items-start gap-2">
-                              <span className="text-[10px] uppercase font-black tracking-widest text-[var(--color-primary-base)] font-mono bg-[var(--color-primary-base)]/10 px-2 py-0.5 rounded">
+                              <span className="text-[10px] uppercase font-black tracking-widest text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 px-2 py-0.5 rounded">
                                 Upcoming Sync
                               </span>
                               {isAdmin && (
@@ -2457,7 +3842,7 @@ export default function ClientDashboard() {
                             <div className="space-y-1 pt-1 text-xs text-[var(--color-text-secondary)]">
                               <p className="flex items-center gap-1.5">
                                 <Calendar size={12} className="text-[var(--color-text-secondary)]" />
-                                {meet.date} a las {meet.time}
+                                {meet.date} a las {formatTimeTo12h(meet.time)}
                               </p>
                             </div>
                           </div>
@@ -2466,7 +3851,7 @@ export default function ClientDashboard() {
                             href={meet.meetLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-2.5 rounded-xl bg-orange-600/15 border border-orange-500/20 text-orange-400 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-orange-600/25 hover:text-orange-300 transition-all font-mono"
+                            className="w-full py-2.5 rounded-xl bg-orange-600/15 border border-orange-500/20 text-orange-400 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-orange-600/25 hover:text-orange-300 transition-all"
                           >
                             <CheckCircle2 size={13} />
                             Acceder a Google Meet
@@ -2485,7 +3870,7 @@ export default function ClientDashboard() {
                         >
                           Anterior
                         </button>
-                        <span className="text-xs text-[var(--color-text-tertiary)] font-mono">
+                        <span className="text-xs text-[var(--color-text-tertiary)] font-medium">
                           Pág {meetingsPage} de {Math.ceil(data.meetings.length / itemsPerPage)}
                         </span>
                         <button
@@ -2531,7 +3916,7 @@ export default function ClientDashboard() {
                             <ExternalLink size={14} />
                             Ver Sitio Web
                           </a>
-                          <p className="text-[10px] font-mono text-zinc-500 break-all text-center">{data.projects[0].vercelUrl}</p>
+                          <p className="text-[10px] text-zinc-500 break-all text-center font-medium">{data.projects[0].vercelUrl}</p>
                         </div>
                       ) : (
                         <div className="text-zinc-500 text-xs py-4 text-center">
@@ -2718,7 +4103,7 @@ export default function ClientDashboard() {
                                 placeholder="Ej: ••••••••"
                                 value={newClientPassword}
                                 onChange={(e) => setNewClientPassword(e.target.value)}
-                                className="glass-input w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none font-mono"
+                                className="glass-input w-full pl-3.5 pr-10 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                               />
                               <button
                                 type="button"
@@ -2740,7 +4125,7 @@ export default function ClientDashboard() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1">
-                            <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)] font-mono">Nombre de la Empresa</label>
+                            <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Nombre de la Empresa</label>
                             <input
                               type="text"
                               required
@@ -2754,10 +4139,10 @@ export default function ClientDashboard() {
                           <div className="space-y-1">
                             <div className="flex justify-between items-center">
                               <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Título Comercial de la Iniciativa</label>
-                              <span className="text-[9px] font-mono font-bold text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 px-1.5 py-0.5 rounded">ID: {nextProjectDisplayId}</span>
+                              <span className="text-[9px] font-bold text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 px-1.5 py-0.5 rounded">ID: {nextProjectDisplayId}</span>
                             </div>
                             <div className="flex bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-xl overflow-hidden focus-within:border-[var(--color-primary-base)] transition-colors">
-                              <div className="pl-3.5 pr-2 py-2.5 bg-black/5 dark:bg-white/5 text-xs font-bold text-[var(--color-text-secondary)] font-mono flex items-center shrink-0 border-r border-[var(--color-border-subtle)]/50">
+                              <div className="pl-3.5 pr-2 py-2.5 bg-black/5 dark:bg-white/5 text-xs font-bold text-[var(--color-text-secondary)] flex items-center shrink-0 border-r border-[var(--color-border-subtle)]/50">
                                 {nextProjectDisplayId} -
                               </div>
                               <input
@@ -2797,9 +4182,7 @@ export default function ClientDashboard() {
                               }}
                               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 text-[var(--color-primary-base)] text-[10px] font-black hover:bg-[var(--color-primary-base)]/20 transition disabled:opacity-40 disabled:cursor-not-allowed"
                             >
-                              {aiLoadingProjectDesc ? (
-                                <div className="w-3 h-3 border border-[var(--color-primary-base)] border-t-transparent rounded-full animate-spin" />
-                              ) : <AISparkleIcon size={14} />}
+                              <AISparkleIcon size={14} className={aiLoadingProjectDesc ? "animate-spin" : ""} />
                               Generar con IA
                             </button>
                           </div>
@@ -3004,7 +4387,7 @@ export default function ClientDashboard() {
                         <p className="text-[10px] uppercase font-bold text-[var(--color-text-tertiary)]">Importe a pagar</p>
                         <p className="text-xs text-[var(--color-text-secondary)]">{payingInvoice.description}</p>
                       </div>
-                      <span className="text-2xl font-black text-emerald-400 font-mono">
+                      <span className="text-2xl font-black text-emerald-400">
                         ${payingInvoice.amount.toLocaleString("en-US")}
                       </span>
                     </div>
@@ -3017,7 +4400,7 @@ export default function ClientDashboard() {
                           placeholder="0000 0000 0000 0000"
                           value={ccNumber}
                           onChange={(e) => setCcNumber(e.target.value)}
-                          className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                          className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -3028,7 +4411,7 @@ export default function ClientDashboard() {
                             placeholder="MM/YY"
                             value={ccExpiry}
                             onChange={(e) => setCcExpiry(e.target.value)}
-                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors"
                           />
                         </div>
                         <div className="space-y-1">
@@ -3038,13 +4421,13 @@ export default function ClientDashboard() {
                             placeholder="123"
                             value={ccCvc}
                             onChange={(e) => setCcCvc(e.target.value)}
-                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors font-mono"
+                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors"
                           />
                         </div>
                       </div>
                       
                       {errorMsg && (
-                        <div className="p-3 rounded border border-red-500/20 bg-red-500/10 text-red-500 text-xs font-bold font-mono">
+                        <div className="p-3 rounded border border-red-500/20 bg-red-500/10 text-red-500 text-xs font-bold">
                           {errorMsg}
                         </div>
                       )}
@@ -3200,20 +4583,19 @@ export default function ClientDashboard() {
                           onClick={async () => {
                             if (chatLoading) return;
                             const userMsg = q;
-                            setChatMessages(prev => [...prev, {role: "user", text: userMsg}]);
+                            const newMsgs = [...chatMessages, { role: "user" as const, text: userMsg }];
+                            saveChatMessages(newMsgs);
                             setChatLoading(true);
                             try {
                               const project = clientProject;
-                              const approved = data?.tasks.filter(t => t.projectId === project?.id && t.status === "approved").length || 0;
-                              const pending = data?.tasks.filter(t => t.projectId === project?.id && t.status === "pending").length || 0;
-                              const pendingInvoices = data?.invoices.filter(i => i.projectId === project?.id && i.status === "pending") || [];
-                              const context = `Contexto: Proyecto "${project?.name}" al ${project?.progress}% en fase "${project?.currentPhase}". Entregables aprobados: ${approved}, pendientes: ${pending}. Facturas pendientes: ${pendingInvoices.length}. Da los datos de contacto (WhatsApp: +18299200544, correo: soporte@polariswebstudio.com) SOLO si el cliente pregunta cómo contactar o pide ayuda externa. De lo contrario, no los menciones.`;
-                              const reply = await askAIFrontend(
-                                `Eres el asistente de Polaris Web Studio. ${context} El cliente pregunta: "${userMsg}". Responde en español, máximo 3 oraciones, tono cercano.`
-                              );
-                              setChatMessages(prev => [...prev, {role: "assistant", text: reply}]);
+                              if (!project) throw new Error("No active project");
+                              const reply = await askAIFrontend({
+                                projectId: project.id,
+                                message: userMsg
+                              });
+                              saveChatMessages([...newMsgs, { role: "assistant" as const, text: reply }]);
                             } catch (e) {
-                              setChatMessages(prev => [...prev, {role: "assistant", text: "No pude procesar tu pregunta. Contáctanos directamente."}]);
+                              saveChatMessages([...newMsgs, { role: "assistant" as const, text: "No pude procesar tu pregunta. Contáctanos directamente." }]);
                             } finally {
                               setChatLoading(false);
                             }
@@ -3286,20 +4668,19 @@ export default function ClientDashboard() {
                     if (!chatInput.trim() || chatLoading) return;
                     const userMsg = chatInput.trim();
                     setChatInput("");
-                    setChatMessages(prev => [...prev, {role: "user", text: userMsg}]);
+                    const newMsgs = [...chatMessages, { role: "user" as const, text: userMsg }];
+                    saveChatMessages(newMsgs);
                     setChatLoading(true);
                     try {
                       const project = clientProject;
-                      const approved = data?.tasks.filter(t => t.projectId === project?.id && t.status === "approved").length || 0;
-                      const pending = data?.tasks.filter(t => t.projectId === project?.id && t.status === "pending").length || 0;
-                      const pendingInvoices = data?.invoices.filter(i => i.projectId === project?.id && i.status === "pending") || [];
-                      const context = `Contexto: Proyecto "${project?.name}" al ${project?.progress}% en fase "${project?.currentPhase}". Entregables aprobados: ${approved}, pendientes: ${pending}. Facturas pendientes: ${pendingInvoices.length}. Da los datos de contacto (WhatsApp: +18299200544, correo: soporte@polariswebstudio.com) SOLO si el cliente pregunta cómo contactar o pide ayuda externa. De lo contrario, no los menciones.`;
-                      const reply = await askAIFrontend(
-                        `Eres el asistente de Polaris Web Studio. ${context} El cliente pregunta: "${userMsg}". Responde en español, máximo 3 oraciones, tono cercano.`
-                      );
-                      setChatMessages(prev => [...prev, {role: "assistant", text: reply}]);
+                      if (!project) throw new Error("No active project");
+                      const reply = await askAIFrontend({
+                        projectId: project.id,
+                        message: userMsg
+                      });
+                      saveChatMessages([...newMsgs, { role: "assistant" as const, text: reply }]);
                     } catch (e) {
-                      setChatMessages(prev => [...prev, {role: "assistant", text: "No pude procesar tu pregunta. Contáctanos directamente."}]);
+                      saveChatMessages([...newMsgs, { role: "assistant" as const, text: "No pude procesar tu pregunta. Contáctanos directamente." }]);
                     } finally {
                       setChatLoading(false);
                     }
@@ -3312,8 +4693,10 @@ export default function ClientDashboard() {
             </motion.div>
           )}
           </AnimatePresence>
+        </>
+      )}
 
-          {/* Change Password Modal */}
+      {/* Change Password Modal */}
           <AnimatePresence>
             {showPasswordModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -3398,8 +4781,61 @@ export default function ClientDashboard() {
               </div>
             )}
           </AnimatePresence>
-        </>
-      )}
+
+          {/* Custom Confirmation Modal */}
+          <AnimatePresence>
+            {confirmDialog.isOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-md"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  className="relative w-full max-w-sm p-6 bg-[var(--color-surface-base)]/90 rounded-2xl border border-[var(--color-border-subtle)] backdrop-blur-xl bento-shadow overflow-hidden z-10"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`inline-flex p-1.5 rounded-lg ${confirmDialog.isDanger ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"}`}>
+                      {confirmDialog.isDanger ? <Trash2 size={14} /> : <Archive size={14} />}
+                    </span>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-[var(--color-text-primary)]">
+                      {confirmDialog.title}
+                    </h3>
+                  </div>
+
+                  <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed mb-6 font-medium">
+                    {confirmDialog.message}
+                  </p>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDialog((prev) => ({ ...prev, isOpen: false }))}
+                      className="flex-1 py-2 px-4 rounded-lg bg-[var(--color-surface-highlight)] hover:bg-[var(--color-surface-hover)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer select-none text-center"
+                    >
+                      {confirmDialog.cancelText}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={confirmDialog.onConfirm}
+                      className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer select-none border ${
+                        confirmDialog.isDanger
+                          ? "bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20 shadow-sm shadow-red-500/5"
+                          : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/20 shadow-sm shadow-indigo-500/5"
+                      }`}
+                    >
+                      {confirmDialog.confirmText}
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
 
     </div>
   );

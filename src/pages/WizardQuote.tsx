@@ -544,7 +544,7 @@ export default function WizardQuote() {
 
   // Domain search / check state definitions
   const [domainName, setDomainName] = useState("");
-  const [domainSuggestions, setDomainSuggestions] = useState<string[]>([]);
+  const [domainSuggestions, setDomainSuggestions] = useState<{ domain: string; available: boolean }[]>([]);
   const [checkingDomain, setCheckingDomain] = useState(false);
   const [domainError, setDomainError] = useState("");
   const [domainStatus, setDomainStatus] = useState<{
@@ -3201,7 +3201,10 @@ export default function WizardQuote() {
                                   }, 600);
                                 } else {
                                   setDomainSuggestions(
-                                    ['com', 'net', 'org', 'co', 'io', 'app'].map(tld => `${val.trim()}.${tld}`)
+                                    ['com', 'net', 'org', 'co', 'io', 'app'].map(tld => ({
+                                      domain: `${val.trim()}.${tld}`,
+                                      available: true
+                                    }))
                                   );
                                 }
                               }}
@@ -3215,7 +3218,7 @@ export default function WizardQuote() {
                               autoComplete="off"
                               spellCheck={false}
                               inputMode="url"
-                              className="glass-input w-full px-4 py-3.5 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-medium placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] focus:border-transparent text-sm shadow-sm transition-all text-left"
+                              className="glass-input w-full px-4 py-3.5 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-medium placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] focus:border-transparent text-base md:text-sm shadow-sm transition-all text-left"
                             />
                             {checkingDomain && (
                               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -3323,25 +3326,41 @@ export default function WizardQuote() {
                         )}
 
                         {domainStatus && !domainStatus.available && domainSuggestions.length > 0 && (
-                          <div className="mt-6">
-                            <h4 className="font-bold text-lg mb-3">
-                              <T en="Suggested Domains">Dominios Sugeridos</T>
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {domainSuggestions.map((suggestion: {domain: string, available: boolean}) => (
-                                <button
-                                  key={suggestion.domain}
-                                  onClick={() => setDomainName(suggestion.domain)}
-                                  className="flex items-center justify-between p-4 rounded-xl border border-[var(--color-border-strong)] bg-[var(--color-surface-soft)] hover:bg-[var(--color-surface-hover)] transition-colors duration-200"
-                                >
-                                  <span className="font-medium text-sm text-[var(--color-text-primary)]">{suggestion.domain}</span>
-                                  {suggestion.available ? (
-                                    <span className="px-2 py-1 bg-emerald-500 text-white rounded-md text-xs font-bold">AVAILABLE</span>
-                                  ) : (
-                                    <span className="px-2 py-1 bg-red-500 text-white rounded-md text-xs font-bold">TAKEN</span>
-                                  )}
-                                </button>
-                              ))}
+                          <div className="mt-5 pt-4 border-t border-[var(--color-border-subtle)]/50">
+                            <div className="flex items-center gap-1.5 mb-3">
+                              <AISparkleIcon size={15} className="text-[var(--color-primary-base)] flex-shrink-0" />
+                              <h4 className="font-bold text-xs uppercase tracking-widest text-[var(--color-text-secondary)]">
+                                <T en="Suggested Domains">Dominios Sugeridos</T>
+                              </h4>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                              {domainSuggestions.map((suggestion: {domain: string, available: boolean}) => {
+                                const isSelected = domainName.trim().toLowerCase() === suggestion.domain.toLowerCase();
+                                return (
+                                  <button
+                                    key={suggestion.domain}
+                                    type="button"
+                                    onClick={() => setDomainName(suggestion.domain)}
+                                    className={`flex items-center gap-2 p-2 px-3 rounded-lg border transition-all duration-200 text-left cursor-pointer min-w-0 ${
+                                      isSelected
+                                        ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 shadow-sm"
+                                        : "border-[var(--color-border-subtle)] bg-[var(--color-surface-soft)] hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary-base)]/50"
+                                    }`}
+                                  >
+                                    <AISparkleIcon size={11} className="text-[var(--color-primary-base)] flex-shrink-0" />
+                                    <span className={`font-medium text-xs truncate flex-1 ${
+                                      isSelected ? "text-[var(--color-primary-base)] font-bold" : "text-[var(--color-text-primary)]"
+                                    }`}>
+                                      {suggestion.domain}
+                                    </span>
+                                    {suggestion.available ? (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" title="Available" />
+                                    ) : (
+                                      <span className="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0" title="Taken" />
+                                    )}
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
                         )}
@@ -3476,7 +3495,7 @@ export default function WizardQuote() {
                                 value={pdfName}
                                 onChange={(e) => setPdfName(e.target.value)}
                                 placeholder="Juan Pérez"
-                                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
                               />
                             </div>
 
@@ -3492,7 +3511,7 @@ export default function WizardQuote() {
                                   setPdfEmailError("");
                                 }}
                                 placeholder="tu@correo.com"
-                                className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all ${
+                                className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${
                                   pdfEmailError ? "border-red-500/50 focus:ring-red-500/10" : "border-[var(--color-border-strong)]"
                                 }`}
                               />
@@ -4060,7 +4079,7 @@ export default function WizardQuote() {
                     placeholder={t("Your name", "Tu nombre")}
                     value={leadName}
                     onChange={(e) => setLeadName(e.target.value)}
-                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
                   />
                 </div>
                 <div>
@@ -4070,7 +4089,7 @@ export default function WizardQuote() {
                     value={leadEmail}
                     onChange={(e) => { setLeadEmail(e.target.value); setLeadEmailError(""); }}
                     onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
-                    className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all ${leadEmailError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
+                    className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${leadEmailError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
                   />
                   {leadEmailError && (
                     <p className="glass-input text-xs text-red-500 mt-1">{leadEmailError}</p>
@@ -4083,7 +4102,7 @@ export default function WizardQuote() {
                     value={leadPhone}
                     onChange={(e) => setLeadPhone(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
-                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
                   />
                 </div>
               </div>

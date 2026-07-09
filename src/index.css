@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --color-surface-base: #020617;
   --color-surface-elevated: #0f172a;
   --color-surface-highlight: #1e293b;
@@ -300,4 +301,41 @@
   background: rgba(15, 23, 42, 0.96);
   border: 1px solid rgba(99, 102, 241, 0.2);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+
+::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(0.5);
+  cursor: pointer;
+}
+::-webkit-calendar-picker-indicator:hover {
+  filter: invert(1) opacity(0.8);
+}
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  color: var(--color-text-primary);
+}
+
+/* Custom scrollbar for scrollbar-thin dropdown lists */
+.scrollbar-thin {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(99, 102, 241, 0.35) transparent !important;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.4) !important;
+  border-radius: 9999px !important;
+  border: 1px solid transparent !important;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.75) !important;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:active {
+  background: rgba(67, 56, 202, 0.95) !important;
 }

@@ -43,6 +43,16 @@ service cloud.firestore {
              (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time);
     }
 
+    function isValidArchivedTask(data) {
+      return data.keys().hasAll(['id', 'projectId', 'title', 'description', 'status', 'archived']) &&
+             data.id is string && data.id.size() <= 128 &&
+             data.projectId is string && data.projectId.size() <= 128 &&
+             data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 5000 &&
+             data.status is string && (data.status == 'approved' || data.status == 'rejected' || data.status == 'pending') &&
+             data.archived == true;
+    }
+
     match /newsletter_subscribers/{subscriberId} {
       allow create: if isValidId(subscriberId) &&
                     isValidNewsletterSubscriber(request.resource.data) &&
@@ -63,6 +73,10 @@ service cloud.firestore {
                     isValidQuoteSession(request.resource.data);
       allow update: if isValidId(sessionId) &&
                     isValidQuoteSession(request.resource.data);
+    }
+
+    match /archived_tasks/{taskId} {
+      allow read, write: if true;
     }
   }
 }

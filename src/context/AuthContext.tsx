@@ -132,7 +132,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(data.user);
           return { success: true };
         } catch (createErr: any) {
-          console.error("On-the-fly Firebase user creation failed (will fallback to custom session):", createErr);
+          if (createErr.code === "auth/email-already-in-use") {
+            try {
+              // User already exists in Firebase Auth, let's sign in to get a valid token
+              const signInCred = await signInWithEmailAndPassword(auth, emailClean, password);
+              const idToken = await signInCred.user.getIdToken();
+              localStorage.setItem("portal_token", idToken);
+              setToken(idToken);
+              setUser(data.user);
+              return { success: true };
+            } catch (signInErr: any) {
+              console.warn("Firebase Auth user already exists but password/sign-in failed. Falling back to custom session:", signInErr);
+            }
+          } else {
+            console.error("On-the-fly Firebase user creation failed (will fallback to custom session):", createErr);
+          }
           // If creation fails (e.g. password too short for Firebase, or network issue), use custom token fallback
           localStorage.setItem("portal_token", data.token);
           setToken(data.token);

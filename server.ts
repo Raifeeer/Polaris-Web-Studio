@@ -319,6 +319,41 @@ const PORT = 3000;
     }
   });
 
+  /**
+   * Safe Proxy Endpoint to Fetch live exchange rate from USD to DOP
+   * Format: GET /api/exchange-rate/usd-dop
+   */
+  app.get("/api/exchange-rate/usd-dop", async (req, res) => {
+    try {
+      const response = await fetch("https://open.er-api.com/v6/latest/USD");
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: any = await response.json();
+      const dopRate = data?.rates?.DOP;
+      if (typeof dopRate === "number") {
+        return res.json({ rate: dopRate, source: "Google Finance (ExchangeRate-API)" });
+      }
+      throw new Error("DOP rate not found in response");
+    } catch (err: any) {
+      console.error("Failed to fetch exchange rate:", err);
+      try {
+        const altResponse = await fetch("https://api.exchangerate-api.com/v4/latest/USD");
+        if (altResponse.ok) {
+          const altData: any = await altResponse.json();
+          const altDopRate = altData?.rates?.DOP;
+          if (typeof altDopRate === "number") {
+            return res.json({ rate: altDopRate, source: "Google Finance (ExchangeRate-API-Alt)" });
+          }
+        }
+      } catch (altErr) {
+        console.error("Alternative fetch failed:", altErr);
+      }
+      // If all else fails, return a reasonable current fallback
+      return res.json({ rate: 59.35, source: "Fallback" });
+    }
+  });
+
   app.post("/api/generate-addon-descriptions", async (req, res) => {
     try {
       await generateAddonDescriptionsHandler(req as any, res as any);
@@ -634,6 +669,20 @@ const PORT = 3000;
     res.json({ success: true, invoiceNumber });
   });
 
+  app.put("/api/portal/invoices/:id/status", authenticateToken, requireAdmin, express.json(), (req, res) => {
+    const invoices = dbInstance.getInvoices();
+    const foundInvoice = invoices.find(i => i.id === req.params.id);
+    if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
+
+    const { status } = req.body;
+    if (!["pending", "paid", "void"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status." });
+    }
+
+    dbInstance.updateInvoice(req.params.id, { status });
+    res.json({ success: true, status });
+  });
+
   app.post("/api/portal/invoices/:id/toggle-pay", authenticateToken, requireAdmin, (req, res) => {
     const invoices = dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
@@ -685,6 +734,24 @@ const PORT = 3000;
 
   app.delete("/api/portal/tasks/:id", authenticateToken, requireAdmin, (req, res) => {
     dbInstance.deleteTask(req.params.id);
+    res.json({ success: true });
+  });
+
+  app.post("/api/portal/tasks/:id/archive", authenticateToken, (req: any, res) => {
+    const { archived } = req.body;
+    const user = req.user;
+    const task = dbInstance.getTasks().find((t) => t.id === req.params.id);
+    if (!task) return res.status(404).json({ error: "Entregable no encontrado." });
+
+    if (user.role !== "admin") {
+      const clientProjects = dbInstance.getProjects().filter((p) => p.clientUserId === user.id);
+      const isMyProject = clientProjects.some((p) => p.id === task.projectId);
+      if (!isMyProject) {
+        return res.status(403).json({ error: "No tienes permiso para archivar este entregable." });
+      }
+    }
+
+    dbInstance.updateTask(req.params.id, { archived: archived === true });
     res.json({ success: true });
   });
 
@@ -828,15 +895,15 @@ const PORT = 3000;
 
   // IA: Generar descripción de entregable
   app.post("/api/ai/task-description", authenticateToken, requireAdmin, async (req, res) => {
-    const { taskTitle, projectName } = req.body;
+    const { taskTitle, projectName, draft } = req.body;
     if (!taskTitle) return res.status(400).json({ error: "Faltan datos" });
     try {
       const text = await askAI(
         `Eres un project manager de Polaris Web Studio. 
          Escribe una descripción breve en español (máximo 1 o 2 oraciones cortas) para el cliente 
          sobre el entregable "${taskTitle}" del proyecto "${projectName || "web"}". 
-         Explica brevemente qué debe revisar el cliente. Tono profesional pero accesible.
-         REGLA MUY IMPORTANTE: Devuelve SOLO la descripción, DIRECTO AL GRANO. NO incluyas introducciones como "Aquí tienes...", ni texto extra.`
+         ${draft ? `El usuario ha escrito este borrador: "${draft}". Mejora y formaliza este borrador manteniéndolo conciso.` : `Explica brevemente qué debe revisar el cliente. Tono profesional pero accesible.`}
+         REGLA MUY IMPORTANTE: Devuelve SOLO la descripción, DIRECTO AL GRANO. NO incluyas introducciones como "Aquí tienes...", ni texto extra, ni comillas.`
       );
       res.json({ text });
     } catch (e: any) {
@@ -846,14 +913,16 @@ const PORT = 3000;
 
   // IA: Generar glosa de factura
   app.post("/api/ai/invoice-description", authenticateToken, requireAdmin, async (req, res) => {
-    const { projectName, amount, phase } = req.body;
+    const { projectName, amount, phase, draft } = req.body;
     if (!amount) return res.status(400).json({ error: "Faltan datos" });
     try {
       const text = await askAI(
         `Eres el área de facturación de Polaris Web Studio. 
-         Escribe una glosa formal en español (máximo 1 oración) para una factura de $${amount} USD 
-         del proyecto "${projectName}"${phase ? ` correspondiente a "${phase}"` : ""}. 
-         Formato: "Servicios de desarrollo web correspondientes a [concepto específico]..."`
+         Genera una descripción formal en español para el concepto de una factura de $${amount} USD 
+         del proyecto "${projectName}"${phase ? ` (Fase actual: ${phase})` : ""}. 
+         ${draft ? `El usuario ha dado este contexto o borrador sobre lo que se está cobrando: "${draft}". Basándote principalmente en este contexto, redacta el concepto de la factura.` : 'Redacta un concepto basado en la fase y proyecto.'}
+         La descripción debe ser directa y profesional (máximo 1 o 2 oraciones).
+         No incluyas saludos, comillas ni el precio dentro del texto. Comienza el texto directamente con el concepto (ej: Servicios de desarrollo web correspondientes a...).`
       );
       res.json({ text });
     } catch (e: any) {
@@ -904,11 +973,67 @@ const PORT = 3000;
     if (!rateLimit(`ai-chat:${req.user.id}`, 30, 10 * 60 * 1000)) {
       return res.status(429).json({ error: "Demasiadas solicitudes de IA. Espera un momento." });
     }
-    const { prompt } = req.body;
-    if (!prompt || typeof prompt !== "string") return res.status(400).json({ error: "Falta el prompt" });
-    if (prompt.length > 4000) return res.status(400).json({ error: "El prompt es demasiado largo." });
+
+    const { projectId, message, action, prompt } = req.body;
+
+    // Admin can perform arbitrary prompts (like task title optimization)
+    if (req.user.role === "admin" && prompt) {
+      if (typeof prompt !== "string" || prompt.length > 4000) {
+        return res.status(400).json({ error: "Prompt inválido o demasiado largo." });
+      }
+      try {
+        const text = await askAI(prompt);
+        return res.json({ text });
+      } catch (e: any) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
+
+    // For clients (or admins using client portal actions), require projectId
+    if (!projectId) {
+      return res.status(400).json({ error: "Falta el projectId" });
+    }
+
+    // Fetch and validate project
+    const project = dbInstance.getProjects().find(p => p.id === projectId);
+    if (!project) {
+      return res.status(404).json({ error: "Proyecto no encontrado." });
+    }
+
+    // Security check: Clients can only ask about their own projects
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "No tienes permiso para acceder a este proyecto." });
+    }
+
     try {
-      const text = await askAI(prompt);
+      const approved = dbInstance.getTasks().filter(t => t.projectId === project.id && t.status === "approved").length;
+      const pending = dbInstance.getTasks().filter(t => t.projectId === project.id && t.status === "pending").length;
+      const pendingInvoices = dbInstance.getInvoices().filter(i => i.projectId === project.id && i.status === "pending").length;
+
+      let generatedPrompt = "";
+
+      if (action === "summary" || !message) {
+        // Generate AI Client Summary
+        const completedPhases = project.phases.filter((p: any) => p.status === "completed").length;
+        const totalPhases = project.phases.length;
+        const remainingPhases = totalPhases - completedPhases;
+        const weeksEstimate = remainingPhases <= 0 ? 0 : remainingPhases * 2;
+
+        generatedPrompt = `Eres el asistente amigable de Polaris Web Studio. Escribe un resumen breve en español 
+         (máximo 2 oraciones, tono cercano y positivo, tutéalo) para el cliente dueño del proyecto 
+         "${project.name}" que está al ${project.progress}% en la fase "${project.currentPhase}".
+         Tiene ${approved} entregables aprobados${pending > 0 ? `, ${pending} pendiente(s) de revisar` : ""}
+         ${pendingInvoices > 0 ? ` y ${pendingInvoices} factura(s) por pagar` : ""}.
+         ${weeksEstimate > 0 ? `Estima que faltan aproximadamente ${weeksEstimate} semanas para completar.` : "El proyecto está casi terminado."}
+         Sé específico con los datos, no genérico.`;
+      } else {
+        // Chat interaction
+        const context = `Contexto: Proyecto "${project.name}" al ${project.progress}% en fase "${project.currentPhase}". Entregables aprobados: ${approved}, pendientes: ${pending}. Facturas pendientes: ${pendingInvoices}. Da los datos de contacto (WhatsApp: +18299200544, correo: soporte@polariswebstudio.com) SOLO si el cliente pregunta cómo contactar o pide ayuda externa. De lo contrario, no los menciones.`;
+        
+        generatedPrompt = `Eres el asistente de Polaris Web Studio. ${context} El cliente pregunta: "${message}". Responde en español, máximo 3 oraciones, tono cercano.`;
+      }
+
+      const text = await askAI(generatedPrompt);
       res.json({ text });
     } catch (e: any) {
       res.status(500).json({ error: e.message });

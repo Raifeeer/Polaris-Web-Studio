@@ -19,12 +19,52 @@
         }
       },
       "required": ["email", "source", "subscribedAt"]
+    },
+    "ArchivedTask": {
+      "title": "ArchivedTask",
+      "description": "Represents an archived deliverable / task.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The ID of the task."
+        },
+        "projectId": {
+          "type": "string",
+          "description": "The ID of the project the task belongs to."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the task."
+        },
+        "description": {
+          "type": "string",
+          "description": "The description of the task."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the task."
+        },
+        "archived": {
+          "type": "boolean",
+          "description": "Whether the task is archived."
+        },
+        "archivedAt": {
+          "type": "string",
+          "description": "When the task was archived."
+        }
+      },
+      "required": ["id", "projectId", "title", "description", "status", "archived"]
     }
   },
   "firestore": {
     "newsletter_subscribers/{subscriberId}": {
       "schema": "NewsletterSubscriber",
       "description": "Stores all newsletter subscribers."
+    },
+    "archived_tasks/{taskId}": {
+      "schema": "ArchivedTask",
+      "description": "Stores all archived tasks / deliverables."
     }
   }
 }

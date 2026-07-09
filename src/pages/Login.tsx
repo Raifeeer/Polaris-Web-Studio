@@ -76,10 +76,6 @@ export default function Login() {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-3">
               <div className="relative">
-                <Mail
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
-                  size={18}
-                />
                 <input
                   type="email"
                   required
@@ -89,12 +85,12 @@ export default function Login() {
                   aria-label="Email"
                   className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
-              </div>
-              <div className="relative">
-                <Lock
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+                <Mail
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] z-10 pointer-events-none"
                   size={18}
                 />
+              </div>
+              <div className="relative">
                 <input
                   type="password"
                   required
@@ -103,6 +99,10 @@ export default function Login() {
                   placeholder={translate("Contraseña", "Password")}
                   aria-label={translate("Contraseña", "Password")}
                   className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
+                />
+                <Lock
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] z-10 pointer-events-none"
+                  size={18}
                 />
               </div>
             </div>

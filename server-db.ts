@@ -96,6 +96,7 @@ export interface DbTask {
   link?: string;
   createdAt?: string;
   respondedAt?: string;
+  archived?: boolean;
 }
 
 export interface DbInvoice {
@@ -104,7 +105,7 @@ export interface DbInvoice {
   invoiceNumber: string;
   amount: number;
   currency: string;
-  status: "paid" | "pending" | "overdue";
+  status: "paid" | "pending" | "overdue" | "void";
   date: string;
   dueDate: string;
   description: string;
@@ -287,12 +288,47 @@ class PortalDatabase {
     }
   }
 
+  private isWriting = false;
+  private pendingWritePromise: Promise<void> | null = null;
+  private needsWriteAgain = false;
+
   private save() {
+    this.saveAsync().catch(err => {
+      console.error("Async save failed:", err);
+    });
+  }
+
+  private async saveAsync(): Promise<void> {
     if (!this.cache) return;
+    if (this.isWriting) {
+      this.needsWriteAgain = true;
+      if (!this.pendingWritePromise) {
+        this.pendingWritePromise = new Promise<void>((resolve) => {
+          const check = setInterval(() => {
+            if (!this.isWriting) {
+              clearInterval(check);
+              this.pendingWritePromise = null;
+              resolve(this.saveAsync());
+            }
+          }, 10);
+        });
+      }
+      return this.pendingWritePromise;
+    }
+
+    this.isWriting = true;
+    this.needsWriteAgain = false;
     try {
-      fs.writeFileSync(DB_FILE_PATH, JSON.stringify(this.cache, null, 2), "utf-8");
+      const dataStr = JSON.stringify(this.cache, null, 2);
+      await fs.promises.writeFile(DB_FILE_PATH, dataStr, "utf-8");
     } catch (err) {
-      console.error("Error writing to persistent JSON db:", err);
+      console.error("Error writing to persistent JSON db asynchronously:", err);
+    } finally {
+      this.isWriting = false;
+      if (this.needsWriteAgain) {
+        this.needsWriteAgain = false;
+        await this.saveAsync();
+      }
     }
   }
 
