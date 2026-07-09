@@ -64,7 +64,7 @@ export default function Logo({
                L 10.5 10.5
                L 14.5 13.5
                Z"
-            fill="url(#logo-gradient)"
+            fill="#4f46e5"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5, ease: "circOut" }}
