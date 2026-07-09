@@ -108,7 +108,7 @@ export default function LandingPage() {
   const { language } = useLanguage();
   const [activeSection, setActiveSection] = useState<string>("inicio");
   // Misma fecha límite de la oferta de lanzamiento usada en Services.tsx (25% de descuento)
-  const [isOfferActive] = useState(() => Date.now() < new Date("2026-07-18T23:59:59Z").getTime());
+  const [isOfferActive] = useState(() => Date.now() < new Date("2026-08-17T23:59:59Z").getTime());
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
