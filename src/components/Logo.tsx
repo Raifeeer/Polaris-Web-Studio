@@ -80,7 +80,7 @@ export default function Logo({
           <span className="font-display font-black text-xl tracking-tighter uppercase text-[var(--color-text-primary)] whitespace-nowrap">
             Polaris
           </span>
-          <span className="text-[9px] font-black uppercase text-[var(--color-primary-base)] opacity-70 tracking-[0.23em] whitespace-nowrap block mt-[-5px]">
+          <span className="text-[9px] font-black uppercase text-[var(--color-primary-base)] opacity-100 tracking-[0.23em] whitespace-nowrap block mt-[-5px]">
             Web Studio
           </span>
         </div>
