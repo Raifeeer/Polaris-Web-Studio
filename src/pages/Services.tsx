@@ -450,7 +450,7 @@ export default function Services() {
   };
 
   const [targetDate] = useState(() => {
-    return new Date("2026-07-18T23:59:59Z").getTime();
+    return new Date("2026-08-17T23:59:59Z").getTime();
   });
 
   // Solo guardamos si la oferta sigue activa (cambia una única vez). El conteo
