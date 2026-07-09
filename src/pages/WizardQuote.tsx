@@ -2870,7 +2870,15 @@ export default function WizardQuote() {
                                 duration: 0.3,
                                 ease: "easeOut"
                               }}
-                              whileHover={!isSelected ? { y: -4, scale: 1.01 } : undefined}
+                              whileHover={
+                                !isSelected
+                                  ? {
+                                      y: -5,
+                                      scale: 1.008,
+                                      transition: { type: "spring", stiffness: 300, damping: 22 }
+                                    }
+                                  : undefined
+                              }
                               whileTap={!isSelected ? { scale: 0.99 } : undefined}
                               onClick={() => {
                                 if (!isSelected) {
@@ -2898,10 +2906,10 @@ export default function WizardQuote() {
                                   });
                                 }
                               }}
-                                                            className={`rounded-[var(--radius-bento)] border transition-[background-color,border-color,box-shadow] duration-200 text-left flex flex-col relative ${
+                              className={`rounded-[var(--radius-bento)] border transition-all duration-300 ease-out text-left flex flex-col relative ${
                                 isSelected
                                   ? "bg-[var(--color-primary-base)]/10 border-[var(--color-primary-base)] shadow-md col-span-full h-auto p-6"
-                                  : "overflow-hidden glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/50 cursor-pointer h-auto min-h-[140px] sm:min-h-[160px] p-6 justify-between flex-row sm:flex-col"
+                                  : "overflow-hidden glass-panel border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)]/40 hover:!bg-[var(--color-primary-base)]/[0.04] dark:hover:!bg-[var(--color-primary-base)]/[0.07] hover:shadow-lg hover:shadow-[var(--color-primary-base)]/[0.03] dark:hover:shadow-[var(--color-primary-base)]/[0.05] cursor-pointer h-auto min-h-[140px] sm:min-h-[160px] p-6 justify-between flex-row sm:flex-col"
                               }`}
                             >
                               {!isSelected ? (
