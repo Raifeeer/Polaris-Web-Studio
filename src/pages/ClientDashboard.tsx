@@ -1534,17 +1534,30 @@ export default function ClientDashboard() {
 
   const handleUpdateInvoiceStatus = async (invoiceId: string, status: string) => {
     try {
-      await fetch(`/api/portal/invoices/${invoiceId}/status`, {
+      const res = await fetch(`/api/portal/invoices/${invoiceId}/status`, {
         method: "PUT",
-        headers: { 
+        headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ status })
       });
+      const resData = await res.json();
+      if (!res.ok) {
+        setErrorMsg(resData.error || "No se pudo actualizar el estado de la factura.");
+        return;
+      }
+      if (status === "void") {
+        if (resData.refunded) {
+          setSuccessMsg("Factura invalidada y reembolsada al cliente vía PayPal.");
+        } else if (resData.manualPayment) {
+          setSuccessMsg("Factura invalidada. Se había marcado pagada manualmente, así que no se generó ningún reembolso automático.");
+        }
+      }
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       console.error(err);
+      setErrorMsg("Error de conexión al actualizar la factura.");
     }
   };
 
@@ -3711,11 +3724,17 @@ export default function ClientDashboard() {
                                           <button
                                             onClick={() => {
                                               setOpenInvoiceStatusDropdown(null);
+                                              const willRefund = inv.status === "paid" && !!inv.paypalCaptureId;
+                                              const wasManuallyPaid = inv.status === "paid" && !inv.paypalCaptureId;
                                               setConfirmDialog({
                                                 isOpen: true,
                                                 title: "Invalidar Factura",
-                                                message: "¿Está seguro de que desea invalidar esta factura? Esta acción no se puede deshacer.",
-                                                confirmText: "Invalidar Factura",
+                                                message: willRefund
+                                                  ? `Esta factura fue pagada de verdad con PayPal. Al invalidarla se reembolsarán ${formatMoney(inv.amount)} al cliente automáticamente vía PayPal. Esta acción no se puede deshacer.`
+                                                  : wasManuallyPaid
+                                                  ? "Esta factura se marcó como pagada manualmente (no por PayPal), así que invalidarla NO generará ningún reembolso automático. Esta acción no se puede deshacer."
+                                                  : "¿Está seguro de que desea invalidar esta factura? Esta acción no se puede deshacer.",
+                                                confirmText: willRefund ? "Invalidar y Reembolsar" : "Invalidar Factura",
                                                 cancelText: "Cancelar",
                                                 isDanger: true,
                                                 onConfirm: () => {

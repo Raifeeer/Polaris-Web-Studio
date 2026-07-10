@@ -285,6 +285,59 @@ async function paypalCaptureOrder(orderId: string): Promise<any> {
   return data;
 }
 
+async function paypalGetOrder(orderId: string): Promise<any> {
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${paypalApiBase()}/v2/checkout/orders/${orderId}`, {
+    headers: { "Authorization": `Bearer ${accessToken}` },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "No se pudo consultar la orden de PayPal.");
+  return data;
+}
+
+async function paypalRefundCapture(captureId: string, amount: number, currency: string): Promise<any> {
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${paypalApiBase()}/v2/payments/captures/${captureId}/refund`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      amount: { value: amount.toFixed(2), currency_code: currency },
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "No se pudo procesar el reembolso de PayPal.");
+  return data;
+}
+
+async function paypalVerifyWebhookSignature(headers: Record<string, any>, body: any): Promise<boolean> {
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+  if (!webhookId) throw new Error("PAYPAL_WEBHOOK_ID no configurado.");
+
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${paypalApiBase()}/v1/notifications/verify-webhook-signature`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      auth_algo: headers["paypal-auth-algo"],
+      cert_url: headers["paypal-cert-url"],
+      transmission_id: headers["paypal-transmission-id"],
+      transmission_sig: headers["paypal-transmission-sig"],
+      transmission_time: headers["paypal-transmission-time"],
+      webhook_id: webhookId,
+      webhook_event: body,
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) return false;
+  return data.verification_status === "SUCCESS";
+}
+
 /**
  * Standard pricing estimates for common TLDs when not returned as premium by Namecheap API
  * (Registration/check API only returns pricing for premium domains by default)
@@ -748,7 +801,7 @@ const PORT = 3000;
     res.json({ success: true, invoiceNumber });
   });
 
-  app.put("/api/portal/invoices/:id/status", authenticateToken, requireAdmin, express.json(), (req, res) => {
+  app.put("/api/portal/invoices/:id/status", authenticateToken, requireAdmin, express.json(), async (req, res) => {
     const invoices = dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
     if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
@@ -758,8 +811,24 @@ const PORT = 3000;
       return res.status(400).json({ error: "Invalid status." });
     }
 
+    // Invalidar una factura que ya fue cobrada de verdad por PayPal debe
+    // devolver el dinero: si el reembolso falla, no se invalida la factura,
+    // para que no quede una factura "invalidada" con el cobro real todavía
+    // en manos de la agencia.
+    if (status === "void" && foundInvoice.status === "paid" && foundInvoice.paypalCaptureId) {
+      try {
+        const refund = await paypalRefundCapture(foundInvoice.paypalCaptureId, foundInvoice.amount, foundInvoice.currency);
+        dbInstance.updateInvoice(req.params.id, { status: "void", paypalRefundId: refund.id });
+        return res.json({ success: true, status: "void", refunded: true });
+      } catch (error: any) {
+        console.error("Error reembolsando factura vía PayPal:", error?.message);
+        return res.status(502).json({ error: "No se pudo procesar el reembolso con PayPal. La factura no fue invalidada." });
+      }
+    }
+
+    const manualPayment = status === "void" && foundInvoice.status === "paid" && !foundInvoice.paypalCaptureId;
     dbInstance.updateInvoice(req.params.id, { status });
-    res.json({ success: true, status });
+    res.json({ success: true, status, refunded: false, manualPayment });
   });
 
   app.post("/api/portal/invoices/:id/toggle-pay", authenticateToken, requireAdmin, (req, res) => {
@@ -1273,6 +1342,62 @@ const PORT = 3000;
     });
 
     console.log(`[GitHub Webhook] Push registrado para proyecto ${project.name}`);
+    res.status(200).json({ ok: true });
+  });
+
+  // Webhook de PayPal — reconcilia el estado real del pago aunque el navegador
+  // del cliente se cierre justo después de aprobar (el servidor ya captura y
+  // guarda antes de responder, pero esto cubre el caso en que esa escritura
+  // nunca llegó a completarse). Fail-closed: sin PAYPAL_WEBHOOK_ID configurado
+  // o con firma inválida, se rechaza — de lo contrario cualquiera podría
+  // marcar facturas como pagadas enviando eventos falsos.
+  app.post("/api/webhooks/paypal", async (req, res) => {
+    if (!process.env.PAYPAL_WEBHOOK_ID) {
+      console.warn("[Webhook PayPal] PAYPAL_WEBHOOK_ID no configurado: webhook rechazado.");
+      return res.status(503).json({ error: "Webhook no configurado" });
+    }
+
+    let verified = false;
+    try {
+      verified = await paypalVerifyWebhookSignature(req.headers as Record<string, any>, req.body);
+    } catch (error: any) {
+      console.error("[Webhook PayPal] Error verificando firma:", error?.message);
+    }
+    if (!verified) return res.status(401).json({ error: "Firma inválida" });
+
+    const event = req.body;
+    try {
+      if (event.event_type === "PAYMENT.CAPTURE.COMPLETED") {
+        const captureId = event.resource?.id;
+        const orderId = event.resource?.supplementary_data?.related_ids?.order_id;
+        if (orderId && captureId) {
+          const order = await paypalGetOrder(orderId);
+          const invoiceId = order.purchase_units?.[0]?.reference_id;
+          const foundInvoice = invoiceId ? dbInstance.getInvoices().find((i) => i.id === invoiceId) : null;
+          if (foundInvoice && foundInvoice.status !== "paid") {
+            const amount = parseFloat(event.resource.amount?.value);
+            const currency = event.resource.amount?.currency_code;
+            if (Math.abs(amount - foundInvoice.amount) < 0.01 && currency === foundInvoice.currency) {
+              dbInstance.updateInvoice(foundInvoice.id, { status: "paid", paypalOrderId: orderId, paypalCaptureId: captureId });
+              console.log(`[Webhook PayPal] Factura ${foundInvoice.id} confirmada como pagada.`);
+            } else {
+              console.error(`[Webhook PayPal] Monto no coincide para factura ${foundInvoice.id}: esperado ${foundInvoice.amount} ${foundInvoice.currency}, recibido ${amount} ${currency}`);
+            }
+          }
+        }
+      } else if (event.event_type === "PAYMENT.CAPTURE.REFUNDED") {
+        const upLink = event.resource?.links?.find((l: any) => l.rel === "up")?.href as string | undefined;
+        const captureId = upLink ? upLink.split("/").pop() : null;
+        const foundInvoice = captureId ? dbInstance.getInvoices().find((i) => i.paypalCaptureId === captureId) : null;
+        if (foundInvoice && foundInvoice.status !== "void") {
+          dbInstance.updateInvoice(foundInvoice.id, { status: "void" });
+          console.log(`[Webhook PayPal] Factura ${foundInvoice.id} invalidada (reembolso detectado por webhook).`);
+        }
+      }
+    } catch (error: any) {
+      console.error("[Webhook PayPal] Error procesando evento:", error?.message);
+    }
+
     res.status(200).json({ ok: true });
   });
 

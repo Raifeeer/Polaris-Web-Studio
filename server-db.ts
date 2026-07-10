@@ -111,6 +111,7 @@ export interface DbInvoice {
   description: string;
   paypalOrderId?: string;
   paypalCaptureId?: string;
+  paypalRefundId?: string;
 }
 
 export interface DbMeeting {
