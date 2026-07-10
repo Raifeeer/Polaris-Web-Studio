@@ -1659,7 +1659,40 @@ export default function ClientDashboard() {
 
   const printInvoice = (inv: any) => {
     const project = data?.projects.find((p: any) => p.id === inv.projectId);
-    const printWindow = window.open("", "_blank", "width=800,height=600");
+    const clientUser = isAdmin
+      ? data?.clients?.find((c: any) => c.id === project?.clientUserId)
+      : null;
+    const clientName = isAdmin ? (clientUser?.name || "—") : (user?.name || "—");
+    const clientCompany = isAdmin ? clientUser?.companyName : (user as any)?.companyName;
+    const clientEmail = isAdmin ? clientUser?.email : user?.email;
+
+    const payment = inv.status === "paid" && inv.paypalCaptureId
+      ? { label: "PayPal", detail: `Ref: ${inv.paypalCaptureId}` }
+      : inv.status === "paid"
+      ? { label: "Transferencia bancaria / Efectivo", detail: "Pago confirmado manualmente" }
+      : inv.status === "void"
+      ? {
+          label: "Factura invalidada",
+          detail: inv.paypalRefundId ? `Reembolsada vía PayPal (Ref: ${inv.paypalRefundId})` : "Sin cobro asociado",
+        }
+      : { label: "PayPal", detail: "Pendiente — disponible para pagar en el portal del cliente" };
+
+    const statusLabel = inv.status === "paid" ? "Pagada" : inv.status === "void" ? "Invalidada" : "Pendiente";
+    const chevronsRight = `
+      <svg width="120" height="52" viewBox="0 0 120 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="8,8 26,26 8,44" stroke="#c7d2fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="46,8 64,26 46,44" stroke="#c7d2fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="84,8 102,26 84,44" stroke="#c7d2fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+    const chevronsLeft = `
+      <svg width="120" height="52" viewBox="0 0 120 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="112,8 94,26 112,44" stroke="#c7d2fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="74,8 56,26 74,44" stroke="#c7d2fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <polyline points="36,8 18,26 36,44" stroke="#c7d2fe" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`;
+    const xGrid = `<div class="x-grid"><span>×</span><span>×</span><span>×</span><span>×</span><span>×</span><span>×</span><span>×</span><span>×</span></div>`;
+
+    const printWindow = window.open("", "_blank", "width=850,height=900");
     if (!printWindow) return;
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -1669,79 +1702,131 @@ export default function ClientDashboard() {
         <title>Factura ${inv.invoiceNumber}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Arial', sans-serif; color: #1e293b; background: #fff; padding: 48px; }
-          .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 48px; padding-bottom: 24px; border-bottom: 2px solid #e2e8f0; }
-          .brand { display: flex; flex-direction: column; gap: 4px; }
-          .brand-name { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; }
-          .brand-sub { font-size: 10px; font-weight: 700; color: #6366f1; letter-spacing: 3px; text-transform: uppercase; }
-          .invoice-meta { text-align: right; }
-          .invoice-num { font-size: 20px; font-weight: 900; color: #6366f1; }
-          .invoice-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
-          .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; background: ${inv.status === "paid" ? "#dcfce7" : inv.status === "void" ? "#fee2e2" : "#fef9c3"}; color: ${inv.status === "paid" ? "#15803d" : inv.status === "void" ? "#b91c1c" : "#854d0e"}; }
-          .section { margin-bottom: 32px; }
-          .section-title { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; margin-bottom: 12px; }
-          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-          .info-item label { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 3px; }
-          .info-item span { font-size: 13px; color: #1e293b; font-weight: 600; }
-          .amount-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center; margin: 32px 0; }
-          .amount-label { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
-          .amount-value { font-size: 42px; font-weight: 900; color: #0f172a; letter-spacing: -1px; }
-          .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-          .footer-note { font-size: 11px; color: #94a3b8; }
-          .footer-brand { font-size: 11px; font-weight: 700; color: #6366f1; }
-          @media print { body { padding: 32px; } }
+          body { font-family: 'Arial', sans-serif; color: #1e293b; background: #fff; }
+          .band { position: relative; height: 56px; background: #4F46E5; overflow: hidden; }
+          .band .chip-l { position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: #7C3AED; clip-path: polygon(0 0, 86% 0, 68% 100%, 0 100%); }
+          .band .chip-r { position: absolute; top: 0; right: 0; width: 16%; height: 100%; background: #7C3AED; clip-path: polygon(24% 0, 100% 0, 100% 100%, 0 100%); }
+          .band .slash { position: absolute; top: -10%; width: 12px; height: 130%; background: #fff; transform: skewX(-18deg); }
+          .band .slash.s1 { left: 27%; }
+          .band .slash.s2 { right: 10%; }
+          .footer-band .chip-l { left: auto; right: 0; clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%); }
+          .footer-band .chip-r { right: auto; left: 0; width: 30%; clip-path: polygon(0 0, 100% 0, 100% 100%, 32% 100%); }
+          .logo-row { display: flex; align-items: center; justify-content: center; gap: 28px; padding: 28px 24px 8px; }
+          .brand-mark { display: flex; align-items: center; gap: 10px; }
+          .brand-name { font-size: 26px; font-weight: 900; letter-spacing: -0.5px; color: #0f172a; line-height: 1; }
+          .brand-sub { font-size: 11px; font-weight: 800; color: #4F46E5; letter-spacing: 3px; text-transform: uppercase; }
+          .content { padding: 20px 48px 0; }
+          .badges-row { display: flex; justify-content: space-between; margin: 12px 0 28px; }
+          .pill { background: #4F46E5; color: #fff; font-weight: 800; font-size: 15px; letter-spacing: 0.5px; padding: 12px 26px; border-radius: 8px; }
+          .status-note { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; text-align: right; color: ${inv.status === "paid" ? "#15803d" : inv.status === "void" ? "#b91c1c" : "#854d0e"}; }
+          .info-block p { font-size: 13px; margin-bottom: 8px; }
+          .info-block b { font-weight: 800; }
+          .table-wrap { position: relative; margin-top: 28px; }
+          table { width: 100%; border-collapse: collapse; }
+          thead th { background: #4F46E5; color: #fff; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 16px; }
+          thead th.num, tbody td.num { text-align: right; }
+          tbody td { padding: 14px 16px; font-size: 13px; background: #F4F2F1; }
+          .x-grid { position: absolute; top: 0; right: -34px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; color: #7C3AED; font-weight: 700; font-size: 13px; }
+          .bottom-row { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 28px; position: relative; padding-bottom: 12px; }
+          .bottom-row .x-grid { left: -34px; right: auto; top: 40px; }
+          .payment b { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; }
+          .payment span { font-size: 13px; display: block; }
+          .totals { min-width: 220px; }
+          .totals .row { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0; color: #475569; }
+          .totals .total { background: #4F46E5; color: #fff; font-weight: 800; font-size: 16px; padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; margin-top: 6px; }
+          .footer-band { margin-top: 40px; }
+          .footer-content { position: relative; z-index: 1; height: 100%; display: flex; align-items: center; justify-content: center; gap: 28px; color: #fff; font-size: 11px; font-weight: 700; }
+          @media print { .content { padding: 20px 40px 0; } }
         </style>
       </head>
       <body>
-        <div class="header">
-          <div class="brand">
-            <span class="brand-name">Polaris</span>
-            <span class="brand-sub">Web Studio</span>
-          </div>
-          <div class="invoice-meta">
-            <div class="invoice-label">Número de Factura</div>
-            <div class="invoice-num">${inv.invoiceNumber}</div>
-            <div class="status-badge">${inv.status === "paid" ? "Pagada" : inv.status === "void" ? "Invalidada" : "Pendiente"}</div>
-          </div>
+        <div class="band">
+          <div class="chip-l"></div>
+          <div class="slash s1"></div>
+          <div class="slash s2"></div>
+          <div class="chip-r"></div>
         </div>
-  
-        <div class="section">
-          <div class="section-title">Detalles de Facturación</div>
-          <div class="info-grid">
-            <div class="info-item">
-              <label>Proyecto</label>
-              <span>${project?.name || "—"}</span>
-            </div>
-            <div class="info-item">
-              <label>Cliente</label>
-              <span>${user?.name || "—"}</span>
-            </div>
-            <div class="info-item">
-              <label>Fecha de Emisión</label>
-              <span>${inv.date}</span>
-            </div>
-            <div class="info-item">
-              <label>Fecha de Vencimiento</label>
-              <span>${inv.dueDate}</span>
+
+        <div class="logo-row">
+          ${chevronsRight}
+          <div class="brand-mark">
+            <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M 16 2 L 17.5 13.5 L 21.5 10.5 L 18.5 14.5 L 30 16 L 18.5 17.5 L 21.5 21.5 L 17.5 18.5 L 16 30 L 14.5 18.5 L 10.5 21.5 L 13.5 17.5 L 2 16 L 13.5 14.5 L 10.5 10.5 L 14.5 13.5 Z" fill="#4F46E5"/>
+              <circle cx="16" cy="16" r="1.5" fill="#fff"/>
+            </svg>
+            <div>
+              <div class="brand-name">POLARIS</div>
+              <div class="brand-sub">Web Studio</div>
             </div>
           </div>
+          ${chevronsLeft}
         </div>
-  
-        <div class="section">
-          <div class="section-title">Concepto</div>
-          <p style="font-size:13px; color:#334155; line-height:1.6;">${inv.description || "Servicios de desarrollo web."}</p>
+
+        <div class="content">
+          <div class="badges-row">
+            <div class="pill">FACTURA</div>
+            <div>
+              <div class="pill">${inv.invoiceNumber}</div>
+              <div class="status-note">${statusLabel}</div>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <p><b>Fecha:</b> ${inv.date} &nbsp;&nbsp; <b>Vencimiento:</b> ${inv.dueDate}</p>
+            <p><b>Proyecto:</b> ${project?.name || "—"}</p>
+            <p><b>Datos del cliente</b><br/>${clientName}${clientCompany ? ` — ${clientCompany}` : ""}</p>
+            ${clientEmail ? `<p><b>Correo electrónico:</b> ${clientEmail}</p>` : ""}
+          </div>
+
+          <div class="table-wrap">
+            ${xGrid}
+            <table>
+              <thead>
+                <tr>
+                  <th>Concepto</th>
+                  <th class="num">Precio</th>
+                  <th class="num">Cantidad</th>
+                  <th class="num">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>${inv.description || "Servicios de desarrollo web."}</td>
+                  <td class="num">$${Number(inv.amount).toFixed(2)}</td>
+                  <td class="num">1</td>
+                  <td class="num">$${Number(inv.amount).toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="bottom-row">
+            ${xGrid}
+            <div class="payment">
+              <b>Forma de pago</b>
+              <span>${payment.label}</span>
+              <span>${payment.detail}</span>
+            </div>
+            <div class="totals">
+              <div class="row"><span>Subtotal</span><span>$${Number(inv.amount).toFixed(2)}</span></div>
+              <div class="row"><span>Impuestos</span><span>$0.00</span></div>
+              <div class="total"><span>TOTAL</span><span>$${Number(inv.amount).toFixed(2)} USD</span></div>
+            </div>
+          </div>
         </div>
-  
-        <div class="amount-box">
-          <div class="amount-label">Total a Pagar</div>
-          <div class="amount-value">$${Number(inv.amount).toFixed(2)} USD</div>
+
+        <div class="band footer-band">
+          <div class="chip-l"></div>
+          <div class="slash s1"></div>
+          <div class="slash s2"></div>
+          <div class="chip-r"></div>
+          <div class="footer-content">
+            <span>polarisweb.studio</span>
+            <span>hola@polarisweb.studio</span>
+            <span>+1 (829) 920-0544</span>
+          </div>
         </div>
-  
-        <div class="footer">
-          <span class="footer-note">Polaris Web Studio · Punta Cana, República Dominicana</span>
-          <span class="footer-brand">polarisweb.studio</span>
-        </div>
-  
+
         <script>window.onload = () => { window.print(); }</script>
       </body>
       </html>
