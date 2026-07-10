@@ -691,10 +691,9 @@ export default function ClientDashboard() {
   // Invoice Checkout Modal States
   const [payingInvoice, setPayingInvoice] = useState<any | null>(null);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [ccNumber, setCcNumber] = useState("");
-  const [ccExpiry, setCcExpiry] = useState("");
-  const [ccCvc, setCcCvc] = useState("");
   const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const paypalButtonsContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Forms / Management States
   const [selectedProjectId, setSelectedProjectId] = useState<string>("");
@@ -952,6 +951,97 @@ export default function ClientDashboard() {
       });
     return () => controller.abort();
   }, [token, selectedProjectId, refreshTrigger]);
+
+  // Carga el SDK de botones de PayPal y los renderiza cada vez que se abre
+  // el modal de pago de una factura nueva. `paymentSuccess` se excluye de las
+  // deps a propósito: no queremos re-renderizar los botones al mostrar la
+  // pantalla de éxito, solo al cambiar de factura.
+  useEffect(() => {
+    if (!payingInvoice || paymentSuccess) return;
+
+    let cancelled = false;
+    setPaypalReady(false);
+
+    (async () => {
+      try {
+        const clientIdRes = await fetch("/api/portal/paypal/client-id", {
+          headers: { Authorization: `Bearer ${tokenRef.current}` },
+        });
+        if (!clientIdRes.ok) throw new Error("No se pudo obtener la configuración de PayPal.");
+        const { clientId } = await clientIdRes.json();
+        if (cancelled) return;
+
+        const currency = payingInvoice.currency || "USD";
+        const existingScript = document.getElementById("paypal-sdk") as HTMLScriptElement | null;
+        if (existingScript && existingScript.dataset.currency !== currency) {
+          existingScript.remove();
+          delete (window as any).paypal;
+        }
+
+        if (!(window as any).paypal) {
+          await new Promise<void>((resolve, reject) => {
+            const script = document.createElement("script");
+            script.id = "paypal-sdk";
+            script.dataset.currency = currency;
+            script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=${currency}&intent=capture`;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal."));
+            document.body.appendChild(script);
+          });
+        }
+        if (cancelled || !paypalButtonsContainerRef.current) return;
+
+        paypalButtonsContainerRef.current.innerHTML = "";
+        (window as any).paypal
+          .Buttons({
+            style: { layout: "vertical", color: "blue", shape: "pill", label: "pay" },
+            createOrder: async () => {
+              const res = await fetch(`/api/portal/invoices/${payingInvoice.id}/paypal/create-order`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${tokenRef.current}` },
+              });
+              const orderData = await res.json();
+              if (!res.ok) throw new Error(orderData.error || "No se pudo iniciar el pago.");
+              return orderData.orderId;
+            },
+            onApprove: async (approveData: { orderID: string }) => {
+              setPaymentProcessing(true);
+              setErrorMsg(null);
+              try {
+                const res = await fetch(`/api/portal/invoices/${payingInvoice.id}/paypal/capture-order`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${tokenRef.current}`,
+                  },
+                  body: JSON.stringify({ orderId: approveData.orderID }),
+                });
+                const captureData = await res.json();
+                if (!res.ok) throw new Error(captureData.error || "No se pudo confirmar el pago.");
+                setPaymentSuccess(true);
+                setRefreshTrigger((p) => p + 1);
+              } catch (err: any) {
+                setErrorMsg(err.message || "Fallo al procesar el pago.");
+              } finally {
+                setPaymentProcessing(false);
+              }
+            },
+            onError: () => {
+              setErrorMsg("Ocurrió un error con PayPal. Intenta de nuevo.");
+            },
+          })
+          .render(paypalButtonsContainerRef.current);
+
+        setPaypalReady(true);
+      } catch (err: any) {
+        if (!cancelled) setErrorMsg(err.message || "No se pudo cargar PayPal.");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [payingInvoice?.id]);
 
   const handleLogout = () => {
     // Limpia los datos del panel además del token/usuario: si se deja el
@@ -3678,9 +3768,7 @@ export default function ClientDashboard() {
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      setCcNumber("");
-                                      setCcExpiry("");
-                                      setCcCvc("");
+                                      setErrorMsg(null);
                                       setPaymentSuccess(false);
                                       setPayingInvoice(inv);
                                     }}
@@ -4452,82 +4540,27 @@ export default function ClientDashboard() {
                     </div>
 
                     <div className="space-y-4">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Número de Tarjeta</label>
-                        <input
-                          type="text"
-                          placeholder="0000 0000 0000 0000"
-                          value={ccNumber}
-                          onChange={(e) => setCcNumber(e.target.value)}
-                          className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Vencimiento</label>
-                          <input
-                            type="text"
-                            placeholder="MM/YY"
-                            value={ccExpiry}
-                            onChange={(e) => setCcExpiry(e.target.value)}
-                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">CVC</label>
-                          <input
-                            type="text"
-                            placeholder="123"
-                            value={ccCvc}
-                            onChange={(e) => setCcCvc(e.target.value)}
-                            className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500 transition-colors"
-                          />
-                        </div>
-                      </div>
-                      
                       {errorMsg && (
                         <div className="p-3 rounded border border-red-500/20 bg-red-500/10 text-red-500 text-xs font-bold">
                           {errorMsg}
                         </div>
                       )}
 
-                      <button
-                        onClick={async () => {
-                          if (!ccNumber || (!ccExpiry && !ccCvc)) {
-                            setErrorMsg("Por favor, ingrese detalles de tarjeta (simulados) para continuar.");
-                            return;
-                          }
-                          setPaymentProcessing(true);
-                          setErrorMsg(null);
-                          // Simulate payment processing delay
-                          await new Promise(r => setTimeout(r, 1500));
-                          
-                          try {
-                            const res = await fetch(`/api/portal/invoices/${payingInvoice.id}/pay`, {
-                              method: "POST",
-                              headers: { Authorization: `Bearer ${token}` }
-                            });
-                            if (!res.ok) throw new Error("Payment failed on server");
-                            setPaymentSuccess(true);
-                            setRefreshTrigger(p => p + 1);
-                          } catch (err) {
-                            setErrorMsg("Fallo al procesar pago en el servidor.");
-                          } finally {
-                            setPaymentProcessing(false);
-                          }
-                        }}
-                        disabled={paymentProcessing}
-                        className="w-full py-3 mt-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {paymentProcessing ? (
-                          <RefreshCw size={18} className="animate-spin" />
-                        ) : (
-                          <>
-                            <CheckCircle2 size={18} />
-                            PAGAR AHORA
-                          </>
+                      <div className="relative min-h-[3rem]">
+                        {(!paypalReady || paymentProcessing) && (
+                          <div className="absolute inset-0 flex items-center justify-center gap-2 text-sm text-[var(--color-text-secondary)]">
+                            <RefreshCw size={18} className="animate-spin" />
+                            {paymentProcessing ? "Confirmando pago..." : "Cargando PayPal..."}
+                          </div>
                         )}
-                      </button>
+                        <div
+                          ref={paypalButtonsContainerRef}
+                          className={paymentProcessing ? "opacity-0 pointer-events-none" : ""}
+                        />
+                      </div>
+                      <p className="text-[10px] text-center text-[var(--color-text-tertiary)]">
+                        Pago seguro procesado por PayPal.
+                      </p>
                     </div>
                   </>
                 )}

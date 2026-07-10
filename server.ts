@@ -213,6 +213,78 @@ async function askAI(prompt: string): Promise<string> {
   }
 }
 
+function paypalApiBase(): string {
+  return process.env.PAYPAL_ENV === "live"
+    ? "https://api-m.paypal.com"
+    : "https://api-m.sandbox.paypal.com";
+}
+
+let cachedPayPalToken: { token: string; expiresAt: number } | null = null;
+
+async function getPayPalAccessToken(): Promise<string> {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error("Credenciales de PayPal no configuradas.");
+
+  if (cachedPayPalToken && cachedPayPalToken.expiresAt > Date.now()) {
+    return cachedPayPalToken.token;
+  }
+
+  const response = await fetch(`${paypalApiBase()}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`,
+    },
+    body: "grant_type=client_credentials",
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error_description || "No se pudo autenticar con PayPal.");
+
+  cachedPayPalToken = {
+    token: data.access_token,
+    expiresAt: Date.now() + (data.expires_in - 60) * 1000,
+  };
+  return cachedPayPalToken.token;
+}
+
+async function paypalCreateOrder(amount: number, currency: string, invoiceId: string): Promise<any> {
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${paypalApiBase()}/v2/checkout/orders`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      intent: "CAPTURE",
+      purchase_units: [
+        {
+          reference_id: invoiceId,
+          amount: { currency_code: currency, value: amount.toFixed(2) },
+        },
+      ],
+    }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "No se pudo crear la orden de PayPal.");
+  return data;
+}
+
+async function paypalCaptureOrder(orderId: string): Promise<any> {
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${paypalApiBase()}/v2/checkout/orders/${orderId}/capture`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "No se pudo capturar el pago de PayPal.");
+  return data;
+}
+
 /**
  * Standard pricing estimates for common TLDs when not returned as premium by Namecheap API
  * (Registration/check API only returns pricing for premium domains by default)
@@ -700,20 +772,96 @@ const PORT = 3000;
     res.json({ success: true, status: nextStatus });
   });
 
-  app.post("/api/portal/invoices/:id/pay", authenticateToken, (req: any, res) => {
+  app.get("/api/portal/paypal/client-id", authenticateToken, (_req, res) => {
+    if (!process.env.PAYPAL_CLIENT_ID) {
+      return res.status(503).json({ error: "PayPal no está configurado." });
+    }
+    res.json({ clientId: process.env.PAYPAL_CLIENT_ID });
+  });
+
+  function assertInvoiceAccess(req: any, foundInvoice: any, res: any): any {
+    const project = dbInstance.getProjects().find((p) => p.id === foundInvoice.projectId);
+    if (!project) {
+      res.status(404).json({ error: "Proyecto asociado inexistente." });
+      return null;
+    }
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre esta factura." });
+      return null;
+    }
+    return project;
+  }
+
+  app.post("/api/portal/invoices/:id/paypal/create-order", authenticateToken, async (req: any, res) => {
+    if (!rateLimit(`paypal-order:${req.user.id}`, 20, 10 * 60 * 1000)) {
+      return res.status(429).json({ error: "Demasiados intentos. Intenta de nuevo más tarde." });
+    }
+
     const invoices = dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
     if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
+    if (!assertInvoiceAccess(req, foundInvoice, res)) return;
 
-    const project = dbInstance.getProjects().find((p) => p.id === foundInvoice.projectId);
-    if (!project) return res.status(404).json({ error: "Proyecto asociado inexistente." });
-
-    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
-      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre esta factura." });
+    if (foundInvoice.status === "paid") {
+      return res.status(400).json({ error: "Esta factura ya está pagada." });
     }
 
-    dbInstance.updateInvoice(req.params.id, { status: "paid" });
-    res.json({ success: true, status: "paid" });
+    try {
+      const order = await paypalCreateOrder(foundInvoice.amount, foundInvoice.currency, foundInvoice.id);
+      res.json({ success: true, orderId: order.id });
+    } catch (error: any) {
+      console.error("Error creando orden PayPal:", error?.message);
+      res.status(502).json({ error: "No se pudo iniciar el pago con PayPal." });
+    }
+  });
+
+  app.post("/api/portal/invoices/:id/paypal/capture-order", authenticateToken, async (req: any, res) => {
+    if (!rateLimit(`paypal-capture:${req.user.id}`, 20, 10 * 60 * 1000)) {
+      return res.status(429).json({ error: "Demasiados intentos. Intenta de nuevo más tarde." });
+    }
+
+    const { orderId } = req.body || {};
+    if (!orderId) return res.status(400).json({ error: "Falta el ID de la orden de PayPal." });
+
+    const invoices = dbInstance.getInvoices();
+    const foundInvoice = invoices.find(i => i.id === req.params.id);
+    if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
+    if (!assertInvoiceAccess(req, foundInvoice, res)) return;
+
+    if (foundInvoice.status === "paid") {
+      return res.status(400).json({ error: "Esta factura ya está pagada." });
+    }
+
+    try {
+      const capture = await paypalCaptureOrder(orderId);
+      const captureUnit = capture.purchase_units?.[0]?.payments?.captures?.[0];
+
+      if (capture.status !== "COMPLETED" || !captureUnit) {
+        return res.status(402).json({ error: "El pago no se completó." });
+      }
+
+      const capturedAmount = parseFloat(captureUnit.amount?.value);
+      const capturedCurrency = captureUnit.amount?.currency_code;
+      if (
+        Math.abs(capturedAmount - foundInvoice.amount) > 0.01 ||
+        capturedCurrency !== foundInvoice.currency
+      ) {
+        console.error(
+          `Discrepancia de monto PayPal: factura ${foundInvoice.id} esperaba ${foundInvoice.amount} ${foundInvoice.currency}, se capturó ${capturedAmount} ${capturedCurrency}`
+        );
+        return res.status(402).json({ error: "El monto capturado no coincide con la factura." });
+      }
+
+      dbInstance.updateInvoice(req.params.id, {
+        status: "paid",
+        paypalOrderId: orderId,
+        paypalCaptureId: captureUnit.id,
+      });
+      res.json({ success: true, status: "paid" });
+    } catch (error: any) {
+      console.error("Error capturando orden PayPal:", error?.message);
+      res.status(502).json({ error: "No se pudo confirmar el pago con PayPal." });
+    }
   });
 
   app.delete("/api/portal/invoices/:id", authenticateToken, requireAdmin, (req, res) => {

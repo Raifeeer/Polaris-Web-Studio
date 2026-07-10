@@ -109,6 +109,8 @@ export interface DbInvoice {
   date: string;
   dueDate: string;
   description: string;
+  paypalOrderId?: string;
+  paypalCaptureId?: string;
 }
 
 export interface DbMeeting {
