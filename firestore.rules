@@ -76,7 +76,16 @@ service cloud.firestore {
     }
 
     match /archived_tasks/{taskId} {
-      allow read, write: if true;
+      allow read, write: if request.auth != null && (
+        // Admin can read/write any archived task (assuming role is in custom claim, or fetched from /users)
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        // Client can read/write their own archived tasks
+        // This requires that the archived task document *itself* stores the clientUserId,
+        // OR we can fetch the project to verify client ownership.
+        // Assuming 'projectId' is stored in the archived task, and project has 'clientUserId'
+        existsAfter(get(/databases/$(database)/documents/projects/$(resource.data.projectId))) &&
+        get(/databases/$(database)/documents/projects/$(resource.data.projectId)).data.clientUserId == request.auth.uid
+      );
     }
   }
 }

@@ -58,15 +58,22 @@ function clientIp(req: any): string {
 }
 
 // projectId de Firebase para validar la audiencia/issuer de los ID tokens.
-let FIREBASE_PROJECT_ID = "";
-try {
-  const cfgRaw = fs.readFileSync(
-    path.join(process.cwd(), "firebase-applet-config.json"),
-    "utf-8"
-  );
-  FIREBASE_PROJECT_ID = JSON.parse(cfgRaw).projectId || "";
-} catch {
-  console.warn("[Auth] No se pudo leer firebase-applet-config.json; verificación de tokens Firebase deshabilitada.");
+let FIREBASE_PROJECT_ID: string = process.env.FIREBASE_PROJECT_ID || ""; // Preferir variable de entorno
+if (!FIREBASE_PROJECT_ID) {
+  try {
+    const cfgRaw = fs.readFileSync(
+      path.join(process.cwd(), "firebase-applet-config.json"),
+      "utf-8"
+    );
+    FIREBASE_PROJECT_ID = JSON.parse(cfgRaw).projectId || "";
+  } catch (err: any) {
+    console.error(`[Auth] ERROR FATAL: No se pudo leer firebase-applet-config.json o FIREBASE_PROJECT_ID no definido en .env. La verificación de tokens de Firebase es crucial para la seguridad. Error: ${err.message}`);
+    process.exit(1); // Salida forzada si la configuración crítica falta
+  }
+}
+if (!FIREBASE_PROJECT_ID) {
+  console.error("[Auth] ERROR FATAL: FIREBASE_PROJECT_ID sigue sin definir. La verificación de tokens de Firebase es crucial para la seguridad. El servidor no se iniciará.");
+  process.exit(1);
 }
 
 /** Crea un token de sesión local firmado con HMAC-SHA256: pst_<payload>.<firma> */
