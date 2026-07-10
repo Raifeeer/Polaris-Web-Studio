@@ -34,7 +34,8 @@ import {
   Archive,
   Inbox,
   Receipt,
-  Sparkles
+  Sparkles,
+  Mail
 } from "lucide-react";
 import Logo from "../components/Logo";
 import AISparkleIcon from "../components/AISparkleIcon";
@@ -684,6 +685,7 @@ export default function ClientDashboard() {
   const [invoicesPage, setInvoicesPage] = useState(1);
   const [selectedInvoiceFilterProject, setSelectedInvoiceFilterProject] = useState("all");
   const [openInvoiceStatusDropdown, setOpenInvoiceStatusDropdown] = useState<string | null>(null);
+  const [openRefundDetails, setOpenRefundDetails] = useState<string | null>(null);
   const [meetingsPage, setMeetingsPage] = useState(1);
   const [projectsPage, setProjectsPage] = useState(1);
   const itemsPerPage = 5;
@@ -899,12 +901,7 @@ export default function ClientDashboard() {
       })
       .then((resData) => {
         if (!active) return;
-        
-        // Filter void invoices for non-admins
-        if (!isAdmin && resData.invoices) {
-          resData.invoices = resData.invoices.filter(i => i.status !== "void");
-        }
-        
+
         setData(resData);
         // Default select first project for admin tasks
         if (resData.projects && resData.projects.length > 0) {
@@ -3604,10 +3601,9 @@ export default function ClientDashboard() {
 
                 {/* Invoices List */}
                 {(() => {
-                  const filteredInvoices = (selectedInvoiceFilterProject === "all" 
-                    ? data.invoices 
-                    : data.invoices.filter((inv) => inv.projectId === selectedInvoiceFilterProject))
-                    .filter(inv => isAdmin || inv.status !== "void");
+                  const filteredInvoices = (selectedInvoiceFilterProject === "all"
+                    ? data.invoices
+                    : data.invoices.filter((inv) => inv.projectId === selectedInvoiceFilterProject));
 
                   return (
                     <>
@@ -3651,10 +3647,11 @@ export default function ClientDashboard() {
                       return (
                         <div
                           key={inv.id}
-                          className={`p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-indigo-500/10 transition-all will-change-transform ${
+                          className={`p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col gap-4 hover:border-indigo-500/10 transition-all will-change-transform ${
                             openInvoiceStatusDropdown === inv.id ? "relative z-30" : "relative z-10"
                           }`}
                         >
+                          <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
                           <div className="space-y-1.5 min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -3801,6 +3798,68 @@ export default function ClientDashboard() {
                             )}
                             </div>
                           </div>
+                          </div>
+
+                          {inv.status === "void" && inv.paypalRefundId && (
+                            <div className="pt-3 border-t border-[var(--color-border-subtle)]/50">
+                              <button
+                                type="button"
+                                onClick={() => setOpenRefundDetails(openRefundDetails === inv.id ? null : inv.id)}
+                                className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-400/80 hover:text-emerald-400 transition-colors"
+                              >
+                                <Receipt size={12} />
+                                Ver detalles del reembolso
+                                <ChevronDown size={10} className={`transition-transform ${openRefundDetails === inv.id ? "rotate-180" : ""}`} />
+                              </button>
+                              <AnimatePresence>
+                                {openRefundDetails === inv.id && (
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                  >
+                                    <div className="mt-2 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-xs text-[var(--color-text-secondary)] space-y-1">
+                                      <p><strong className="text-[var(--color-text-primary)]">Monto reembolsado:</strong> {formatMoney(inv.amount)}</p>
+                                      {inv.refundedAt && (
+                                        <p><strong className="text-[var(--color-text-primary)]">Fecha:</strong> {new Date(inv.refundedAt).toLocaleString("es-DO")}</p>
+                                      )}
+                                      <p><strong className="text-[var(--color-text-primary)]">Referencia de PayPal:</strong> {inv.paypalRefundId}</p>
+                                      <p className="text-[var(--color-text-tertiary)] pt-1">El reembolso ya fue procesado por PayPal. Puede tardar unos días en reflejarse en tu cuenta o tarjeta.</p>
+                                    </div>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          )}
+
+                          {inv.status === "void" && inv.voidedAfterManualPayment && !isAdmin && (
+                            <div className="pt-3 border-t border-[var(--color-border-subtle)]/50">
+                              <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 space-y-2">
+                                <p className="text-xs text-[var(--color-text-secondary)]">
+                                  Esta factura fue invalidada. Si ya realizaste un pago por transferencia o efectivo, contáctanos para resolverlo:
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  <a
+                                    href={`https://wa.me/18299200544?text=${encodeURIComponent(`Hola, tengo una duda sobre la factura ${inv.invoiceNumber} que aparece invalidada.`)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 text-[11px] font-bold hover:bg-[#25D366]/20 transition-colors"
+                                  >
+                                    <MessageCircle size={12} />
+                                    WhatsApp
+                                  </a>
+                                  <a
+                                    href={`mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Factura ${inv.invoiceNumber} invalidada`)}`}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-[11px] font-bold hover:bg-indigo-500/20 transition-colors"
+                                  >
+                                    <Mail size={12} />
+                                    Correo
+                                  </a>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })}

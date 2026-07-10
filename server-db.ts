@@ -112,6 +112,8 @@ export interface DbInvoice {
   paypalOrderId?: string;
   paypalCaptureId?: string;
   paypalRefundId?: string;
+  refundedAt?: string;
+  voidedAfterManualPayment?: boolean;
 }
 
 export interface DbMeeting {

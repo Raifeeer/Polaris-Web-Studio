@@ -818,8 +818,14 @@ const PORT = 3000;
     if (status === "void" && foundInvoice.status === "paid" && foundInvoice.paypalCaptureId) {
       try {
         const refund = await paypalRefundCapture(foundInvoice.paypalCaptureId, foundInvoice.amount, foundInvoice.currency);
-        dbInstance.updateInvoice(req.params.id, { status: "void", paypalRefundId: refund.id });
-        return res.json({ success: true, status: "void", refunded: true });
+        const refundedAt = new Date().toISOString();
+        dbInstance.updateInvoice(req.params.id, {
+          status: "void",
+          paypalRefundId: refund.id,
+          refundedAt,
+          voidedAfterManualPayment: false,
+        });
+        return res.json({ success: true, status: "void", refunded: true, refundId: refund.id, refundedAt });
       } catch (error: any) {
         console.error("Error reembolsando factura vía PayPal:", error?.message);
         return res.status(502).json({ error: "No se pudo procesar el reembolso con PayPal. La factura no fue invalidada." });
@@ -827,7 +833,13 @@ const PORT = 3000;
     }
 
     const manualPayment = status === "void" && foundInvoice.status === "paid" && !foundInvoice.paypalCaptureId;
-    dbInstance.updateInvoice(req.params.id, { status });
+    // Salir de "void" (reactivar una factura) limpia el rastro de reembolso/aviso
+    // anterior, para que no queden etiquetas obsoletas si luego se vuelve a pagar.
+    dbInstance.updateInvoice(req.params.id, {
+      status,
+      voidedAfterManualPayment: manualPayment,
+      ...(status !== "void" ? { paypalRefundId: undefined, refundedAt: undefined } : {}),
+    });
     res.json({ success: true, status, refunded: false, manualPayment });
   });
 
@@ -1390,7 +1402,12 @@ const PORT = 3000;
         const captureId = upLink ? upLink.split("/").pop() : null;
         const foundInvoice = captureId ? dbInstance.getInvoices().find((i) => i.paypalCaptureId === captureId) : null;
         if (foundInvoice && foundInvoice.status !== "void") {
-          dbInstance.updateInvoice(foundInvoice.id, { status: "void" });
+          dbInstance.updateInvoice(foundInvoice.id, {
+            status: "void",
+            paypalRefundId: event.resource?.id,
+            refundedAt: new Date().toISOString(),
+            voidedAfterManualPayment: false,
+          });
           console.log(`[Webhook PayPal] Factura ${foundInvoice.id} invalidada (reembolso detectado por webhook).`);
         }
       }
