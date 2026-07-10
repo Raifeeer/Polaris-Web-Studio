@@ -96,6 +96,33 @@ const formatTimeTo12h = (timeStr: string) => {
   return timeStr;
 };
 
+// Combina fecha ("YYYY-MM-DD") + hora (24h "HH:MM" o ya formateada "h:mm AM/PM",
+// las reuniones antiguas quedaron guardadas así) en un Date real, para poder
+// distinguir reuniones pasadas de próximas en vez de mostrar siempre "Upcoming".
+const parseMeetingDateTime = (dateStr: string, timeStr: string): Date | null => {
+  if (!dateStr) return null;
+  let hours = 0;
+  let minutes = 0;
+  const ampmMatch = timeStr?.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (ampmMatch) {
+    hours = parseInt(ampmMatch[1], 10) % 12;
+    minutes = parseInt(ampmMatch[2], 10);
+    if (ampmMatch[3].toUpperCase() === "PM") hours += 12;
+  } else {
+    const parts = (timeStr || "").split(":");
+    hours = parseInt(parts[0], 10) || 0;
+    minutes = parseInt(parts[1], 10) || 0;
+  }
+  const [y, m, d] = dateStr.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d, hours, minutes);
+};
+
+const isMeetingPast = (meet: { date: string; time: string }): boolean => {
+  const dt = parseMeetingDateTime(meet.date, meet.time);
+  return !!dt && dt.getTime() < Date.now();
+};
+
 interface CustomSelectOption {
   id: string;
   label: string;
@@ -529,6 +556,13 @@ export default function ClientDashboard() {
   const { language } = useLanguage();
   const { user, logout, token } = useAuth();
   const isAdmin = user?.role === "admin";
+  // Ref sincronizado en cada render: generateClientSummary se dispara desde un
+  // useEffect automático al cargar el proyecto del cliente, y si ese efecto
+  // llega a ejecutarse con un closure de un render donde `token` aún era null
+  // (justo tras el login), la petición sale como "Bearer null" y el servidor
+  // la rechaza con 403. Leer siempre tokenRef.current evita ese closure obsoleto.
+  const tokenRef = useRef(token);
+  tokenRef.current = token;
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -920,6 +954,14 @@ export default function ClientDashboard() {
   }, [token, selectedProjectId, refreshTrigger]);
 
   const handleLogout = () => {
+    // Limpia los datos del panel además del token/usuario: si se deja el
+    // `data` (proyectos, etc.) de la sesión anterior, por un instante
+    // `isAdmin` ya es false (user === null) pero `data.projects` sigue
+    // teniendo los proyectos viejos, así que `clientProject` resuelve a un
+    // proyecto real y dispara el resumen de IA con el token ya vacío
+    // (pedido con "Bearer null", rechazado con 403).
+    setData(null);
+    setSelectedClientProjectId(null);
     logout();
     navigate("/login");
   };
@@ -977,7 +1019,7 @@ export default function ClientDashboard() {
   const callAI = async (endpoint: string, body: object): Promise<string> => {
     const res = await fetch(endpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${tokenRef.current}` },
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -997,7 +1039,7 @@ export default function ClientDashboard() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${tokenRef.current}`,
       },
       body: JSON.stringify(payload),
     });
@@ -2213,14 +2255,20 @@ export default function ClientDashboard() {
                                                 const parsed = JSON.parse(suggestion);
                                                 const updatedPhases = project.phases.map((ph: any, i: number) => ({
                                                   ...ph,
-                                                  status: i < parsed.phaseIndex ? "completed" 
-                                                         : i === parsed.phaseIndex ? "active" 
+                                                  status: i < parsed.phaseIndex ? "completed"
+                                                         : i === parsed.phaseIndex ? "active"
                                                          : "pending"
                                                 }));
+                                                // Usa el nombre real de la fase marcada como activa, no el texto libre
+                                                // que redacta la IA en "suggestedPhase" — si difieren aunque sea en un
+                                                // detalle, la insignia de arriba y la tarjeta "En Curso" quedan
+                                                // mostrando nombres distintos para la misma fase.
+                                                const activePhaseName =
+                                                  updatedPhases[parsed.phaseIndex]?.name || parsed.suggestedPhase;
                                                 await handleUpdateProjectProgress(
-                                                  project.id, 
-                                                  parsed.suggestedProgress, 
-                                                  parsed.suggestedPhase,
+                                                  project.id,
+                                                  parsed.suggestedProgress,
+                                                  activePhaseName,
                                                   updatedPhases
                                                 );
                                                 setSuccessMsg(`IA sugirió: ${parsed.reason}`);
@@ -3819,15 +3867,21 @@ export default function ClientDashboard() {
                 ) : (
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {data.meetings.slice((meetingsPage - 1) * itemsPerPage, meetingsPage * itemsPerPage).map((meet) => (
+                      {data.meetings.slice((meetingsPage - 1) * itemsPerPage, meetingsPage * itemsPerPage).map((meet) => {
+                        const isPast = isMeetingPast(meet);
+                        return (
                         <div
                           key={meet.id}
-                          className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-4 hover:border-indigo-500/10 transition-all shadow-sm will-change-transform transition-all"
+                          className={`p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex flex-col justify-between space-y-4 hover:border-indigo-500/10 transition-all shadow-sm will-change-transform transition-all ${isPast ? "opacity-60" : ""}`}
                         >
                           <div className="space-y-1">
                             <div className="flex justify-between items-start gap-2">
-                              <span className="text-[10px] uppercase font-black tracking-widest text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 px-2 py-0.5 rounded">
-                                Upcoming Sync
+                              <span className={`text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded ${
+                                isPast
+                                  ? "text-[var(--color-text-tertiary)] bg-[var(--color-surface-highlight)]"
+                                  : "text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10"
+                              }`}>
+                                {isPast ? "Reunión Pasada" : "Upcoming Sync"}
                               </span>
                               {isAdmin && (
                                 <button
@@ -3851,13 +3905,18 @@ export default function ClientDashboard() {
                             href={meet.meetLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full py-2.5 rounded-xl bg-orange-600/15 border border-orange-500/20 text-orange-400 font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-orange-600/25 hover:text-orange-300 transition-all"
+                            className={`w-full py-2.5 rounded-xl border font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
+                              isPast
+                                ? "bg-[var(--color-surface-highlight)] border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                                : "bg-orange-600/15 border-orange-500/20 text-orange-400 hover:bg-orange-600/25 hover:text-orange-300"
+                            }`}
                           >
                             <CheckCircle2 size={13} />
                             Acceder a Google Meet
                           </a>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     {/* Pagination Controls */}

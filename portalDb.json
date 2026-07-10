@@ -29,7 +29,7 @@
       "displayId": "000001",
       "clientUserId": "usr-client-1",
       "name": "Nexus E-commerce",
-      "currentPhase": "Fase 2: Diseño UI/UX",
+      "currentPhase": "Fase 2: Desarrollo Frontend",
       "progress": 75,
       "description": "Desarrollo a medida de plataforma de e-commerce de alto rendimiento con React y Node.js.",
       "phases": [
