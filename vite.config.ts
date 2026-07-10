@@ -24,6 +24,7 @@ export default defineConfig(({mode: _mode}) => {
             'vendor-motion': ['framer-motion'],
             'vendor-icons': ['lucide-react'],
             'vendor-calcom': ['@calcom/embed-react'],
+            'vendor-firebase': ['firebase/app', 'firebase/firestore', 'firebase/auth'],
           },
         },
       },

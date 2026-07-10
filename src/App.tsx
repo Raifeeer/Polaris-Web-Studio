@@ -35,7 +35,7 @@ const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const Gracias = lazy(() => import("./pages/Gracias"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
-import TerminalPage from "./pages/TerminalPage";
+const TerminalPage = lazy(() => import("./pages/TerminalPage"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
