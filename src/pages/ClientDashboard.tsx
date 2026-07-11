@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -149,6 +150,7 @@ function CustomSelect({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">("bottom");
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -161,27 +163,42 @@ function CustomSelect({
   }, []);
 
   useEffect(() => {
-    if (isOpen && containerRef.current) {
+    if (!isOpen || !containerRef.current) return;
+
+    const updatePosition = () => {
+      if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
+
       // Estimar la altura real del dropdown según el número de opciones.
       // Cada opción mide aproximadamente 36px, más 16px de padding/borde. Máximo de 240px (max-h-60).
       const estimatedHeight = Math.min(options.length * 36 + 16, 240);
-      
-      if (spaceBelow < estimatedHeight && spaceAbove > spaceBelow) {
-        setDropdownPosition("top");
-      } else {
-        setDropdownPosition("bottom");
-      }
-    }
+
+      const position = spaceBelow < estimatedHeight && spaceAbove > spaceBelow ? "top" : "bottom";
+      setDropdownPosition(position);
+      setDropdownRect({
+        top: position === "top" ? rect.top - 6 : rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    };
+
+    updatePosition();
+    // El dropdown se renderiza en un portal fuera del árbol del formulario, así que
+    // su posición se recalcula ante scroll/resize en vez de depender del layout local.
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
   }, [isOpen, options.length]);
 
   const selectedOption = options.find(opt => opt.id === value);
 
   return (
-    <div ref={containerRef} className={`relative ${className} ${isOpen ? "z-[160]" : "z-10"}`}>
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -196,14 +213,21 @@ function CustomSelect({
         />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
+      {isOpen && dropdownRect && createPortal(
+        <AnimatePresence>
           <motion.ul
             initial={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className={`absolute z-[150] w-full max-h-60 overflow-y-auto rounded-lg bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none scrollbar-thin left-0 ${dropdownPosition === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+            style={{
+              position: "fixed",
+              top: dropdownPosition === "top" ? undefined : dropdownRect.top,
+              bottom: dropdownPosition === "top" ? window.innerHeight - dropdownRect.top : undefined,
+              left: dropdownRect.left,
+              width: dropdownRect.width,
+            }}
+            className="z-[1000] max-h-60 overflow-y-auto rounded-lg bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none scrollbar-thin"
           >
             {options.map((opt) => {
               const isSelected = opt.id === value;
@@ -226,8 +250,9 @@ function CustomSelect({
               );
             })}
           </motion.ul>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 
@@ -289,6 +314,7 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
   const [currentMonth, setCurrentMonth] = useState(() => value ? new Date(value + 'T00:00:00') : new Date());
   const [view, setView] = useState<"days" | "months" | "years">("days");
   const [dropdownPosition, setDropdownPosition] = useState<"bottom" | "top">("bottom");
+  const [dropdownRect, setDropdownRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -301,17 +327,30 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
   }, []);
 
   useEffect(() => {
-    if (isOpen && containerRef.current) {
+    if (!isOpen || !containerRef.current) return;
+
+    const updatePosition = () => {
+      if (!containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-      
-      if (spaceBelow < 300 && spaceAbove > spaceBelow) {
-        setDropdownPosition("top");
-      } else {
-        setDropdownPosition("bottom");
-      }
-    }
+
+      const position = spaceBelow < 300 && spaceAbove > spaceBelow ? "top" : "bottom";
+      setDropdownPosition(position);
+      setDropdownRect({
+        top: position === "top" ? rect.top - 6 : rect.bottom + 6,
+        left: rect.left,
+        width: rect.width,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
   }, [isOpen]);
 
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -362,7 +401,7 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
   const formattedValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : placeholder;
 
   return (
-    <div ref={containerRef} className={`relative ${className} ${isOpen ? "z-[160]" : "z-10"}`}>
+    <div ref={containerRef} className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -374,14 +413,21 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
         <Calendar size={14} className="text-[var(--color-text-tertiary)] flex-shrink-0 ml-2" />
       </button>
 
-      <AnimatePresence>
-        {isOpen && (
+      {isOpen && dropdownRect && createPortal(
+        <AnimatePresence>
           <motion.div
             initial={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: dropdownPosition === "top" ? 4 : -4, scale: 0.98 }}
             transition={{ duration: 0.15 }}
-            className={`absolute z-[160] w-full min-w-[260px] p-3 rounded-xl bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none left-0 ${dropdownPosition === "top" ? "bottom-full mb-1.5" : "top-full mt-1.5"}`}
+            style={{
+              position: "fixed",
+              top: dropdownPosition === "top" ? undefined : dropdownRect.top,
+              bottom: dropdownPosition === "top" ? window.innerHeight - dropdownRect.top : undefined,
+              left: dropdownRect.left,
+              width: Math.max(dropdownRect.width, 260),
+            }}
+            className="z-[1000] min-w-[260px] p-3 rounded-xl bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none"
           >
             {view === "days" && (
               <>
@@ -464,8 +510,9 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
               </>
             )}
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
