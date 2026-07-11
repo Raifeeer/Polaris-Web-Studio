@@ -227,7 +227,7 @@ function CustomSelect({
               left: dropdownRect.left,
               width: dropdownRect.width,
             }}
-            className="z-[1000] max-h-60 overflow-y-auto rounded-lg bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none scrollbar-thin"
+            className="z-30 max-h-60 overflow-y-auto rounded-lg bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none scrollbar-thin"
           >
             {options.map((opt) => {
               const isSelected = opt.id === value;
@@ -427,7 +427,7 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
               left: dropdownRect.left,
               width: Math.max(dropdownRect.width, 260),
             }}
-            className="z-[1000] min-w-[260px] p-3 rounded-xl bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none"
+            className="z-30 min-w-[260px] p-3 rounded-xl bg-[var(--color-surface-base)]/95 border border-[var(--color-border-subtle)] shadow-xl backdrop-blur-md focus:outline-none"
           >
             {view === "days" && (
               <>
