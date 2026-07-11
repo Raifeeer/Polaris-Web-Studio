@@ -386,13 +386,27 @@ export const app = express();
 app.disable("x-powered-by");
 
 // Endurece cabeceras de respuesta (defensa básica sin depender de helmet).
-// No se fija una CSP estricta para no romper Firebase/Cal.com/estilos inline.
-app.use((_req, res, next) => {
+// La CSP usa solo el subconjunto seguro (frame-ancestors/object-src/base-uri/
+// form-action): bloquea clickjacking, inyección de <object>/<base> y exfiltración
+// por form-action, sin tocar script/style/connect/font (que romperían Firebase,
+// Cal.com, PayPal, GA4/Clarity y las fuentes externas).
+const CSP_VALUE =
+  "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'";
+app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
   res.setHeader("X-DNS-Prefetch-Control", "off");
+  res.setHeader("Content-Security-Policy", CSP_VALUE);
+  // HSTS solo sobre HTTPS: enviarlo en el dev local (http://localhost) haría que
+  // el navegador del desarrollador forzara HTTPS en localhost y rompiera el dev.
+  if (req.secure || req.headers["x-forwarded-proto"] === "https") {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=63072000; includeSubDomains; preload"
+    );
+  }
   res.removeHeader("X-Powered-By");
   next();
 });
@@ -1211,6 +1225,12 @@ const PORT = 3000;
     }
 
     const { projectId, message, action, prompt } = req.body;
+
+    // Acota la entrada del cliente: evita que se use como proxy de IA con
+    // prompts enormes (coste) y frena intentos de inyección larguísimos.
+    if (message !== undefined && (typeof message !== "string" || message.length > 2000)) {
+      return res.status(400).json({ error: "Mensaje inválido o demasiado largo." });
+    }
 
     // Admin can perform arbitrary prompts (like task title optimization)
     if (req.user.role === "admin" && prompt) {

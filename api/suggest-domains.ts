@@ -36,6 +36,20 @@ async function checkDomain(domain: string): Promise<boolean> {
   }
 }
 
+// Rate limit best-effort por instancia (ver nota en terminal-ai.ts).
+const rlBuckets = new Map<string, { count: number; resetAt: number }>();
+function rateLimited(ip: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const b = rlBuckets.get(ip);
+  if (!b || now > b.resetAt) {
+    rlBuckets.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (b.count >= max) return true;
+  b.count++;
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST");
@@ -44,10 +58,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { domain, sector, businessType } = req.body;
+  const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";
+  if (rateLimited(ip, 30, 10 * 60 * 1000)) {
+    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
+  }
 
-  if (!domain) {
-    return res.status(400).json({ error: "Falta parámetro 'domain'" });
+  const { domain, sector, businessType } = req.body || {};
+
+  // Validación de entradas: acota longitudes para evitar abuso de coste de IA.
+  if (!domain || typeof domain !== "string" || domain.length > 253) {
+    return res.status(400).json({ error: "Parámetro 'domain' inválido o ausente." });
+  }
+  if (sector !== undefined && (typeof sector !== "string" || sector.length > 100)) {
+    return res.status(400).json({ error: "Parámetro 'sector' inválido." });
+  }
+  if (businessType !== undefined && (typeof businessType !== "string" || businessType.length > 100)) {
+    return res.status(400).json({ error: "Parámetro 'businessType' inválido." });
   }
 
   const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0].toLowerCase();

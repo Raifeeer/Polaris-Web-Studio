@@ -1,10 +1,55 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+const MAX_MESSAGE_CHARS = 2000;
+const MAX_HISTORY_TURNS = 20;
+
+// Rate limit best-effort por instancia (serverless): en cold start se reinicia,
+// pero frena ráfagas sobre una instancia caliente. El límite real de coste lo
+// dan los topes de longitud/historial de abajo (bounded por request).
+const rlBuckets = new Map<string, { count: number; resetAt: number }>();
+function rateLimited(ip: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const b = rlBuckets.get(ip);
+  if (!b || now > b.resetAt) {
+    rlBuckets.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (b.count >= max) return true;
+  b.count++;
+  return false;
+}
+function clientIp(req: VercelRequest): string {
+  const fwd = (req.headers["x-forwarded-for"] as string) || "";
+  return fwd.split(",")[0].trim() || "unknown";
+}
+
+// Solo se aceptan turnos user/assistant del historial. Descartar cualquier otro
+// rol (p. ej. "system") evita que un cliente inyecte instrucciones de sistema
+// a través del historial en el fallback de Grok.
+function sanitizeHistory(history: unknown): { role: string; content: string }[] {
+  if (!Array.isArray(history)) return [];
+  const out: { role: string; content: string }[] = [];
+  for (const h of history.slice(-MAX_HISTORY_TURNS)) {
+    if (!h || typeof h !== "object") continue;
+    const role = (h as any).role;
+    const content = (h as any).content;
+    if ((role !== "user" && role !== "assistant") || typeof content !== "string") continue;
+    out.push({ role, content: content.slice(0, MAX_MESSAGE_CHARS) });
+  }
+  return out;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { message, history } = req.body;
-  if (!message) return res.status(400).json({ error: "Missing message" });
+  if (rateLimited(clientIp(req), 30, 10 * 60 * 1000)) {
+    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
+  }
+
+  const { message } = req.body || {};
+  if (!message || typeof message !== "string") return res.status(400).json({ error: "Missing message" });
+  if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
+  const history = sanitizeHistory((req.body || {}).history);
 
   const systemPrompt = `Eres Atlas, el asistente técnico de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA.
 

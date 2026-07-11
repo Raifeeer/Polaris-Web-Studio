@@ -1,14 +1,39 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// Rate limit best-effort por instancia (ver nota en terminal-ai.ts).
+const rlBuckets = new Map<string, { count: number; resetAt: number }>();
+function rateLimited(ip: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const b = rlBuckets.get(ip);
+  if (!b || now > b.resetAt) {
+    rlBuckets.set(ip, { count: 1, resetAt: now + windowMs });
+    return false;
+  }
+  if (b.count >= max) return true;
+  b.count++;
+  return false;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { businessType, sector, planType } = req.body;
+  const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";
+  if (rateLimited(ip, 30, 10 * 60 * 1000)) {
+    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
+  }
+
+  const { businessType, sector, planType } = req.body || {};
 
   if (!businessType || !sector) {
     return res.status(400).json({ error: "Faltan parámetros" });
+  }
+  // Acota longitudes para evitar abuso de coste de IA.
+  if (typeof businessType !== "string" || businessType.length > 100 ||
+      typeof sector !== "string" || sector.length > 100 ||
+      (planType !== undefined && (typeof planType !== "string" || planType.length > 50))) {
+    return res.status(400).json({ error: "Parámetros inválidos." });
   }
 
   const systemPrompt = `Eres un copywriter para Polaris Web Studio, agencia de desarrollo web en República Dominicana. Tu tarea es personalizar las descripciones de nuestros add-ons para el negocio específico del cliente.
