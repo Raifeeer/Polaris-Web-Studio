@@ -4040,7 +4040,7 @@ export default function ClientDashboard() {
 
                 {/* MANAGER ONLY: Form to schedule meetings */}
                 {isAdmin && (
-                  <div className={`rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 transition-all ${meetingFormOpen ? "relative z-[100]" : "relative z-10"}`}>
+                  <div className={`rounded-[var(--radius-bento)] glass-panel border border-indigo-500/10 transition-all ${meetingFormOpen ? "relative z-20" : "relative z-10"}`}>
                     <button
                       type="button"
                       ref={meetingHeaderRef}
