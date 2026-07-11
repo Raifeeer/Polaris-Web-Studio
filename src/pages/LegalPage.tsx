@@ -123,9 +123,9 @@ function PrivacyContent() {
         </p>
         <SubHeading><T en="Site usage (analytics)">Uso del sitio (analítica)</T></SubHeading>
         <p>
-          <T en="Only if you accept analytics cookies in our cookie banner, we use Google Analytics and Microsoft Clarity to understand which pages are visited and how — see our">
-            Solo si aceptás las cookies analíticas en nuestro banner, usamos Google Analytics y
-            Microsoft Clarity para entender qué páginas se visitan y cómo — ver nuestra
+          <T en="Only if you accept analytics cookies in our cookie banner, we use third-party analytics tools to understand which pages are visited and how — see our">
+            Solo si aceptás las cookies analíticas en nuestro banner, usamos herramientas de
+            analítica de terceros para entender qué páginas se visitan y cómo — ver nuestra
           </T>{" "}
           <a href="/cookies" className="text-[var(--color-primary-base)] underline">
             <T en="Cookie Policy">Política de Cookies</T>
@@ -158,7 +158,7 @@ function PrivacyContent() {
           <li><T en="PayPal — online payment processing.">PayPal — procesamiento de pagos en línea.</T></li>
           <li><T en="Cal.com — meeting scheduling.">Cal.com — agenda de reuniones.</T></li>
           <li><T en="Google Gemini / xAI (Grok) — AI chat assistant.">Google Gemini / xAI (Grok) — asistente de chat con IA.</T></li>
-          <li><T en="Google Analytics and Microsoft Clarity — site usage analytics, only with your consent.">Google Analytics y Microsoft Clarity — analítica de uso del sitio, solo con tu consentimiento.</T></li>
+          <li><T en="Third-party analytics providers — site usage analytics, only with your consent.">Proveedores de analítica de terceros — analítica de uso del sitio, solo con tu consentimiento.</T></li>
         </ul>
         <p>
           <T en="Most of these providers process data on servers located outside the Dominican Republic (mainly in the United States). By using our services, you accept this international transfer, which is necessary to provide them.">
@@ -591,19 +591,19 @@ function CookiesContent() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-[var(--color-border-subtle)] text-left">
-                <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Provider">Proveedor</T></th>
+                <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Category">Categoría</T></th>
                 <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Purpose">Propósito</T></th>
                 <th className="py-2 font-bold text-[var(--color-text-primary)]"><T en="Duration">Duración</T></th>
               </tr>
             </thead>
             <tbody className="align-top">
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4">Google Analytics (GA4)</td>
+                <td className="py-2 pr-4"><T en="Web traffic analytics">Analítica de tráfico web</T></td>
                 <td className="py-2 pr-4"><T en="Understand how many people visit and which pages they use.">Entender cuánta gente visita y qué páginas usa.</T></td>
                 <td className="py-2"><T en="Up to 14 months">Hasta 14 meses</T></td>
               </tr>
               <tr>
-                <td className="py-2 pr-4">Microsoft Clarity</td>
+                <td className="py-2 pr-4"><T en="Session behavior analytics">Analítica de comportamiento de sesión</T></td>
                 <td className="py-2 pr-4"><T en="Understand how visitors navigate (heatmaps and anonymized session recordings) to improve the site.">Entender cómo navegan los visitantes (mapas de calor y grabaciones de sesión anonimizadas) para mejorar el sitio.</T></td>
                 <td className="py-2"><T en="Up to 12 months">Hasta 12 meses</T></td>
               </tr>
@@ -614,12 +614,12 @@ function CookiesContent() {
 
       <Section heading={<T en="4. Third-party cookies outside our control">4. Cookies de terceros fuera de nuestro control</T>}>
         <p>
-          <T en="If you use the meeting scheduler (Cal.com) or pay an invoice via PayPal, those services may set their own cookies according to their own policies, independently of your choice on our banner — we don't control this. We recommend checking Cal.com's and PayPal's own cookie/privacy policies if you have questions.">
-            Si usás el agendador de reuniones (Cal.com) o pagás una factura vía PayPal, esos
-            servicios pueden poner sus propias cookies según sus propias políticas,
-            independientemente de tu elección en nuestro banner — esto no lo controlamos nosotros.
-            Te recomendamos revisar las políticas de cookies/privacidad propias de Cal.com y
-            PayPal si tenés dudas.
+          <T en="If you use our meeting scheduler or pay an invoice through our online payment provider, those services may set their own cookies according to their own policies, independently of your choice on our banner — we don't control this. We recommend checking those providers' own cookie/privacy policies if you have questions.">
+            Si usás nuestro agendador de reuniones o pagás una factura a través de nuestro
+            proveedor de pagos en línea, esos servicios pueden poner sus propias cookies según sus
+            propias políticas, independientemente de tu elección en nuestro banner — esto no lo
+            controlamos nosotros. Te recomendamos revisar las políticas de cookies/privacidad
+            propias de esos proveedores si tenés dudas.
           </T>
         </p>
       </Section>
