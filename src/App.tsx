@@ -13,12 +13,14 @@ import {
 import { useEffect, useLayoutEffect, lazy, Suspense, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
-import { LanguageProvider, T } from "./context/LanguageContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
 import EasterEgg from "./components/EasterEgg";
+import CookieConsent from "./components/CookieConsent";
+import { getCookieConsent, onCookieConsentChange } from "./lib/cookieConsent";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -103,7 +105,9 @@ function ScrollHandler() {
   }, [pathname]);
 
   useEffect(() => {
-    if (GA_ID) {
+    // Sin consentimiento de cookies analíticas, ni siquiera se pide el
+    // módulo de GA4 -- ver /cookies y src/lib/cookieConsent.ts.
+    if (GA_ID && getCookieConsent()?.analytics) {
       try {
         import("react-ga4").then((module) => {
           module.default.send({ hitType: "pageview", page: pathname + hash });
@@ -156,27 +160,15 @@ function AnimatedRoutes() {
             <Route path="/terminal" element={<TerminalPage />} />
             <Route
               path="/privacidad"
-              element={
-                <LegalPage
-                  title={<T en="Privacy Policy">Política de Privacidad</T>}
-                />
-              }
+              element={<LegalPage page="privacy" />}
             />
             <Route
               path="/terminos"
-              element={
-                <LegalPage
-                  title={<T en="Terms and Conditions">Términos y Condiciones</T>}
-                />
-              }
+              element={<LegalPage page="terms" />}
             />
             <Route
               path="/cookies"
-              element={
-                <LegalPage
-                  title={<T en="Cookie Policy">Política de Cookies</T>}
-                />
-              }
+              element={<LegalPage page="cookies" />}
             />
           </Routes>
         </Suspense>
@@ -319,15 +311,15 @@ export default function App() {
       setShowBot(true);
     }, 4500);
 
-    // 2. Initialize trackers on first real interaction, or timing fallback
-    let initialized = false;
+    // 2. Initialize analytics trackers on first real interaction, or timing
+    // fallback -- pero SOLO si hay consentimiento de cookies analíticas (ver
+    // /cookies y src/lib/cookieConsent.ts). Sin consentimiento, no se pide
+    // ni GA4 ni Clarity, así que no se ponen sus cookies.
+    let analyticsLoaded = false;
 
-    const initTrackers = () => {
-      if (initialized) return;
-      initialized = true;
-
-      // Clean up event listeners
-      cleanupListeners();
+    const loadAnalyticsScripts = () => {
+      if (analyticsLoaded) return;
+      analyticsLoaded = true;
 
       // Initialize Google Analytics (GA4)
       if (GA_ID) {
@@ -363,6 +355,14 @@ export default function App() {
       }
     };
 
+    let interacted = false;
+    const initTrackers = () => {
+      if (interacted) return;
+      interacted = true;
+      cleanupListeners();
+      if (getCookieConsent()?.analytics) loadAnalyticsScripts();
+    };
+
     const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
 
     const cleanupListeners = () => {
@@ -379,10 +379,19 @@ export default function App() {
     // Fallback: load trackers after 6 seconds anyway if user remains idle
     const fallbackTimer = setTimeout(initTrackers, 6000);
 
+    // Si el usuario acepta cookies analíticas (banner o "Configurar cookies")
+    // después de ya haber interactuado sin consentimiento, cargarlas ahí
+    // mismo -- sin esto, aceptar recién surtiría efecto en la próxima carga
+    // de página.
+    const unsubscribeConsent = onCookieConsentChange((consent) => {
+      if (consent?.analytics) loadAnalyticsScripts();
+    });
+
     return () => {
       clearTimeout(botTimer);
       clearTimeout(fallbackTimer);
       cleanupListeners();
+      unsubscribeConsent();
     };
   }, []);
 
@@ -407,6 +416,7 @@ export default function App() {
                   <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
                     <AnimatedRoutes />
                     <ConditionalQuoteBot showBot={showBot} />
+                    <CookieConsent />
                     <EasterEgg />
                   </div>
                 </Router>
