@@ -570,10 +570,15 @@ function CookiesContent() {
                 <td className="py-2 pr-4"><T en="Saves your progress in the quote wizard so you don't lose it.">Guarda tu avance en el cotizador para que no lo pierdas.</T></td>
                 <td className="py-2"><T en="Until submitted or cleared">Hasta que lo envíes o lo borres</T></td>
               </tr>
-              <tr>
+              <tr className="border-b border-[var(--color-border-subtle)]/50">
                 <td className="py-2 pr-4 font-mono text-xs">polaris_cookie_consent</td>
                 <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice).">Recuerda tu preferencia de cookies (esta elección).</T></td>
-                <td className="py-2"><T en="Until you change it">Hasta que la cambies</T></td>
+                <td className="py-2"><T en="Until you change it">Hasta que lo cambies</T></td>
+              </tr>
+              <tr>
+                <td className="py-2 pr-4 font-mono text-xs">polaris_cookie_consent_id</td>
+                <td className="py-2 pr-4"><T en="Random identifier (not tied to your name or account) that lets us keep a record of your cookie decision as evidence, in case we ever need to demonstrate it.">Identificador aleatorio (no vinculado a tu nombre ni cuenta) que nos permite guardar un registro de tu decisión de cookies como evidencia, por si hace falta demostrarla.</T></td>
+                <td className="py-2"><T en="Until you change it">Hasta que lo cambies</T></td>
               </tr>
             </tbody>
           </table>
