@@ -52,15 +52,35 @@ const GA_ID = import.meta.env.VITE_GA4_ID;
 // así que sin el portal el loader queda posicionado relativo a ese
 // ancestro en movimiento en vez del viewport real, y "salta" mientras la
 // página entra/sale.
+// "Destello": la estrella pasa la mayor parte del ciclo en reposo (escala y
+// brillo normales) y cada tanto hace un pulso rápido, como una estrella real
+// titilando -- a diferencia de un giro infinito, que nunca tiene un punto de
+// reposo natural y siempre se corta a mitad de vuelta quede como quede la
+// carga real de la página, esto casi siempre se corta viéndose "quieto".
+const TWINKLE_TIMES = [0, 0.55, 0.65, 0.78, 1];
+const TWINKLE_TRANSITION = {
+  duration: 2.4,
+  times: TWINKLE_TIMES,
+  repeat: Infinity,
+  ease: "easeInOut" as const,
+};
+
 function RouteLoader() {
   return createPortal(
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
-      >
-        <Logo size={160} showText={false} />
-      </motion.div>
+      <div className="relative flex items-center justify-center">
+        <motion.div
+          className="absolute inset-0 rounded-full bg-[var(--color-primary-base)] blur-2xl"
+          animate={{ opacity: [0.15, 0.15, 0.55, 0.55, 0.15], scale: [1, 1, 1.35, 1.35, 1] }}
+          transition={TWINKLE_TRANSITION}
+        />
+        <motion.div
+          animate={{ scale: [1, 1, 1.15, 1.15, 1], rotate: [0, 0, 12, -8, 0] }}
+          transition={TWINKLE_TRANSITION}
+        >
+          <Logo size={160} showText={false} />
+        </motion.div>
+      </div>
     </div>,
     document.body,
   );
