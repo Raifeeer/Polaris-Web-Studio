@@ -545,7 +545,7 @@ function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
           role="dialog"
           aria-label="Configurar mis cookies"
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md glass-panel border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] shadow-2xl p-6"
+          className="w-full max-w-md bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] shadow-2xl p-6"
         >
           <div className="flex items-start justify-between mb-4">
             <p className="text-sm font-bold text-[var(--color-text-primary)]">
