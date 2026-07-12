@@ -3,27 +3,38 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
 import { T } from "../context/LanguageContext";
-import { getCookieConsent, setCookieConsent, onCookieConsentChange } from "../lib/cookieConsent";
+import {
+  getCookieConsent,
+  setCookieConsent,
+  onCookieConsentChange,
+  onCookieSettingsPanelOpenChange,
+} from "../lib/cookieConsent";
 
 export default function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+  const [undecided, setUndecided] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => {
-    setVisible(getCookieConsent() === null);
-    // Si la decisión se toma desde otro lado (el panel de "Configurar mis
-    // cookies" en /cookies) mientras el banner sigue visible por no haber
-    // decidido todavía, se oculta también acá -- si no, quedarían los dos
-    // superpuestos.
-    return onCookieConsentChange((consent) => {
-      setVisible(consent === null);
+    setUndecided(getCookieConsent() === null);
+    const unsubscribeConsent = onCookieConsentChange((consent) => {
+      setUndecided(consent === null);
     });
+    // Mientras el panel "Configurar mis cookies" (en /cookies) está abierto,
+    // el banner se oculta -- si no, ambos quedan visibles y compiten por la
+    // misma decisión (tocar un botón acá no actualiza el toggle del panel,
+    // y viceversa).
+    const unsubscribePanel = onCookieSettingsPanelOpenChange(setPanelOpen);
+    return () => {
+      unsubscribeConsent();
+      unsubscribePanel();
+    };
   }, []);
 
-  if (!visible) return null;
+  if (!undecided || panelOpen) return null;
 
   const decide = (analytics: boolean) => {
     setCookieConsent(analytics);
-    setVisible(false);
+    setUndecided(false);
   };
 
   return (

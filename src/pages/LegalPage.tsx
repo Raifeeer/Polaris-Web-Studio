@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Cookie, X, Lock } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
-import { getCookieConsent, setCookieConsent } from "../lib/cookieConsent";
+import { getCookieConsent, setCookieConsent, setCookieSettingsPanelOpen } from "../lib/cookieConsent";
 
 type LegalPageKind = "privacy" | "terms" | "cookies";
 
@@ -523,6 +523,13 @@ function TermsContent() {
 function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
   const { translate } = useLanguage();
   const [analytics, setAnalytics] = useState(() => getCookieConsent()?.analytics ?? false);
+
+  useEffect(() => {
+    // Avisa al banner global (CookieConsent.tsx) que se oculte mientras
+    // este panel está abierto, para que no compitan por la misma decisión.
+    setCookieSettingsPanelOpen(true);
+    return () => setCookieSettingsPanelOpen(false);
+  }, []);
 
   const save = () => {
     setCookieConsent(analytics);

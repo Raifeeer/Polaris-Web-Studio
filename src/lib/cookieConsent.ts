@@ -118,3 +118,20 @@ export function onCookieConsentChange(handler: (consent: CookieConsent | null) =
   window.addEventListener(CONSENT_EVENT, listener);
   return () => window.removeEventListener(CONSENT_EVENT, listener);
 }
+
+const PANEL_OPEN_EVENT = "polaris-cookie-panel-open-changed";
+
+/** El panel "Configurar mis cookies" (en /cookies) avisa acá cuando se abre
+ * o se cierra. El banner global (CookieConsent.tsx) lo escucha para
+ * ocultarse mientras el panel está abierto -- si no, quedaban los dos
+ * visibles a la vez y competían por la misma decisión (tocar un botón del
+ * banner no actualizaba el toggle del panel, y viceversa). */
+export function setCookieSettingsPanelOpen(open: boolean) {
+  window.dispatchEvent(new CustomEvent(PANEL_OPEN_EVENT, { detail: open }));
+}
+
+export function onCookieSettingsPanelOpenChange(handler: (open: boolean) => void) {
+  const listener = (e: Event) => handler(Boolean((e as CustomEvent<boolean>).detail));
+  window.addEventListener(PANEL_OPEN_EVENT, listener);
+  return () => window.removeEventListener(PANEL_OPEN_EVENT, listener);
+}
