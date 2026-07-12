@@ -11,6 +11,7 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { useEffect, useLayoutEffect, lazy, Suspense, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider } from "./context/LanguageContext";
@@ -45,8 +46,14 @@ const GA_ID = import.meta.env.VITE_GA4_ID;
 // Simple, beautiful high-fidelity micro-loader -- se muestra en cada
 // transición de ruta (el Suspense que envuelve <AnimatedRoutes /> lo
 // dispara mientras se descarga el chunk lazy de la página siguiente).
+// Se renderiza en un portal a document.body porque su ancestro directo
+// (el motion.div de la transición de página en AnimatedRoutes) anima con
+// transform -- eso crea un nuevo "containing block" para position:fixed,
+// así que sin el portal el loader queda posicionado relativo a ese
+// ancestro en movimiento en vez del viewport real, y "salta" mientras la
+// página entra/sale.
 function RouteLoader() {
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
       <motion.div
         animate={{ rotate: 360 }}
@@ -54,7 +61,8 @@ function RouteLoader() {
       >
         <Logo size={160} showText={false} />
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -232,7 +240,7 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
         <img
           src="/brand/lockup-vertical-color.svg"
           alt="Polaris Web Studio"
-          className="h-40 w-auto mx-auto"
+          className="h-72 w-auto mx-auto"
         />
         <motion.p
           initial={{ opacity: 0 }}
