@@ -96,7 +96,11 @@ export default function Navbar() {
           className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
           aria-label={translate("Polaris Web Studio - Inicio", "Polaris Web Studio - Home")}
         >
-          <Logo size={44} />
+          <img
+            src="/brand/lockup-horizontal-color.svg"
+            alt="Polaris Web Studio"
+            className="h-11 w-auto"
+          />
         </Link>
 
         {/* Desktop Nav */}
