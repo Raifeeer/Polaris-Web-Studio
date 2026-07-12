@@ -16,6 +16,17 @@ interface LogoProps {
 const HORIZONTAL_GAP_RATIO = 0.0527;
 const STACKED_GAP_RATIO = 0.0403;
 
+// Tamaño real del texto respecto al ícono, medido en píxeles sobre el mismo
+// diseño oficial. En la variante apilada la estrella es mucho más alta que
+// el texto (~2.3x); en la horizontal el texto pesa relativamente más. Antes
+// el texto usaba un tamaño fijo sin importar `size`, así que a tamaños
+// chicos (login) la estrella se veía desproporcionadamente pequeña frente
+// al texto -- ahora ambos escalan juntos con la misma proporción real.
+const STACKED_TITLE_RATIO = 0.34;
+const STACKED_SUBTITLE_RATIO = 0.17;
+const HORIZONTAL_TITLE_RATIO = 0.46;
+const HORIZONTAL_SUBTITLE_RATIO = 0.23;
+
 export default function Logo({
   size = 40,
   showText = true,
@@ -23,6 +34,8 @@ export default function Logo({
   stacked = false,
 }: LogoProps) {
   const gap = size * (stacked ? STACKED_GAP_RATIO : HORIZONTAL_GAP_RATIO);
+  const titleSize = size * (stacked ? STACKED_TITLE_RATIO : HORIZONTAL_TITLE_RATIO);
+  const subtitleSize = size * (stacked ? STACKED_SUBTITLE_RATIO : HORIZONTAL_SUBTITLE_RATIO);
 
   return (
     <div
@@ -72,10 +85,16 @@ export default function Logo({
 
       {showText && (
         <div className="flex flex-col leading-none">
-          <span className="font-display font-black text-xl tracking-tighter uppercase text-[var(--color-text-primary)] whitespace-nowrap">
+          <span
+            className="font-display font-black tracking-tighter uppercase text-[var(--color-text-primary)] whitespace-nowrap"
+            style={{ fontSize: titleSize }}
+          >
             Polaris
           </span>
-          <span className="text-[9px] font-black uppercase text-[var(--color-primary-base)] opacity-100 tracking-[0.23em] whitespace-nowrap block mt-[-5px]">
+          <span
+            className="font-black uppercase text-[var(--color-primary-base)] tracking-[0.23em] whitespace-nowrap block"
+            style={{ fontSize: subtitleSize, marginTop: subtitleSize * -0.25 }}
+          >
             Web Studio
           </span>
         </div>

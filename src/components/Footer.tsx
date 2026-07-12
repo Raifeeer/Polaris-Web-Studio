@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Instagram, Linkedin, Mail, Globe } from "lucide-react";
-import Logo from "./Logo";
 import { useLanguage, T } from "../context/LanguageContext";
 import FooterTerminal from "./FooterTerminal";
 
@@ -40,7 +39,21 @@ export default function Footer({
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         {/* Brand */}
         <div className="col-span-1 md:col-span-1 space-y-6">
-          <Logo size={48} />
+          {/* El Footer queda oscuro en modo oscuro (tema por defecto) y claro
+              en modo claro (clase .light en <html>) -- el logotipo con texto
+              azul marino se pierde contra un fondo casi negro, así que acá
+              se usa la variante blanca en modo oscuro y la de color en modo
+              claro. */}
+          <img
+            src="/brand/lockup-horizontal-blanco.svg"
+            alt="Polaris Web Studio"
+            className="h-12 w-auto [.light_&]:hidden"
+          />
+          <img
+            src="/brand/lockup-horizontal-color.svg"
+            alt="Polaris Web Studio"
+            className="h-12 w-auto hidden [.light_&]:block"
+          />
           <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-xs md:w-[140px] lg:w-auto lg:max-w-xs md:text-justify lg:text-left">
             <T en="Precision digital engineering for brands looking to shine in the web universe.">
               Ingeniería digital de precisión para marcas que buscan destacar en

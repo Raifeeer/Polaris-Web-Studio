@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, ArrowRight, Share2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import Logo from "./Logo";
 import { useLanguage, T } from "../context/LanguageContext";
 
 type Question = {
@@ -237,7 +236,11 @@ export default function QuoteBot() {
           >
             {/* Header */}
             <div className="p-4 bg-[var(--color-surface-base)] border-b border-[var(--color-border-subtle)] flex items-center justify-between">
-              <Logo size={24} showText={false} />
+              <img
+                src="/brand/isotipo-color-badge-circular.svg"
+                alt=""
+                className="w-6 h-6 rounded-full"
+              />
               <div className="text-left flex-1 ml-3">
                 <span className="block text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)] leading-none">
                   Atlas Assistant
@@ -481,7 +484,15 @@ export default function QuoteBot() {
           "Open project planner",
         )}
       >
-        {isOpen ? <X size={30} /> : <Logo size={44} showText={false} />}
+        {isOpen ? (
+          <X size={30} />
+        ) : (
+          <img
+            src="/brand/isotipo-color-badge-circular.svg"
+            alt=""
+            className="w-11 h-11 rounded-full"
+          />
+        )}
 
         {!isOpen && (
           <motion.div

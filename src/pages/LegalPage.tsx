@@ -1,11 +1,11 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Cookie } from "lucide-react";
+import { ArrowLeft, Cookie, X, Lock } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { T } from "../context/LanguageContext";
-import { resetCookieConsent } from "../lib/cookieConsent";
+import { T, useLanguage } from "../context/LanguageContext";
+import { getCookieConsent, setCookieConsent, setCookieSettingsPanelOpen } from "../lib/cookieConsent";
 
 type LegalPageKind = "privacy" | "terms" | "cookies";
 
@@ -76,23 +76,23 @@ function PrivacyContent() {
         <SubHeading><T en="Quote requests (Get a Quote wizard)">Solicitud de cotización (cotizador)</T></SubHeading>
         <p>
           <T en="Name, email, phone number, and the project details/preferences you select. We use this to prepare and send you a quote, and to follow up about it. This data is temporarily saved in your browser (localStorage) while you complete the wizard, and sent to us only when you submit or explicitly save it.">
-            Nombre, correo, teléfono, y los detalles/preferencias del proyecto que elegís. Lo
+            Nombre, correo, teléfono, y los detalles/preferencias del proyecto que eliges. Lo
             usamos para preparar y enviarte una cotización, y para dar seguimiento. Estos datos se
-            guardan temporalmente en tu navegador (localStorage) mientras completás el
-            formulario, y nos llegan recién cuando lo enviás o guardás explícitamente.
+            guardan temporalmente en tu navegador (localStorage) mientras completas el
+            formulario, y nos llegan recién cuando lo envías o guardas explícitamente.
           </T>
         </p>
         <SubHeading><T en="Newsletter">Newsletter</T></SubHeading>
         <p>
           <T en="Only your email address, used to send you articles about growing your business with technology. You can unsubscribe at any time by writing to us.">
             Solo tu correo electrónico, usado para enviarte artículos sobre cómo hacer crecer tu
-            negocio con tecnología. Podés darte de baja cuando quieras escribiéndonos.
+            negocio con tecnología. Puedes darte de baja cuando quieras escribiéndonos.
           </T>
         </p>
         <SubHeading><T en="Client portal">Portal de clientes</T></SubHeading>
         <p>
           <T en="If you become a client, we store your name, email, company name, and an encrypted password (hashed, never stored in plain text) to give you access to your project dashboard — deliverables, invoices, meetings, and updates.">
-            Si te convertís en cliente, guardamos tu nombre, correo, nombre de empresa, y una
+            Si te conviertes en cliente, guardamos tu nombre, correo, nombre de empresa, y una
             contraseña cifrada (hasheada, nunca en texto plano) para darte acceso a tu panel de
             proyecto — entregables, facturas, reuniones y novedades.
           </T>
@@ -109,14 +109,14 @@ function PrivacyContent() {
         <SubHeading><T en="Scheduled meetings">Reuniones agendadas</T></SubHeading>
         <p>
           <T en="If you book a call with us, the scheduling is handled by Cal.com, a third-party service that will also receive your name and email to confirm the booking.">
-            Si agendás una llamada con nosotros, la reserva la gestiona Cal.com, un servicio de
+            Si agendas una llamada con nosotros, la reserva la gestiona Cal.com, un servicio de
             terceros que también va a recibir tu nombre y correo para confirmar la cita.
           </T>
         </p>
         <SubHeading><T en="AI assistant (Atlas Terminal)">Asistente de IA (Atlas Terminal)</T></SubHeading>
         <p>
           <T en="Messages you send to our chat assistant are processed by Google Gemini, with xAI Grok as a fallback if Gemini is unavailable. We don't ask you for sensitive personal data through the chat, and you shouldn't share any either.">
-            Los mensajes que le escribís a nuestro asistente de chat se procesan con Google
+            Los mensajes que le escribes a nuestro asistente de chat se procesan con Google
             Gemini, con xAI Grok como respaldo si Gemini no está disponible. No te pedimos datos
             personales sensibles por el chat, y te recomendamos no compartir ninguno.
           </T>
@@ -124,7 +124,7 @@ function PrivacyContent() {
         <SubHeading><T en="Site usage (analytics)">Uso del sitio (analítica)</T></SubHeading>
         <p>
           <T en="Only if you accept analytics cookies in our cookie banner, we use third-party analytics tools to understand which pages are visited and how — see our">
-            Solo si aceptás las cookies analíticas en nuestro banner, usamos herramientas de
+            Solo si aceptas las cookies analíticas en nuestro banner, usamos herramientas de
             analítica de terceros para entender qué páginas se visitan y cómo — ver nuestra
           </T>{" "}
           <a href="/cookies" className="text-[var(--color-primary-base)] underline">
@@ -163,7 +163,7 @@ function PrivacyContent() {
         <p>
           <T en="Most of these providers process data on servers located outside the Dominican Republic (mainly in the United States). By using our services, you accept this international transfer, which is necessary to provide them.">
             La mayoría de estos proveedores procesan datos en servidores fuera de República
-            Dominicana (principalmente en Estados Unidos). Al usar nuestros servicios, aceptás esta
+            Dominicana (principalmente en Estados Unidos). Al usar nuestros servicios, aceptas esta
             transferencia internacional, necesaria para poder prestarlos.
           </T>
         </p>
@@ -185,7 +185,7 @@ function PrivacyContent() {
           <li>
             <T en="Newsletter: while you remain subscribed, or up to 24 months without activity, whichever comes first. You can unsubscribe at any time.">
               Newsletter: mientras sigas suscrito, o hasta 24 meses sin actividad, lo que ocurra
-              primero. Podés darte de baja cuando quieras.
+              primero. Puedes darte de baja cuando quieras.
             </T>
           </li>
           <li>
@@ -214,7 +214,7 @@ function PrivacyContent() {
           <T en="Note: the technical deletion mechanism for expired data is being built. Until it's finished, we honor deletion requests manually if you write to us.">
             Nota: el mecanismo técnico de eliminación automática todavía se está construyendo.
             Hasta que esté listo, atendemos pedidos de eliminación de forma manual si nos
-            escribís.
+            escribes.
           </T>
         </p>
       </Section>
@@ -223,17 +223,17 @@ function PrivacyContent() {
         <p>
           <T en="Under Dominican Republic Law No. 172-13 on the Protection of Personal Data, you have the right to:">
             Según la Ley No. 172-13 sobre Protección de Datos de Carácter Personal de República
-            Dominicana, tenés derecho a:
+            Dominicana, tienes derecho a:
           </T>
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
-          <li><T en="Access: know what data we have about you.">Acceso: saber qué datos tenemos sobre vos.</T></li>
+          <li><T en="Access: know what data we have about you.">Acceso: saber qué datos tenemos sobre ti.</T></li>
           <li><T en="Rectification: correct inaccurate or outdated data.">Rectificación: corregir datos inexactos o desactualizados.</T></li>
           <li><T en="Cancellation: request deletion of your data when it's no longer necessary.">Cancelación: pedir que eliminemos tus datos cuando ya no sean necesarios.</T></li>
           <li><T en="Opposition: object to a specific use of your data (e.g. the newsletter).">Oposición: oponerte a un uso específico de tus datos (ej. el newsletter).</T></li>
         </ul>
         <p>
-          <T en="To exercise any of these rights, write to us at">Para ejercer cualquiera de estos derechos, escribinos a</T>{" "}
+          <T en="To exercise any of these rights, write to us at">Para ejercer cualquiera de estos derechos, escríbenos a</T>{" "}
           <a href="mailto:privacidad@polarisweb.studio" className="text-[var(--color-primary-base)] underline">
             privacidad@polarisweb.studio
           </a>
@@ -256,8 +256,8 @@ function PrivacyContent() {
         <p>
           <T en="Our services are aimed at business owners and professionals of legal age. We don't knowingly collect data from minors under 18. If you believe a minor has provided us data, write to us and we'll delete it.">
             Nuestros servicios están dirigidos a dueños de negocio y profesionales mayores de edad.
-            No recolectamos a sabiendas datos de menores de 18 años. Si creés que un menor nos
-            proporcionó datos, escribinos y los eliminamos.
+            No recolectamos a sabiendas datos de menores de 18 años. Si crees que un menor nos
+            proporcionó datos, escríbenos y los eliminamos.
           </T>
         </p>
       </Section>
@@ -291,7 +291,7 @@ function TermsContent() {
         <p>
           <T en="By using this site, requesting a quote, or becoming a client of Polaris Web Studio, you accept these Terms and Conditions. If you don't agree with any part, please don't use our services.">
             Al usar este sitio, solicitar una cotización, o convertirte en cliente de Polaris Web
-            Studio, aceptás estos Términos y Condiciones. Si no estás de acuerdo con alguna parte,
+            Studio, aceptas estos Términos y Condiciones. Si no estás de acuerdo con alguna parte,
             por favor no uses nuestros servicios.
           </T>
         </p>
@@ -309,7 +309,7 @@ function TermsContent() {
             Ofrecemos desarrollo web a medida bajo tres paquetes (Destello, Constelación, Nova), más
             un portal de clientes para seguir entregables, facturas y reuniones de proyectos
             activos. El alcance, precio y plazo exactos de tu proyecto quedan definidos en la
-            cotización que aceptás, no en este documento — este documento rige la relación general,
+            cotización que aceptas, no en este documento — este documento rige la relación general,
             no los detalles de un proyecto en particular.
           </T>
         </p>
@@ -319,9 +319,9 @@ function TermsContent() {
         <p>
           <T en="A quote request through our wizard is not a binding contract — it's the first step. The relationship becomes binding once you explicitly accept a specific quote (in writing, by email or through the portal) and, where applicable, pay the agreed deposit.">
             Una solicitud de cotización por el cotizador no es un contrato vinculante — es el
-            primer paso. La relación se vuelve vinculante cuando aceptás explícitamente una
+            primer paso. La relación se vuelve vinculante cuando aceptas explícitamente una
             cotización concreta (por escrito, por correo o desde el portal) y, cuando corresponda,
-            pagás el anticipo acordado.
+            pagas el anticipo acordado.
           </T>
         </p>
       </Section>
@@ -361,7 +361,7 @@ function TermsContent() {
         <SubHeading><T en="5.2 Cancellation before work starts">5.2 Cancelación antes de iniciar el trabajo</T></SubHeading>
         <p>
           <T en="If you cancel before any work has begun, we refund 100% of the deposit, minus any payment processing fees already charged to us by PayPal or our bank (these are never refundable by Polaris, since they were already paid to a third party).">
-            Si cancelás antes de que empiece cualquier trabajo, reembolsamos el 100% del anticipo,
+            Si cancelas antes de que empiece cualquier trabajo, reembolsamos el 100% del anticipo,
             menos las comisiones de procesamiento de pago que ya nos hayan cobrado PayPal o el
             banco (esas nunca son reembolsables por Polaris, ya que se pagaron a un tercero).
           </T>
@@ -370,7 +370,7 @@ function TermsContent() {
         <SubHeading><T en="5.3 Cancellation after work has started">5.3 Cancelación después de iniciado el trabajo</T></SubHeading>
         <p>
           <T en="If you cancel after work has started, we invoice the value of work actually completed up to that point. If you had paid more than that value, we refund the difference; if you had paid less, the remaining balance for completed work becomes due. Any amount already spent on your behalf on third-party costs (domain names, premium licenses/plugins purchased at your request, etc.) is never refundable under any circumstance, as it has already been transferred to those providers.">
-            Si cancelás después de que el trabajo empezó, facturamos el valor del trabajo
+            Si cancelas después de que el trabajo empezó, facturamos el valor del trabajo
             efectivamente completado hasta ese momento. Si habías pagado más que ese valor,
             reembolsamos la diferencia; si habías pagado menos, el saldo restante por el trabajo
             completado queda pendiente de pago. Cualquier monto ya gastado en tu nombre en costos
@@ -384,7 +384,7 @@ function TermsContent() {
           <T en="If Polaris Web Studio fails to deliver the agreed work for reasons attributable to us (not due to delays caused by you in providing content, access, or feedback), you're entitled to a full refund of the deposit if no substantial progress was delivered, or a proportional refund based on the progress actually delivered.">
             Si Polaris Web Studio no entrega el trabajo acordado por razones atribuibles a
             nosotros (no por demoras tuyas en proveer contenido, accesos, o retroalimentación),
-            tenés derecho a un reembolso total del anticipo si no se entregó ningún avance
+            tienes derecho a un reembolso total del anticipo si no se entregó ningún avance
             sustancial, o a un reembolso proporcional según el avance efectivamente entregado.
           </T>
         </p>
@@ -403,7 +403,7 @@ function TermsContent() {
         <SubHeading><T en="5.6 Subscriptions / recurring maintenance">5.6 Suscripciones / mantenimiento recurrente</T></SubHeading>
         <p>
           <T en="If your plan includes recurring monthly maintenance, you can cancel it at any time, effective at the end of the current billing cycle. Amounts already paid for the current cycle are not refunded.">
-            Si tu plan incluye mantenimiento mensual recurrente, podés cancelarlo cuando quieras,
+            Si tu plan incluye mantenimiento mensual recurrente, puedes cancelarlo cuando quieras,
             con efecto al final del ciclo de facturación en curso. Los montos ya pagados del ciclo
             actual no se reembolsan.
           </T>
@@ -423,7 +423,7 @@ function TermsContent() {
         <SubHeading><T en="5.8 Payment disputes and chargebacks">5.8 Disputas de pago y contracargos</T></SubHeading>
         <p>
           <T en="Before opening a payment dispute (chargeback) with PayPal or your bank, you agree to first contact us at hola@polarisweb.studio so we can try to resolve the issue directly. Opening a dispute without first giving us the chance to respond is considered a breach of this agreement, and we reserve the right to present evidence of work delivered to the payment processor and to suspend any ongoing services associated with the disputed payment.">
-            Antes de abrir una disputa de pago (contracargo) con PayPal o tu banco, aceptás
+            Antes de abrir una disputa de pago (contracargo) con PayPal o tu banco, aceptas
             contactarnos primero a hola@polarisweb.studio para intentar resolver el problema
             directamente. Abrir una disputa sin darnos antes la oportunidad de responder se
             considera un incumplimiento de este acuerdo, y nos reservamos el derecho de presentar
@@ -437,7 +437,7 @@ function TermsContent() {
         <p>
           <T en="Delivery timelines stated in a quote assume timely delivery of content, access credentials, and feedback from you. Delays caused by you extend the timeline accordingly and don't count as a delay attributable to us.">
             Los plazos de entrega indicados en una cotización asumen que nos das a tiempo el
-            contenido, accesos, y retroalimentación necesarios. Las demoras causadas por vos
+            contenido, accesos, y retroalimentación necesarios. Las demoras causadas por ti
             extienden el plazo en la misma medida, y no cuentan como una demora atribuible a
             nosotros.
           </T>
@@ -447,8 +447,8 @@ function TermsContent() {
       <Section heading={<T en="7. Intellectual property">7. Propiedad intelectual</T>}>
         <p>
           <T en="Once your project is fully paid for, you own the custom code, design, and content created specifically for you. This doesn't include third-party libraries, frameworks, plugins, or assets used to build it, which remain under their own respective licenses. Until full payment is received, all deliverables remain the property of Polaris Web Studio.">
-            Una vez que tu proyecto está pagado en su totalidad, sos dueño del código, diseño y
-            contenido a medida creado específicamente para vos. Esto no incluye librerías,
+            Una vez que tu proyecto está pagado en su totalidad, eres dueño del código, diseño y
+            contenido a medida creado específicamente para ti. Esto no incluye librerías,
             frameworks, plugins o recursos de terceros usados para construirlo, que se mantienen
             bajo sus propias licencias. Hasta recibir el pago completo, todos los entregables siguen
             siendo propiedad de Polaris Web Studio.
@@ -460,7 +460,7 @@ function TermsContent() {
         <p>
           <T en="You're responsible for keeping your portal password confidential and for any activity under your account. Notify us immediately if you suspect unauthorized access.">
             Sos responsable de mantener tu contraseña del portal confidencial y de cualquier
-            actividad bajo tu cuenta. Avisanos de inmediato si sospechás de un acceso no
+            actividad bajo tu cuenta. Avísanos de inmediato si sospechas de un acceso no
             autorizado.
           </T>
         </p>
@@ -470,7 +470,7 @@ function TermsContent() {
         <p>
           <T en="Meeting scheduling through Cal.com is subject to Cal.com's own terms in addition to ours. Please give us reasonable notice if you need to reschedule.">
             La agenda de reuniones vía Cal.com está sujeta también a los términos propios de
-            Cal.com, además de los nuestros. Te pedimos avisar con tiempo razonable si necesitás
+            Cal.com, además de los nuestros. Te pedimos avisar con tiempo razonable si necesitas
             reprogramar.
           </T>
         </p>
@@ -520,7 +520,113 @@ function TermsContent() {
   );
 }
 
+function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
+  const { translate } = useLanguage();
+  const [analytics, setAnalytics] = useState(() => getCookieConsent()?.analytics ?? false);
+
+  useEffect(() => {
+    // Avisa al banner global (CookieConsent.tsx) que se oculte mientras
+    // este panel está abierto, para que no compitan por la misma decisión.
+    setCookieSettingsPanelOpen(true);
+    return () => setCookieSettingsPanelOpen(false);
+  }, []);
+
+  const save = () => {
+    setCookieConsent(analytics);
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] bg-black/60 flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.97 }}
+          role="dialog"
+          aria-label="Configurar mis cookies"
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md bg-[var(--color-surface-elevated)]/95 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.6),0_25px_50px_-12px_rgba(0,0,0,0.4)] rounded-[var(--radius-bento)] p-6"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <p className="text-sm font-bold text-[var(--color-text-primary)]">
+              <T en="Manage my cookies">Configurar mis cookies</T>
+            </p>
+            <button
+              onClick={onClose}
+              aria-label={translate("Cerrar", "Close")}
+              className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[var(--color-text-primary)]">
+                  <T en="Essential">Esenciales</T>
+                </p>
+                <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">
+                  <T en="Always active — the site can't work without them.">
+                    Siempre activas — el sitio no puede funcionar sin ellas.
+                  </T>
+                </p>
+              </div>
+              <div className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[var(--color-surface-highlight)] flex items-center justify-center text-[var(--color-text-tertiary)]">
+                <Lock size={12} />
+              </div>
+            </div>
+
+            <div className="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[var(--color-text-primary)]">
+                  <T en="Optional analytics">Analíticas opcionales</T>
+                </p>
+                <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">
+                  <T en="Help us understand how the site is used.">
+                    Nos ayudan a entender cómo se usa el sitio.
+                  </T>
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={analytics}
+                onClick={() => setAnalytics((v) => !v)}
+                className={`shrink-0 mt-0.5 w-9 h-5 rounded-full flex items-center px-0.5 transition-colors cursor-pointer ${
+                  analytics ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-border-strong)]"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                    analytics ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={save}
+            className="mt-5 w-full px-4 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            <T en="Save preferences">Guardar preferencias</T>
+          </button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function CookiesContent() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
     <div className="space-y-10">
       <Section heading={<T en="1. What are cookies">1. Qué son las cookies</T>}>
@@ -544,36 +650,31 @@ function CookiesContent() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-[var(--color-border-subtle)] text-left">
-                <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Name">Nombre</T></th>
+                <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Category">Categoría</T></th>
                 <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Purpose">Propósito</T></th>
                 <th className="py-2 font-bold text-[var(--color-text-primary)]"><T en="Duration">Duración</T></th>
               </tr>
             </thead>
             <tbody className="align-top">
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">polaris-theme</td>
-                <td className="py-2 pr-4"><T en="Remembers your light/dark theme choice.">Recuerda tu elección de tema claro/oscuro.</T></td>
+                <td className="py-2 pr-4"><T en="Display preferences">Preferencias de visualización</T></td>
+                <td className="py-2 pr-4"><T en="Remembers your light/dark theme and language choice (ES/EN).">Recuerda tu elección de tema claro/oscuro y de idioma (ES/EN).</T></td>
                 <td className="py-2"><T en="Until you clear it">Hasta que lo borres</T></td>
               </tr>
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">language</td>
-                <td className="py-2 pr-4"><T en="Remembers your language choice (ES/EN).">Recuerda tu idioma elegido (ES/EN).</T></td>
-                <td className="py-2"><T en="Until you clear it">Hasta que lo borres</T></td>
-              </tr>
-              <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">portal_token</td>
+                <td className="py-2 pr-4"><T en="Client portal session">Sesión del portal de clientes</T></td>
                 <td className="py-2 pr-4"><T en="Keeps you logged in to the client portal.">Mantiene tu sesión iniciada en el portal de clientes.</T></td>
                 <td className="py-2"><T en="Until you log out">Hasta que cierres sesión</T></td>
               </tr>
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">wizardQuote_*</td>
+                <td className="py-2 pr-4"><T en="Quote wizard progress">Avance del cotizador</T></td>
                 <td className="py-2 pr-4"><T en="Saves your progress in the quote wizard so you don't lose it.">Guarda tu avance en el cotizador para que no lo pierdas.</T></td>
                 <td className="py-2"><T en="Until submitted or cleared">Hasta que lo envíes o lo borres</T></td>
               </tr>
               <tr>
-                <td className="py-2 pr-4 font-mono text-xs">polaris_cookie_consent</td>
-                <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice).">Recuerda tu preferencia de cookies (esta elección).</T></td>
-                <td className="py-2"><T en="Until you change it">Hasta que la cambies</T></td>
+                <td className="py-2 pr-4"><T en="Cookie preference record">Registro de preferencia de cookies</T></td>
+                <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice) and, together with our server, keeps a record of it as evidence in case we ever need to demonstrate it — using a random identifier not tied to your name or account.">Recuerda tu preferencia de cookies (esta elección) y, junto con nuestro servidor, guarda un registro de ella como evidencia por si hace falta demostrarla — mediante un identificador aleatorio no vinculado a tu nombre ni cuenta.</T></td>
+                <td className="py-2"><T en="Until you change it">Hasta que lo cambies</T></td>
               </tr>
             </tbody>
           </table>
@@ -583,8 +684,8 @@ function CookiesContent() {
       <Section heading={<T en="3. Optional analytics cookies (require your consent)">3. Cookies analíticas opcionales (requieren tu consentimiento)</T>}>
         <p>
           <T en={'We only load these if you click "Accept all" in our cookie banner. If you choose "Essential only", these are never loaded and no analytics cookies are set.'}>
-            Solo las cargamos si hacés clic en "Aceptar todo" en nuestro banner de cookies. Si
-            elegís "Solo esenciales", estas nunca se cargan y no se pone ninguna cookie analítica.
+            Solo las cargamos si haces clic en "Aceptar todo" en nuestro banner de cookies. Si
+            eliges "Solo esenciales", estas nunca se cargan y no se pone ninguna cookie analítica.
           </T>
         </p>
         <div className="overflow-x-auto">
@@ -615,11 +716,11 @@ function CookiesContent() {
       <Section heading={<T en="4. Third-party cookies outside our control">4. Cookies de terceros fuera de nuestro control</T>}>
         <p>
           <T en="If you use our meeting scheduler or pay an invoice through our online payment provider, those services may set their own cookies according to their own policies, independently of your choice on our banner — we don't control this. We recommend checking those providers' own cookie/privacy policies if you have questions.">
-            Si usás nuestro agendador de reuniones o pagás una factura a través de nuestro
+            Si usas nuestro agendador de reuniones o pagas una factura a través de nuestro
             proveedor de pagos en línea, esos servicios pueden poner sus propias cookies según sus
             propias políticas, independientemente de tu elección en nuestro banner — esto no lo
             controlamos nosotros. Te recomendamos revisar las políticas de cookies/privacidad
-            propias de esos proveedores si tenés dudas.
+            propias de esos proveedores si tienes dudas.
           </T>
         </p>
       </Section>
@@ -627,18 +728,20 @@ function CookiesContent() {
       <Section heading={<T en="5. Managing your preferences">5. Gestionar tus preferencias</T>}>
         <p>
           <T en="You can change your cookie choice at any time from this page, or by clearing your browser's site data.">
-            Podés cambiar tu elección de cookies cuando quieras desde esta página, o borrando los
+            Puedes cambiar tu elección de cookies cuando quieras desde esta página, o borrando los
             datos del sitio en tu navegador.
           </T>
         </p>
         <button
-          onClick={() => resetCookieConsent()}
+          onClick={() => setSettingsOpen(true)}
           className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer"
         >
           <Cookie size={14} />
           <T en="Manage my cookies">Configurar mis cookies</T>
         </button>
       </Section>
+
+      {settingsOpen && <CookieSettingsPanel onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }
@@ -693,7 +796,7 @@ export default function LegalPage({ page }: LegalPageProps) {
           <p className="text-[var(--color-text-tertiary)] text-sm italic mt-12 pt-8 border-t border-[var(--color-border-subtle)]">
             <T en="This document was drafted based on the real services and features of this site. If you have questions before contacting a lawyer yourself, write to us at">
               Este documento se redactó en base a los servicios y funciones reales de este sitio.
-              Si tenés dudas antes de consultar con un abogado, escribinos a
+              Si tienes dudas antes de consultar con un abogado, escríbenos a
             </T>{" "}
             <a
               href="mailto:hola@polarisweb.studio"

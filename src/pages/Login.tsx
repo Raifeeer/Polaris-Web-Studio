@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
-import Logo from "../components/Logo";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 
@@ -43,7 +42,7 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative pt-20">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative">
       <Navbar />
       <div className="flex-1 flex items-center justify-center p-4">
         <motion.div
@@ -52,7 +51,16 @@ export default function Login() {
           className="w-full max-w-md p-6 md:p-10 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] bento-glow"
         >
           <div className="flex justify-center mb-6">
-            <Logo size={40} stacked />
+            <img
+              src="/brand/lockup-vertical-blanco.svg"
+              alt="Polaris Web Studio"
+              className="h-32 w-auto [.light_&]:hidden"
+            />
+            <img
+              src="/brand/lockup-vertical-color.svg"
+              alt="Polaris Web Studio"
+              className="h-32 w-auto hidden [.light_&]:block"
+            />
           </div>
 
           <div className="text-center mb-6 space-y-2">

@@ -43,6 +43,15 @@ service cloud.firestore {
              (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time);
     }
 
+    function isValidCookieConsent(data) {
+      return data.keys().hasAll(['decision', 'version', 'timestamp', 'ip']) &&
+             data.keys().size() == 4 &&
+             data.decision is bool &&
+             data.version is int &&
+             data.timestamp == request.time &&
+             data.ip is string && data.ip.size() <= 45;
+    }
+
     function isValidArchivedTask(data) {
       return data.keys().hasAll(['id', 'projectId', 'title', 'description', 'status', 'archived']) &&
              data.id is string && data.id.size() <= 128 &&
@@ -73,6 +82,20 @@ service cloud.firestore {
                     isValidQuoteSession(request.resource.data);
       allow update: if isValidId(sessionId) &&
                     isValidQuoteSession(request.resource.data);
+    }
+
+    match /cookie_consents/{consentId} {
+      allow create: if isValidId(consentId) &&
+                    isValidCookieConsent(request.resource.data);
+      allow update: if isValidId(consentId) &&
+                    isValidCookieConsent(request.resource.data);
+
+      // Historial inmutable de cada decisión (nunca se sobreescribe), para
+      // poder demostrar que alguien cambió de preferencia y cuándo -- no
+      // solo cuál es su elección vigente.
+      match /history/{entryId} {
+        allow create: if isValidCookieConsent(request.resource.data);
+      }
     }
 
     match /archived_tasks/{taskId} {

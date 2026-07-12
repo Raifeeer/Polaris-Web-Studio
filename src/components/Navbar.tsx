@@ -74,12 +74,12 @@ export default function Navbar() {
   return (
     <>
       <div
-        className="h-[60px] md:h-[76px] w-full shrink-0"
+        className="h-16 w-full shrink-0"
         aria-hidden="true"
       />
       <nav
         ref={navRef}
-        className={`fixed left-0 right-0 top-0 w-full px-4 md:px-6 lg:px-8 xl:px-12 py-2 md:py-4 flex items-center justify-between z-50 transition duration-300 backdrop-blur-xl border-b ${
+        className={`fixed left-0 right-0 top-0 w-full h-16 px-4 md:px-6 lg:px-8 xl:px-12 flex items-center justify-between z-50 transition duration-300 backdrop-blur-xl border-b overflow-visible ${
           scrolled || isOpen
             ? "bg-[var(--color-surface-base)]/98"
             : "bg-transparent"
@@ -96,7 +96,16 @@ export default function Navbar() {
           className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
           aria-label={translate("Polaris Web Studio - Inicio", "Polaris Web Studio - Home")}
         >
-          <Logo size={44} />
+          <img
+            src="/brand/lockup-horizontal-blanco.svg"
+            alt="Polaris Web Studio"
+            className="h-12 w-auto shrink-0 [.light_&]:hidden"
+          />
+          <img
+            src="/brand/lockup-horizontal-color.svg"
+            alt="Polaris Web Studio"
+            className="h-12 w-auto shrink-0 hidden [.light_&]:block"
+          />
         </Link>
 
         {/* Desktop Nav */}

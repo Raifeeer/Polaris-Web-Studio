@@ -3,26 +3,38 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Cookie } from "lucide-react";
 import { T } from "../context/LanguageContext";
-import { getCookieConsent, setCookieConsent, onCookieConsentChange } from "../lib/cookieConsent";
+import {
+  getCookieConsent,
+  setCookieConsent,
+  onCookieConsentChange,
+  onCookieSettingsPanelOpenChange,
+} from "../lib/cookieConsent";
 
 export default function CookieConsent() {
-  const [visible, setVisible] = useState(false);
+  const [undecided, setUndecided] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => {
-    setVisible(getCookieConsent() === null);
-    // Si se reabre desde "Configurar cookies" (política de Cookies), la
-    // decisión guardada se borra y hay que volver a mostrar el banner sin
-    // necesitar un refresh de página.
-    return onCookieConsentChange((consent) => {
-      if (consent === null) setVisible(true);
+    setUndecided(getCookieConsent() === null);
+    const unsubscribeConsent = onCookieConsentChange((consent) => {
+      setUndecided(consent === null);
     });
+    // Mientras el panel "Configurar mis cookies" (en /cookies) está abierto,
+    // el banner se oculta -- si no, ambos quedan visibles y compiten por la
+    // misma decisión (tocar un botón acá no actualiza el toggle del panel,
+    // y viceversa).
+    const unsubscribePanel = onCookieSettingsPanelOpenChange(setPanelOpen);
+    return () => {
+      unsubscribeConsent();
+      unsubscribePanel();
+    };
   }, []);
 
-  if (!visible) return null;
+  if (!undecided || panelOpen) return null;
 
   const decide = (analytics: boolean) => {
     setCookieConsent(analytics);
-    setVisible(false);
+    setUndecided(false);
   };
 
   return (
@@ -46,10 +58,10 @@ export default function CookieConsent() {
               <T en="We use cookies">Usamos cookies</T>
             </p>
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-              <T en="We use essential cookies for the site to work, and optional analytics cookies (Google Analytics, Microsoft Clarity) to understand how you use it. You can change your choice anytime from our">
+              <T en="We use essential cookies for the site to work, and optional analytics cookies to understand how you use it. You can change your choice anytime from our">
                 Usamos cookies esenciales para que el sitio funcione, y cookies analíticas
-                opcionales (Google Analytics, Microsoft Clarity) para entender cómo lo usás.
-                Podés cambiar tu elección cuando quieras desde nuestra
+                opcionales para entender cómo lo usas. Puedes cambiar tu elección cuando quieras
+                desde nuestra
               </T>{" "}
               <Link
                 to="/cookies"

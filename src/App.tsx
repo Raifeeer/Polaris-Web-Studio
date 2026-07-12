@@ -11,12 +11,14 @@ import {
   useNavigationType,
 } from "react-router-dom";
 import { useEffect, useLayoutEffect, lazy, Suspense, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
+import Logo from "./components/Logo";
 import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
 import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
@@ -41,15 +43,55 @@ const TerminalPage = lazy(() => import("./pages/TerminalPage"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
-// Simple, beautiful high-fidelity micro-loader
+// Simple, beautiful high-fidelity micro-loader -- se muestra en cada
+// transición de ruta (el Suspense que envuelve <AnimatedRoutes /> lo
+// dispara mientras se descarga el chunk lazy de la página siguiente).
+// Se renderiza en un portal a document.body porque su ancestro directo
+// (el motion.div de la transición de página en AnimatedRoutes) anima con
+// transform -- eso crea un nuevo "containing block" para position:fixed,
+// así que sin el portal el loader queda posicionado relativo a ese
+// ancestro en movimiento en vez del viewport real, y "salta" mientras la
+// página entra/sale.
+// "Destello": la estrella pasa la mayor parte del ciclo en reposo (escala y
+// brillo normales) y cada tanto hace un pulso rápido, como una estrella real
+// titilando -- a diferencia de un giro infinito, que nunca tiene un punto de
+// reposo natural y siempre se corta a mitad de vuelta quede como quede la
+// carga real de la página, esto casi siempre se corta viéndose "quieto".
+const TWINKLE_TIMES = [0, 0.55, 0.65, 0.78, 1];
+const TWINKLE_TRANSITION = {
+  duration: 2.4,
+  times: TWINKLE_TIMES,
+  repeat: Infinity,
+  ease: "easeInOut" as const,
+};
+
 function RouteLoader() {
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
-      <div className="relative w-12 h-12 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full border-2 border-[var(--color-primary-base)]/20 animate-ping duration-1000" />
-        <div className="w-8 h-8 rounded-full border-2 border-[var(--color-primary-base)] border-t-transparent animate-spin" />
+      <div className="relative flex items-center justify-center">
+        {/* Brillo con radial-gradient en vez de filter:blur -- blur() combinado
+            con una animación de scale a veces renderiza con un borde
+            cuadrado visible (bug de compositing de Safari/WebKit en iOS,
+            intermitente). El gradiente radial da el mismo efecto de
+            resplandor difuso sin usar filter, así que no tiene ese problema. */}
+        <motion.div
+          className="absolute -inset-8 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, var(--color-primary-base) 0%, transparent 70%)",
+          }}
+          animate={{ opacity: [0.15, 0.15, 0.55, 0.55, 0.15], scale: [1, 1, 1.35, 1.35, 1] }}
+          transition={TWINKLE_TRANSITION}
+        />
+        <motion.div
+          animate={{ scale: [1, 1, 1.15, 1.15, 1], rotate: [0, 0, 12, -8, 0] }}
+          transition={TWINKLE_TRANSITION}
+        >
+          <Logo size={160} showText={false} />
+        </motion.div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -136,14 +178,27 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
+      {/* Este motion.div solo se usa para la animación de SALIDA de la
+          página anterior (exit) -- no tiene initial/animate porque, al
+          envolver también el Suspense, su "entrada" se disparaba en cuanto
+          cambiaba la ruta (mientras se mostraba el RouteLoader), no cuando
+          la página real terminaba de cargar. El fade-in real de la página
+          vive en el motion.div de más abajo, DENTRO del Suspense, así que
+          React recién lo monta (y dispara su propio `initial`) cuando el
+          contenido de verdad está listo para mostrarse -- antes la página
+          aparecía de golpe porque la animación de entrada ya se había
+          consumido entera sobre el loader. */}
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.22, ease: "easeInOut" }}
       >
         <Suspense fallback={<RouteLoader />}>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
           <Routes location={location}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/servicios" element={<Services />} />
@@ -171,6 +226,7 @@ function AnimatedRoutes() {
               element={<LegalPage page="cookies" />}
             />
           </Routes>
+          </motion.div>
         </Suspense>
       </motion.div>
     </AnimatePresence>
@@ -215,50 +271,33 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
       transition={{ duration: 0.5, ease: "easeInOut" }}
       className="fixed inset-0 z-[99999] bg-[var(--color-surface-base)] flex flex-col items-center justify-center gap-6 select-none"
     >
-      {/* Logo */}
+      {/* Logo real -- misma imagen combinada (estrella + letras juntas) que
+          el portal de clientes, en vez de la estrella y el texto como
+          elementos separados. */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
+        className="text-center space-y-2"
       >
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 200 200"
-          fill="none"
-          className="opacity-80"
-        >
-          <defs>
-            <linearGradient id="loader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#818cf8" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M100 10 L108 85 L130 60 L115 92 L190 100 L115 108 L130 140 L108 115 L100 190 L92 115 L70 140 L85 108 L10 100 L85 92 L70 60 L92 85 Z"
-            fill="url(#loader-grad)"
-          />
-          <circle cx="100" cy="100" r="8" fill="white" opacity="0.9" />
-        </svg>
-      </motion.div>
-
-      {/* Brand */}
-      <div className="text-center space-y-1">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: phase >= 0 ? 1 : 0 }}
-          className="text-sm font-black tracking-[0.3em] uppercase text-[var(--color-text-primary)]"
-        >
-          Polaris
-        </motion.p>
+        <img
+          src="/brand/lockup-vertical-blanco.svg"
+          alt="Polaris Web Studio"
+          className="h-72 w-auto mx-auto [.light_&]:hidden"
+        />
+        <img
+          src="/brand/lockup-vertical-color.svg"
+          alt="Polaris Web Studio"
+          className="h-72 w-auto mx-auto hidden [.light_&]:block"
+        />
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: phase >= 1 ? 0.4 : 0 }}
           className="text-[10px] font-mono tracking-widest text-[var(--color-text-tertiary)] uppercase"
         >
-          Web Studio · v1.0
+          v1.0
         </motion.p>
-      </div>
+      </motion.div>
 
       {/* Progress bar */}
       <div className="w-48">
@@ -355,12 +394,52 @@ export default function App() {
       }
     };
 
+    // Apaga GA4/Clarity en caliente cuando el usuario revoca su consentimiento
+    // (banner o "Configurar mis cookies"), sin recargar la página. GA4 usa la
+    // bandera de opt-out documentada por Google (`ga-disable-<ID>`, leída por
+    // gtag.js en cada llamada); Clarity tiene su propia API de consentimiento
+    // (`clarity('consent', false)`) pensada exactamente para esto -- ambas
+    // detienen el envío de datos nuevos de inmediato. También se borran las
+    // cookies que ya hubieran quedado puestas, no solo las futuras.
+    const disableAnalyticsScripts = () => {
+      if (GA_ID) {
+        (window as any)[`ga-disable-${GA_ID}`] = true;
+      }
+      if ((window as any).clarity) {
+        try {
+          (window as any).clarity("consent", false);
+        } catch {
+          // Clarity no disponible todavía, nada que desactivar.
+        }
+      }
+      const domain = window.location.hostname;
+      ["_ga", `_ga_${GA_ID?.replace(/^G-/, "")}`, "_gid", "_gat", "_clck", "_clsk", "CLID", "ANONCHK", "MR", "MUID", "SM"]
+        .forEach((name) => {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain};`;
+        });
+    };
+
+    const enableAnalyticsScripts = () => {
+      if (GA_ID) {
+        (window as any)[`ga-disable-${GA_ID}`] = false;
+      }
+      if ((window as any).clarity) {
+        try {
+          (window as any).clarity("consent", true);
+        } catch {
+          // Clarity no disponible todavía, loadAnalyticsScripts la inicializa.
+        }
+      }
+      loadAnalyticsScripts();
+    };
+
     let interacted = false;
     const initTrackers = () => {
       if (interacted) return;
       interacted = true;
       cleanupListeners();
-      if (getCookieConsent()?.analytics) loadAnalyticsScripts();
+      if (getCookieConsent()?.analytics) enableAnalyticsScripts();
     };
 
     const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
@@ -379,12 +458,14 @@ export default function App() {
     // Fallback: load trackers after 6 seconds anyway if user remains idle
     const fallbackTimer = setTimeout(initTrackers, 6000);
 
-    // Si el usuario acepta cookies analíticas (banner o "Configurar cookies")
-    // después de ya haber interactuado sin consentimiento, cargarlas ahí
-    // mismo -- sin esto, aceptar recién surtiría efecto en la próxima carga
-    // de página.
+    // Reacciona en caliente a cualquier cambio de preferencia, venga del
+    // banner o del panel "Configurar mis cookies" en /cookies.
     const unsubscribeConsent = onCookieConsentChange((consent) => {
-      if (consent?.analytics) loadAnalyticsScripts();
+      if (consent?.analytics) {
+        enableAnalyticsScripts();
+      } else if (consent && !consent.analytics) {
+        disableAnalyticsScripts();
+      }
     });
 
     return () => {
