@@ -100,23 +100,17 @@ async function logConsentToFirestore(analytics: boolean) {
 }
 
 export function setCookieConsent(analytics: boolean) {
-  const previous = getCookieConsent();
   const consent: CookieConsent = {
     analytics,
     version: CONSENT_VERSION,
     decidedAt: new Date().toISOString(),
   };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(consent));
+  // App.tsx escucha este evento y activa/desactiva GA4 y Clarity en caliente
+  // (ga-disable-* de Google, consent() de Clarity) -- no hace falta recargar
+  // la página para que el cambio surta efecto.
   window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: consent }));
   void logConsentToFirestore(analytics);
-
-  // Si venía de haber aceptado analítica y ahora la revoca, GA4/Clarity ya
-  // pueden estar inyectados en la página -- no hay forma limpia de
-  // "desengancharlos" en caliente, así que recargamos para que no quede
-  // ningún tracker corriendo el resto de la sesión.
-  if (previous?.analytics && !analytics) {
-    window.location.reload();
-  }
 }
 
 export function onCookieConsentChange(handler: (consent: CookieConsent | null) => void) {

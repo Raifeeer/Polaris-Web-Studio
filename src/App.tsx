@@ -340,12 +340,52 @@ export default function App() {
       }
     };
 
+    // Apaga GA4/Clarity en caliente cuando el usuario revoca su consentimiento
+    // (banner o "Configurar mis cookies"), sin recargar la página. GA4 usa la
+    // bandera de opt-out documentada por Google (`ga-disable-<ID>`, leída por
+    // gtag.js en cada llamada); Clarity tiene su propia API de consentimiento
+    // (`clarity('consent', false)`) pensada exactamente para esto -- ambas
+    // detienen el envío de datos nuevos de inmediato. También se borran las
+    // cookies que ya hubieran quedado puestas, no solo las futuras.
+    const disableAnalyticsScripts = () => {
+      if (GA_ID) {
+        (window as any)[`ga-disable-${GA_ID}`] = true;
+      }
+      if ((window as any).clarity) {
+        try {
+          (window as any).clarity("consent", false);
+        } catch {
+          // Clarity no disponible todavía, nada que desactivar.
+        }
+      }
+      const domain = window.location.hostname;
+      ["_ga", `_ga_${GA_ID?.replace(/^G-/, "")}`, "_gid", "_gat", "_clck", "_clsk", "CLID", "ANONCHK", "MR", "MUID", "SM"]
+        .forEach((name) => {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${domain};`;
+        });
+    };
+
+    const enableAnalyticsScripts = () => {
+      if (GA_ID) {
+        (window as any)[`ga-disable-${GA_ID}`] = false;
+      }
+      if ((window as any).clarity) {
+        try {
+          (window as any).clarity("consent", true);
+        } catch {
+          // Clarity no disponible todavía, loadAnalyticsScripts la inicializa.
+        }
+      }
+      loadAnalyticsScripts();
+    };
+
     let interacted = false;
     const initTrackers = () => {
       if (interacted) return;
       interacted = true;
       cleanupListeners();
-      if (getCookieConsent()?.analytics) loadAnalyticsScripts();
+      if (getCookieConsent()?.analytics) enableAnalyticsScripts();
     };
 
     const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart"];
@@ -364,12 +404,14 @@ export default function App() {
     // Fallback: load trackers after 6 seconds anyway if user remains idle
     const fallbackTimer = setTimeout(initTrackers, 6000);
 
-    // Si el usuario acepta cookies analíticas (banner o "Configurar cookies")
-    // después de ya haber interactuado sin consentimiento, cargarlas ahí
-    // mismo -- sin esto, aceptar recién surtiría efecto en la próxima carga
-    // de página.
+    // Reacciona en caliente a cualquier cambio de preferencia, venga del
+    // banner o del panel "Configurar mis cookies" en /cookies.
     const unsubscribeConsent = onCookieConsentChange((consent) => {
-      if (consent?.analytics) loadAnalyticsScripts();
+      if (consent?.analytics) {
+        enableAnalyticsScripts();
+      } else if (consent && !consent.analytics) {
+        disableAnalyticsScripts();
+      }
     });
 
     return () => {
