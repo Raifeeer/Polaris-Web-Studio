@@ -68,10 +68,6 @@ const LINK_DEFINITIONS: LinkDef[] = [
     terms: ["core web vitals", "web vitals", "vitals"]
   },
   {
-    slug: "postgresql-base-datos",
-    terms: ["postgresql", "base de datos relacional", "postgres"]
-  },
-  {
     slug: "cloud-firebase-servidores",
     terms: ["firebase", "cloud firebase"]
   },

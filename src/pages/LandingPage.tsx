@@ -19,7 +19,6 @@ import {
   Eclipse,
   Cpu,
   Brain,
-  Database,
   Cloud,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useScroll, useTransform } from "framer-motion"; // Tree-shaking: solo se usan estos 7 exports
@@ -1758,13 +1757,6 @@ export default function LandingPage() {
                             slug: "grok-modelo-ia",
                           },
                           {
-                            name: "PostgreSQL",
-                            icon: Database,
-                            rgb: "71, 85, 105",
-                            hex: "#475569",
-                            slug: "postgresql-base-datos",
-                          },
-                          {
                             name: "SEO Core",
                             icon: BarChart3,
                             rgb: "16, 185, 129",
@@ -1925,15 +1917,6 @@ export default function LandingPage() {
                             catEs: "Modelo IA",
                             catEn: "AI Model",
                             slug: "grok-modelo-ia",
-                          },
-                          {
-                            name: "PostgreSQL",
-                            icon: Database,
-                            rgb: "71, 85, 105",
-                            hex: "#475569",
-                            catEs: "Base de Datos",
-                            catEn: "Database",
-                            slug: "postgresql-base-datos",
                           },
                           {
                             name: "SEO Core",
