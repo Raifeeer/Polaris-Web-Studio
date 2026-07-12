@@ -46,9 +46,12 @@ const GA_ID = import.meta.env.VITE_GA4_ID;
 function RouteLoader() {
   return (
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
-      <div className="animate-pulse">
+      <motion.div
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+      >
         <Logo size={48} showText={false} />
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -220,7 +223,6 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="opacity-80"
       >
         <Logo size={48} showText={false} />
       </motion.div>
