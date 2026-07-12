@@ -26,6 +26,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import Logo from "../components/Logo";
 import MockupFrame from "../components/MockupFrame";
+import CountdownPill from "../components/CountdownPill";
 import { T, useLanguage } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
 
@@ -107,7 +108,8 @@ export default function LandingPage() {
   const { language } = useLanguage();
   const [activeSection, setActiveSection] = useState<string>("inicio");
   // Misma fecha límite de la oferta de lanzamiento usada en Services.tsx (25% de descuento)
-  const [isOfferActive] = useState(() => Date.now() < new Date("2026-08-17T23:59:59Z").getTime());
+  const [targetDate] = useState(() => new Date("2026-08-17T23:59:59Z").getTime());
+  const [isOfferActive, setIsOfferActive] = useState(() => Date.now() < targetDate);
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -197,14 +199,6 @@ export default function LandingPage() {
         enDesc:
           "Get answers regarding turnaround times, hosting, SEO maintenance, flexible payment plans, and custom estimates starting at $299 USD.",
       },
-      contacto: {
-        esTitle: "Hablemos de tu Proyecto | Planificador de Proyectos",
-        esDesc:
-          "Define tu propuesta en minutos con nuestro planificador interactivo. Sin compromisos ni costes ocultos y agenda inmediata.",
-        enTitle: "Let's Build Your Project | Interactive Project Planner",
-        enDesc:
-          "Complete our dynamic project planner in under 2 minutes and unlock detailed deliverables, rates, and launch schedules.",
-      },
     };
 
     const currentMeta = metaData[activeSection] || metaData.inicio;
@@ -250,7 +244,6 @@ export default function LandingPage() {
       "proceso",
       "portafolio",
       "faq",
-      "contacto",
     ];
     sections.forEach((id) => {
       const el = document.getElementById(id);
@@ -328,6 +321,7 @@ export default function LandingPage() {
       ),
       stack: ["React", "Framer Motion", "Vite", "Tailwind CSS"],
       colorClass: "from-cyan-500/20 to-indigo-500/5 hover:border-cyan-500/40",
+      perfScore: 97,
     },
     {
       title: "Nexus Realty",
@@ -342,6 +336,7 @@ export default function LandingPage() {
       ),
       stack: ["React", "TypeScript", "Tailwind CSS"],
       colorClass: "from-amber-500/20 to-orange-500/5 hover:border-amber-500/40",
+      perfScore: 88,
     },
     {
       title: "Chroma Tech Store",
@@ -1437,6 +1432,11 @@ export default function LandingPage() {
                       {p.stack.map((tech, tIdx) => (
                         <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)] transition-colors group-hover:border-[var(--color-primary-base)]/20">{tech}</span>
                       ))}
+                      {p.perfScore && (
+                        <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500 transition-colors">
+                          ⚡ {p.perfScore}/100 <T en="Performance">Rendimiento</T>
+                        </span>
+                      )}
                     </div>
                     <motion.div
                       className="pt-4 overflow-hidden rounded-lg"
@@ -1504,6 +1504,11 @@ export default function LandingPage() {
                             {p.stack.map((tech, tIdx) => (
                               <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)]">{tech}</span>
                             ))}
+                            {p.perfScore && (
+                              <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500">
+                                ⚡ {p.perfScore}/100 <T en="Performance">Rendimiento</T>
+                              </span>
+                            )}
                           </div>
                           <div className="pt-4 overflow-hidden rounded-lg">
                             <div className="relative w-full overflow-hidden rounded-lg">
@@ -2033,6 +2038,17 @@ export default function LandingPage() {
             </p>
           </div>
 
+          {isOfferActive && (
+            <div className="mb-10 rounded-2xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/30 px-4 py-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center">
+              <span className="font-bold text-sm md:text-base text-[var(--color-text-primary)]">
+                <T en="Launch Offer: Get a 25% discount through the entire first month!">
+                  Oferta de lanzamiento: ¡todo el primer mes con 25% de descuento!
+                </T>
+              </span>
+              <CountdownPill targetDate={targetDate} onExpire={() => setIsOfferActive(false)} />
+            </div>
+          )}
+
           {/* Plans Grid */}
           <div ref={pricingRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
 
@@ -2231,9 +2247,9 @@ export default function LandingPage() {
             </p>
             <button
               onClick={() => navigate("/servicios")}
-              className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-primary-base)] hover:underline transition-all"
+              className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors"
             >
-              <T en="Compare all features in detail →">Comparar todas las funcionalidades en detalle →</T>
+              <T en="Compare all features in detail">Comparar todas las funcionalidades en detalle</T>
             </button>
           </div>
         </div>
