@@ -69,8 +69,17 @@ function RouteLoader() {
   return createPortal(
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
       <div className="relative flex items-center justify-center">
+        {/* Brillo con radial-gradient en vez de filter:blur -- blur() combinado
+            con una animación de scale a veces renderiza con un borde
+            cuadrado visible (bug de compositing de Safari/WebKit en iOS,
+            intermitente). El gradiente radial da el mismo efecto de
+            resplandor difuso sin usar filter, así que no tiene ese problema. */}
         <motion.div
-          className="absolute inset-0 rounded-full bg-[var(--color-primary-base)] blur-2xl"
+          className="absolute -inset-8 rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, var(--color-primary-base) 0%, transparent 70%)",
+          }}
           animate={{ opacity: [0.15, 0.15, 0.55, 0.55, 0.15], scale: [1, 1, 1.35, 1.35, 1] }}
           transition={TWINKLE_TRANSITION}
         />
@@ -169,14 +178,27 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
+      {/* Este motion.div solo se usa para la animación de SALIDA de la
+          página anterior (exit) -- no tiene initial/animate porque, al
+          envolver también el Suspense, su "entrada" se disparaba en cuanto
+          cambiaba la ruta (mientras se mostraba el RouteLoader), no cuando
+          la página real terminaba de cargar. El fade-in real de la página
+          vive en el motion.div de más abajo, DENTRO del Suspense, así que
+          React recién lo monta (y dispara su propio `initial`) cuando el
+          contenido de verdad está listo para mostrarse -- antes la página
+          aparecía de golpe porque la animación de entrada ya se había
+          consumido entera sobre el loader. */}
       <motion.div
         key={location.pathname}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.22, ease: "easeInOut" }}
       >
         <Suspense fallback={<RouteLoader />}>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+          >
           <Routes location={location}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/servicios" element={<Services />} />
@@ -204,6 +226,7 @@ function AnimatedRoutes() {
               element={<LegalPage page="cookies" />}
             />
           </Routes>
+          </motion.div>
         </Suspense>
       </motion.div>
     </AnimatePresence>
