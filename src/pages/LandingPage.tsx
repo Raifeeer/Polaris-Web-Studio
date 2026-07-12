@@ -1433,8 +1433,9 @@ export default function LandingPage() {
                         <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)] transition-colors group-hover:border-[var(--color-primary-base)]/20">{tech}</span>
                       ))}
                       {p.perfScore && (
-                        <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500 transition-colors">
-                          ⚡ {p.perfScore}/100 <T en="Performance">Rendimiento</T>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500 transition-colors">
+                          <Zap size={10} className="shrink-0" />
+                          {p.perfScore}/100 <T en="Performance">Rendimiento</T>
                         </span>
                       )}
                     </div>
@@ -1505,8 +1506,9 @@ export default function LandingPage() {
                               <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)]">{tech}</span>
                             ))}
                             {p.perfScore && (
-                              <span className="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500">
-                                ⚡ {p.perfScore}/100 <T en="Performance">Rendimiento</T>
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500">
+                                <Zap size={10} className="shrink-0" />
+                                {p.perfScore}/100 <T en="Performance">Rendimiento</T>
                               </span>
                             )}
                           </div>
