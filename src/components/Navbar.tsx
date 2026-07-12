@@ -91,32 +91,20 @@ export default function Navbar() {
             : "border-b-transparent"
         } ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
-        {/* Estrella y wordmark independientes (dos imágenes, no un solo
-            lockup) -- la estrella no depende del tema, el wordmark sí
-            (blanco en modo oscuro, a color en modo claro). Tamaño y espacio
-            entre ambas medidos en píxeles sobre el lockup horizontal real
-            (proporción estrella:texto 1.71:1, gap 4.9% del alto de la
-            estrella) para que la composición quede igual que el diseño
-            original aunque estén separadas. */}
         <Link
           to="/"
-          className="flex items-center gap-[5.5px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
+          className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
           aria-label={translate("Polaris Web Studio - Inicio", "Polaris Web Studio - Home")}
         >
           <img
-            src="/brand/isotipo-color.svg"
-            alt=""
-            className="h-28 w-auto shrink-0"
+            src="/brand/lockup-horizontal-blanco.svg"
+            alt="Polaris Web Studio"
+            className="h-28 w-auto shrink-0 [.light_&]:hidden"
           />
           <img
-            src="/brand/logotipo-blanco.svg"
+            src="/brand/lockup-horizontal-color.svg"
             alt="Polaris Web Studio"
-            className="h-16 w-auto shrink-0 [.light_&]:hidden"
-          />
-          <img
-            src="/brand/logotipo-color.svg"
-            alt="Polaris Web Studio"
-            className="h-16 w-auto shrink-0 hidden [.light_&]:block"
+            className="h-28 w-auto shrink-0 hidden [.light_&]:block"
           />
         </Link>
 
