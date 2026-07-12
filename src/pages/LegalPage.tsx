@@ -1,11 +1,11 @@
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Cookie } from "lucide-react";
+import { ArrowLeft, Cookie, X } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { T } from "../context/LanguageContext";
-import { resetCookieConsent } from "../lib/cookieConsent";
+import { T, useLanguage } from "../context/LanguageContext";
+import { getCookieConsent, setCookieConsent } from "../lib/cookieConsent";
 
 type LegalPageKind = "privacy" | "terms" | "cookies";
 
@@ -520,7 +520,106 @@ function TermsContent() {
   );
 }
 
+function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
+  const { translate } = useLanguage();
+  const [analytics, setAnalytics] = useState(() => getCookieConsent()?.analytics ?? false);
+
+  const save = () => {
+    setCookieConsent(analytics);
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.97 }}
+          role="dialog"
+          aria-label="Configurar mis cookies"
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md glass-panel rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]/95 backdrop-blur-xl shadow-2xl p-6"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <p className="text-sm font-bold text-[var(--color-text-primary)]">
+              <T en="Manage my cookies">Configurar mis cookies</T>
+            </p>
+            <button
+              onClick={onClose}
+              aria-label={translate("Cerrar", "Close")}
+              className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-start justify-between gap-4 p-3 rounded-xl bg-[var(--color-surface-highlight)]/50">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[var(--color-text-primary)]">
+                  <T en="Essential">Esenciales</T>
+                </p>
+                <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">
+                  <T en="Always active — the site can't work without them.">
+                    Siempre activas — el sitio no puede funcionar sin ellas.
+                  </T>
+                </p>
+              </div>
+              <div className="shrink-0 mt-0.5 w-9 h-5 rounded-full bg-[var(--color-primary-base)]/40 flex items-center px-0.5 cursor-not-allowed">
+                <div className="w-4 h-4 rounded-full bg-[var(--color-primary-base)] ml-auto" />
+              </div>
+            </div>
+
+            <div className="flex items-start justify-between gap-4 p-3 rounded-xl bg-[var(--color-surface-highlight)]/50">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[var(--color-text-primary)]">
+                  <T en="Optional analytics">Analíticas opcionales</T>
+                </p>
+                <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">
+                  <T en="Help us understand how the site is used.">
+                    Nos ayudan a entender cómo se usa el sitio.
+                  </T>
+                </p>
+              </div>
+              <button
+                role="switch"
+                aria-checked={analytics}
+                onClick={() => setAnalytics((v) => !v)}
+                className={`shrink-0 mt-0.5 w-9 h-5 rounded-full flex items-center px-0.5 transition-colors cursor-pointer ${
+                  analytics ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-border-strong)]"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform ${
+                    analytics ? "translate-x-4" : "translate-x-0"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={save}
+            className="mt-5 w-full px-4 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            <T en="Save preferences">Guardar preferencias</T>
+          </button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function CookiesContent() {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   return (
     <div className="space-y-10">
       <Section heading={<T en="1. What are cookies">1. Qué son las cookies</T>}>
@@ -627,13 +726,15 @@ function CookiesContent() {
           </T>
         </p>
         <button
-          onClick={() => resetCookieConsent()}
+          onClick={() => setSettingsOpen(true)}
           className="mt-2 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] text-xs font-bold uppercase tracking-wider hover:opacity-90 transition-opacity cursor-pointer"
         >
           <Cookie size={14} />
           <T en="Manage my cookies">Configurar mis cookies</T>
         </button>
       </Section>
+
+      {settingsOpen && <CookieSettingsPanel onClose={() => setSettingsOpen(false)} />}
     </div>
   );
 }

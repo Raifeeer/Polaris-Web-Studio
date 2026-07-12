@@ -96,6 +96,7 @@ async function logConsentToFirestore(analytics: boolean) {
 }
 
 export function setCookieConsent(analytics: boolean) {
+  const previous = getCookieConsent();
   const consent: CookieConsent = {
     analytics,
     version: CONSENT_VERSION,
@@ -104,12 +105,14 @@ export function setCookieConsent(analytics: boolean) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(consent));
   window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: consent }));
   void logConsentToFirestore(analytics);
-}
 
-/** Borra la decisión guardada -- usado por "Configurar cookies" para volver a mostrar el banner. */
-export function resetCookieConsent() {
-  localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: null }));
+  // Si venía de haber aceptado analítica y ahora la revoca, GA4/Clarity ya
+  // pueden estar inyectados en la página -- no hay forma limpia de
+  // "desengancharlos" en caliente, así que recargamos para que no quede
+  // ningún tracker corriendo el resto de la sesión.
+  if (previous?.analytics && !analytics) {
+    window.location.reload();
+  }
 }
 
 export function onCookieConsentChange(handler: (consent: CookieConsent | null) => void) {
