@@ -52,7 +52,7 @@ export default function Login() {
           className="w-full max-w-md p-6 md:p-10 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] bento-glow"
         >
           <div className="flex justify-center mb-6">
-            <Logo size={40} stacked />
+            <Logo size={72} stacked />
           </div>
 
           <div className="text-center mb-6 space-y-2">

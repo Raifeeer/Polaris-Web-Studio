@@ -1927,7 +1927,7 @@ export default function ClientDashboard() {
       {/* Mobile Navigation Header */}
       <aside className="block md:hidden border-b border-[var(--color-border-subtle)] glass-panel p-4 sticky top-0 z-40">
         <div className="flex items-center justify-between">
-          <img src="/brand/lockup-horizontal-color.svg" alt="Polaris Web Studio" className="h-7 w-auto" />
+          <img src="/brand/lockup-horizontal-color.svg" alt="Polaris Web Studio" className="h-11 w-auto" />
           <div className="flex items-center gap-2">
             <div className={`px-2 py-0.5 flex items-center gap-1 rounded-full text-[9px] uppercase font-black tracking-widest ${
               isAdmin 
@@ -2111,7 +2111,7 @@ export default function ClientDashboard() {
       <aside className="hidden md:flex w-64 border-r border-[var(--color-border-subtle)] glass-panel p-6 flex-col gap-8 shrink-0 justify-between">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <img src="/brand/lockup-horizontal-color.svg" alt="Polaris Web Studio" className="h-8 w-auto" />
+            <img src="/brand/lockup-horizontal-color.svg" alt="Polaris Web Studio" className="h-12 w-auto" />
             <div className={`px-2 py-1 flex items-center gap-1 rounded-full text-[9px] uppercase font-black tracking-widest ${
               isAdmin 
                 ? "bg-indigo-500/10 text-indigo-400" 
