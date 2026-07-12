@@ -52,9 +52,14 @@ export default function Login() {
         >
           <div className="flex justify-center mb-6">
             <img
+              src="/brand/lockup-vertical-blanco.svg"
+              alt="Polaris Web Studio"
+              className="h-32 w-auto [.light_&]:hidden"
+            />
+            <img
               src="/brand/lockup-vertical-color.svg"
               alt="Polaris Web Studio"
-              className="h-32 w-auto"
+              className="h-32 w-auto hidden [.light_&]:block"
             />
           </div>
 

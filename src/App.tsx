@@ -258,9 +258,14 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
         className="text-center space-y-2"
       >
         <img
+          src="/brand/lockup-vertical-blanco.svg"
+          alt="Polaris Web Studio"
+          className="h-72 w-auto mx-auto [.light_&]:hidden"
+        />
+        <img
           src="/brand/lockup-vertical-color.svg"
           alt="Polaris Web Studio"
-          className="h-72 w-auto mx-auto"
+          className="h-72 w-auto mx-auto hidden [.light_&]:block"
         />
         <motion.p
           initial={{ opacity: 0 }}
