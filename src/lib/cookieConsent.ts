@@ -1,4 +1,4 @@
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase";
 
 // Consentimiento de cookies analíticas (GA4 + Microsoft Clarity). Las
@@ -62,10 +62,16 @@ function truncateIp(ip: string): string {
   return "unknown";
 }
 
-/** Registra la decisión de consentimiento en Firestore (colección
- * `cookie_consents`) como evidencia por si hace falta demostrarla más
- * adelante -- decision, version, timestamp del servidor e IP truncada. No
- * bloquea la UI: si falla (red, IP no disponible), solo lo loguea. */
+/** Registra la decisión de consentimiento en Firestore como evidencia por si
+ * hace falta demostrarla más adelante -- decision, version, timestamp del
+ * servidor e IP truncada. Escribe en dos lugares:
+ * - `cookie_consents/{consentId}`: snapshot de la decisión ACTUAL (se
+ *   sobreescribe en cada cambio), para consultar rápido el estado vigente.
+ * - `cookie_consents/{consentId}/history`: un documento NUEVO por cada
+ *   decisión, nunca se sobreescribe -- así queda registro de que alguien
+ *   cambió de opinión (por ejemplo, aceptó todo y después revocó), no solo
+ *   cuál es su elección de hoy.
+ * No bloquea la UI: si falla (red, IP no disponible), solo lo loguea. */
 async function logConsentToFirestore(analytics: boolean) {
   try {
     let ip = "unknown";
@@ -80,16 +86,14 @@ async function logConsentToFirestore(analytics: boolean) {
     }
 
     const consentId = getOrCreateConsentId();
-    await setDoc(
-      doc(db, "cookie_consents", consentId),
-      {
-        decision: analytics,
-        version: CONSENT_VERSION,
-        timestamp: serverTimestamp(),
-        ip,
-      },
-      { merge: true },
-    );
+    const entry = {
+      decision: analytics,
+      version: CONSENT_VERSION,
+      timestamp: serverTimestamp(),
+      ip,
+    };
+    await setDoc(doc(db, "cookie_consents", consentId), entry, { merge: true });
+    await addDoc(collection(db, "cookie_consents", consentId, "history"), entry);
   } catch (error) {
     console.error("No se pudo registrar el consentimiento en Firestore:", error);
   }

@@ -89,6 +89,13 @@ service cloud.firestore {
                     isValidCookieConsent(request.resource.data);
       allow update: if isValidId(consentId) &&
                     isValidCookieConsent(request.resource.data);
+
+      // Historial inmutable de cada decisión (nunca se sobreescribe), para
+      // poder demostrar que alguien cambió de preferencia y cuándo -- no
+      // solo cuál es su elección vigente.
+      match /history/{entryId} {
+        allow create: if isValidCookieConsent(request.resource.data);
+      }
     }
 
     match /archived_tasks/{taskId} {
