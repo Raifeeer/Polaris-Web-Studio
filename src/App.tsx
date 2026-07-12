@@ -17,6 +17,7 @@ import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
+import Logo from "./components/Logo";
 import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
 import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
@@ -45,9 +46,8 @@ const GA_ID = import.meta.env.VITE_GA4_ID;
 function RouteLoader() {
   return (
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
-      <div className="relative w-12 h-12 flex items-center justify-center">
-        <div className="absolute inset-0 rounded-full border-2 border-[var(--color-primary-base)]/20 animate-ping duration-1000" />
-        <div className="w-8 h-8 rounded-full border-2 border-[var(--color-primary-base)] border-t-transparent animate-spin" />
+      <div className="animate-pulse">
+        <Logo size={48} showText={false} />
       </div>
     </div>
   );
@@ -220,26 +220,9 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
+        className="opacity-80"
       >
-        <svg
-          width="48"
-          height="48"
-          viewBox="0 0 200 200"
-          fill="none"
-          className="opacity-80"
-        >
-          <defs>
-            <linearGradient id="loader-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#818cf8" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M100 10 L108 85 L130 60 L115 92 L190 100 L115 108 L130 140 L108 115 L100 190 L92 115 L70 140 L85 108 L10 100 L85 92 L70 60 L92 85 Z"
-            fill="url(#loader-grad)"
-          />
-          <circle cx="100" cy="100" r="8" fill="white" opacity="0.9" />
-        </svg>
+        <Logo size={48} showText={false} />
       </motion.div>
 
       {/* Brand */}

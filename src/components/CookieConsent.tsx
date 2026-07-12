@@ -46,10 +46,10 @@ export default function CookieConsent() {
               <T en="We use cookies">Usamos cookies</T>
             </p>
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-              <T en="We use essential cookies for the site to work, and optional analytics cookies (Google Analytics, Microsoft Clarity) to understand how you use it. You can change your choice anytime from our">
+              <T en="We use essential cookies for the site to work, and optional analytics cookies to understand how you use it. You can change your choice anytime from our">
                 Usamos cookies esenciales para que el sitio funcione, y cookies analíticas
-                opcionales (Google Analytics, Microsoft Clarity) para entender cómo lo usás.
-                Podés cambiar tu elección cuando quieras desde nuestra
+                opcionales para entender cómo lo usa. Puede cambiar su elección cuando quiera
+                desde nuestra
               </T>{" "}
               <Link
                 to="/cookies"
