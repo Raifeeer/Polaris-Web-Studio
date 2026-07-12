@@ -42,15 +42,17 @@ const TerminalPage = lazy(() => import("./pages/TerminalPage"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
-// Simple, beautiful high-fidelity micro-loader
+// Simple, beautiful high-fidelity micro-loader -- se muestra en cada
+// transición de ruta (el Suspense que envuelve <AnimatedRoutes /> lo
+// dispara mientras se descarga el chunk lazy de la página siguiente).
 function RouteLoader() {
   return (
     <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
       <motion.div
-        animate={{ scale: [1, 1.08, 1] }}
-        transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
       >
-        <Logo size={48} showText={false} />
+        <Logo size={160} showText={false} />
       </motion.div>
     </div>
   );
@@ -230,7 +232,7 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
         <img
           src="/brand/lockup-vertical-color.svg"
           alt="Polaris Web Studio"
-          className="h-14 w-auto mx-auto"
+          className="h-40 w-auto mx-auto"
         />
         <motion.p
           initial={{ opacity: 0 }}
