@@ -544,40 +544,30 @@ function CookiesContent() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-[var(--color-border-subtle)] text-left">
-                <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Name">Nombre</T></th>
+                <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Category">Categoría</T></th>
                 <th className="py-2 pr-4 font-bold text-[var(--color-text-primary)]"><T en="Purpose">Propósito</T></th>
                 <th className="py-2 font-bold text-[var(--color-text-primary)]"><T en="Duration">Duración</T></th>
               </tr>
             </thead>
             <tbody className="align-top">
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">polaris-theme</td>
-                <td className="py-2 pr-4"><T en="Remembers your light/dark theme choice.">Recuerda tu elección de tema claro/oscuro.</T></td>
+                <td className="py-2 pr-4"><T en="Display preferences">Preferencias de visualización</T></td>
+                <td className="py-2 pr-4"><T en="Remembers your light/dark theme and language choice (ES/EN).">Recuerda tu elección de tema claro/oscuro y de idioma (ES/EN).</T></td>
                 <td className="py-2"><T en="Until you clear it">Hasta que lo borres</T></td>
               </tr>
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">language</td>
-                <td className="py-2 pr-4"><T en="Remembers your language choice (ES/EN).">Recuerda tu idioma elegido (ES/EN).</T></td>
-                <td className="py-2"><T en="Until you clear it">Hasta que lo borres</T></td>
-              </tr>
-              <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">portal_token</td>
+                <td className="py-2 pr-4"><T en="Client portal session">Sesión del portal de clientes</T></td>
                 <td className="py-2 pr-4"><T en="Keeps you logged in to the client portal.">Mantiene tu sesión iniciada en el portal de clientes.</T></td>
                 <td className="py-2"><T en="Until you log out">Hasta que cierres sesión</T></td>
               </tr>
               <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">wizardQuote_*</td>
+                <td className="py-2 pr-4"><T en="Quote wizard progress">Avance del cotizador</T></td>
                 <td className="py-2 pr-4"><T en="Saves your progress in the quote wizard so you don't lose it.">Guarda tu avance en el cotizador para que no lo pierdas.</T></td>
                 <td className="py-2"><T en="Until submitted or cleared">Hasta que lo envíes o lo borres</T></td>
               </tr>
-              <tr className="border-b border-[var(--color-border-subtle)]/50">
-                <td className="py-2 pr-4 font-mono text-xs">polaris_cookie_consent</td>
-                <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice).">Recuerda tu preferencia de cookies (esta elección).</T></td>
-                <td className="py-2"><T en="Until you change it">Hasta que lo cambies</T></td>
-              </tr>
               <tr>
-                <td className="py-2 pr-4 font-mono text-xs">polaris_cookie_consent_id</td>
-                <td className="py-2 pr-4"><T en="Random identifier (not tied to your name or account) that lets us keep a record of your cookie decision as evidence, in case we ever need to demonstrate it.">Identificador aleatorio (no vinculado a tu nombre ni cuenta) que nos permite guardar un registro de tu decisión de cookies como evidencia, por si hace falta demostrarla.</T></td>
+                <td className="py-2 pr-4"><T en="Cookie preference record">Registro de preferencia de cookies</T></td>
+                <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice) and, together with our server, keeps a record of it as evidence in case we ever need to demonstrate it — using a random identifier not tied to your name or account.">Recuerda tu preferencia de cookies (esta elección) y, junto con nuestro servidor, guarda un registro de ella como evidencia por si hace falta demostrarla — mediante un identificador aleatorio no vinculado a tu nombre ni cuenta.</T></td>
                 <td className="py-2"><T en="Until you change it">Hasta que lo cambies</T></td>
               </tr>
             </tbody>

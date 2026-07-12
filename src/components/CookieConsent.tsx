@@ -48,7 +48,7 @@ export default function CookieConsent() {
             <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
               <T en="We use essential cookies for the site to work, and optional analytics cookies to understand how you use it. You can change your choice anytime from our">
                 Usamos cookies esenciales para que el sitio funcione, y cookies analíticas
-                opcionales para entender cómo lo usa. Puede cambiar su elección cuando quiera
+                opcionales para entender cómo lo usas. Puedes cambiar tu elección cuando quieras
                 desde nuestra
               </T>{" "}
               <Link
