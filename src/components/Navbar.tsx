@@ -99,12 +99,12 @@ export default function Navbar() {
           <img
             src="/brand/lockup-horizontal-blanco.svg"
             alt="Polaris Web Studio"
-            className="h-11 w-auto [.light_&]:hidden"
+            className="h-16 w-auto [.light_&]:hidden"
           />
           <img
             src="/brand/lockup-horizontal-color.svg"
             alt="Polaris Web Studio"
-            className="h-11 w-auto hidden [.light_&]:block"
+            className="h-16 w-auto hidden [.light_&]:block"
           />
         </Link>
 
