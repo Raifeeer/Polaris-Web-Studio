@@ -10,11 +10,12 @@ export default function CookieConsent() {
 
   useEffect(() => {
     setVisible(getCookieConsent() === null);
-    // Si se reabre desde "Configurar cookies" (política de Cookies), la
-    // decisión guardada se borra y hay que volver a mostrar el banner sin
-    // necesitar un refresh de página.
+    // Si la decisión se toma desde otro lado (el panel de "Configurar mis
+    // cookies" en /cookies) mientras el banner sigue visible por no haber
+    // decidido todavía, se oculta también acá -- si no, quedarían los dos
+    // superpuestos.
     return onCookieConsentChange((consent) => {
-      if (consent === null) setVisible(true);
+      setVisible(consent === null);
     });
   }, []);
 

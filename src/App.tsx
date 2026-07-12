@@ -218,32 +218,28 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
       transition={{ duration: 0.5, ease: "easeInOut" }}
       className="fixed inset-0 z-[99999] bg-[var(--color-surface-base)] flex flex-col items-center justify-center gap-6 select-none"
     >
-      {/* Logo */}
+      {/* Logo real -- misma imagen combinada (estrella + letras juntas) que
+          el portal de clientes, en vez de la estrella y el texto como
+          elementos separados. */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
+        className="text-center space-y-2"
       >
-        <Logo size={48} showText={false} />
-      </motion.div>
-
-      {/* Brand */}
-      <div className="text-center space-y-1">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: phase >= 0 ? 1 : 0 }}
-          className="text-sm font-black tracking-[0.3em] uppercase text-[var(--color-text-primary)]"
-        >
-          Polaris
-        </motion.p>
+        <img
+          src="/brand/lockup-vertical-color.svg"
+          alt="Polaris Web Studio"
+          className="h-14 w-auto mx-auto"
+        />
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: phase >= 1 ? 0.4 : 0 }}
           className="text-[10px] font-mono tracking-widest text-[var(--color-text-tertiary)] uppercase"
         >
-          Web Studio · v1.0
+          v1.0
         </motion.p>
-      </div>
+      </motion.div>
 
       {/* Progress bar */}
       <div className="w-48">

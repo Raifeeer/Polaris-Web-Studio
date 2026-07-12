@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Cookie, X } from "lucide-react";
+import { ArrowLeft, Cookie, X, Lock } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
@@ -535,7 +535,7 @@ function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -545,7 +545,7 @@ function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
           role="dialog"
           aria-label="Configurar mis cookies"
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md glass-panel rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]/95 backdrop-blur-xl shadow-2xl p-6"
+          className="w-full max-w-md glass-panel border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] shadow-2xl p-6"
         >
           <div className="flex items-start justify-between mb-4">
             <p className="text-sm font-bold text-[var(--color-text-primary)]">
@@ -560,8 +560,8 @@ function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
             </button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-4 p-3 rounded-xl bg-[var(--color-surface-highlight)]/50">
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40">
               <div className="min-w-0">
                 <p className="text-xs font-bold text-[var(--color-text-primary)]">
                   <T en="Essential">Esenciales</T>
@@ -572,12 +572,12 @@ function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
                   </T>
                 </p>
               </div>
-              <div className="shrink-0 mt-0.5 w-9 h-5 rounded-full bg-[var(--color-primary-base)]/40 flex items-center px-0.5 cursor-not-allowed">
-                <div className="w-4 h-4 rounded-full bg-[var(--color-primary-base)] ml-auto" />
+              <div className="shrink-0 mt-0.5 w-7 h-7 rounded-full bg-[var(--color-surface-highlight)] flex items-center justify-center text-[var(--color-text-tertiary)]">
+                <Lock size={12} />
               </div>
             </div>
 
-            <div className="flex items-start justify-between gap-4 p-3 rounded-xl bg-[var(--color-surface-highlight)]/50">
+            <div className="flex items-start justify-between gap-4 p-3.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40">
               <div className="min-w-0">
                 <p className="text-xs font-bold text-[var(--color-text-primary)]">
                   <T en="Optional analytics">Analíticas opcionales</T>
