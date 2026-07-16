@@ -37,9 +37,11 @@ import {
   Receipt,
   Sparkles,
   Mail,
-  Loader2
+  Loader2,
+  Globe
 } from "lucide-react";
 import AISparkleIcon from "../components/AISparkleIcon";
+import Logo from "../components/Logo";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { collection, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
@@ -602,9 +604,42 @@ function DashboardSkeleton() {
   );
 }
 
+// Mismo loader del isotipo que se usa entre rutas (App.tsx -- RouteLoader), reutilizado
+// acá para el cambio de idioma: le da un instante real y visible antes de recargar, en
+// vez de solo cambiar el texto en caliente, para que cualquier generador de documentos
+// (el PDF de facturas) que dependía del idioma viejo no quede a medias.
+const LANGUAGE_SWITCH_TWINKLE = {
+  duration: 1.1,
+  times: [0, 0.55, 0.65, 0.78, 1],
+  repeat: Infinity,
+  ease: "easeInOut" as const,
+};
+function LanguageSwitchLoader() {
+  return createPortal(
+    <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-[100]">
+      <div className="relative flex items-center justify-center">
+        <motion.div
+          className="absolute -inset-8 rounded-full"
+          style={{ background: "radial-gradient(circle, var(--color-primary-base) 0%, transparent 70%)" }}
+          animate={{ opacity: [0.15, 0.15, 0.55, 0.55, 0.15], scale: [1, 1, 1.35, 1.35, 1] }}
+          transition={LANGUAGE_SWITCH_TWINKLE}
+        />
+        <motion.div
+          animate={{ scale: [1, 1, 1.15, 1.15, 1], rotate: [0, 0, 12, -8, 0] }}
+          transition={LANGUAGE_SWITCH_TWINKLE}
+        >
+          <Logo size={160} showText={false} />
+        </motion.div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
-  const { language } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const [switchingLanguage, setSwitchingLanguage] = useState<"es" | "en" | null>(null);
   const { user, logout, token } = useAuth();
   const isAdmin = user?.role === "admin";
   // Ref sincronizado en cada render: generateClientSummary se dispara desde un
@@ -1729,18 +1764,22 @@ export default function ClientDashboard() {
       const clientEmail = isAdmin ? clientUser?.email : user?.email;
       const clientPhone = isAdmin ? (clientUser as any)?.phone : (user as any)?.phone;
 
+      // El PDF se genera en el mismo idioma que el usuario tenga elegido en la
+      // interfaz (ver `language`, ya en scope del componente) -- no solo las fechas.
+      const tr = (es: string, en: string) => (language === "en" ? en : es);
+
       const payment = inv.status === "paid" && inv.paypalCaptureId
         ? { label: "PayPal", detail: `Ref: ${inv.paypalCaptureId}` }
         : inv.status === "paid"
-        ? { label: "Transferencia bancaria / Efectivo", detail: "Pago confirmado manualmente" }
+        ? { label: tr("Transferencia bancaria / Efectivo", "Bank transfer / Cash"), detail: tr("Pago confirmado manualmente", "Manually confirmed payment") }
         : inv.status === "void"
         ? {
-            label: "Factura invalidada",
-            detail: inv.paypalRefundId ? `Reembolsada vía PayPal (Ref: ${inv.paypalRefundId})` : "Sin cobro asociado",
+            label: tr("Factura invalidada", "Invoice voided"),
+            detail: inv.paypalRefundId ? `${tr("Reembolsada vía PayPal", "Refunded via PayPal")} (Ref: ${inv.paypalRefundId})` : tr("Sin cobro asociado", "No charge associated"),
           }
-        : { label: "PayPal", detail: "Pendiente — disponible para pagar en el portal del cliente" };
+        : { label: "PayPal", detail: tr("Pendiente — disponible para pagar en el portal del cliente", "Pending — available to pay in the client portal") };
 
-      const statusLabel = (inv.status === "paid" ? "Pagada" : inv.status === "void" ? "Invalidada" : "Pendiente").toUpperCase();
+      const statusLabel = (inv.status === "paid" ? tr("Pagada", "Paid") : inv.status === "void" ? tr("Invalidada", "Voided") : tr("Pendiente", "Pending")).toUpperCase();
       const statusColors = inv.status === "paid"
         ? { bg: [220, 252, 231], text: [6, 95, 70] }
         : inv.status === "void"
@@ -1752,7 +1791,7 @@ export default function ClientDashboard() {
       const invoiceItems: { description: string; price: number; quantity: number }[] =
         Array.isArray(inv.items) && inv.items.length > 0
           ? inv.items
-          : [{ description: inv.description || "Servicios de desarrollo web.", price: Number(inv.amount), quantity: 1 }];
+          : [{ description: inv.description || tr("Servicios de desarrollo web.", "Web development services."), price: Number(inv.amount), quantity: 1 }];
 
       // Lockup vertical oficial (public/brand/lockup-vertical-color.svg), inlineado a
       // mano -- se incrusta como SVG vectorial real (vía svg2pdf.js), no como imagen
@@ -1793,7 +1832,7 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(32));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      pdf.text("FACTURA", RIGHT, MARGIN + 26, { align: "right" });
+      pdf.text(tr("FACTURA", "INVOICE"), RIGHT, MARGIN + 26, { align: "right" });
 
       pdf.setFontSize(pt(14));
       pdf.setTextColor(INDIGO[0], INDIGO[1], INDIGO[2]);
@@ -1829,7 +1868,7 @@ export default function ClientDashboard() {
       };
 
       let c1y = infoY;
-      label("Datos del cliente", col1X, c1y);
+      label(tr("Datos del cliente", "Client Details"), col1X, c1y);
       c1y += 16;
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(13));
@@ -1842,7 +1881,7 @@ export default function ClientDashboard() {
       if (clientEmail) { pdf.text(clientEmail, col1X, c1y); c1y += 13; }
       if (clientPhone) { pdf.text(clientPhone, col1X, c1y); c1y += 13; }
       c1y += 6;
-      label("Proyecto", col1X, c1y);
+      label(tr("Proyecto", "Project"), col1X, c1y);
       c1y += 15;
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(11));
@@ -1850,7 +1889,7 @@ export default function ClientDashboard() {
       pdf.text(project?.name || "—", col1X, c1y);
 
       let c2y = infoY;
-      label("Fecha de emisión", col2X, c2y);
+      label(tr("Fecha de emisión", "Issue Date"), col2X, c2y);
       c2y += 16;
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(11));
@@ -1858,7 +1897,7 @@ export default function ClientDashboard() {
       pdf.text(formatDate(inv.date, language), col2X, c2y);
 
       let c3y = infoY;
-      label("Datos de la empresa", col3X, c3y, "right");
+      label(tr("Datos de la empresa", "Company Details"), col3X, c3y, "right");
       c3y += 16;
       const rightLine = (l: string, v: string) => {
         pdf.setFont("helvetica", "bold");
@@ -1871,9 +1910,9 @@ export default function ClientDashboard() {
         pdf.text(v, col3X, c3y, { align: "right" });
         c3y += 16;
       };
-      rightLine("Correo electrónico", "hola@polarisweb.studio");
-      rightLine("Teléfono", "+1 829-920-0544");
-      rightLine("RNC", "123456789");
+      rightLine(tr("Correo electrónico", "Email"), "hola@polarisweb.studio");
+      rightLine(tr("Teléfono", "Phone"), "+1 829-920-0544");
+      rightLine(tr("RNC", "Tax ID (RNC)"), "123456789");
 
       // --- Tabla de productos ---
       let tableY = Math.max(c1y, c2y, c3y) + 24;
@@ -1885,10 +1924,10 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(9));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      pdf.text("PRODUCTO", tc1, tableY);
-      pdf.text("PRECIO", tc2, tableY, { align: "right" });
-      pdf.text("CANTIDAD", tc3, tableY, { align: "right" });
-      pdf.text("SUBTOTAL", tc4, tableY, { align: "right" });
+      pdf.text(tr("PRODUCTO", "PRODUCT"), tc1, tableY);
+      pdf.text(tr("PRECIO", "PRICE"), tc2, tableY, { align: "right" });
+      pdf.text(tr("CANTIDAD", "QTY"), tc3, tableY, { align: "right" });
+      pdf.text(tr("SUBTOTAL", "SUBTOTAL"), tc4, tableY, { align: "right" });
       tableY += 10;
       pdf.setDrawColor(INK[0], INK[1], INK[2]);
       pdf.setLineWidth(2);
@@ -1917,7 +1956,7 @@ export default function ClientDashboard() {
 
       // --- Forma de pago + tarjeta de totales ---
       let bottomY = tableY + 28;
-      label("Forma de pago:", MARGIN, bottomY);
+      label(tr("Forma de pago:", "Payment method:"), MARGIN, bottomY);
       bottomY += 16;
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(12));
@@ -1948,8 +1987,8 @@ export default function ClientDashboard() {
         pdf.text(v, boxX + boxW - 24, ty, { align: "right" });
         ty += 22;
       };
-      totalsRow("Subtotal", `$${Number(inv.amount).toFixed(2)}`);
-      totalsRow("Impuestos", "$0.00");
+      totalsRow(tr("Subtotal", "Subtotal"), `$${Number(inv.amount).toFixed(2)}`);
+      totalsRow(tr("Impuestos", "Taxes"), "$0.00");
       pdf.setDrawColor(INK[0], INK[1], INK[2]);
       pdf.setLineWidth(2);
       pdf.line(boxX + 24, ty - 4, boxX + boxW - 24, ty - 4);
@@ -1957,7 +1996,7 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(12));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      pdf.text("TOTAL (USD)", boxX + 24, ty);
+      pdf.text(tr("TOTAL (USD)", "TOTAL (USD)"), boxX + 24, ty);
       pdf.setFontSize(pt(20));
       pdf.setTextColor(INDIGO[0], INDIGO[1], INDIGO[2]);
       pdf.text(`$${Number(inv.amount).toFixed(2)}`, boxX + boxW - 24, ty, { align: "right" });
@@ -1966,7 +2005,7 @@ export default function ClientDashboard() {
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(pt(10));
         pdf.setTextColor(MUTED[0], MUTED[1], MUTED[2]);
-        pdf.text("TOTAL (RD)", boxX + 24, ty);
+        pdf.text(tr("TOTAL (RD)", "TOTAL (RD)"), boxX + 24, ty);
         pdf.text(
           `RD$ ${(Number(inv.amount) * Number(inv.exchangeRate)).toLocaleString("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           boxX + boxW - 24,
@@ -1976,7 +2015,7 @@ export default function ClientDashboard() {
         ty += 15;
         pdf.setFontSize(pt(9));
         pdf.setTextColor(161, 156, 150);
-        pdf.text("Tasa:", boxX + 24, ty);
+        pdf.text(tr("Tasa:", "Rate:"), boxX + 24, ty);
         pdf.text(`${Number(inv.exchangeRate).toFixed(2)} DOP`, boxX + boxW - 24, ty, { align: "right" });
       }
 
@@ -2004,7 +2043,9 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-dvh bg-[var(--color-surface-base)] flex flex-col md:flex-row">
-      
+
+      {switchingLanguage && <LanguageSwitchLoader />}
+
       {/* Toast Notification HUD -- se renderiza en un portal a document.body porque el
           motion.div de la transición de página (AnimatedRoutes, App.tsx) anima con
           transform, lo que crea un nuevo containing block para position:fixed y deja el
@@ -4777,6 +4818,49 @@ export default function ClientDashboard() {
                 <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
                   Configuración del Sistema
                 </p>
+
+                {/* Idioma de la interfaz */}
+                <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3">
+                  <div>
+                    <p className="text-xs font-black text-[var(--color-text-primary)] mb-1 flex items-center gap-1.5">
+                      <Globe size={13} className="text-[var(--color-primary-base)]" />
+                      Idioma de la interfaz
+                    </p>
+                    <p className="text-[11px] text-[var(--color-text-tertiary)] mb-3">
+                      Afecta todo el sitio, incluyendo las facturas que se generan en PDF (fechas dd/mm/aaaa
+                      en español, mm/dd/aaaa en inglés, y las etiquetas del documento).
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    {(["es", "en"] as const).map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        disabled={switchingLanguage !== null}
+                        onClick={() => {
+                          if (lang === language || switchingLanguage) return;
+                          // No basta con cambiar el estado en caliente: la pantalla de carga
+                          // (el mismo loader del isotipo que se usa entre rutas) le da un
+                          // instante real antes de recargar, para que cualquier cosa que ya
+                          // dependía del idioma viejo (como un PDF a medio generar) no quede
+                          // en un estado intermedio -- la recarga vuelve a montar todo limpio
+                          // ya con el idioma nuevo.
+                          setSwitchingLanguage(lang);
+                          localStorage.setItem("language", lang);
+                          setTimeout(() => window.location.reload(), 500);
+                        }}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer disabled:cursor-not-allowed ${
+                          language === lang
+                            ? "bg-[var(--color-primary-base)] text-white"
+                            : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] hover:bg-[var(--color-primary-base)]/10 disabled:opacity-50"
+                        }`}
+                      >
+                        {switchingLanguage === lang ? <Loader2 size={13} className="animate-spin" /> : null}
+                        {lang === "es" ? "Español" : "English"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Webhook URL */}
                 <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3">
