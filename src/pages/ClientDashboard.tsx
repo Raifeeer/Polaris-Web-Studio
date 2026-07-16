@@ -1746,9 +1746,11 @@ export default function ClientDashboard() {
       <head>
         <meta charset="UTF-8">
         <title>Factura ${inv.invoiceNumber}</title>
+        <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@900,800,700,500&f[]=satoshi@700,500,400&display=swap">
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Arial', sans-serif; color: #1e293b; background: #fff; }
+          body { font-family: 'Satoshi', 'Arial', sans-serif; color: #1e293b; background: #fff; }
+          .brand-name, .brand-sub, .pill, thead th, .totals .total, .payment b { font-family: 'Cabinet Grotesk', 'Arial', sans-serif; }
           .band { position: relative; height: 56px; background: #4F46E5; overflow: hidden; }
           .band .chip-l { position: absolute; top: 0; left: 0; width: 30%; height: 100%; background: #7C3AED; clip-path: polygon(0 0, 86% 0, 68% 100%, 0 100%); }
           .band .chip-r { position: absolute; top: 0; right: 0; width: 16%; height: 100%; background: #7C3AED; clip-path: polygon(24% 0, 100% 0, 100% 100%, 0 100%); }
@@ -1796,9 +1798,15 @@ export default function ClientDashboard() {
         <div class="logo-row">
           ${chevronsRight}
           <div class="brand-mark">
-            <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M 16 2 L 17.5 13.5 L 21.5 10.5 L 18.5 14.5 L 30 16 L 18.5 17.5 L 21.5 21.5 L 17.5 18.5 L 16 30 L 14.5 18.5 L 10.5 21.5 L 13.5 17.5 L 2 16 L 13.5 14.5 L 10.5 10.5 L 14.5 13.5 Z" fill="#4F46E5"/>
-              <circle cx="16" cy="16" r="1.5" fill="#fff"/>
+            <svg width="40" height="40" viewBox="0 0 1486.28 1486.27" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="invoice-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop stop-color="#4F46E5"/>
+                  <stop offset="1" stop-color="#818cf8"/>
+                </linearGradient>
+              </defs>
+              <path d="M 912.917969 849.828125 L 1486.273437 744.0625 L 909.207031 645.71875 L 1066.925781 417.492188 L 846.117187 575.210938 L 742.207031 0 L 643.867187 578.921875 L 417.492187 417.492188 L 573.355469 645.71875 L 0 744.0625 L 573.355469 849.828125 L 417.492187 1068.777344 L 643.867187 912.914063 L 742.207031 1486.269531 L 847.972656 916.625 L 1066.925781 1068.777344 Z" fill="url(#invoice-logo-gradient)"/>
+              <circle cx="744.988281" cy="733.605469" r="109.738281" fill="#fff"/>
             </svg>
             <div>
               <div class="brand-name">POLARIS</div>
