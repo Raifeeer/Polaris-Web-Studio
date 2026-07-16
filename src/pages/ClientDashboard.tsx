@@ -1785,7 +1785,7 @@ export default function ClientDashboard() {
 
       // --- Encabezado ---
       const { svg2pdf } = await import("svg2pdf.js");
-      await svg2pdf(logoSvgEl, pdf, { x: MARGIN, y: MARGIN, width: 64, height: 64 });
+      await svg2pdf(logoSvgEl, pdf, { x: MARGIN, y: MARGIN, width: 84, height: 84 });
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(32));
@@ -1852,7 +1852,8 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(11));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      pdf.text(inv.date, col2X, c2y);
+      const [emYear, emMonth, emDay] = String(inv.date).split("-");
+      pdf.text(emYear && emMonth && emDay ? `${emDay}/${emMonth}/${emYear}` : inv.date, col2X, c2y);
 
       let c3y = infoY;
       label("Datos de la empresa", col3X, c3y, "right");
