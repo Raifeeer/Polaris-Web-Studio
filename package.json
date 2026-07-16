@@ -27,6 +27,7 @@
     "react-dom": "^19.0.1",
     "react-ga4": "^3.0.1",
     "react-router-dom": "^7.15.1",
+    "svg2pdf.js": "^2.7.0",
     "tailwind-merge": "^3.6.0",
     "vite": "^6.4.3"
   },
