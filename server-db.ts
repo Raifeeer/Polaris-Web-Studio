@@ -109,6 +109,7 @@ export interface DbInvoice {
   date: string;
   dueDate: string;
   description: string;
+  exchangeRate?: number; // Tasa USD→DOP al momento de crear la factura, para mostrar el equivalente en RD en la impresión.
   paypalOrderId?: string;
   paypalCaptureId?: string;
   paypalRefundId?: string;

@@ -792,7 +792,7 @@ const PORT = 3000;
   }
 
   app.post("/api/portal/invoices", authenticateToken, requireAdmin, (req, res) => {
-    const { projectId, amount, description, status, date, dueDate } = req.body;
+    const { projectId, amount, description, status, date, dueDate, exchangeRate } = req.body;
     if (!projectId || !amount) {
       return res.status(400).json({ error: "Faltan campos obligatorios para la factura." });
     }
@@ -810,6 +810,7 @@ const PORT = 3000;
       date: date || new Date().toISOString().split("T")[0],
       dueDate: dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       description,
+      exchangeRate: exchangeRate ? Number(exchangeRate) : undefined,
     });
 
     res.json({ success: true, invoiceNumber });
