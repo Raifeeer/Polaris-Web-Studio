@@ -339,3 +339,16 @@ input[type="time"]::-webkit-datetime-edit {
 .scrollbar-thin::-webkit-scrollbar-thumb:active {
   background: rgba(67, 56, 202, 0.95) !important;
 }
+
+/* iOS Safari hace zoom automático al enfocar un input/select/textarea con
+   font-size menor a 16px -- la app usa mucho `text-xs` (12px) en formularios.
+   Forzamos 16px solo en pantallas móviles (no toca el tamaño visual en
+   desktop) para evitar ese autozoom sin desactivar el pinch-zoom manual del
+   usuario (que sí es accesibilidad real y no debe bloquearse). */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
