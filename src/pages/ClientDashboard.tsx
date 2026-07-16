@@ -1882,46 +1882,53 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-dvh bg-[var(--color-surface-base)] flex flex-col md:flex-row">
       
-      {/* Toast Notification HUD */}
-      <AnimatePresence>
-        {(successMsg || errorMsg) && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 16 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
-          >
-            {successMsg && (
-              <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] backdrop-blur-xl border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
-                <div className="bg-emerald-500/10 p-1.5 rounded-full text-emerald-500 shrink-0">
-                  <CheckCircle size={18} />
+      {/* Toast Notification HUD -- se renderiza en un portal a document.body porque el
+          motion.div de la transición de página (AnimatedRoutes, App.tsx) anima con
+          transform, lo que crea un nuevo containing block para position:fixed y deja el
+          toast posicionado relativo a ese ancestro (a veces fuera de vista) en vez del
+          viewport real. Mismo patrón que ya usa RouteLoader en App.tsx para el mismo problema. */}
+      {createPortal(
+        <AnimatePresence>
+          {(successMsg || errorMsg) && (
+            <motion.div
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 16 }}
+              exit={{ opacity: 0, y: -50 }}
+              className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
+            >
+              {successMsg && (
+                <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] backdrop-blur-xl border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+                  <div className="bg-emerald-500/10 p-1.5 rounded-full text-emerald-500 shrink-0">
+                    <CheckCircle size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-[var(--color-text-primary)]">Acción Completada</p>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{successMsg}</p>
+                  </div>
+                  <button onClick={() => setSuccessMsg(null)} className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all">
+                    <X size={16} />
+                  </button>
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold text-[var(--color-text-primary)]">Acción Completada</p>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{successMsg}</p>
+              )}
+              {errorMsg && (
+                <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] backdrop-blur-xl border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+                  <div className="bg-red-500/10 p-1.5 rounded-full text-red-500 shrink-0">
+                    <AlertCircle size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-[var(--color-text-primary)]">Atención</p>
+                    <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{errorMsg}</p>
+                  </div>
+                  <button onClick={() => setErrorMsg(null)} className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all">
+                    <X size={16} />
+                  </button>
                 </div>
-                <button onClick={() => setSuccessMsg(null)} className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all">
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-            {errorMsg && (
-              <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] backdrop-blur-xl border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
-                <div className="bg-red-500/10 p-1.5 rounded-full text-red-500 shrink-0">
-                  <AlertCircle size={18} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-[var(--color-text-primary)]">Atención</p>
-                  <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{errorMsg}</p>
-                </div>
-                <button onClick={() => setErrorMsg(null)} className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all">
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body,
+      )}
 
       {/* Mobile Navigation Header */}
       <aside className="block md:hidden border-b border-[var(--color-border-subtle)] glass-panel p-4 sticky top-0 z-40">
