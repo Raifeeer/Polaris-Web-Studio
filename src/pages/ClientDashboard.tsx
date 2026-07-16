@@ -1892,7 +1892,7 @@ export default function ClientDashboard() {
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
           >
             {successMsg && (
-              <div className="p-4 rounded-xl glass-panel border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+              <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] backdrop-blur-xl border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
                 <div className="bg-emerald-500/10 p-1.5 rounded-full text-emerald-500 shrink-0">
                   <CheckCircle size={18} />
                 </div>
@@ -1906,7 +1906,7 @@ export default function ClientDashboard() {
               </div>
             )}
             {errorMsg && (
-              <div className="p-4 rounded-xl glass-panel border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
+              <div className="p-4 rounded-xl bg-[var(--color-surface-elevated)] backdrop-blur-xl border border-[var(--color-border-subtle)] text-[var(--color-text-primary)] text-sm flex items-start gap-4 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.25)] ring-1 ring-black/5">
                 <div className="bg-red-500/10 p-1.5 rounded-full text-red-500 shrink-0">
                   <AlertCircle size={18} />
                 </div>
@@ -2150,7 +2150,7 @@ export default function ClientDashboard() {
 
             <button
               onClick={() => setActiveTab("tasks")}
-              className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all relative ${
+              className={`w-full flex items-center gap-3 pl-3.5 pr-8 py-2.5 rounded-lg text-xs font-bold transition-all relative ${
                 activeTab === "tasks"
                   ? "bg-[var(--color-primary-base)] text-white"
                   : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"
