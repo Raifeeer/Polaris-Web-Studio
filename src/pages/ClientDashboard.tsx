@@ -3679,15 +3679,11 @@ export default function ClientDashboard() {
                               </label>
                               <button
                                 type="button"
-                                disabled={!newInvoiceAmount || aiLoadingInvoiceDesc}
+                                disabled={!newInvoiceDesc.trim() || aiLoadingInvoiceDesc}
                                 onClick={async () => {
                                   setAiLoadingInvoiceDesc(true);
                                   try {
-                                    const project = data?.projects.find(p => p.id === selectedProjectId);
                                     const text = await callAI("/api/ai/invoice-description", {
-                                      projectName: project?.name || "",
-                                      amount: newInvoiceAmount,
-                                      phase: project?.currentPhase || "",
                                       draft: newInvoiceDesc,
                                     });
                                     setNewInvoiceDesc(text);

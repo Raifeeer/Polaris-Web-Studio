@@ -1162,18 +1162,18 @@ const PORT = 3000;
     }
   });
 
-  // IA: Generar glosa de factura
+  // IA: Pulir la glosa de factura que escribió el admin (no inventa datos que el usuario no dio)
   app.post("/api/ai/invoice-description", authenticateToken, requireAdmin, async (req, res) => {
-    const { projectName, amount, phase, draft } = req.body;
-    if (!amount) return res.status(400).json({ error: "Faltan datos" });
+    const { draft } = req.body;
+    if (!draft || !String(draft).trim()) return res.status(400).json({ error: "Faltan datos" });
     try {
       const text = await askAI(
-        `Eres el área de facturación de Polaris Web Studio. 
-         Genera una descripción formal en español para el concepto de una factura de $${amount} USD 
-         del proyecto "${projectName}"${phase ? ` (Fase actual: ${phase})` : ""}. 
-         ${draft ? `El usuario ha dado este contexto o borrador sobre lo que se está cobrando: "${draft}". Basándote principalmente en este contexto, redacta el concepto de la factura.` : 'Redacta un concepto basado en la fase y proyecto.'}
-         La descripción debe ser directa y profesional (máximo 1 o 2 oraciones).
-         No incluyas saludos, comillas ni el precio dentro del texto. Comienza el texto directamente con el concepto (ej: Servicios de desarrollo web correspondientes a...).`
+        `Eres el área de facturación de Polaris Web Studio.
+         Reescribe el siguiente concepto de factura para que suene profesional y prolijo, EN ESPAÑOL,
+         sin inventar detalles que no estén en el texto original (no agregues fases, proyectos ni datos
+         que el usuario no haya mencionado): "${draft}".
+         Debe ser breve, una sola oración corta (máximo ~12 palabras), apta para una línea de factura.
+         No incluyas saludos, comillas ni el precio. Devuelve solo el texto final.`
       );
       res.json({ text });
     } catch (e: any) {
