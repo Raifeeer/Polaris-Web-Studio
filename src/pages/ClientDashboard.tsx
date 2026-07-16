@@ -1891,17 +1891,22 @@ export default function ClientDashboard() {
       pdf.setLineWidth(2);
       pdf.line(MARGIN, tableY, RIGHT, tableY);
 
+      const descColWidth = tc2 - tc1 - 80; // reserva espacio real para la columna de precio (que crece hacia la izquierda desde tc2, right-aligned)
+      const descLineH = 15;
       invoiceItems.forEach((it) => {
         tableY += 24;
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(pt(12));
         pdf.setTextColor(INK[0], INK[1], INK[2]);
-        pdf.text(it.description, tc1, tableY);
+        // Descripciones largas se parten en varias líneas en vez de superponerse con la
+        // columna de precio -- precio/cantidad/subtotal quedan alineados con la primera línea.
+        const descLines = pdf.splitTextToSize(it.description, descColWidth);
+        pdf.text(descLines, tc1, tableY);
         pdf.text(`$${it.price.toFixed(2)}`, tc2, tableY, { align: "right" });
         pdf.text(String(it.quantity), tc3, tableY, { align: "right" });
         pdf.setFont("helvetica", "bold");
         pdf.text(`$${(it.price * it.quantity).toFixed(2)}`, tc4, tableY, { align: "right" });
-        tableY += 12;
+        tableY += (descLines.length - 1) * descLineH + 12;
         pdf.setDrawColor(216, 212, 207);
         pdf.setLineWidth(1);
         pdf.line(MARGIN, tableY, RIGHT, tableY);
