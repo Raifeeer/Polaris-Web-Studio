@@ -792,8 +792,34 @@ const PORT = 3000;
   }
 
   app.post("/api/portal/invoices", authenticateToken, requireAdmin, (req, res) => {
-    const { projectId, amount, description, status, date, dueDate, exchangeRate } = req.body;
-    if (!projectId || !amount) {
+    const { projectId, amount, description, items, status, date, dueDate, exchangeRate } = req.body;
+
+    // Varios productos/conceptos en una misma factura (ej: 2 addons separados de un
+    // cliente): el total y el concepto-resumen se derivan de la lista, en vez de
+    // pedirlos sueltos -- mantiene compatibilidad con el flujo anterior de un solo
+    // monto/descripción para llamadas que no manden "items".
+    let finalAmount: number;
+    let finalDescription: string;
+    let finalItems: { description: string; price: number; quantity: number }[] | undefined;
+    if (Array.isArray(items) && items.length > 0) {
+      finalItems = items
+        .filter((it: any) => it?.description && Number(it.price) > 0)
+        .map((it: any) => ({
+          description: String(it.description).trim(),
+          price: Number(it.price),
+          quantity: Number(it.quantity) || 1,
+        }));
+      if (finalItems.length === 0) {
+        return res.status(400).json({ error: "Faltan campos obligatorios para la factura." });
+      }
+      finalAmount = finalItems.reduce((sum, it) => sum + it.price * it.quantity, 0);
+      finalDescription = finalItems.map((it) => it.description).join(", ");
+    } else {
+      if (!amount) return res.status(400).json({ error: "Faltan campos obligatorios para la factura." });
+      finalAmount = Number(amount);
+      finalDescription = description;
+    }
+    if (!projectId) {
       return res.status(400).json({ error: "Faltan campos obligatorios para la factura." });
     }
 
@@ -804,12 +830,13 @@ const PORT = 3000;
       id: `inv-${Date.now()}`,
       projectId,
       invoiceNumber,
-      amount: Number(amount),
+      amount: finalAmount,
       currency: "USD",
       status: status || "pending",
       date: date || new Date().toISOString().split("T")[0],
       dueDate: dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description,
+      description: finalDescription,
+      items: finalItems,
       exchangeRate: exchangeRate ? Number(exchangeRate) : undefined,
     });
 

@@ -109,6 +109,7 @@ export interface DbInvoice {
   date: string;
   dueDate: string;
   description: string;
+  items?: { description: string; price: number; quantity: number }[]; // Varios productos/conceptos en una misma factura (ej: 2 addons separados); si está presente, "amount"/"description" son el total/resumen derivados de esta lista.
   exchangeRate?: number; // Tasa USD→DOP al momento de crear la factura, para mostrar el equivalente en RD en la impresión.
   paypalOrderId?: string;
   paypalCaptureId?: string;
