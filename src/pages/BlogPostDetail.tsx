@@ -16,6 +16,7 @@ import AISparkleIcon from "../components/AISparkleIcon";
 import NewsletterForm from "../components/NewsletterForm";
 import { BLOG_POSTS, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
+import { formatDate } from "../lib/utils";
 
 interface LinkDef {
   slug: string;
@@ -345,15 +346,8 @@ export default function BlogPostDetail() {
     });
   };
 
-  const formatDate = (isoStr: string) => {
-    const parts = isoStr.split("-");
-    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    return d.toLocaleDateString(language === "en" ? "en-US" : "es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  };
+  const formatPostDate = (isoStr: string) =>
+    formatDate(isoStr, language, { year: "numeric", month: "long", day: "numeric" });
 
   if (!post) {
     return (
@@ -514,7 +508,7 @@ export default function BlogPostDetail() {
                 {post.author.name}
               </h5>
               <p className="text-xs font-mono text-[var(--color-text-tertiary)] tracking-tight">
-                {language === "en" ? post.author.roleEn : post.author.role} • {formatDate(post.publishedAt)}
+                {language === "en" ? post.author.roleEn : post.author.role} • {formatPostDate(post.publishedAt)}
               </p>
             </div>
           </div>

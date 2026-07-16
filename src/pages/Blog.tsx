@@ -22,6 +22,7 @@ import Footer from "../components/Footer";
 import AISparkleIcon from "../components/AISparkleIcon";
 import { BLOG_POSTS, querySemanticBlog, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
+import { formatDate } from "../lib/utils";
 
 // Words (2+ letters) from the search query used to highlight matches in titles/previews
 const getHighlightWords = (query: string): string[] => {
@@ -247,16 +248,8 @@ export default function Blog() {
     { key: "Inteligencia Artificial", es: "Inteligencia Artificial", en: "Artificial Intelligence" },
   ];
 
-  // Helper format date
-  const formatDate = (isoStr: string) => {
-    const parts = isoStr.split("-");
-    const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-    return d.toLocaleDateString(language === "en" ? "en-US" : "es-ES", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  };
+  const formatBlogDate = (isoStr: string) =>
+    formatDate(isoStr, language, { year: "numeric", month: "long", day: "numeric" });
 
   return (
     <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden" id="blog-section-main">
@@ -542,7 +535,7 @@ export default function Blog() {
                           {post.author.name}
                         </p>
                         <p className="text-[9px] font-mono text-[var(--color-text-tertiary)] leading-none mt-0.5">
-                          {formatDate(post.publishedAt)}
+                          {formatBlogDate(post.publishedAt)}
                         </p>
                       </div>
                     </div>

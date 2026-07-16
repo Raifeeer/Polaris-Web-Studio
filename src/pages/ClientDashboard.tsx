@@ -44,6 +44,7 @@ import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { collection, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { formatDate } from "../lib/utils";
 
 enum OperationType {
   CREATE = 'create',
@@ -398,7 +399,8 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
     setView("months");
   };
 
-  const formattedValue = value ? new Date(value + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : placeholder;
+  const { language } = useLanguage();
+  const formattedValue = value ? formatDate(value, language, { day: 'numeric', month: 'short', year: 'numeric' }) : placeholder;
 
   return (
     <div ref={containerRef} className={`relative ${className}`}>
@@ -521,12 +523,13 @@ function CustomDatePicker({ value, onChange, placeholder = "Seleccionar fecha", 
 // Reloj en vivo aislado: tiene su propio estado/intervalo para que el tick de
 // cada segundo re-renderice SOLO este componente y no todo el dashboard.
 function LiveClock() {
+  const { language } = useLanguage();
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-  const formattedTime = new Intl.DateTimeFormat('es-DO', {
+  const formattedTime = new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'es-DO', {
     timeZone: 'America/Santo_Domingo',
     weekday: 'long',
     day: 'numeric',
@@ -1852,8 +1855,7 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(11));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      const [emYear, emMonth, emDay] = String(inv.date).split("-");
-      pdf.text(emYear && emMonth && emDay ? `${emDay}/${emMonth}/${emYear}` : inv.date, col2X, c2y);
+      pdf.text(formatDate(inv.date, language), col2X, c2y);
 
       let c3y = infoY;
       label("Datos de la empresa", col3X, c3y, "right");
@@ -1951,7 +1953,7 @@ export default function ClientDashboard() {
       pdf.setDrawColor(INK[0], INK[1], INK[2]);
       pdf.setLineWidth(2);
       pdf.line(boxX + 24, ty - 4, boxX + boxW - 24, ty - 4);
-      ty += 12;
+      ty += 16; // un poco más de aire que las filas normales, para que no quede pegado a la línea
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(12));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
@@ -3375,13 +3377,13 @@ export default function ClientDashboard() {
                                     {task.createdAt && (
                                       <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
                                         <Clock size={10} />
-                                        <span>Enviado: {new Date(task.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                        <span>Enviado: {formatDate(task.createdAt, language, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                       </span>
                                     )}
                                     {task.respondedAt && (
                                       <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
                                         <Check size={10} />
-                                        <span>Respondido: {new Date(task.respondedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                        <span>Respondido: {formatDate(task.respondedAt, language, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                       </span>
                                     )}
                                   </div>
@@ -3578,13 +3580,13 @@ export default function ClientDashboard() {
                                             {task.createdAt && (
                                               <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
                                                 <Clock size={10} />
-                                                <span>Enviado: {new Date(task.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                <span>Enviado: {formatDate(task.createdAt, language, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                               </span>
                                             )}
                                             {task.respondedAt && (
                                               <span className="text-[9px] uppercase tracking-wider text-[var(--color-text-tertiary)] flex items-center gap-1 font-medium">
                                                 <Check size={10} />
-                                                <span>Respondido: {new Date(task.respondedAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                                <span>Respondido: {formatDate(task.respondedAt, language, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                               </span>
                                             )}
                                             <span className="text-[9px] bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
@@ -3964,7 +3966,7 @@ export default function ClientDashboard() {
                               <p className="text-xs text-[var(--color-text-tertiary)] font-medium mt-0.5">{inv.description}</p>
                             )}
                             <p className="text-[10px] text-[var(--color-text-tertiary)]">
-                              Fecha de Emisión: <strong>{inv.date}</strong> | Expiración: <strong>{inv.dueDate}</strong>
+                              Fecha de Emisión: <strong>{formatDate(inv.date, language)}</strong> | Expiración: <strong>{formatDate(inv.dueDate, language)}</strong>
                             </p>
                           </div>
 
@@ -4134,7 +4136,7 @@ export default function ClientDashboard() {
                                     <div className="mt-2 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-xs text-[var(--color-text-secondary)] space-y-1">
                                       <p><strong className="text-[var(--color-text-primary)]">Monto reembolsado:</strong> {formatMoney(inv.amount)}</p>
                                       {inv.refundedAt && (
-                                        <p><strong className="text-[var(--color-text-primary)]">Fecha:</strong> {new Date(inv.refundedAt).toLocaleString("es-DO")}</p>
+                                        <p><strong className="text-[var(--color-text-primary)]">Fecha:</strong> {formatDate(inv.refundedAt, language, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                                       )}
                                       <p><strong className="text-[var(--color-text-primary)]">Referencia de PayPal:</strong> {inv.paypalRefundId}</p>
                                       <p className="text-[var(--color-text-tertiary)] pt-1">El reembolso ya fue procesado por PayPal. Puede tardar unos días en reflejarse en tu cuenta o tarjeta.</p>
@@ -4374,7 +4376,7 @@ export default function ClientDashboard() {
                             <div className="space-y-1 pt-1 text-xs text-[var(--color-text-secondary)]">
                               <p className="flex items-center gap-1.5">
                                 <Calendar size={12} className="text-[var(--color-text-secondary)]" />
-                                {meet.date} a las {formatTimeTo12h(meet.time)}
+                                {formatDate(meet.date, language)} <T en={`at ${formatTimeTo12h(meet.time)}`}>{`a las ${formatTimeTo12h(meet.time)}`}</T>
                               </p>
                             </div>
                           </div>
@@ -4541,10 +4543,7 @@ export default function ClientDashboard() {
                                       : (language === 'es' ? 'Error' : 'Error')}
                                   </span>
                                   <span className="text-[10px] text-[var(--color-text-tertiary)]">
-                                    {new Date(dep.createdAt).toLocaleDateString(
-                                      language === 'es' ? 'es-DO' : 'en-US',
-                                      { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }
-                                    )}
+                                    {formatDate(dep.createdAt, language, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 </div>
                               </div>
