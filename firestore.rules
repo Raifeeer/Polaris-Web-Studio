@@ -10,14 +10,6 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
     }
 
-    function isValidNewsletterSubscriber(data) {
-      return data.keys().hasAll(['email', 'source', 'language', 'subscribedAt']) &&
-             data.keys().size() == 4 &&
-             data.email is string && data.email.size() <= 200 &&
-             data.source is string && data.source.size() <= 50 &&
-             data.language is string && (data.language == 'es' || data.language == 'en');
-    }
-
     function isValidWizardLead(data) {
       return data.keys().hasAll(["name", "email", "phone", "type", "addons", "domain", "createdAt"]) &&
              data.keys().size() == 7 &&
@@ -64,9 +56,10 @@ service cloud.firestore {
     }
 
     match /newsletter_subscribers/{subscriberId} {
-      allow create: if isValidId(subscriberId) &&
-                    isValidNewsletterSubscriber(request.resource.data) &&
-                    request.resource.data.subscribedAt == request.time;
+      // Escritura solo desde newsletter-subscribe (Cloud Function, Admin SDK
+      // — ignora estas reglas) con límite de tasa por IP y deduplicación por
+      // email. El cliente ya no escribe directo a Firestore.
+      allow write: if false;
     }
 
     match /wizardLeads/{leadId} {

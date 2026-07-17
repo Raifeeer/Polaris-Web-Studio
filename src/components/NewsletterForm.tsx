@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Mail, Check, AlertCircle } from "lucide-react";
-import { db } from "../lib/firebase";
+import { getAppCheckToken } from "../lib/firebase";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useToast } from "../context/ToastContext";
+
+const SUBSCRIBE_URL = "https://newsletter-subscribe-wdvfac6mgq-ue.a.run.app";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
@@ -14,7 +15,8 @@ export default function NewsletterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = email.trim().toLowerCase();
-    // Validación básica de formato antes de escribir en Firestore.
+    // Validación básica de formato en el cliente — el servidor la repite
+    // igual, esto es solo para no gastar una llamada de red en algo obvio.
     if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
       setStatus("error");
       toastError(
@@ -25,23 +27,37 @@ export default function NewsletterForm() {
 
     setStatus("loading");
     try {
-      const docRef = await addDoc(collection(db, "newsletter_subscribers"), {
-        email: clean,
-        source: "blog",
-        language,
-        subscribedAt: serverTimestamp(),
+      const appCheckToken = await getAppCheckToken();
+      const res = await fetch(SUBSCRIBE_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
+        },
+        body: JSON.stringify({ email: clean, language }),
       });
-      // Dispara el correo de bienvenida sin bloquear la confirmación en pantalla —
-      // si el envío falla (ej. Cloud Function caída) la suscripción ya quedó
-      // guardada igual, no tiene sentido mostrarle un error al usuario por esto.
-      fetch(`https://newsletter-welcome-send-wdvfac6mgq-ue.a.run.app?id=${docRef.id}`).catch((err) =>
-        console.error("Error triggering welcome email: ", err)
-      );
+
+      if (res.status === 429) {
+        setStatus("error");
+        toastError(
+          <T en="Too many attempts. Please try again later.">Demasiados intentos. Intenta de nuevo más tarde.</T>
+        );
+        return;
+      }
+      if (!res.ok) throw new Error(`subscribe failed: ${res.status}`);
+
+      const data = await res.json();
       setStatus("success");
       setEmail("");
-      success(
-        <T en="Successfully subscribed to our newsletter! 🎉">¡Suscripción al boletín confirmada con éxito! 🎉</T>
-      );
+      if (data.alreadySubscribed) {
+        success(
+          <T en="You're already subscribed to our newsletter.">Ya estás suscrito a nuestro boletín.</T>
+        );
+      } else {
+        success(
+          <T en="Successfully subscribed to our newsletter! 🎉">¡Suscripción al boletín confirmada con éxito! 🎉</T>
+        );
+      }
     } catch (error) {
       console.error("Error subscribing: ", error);
       setStatus("error");
