@@ -253,6 +253,11 @@ const types = [
     name: "Landing Page",
     title: "Landing Page",
     price: 299,
+    // Nombres comerciales (Destello/Constelación/Nova) — usados en el email
+    // de confirmación de cotización y el PDF de desglose, donde no se puede
+    // renderizar JSX. El wizard en pantalla sigue mostrando "Landing Page".
+    labelEs: "Destello",
+    labelEn: "Destello",
     desc: (
       <T en="1 single scrollable page (Up to 5 sections)">
         1 sola página web (Diseño vertical de 5 bloques)
@@ -264,6 +269,8 @@ const types = [
     name: "Corporate Web",
     title: <T en="Corporate Web">Web Corporativa</T>,
     price: 699,
+    labelEs: "Constelación",
+    labelEn: "Constelación",
     desc: (
       <T en="Manageable site (Up to 5 independent pages)">
         Sitio autoadministrable (Hasta 5 páginas independientes)
@@ -275,6 +282,8 @@ const types = [
     name: "E-commerce",
     title: "E-commerce",
     price: 1299,
+    labelEs: "Nova",
+    labelEn: "Nova",
     desc: (
       <T en="Online store (Includes setup of 20 products)">
         Tienda online (Incluye carga inicial de 20 productos)
@@ -289,6 +298,8 @@ const addons = [
   {
     id: "ai_agent",
     title: <T en="Autonomous AI Agent">Agente de Ventas IA</T>,
+    labelEs: "Agente de Ventas IA",
+    labelEn: "Autonomous AI Agent",
     price: 49,
     isMonthly: true,
     suffix: "/mes",
@@ -316,6 +327,8 @@ const addons = [
   {
     id: "bot_fast",
     title: <T en="24/7 Attendance Bot">Bot de Atención 24/7</T>,
+    labelEs: "Bot de Atención 24/7",
+    labelEn: "24/7 Attendance Bot",
     price: 149,
     desc: <T en="Automated flows 24/7">Flujos automatizados 24/7</T>,
     isAi: true,
@@ -323,6 +336,8 @@ const addons = [
   {
     id: "semantic_search",
     title: <T en="Semantic AI Search">Buscador Semántico IA</T>,
+    labelEs: "Buscador Semántico IA",
+    labelEn: "Semantic AI Search",
     price: 249,
     desc: (
       <T en="Smart catalog search. Recommended for Nova e-commerce.">
@@ -335,6 +350,8 @@ const addons = [
   {
     id: "content_assistant",
     title: <T en="Content Assistant">Asistente de Contenido</T>,
+    labelEs: "Asistente de Contenido",
+    labelEn: "Content Assistant",
     price: 29,
     isMonthly: true,
     suffix: "/mes",
@@ -348,6 +365,8 @@ const addons = [
   {
     id: "content_seo",
     title: <T en="SEO Strategy Guide">Guía de Estrategia SEO</T>,
+    labelEs: "Guía de Estrategia SEO",
+    labelEn: "SEO Strategy Guide",
     price: 49,
     desc: (
       <T en="Personalized content strategy guide with 20 keywords prioritized for your industry and market.">
@@ -358,6 +377,8 @@ const addons = [
   {
     id: "crm_connect",
     title: <T en="CRM Connect">CRM Connect</T>,
+    labelEs: "CRM Connect",
+    labelEn: "CRM Connect",
     price: 149,
     desc: (
       <T en="Automatically sync every web lead to HubSpot, Zoho CRM, Google Sheets, Pipedrive or Salesforce.">
@@ -368,6 +389,8 @@ const addons = [
   {
     id: "multilingual",
     title: <T en="Multilingual Website">Sitio Web Multilingüe</T>,
+    labelEs: "Sitio Web Multilingüe",
+    labelEn: "Multilingual Website",
     price: 99,
     desc: (
       <T en="Site in up to 3 languages, architecture included">
@@ -378,12 +401,16 @@ const addons = [
   {
     id: "copy",
     title: <T en="Pro Copywriting">Copywriting Profesional</T>,
+    labelEs: "Copywriting Profesional",
+    labelEn: "Pro Copywriting",
     price: 97,
     desc: <T en="Persuasive sales texts">Textos persuasivos que venden</T>,
   },
   {
     id: "branding",
     title: <T en="Basic Branding Kit">Kit de Branding Básico</T>,
+    labelEs: "Kit de Branding Básico",
+    labelEn: "Basic Branding Kit",
     price: 149,
     desc: (
       <T en="Logo redesign and professional color palette">
@@ -394,6 +421,8 @@ const addons = [
   {
     id: "hosting",
     title: <T en="Premium Maintenance & Support">Mantenimiento y Soporte Premium</T>,
+    labelEs: "Mantenimiento y Soporte Premium",
+    labelEn: "Premium Maintenance & Support",
     price: 30,
     isMonthly: true,
     suffix: "/mes",
@@ -2498,6 +2527,19 @@ export default function WizardQuote() {
       domain: domainSummaryText || null,
       createdAt: serverTimestamp(),
     }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
+    // Dispara el correo de confirmación con el desglose de la cotización —
+    // sin bloquear el avance del wizard, si falla el lead ya quedó guardado.
+    fetch("https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: leadName,
+        email: leadEmail,
+        packageId: selections.type,
+        addonIds: selections.addons,
+        language,
+      }),
+    }).catch((err) => console.error("Error triggering quote confirmation email: ", err));
     setSelections((s) => ({ ...s, name: leadName, email: leadEmail, phone: leadPhone }));
     localStorage.setItem("wizardQuote_leadCaptured", "1");
     setLeadCaptured(true);
