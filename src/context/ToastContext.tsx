@@ -66,16 +66,16 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       {/* Toast Portal Container */}
       <div 
         id="toast-container"
-        className="fixed bottom-24 md:bottom-6 right-6 z-50 flex flex-col gap-3 w-full max-w-sm pointer-events-none px-4 sm:px-0"
+        className="fixed top-20 right-6 z-50 flex flex-col gap-3 w-full max-w-sm pointer-events-none px-4 sm:px-0"
       >
         <AnimatePresence mode="popLayout">
           {toasts.map((t) => (
             <motion.div
               key={t.id}
               layout
-              initial={{ opacity: 0, y: 30, scale: 0.9, filter: "blur(4px)" }}
+              initial={{ opacity: 0, y: -30, scale: 0.9, filter: "blur(4px)" }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 0.9, y: 15, transition: { duration: 0.2 } }}
+              exit={{ opacity: 0, scale: 0.9, y: -15, transition: { duration: 0.2 } }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="pointer-events-auto w-full glass-panel rounded-xl border border-[var(--color-border-subtle)] p-4 shadow-xl flex items-start gap-3.5 relative overflow-hidden backdrop-blur-md bg-[var(--color-surface-base)]/80 bento-glow"
             >
