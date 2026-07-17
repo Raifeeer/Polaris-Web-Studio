@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
 import crypto from "crypto";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Define TypeScript structures for our localized database
 export interface DbUser {
@@ -150,7 +150,24 @@ export interface DatabaseSchema {
   projectDisplayCounter: number;
 }
 
-const DB_FILE_PATH = path.join(process.cwd(), "portalDb.json");
+// La persistencia real vive en Firestore (colección "portal_state", un solo
+// documento "main" con todo el blob) — no en un archivo local. Vercel corre
+// las funciones serverless sobre un filesystem de solo lectura (/var/task),
+// así que escribir a un archivo ahí falla silenciosamente (EROFS) y cualquier
+// cambio se pierde en el próximo cold start. Bug real encontrado en vivo el
+// 17 de julio: portalDb.json nunca persistía en producción, aunque el código
+// reportaba éxito (el error se registraba pero no se propagaba al caller).
+const firebaseApp = getApps().length
+  ? getApps()[0]
+  : initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
+      }),
+    });
+const firestore = getFirestore(firebaseApp, "polaris-web-studio");
+const STATE_DOC = firestore.collection("portal_state").doc("main");
 
 // Default initial state for self-seeding
 const getInitialSeededData = (): DatabaseSchema => {
@@ -252,21 +269,27 @@ const getInitialSeededData = (): DatabaseSchema => {
 
 class PortalDatabase {
   private cache: DatabaseSchema | null = null;
+  private readyPromise: Promise<void>;
 
   constructor() {
-    this.ensureInitialized();
+    this.readyPromise = this.load();
   }
 
-  private ensureInitialized() {
-    if (this.cache) return;
+  /**
+   * Todas las rutas de server.ts que usan dbInstance deben esperar esto antes
+   * de llamar a cualquier método (ver el middleware en server.ts) — los
+   * métodos de abajo siguen siendo síncronos porque asumen que `cache` ya
+   * está poblado en memoria para no tener que tocar decenas de call sites.
+   */
+  async waitUntilReady(): Promise<void> {
+    await this.readyPromise;
+  }
 
+  private async load(): Promise<void> {
     try {
-      if (fs.existsSync(DB_FILE_PATH)) {
-        const raw = fs.readFileSync(DB_FILE_PATH, "utf-8");
-        this.cache = JSON.parse(raw);
-        
-        // Safety check to ensure crucial fields are arrays
-        const c = this.cache!;
+      const snap = await STATE_DOC.get();
+      if (snap.exists) {
+        const c = snap.data() as DatabaseSchema;
         if (typeof c.projectDisplayCounter !== "number") {
           let maxNum = 0;
           if (Array.isArray(c.projects)) {
@@ -285,14 +308,21 @@ class PortalDatabase {
         if (!Array.isArray(c.invoices)) c.invoices = [];
         if (!Array.isArray(c.meetings)) c.meetings = [];
         if (!Array.isArray(c.deploys)) c.deploys = [];
+        this.cache = c;
       } else {
         this.cache = getInitialSeededData();
-        this.save();
-        console.log(`[Database Seeded] Generated persistent JSON database at ${DB_FILE_PATH}`);
+        await this.saveAsync();
+        console.log("[Database Seeded] Generated persistent Firestore state at portal_state/main");
       }
     } catch (err) {
-      console.error("Failed to initialize database, falling back to in-memory fallback", err);
+      console.error("Failed to initialize database from Firestore, falling back to in-memory fallback", err);
       this.cache = getInitialSeededData();
+    }
+  }
+
+  private ensureInitialized() {
+    if (!this.cache) {
+      throw new Error("PortalDatabase used before waitUntilReady() resolved");
     }
   }
 
@@ -327,10 +357,11 @@ class PortalDatabase {
     this.isWriting = true;
     this.needsWriteAgain = false;
     try {
-      const dataStr = JSON.stringify(this.cache, null, 2);
-      await fs.promises.writeFile(DB_FILE_PATH, dataStr, "utf-8");
+      // JSON round-trip: Firestore rechaza `undefined` en campos de documento
+      // (a diferencia de un archivo JSON, donde simplemente se omitían).
+      await STATE_DOC.set(JSON.parse(JSON.stringify(this.cache)));
     } catch (err) {
-      console.error("Error writing to persistent JSON db asynchronously:", err);
+      console.error("Error writing to persistent Firestore state asynchronously:", err);
     } finally {
       this.isWriting = false;
       if (this.needsWriteAgain) {

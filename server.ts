@@ -442,6 +442,15 @@ app.use((req, res, next) => {
 });
 app.use(express.urlencoded({ extended: true, limit: MAX_BODY_BYTES }));
 
+// dbInstance (portalDb, ver server-db.ts) carga su estado desde Firestore de
+// forma asíncrona al arrancar — cualquier ruta que la use debe esperar a que
+// esté lista antes de leer/escribir, o correría contra un caché vacío en un
+// cold start. En la práctica resuelve casi instantáneo salvo la primerísima
+// invocación tras un deploy.
+app.use((req, res, next) => {
+  dbInstance.waitUntilReady().then(() => next()).catch(next);
+});
+
 const PORT = 3000;
 
   /**
