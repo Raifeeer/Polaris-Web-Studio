@@ -591,7 +591,7 @@ const PORT = 3000;
       status: "pending",
       date: new Date().toISOString().split("T")[0],
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description: `Depósito inicial (50%) — Paquete ${pkg.name}`,
+      description: `Pago inicial (50%) — Paquete ${pkg.name}`,
     });
 
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
