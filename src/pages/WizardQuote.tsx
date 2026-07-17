@@ -911,8 +911,20 @@ export default function WizardQuote() {
   }, []);
 
   // Lead capture state
+  // La bandera "ya capturado" solo se confía si además coincide con el correo
+  // real que se capturó esa vez -- antes se confiaba en la bandera sola, así
+  // que si el mismo navegador ya había completado el wizard alguna vez (aunque
+  // fuera semanas atrás, dentro del TTL de 30 días de "resumir cotización"),
+  // cualquier intento nuevo saltaba el formulario de contacto sin volver a
+  // escribir el lead real en Firestore ni disparar el correo de confirmación
+  // -- solo corría el paso de Cal.com, que es independiente. Bug real
+  // encontrado en vivo (17 de julio): una prueba con correo temporal no dejó
+  // rastro en `wizardLeads` por esto mismo.
   const [leadCaptured, setLeadCaptured] = useState(() =>
-    !isSavedWizardStale() && !!localStorage.getItem("wizardQuote_leadCaptured")
+    !isSavedWizardStale() &&
+    !!localStorage.getItem("wizardQuote_leadCaptured") &&
+    !!selections.email &&
+    localStorage.getItem("wizardQuote_leadCapturedEmail") === selections.email
   );
   const [showLeadCapture, setShowLeadCapture] = useState(false);
   const [leadName, setLeadName] = useState(selections.name || "");
@@ -2545,6 +2557,7 @@ export default function WizardQuote() {
     }).catch((err) => console.error("Error triggering quote confirmation email: ", err));
     setSelections((s) => ({ ...s, name: leadName, email: leadEmail, phone: leadPhone }));
     localStorage.setItem("wizardQuote_leadCaptured", "1");
+    localStorage.setItem("wizardQuote_leadCapturedEmail", leadEmail);
     setLeadCaptured(true);
     setShowLeadCapture(false);
     toastSuccess(
