@@ -488,6 +488,107 @@ const PORT = 3000;
   });
 
   /**
+   * Disparado por la Cloud Function proposal-send (Meridian) cuando un
+   * cliente aprueba una propuesta comercial en línea: crea su cuenta real en
+   * el portal (rol "client"), un proyecto inicial, la primera tarea, y la
+   * factura del depósito (50% del paquete) — mismo patrón de datos que crea
+   * el alta manual de POST /api/portal/clients, pero server-to-server, sin
+   * sesión de admin. Protegido por el mismo CRON_SECRET que /api/is-client.
+   * Format: POST /api/portal/auto-provision-client
+   */
+  app.post("/api/portal/auto-provision-client", (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const { email, name, packageId } = req.body || {};
+    if (!email || !name || !packageId) {
+      return res.status(400).json({ error: "missing_fields" });
+    }
+    const emailClean = String(email).trim().toLowerCase();
+    const existing = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
+    if (existing) {
+      return res.status(200).json({ alreadyExists: true, clientId: existing.id });
+    }
+
+    const PACKAGE_INFO: Record<string, { name: string; price: number }> = {
+      landing: { name: "Destello", price: 299 },
+      corporate: { name: "Constelación", price: 699 },
+      ecommerce: { name: "Nova", price: 1299 },
+    };
+    const pkg = PACKAGE_INFO[packageId] || PACKAGE_INFO.corporate;
+    const depositAmount = Math.round(pkg.price * 0.5 * 100) / 100;
+
+    const tempPassword = crypto.randomBytes(6).toString("hex");
+    const clientId = `usr-${Date.now()}`;
+    const projectId = `proj-${Date.now()}`;
+
+    dbInstance.addUser({
+      id: clientId,
+      email: emailClean,
+      password: hashPassword(tempPassword),
+      name,
+      role: "client",
+      companyName: name,
+      mustChangePassword: true,
+    });
+
+    const displayId = dbInstance.consumeNextDisplayId();
+
+    dbInstance.addProject({
+      id: projectId,
+      displayId,
+      clientUserId: clientId,
+      name: `Sitio Web — Paquete ${pkg.name}`,
+      currentPhase: "Fase 1: Descubrimiento y Requerimientos",
+      progress: 25,
+      description: `Proyecto generado automáticamente al aprobar la propuesta comercial (paquete ${pkg.name}).`,
+      status: "active",
+      phases: [
+        {
+          name: "Fase 1: Descubrimiento y Requerimientos",
+          status: "active",
+          detail: "Definiendo propuesta técnica, objetivos de conversión SEO e integraciones API.",
+        },
+        {
+          name: "Fase 2: Diseño de Experiencia de Usuario (UI/UX)",
+          status: "pending",
+          detail: "Pendiente de inicio. Estructuración en wireframes interactivos.",
+        },
+        {
+          name: "Fase 3: Desarrollo Core Frontend & Backend",
+          status: "pending",
+          detail: "Construcción en pila tecnológica nativa (TypeScript, Tailwind, React).",
+        },
+      ],
+    });
+
+    dbInstance.addTask({
+      id: `task-${Date.now()}`,
+      projectId,
+      title: "Revisar Documento de Requerimientos de Software (SRS)",
+      description: "Por favor, valide los requerimientos, alcances y plazos iniciales descritos en la ficha de proyecto.",
+      status: "pending",
+      createdAt: new Date().toISOString(),
+    });
+
+    const invoiceId = `inv-${Date.now()}`;
+    dbInstance.addInvoice({
+      id: invoiceId,
+      projectId,
+      invoiceNumber: generateInvoiceNumber(dbInstance.getInvoices()),
+      amount: depositAmount,
+      currency: "USD",
+      status: "pending",
+      date: new Date().toISOString().split("T")[0],
+      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      description: `Depósito inicial (50%) — Paquete ${pkg.name}`,
+    });
+
+    res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
+  });
+
+  /**
    * Safe Proxy Endpoint to Fetch live exchange rate from USD to DOP
    * Format: GET /api/exchange-rate/usd-dop
    */
@@ -628,6 +729,28 @@ const PORT = 3000;
   app.get("/api/auth/me", authenticateToken, (req: any, res) => {
     const { password: _, ...userWithoutPassword } = req.user;
     res.json({ success: true, user: userWithoutPassword });
+  });
+
+  /**
+   * Cambio de contraseña real, usado tanto por el flujo obligatorio tras un
+   * alta automática (mustChangePassword: true, ver auto-provision-client)
+   * como por cualquier usuario que quiera cambiarla voluntariamente.
+   */
+  app.post("/api/auth/change-password", authenticateToken, (req: any, res) => {
+    const { currentPassword, newPassword } = req.body || {};
+    if (!currentPassword || !newPassword || typeof newPassword !== "string") {
+      return res.status(400).json({ success: false, error: "Faltan datos." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: "La nueva contraseña debe tener al menos 8 caracteres." });
+    }
+    const stored = req.user.password || DUMMY_PASSWORD_HASH;
+    const { valid } = verifyPassword(stored, String(currentPassword));
+    if (!valid) {
+      return res.status(401).json({ success: false, error: "La contraseña actual no es correcta." });
+    }
+    dbInstance.updateUser(req.user.id, { password: hashPassword(newPassword), mustChangePassword: false });
+    res.json({ success: true });
   });
 
   // --- Client Portal Core Operations (Multi-role support) ---

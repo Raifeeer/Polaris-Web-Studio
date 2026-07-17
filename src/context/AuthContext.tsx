@@ -8,6 +8,7 @@ export interface User {
   name: string;
   role: "admin" | "client";
   companyName?: string;
+  mustChangePassword?: boolean;
 }
 
 interface AuthContextType {

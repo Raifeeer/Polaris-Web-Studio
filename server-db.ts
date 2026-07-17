@@ -11,6 +11,7 @@ export interface DbUser {
   role: "admin" | "client";
   companyName?: string;
   deletedAt?: string;
+  mustChangePassword?: boolean; // true tras el alta automática con contraseña temporal (ver auto-provision-client)
 }
 
 // --- Password hashing (scrypt, sin dependencias externas) ---

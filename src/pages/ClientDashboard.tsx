@@ -947,6 +947,46 @@ export default function ClientDashboard() {
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
 
+  // Cambio de contraseña obligatorio tras un alta automática (mustChangePassword,
+  // ver auto-provision-client) — distinto del modal de arriba, que solo sirve
+  // para cuentas de Firebase Auth. Esta cuenta vive en portalDb.json (JWT local).
+  const [forceCurrentPassword, setForceCurrentPassword] = useState("");
+  const [forceNewPassword, setForceNewPassword] = useState("");
+  const [forceConfirmPassword, setForceConfirmPassword] = useState("");
+  const [forceChangeError, setForceChangeError] = useState<string | null>(null);
+  const [forceChangeLoading, setForceChangeLoading] = useState(false);
+
+  const handleForceChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForceChangeError(null);
+    if (forceNewPassword.length < 8) {
+      setForceChangeError(language === "es" ? "La nueva contraseña debe tener al menos 8 caracteres." : "The new password must be at least 8 characters.");
+      return;
+    }
+    if (forceNewPassword !== forceConfirmPassword) {
+      setForceChangeError(language === "es" ? "Las contraseñas no coinciden." : "Passwords don't match.");
+      return;
+    }
+    setForceChangeLoading(true);
+    try {
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: forceCurrentPassword, newPassword: forceNewPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setForceChangeError(data.error || (language === "es" ? "No se pudo cambiar la contraseña." : "Could not change password."));
+        return;
+      }
+      window.location.reload();
+    } catch {
+      setForceChangeError(language === "es" ? "Error de conexión. Intenta de nuevo." : "Connection error. Try again.");
+    } finally {
+      setForceChangeLoading(false);
+    }
+  };
+
   // Auto-hide notifications
   useEffect(() => {
     if (successMsg || errorMsg) {
@@ -1742,6 +1782,86 @@ export default function ClientDashboard() {
         <p className="text-xs text-[var(--color-text-secondary)] font-medium tracking-wider">
           <T en="Loading your workspace...">Cargando tu área de trabajo por favor espera...</T>
         </p>
+      </div>
+    );
+  }
+
+  if (user.mustChangePassword) {
+    return (
+      <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center p-4 z-50">
+        <div className="w-full max-w-md p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel space-y-5 bento-glow shadow-sm">
+          <div className="text-center space-y-2">
+            <h2 className="text-xl font-display font-black text-[var(--color-text-primary)]">
+              <T en="Set your password">Define tu contraseña</T>
+            </h2>
+            <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              <T en="For your security, change the temporary password we emailed you before continuing.">
+                Por seguridad, cambia la contraseña temporal que te enviamos por correo antes de continuar.
+              </T>
+            </p>
+          </div>
+          <form onSubmit={handleForceChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
+                <T en="Temporary password">Contraseña temporal</T>
+              </label>
+              <input
+                type="password"
+                required
+                value={forceCurrentPassword}
+                onChange={(e) => setForceCurrentPassword(e.target.value)}
+                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
+                <T en="New password">Nueva contraseña</T>
+              </label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={forceNewPassword}
+                onChange={(e) => setForceNewPassword(e.target.value)}
+                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
+                <T en="Confirm new password">Confirma la nueva contraseña</T>
+              </label>
+              <input
+                type="password"
+                required
+                minLength={8}
+                value={forceConfirmPassword}
+                onChange={(e) => setForceConfirmPassword(e.target.value)}
+                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+              />
+            </div>
+            {forceChangeError && (
+              <p className="text-xs text-red-500">{forceChangeError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={forceChangeLoading}
+              className="w-full bg-[var(--color-primary-base)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+            >
+              {forceChangeLoading ? (
+                <T en="Saving...">Guardando...</T>
+              ) : (
+                <T en="Save and continue">Guardar y continuar</T>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={logout}
+              className="w-full text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] transition-colors cursor-pointer"
+            >
+              <T en="Log out">Cerrar sesión</T>
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
