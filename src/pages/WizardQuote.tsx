@@ -2535,6 +2535,8 @@ export default function WizardQuote() {
       body: JSON.stringify({
         name: leadName,
         email: leadEmail,
+        phone: leadPhone,
+        domain: domainSummaryText || "",
         packageId: selections.type,
         addonIds: selections.addons,
         language,
