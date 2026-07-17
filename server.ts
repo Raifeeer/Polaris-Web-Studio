@@ -510,7 +510,7 @@ const PORT = 3000;
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
     }
-    const { email, name, packageId } = req.body || {};
+    const { email, name, packageId, addonIds } = req.body || {};
     if (!email || !name || !packageId) {
       return res.status(400).json({ error: "missing_fields" });
     }
@@ -525,8 +525,31 @@ const PORT = 3000;
       corporate: { name: "Constelación", price: 699 },
       ecommerce: { name: "Nova", price: 1299 },
     };
+    // Mismos addons/oferta que cloud-functions/proposal-send -- la factura
+    // que se genera acá tiene que coincidir con el total que el cliente ya
+    // vio en el correo de la propuesta (paquete + addons de una vez, con la
+    // oferta de lanzamiento -25% aplicada solo al pago único).
+    const ADDON_INFO: Record<string, { price: number; isMonthly?: boolean }> = {
+      ai_agent: { price: 49, isMonthly: true },
+      bot_fast: { price: 149 },
+      semantic_search: { price: 249 },
+      content_assistant: { price: 29, isMonthly: true },
+      content_seo: { price: 49 },
+      crm_connect: { price: 149 },
+      multilingual: { price: 99 },
+      copy: { price: 97 },
+      branding: { price: 149 },
+      hosting: { price: 30, isMonthly: true },
+    };
+    const OFFER_DISCOUNT = 0.25;
     const pkg = PACKAGE_INFO[packageId] || PACKAGE_INFO.corporate;
-    const depositAmount = Math.round(pkg.price * 0.5 * 100) / 100;
+    const selectedAddons = (Array.isArray(addonIds) ? addonIds : [])
+      .map((id: string) => ADDON_INFO[id])
+      .filter(Boolean);
+    const oneTimeAddonsPrice = selectedAddons.filter((a) => !a.isMonthly).reduce((s, a) => s + a.price, 0);
+    const subtotal = pkg.price + oneTimeAddonsPrice;
+    const discountedTotal = subtotal - Math.round(subtotal * OFFER_DISCOUNT);
+    const depositAmount = Math.round(discountedTotal * 0.5 * 100) / 100;
 
     const tempPassword = crypto.randomBytes(6).toString("hex");
     const clientId = `usr-${Date.now()}`;
@@ -591,7 +614,7 @@ const PORT = 3000;
       status: "pending",
       date: new Date().toISOString().split("T")[0],
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description: `Pago inicial (50%) — Paquete ${pkg.name}`,
+      description: `Pago inicial (50%, con oferta de lanzamiento -25% aplicada) — Paquete ${pkg.name}`,
     });
 
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
