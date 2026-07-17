@@ -466,6 +466,28 @@ const PORT = 3000;
   });
 
   /**
+   * Consultado por la Cloud Function lead-drip-send (Meridian) para excluir
+   * de la secuencia de nutrición a los leads que ya son clientes reales del
+   * portal. Protegido por un secreto compartido, no por sesión — quien lo
+   * llama es un cron server-to-server, no un navegador.
+   * Format: GET /api/is-client?email=...
+   */
+  app.get("/api/is-client", (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!email) {
+      return res.status(400).json({ error: "missing_email" });
+    }
+    const isClient = dbInstance
+      .getUsers()
+      .some((u) => !u.deletedAt && u.role === "client" && u.email.trim().toLowerCase() === email);
+    return res.json({ isClient });
+  });
+
+  /**
    * Safe Proxy Endpoint to Fetch live exchange rate from USD to DOP
    * Format: GET /api/exchange-rate/usd-dop
    */

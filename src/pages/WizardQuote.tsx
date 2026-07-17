@@ -2525,6 +2525,7 @@ export default function WizardQuote() {
       type: selections.type,
       addons: selections.addons,
       domain: domainSummaryText || null,
+      language,
       createdAt: serverTimestamp(),
     }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
     // Dispara el correo de confirmación con el desglose de la cotización —
