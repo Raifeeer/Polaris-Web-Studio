@@ -11,10 +11,11 @@ service cloud.firestore {
     }
 
     function isValidNewsletterSubscriber(data) {
-      return data.keys().hasAll(['email', 'source', 'subscribedAt']) && 
-             data.keys().size() == 3 &&
+      return data.keys().hasAll(['email', 'source', 'language', 'subscribedAt']) &&
+             data.keys().size() == 4 &&
              data.email is string && data.email.size() <= 200 &&
-             data.source is string && data.source.size() <= 50;
+             data.source is string && data.source.size() <= 50 &&
+             data.language is string && (data.language == 'es' || data.language == 'en');
     }
 
     function isValidWizardLead(data) {

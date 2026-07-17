@@ -2,13 +2,14 @@ import React, { useState } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Mail, Check, AlertCircle } from "lucide-react";
 import { db } from "../lib/firebase";
-import { T } from "../context/LanguageContext";
+import { T, useLanguage } from "../context/LanguageContext";
 import { useToast } from "../context/ToastContext";
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const { success, error: toastError } = useToast();
+  const { language } = useLanguage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +28,7 @@ export default function NewsletterForm() {
       await addDoc(collection(db, "newsletter_subscribers"), {
         email: clean,
         source: "blog",
+        language,
         subscribedAt: serverTimestamp(),
       });
       setStatus("success");
