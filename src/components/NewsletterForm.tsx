@@ -25,12 +25,18 @@ export default function NewsletterForm() {
 
     setStatus("loading");
     try {
-      await addDoc(collection(db, "newsletter_subscribers"), {
+      const docRef = await addDoc(collection(db, "newsletter_subscribers"), {
         email: clean,
         source: "blog",
         language,
         subscribedAt: serverTimestamp(),
       });
+      // Dispara el correo de bienvenida sin bloquear la confirmación en pantalla —
+      // si el envío falla (ej. Cloud Function caída) la suscripción ya quedó
+      // guardada igual, no tiene sentido mostrarle un error al usuario por esto.
+      fetch(`https://newsletter-welcome-send-wdvfac6mgq-ue.a.run.app?id=${docRef.id}`).catch((err) =>
+        console.error("Error triggering welcome email: ", err)
+      );
       setStatus("success");
       setEmail("");
       success(
