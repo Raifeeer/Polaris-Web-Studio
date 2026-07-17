@@ -910,27 +910,6 @@ export default function WizardQuote() {
     return () => observer.disconnect();
   }, []);
 
-  // Lead capture state
-  // La bandera "ya capturado" solo se confía si además coincide con el correo
-  // real que se capturó esa vez -- antes se confiaba en la bandera sola, así
-  // que si el mismo navegador ya había completado el wizard alguna vez (aunque
-  // fuera semanas atrás, dentro del TTL de 30 días de "resumir cotización"),
-  // cualquier intento nuevo saltaba el formulario de contacto sin volver a
-  // escribir el lead real en Firestore ni disparar el correo de confirmación
-  // -- solo corría el paso de Cal.com, que es independiente. Bug real
-  // encontrado en vivo (17 de julio): una prueba con correo temporal no dejó
-  // rastro en `wizardLeads` por esto mismo.
-  const [leadCaptured, setLeadCaptured] = useState(() =>
-    !isSavedWizardStale() &&
-    !!localStorage.getItem("wizardQuote_leadCaptured") &&
-    !!selections.email &&
-    localStorage.getItem("wizardQuote_leadCapturedEmail") === selections.email
-  );
-  const [showLeadCapture, setShowLeadCapture] = useState(false);
-  const [leadName, setLeadName] = useState(selections.name || "");
-  const [leadEmail, setLeadEmail] = useState(selections.email || "");
-  const [leadPhone, setLeadPhone] = useState(selections.phone || "");
-  const [leadEmailError, setLeadEmailError] = useState("");
 
   // GA4 helper
   const trackEvent = (eventName: string, params?: Record<string, any>) => {
@@ -2523,17 +2502,25 @@ export default function WizardQuote() {
     scrollToProgress();
   };
 
-  const handleSubmitLead = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(leadEmail)) {
-      setLeadEmailError(t("Enter a valid email.", "Ingresa un email válido."));
-      return;
-    }
-    setLeadEmailError("");
+  // Paso 3 ("Cotización PDF") real -- escribe el lead a Firestore y dispara
+  // el correo de confirmación (que incluye el link real al PDF vía
+  // quote-pdf). Bug real encontrado en vivo (17 de julio): el botón "Get My
+  // PDF Quote" solo simulaba el envío (`await new Promise(setTimeout(...))`,
+  // sin ninguna llamada real) — nunca escribía a `wizardLeads` ni mandaba
+  // ningún correo, así que ningún lead real del wizard llegaba a Meridian ni
+  // recibía nada por email, aunque la UI mostrara "¡Cotización enviada con
+  // éxito!". El único código que sí hacía el trabajo real (`handleSubmitLead`,
+  // ligado a un formulario `showLeadCapture` que nunca se activaba en ningún
+  // lado) era código muerto -- eliminado, esta función lo reemplaza.
+  const handleGetPdfQuote = async () => {
+    setSendingPdf(true);
+    const name = pdfName.trim();
+    const email = pdfEmail.trim();
+
     addDoc(collection(db, "wizardLeads"), {
-      name: leadName,
-      email: leadEmail,
-      phone: leadPhone,
+      name,
+      email,
+      phone: "",
       type: selections.type,
       addons: selections.addons,
       domain: domainSummaryText || null,
@@ -2546,27 +2533,20 @@ export default function WizardQuote() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: leadName,
-        email: leadEmail,
-        phone: leadPhone,
+        name,
+        email,
+        phone: "",
         domain: domainSummaryText || "",
         packageId: selections.type,
         addonIds: selections.addons,
         language,
       }),
     }).catch((err) => console.error("Error triggering quote confirmation email: ", err));
-    setSelections((s) => ({ ...s, name: leadName, email: leadEmail, phone: leadPhone }));
-    localStorage.setItem("wizardQuote_leadCaptured", "1");
-    localStorage.setItem("wizardQuote_leadCapturedEmail", leadEmail);
-    setLeadCaptured(true);
-    setShowLeadCapture(false);
-    toastSuccess(
-      <T en="Contact details saved! Continue to schedule your session.">¡Datos de contacto guardados! Continúa para agendar tu sesión.</T>
-    );
-    trackEvent("lead_captured", { method: "wizard_pre_schedule" });
-    trackEvent("wizard_step_complete", { step: 3 });
-    setCurrentStep((c) => c + 1);
-    scrollToProgress();
+
+    setSelections((prev) => ({ ...prev, email, name }));
+    trackEvent("lead_captured", { method: "wizard_pdf_step" });
+    setSendingPdf(false);
+    setPdfSent(true);
   };
 
   const toggleAddon = (id: string) => {
@@ -3608,18 +3588,7 @@ export default function WizardQuote() {
                                   return;
                                 }
 
-                                setSendingPdf(true);
-                                // Sync selections email/name so it's tracked in session
-                                setSelections(prev => ({
-                                  ...prev,
-                                  email: pdfEmail.trim(),
-                                  name: pdfName.trim()
-                                }));
-
-                                // Simulated send
-                                await new Promise(resolve => setTimeout(resolve, 2000));
-                                setSendingPdf(false);
-                                setPdfSent(true);
+                                await handleGetPdfQuote();
                               }}
                               className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none"
                             >
@@ -4107,97 +4076,6 @@ export default function WizardQuote() {
           </AnimatePresence>
       </main>
       <Footer />
-
-      {/* Lead Capture Modal */}
-      <AnimatePresence>
-        {showLeadCapture && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="w-full max-w-md glass-panel border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] p-8 space-y-6 shadow-2xl"
-              initial={{ opacity: 0, scale: 0.95, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 16 }}
-              transition={{ duration: 0.25 }}
-            >
-              <div className="space-y-2">
-                <div className="w-10 h-10 rounded-2xl bg-[var(--color-primary-base)]/10 flex items-center justify-center text-[var(--color-primary-base)] mb-4">
-                  <Calendar size={20} />
-                </div>
-                <h3 className="text-xl font-display font-black tracking-tight">
-                  <T en="Save your proposal">Guarda tu propuesta</T>
-                </h3>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  <T en="We'll send a detailed copy to your email so you can review it anytime — even if you don't schedule today.">
-                    Te enviamos una copia detallada a tu correo para que la revises cuando quieras, aunque no agendes hoy.
-                  </T>
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <input
-                    type="text"
-                    placeholder={t("Your name", "Tu nombre")}
-                    value={leadName}
-                    onChange={(e) => setLeadName(e.target.value)}
-                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="email"
-                    placeholder={t("your@email.com", "tu@correo.com")}
-                    value={leadEmail}
-                    onChange={(e) => { setLeadEmail(e.target.value); setLeadEmailError(""); }}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
-                    className={`w-full px-4 py-3 rounded-xl border bg-[var(--color-surface-base)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${leadEmailError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
-                  />
-                  {leadEmailError && (
-                    <p className="glass-input text-xs text-red-500 mt-1">{leadEmailError}</p>
-                  )}
-                </div>
-                <div>
-                  <input
-                    type="tel"
-                    placeholder={t("WhatsApp / Celular (Optional)", "WhatsApp / Celular (Opcional)")}
-                    value={leadPhone}
-                    onChange={(e) => setLeadPhone(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSubmitLead(); }}
-                    className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={handleSubmitLead}
-                  className="w-full py-3 px-6 bg-[var(--color-primary-base)] text-white rounded-xl font-bold hover:scale-[1.02] active:scale-95 transition-all border-none cursor-pointer"
-                >
-                  <T en="Save & continue to scheduling →">Guardar y continuar →</T>
-                </button>
-                <button
-                  onClick={() => {
-                    setShowLeadCapture(false);
-                    localStorage.setItem("wizardQuote_leadCaptured", "1");
-                    setLeadCaptured(true);
-                    trackEvent("wizard_step_complete", { step: 3 });
-                    setCurrentStep((c) => c + 1);
-                    scrollToProgress();
-                  }}
-                  className="w-full py-2 px-6 text-[var(--color-text-tertiary)] text-xs hover:text-[var(--color-text-secondary)] transition-colors border-none bg-transparent cursor-pointer"
-                >
-                  <T en="Skip for now">Continuar sin guardar</T>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
