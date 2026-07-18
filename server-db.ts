@@ -285,6 +285,19 @@ class PortalDatabase {
     await this.readyPromise;
   }
 
+  // save() es fire-and-forget a propósito (para no bloquear cada mutación
+  // síncrona con un round-trip a Firestore) -- pero eso es un problema real
+  // en endpoints serverless de Vercel: si el handler responde con res.json()
+  // antes de que la escritura asíncrona termine, el runtime puede congelar/
+  // matar el proceso a mitad de la escritura, perdiendo la mutación en
+  // silencio. Bug real encontrado en vivo (18 de julio): auto-provision-client
+  // creaba el usuario pero el proyecto/tarea/factura desaparecían al azar.
+  // Los handlers que encadenan varias mutaciones y luego responden deben
+  // llamar a este flush() y esperarlo antes de mandar la respuesta.
+  async flush(): Promise<void> {
+    await this.saveAsync();
+  }
+
   private async load(): Promise<void> {
     try {
       const snap = await STATE_DOC.get();

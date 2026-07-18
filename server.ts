@@ -505,7 +505,7 @@ const PORT = 3000;
    * sesión de admin. Protegido por el mismo CRON_SECRET que /api/is-client.
    * Format: POST /api/portal/auto-provision-client
    */
-  app.post("/api/portal/auto-provision-client", (req, res) => {
+  app.post("/api/portal/auto-provision-client", async (req, res) => {
     const secret = req.headers["x-cron-secret"];
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
@@ -628,6 +628,12 @@ const PORT = 3000;
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       description: `Pago inicial (50%, con oferta de lanzamiento -25% aplicada) — Paquete ${pkg.name}`,
     });
+
+    // Espera a que la escritura real a Firestore termine antes de responder
+    // -- si no, Vercel puede congelar el proceso justo después de res.json()
+    // y perder el proyecto/tarea/factura que ya se agregaron en memoria
+    // (bug real, ver comentario de flush() en server-db.ts).
+    await dbInstance.flush();
 
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
   });
@@ -849,7 +855,7 @@ const PORT = 3000;
   // --- Admin actions ---
 
   // 1. Create a client and their project & deliverables
-  app.post("/api/portal/clients", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/clients", authenticateToken, requireAdmin, async (req, res) => {
     const { email, password, name, companyName, projectName, projectDescription } = req.body;
 
     if (!email || !password || !name || !companyName || !projectName) {
@@ -924,6 +930,11 @@ const PORT = 3000;
       dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       description: "Fase Inicial: Planificación, Descubrimiento y Foco SEO",
     });
+
+    // Mismo motivo que auto-provision-client: esperar la escritura real
+    // antes de responder, para no perder el proyecto/tarea/factura si
+    // Vercel congela el proceso justo después de responder.
+    await dbInstance.flush();
 
     res.json({ success: true, clientId, projectId });
   });
