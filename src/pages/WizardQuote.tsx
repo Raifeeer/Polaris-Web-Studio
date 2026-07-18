@@ -816,9 +816,14 @@ export default function WizardQuote() {
   // dejar de recortar (overflow-hidden) una vez que ya no hace falta
   // y así no cortar el hover/shadow de los botones de tipo de negocio.
   const [expandedSectorDone, setExpandedSectorDone] = useState<string | null>(null);
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  // Antes observaba el sidebar de estimación, pero en md+ (tablet/iPad) el
+  // sidebar es sticky y queda visible casi de inmediato aunque el botón real
+  // de "Siguiente" siga muy abajo en la columna izquierda -- eso ocultaba la
+  // barra flotante justo cuando más hacía falta. Ahora observa directamente
+  // el bloque de navegación (Atrás/Siguiente) real.
+  const footerNavRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [footerNavVisible, setFooterNavVisible] = useState(false);
 
   const scrollToProgress = () => {
     setTimeout(() => {
@@ -835,15 +840,15 @@ export default function WizardQuote() {
   };
 
   useEffect(() => {
-    const el = sidebarRef.current;
+    const el = footerNavRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setSidebarVisible(entry.isIntersecting),
+      ([entry]) => setFooterNavVisible(entry.isIntersecting),
       { threshold: 0.1 }
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [currentStep]);
 
 
   // GA4 helper
@@ -3530,7 +3535,7 @@ export default function WizardQuote() {
             </AnimatePresence>
 
             {/* Footer Navigation */}
-              <div className="mt-8 flex items-center justify-between pt-8 border-t border-[var(--color-border-subtle)]">
+              <div ref={footerNavRef} className="mt-8 flex items-center justify-between pt-8 border-t border-[var(--color-border-subtle)]">
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleBack}
@@ -3563,7 +3568,7 @@ export default function WizardQuote() {
           </div>
 
           {/* Sidebar Estimator */}
-            <div ref={sidebarRef} className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
+            <div className="w-full md:w-80 h-max sticky top-24 p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
             <h3 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-6">
               <T en="Live Estimate">Estimación en vivo</T>
             </h3>
@@ -3733,15 +3738,19 @@ export default function WizardQuote() {
           </div>
         </div>
 
-        {/* Barra sticky mobile — se oculta cuando el sidebar real es visible */}
+        {/* Barra sticky — se oculta cuando el botón real de Siguiente/Atrás
+            ya es visible. Antes era md:hidden (solo mobile), pero en iPad
+            (md/lg) el usuario también tenía que bajar mucho para encontrar
+            el botón real, así que ahora se muestra en cualquier ancho donde
+            haga falta -- se oculta sola apenas el botón real entra a la vista. */}
           <AnimatePresence>
-            {!sidebarVisible && (
+            {!footerNavVisible && (
               <motion.div
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 100, opacity: 0 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
-                className="md:hidden fixed bottom-0 left-0 right-0 z-40 rounded-t-2xl overflow-hidden shadow-2xl border border-b-0 border-[var(--color-border-subtle)] pb-safe"
+                className="xl:hidden fixed bottom-0 left-0 right-0 z-40 rounded-t-2xl overflow-hidden shadow-2xl border border-b-0 border-[var(--color-border-subtle)] pb-safe"
               >
                 {/* Drawer expandido */}
                 <AnimatePresence>
