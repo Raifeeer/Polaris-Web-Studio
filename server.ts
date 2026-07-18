@@ -386,6 +386,29 @@ async function notifyInvoice(params: {
   }
 }
 
+// Avisa al cliente por correo cuando se crea un entregable (tarea) nuevo en
+// su proyecto (Cloud Function deliverable-notify-send, Meridian) -- mismo
+// patrón/CRON_SECRET que notifyInvoice.
+async function notifyDeliverable(params: {
+  clientEmail: string;
+  clientName: string;
+  deliverableName: string;
+  deliverableDesc?: string;
+}) {
+  try {
+    const res = await fetch("https://deliverable-notify-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyDeliverable failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando entregable:", err);
+  }
+}
+
 /**
  * Helper to extract an attribute value from a specific XML tag using robust RegExp rules.
  * Keeps parsing lightweight and secure from XML External Entity (XXE) injections.
@@ -1276,7 +1299,7 @@ const PORT = 3000;
     res.json({ success: true });
   });
 
-  app.post("/api/portal/tasks", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/tasks", authenticateToken, requireAdmin, async (req, res) => {
     const { projectId, title, description, link } = req.body;
     if (!projectId || !title) {
       return res.status(400).json({ error: "Faltan campos obligatorios para la aprobación." });
@@ -1291,6 +1314,17 @@ const PORT = 3000;
       link,
       createdAt: new Date().toISOString(),
     });
+    await dbInstance.flush();
+
+    const taskProject = dbInstance.getProjects().find((p) => p.id === projectId);
+    const taskClient = taskProject ? dbInstance.getUsers().find((u) => u.id === taskProject.clientUserId) : null;
+    if (taskClient) {
+      await notifyDeliverable({
+        clientEmail: taskClient.email, clientName: taskClient.name,
+        deliverableName: title, deliverableDesc: description,
+      });
+    }
+
     res.json({ success: true });
   });
 
