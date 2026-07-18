@@ -3128,6 +3128,30 @@ export default function ClientDashboard() {
                       </div>
                     ) : (
                       <>
+                        {/* Encabezado con el nombre real del proyecto -- antes el
+                            cliente nunca veía en ningún lado el nombre de su
+                            proyecto/empresa, solo texto genérico de la pestaña. */}
+                        <div className="flex items-start gap-4 p-5 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)]">
+                          <div className="w-11 h-11 rounded-xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 flex items-center justify-center shrink-0">
+                            <Briefcase size={20} className="text-[var(--color-primary-base)]" />
+                          </div>
+                          <div className="min-w-0">
+                            {clientProject.displayId && (
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-1">
+                                Proyecto {clientProject.displayId}
+                              </p>
+                            )}
+                            <h1 className="font-display font-black text-lg md:text-xl text-[var(--color-text-primary)] truncate">
+                              {clientProject.name}
+                            </h1>
+                            {clientProject.description && (
+                              <p className="text-xs text-[var(--color-text-secondary)] mt-1 leading-relaxed">
+                                {clientProject.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
                         {/* Resumen IA */}
                         {(aiSummaryLoading || aiSummary) && (
                           <div className="p-5 rounded-[var(--radius-bento)] bg-[var(--color-primary-base)]/5 border border-[var(--color-primary-base)]/15 flex items-start gap-3">
