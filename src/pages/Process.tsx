@@ -16,98 +16,15 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AISparkleIcon from "../components/AISparkleIcon";
 import { T, useLanguage } from "../context/LanguageContext";
-import { useTheme } from "../hooks/useTheme";
-import Cal, { getCalApi } from "@calcom/embed-react";
+import BookingScheduler from "../components/BookingScheduler";
 
 export default function Process() {
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = React.useState(0);
   const [isSchedulerOpen, setIsSchedulerOpen] = React.useState(false);
   const [isSuccess, setIsSuccess] = React.useState(false);
-  const { theme } = useTheme();
   const { language } = useLanguage();
-  const calTheme = theme === "dark" ? "dark" : "light";
 
-  React.useEffect(() => {
-    if (!isSchedulerOpen) return;
-
-    let active = true;
-    let calApi: any = null;
-    // Callback con referencia estable para poder desuscribirlo en el cleanup.
-    const onBookingSuccess = () => setIsSuccess(true);
-    const initCal = async () => {
-      try {
-        const cal = await getCalApi();
-        if (!active) return;
-        calApi = cal;
-
-        cal("on", {
-          action: "bookingSuccessful",
-          callback: onBookingSuccess,
-        });
-
-        cal("ui", {
-          theme: calTheme,
-          cssVarsPerTheme: {
-            dark: {
-              "cal-brand": "#6366f1",
-              "cal-brand-emphasis": "#818cf8",
-              "cal-brand-text": "#ffffff",
-              "cal-bg": "#020617",
-              "cal-bg-emphasis": "#0f172a",
-              "cal-bg-subtle": "#1e293b",
-              "cal-bg-muted": "#0f172a",
-              "cal-bg-inverted": "#f8fafc",
-              "cal-border": "#1e293b",
-              "cal-border-emphasis": "#334155",
-              "cal-border-subtle": "#1e293b",
-              "cal-border-booker": "#334155",
-              "cal-text": "#f8fafc",
-              "cal-text-emphasis": "#ffffff",
-              "cal-text-subtle": "#94a3b8",
-              "cal-text-muted": "#64748b",
-              "cal-text-inverted": "#020617",
-            },
-            light: {
-              "cal-brand": "#4f46e5",
-              "cal-brand-emphasis": "#4338ca",
-              "cal-brand-text": "#ffffff",
-              "cal-bg": "#f8fafc",
-              "cal-bg-emphasis": "#ffffff",
-              "cal-bg-subtle": "#f1f5f9",
-              "cal-bg-muted": "#ffffff",
-              "cal-bg-inverted": "#020617",
-              "cal-border": "#e2e8f0",
-              "cal-border-emphasis": "#cbd5e1",
-              "cal-border-subtle": "#e2e8f0",
-              "cal-border-booker": "#cbd5e1",
-              "cal-text": "#020617",
-              "cal-text-emphasis": "#000000",
-              "cal-text-subtle": "#64748b",
-              "cal-text-muted": "#94a3b8",
-              "cal-text-inverted": "#f8fafc",
-            },
-          },
-          hideEventTypeDetails: false,
-          layout: "month_view",
-        });
-      } catch (err) {
-        console.warn("Cal.com UI config deferred:", err);
-      }
-    };
-
-    const timer = setTimeout(initCal, 150);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-      // Desuscribir el listener para que no se acumulen callbacks al reabrir.
-      if (calApi) {
-        try {
-          calApi("off", { action: "bookingSuccessful", callback: onBookingSuccess });
-        } catch { /* noop */ }
-      }
-    };
-  }, [isSchedulerOpen, calTheme]);
 
   const steps = [
     {
@@ -691,34 +608,14 @@ export default function Process() {
                       </button>
                     </motion.div>
                   ) : (
-                    <div
-                      className="w-full rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] min-h-[480px] h-[520px]"
-                      style={
-                        {
-                          "--cal-brand-color": "#10b981",
-                          "--cal-brand": "#10b981",
-                          "--cal-brand-emphasis": "#059669",
-                        } as React.CSSProperties
+                    <BookingScheduler
+                      notes={
+                        language === "en"
+                          ? "Direct consultation booked from the Work Methodology page."
+                          : "Consulta directa programada desde la sección de Metodología de Trabajo."
                       }
-                    >
-                      <Cal
-                        calLink={`cristian-dicen/consultoria-polaris?notes=${encodeURIComponent(
-                          language === "en"
-                            ? "Direct consultation booked from the Work Methodology page."
-                            : "Consulta directa programada desde la sección de Metodología de Trabajo.",
-                        )}`}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          overflow: "scroll",
-                        }}
-                        config={{
-                          layout: "month_view",
-                          theme: calTheme,
-                          locale: language === "en" ? "en" : "es",
-                        }}
-                      />
-                    </div>
+                      onBooked={() => setIsSuccess(true)}
+                    />
                   )}
                 </div>
 

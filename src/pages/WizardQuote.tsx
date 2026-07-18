@@ -19,6 +19,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AISparkleIcon from "../components/AISparkleIcon";
 import GlobeSearchIcon from "../components/GlobeSearchIcon";
+import BookingScheduler from "../components/BookingScheduler";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 import { useToast } from "../context/ToastContext";
@@ -478,79 +479,14 @@ const addonSocialProof: Record<string, { en: string; es: string }> = {
   },
 };
 
-function safePatchCal() {
-  try {
-    const Cal = (window as any).Cal;
-    if (!Cal) return false;
-
-    // If default instance exists, patch its prototype
-    if (Cal.instance) {
-      const proto = Object.getPrototypeOf(Cal.instance);
-      if (proto && !proto.__isPatched) {
-        const originalDoInIframe = proto.doInIframe;
-        proto.doInIframe = function (e: any) {
-          if (!this.iframe) {
-            this.iframeDoQueue = this.iframeDoQueue || [];
-            this.iframeDoQueue.push(e);
-            return;
-          }
-          try {
-            return originalDoInIframe.apply(this, arguments);
-          } catch (err) {
-            console.warn("Caught doInIframe error:", err);
-          }
-        };
-        proto.__isPatched = true;
-        console.log("Successfully patched Cal's prototype.doInIframe!");
-        return true;
-      }
-    }
-
-    // Also patch any existing instances directly just in case
-    const instances: any[] = [];
-    if (Cal.instance) instances.push(Cal.instance);
-    if (Cal.ns) {
-      Object.keys(Cal.ns).forEach((ns) => {
-        if (Cal.ns[ns] && Cal.ns[ns].instance) {
-          instances.push(Cal.ns[ns].instance);
-        }
-      });
-    }
-
-    instances.forEach((inst) => {
-      if (inst && !inst.__isPatched) {
-        const originalDoInIframe = inst.doInIframe;
-        inst.doInIframe = function (e: any) {
-          if (!this.iframe) {
-            this.iframeDoQueue = this.iframeDoQueue || [];
-            this.iframeDoQueue.push(e);
-            return;
-          }
-          try {
-            return originalDoInIframe.apply(this, arguments);
-          } catch (err) {
-            console.warn("Caught doInIframe error on instance:", err);
-          }
-        };
-        inst.__isPatched = true;
-      }
-    });
-  } catch (err) {
-    console.warn("Error applying Cal patch:", err);
-  }
-  return false;
-}
-
-if (typeof window !== "undefined") {
-  const interval = setInterval(() => {
-    const patched = safePatchCal();
-    if (patched) {
-      clearInterval(interval);
-      // Run it on a slower poll to check for any new dynamic/namespace instances
-      setInterval(safePatchCal, 1000);
-    }
-  }, 100);
-}
+// Agendado propio vía Cloud Function calcom-booking (repo Meridian) — el
+// wizard ya no usa el formulario embebido de Cal.com. Motivo real (18 de
+// julio): con el embed, el cliente recibía siempre dos correos ajenos (la
+// confirmación de hello@cal.com y la invitación de Google Calendar desde el
+// Gmail personal) imposibles de apagar sin pagar Cal.com. Reservando por API,
+// el asistente en Cal.com es el buzón interno (hola@polarisweb.studio) y el
+// cliente recibe un solo correo: el de Polaris, con el Meet real y el .ics.
+const BOOKING_URL = "https://calcom-booking-wdvfac6mgq-ue.a.run.app";
 
 // Una cotización guardada hace más de 30 días probablemente refleje precios u
 // ofertas ya vencidas, así que se descarta en vez de retomarla silenciosamente.
@@ -568,7 +504,6 @@ export default function WizardQuote() {
   const { theme } = useTheme();
   const { language, translate } = useLanguage();
   const { success: toastSuccess, error: toastError } = useToast();
-  const calTheme = theme === "dark" ? "dark" : "light";
   const location = useLocation();
 
   // Domain search / check state definitions
@@ -959,16 +894,6 @@ export default function WizardQuote() {
     return Math.max(0, total);
   }, [selections, isOfferActive]);
 
-  const [CalComponent, setCalComponent] = useState<any>(null);
-
-  useEffect(() => {
-    // Solo cargar Cal cuando el usuario llegue al último paso
-    if (currentStep === 4 && !CalComponent) {
-      import('@calcom/embed-react').then((mod) => {
-        setCalComponent(() => mod.default);
-      });
-    }
-  }, [currentStep, CalComponent]);
 
   // Firestore session update effect
   useEffect(() => {
@@ -998,108 +923,6 @@ export default function WizardQuote() {
     }
   }, [sessionId, sessionInitialized, selections, currentStep, calculateTotalPrice]);
 
-  useEffect(() => {
-    if (currentStep !== 3) return;
-
-    let active = true;
-    const initCal = async () => {
-      try {
-        const calMod = await import("@calcom/embed-react");
-        const getCalApi = calMod.getCalApi;
-        const cal = await getCalApi();
-        if (!active) return;
-
-        cal("on", {
-          action: "bookingSuccessful",
-          callback: (e) => {
-            const selectedPlanName = getTypeName(selections.type);
-            const finalTotal = isOfferActive ? discountedTotal : estimatedTotal;
-            const statePayload = {
-              plan: selections.type,
-              planName: selectedPlanName,
-              total: finalTotal,
-              isMonthly: monthlyAddonsPrice > 0 ? monthlyAddonsPrice : null,
-              discountActive: isOfferActive,
-              addons: selections.addons.map(getAddonName),
-              domain: domainSummaryText,
-            };
-            localStorage.removeItem("wizardQuote_currentStep");
-            localStorage.removeItem("wizardQuote_selections");
-            localStorage.removeItem("polaris_addon_descriptions");
-            navigate("/gracias", { state: statePayload });
-          },
-        });
-
-        cal("ui", {
-          theme: calTheme,
-          cssVarsPerTheme: {
-            dark: {
-              // Brand
-              "cal-brand": "#6366f1",
-              "cal-brand-emphasis": "#818cf8",
-              "cal-brand-text": "#ffffff",
-
-              // Fondos
-              "cal-bg": "#020617",
-              "cal-bg-emphasis": "#0f172a",
-              "cal-bg-subtle": "#1e293b",
-              "cal-bg-muted": "#0f172a",
-              "cal-bg-inverted": "#f8fafc",
-
-              // Bordes
-              "cal-border": "#1e293b",
-              "cal-border-emphasis": "#334155",
-              "cal-border-subtle": "#1e293b",
-              "cal-border-booker": "#334155",
-
-              // Texto
-              "cal-text": "#f8fafc",
-              "cal-text-emphasis": "#ffffff",
-              "cal-text-subtle": "#94a3b8",
-              "cal-text-muted": "#64748b",
-              "cal-text-inverted": "#020617",
-            },
-            light: {
-              // Brand
-              "cal-brand": "#4f46e5",
-              "cal-brand-emphasis": "#4338ca",
-              "cal-brand-text": "#ffffff",
-
-              // Fondos
-              "cal-bg": "#f8fafc",
-              "cal-bg-emphasis": "#ffffff",
-              "cal-bg-subtle": "#f1f5f9",
-              "cal-bg-muted": "#ffffff",
-              "cal-bg-inverted": "#020617",
-
-              // Bordes
-              "cal-border": "#e2e8f0",
-              "cal-border-emphasis": "#cbd5e1",
-              "cal-border-subtle": "#e2e8f0",
-              "cal-border-booker": "#cbd5e1",
-
-              // Texto
-              "cal-text": "#020617",
-              "cal-text-emphasis": "#000000",
-              "cal-text-subtle": "#64748b",
-              "cal-text-muted": "#94a3b8",
-              "cal-text-inverted": "#f8fafc",
-            },
-          },
-          hideEventTypeDetails: false,
-          layout: "month_view",
-        });
-      } catch (err) {
-        console.warn("Cal.com UI config deferred:", err);
-      }
-    };
-
-    const timer = setTimeout(initCal, 150);
-    return () => {
-      active = false;
-      clearTimeout(timer);
-    };
-  }, [currentStep, calTheme]);
 
   const aiAddons = ["bot_fast", "semantic_search"];
   const params = new URLSearchParams(location.search);
@@ -2502,6 +2325,27 @@ export default function WizardQuote() {
     scrollToProgress();
   };
 
+  // Cierre post-reserva — replica lo que antes hacía el callback
+  // bookingSuccessful del embed de Cal.com: limpiar el progreso guardado y
+  // navegar a /gracias con el resumen de lo cotizado.
+  const handleBookingComplete = () => {
+    trackEvent("lead_captured", { method: "wizard_booking" });
+    trackEvent("wizard_step_complete", { step: 4 });
+    const statePayload = {
+      plan: selections.type,
+      planName: getTypeName(selections.type),
+      total: isOfferActive ? discountedTotal : estimatedTotal,
+      isMonthly: monthlyAddonsPrice > 0 ? monthlyAddonsPrice : null,
+      discountActive: isOfferActive,
+      addons: selections.addons.map(getAddonName),
+      domain: domainSummaryText,
+    };
+    localStorage.removeItem("wizardQuote_currentStep");
+    localStorage.removeItem("wizardQuote_selections");
+    localStorage.removeItem("polaris_addon_descriptions");
+    navigate("/gracias", { state: statePayload });
+  };
+
   // Paso 3 ("Cotización PDF") real -- escribe el lead a Firestore y dispara
   // el correo de confirmación (que incluye el link real al PDF vía
   // quote-pdf). Bug real encontrado en vivo (17 de julio): el botón "Get My
@@ -3673,40 +3517,13 @@ export default function WizardQuote() {
                         </div>
                       )}
 
-                      <div
-                        className="w-full bg-[var(--color-surface-base)] rounded-2xl overflow-hidden border border-[var(--color-border-subtle)] min-h-[500px]"
-                        style={
-                          {
-                            "--cal-brand-color":
-                              theme === "dark" ? "#6366f1" : "#4f46e5",
-                            "--cal-brand":
-                              theme === "dark" ? "#6366f1" : "#4f46e5",
-                            "--cal-brand-emphasis":
-                              theme === "dark" ? "#818cf8" : "#4338ca",
-                          } as React.CSSProperties
-                        }
-                      >
-                        {CalComponent ? (
-                          <CalComponent
-                            key={quoteSummary}
-                            calLink={`cristian-dicen/consultoria-polaris?name=${encodeURIComponent(selections.name || "")}&email=${encodeURIComponent(selections.email || "")}&notes=${encodeURIComponent(quoteSummary)}`}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              overflow: "scroll",
-                            }}
-                            config={{
-                              layout: "month_view",
-                              theme: calTheme,
-                              locale: language === "en" ? "en" : "es",
-                            }}
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-full min-h-[500px]">
-                            <div className="animate-spin w-6 h-6 border-2 border-[var(--color-primary-base)] border-t-transparent rounded-full" />
-                          </div>
-                        )}
-                      </div>
+                      <BookingScheduler
+                        notes={quoteSummary}
+                        initialName={selections.name || ""}
+                        initialEmail={selections.email || ""}
+                        phone={selections.phone || ""}
+                        onBooked={handleBookingComplete}
+                      />
                     </div>
                   )}
                 </motion.div>
