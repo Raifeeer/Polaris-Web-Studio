@@ -12,6 +12,8 @@ export interface DbUser {
   companyName?: string;
   deletedAt?: string;
   mustChangePassword?: boolean; // true tras el alta automática con contraseña temporal (ver auto-provision-client)
+  cedula?: string; // datos legales para el contrato de servicio -- opcionales hasta que el cliente los complete
+  address?: string;
 }
 
 // --- Password hashing (scrypt, sin dependencias externas) ---
@@ -88,6 +90,18 @@ export interface DbProject {
   customDomain?: string;     // dominio real de producción, distinto del preview de Vercel -- dispara el correo de Lanzamiento Oficial al conectarse por primera vez
   reviewUrl?: string;        // link real de reseña (Google Maps u otro) del negocio del cliente, para pedirla en el correo de lanzamiento -- se omite el CTA si no está cargado, nunca se inventa
   launchedAt?: string;       // fecha real en que se conectó customDomain por primera vez
+  packageId?: string;        // "landing"|"corporate"|"ecommerce" -- el mismo paquete cotizado, guardado para poder rellenar el contrato sin depender de Firestore de Meridian
+  addonIds?: string[];
+  // Contrato de servicio -- firma electrónica simple (Ley 126-02 RD), no certificada.
+  // La constancia real es el PDF final mandado por correo a cliente + Cristian al
+  // firmar (ver contract-sign-notify), no este registro -- esto es solo el estado interno.
+  contractStatus?: "pending" | "signed";
+  contractSignedAt?: string;
+  contractSignatureDataUrl?: string; // PNG base64 de la firma dibujada, ausente si fue tipeada
+  contractSignerName?: string;       // nombre tipeado tal cual lo confirmó el cliente
+  contractHash?: string;             // SHA-256 del HTML exacto del contrato que el cliente vio al firmar
+  contractIp?: string;
+  contractPdfUrl?: string;           // URL de contract-pdf con los params ya resueltos, cacheada tras firmar
 }
 
 export interface DbTask {

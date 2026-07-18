@@ -940,6 +940,24 @@ export default function ClientDashboard() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatMessages, chatLoading]);
 
+  // Modal de firma del contrato de servicio -- firma electrónica simple
+  // (dibujada o tipeada, Ley 126-02 RD). Pasos: 1) completar cédula/domicilio
+  // si faltan, 2) revisar el HTML exacto que se va a firmar, 3) firmar.
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [contractStep, setContractStep] = useState<"legal-info" | "review" | "done">("legal-info");
+  const [contractCedula, setContractCedula] = useState("");
+  const [contractAddress, setContractAddress] = useState("");
+  const [contractHtml, setContractHtml] = useState("");
+  const [contractHtmlLoading, setContractHtmlLoading] = useState(false);
+  const [contractAccepted, setContractAccepted] = useState(false);
+  const [contractSignerName, setContractSignerName] = useState("");
+  const [contractUseTyped, setContractUseTyped] = useState(false);
+  const [contractError, setContractError] = useState<string | null>(null);
+  const [contractSigning, setContractSigning] = useState(false);
+  const contractCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const contractDrawingRef = useRef(false);
+  const contractHasDrawnRef = useRef(false);
+
   // Change Password Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [newPasswordValue, setNewPasswordValue] = useState("");
@@ -1619,6 +1637,125 @@ export default function ClientDashboard() {
       setRefreshTrigger((prev) => prev + 1);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Contrato de servicio -- firma electrónica simple
+  const openContractModal = async () => {
+    setContractError(null);
+    setContractAccepted(false);
+    setContractUseTyped(false);
+    setContractSignerName("");
+    setContractCedula("");
+    setContractAddress("");
+    setContractHtml("");
+    setShowContractModal(true);
+    if (!clientProject?.id) return;
+    try {
+      const res = await fetch(`/api/portal/projects/${clientProject.id}/contract-data`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const info = await res.json();
+      const hasLegalInfo = !!(info?.client?.cedula && info?.client?.address);
+      setContractCedula(info?.client?.cedula || "");
+      setContractAddress(info?.client?.address || "");
+      if (info?.contract?.status === "signed") {
+        setContractStep("done");
+      } else if (hasLegalInfo) {
+        setContractStep("review");
+        await fetchContractHtml();
+      } else {
+        setContractStep("legal-info");
+      }
+    } catch (err) {
+      console.error(err);
+      setContractError("No se pudo cargar la información del contrato.");
+    }
+  };
+
+  const fetchContractHtml = async () => {
+    if (!clientProject?.id) return;
+    setContractHtmlLoading(true);
+    try {
+      const res = await fetch(`/api/portal/projects/${clientProject.id}/contract-html`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const html = await res.text();
+      setContractHtml(html);
+    } catch (err) {
+      console.error(err);
+      setContractError("No se pudo cargar el contrato. Intenta de nuevo.");
+    } finally {
+      setContractHtmlLoading(false);
+    }
+  };
+
+  const handleSaveLegalInfo = async () => {
+    if (!clientProject?.id || !contractCedula.trim() || !contractAddress.trim()) {
+      setContractError("Completa cédula y domicilio para continuar.");
+      return;
+    }
+    setContractError(null);
+    try {
+      await fetch(`/api/portal/projects/${clientProject.id}/legal-info`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ cedula: contractCedula.trim(), address: contractAddress.trim() }),
+      });
+      setContractStep("review");
+      await fetchContractHtml();
+    } catch (err) {
+      console.error(err);
+      setContractError("No se pudo guardar la información. Intenta de nuevo.");
+    }
+  };
+
+  const clearSignaturePad = () => {
+    const canvas = contractCanvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx?.clearRect(0, 0, canvas.width, canvas.height);
+    contractHasDrawnRef.current = false;
+  };
+
+  const handleSignContract = async () => {
+    if (!clientProject?.id || !contractHtml) return;
+    if (!contractAccepted) {
+      setContractError("Debes marcar que leíste y aceptas los términos.");
+      return;
+    }
+    let signatureDataUrl: string | undefined;
+    let signerName = "";
+    if (contractUseTyped) {
+      signerName = contractSignerName.trim();
+      if (!signerName) {
+        setContractError("Escribe tu nombre completo para firmar.");
+        return;
+      }
+    } else {
+      if (!contractHasDrawnRef.current || !contractCanvasRef.current) {
+        setContractError("Dibuja tu firma o elige escribir tu nombre.");
+        return;
+      }
+      signatureDataUrl = contractCanvasRef.current.toDataURL("image/png");
+      signerName = user?.name || "";
+    }
+    setContractSigning(true);
+    setContractError(null);
+    try {
+      const res = await fetch(`/api/portal/projects/${clientProject.id}/sign-contract`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ signatureDataUrl, signerName, contractHtml }),
+      });
+      if (!res.ok) throw new Error(`sign-contract respondió ${res.status}`);
+      setContractStep("done");
+      setRefreshTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error(err);
+      setContractError("No se pudo firmar el contrato. Intenta de nuevo.");
+    } finally {
+      setContractSigning(false);
     }
   };
 
@@ -4119,6 +4256,42 @@ export default function ClientDashboard() {
                   </div>
                 )}
 
+                {/* Contrato de servicio -- firma electrónica simple */}
+                {!isAdmin && clientProject && (
+                  <div className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                        <FileText size={18} className="text-indigo-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato de servicio</div>
+                        <div className="text-xs text-[var(--color-text-secondary)]">
+                          {(clientProject as any).contractStatus === "signed"
+                            ? "Firmado -- puedes descargar tu copia cuando quieras."
+                            : "Revisa y firma el contrato antes de que tu proyecto avance."}
+                        </div>
+                      </div>
+                    </div>
+                    {(clientProject as any).contractStatus === "signed" ? (
+                      <a
+                        href={`/api/portal/projects/${clientProject.id}/contract-pdf`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
+                      >
+                        Ver mi contrato firmado
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={openContractModal}
+                        className="px-4 py-2 rounded-lg bg-[var(--color-primary-base)] text-white text-xs font-bold hover:opacity-95 whitespace-nowrap"
+                      >
+                        Revisar y firmar
+                      </button>
+                    )}
+                  </div>
+                )}
+
                 {/* Invoices List */}
                 {(() => {
                   const filteredInvoices = (selectedInvoiceFilterProject === "all"
@@ -5442,6 +5615,193 @@ export default function ClientDashboard() {
 
       {/* Change Password Modal */}
           <AnimatePresence>
+            {showContractModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => contractStep !== "review" && setShowContractModal(false)}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  className="relative w-full max-w-2xl max-h-[90vh] flex flex-col p-6 bg-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bento-shadow overflow-hidden"
+                >
+                  <div className="flex justify-between items-center mb-5 pb-3 border-b border-[var(--color-border-subtle)]/30 flex-shrink-0">
+                    <h3 className="text-lg font-display font-black flex items-center gap-2 text-[var(--color-text-primary)]">
+                      <FileText size={18} className="text-[var(--color-primary-base)]" />
+                      Contrato de servicio
+                    </h3>
+                    <button
+                      onClick={() => setShowContractModal(false)}
+                      className="p-1 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors"
+                      aria-label="Close"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {contractError && (
+                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs flex-shrink-0">
+                      {contractError}
+                    </div>
+                  )}
+
+                  {contractStep === "legal-info" && (
+                    <div className="space-y-4 overflow-y-auto">
+                      <p className="text-xs text-[var(--color-text-secondary)]">
+                        Antes de firmar necesitamos tu cédula y domicilio -- se usan solo para identificarte en el contrato.
+                      </p>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula</label>
+                        <input
+                          type="text"
+                          value={contractCedula}
+                          onChange={(e) => setContractCedula(e.target.value)}
+                          placeholder="000-0000000-0"
+                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Domicilio</label>
+                        <input
+                          type="text"
+                          value={contractAddress}
+                          onChange={(e) => setContractAddress(e.target.value)}
+                          placeholder="Calle, número, sector, ciudad"
+                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleSaveLegalInfo}
+                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95"
+                      >
+                        Continuar
+                      </button>
+                    </div>
+                  )}
+
+                  {contractStep === "review" && (
+                    <div className="flex flex-col gap-4 min-h-0 flex-1">
+                      <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
+                        {contractHtmlLoading ? (
+                          <div className="h-full flex items-center justify-center text-xs text-[var(--color-text-secondary)]">Cargando contrato...</div>
+                        ) : (
+                          <iframe
+                            title="Contrato de servicio"
+                            srcDoc={contractHtml}
+                            className="w-full h-full min-h-[360px] bg-white"
+                          />
+                        )}
+                      </div>
+
+                      <label className="flex items-center gap-2 text-xs text-[var(--color-text-primary)]">
+                        <input
+                          type="checkbox"
+                          checked={contractAccepted}
+                          onChange={(e) => setContractAccepted(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        Leí y acepto los términos de este contrato.
+                      </label>
+
+                      <div className="flex items-center gap-3 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => setContractUseTyped(false)}
+                          className={`px-3 py-1.5 rounded-lg font-bold ${!contractUseTyped ? "bg-[var(--color-primary-base)] text-white" : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"}`}
+                        >
+                          Dibujar mi firma
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setContractUseTyped(true)}
+                          className={`px-3 py-1.5 rounded-lg font-bold ${contractUseTyped ? "bg-[var(--color-primary-base)] text-white" : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"}`}
+                        >
+                          Prefiero escribir mi nombre
+                        </button>
+                      </div>
+
+                      {contractUseTyped ? (
+                        <input
+                          type="text"
+                          value={contractSignerName}
+                          onChange={(e) => setContractSignerName(e.target.value)}
+                          placeholder="Escribe tu nombre completo"
+                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm italic font-serif"
+                        />
+                      ) : (
+                        <div className="space-y-1">
+                          <canvas
+                            ref={contractCanvasRef}
+                            width={560}
+                            height={140}
+                            className="w-full rounded-xl border border-[var(--color-border-strong)] bg-white touch-none"
+                            style={{ height: 140 }}
+                            onPointerDown={(e) => {
+                              contractDrawingRef.current = true;
+                              const canvas = contractCanvasRef.current!;
+                              const rect = canvas.getBoundingClientRect();
+                              const ctx = canvas.getContext("2d")!;
+                              ctx.strokeStyle = "#0f172a";
+                              ctx.lineWidth = 2;
+                              ctx.lineCap = "round";
+                              ctx.beginPath();
+                              ctx.moveTo((e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height));
+                            }}
+                            onPointerMove={(e) => {
+                              if (!contractDrawingRef.current) return;
+                              const canvas = contractCanvasRef.current!;
+                              const rect = canvas.getBoundingClientRect();
+                              const ctx = canvas.getContext("2d")!;
+                              ctx.lineTo((e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height));
+                              ctx.stroke();
+                              contractHasDrawnRef.current = true;
+                            }}
+                            onPointerUp={() => { contractDrawingRef.current = false; }}
+                            onPointerLeave={() => { contractDrawingRef.current = false; }}
+                          />
+                          <button
+                            type="button"
+                            onClick={clearSignaturePad}
+                            className="text-[11px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                          >
+                            Limpiar
+                          </button>
+                        </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={handleSignContract}
+                        disabled={contractSigning}
+                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50"
+                      >
+                        {contractSigning ? "Firmando..." : "Firmar y enviar"}
+                      </button>
+                    </div>
+                  )}
+
+                  {contractStep === "done" && (
+                    <div className="text-center py-8 space-y-3">
+                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado -- te llegará una copia por correo.</div>
+                      <button
+                        type="button"
+                        onClick={() => setShowContractModal(false)}
+                        className="px-6 py-2.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)]"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+            )}
+
             {showPasswordModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                 <motion.div

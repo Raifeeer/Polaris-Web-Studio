@@ -465,6 +465,103 @@ async function notifyDeploy(params: {
   }
 }
 
+// Catálogo real de paquetes/addons -- compartido entre auto-provision-client
+// y el endpoint de contract-data. Mismos precios/oferta que
+// cloud-functions/proposal-send y quote-pdf (Meridian) -- hay que mantenerlos
+// sincronizados a mano si se agrega o cambia un addon en el wizard.
+const PACKAGE_INFO: Record<string, { name: string; price: number }> = {
+  landing: { name: "Destello", price: 299 },
+  corporate: { name: "Constelación", price: 699 },
+  ecommerce: { name: "Nova", price: 1299 },
+};
+const ADDON_INFO: Record<string, { name: string; price: number; isMonthly?: boolean }> = {
+  ai_agent: { name: "Agente de Ventas IA", price: 49, isMonthly: true },
+  bot_fast: { name: "Bot de Atención 24/7", price: 149 },
+  semantic_search: { name: "Buscador Semántico IA", price: 249 },
+  content_assistant: { name: "Asistente de Contenido", price: 29, isMonthly: true },
+  content_seo: { name: "Guía de Estrategia SEO", price: 49 },
+  crm_connect: { name: "CRM Connect", price: 149 },
+  multilingual: { name: "Sitio Web Multilingüe", price: 99 },
+  copy: { name: "Copywriting Profesional", price: 97 },
+  branding: { name: "Kit de Branding Básico", price: 149 },
+  hosting: { name: "Mantenimiento y Soporte Premium", price: 30, isMonthly: true },
+};
+const OFFER_DISCOUNT = 0.25;
+
+// Resuelve el precio real (paquete + addons + oferta -25% + depósito 50/50)
+// para un proyecto ya provisionado -- usado por contract-data y por el
+// endpoint que arma el payload para contract-pdf/contract-sign-notify
+// (Meridian), así el cálculo vive en un solo lugar.
+function resolveContractPricing(project: import("./server-db.js").DbProject) {
+  const pkg = PACKAGE_INFO[project.packageId || ""] || PACKAGE_INFO.corporate;
+  const selectedAddons = (project.addonIds || [])
+    .map((id) => ({ id, ...ADDON_INFO[id] }))
+    .filter((a) => a.price !== undefined);
+  const oneTimeAddonsPrice = selectedAddons.filter((a) => !a.isMonthly).reduce((s, a) => s + a.price, 0);
+  const monthlyAddonsPrice = selectedAddons.filter((a) => a.isMonthly).reduce((s, a) => s + a.price, 0);
+  const subtotal = pkg.price + oneTimeAddonsPrice;
+  const discountedTotal = subtotal - Math.round(subtotal * OFFER_DISCOUNT);
+  const depositAmount = Math.round(discountedTotal * 0.5 * 100) / 100;
+  const finalAmount = Math.round((discountedTotal - depositAmount) * 100) / 100;
+  return { pkg, selectedAddons, oneTimeAddonsPrice, monthlyAddonsPrice, subtotal, discountedTotal, depositAmount, finalAmount };
+}
+
+// Arma el payload que consume contract-pdf (Meridian) a partir de un
+// proyecto/cliente reales -- usado tanto para servir el HTML de revisión
+// (que el cliente firma tal cual) como para descargar el PDF final.
+function buildContractPdfPayload(project: import("./server-db.js").DbProject, client: import("./server-db.js").DbUser) {
+  const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
+  return {
+    lang: "es",
+    clientName: client.name, cedula: client.cedula || "", address: client.address || "",
+    projectName: project.name,
+    packageName: pkg.name,
+    addons: selectedAddons.map((a) => ({ name: a.name, price: a.price, isMonthly: a.isMonthly || false })),
+    discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice,
+    signed: project.contractStatus === "signed",
+    signatureDataUrl: project.contractSignatureDataUrl || null,
+    signerName: project.contractSignerName || null,
+    signedAt: project.contractSignedAt || null,
+    contractHash: project.contractHash || null,
+  };
+}
+
+// Dispara la generación + envío del PDF final del contrato firmado (Cloud
+// Function contract-sign-notify, Meridian) -- manda el mismo PDF a la vez al
+// cliente y a Cristian, cada uno a su propia bandeja. Esa es la constancia
+// real (dos copias independientes con sello de tiempo de Zoho/Gmail), no el
+// registro en Firestore -- ver POST /api/portal/projects/:id/sign-contract.
+async function notifyContractSigned(params: {
+  clientEmail: string;
+  clientName: string;
+  cedula: string;
+  address: string;
+  projectName: string;
+  packageName: string;
+  addons: { name: string; price: number; isMonthly: boolean }[];
+  discountedTotal: number;
+  depositAmount: number;
+  finalAmount: number;
+  monthlyAddonsPrice: number;
+  signatureDataUrl?: string;
+  signerName: string;
+  contractHash: string;
+  signedAt: string;
+}) {
+  try {
+    const res = await fetch("https://contract-sign-notify-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyContractSigned failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando firma de contrato:", err);
+  }
+}
+
 /**
  * Helper to extract an attribute value from a specific XML tag using robust RegExp rules.
  * Keeps parsing lightweight and secure from XML External Entity (XXE) injections.
@@ -669,28 +766,6 @@ const PORT = 3000;
       return res.status(200).json({ alreadyExists: true, clientId: existing.id });
     }
 
-    const PACKAGE_INFO: Record<string, { name: string; price: number }> = {
-      landing: { name: "Destello", price: 299 },
-      corporate: { name: "Constelación", price: 699 },
-      ecommerce: { name: "Nova", price: 1299 },
-    };
-    // Mismos addons/oferta que cloud-functions/proposal-send -- la factura
-    // que se genera acá tiene que coincidir con el total que el cliente ya
-    // vio en el correo de la propuesta (paquete + addons de una vez, con la
-    // oferta de lanzamiento -25% aplicada solo al pago único).
-    const ADDON_INFO: Record<string, { price: number; isMonthly?: boolean }> = {
-      ai_agent: { price: 49, isMonthly: true },
-      bot_fast: { price: 149 },
-      semantic_search: { price: 249 },
-      content_assistant: { price: 29, isMonthly: true },
-      content_seo: { price: 49 },
-      crm_connect: { price: 149 },
-      multilingual: { price: 99 },
-      copy: { price: 97 },
-      branding: { price: 149 },
-      hosting: { price: 30, isMonthly: true },
-    };
-    const OFFER_DISCOUNT = 0.25;
     const pkg = PACKAGE_INFO[packageId] || PACKAGE_INFO.corporate;
     const selectedAddons = (Array.isArray(addonIds) ? addonIds : [])
       .map((id: string) => ADDON_INFO[id])
@@ -738,6 +813,9 @@ const PORT = 3000;
       progress: 25,
       description: projectDescription,
       status: "active",
+      packageId,
+      addonIds: Array.isArray(addonIds) ? addonIds : [],
+      contractStatus: "pending",
       phases: [
         {
           name: "Fase 1: Descubrimiento y Requerimientos",
@@ -2050,6 +2128,185 @@ const PORT = 3000;
     }
 
     res.json({ success: true });
+  });
+
+  /**
+   * El cliente completa sus datos legales (cédula, domicilio) antes de poder
+   * firmar el contrato -- no se piden en el wizard/propuesta porque en ese
+   * momento el cliente todavía no decidió si avanza. Client-facing, mismo
+   * patrón de ownership check que /api/portal/tasks/:id/respond.
+   * Format: PUT /api/portal/projects/:id/legal-info
+   */
+  app.put("/api/portal/projects/:id/legal-info", authenticateToken, async (req: any, res) => {
+    const { cedula, address } = req.body || {};
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    dbInstance.updateUser(project.clientUserId, {
+      cedula: String(cedula || "").trim(),
+      address: String(address || "").trim(),
+    });
+    await dbInstance.flush();
+    res.json({ success: true });
+  });
+
+  /**
+   * Todos los datos reales para rellenar el contrato (cliente, proyecto,
+   * paquete/addons ya resueltos con el mismo cálculo de auto-provision-client)
+   * -- consumido tanto por el modal de firma en el portal como por
+   * contract-pdf (Meridian) para generar el PDF final. Client-facing, mismo
+   * ownership check que el resto de los endpoints del proyecto.
+   * Format: GET /api/portal/projects/:id/contract-data
+   */
+  app.get("/api/portal/projects/:id/contract-data", authenticateToken, (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
+
+    res.json({
+      client: { name: client.name, email: client.email, cedula: client.cedula || "", address: client.address || "" },
+      project: { id: project.id, name: project.name },
+      package: { id: project.packageId || "", name: pkg.name },
+      addons: selectedAddons.map((a) => ({ id: a.id, name: a.name, price: a.price, isMonthly: a.isMonthly || false })),
+      pricing: { discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice, offerDiscount: OFFER_DISCOUNT },
+      contract: {
+        status: project.contractStatus || "pending",
+        signedAt: project.contractSignedAt || null,
+        signerName: project.contractSignerName || null,
+        hash: project.contractHash || null,
+      },
+    });
+  });
+
+  /**
+   * HTML resuelto del contrato -- lo que el modal de firma muestra y lo que
+   * el cliente reenvía tal cual a sign-contract, para que el hash coincida
+   * con lo que realmente vio y aceptó.
+   * Format: GET /api/portal/projects/:id/contract-html
+   */
+  app.get("/api/portal/projects/:id/contract-html", authenticateToken, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    try {
+      const htmlRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app?format=html", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildContractPdfPayload(project, client)),
+      });
+      if (!htmlRes.ok) throw new Error(`contract-pdf respondió ${htmlRes.status}`);
+      res.set("Content-Type", "text/html");
+      res.status(200).send(await htmlRes.text());
+    } catch (err) {
+      console.error("Error generando contract-html:", err);
+      res.status(502).json({ error: "No se pudo generar el contrato." });
+    }
+  });
+
+  /**
+   * Descarga el PDF final del contrato -- si ya está firmado, incluye la
+   * firma real estampada; si no, muestra el contrato en blanco para que el
+   * cliente lo revise antes de firmar. Genera el PDF al vuelo llamando a
+   * contract-pdf (Meridian, Puppeteer) con los mismos datos ya guardados --
+   * no se cachea ningún PDF estático para no duplicar el dato sensible.
+   * Format: GET /api/portal/projects/:id/contract-pdf
+   */
+  app.get("/api/portal/projects/:id/contract-pdf", authenticateToken, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    try {
+      const pdfRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildContractPdfPayload(project, client)),
+      });
+      if (!pdfRes.ok) throw new Error(`contract-pdf respondió ${pdfRes.status}`);
+      const buf = Buffer.from(await pdfRes.arrayBuffer());
+      res.set("Content-Type", "application/pdf");
+      res.set("Content-Disposition", `attachment; filename="contrato-${project.displayId}.pdf"`);
+      res.status(200).send(buf);
+    } catch (err) {
+      console.error("Error generando contract-pdf:", err);
+      res.status(502).json({ error: "No se pudo generar el PDF del contrato." });
+    }
+  });
+
+  /**
+   * Firma electrónica simple (Ley 126-02, RD) -- el cliente ya vio el HTML
+   * exacto del contrato (mismo que arma contract-pdf con los datos de
+   * contract-data) y lo manda de vuelta tal cual para que el hash coincida
+   * con lo que realmente aceptó. La constancia real no es este registro --
+   * es el PDF final que notifyContractSigned manda por correo a cliente y
+   * Cristian a la vez, cada uno a su propia bandeja (ver esa función).
+   * Format: POST /api/portal/projects/:id/sign-contract
+   */
+  app.post("/api/portal/projects/:id/sign-contract", authenticateToken, async (req: any, res) => {
+    const { signatureDataUrl, signerName, contractHtml } = req.body || {};
+    if (!contractHtml || !String(signerName || "").trim()) {
+      return res.status(400).json({ error: "missing_fields" });
+    }
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    if (project.contractStatus === "signed") {
+      return res.status(200).json({ success: true, alreadySigned: true });
+    }
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    const contractHash = crypto.createHash("sha256").update(contractHtml).digest("hex");
+    const signedAt = new Date().toISOString();
+    const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
+
+    dbInstance.updateProject(project.id, {
+      contractStatus: "signed",
+      contractSignedAt: signedAt,
+      contractSignatureDataUrl: signatureDataUrl || undefined,
+      contractSignerName: String(signerName).trim(),
+      contractHash,
+      contractIp: ip,
+    });
+    await dbInstance.flush();
+
+    const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
+
+    // Fire-and-forget: no bloquea la respuesta al cliente por si el envío
+    // del correo/PDF tarda -- mismo patrón que notifyInvoice/notifyLaunch.
+    // Se manda el payload completo porque Meridian no tiene forma de volver
+    // a pedirlo con el token de sesión del cliente.
+    notifyContractSigned({
+      clientEmail: client.email, clientName: client.name,
+      cedula: client.cedula || "", address: client.address || "",
+      projectName: project.name, packageName: pkg.name,
+      addons: selectedAddons.map((a) => ({ name: a.name, price: a.price, isMonthly: a.isMonthly || false })),
+      discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice,
+      signatureDataUrl: signatureDataUrl || undefined,
+      signerName: String(signerName).trim(),
+      contractHash, signedAt,
+    });
+
+    res.json({ success: true, contractHash, signedAt });
   });
 
 async function startServer() {
