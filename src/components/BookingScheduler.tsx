@@ -160,7 +160,7 @@ export default function BookingScheduler({
           </div>
 
           {selectedDay && slotsByDay[selectedDay] && (
-            <div>
+            <div className="min-w-0">
               <label className="block text-xs font-bold uppercase tracking-wider mb-3 text-[var(--color-text-secondary)]">
                 <T en="Pick a time (your local time)">Elige una hora (tu hora local)</T>
               </label>
@@ -170,7 +170,7 @@ export default function BookingScheduler({
                     key={iso}
                     type="button"
                     onClick={() => setSelectedSlot(iso)}
-                    className={`px-2 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
+                    className={`min-w-0 px-2 py-2.5 rounded-xl border text-sm font-semibold transition-all cursor-pointer ${
                       selectedSlot === iso
                         ? "bg-[var(--color-primary-base)] text-white border-transparent"
                         : "bg-transparent border-[var(--color-border-strong)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
