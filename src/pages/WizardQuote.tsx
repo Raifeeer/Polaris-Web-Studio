@@ -514,6 +514,8 @@ export default function WizardQuote() {
   const [domainStatus, setDomainStatus] = useState<{
     domain: string;
     available: boolean;
+    price?: number;
+    regularPrice?: number;
   } | null>(null);
   const domainDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toastShownRef = useRef(false);
@@ -562,6 +564,8 @@ export default function WizardQuote() {
       setDomainStatus({
         domain: target.toLowerCase(),
         available: data.available,
+        price: typeof data.price === "number" ? data.price : undefined,
+        regularPrice: typeof data.regularPrice === "number" ? data.regularPrice : undefined,
       });
 
       if (!data.available) {
@@ -1006,9 +1010,20 @@ export default function WizardQuote() {
     }
   };
 
+  // Tope real de lo incluido en el paquete -- si el precio real del dominio
+  // (vía Porkbun, ver /api/check-domain) lo supera, se avisa el sobrecosto
+  // real en vez de decir "incluido" sobre un dominio que no lo está.
+  const DOMAIN_INCLUDED_CAP = 15;
+  const domainOverage =
+    domainStatus?.price !== undefined && domainStatus.price > DOMAIN_INCLUDED_CAP
+      ? Math.round((domainStatus.price - DOMAIN_INCLUDED_CAP) * 100) / 100
+      : null;
+
   const domainSummaryText =
     domainStatus && domainStatus.available
-      ? `${domainStatus.domain} ${t("(Included, up to $15 USD)", "(Incluido, hasta $15 USD)")}`
+      ? domainOverage !== null
+        ? `${domainStatus.domain} ${t(`(+$${domainOverage} above what's included)`, `(+$${domainOverage} sobre lo incluido)`)}`
+        : `${domainStatus.domain} ${t("(Included, up to $15 USD)", "(Incluido, hasta $15 USD)")}`
       : t("Standard Included ($15 default credit)", "Estándar Incluido ($15 crédito por defecto)");
 
   const getSectorName = (id: string) => {
@@ -3201,24 +3216,31 @@ export default function WizardQuote() {
                             </div>
 
                             {domainStatus.available && (
-                              <div className="text-xs md:text-sm text-[var(--color-text-secondary)] leading-relaxed pt-1.5 border-t border-[var(--color-border-subtle)]">
-                                <div className="space-y-3">
+                              <div className="text-xs md:text-sm leading-relaxed pt-1.5 border-t border-[var(--color-border-subtle)]">
+                                {domainStatus.price === undefined ? (
                                   <p className="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
-                                    <T en="This domain appears to be available. Check the exact registration price on GoDaddy.">
-                                      Este dominio parece estar disponible. Consulta el precio exacto de registro en GoDaddy.
-                                    </T>
+                                    <T en="This domain appears to be available.">Este dominio parece estar disponible.</T>
                                   </p>
-                                  <a
-                                    href={`https://www.godaddy.com/domainsearch/find?domainToCheck=${encodeURIComponent(domainStatus.domain)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--color-surface-base)] border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-600 dark:text-emerald-400 font-bold text-xs transition-all hover:scale-105 active:scale-95"
-                                  >
-                                    <span>🌐</span>
-                                    <T en="View price on GoDaddy">Ver precio en GoDaddy</T>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                                  </a>
-                                </div>
+                                ) : domainOverage === null ? (
+                                  <p className="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
+                                    <T en="Included in your package -- no extra cost.">Incluido en tu paquete, sin costo adicional.</T>
+                                  </p>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <p className="text-amber-600 dark:text-amber-400 font-medium text-xs">
+                                      <T en={`This domain costs $${domainStatus.price} for the first year -- $${domainOverage} above the $15 included.`}>
+                                        {`Este dominio cuesta $${domainStatus.price} el primer año -- $${domainOverage} sobre los $15 incluidos.`}
+                                      </T>
+                                    </p>
+                                    {domainStatus.regularPrice !== undefined && domainStatus.regularPrice > domainStatus.price && (
+                                      <p className="text-[var(--color-text-secondary)] text-[11px]">
+                                        <T en={`Renews at $${domainStatus.regularPrice}/year after the first year.`}>
+                                          {`Se renueva a $${domainStatus.regularPrice}/año después del primer año.`}
+                                        </T>
+                                      </p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             )}
 

@@ -462,6 +462,42 @@ function getXmlError(xml: string): string | null {
 
 import { checkDomainAvailability } from "./src/lib/domain-utils";
 
+// Precio real en vivo (primer año + renovación) vía la API de Porkbun --
+// mismo registrador ya usado para comprar polarisweb.studio. Rate limit
+// real y estricto del lado de Porkbun (~1 request/10s), así que solo se usa
+// para el chequeo puntual de UN dominio a la vez (acción explícita del
+// usuario), nunca para listas/sugerencias en batch. Si falla o no hay
+// credenciales, cae de vuelta al chequeo RDAP-only (solo disponibilidad,
+// sin precio) -- el wizard nunca se rompe por esto.
+async function checkDomainViaPorkbun(domain: string): Promise<{ available: boolean; price?: number; regularPrice?: number } | null> {
+  const apiKey = process.env.PORKBUN_API_KEY;
+  const secretKey = process.env.PORKBUN_SECRET_KEY;
+  if (!apiKey || !secretKey) return null;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  try {
+    const res = await fetch(`https://api.porkbun.com/api/json/v3/domain/checkDomain/${encodeURIComponent(domain)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apikey: apiKey, secretapikey: secretKey }),
+      signal: controller.signal,
+    });
+    const data = await res.json();
+    if (data?.status !== "SUCCESS" || !data.response) return null;
+    const r = data.response;
+    return {
+      available: r.avail === "yes",
+      price: r.price !== undefined ? Number(r.price) : undefined,
+      regularPrice: r.regularPrice !== undefined ? Number(r.regularPrice) : undefined,
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export const app = express();
 app.disable("x-powered-by");
 
@@ -534,7 +570,8 @@ app.use((req, res, next) => {
 const PORT = 3000;
 
   /**
-   * Safe Proxy Endpoint to Check Domain Availability and Pricing using Namecheap API.
+   * Proxy seguro de disponibilidad + precio real de dominio (Porkbun, con
+   * fallback a solo-disponibilidad vía RDAP si Porkbun falla).
    * Format: GET /api/check-domain?domain=example.com
    */
   app.get("/api/check-domain", async (req, res) => {
@@ -546,6 +583,11 @@ const PORT = 3000;
     }
 
     try {
+      const porkbun = await checkDomainViaPorkbun(domain);
+      if (porkbun) {
+        return res.json({ available: porkbun.available, price: porkbun.price, regularPrice: porkbun.regularPrice });
+      }
+      // Porkbun no disponible/con rate limit -- solo disponibilidad, sin precio.
       const available = await checkDomainAvailability(domain);
       return res.json({ available });
 
