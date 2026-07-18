@@ -2862,6 +2862,41 @@ export default function ClientDashboard() {
                                           </div>
                                         </div>
 
+                                        {/* Nombre del proyecto -- editable por si el nombre que se
+                                            mandó al aprobar la propuesta tenía un error o necesita
+                                            ajustarse después (ej. razón social real del cliente). */}
+                                        <div className="pt-4 border-t border-[var(--color-border-subtle)]/20 mt-4 space-y-3">
+                                          <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400">
+                                            NOMBRE DEL PROYECTO
+                                          </h4>
+                                          <input
+                                            type="text"
+                                            placeholder="ej: Propiedades del Caribe SRL"
+                                            key={`project-name-${project.id}-${project.name}`}
+                                            defaultValue={project.name || ""}
+                                            onBlur={(e) => {
+                                              const val = e.target.value.trim();
+                                              if (!val || val === project.name) return;
+                                              fetch(`/api/portal/projects/${project.id}`, {
+                                                method: "POST",
+                                                headers: {
+                                                  "Content-Type": "application/json",
+                                                  Authorization: `Bearer ${token}`,
+                                                },
+                                                body: JSON.stringify({ name: val }),
+                                              }).then((res) => {
+                                                if (res.ok) {
+                                                  setSuccessMsg("Nombre del proyecto actualizado");
+                                                  handleRefresh();
+                                                } else {
+                                                  setErrorMsg("No se pudo actualizar el nombre del proyecto.");
+                                                }
+                                              });
+                                            }}
+                                            className="glass-input w-full px-3 py-1.5 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]/60 text-xs text-[var(--color-text-primary)] focus:outline-none"
+                                          />
+                                        </div>
+
                                         {/* Configuración de Proyecto en Vercel */}
                                         <div className="pt-4 border-t border-[var(--color-border-subtle)]/20 mt-4 space-y-3">
                                           <h4 className="text-[10px] font-black uppercase tracking-wider text-indigo-400">

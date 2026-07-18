@@ -961,14 +961,21 @@ const PORT = 3000;
     res.json({ success: true });
   });
 
-  app.post("/api/portal/projects/:id", authenticateToken, requireAdmin, (req, res) => {
-    const { currentPhase, progress, phases, status } = req.body;
-    dbInstance.updateProject(req.params.id, {
-      currentPhase,
-      progress: Number(progress),
-      phases,
-      status,
-    });
+  app.post("/api/portal/projects/:id", authenticateToken, requireAdmin, async (req, res) => {
+    const { currentPhase, progress, phases, status, name, description } = req.body || {};
+    // Solo se aplican los campos que realmente vinieron en el body -- antes
+    // siempre escribía los 4 campos originales aunque no vinieran (ej.
+    // progress: Number(undefined) => NaN), lo que habría roto cualquier
+    // guardado parcial (como renombrar el proyecto sin tocar las fases).
+    const updates: Record<string, unknown> = {};
+    if (currentPhase !== undefined) updates.currentPhase = currentPhase;
+    if (progress !== undefined) updates.progress = Number(progress);
+    if (phases !== undefined) updates.phases = phases;
+    if (status !== undefined) updates.status = status;
+    if (name !== undefined) updates.name = String(name).trim();
+    if (description !== undefined) updates.description = String(description);
+    dbInstance.updateProject(req.params.id, updates);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
