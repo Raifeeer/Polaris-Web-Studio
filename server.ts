@@ -438,6 +438,33 @@ async function notifyLaunch(params: {
   }
 }
 
+// Avisa al cliente cuando hay un deploy nuevo real de su sitio (Cloud
+// Function deploy-notify-send, Meridian) -- mismo patrón/CRON_SECRET que
+// notifyInvoice/notifyDeliverable/notifyLaunch. Se dispara tanto desde el
+// webhook real de GitHub como desde el registro manual de deploy en el
+// panel Polaris. `description` es el mensaje del commit YA traducido a
+// español simple (ver askAI más abajo) -- nunca jerga técnica cruda.
+async function notifyDeploy(params: {
+  clientEmail: string;
+  clientName: string;
+  projectName: string;
+  description: string;
+  url: string;
+}) {
+  try {
+    const res = await fetch("https://deploy-notify-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyDeploy failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando deploy:", err);
+  }
+}
+
 /**
  * Helper to extract an attribute value from a specific XML tag using robust RegExp rules.
  * Keeps parsing lightweight and secure from XML External Entity (XXE) injections.
@@ -1814,8 +1841,19 @@ const PORT = 3000;
       state: "ready",
       createdAt: new Date().toISOString(),
     });
+    await dbInstance.flush();
 
     console.log(`[GitHub Webhook] Push registrado para proyecto ${project.name}`);
+
+    const deployClient = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (deployClient) {
+      await notifyDeploy({
+        clientEmail: deployClient.email, clientName: deployClient.name,
+        projectName: project.name, description: commitMessageEs,
+        url: project.vercelUrl || `https://${repoName}.vercel.app`,
+      });
+    }
+
     res.status(200).json({ ok: true });
   });
 
@@ -1941,6 +1979,17 @@ const PORT = 3000;
     };
 
     dbInstance.addDeploy(newDeploy);
+    await dbInstance.flush();
+
+    const deployClient = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (deployClient) {
+      await notifyDeploy({
+        clientEmail: deployClient.email, clientName: deployClient.name,
+        projectName: project.name, description: newDeploy.commitMessageEs,
+        url: newDeploy.url,
+      });
+    }
+
     res.json({ success: true, deploy: newDeploy });
   });
 
