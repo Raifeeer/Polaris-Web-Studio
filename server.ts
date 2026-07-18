@@ -358,6 +358,34 @@ const TLD_PRICES_ESTIMATE: Record<string, number> = {
   store: 29.98,
 };
 
+// Notifica al cliente por correo cuando se crea una factura o se confirma un
+// pago (Cloud Function invoice-notify-send, Meridian) -- server-to-server,
+// protegido por el mismo CRON_SECRET que ya usa auto-provision-client. No
+// bloquea la operación real si falla (la factura/pago ya quedó registrado),
+// solo se registra el error.
+async function notifyInvoice(params: {
+  type: "pending" | "paid";
+  clientEmail: string;
+  clientName: string;
+  concept: string;
+  amount: number;
+  dueDate?: string;
+  paidDate?: string;
+}) {
+  try {
+    const res = await fetch("https://invoice-notify-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyInvoice failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando factura/pago:", err);
+  }
+}
+
 /**
  * Helper to extract an attribute value from a specific XML tag using robust RegExp rules.
  * Keeps parsing lightweight and secure from XML External Entity (XXE) injections.
@@ -618,6 +646,8 @@ const PORT = 3000;
     });
 
     const invoiceId = `inv-${Date.now()}`;
+    const depositDueDate = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const depositDescription = `Pago inicial (50%, con oferta de lanzamiento -25% aplicada) — Paquete ${pkg.name}`;
     dbInstance.addInvoice({
       id: invoiceId,
       projectId,
@@ -626,8 +656,8 @@ const PORT = 3000;
       currency: "USD",
       status: "pending",
       date: new Date().toISOString().split("T")[0],
-      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description: `Pago inicial (50%, con oferta de lanzamiento -25% aplicada) — Paquete ${pkg.name}`,
+      dueDate: depositDueDate,
+      description: depositDescription,
     });
 
     // Espera a que la escritura real a Firestore termine antes de responder
@@ -635,6 +665,15 @@ const PORT = 3000;
     // y perder el proyecto/tarea/factura que ya se agregaron en memoria
     // (bug real, ver comentario de flush() en server-db.ts).
     await dbInstance.flush();
+
+    // Aparte del correo de bienvenida al portal (lo manda proposal-send tras
+    // llamar acá), se avisa específicamente de la factura del depósito --
+    // no queda solo implícita en el portal. Se espera (igual que flush())
+    // para que no se pierda si Vercel congela el proceso tras responder.
+    await notifyInvoice({
+      type: "pending", clientEmail: emailClean, clientName: name,
+      concept: depositDescription, amount: depositAmount, dueDate: depositDueDate,
+    });
 
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
   });
@@ -920,6 +959,8 @@ const PORT = 3000;
       createdAt: new Date().toISOString(),
     });
 
+    const manualInvoiceDueDate = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const manualInvoiceDescription = "Fase Inicial: Planificación, Descubrimiento y Foco SEO";
     dbInstance.addInvoice({
       id: `inv-${Date.now()}`,
       projectId: projectId,
@@ -928,14 +969,22 @@ const PORT = 3000;
       currency: "USD",
       status: "pending",
       date: new Date().toISOString().split("T")[0],
-      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description: "Fase Inicial: Planificación, Descubrimiento y Foco SEO",
+      dueDate: manualInvoiceDueDate,
+      description: manualInvoiceDescription,
     });
 
     // Mismo motivo que auto-provision-client: esperar la escritura real
     // antes de responder, para no perder el proyecto/tarea/factura si
     // Vercel congela el proceso justo después de responder.
     await dbInstance.flush();
+
+    // Este alta manual no manda ningún otro correo -- este aviso de factura
+    // es la única notificación real que recibe el cliente de que ya tiene
+    // cuenta y un pago pendiente.
+    await notifyInvoice({
+      type: "pending", clientEmail: emailClean, clientName: name,
+      concept: manualInvoiceDescription, amount: 1500, dueDate: manualInvoiceDueDate,
+    });
 
     res.json({ success: true, clientId, projectId });
   });
@@ -999,7 +1048,7 @@ const PORT = 3000;
     return `POL-${year}-${String(nextNum).padStart(3, "0")}`;
   }
 
-  app.post("/api/portal/invoices", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/invoices", authenticateToken, requireAdmin, async (req, res) => {
     const { projectId, amount, description, items, status, date, dueDate, exchangeRate } = req.body;
 
     // Varios productos/conceptos en una misma factura (ej: 2 addons separados de un
@@ -1033,6 +1082,8 @@ const PORT = 3000;
 
     const allInvoices = dbInstance.getInvoices();
     const invoiceNumber = generateInvoiceNumber(allInvoices);
+    const finalStatus = status || "pending";
+    const finalDueDate = dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
     dbInstance.addInvoice({
       id: `inv-${Date.now()}`,
@@ -1040,13 +1091,30 @@ const PORT = 3000;
       invoiceNumber,
       amount: finalAmount,
       currency: "USD",
-      status: status || "pending",
+      status: finalStatus,
       date: date || new Date().toISOString().split("T")[0],
-      dueDate: dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      dueDate: finalDueDate,
       description: finalDescription,
       items: finalItems,
       exchangeRate: exchangeRate ? Number(exchangeRate) : undefined,
     });
+
+    await dbInstance.flush();
+
+    // Avisar al cliente de que tiene una factura nueva, para facturas
+    // creadas después del alta inicial (ej. un addon nuevo, una segunda
+    // fase de pago) -- antes esto quedaba solo implícito en el portal,
+    // sin ningún correo real que lo anunciara.
+    if (finalStatus === "pending") {
+      const project = dbInstance.getProjects().find((p) => p.id === projectId);
+      const client = project ? dbInstance.getUsers().find((u) => u.id === project.clientUserId) : null;
+      if (client) {
+        await notifyInvoice({
+          type: "pending", clientEmail: client.email, clientName: client.name,
+          concept: finalDescription, amount: finalAmount, dueDate: finalDueDate,
+        });
+      }
+    }
 
     res.json({ success: true, invoiceNumber });
   });
@@ -1188,6 +1256,14 @@ const PORT = 3000;
         paypalOrderId: orderId,
         paypalCaptureId: captureUnit.id,
       });
+      await dbInstance.flush();
+
+      await notifyInvoice({
+        type: "paid", clientEmail: req.user.email, clientName: req.user.name,
+        concept: foundInvoice.description, amount: foundInvoice.amount,
+        paidDate: new Date().toLocaleDateString("es-DO", { day: "numeric", month: "long", year: "numeric" }),
+      });
+
       res.json({ success: true, status: "paid" });
     } catch (error: any) {
       console.error("Error capturando orden PayPal:", error?.message);
@@ -1647,7 +1723,21 @@ const PORT = 3000;
             const currency = event.resource.amount?.currency_code;
             if (Math.abs(amount - foundInvoice.amount) < 0.01 && currency === foundInvoice.currency) {
               dbInstance.updateInvoice(foundInvoice.id, { status: "paid", paypalOrderId: orderId, paypalCaptureId: captureId });
+              await dbInstance.flush();
               console.log(`[Webhook PayPal] Factura ${foundInvoice.id} confirmada como pagada.`);
+
+              // Ruta de reconciliación: solo llega hasta acá si el endpoint
+              // directo de captura murió antes de notificar -- avisa igual,
+              // para que el cliente no se quede sin el correo de confirmación.
+              const webhookProject = dbInstance.getProjects().find((p) => p.id === foundInvoice.projectId);
+              const webhookClient = webhookProject ? dbInstance.getUsers().find((u) => u.id === webhookProject.clientUserId) : null;
+              if (webhookClient) {
+                await notifyInvoice({
+                  type: "paid", clientEmail: webhookClient.email, clientName: webhookClient.name,
+                  concept: foundInvoice.description, amount: foundInvoice.amount,
+                  paidDate: new Date().toLocaleDateString("es-DO", { day: "numeric", month: "long", year: "numeric" }),
+                });
+              }
             } else {
               console.error(`[Webhook PayPal] Monto no coincide para factura ${foundInvoice.id}: esperado ${foundInvoice.amount} ${foundInvoice.currency}, recibido ${amount} ${currency}`);
             }
