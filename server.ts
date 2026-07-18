@@ -510,7 +510,7 @@ const PORT = 3000;
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
     }
-    const { email, name, packageId, addonIds, businessType } = req.body || {};
+    const { email, name, packageId, addonIds, businessType, projectName: projectNameInput } = req.body || {};
     if (!email || !name || !packageId) {
       return res.status(400).json({ error: "missing_fields" });
     }
@@ -567,14 +567,15 @@ const PORT = 3000;
 
     const displayId = dbInstance.consumeNextDisplayId();
 
-    // El "Negocio" que el cliente escribió en el paso 1 del wizard (ej.
-    // "Administración de propiedades") da un nombre de proyecto real en vez
-    // del genérico "Sitio Web — Paquete X" -- mismo criterio que el proyecto
-    // de ejemplo "Nexus E-commerce" (proj-1), que describe el negocio real,
-    // no el paquete contratado. Si no viajó businessType (propuesta armada
-    // a mano sin ese dato), se mantiene el fallback genérico de siempre.
+    // El nombre del proyecto lo decide Cristian a mano en la pestaña
+    // Propuestas de Meridian (campo "Nombre del proyecto", editable) -- no
+    // se arma solo a partir del "Negocio" (tipo de negocio, ej.
+    // "Administración de propiedades") porque eso no es el nombre real de
+    // la empresa/proyecto del cliente. Si llega vacío (propuesta armada sin
+    // ese campo), se cae al mismo fallback genérico de siempre.
     const businessTypeClean = String(businessType || "").trim();
-    const projectName = businessTypeClean ? `Sitio Web — ${businessTypeClean}` : `Sitio Web — Paquete ${pkg.name}`;
+    const projectNameClean = String(projectNameInput || "").trim();
+    const projectName = projectNameClean || (businessTypeClean ? `Sitio Web — ${businessTypeClean}` : `Sitio Web — Paquete ${pkg.name}`);
     const projectDescription = businessTypeClean
       ? `Desarrollo del sitio web (paquete ${pkg.name}) para ${businessTypeClean}.`
       : `Proyecto generado automáticamente al aprobar la propuesta comercial (paquete ${pkg.name}).`;
