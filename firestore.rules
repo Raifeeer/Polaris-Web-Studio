@@ -11,14 +11,16 @@ service cloud.firestore {
     }
 
     function isValidWizardLead(data) {
-      return data.keys().hasAll(["name", "email", "phone", "type", "addons", "domain", "language", "createdAt"]) &&
-             data.keys().size() == 8 &&
+      return data.keys().hasAll(["name", "email", "phone", "type", "addons", "domain", "businessType", "sector", "language", "createdAt"]) &&
+             data.keys().size() == 10 &&
              data.name is string && data.name.size() <= 200 &&
              data.email is string && data.email.size() <= 200 &&
              data.phone is string && data.phone.size() <= 100 &&
              data.type is string &&
              data.addons is list &&
              (data.domain == null || data.domain is string) &&
+             (data.businessType == null || (data.businessType is string && data.businessType.size() <= 200)) &&
+             (data.sector == null || (data.sector is string && data.sector.size() <= 100)) &&
              data.language is string && (data.language == 'es' || data.language == 'en') &&
              data.createdAt == request.time;
     }

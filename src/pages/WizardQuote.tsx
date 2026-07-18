@@ -2379,6 +2379,12 @@ export default function WizardQuote() {
       type: selections.type,
       addons: selections.addons,
       domain: domainSummaryText || null,
+      // Negocio real que el cliente escribió en el paso 1 -- antes se perdía
+      // por completo (solo vivía en el resumen de la reunión de Cal.com),
+      // así que el proyecto auto-aprovisionado del portal quedaba con el
+      // nombre genérico del paquete en vez del negocio real del cliente.
+      businessType: selections.businessType || null,
+      sector: selections.sector || null,
       language,
       createdAt: serverTimestamp(),
     }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
