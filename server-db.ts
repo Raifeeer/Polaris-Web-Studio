@@ -84,7 +84,10 @@ export interface DbProject {
   phases: DbProjectPhase[];
   deletedAt?: string;
   vercelProjectId?: string;  // nombre del proyecto en Vercel ej: "tano-excursions"
-  vercelUrl?: string;        // URL de producción ej: "https://tano-excursions.vercel.app"
+  vercelUrl?: string;        // URL de preview/staging ej: "https://tano-excursions.vercel.app" -- para que el cliente vea avances antes del dominio real
+  customDomain?: string;     // dominio real de producción, distinto del preview de Vercel -- dispara el correo de Lanzamiento Oficial al conectarse por primera vez
+  reviewUrl?: string;        // link real de reseña (Google Maps u otro) del negocio del cliente, para pedirla en el correo de lanzamiento -- se omite el CTA si no está cargado, nunca se inventa
+  launchedAt?: string;       // fecha real en que se conectó customDomain por primera vez
 }
 
 export interface DbTask {

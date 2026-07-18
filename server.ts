@@ -413,6 +413,31 @@ async function notifyDeliverable(params: {
   }
 }
 
+// Avisa al cliente cuando se conecta el dominio real del proyecto (Cloud
+// Function launch-notify-send, Meridian) -- mismo patrón/CRON_SECRET que
+// notifyInvoice/notifyDeliverable. Se dispara una sola vez, al pasar
+// customDomain de vacío a lleno (ver PUT /api/portal/projects/:id/vercel).
+async function notifyLaunch(params: {
+  clientEmail: string;
+  clientName: string;
+  projectName: string;
+  customDomain: string;
+  reviewUrl?: string;
+}) {
+  try {
+    const res = await fetch("https://launch-notify-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyLaunch failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando lanzamiento:", err);
+  }
+}
+
 /**
  * Helper to extract an attribute value from a specific XML tag using robust RegExp rules.
  * Keeps parsing lightweight and secure from XML External Entity (XXE) injections.
@@ -1868,10 +1893,62 @@ const PORT = 3000;
     res.json({ success: true, deploy: newDeploy });
   });
 
-  app.put("/api/portal/projects/:id/vercel", authenticateToken, requireAdmin, (req: any, res) => {
+  app.put("/api/portal/projects/:id/vercel", authenticateToken, requireAdmin, async (req: any, res) => {
     const { id } = req.params;
-    const { vercelProjectId, vercelUrl } = req.body;
-    dbInstance.updateProject(id, { vercelProjectId, vercelUrl });
+    const { vercelProjectId, vercelUrl, customDomain, reviewUrl } = req.body;
+
+    const project = dbInstance.getProjects().find((p) => p.id === id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+
+    // Detectar transiciones de vacío -> lleno ANTES de guardar, para no
+    // disparar el correo/tarea de nuevo en cada guardado posterior del
+    // mismo campo (ej. Cristian editando el dominio por un typo).
+    const newVercelUrl = String(vercelUrl ?? project.vercelUrl ?? "").trim();
+    const newCustomDomain = String(customDomain ?? project.customDomain ?? "").trim();
+    const previewJustAppeared = !project.vercelUrl?.trim() && !!newVercelUrl;
+    const domainJustConnected = !project.customDomain?.trim() && !!newCustomDomain;
+
+    dbInstance.updateProject(id, {
+      vercelProjectId, vercelUrl,
+      customDomain,
+      reviewUrl,
+      ...(domainJustConnected ? { launchedAt: new Date().toISOString() } : {}),
+    });
+    await dbInstance.flush();
+
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+
+    // Vista previa del sitio disponible por primera vez -- reusa el mismo
+    // mecanismo de "Entregable Listo" (tarea + correo) en vez de inventar
+    // un tipo de correo nuevo, para que el cliente pueda ir viendo avances
+    // antes del lanzamiento real con dominio propio.
+    if (previewJustAppeared && client) {
+      const previewTask = {
+        id: `task-${Date.now()}`,
+        projectId: id,
+        title: "Vista previa de tu sitio",
+        description: "Ya puedes ver el avance de tu proyecto en línea. Los cambios se van a ir actualizando ahí.",
+        status: "pending" as const,
+        link: newVercelUrl,
+        createdAt: new Date().toISOString(),
+      };
+      dbInstance.addTask(previewTask);
+      await dbInstance.flush();
+      await notifyDeliverable({
+        clientEmail: client.email, clientName: client.name,
+        deliverableName: previewTask.title, deliverableDesc: previewTask.description,
+      });
+    }
+
+    // Lanzamiento oficial -- el dominio real se conecta por primera vez.
+    if (domainJustConnected && client) {
+      await notifyLaunch({
+        clientEmail: client.email, clientName: client.name,
+        projectName: project.name, customDomain: newCustomDomain,
+        reviewUrl: (reviewUrl ?? project.reviewUrl ?? "").trim() || undefined,
+      });
+    }
+
     res.json({ success: true });
   });
 
