@@ -23,6 +23,10 @@ if (!process.env.PORTAL_SESSION_SECRET) {
 }
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
 
+// Secreto de servicio para la integración con Meridian (pestaña "Polaris",
+// comanda el portal de admin sin login humano) -- ver authenticateToken.
+const PORTAL_ADMIN_SECRET = process.env.PORTAL_ADMIN_SECRET || "";
+
 // Hash scrypt de un valor aleatorio, usado para igualar el coste de verificación
 // cuando el email no existe (evita distinguir usuarios válidos por temporización).
 const DUMMY_PASSWORD_HASH = hashPassword(crypto.randomBytes(24).toString("hex"));
@@ -760,6 +764,22 @@ const PORT = 3000;
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (!token) return res.status(401).json({ error: "Debe iniciar sesión para acceder." });
+
+    // 0. Secreto de servicio (integración Meridian -- panel "Polaris" que
+    //    comanda el portal de admin sin loguearse como humano). Distinto de
+    //    CRON_SECRET a propósito: este mapea a una sesión admin real con
+    //    permiso total de escritura (crear/borrar clientes, facturas,
+    //    reembolsos PayPal), mientras que CRON_SECRET solo protege
+    //    endpoints puntuales de bajo riesgo (auto-provision-client, is-client).
+    //    No conviene compartir el mismo secreto entre ambos niveles de acceso.
+    if (PORTAL_ADMIN_SECRET && token === PORTAL_ADMIN_SECRET) {
+      const serviceAdmin = dbInstance.getUsers().find((u) => u.role === "admin" && !u.deletedAt);
+      if (!serviceAdmin) {
+        return res.status(500).json({ error: "No hay un usuario admin real para atender la sesión de servicio." });
+      }
+      req.user = serviceAdmin;
+      return next();
+    }
 
     // 1. Token de sesión local firmado con HMAC (emitido por /api/auth/login)
     const session = verifySessionToken(token);
