@@ -2569,10 +2569,10 @@ export default function WizardQuote() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative">
+    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-x-hidden">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-6 pt-10 pb-24 md:pt-24 relative z-10 flex flex-col">
+      <main className="flex-1 min-w-0 max-w-5xl mx-auto w-full px-6 pt-10 pb-24 md:pt-24 relative z-10 flex flex-col">
         {/* Ambient Background Glows */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[450px] pointer-events-none overflow-hidden -z-10 bg-transparent">
           <div className="absolute top-[-150px] left-1/2 -translate-x-1/2 w-[550px] h-[550px] rounded-full bg-[var(--color-primary-base)]/15" style={{ filter: "blur(130px)" }} />
@@ -3487,7 +3487,7 @@ export default function WizardQuote() {
 
                   {/* STEP 4: SCHEDULE */}
                   {currentStep === 4 && (
-                    <div className="space-y-6 w-full">
+                    <div className="space-y-6 w-full min-w-0">
                       <h2 className="text-2xl font-display font-bold">
                         <T en="Let's build it together">Vamos a construirlo</T>
                       </h2>

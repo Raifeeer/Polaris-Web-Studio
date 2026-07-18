@@ -110,7 +110,7 @@ export default function BookingScheduler({
   };
 
   return (
-    <div className="w-full bg-[var(--color-surface-base)] rounded-2xl border border-[var(--color-border-subtle)] p-5 md:p-7 space-y-6">
+    <div className="w-full min-w-0 bg-[var(--color-surface-base)] rounded-2xl border border-[var(--color-border-subtle)] p-5 md:p-7 space-y-6">
       {slotsLoading && (
         <div className="flex items-center justify-center min-h-[300px]">
           <div className="animate-spin w-6 h-6 border-2 border-[var(--color-primary-base)] border-t-transparent rounded-full" />
@@ -134,11 +134,11 @@ export default function BookingScheduler({
 
       {!slotsLoading && !slotsError && slotsByDay && (
         <>
-          <div>
+          <div className="min-w-0">
             <label className="block text-xs font-bold uppercase tracking-wider mb-3 text-[var(--color-text-secondary)]">
               <T en="Pick a day">Elige un día</T>
             </label>
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch" }}>
               {Object.keys(slotsByDay).sort().map((day) => {
                 const label = new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${day}T12:00:00`));
                 return (
