@@ -1057,24 +1057,28 @@ const PORT = 3000;
     res.json({ success: true, clientId, projectId });
   });
 
-  app.delete("/api/portal/clients/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.delete("/api/portal/clients/:id", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.deleteUser(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
-  app.post("/api/portal/clients/:id/restore", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/clients/:id/restore", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.restoreUser(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
-  app.post("/api/portal/projects/:id/restore", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/projects/:id/restore", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.restoreProject(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
-  app.delete("/api/portal/projects/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.delete("/api/portal/projects/:id", authenticateToken, requireAdmin, async (req, res) => {
     console.log("Deleting project:", req.params.id);
     dbInstance.deleteProject(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
@@ -1229,13 +1233,14 @@ const PORT = 3000;
     res.json({ success: true, status, refunded: false, manualPayment });
   });
 
-  app.post("/api/portal/invoices/:id/toggle-pay", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/invoices/:id/toggle-pay", authenticateToken, requireAdmin, async (req, res) => {
     const invoices = dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
     if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
 
     const nextStatus = foundInvoice.status === "paid" ? "pending" : "paid";
     dbInstance.updateInvoice(req.params.id, { status: nextStatus });
+    await dbInstance.flush();
     res.json({ success: true, status: nextStatus });
   });
 
@@ -1339,8 +1344,9 @@ const PORT = 3000;
     }
   });
 
-  app.delete("/api/portal/invoices/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.delete("/api/portal/invoices/:id", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.deleteInvoice(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
@@ -1373,12 +1379,13 @@ const PORT = 3000;
     res.json({ success: true });
   });
 
-  app.delete("/api/portal/tasks/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.delete("/api/portal/tasks/:id", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.deleteTask(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
-  app.post("/api/portal/tasks/:id/archive", authenticateToken, (req: any, res) => {
+  app.post("/api/portal/tasks/:id/archive", authenticateToken, async (req: any, res) => {
     const { archived } = req.body;
     const user = req.user;
     const task = dbInstance.getTasks().find((t) => t.id === req.params.id);
@@ -1393,6 +1400,7 @@ const PORT = 3000;
     }
 
     dbInstance.updateTask(req.params.id, { archived: archived === true });
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
@@ -1414,8 +1422,9 @@ const PORT = 3000;
     res.json({ success: true });
   });
 
-  app.delete("/api/portal/meetings/:id", authenticateToken, requireAdmin, (req, res) => {
+  app.delete("/api/portal/meetings/:id", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.deleteMeeting(req.params.id);
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
