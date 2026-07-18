@@ -1008,7 +1008,7 @@ export default function WizardQuote() {
 
   const domainSummaryText =
     domainStatus && domainStatus.available
-      ? `${domainStatus.domain} (Included)`
+      ? `${domainStatus.domain} ${t("(Included, up to $15 USD)", "(Incluido, hasta $15 USD)")}`
       : t("Standard Included ($15 default credit)", "Estándar Incluido ($15 crédito por defecto)");
 
   const getSectorName = (id: string) => {
