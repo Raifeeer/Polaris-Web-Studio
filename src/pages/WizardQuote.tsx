@@ -2366,7 +2366,13 @@ export default function WizardQuote() {
     const name = pdfName.trim();
     const email = pdfEmail.trim();
 
-    addDoc(collection(db, "wizardLeads"), {
+    // Antes estas dos llamadas se disparaban sin esperar (fire-and-forget) y
+    // el botón volvía a su estado normal en el mismo tick -- el spinner de
+    // "Generando y enviando PDF..." nunca alcanzaba a pintarse, así que el
+    // botón se sentía como si no hiciera nada. Ahora se esperan de verdad
+    // (con Promise.allSettled para que un fallo en una no tumbe la otra) y
+    // recién ahí se marca como enviado.
+    const leadPromise = addDoc(collection(db, "wizardLeads"), {
       name,
       email,
       phone: "",
@@ -2376,9 +2382,8 @@ export default function WizardQuote() {
       language,
       createdAt: serverTimestamp(),
     }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
-    // Dispara el correo de confirmación con el desglose de la cotización —
-    // sin bloquear el avance del wizard, si falla el lead ya quedó guardado.
-    fetch("https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app", {
+
+    const emailPromise = fetch("https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -2391,6 +2396,8 @@ export default function WizardQuote() {
         language,
       }),
     }).catch((err) => console.error("Error triggering quote confirmation email: ", err));
+
+    await Promise.allSettled([leadPromise, emailPromise]);
 
     setSelections((prev) => ({ ...prev, email, name }));
     trackEvent("lead_captured", { method: "wizard_pdf_step" });
