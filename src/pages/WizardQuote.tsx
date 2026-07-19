@@ -2694,7 +2694,7 @@ export default function WizardQuote() {
                       }
                     }}
                     disabled={!isClickable}
-                    className={`relative z-10 p-2 -m-2 bg-transparent border-none rounded-full outline-none transition-all duration-300 focus:scale-110 flex items-center justify-center ${
+                    className={`relative z-10 p-2 -m-2 bg-transparent border-none rounded-full outline-none transition-transform duration-300 focus:scale-110 flex items-center justify-center ${
                       isClickable ? "cursor-pointer hover:scale-125" : "cursor-default"
                     }`}
                     animate={{
@@ -3090,7 +3090,7 @@ export default function WizardQuote() {
                   {currentStep === 2 && (
                     <div className="space-y-8 animate-fade-in">
                       {/* Premium Domain Checker Card */}
-                      <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel space-y-5 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-all duration-300 will-change-transform transition-all">
+                      <div className="p-6 md:p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] glass-panel space-y-5 bento-glow shadow-sm hover:border-[var(--color-primary-base)]/20 transition-colors duration-300">
                         <div className="flex items-start gap-4">
                           <div className="w-12 h-12 rounded-2xl bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] flex items-center justify-center shrink-0 shadow-inner">
                             <GlobeSearchIcon size={28} className="opacity-90" />
@@ -3588,7 +3588,7 @@ export default function WizardQuote() {
                   <button
                     onClick={resetWizard}
                     title={language === "es" ? "Reiniciar planificador" : "Reset planner"}
-                    className="w-7 h-7 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-all cursor-pointer"
+                    className="w-7 h-7 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-colors cursor-pointer"
                   >
                     <RotateCcw size={12} />
                   </button>
@@ -3874,7 +3874,7 @@ export default function WizardQuote() {
                         type="button"
                         onClick={handleBack}
                         title={language === "es" ? "Atrás" : "Back"}
-                        className="w-8 h-8 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] flex items-center justify-center transition-all cursor-pointer"
+                        className="w-8 h-8 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <ArrowLeft size={14} />
                       </button>
@@ -3883,7 +3883,7 @@ export default function WizardQuote() {
                       type="button"
                       onClick={resetWizard}
                       title={language === "es" ? "Reiniciar planificador" : "Reset planner"}
-                      className="w-8 h-8 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-all cursor-pointer"
+                      className="w-8 h-8 rounded-full border border-red-500/20 bg-red-500/5 text-red-400/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/10 flex items-center justify-center transition-colors cursor-pointer"
                     >
                       <RotateCcw size={12} />
                     </button>
