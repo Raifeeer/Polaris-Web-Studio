@@ -973,6 +973,9 @@ export default function ClientDashboard() {
   const [forceConfirmPassword, setForceConfirmPassword] = useState("");
   const [forceChangeError, setForceChangeError] = useState<string | null>(null);
   const [forceChangeLoading, setForceChangeLoading] = useState(false);
+  const [showForceCurrentPassword, setShowForceCurrentPassword] = useState(false);
+  const [showForceNewPassword, setShowForceNewPassword] = useState(false);
+  const [showForceConfirmPassword, setShowForceConfirmPassword] = useState(false);
 
   const handleForceChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1942,26 +1945,46 @@ export default function ClientDashboard() {
               <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
                 <T en="Temporary password">Contraseña temporal</T>
               </label>
-              <input
-                type="password"
-                required
-                value={forceCurrentPassword}
-                onChange={(e) => setForceCurrentPassword(e.target.value)}
-                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showForceCurrentPassword ? "text" : "password"}
+                  required
+                  value={forceCurrentPassword}
+                  onChange={(e) => setForceCurrentPassword(e.target.value)}
+                  className="glass-input w-full px-4 py-3 pr-11 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowForceCurrentPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+                  title={showForceCurrentPassword ? (language === "es" ? "Ocultar contraseña" : "Hide password") : (language === "es" ? "Mostrar contraseña" : "Show password")}
+                >
+                  {showForceCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
                 <T en="New password">Nueva contraseña</T>
               </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={forceNewPassword}
-                onChange={(e) => setForceNewPassword(e.target.value)}
-                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showForceNewPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={forceNewPassword}
+                  onChange={(e) => setForceNewPassword(e.target.value)}
+                  className="glass-input w-full px-4 py-3 pr-11 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowForceNewPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+                  title={showForceNewPassword ? (language === "es" ? "Ocultar contraseña" : "Hide password") : (language === "es" ? "Mostrar contraseña" : "Show password")}
+                >
+                  {showForceNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
               <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1.5">
                 <T en="At least 8 characters, including a number.">Mínimo 8 caracteres, incluyendo un número.</T>
               </p>
@@ -1970,14 +1993,24 @@ export default function ClientDashboard() {
               <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
                 <T en="Confirm new password">Confirma la nueva contraseña</T>
               </label>
-              <input
-                type="password"
-                required
-                minLength={8}
-                value={forceConfirmPassword}
-                onChange={(e) => setForceConfirmPassword(e.target.value)}
-                className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
-              />
+              <div className="relative">
+                <input
+                  type={showForceConfirmPassword ? "text" : "password"}
+                  required
+                  minLength={8}
+                  value={forceConfirmPassword}
+                  onChange={(e) => setForceConfirmPassword(e.target.value)}
+                  className="glass-input w-full px-4 py-3 pr-11 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowForceConfirmPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+                  title={showForceConfirmPassword ? (language === "es" ? "Ocultar contraseña" : "Hide password") : (language === "es" ? "Mostrar contraseña" : "Show password")}
+                >
+                  {showForceConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
             {forceChangeError && (
               <p className="text-xs text-red-500">{forceChangeError}</p>
