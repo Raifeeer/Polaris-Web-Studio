@@ -23,7 +23,12 @@ export default function BookingScheduler({
   initialName?: string;
   initialEmail?: string;
   phone?: string;
-  onBooked: () => void;
+  // Recibe el nombre/correo con el que el cliente terminó confirmando la
+  // reserva -- puede diferir de initialName/initialEmail si lo corrigió acá
+  // mismo (caso real: typo en el nombre al enviar la cotización, arreglado
+  // recién al agendar). El wizard usa esto para sincronizar el lead ya
+  // guardado en Firestore, en vez de dejarlo con el dato viejo para siempre.
+  onBooked: (name: string, email: string) => void;
 }) {
   const { language, translate } = useLanguage();
   const locale = language === "en" ? "en-US" : "es-DO";
@@ -97,7 +102,7 @@ export default function BookingScheduler({
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
-        onBooked();
+        onBooked(name.trim(), email.trim());
         return;
       }
       if (res.status === 409) {

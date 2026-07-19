@@ -23,7 +23,7 @@ import BookingScheduler from "../components/BookingScheduler";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
 import { useToast } from "../context/ToastContext";
-import { collection, doc, addDoc, setDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, doc, addDoc, setDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
 
 enum OperationType {
@@ -523,6 +523,10 @@ export default function WizardQuote() {
   // States for step 3: PDF Quote
   const [pdfEmail, setPdfEmail] = useState("");
   const [pdfName, setPdfName] = useState("");
+  // Id del doc real en wizardLeads (escrito en handleGetPdfQuote) -- se
+  // reusa en handleBookingComplete para sincronizar el nombre/correo si el
+  // cliente los corrige al agendar la llamada (ver comentario ahí).
+  const [wizardLeadDocId, setWizardLeadDocId] = useState<string | null>(null);
   const [sendingPdf, setSendingPdf] = useState(false);
   const [pdfSent, setPdfSent] = useState(false);
   const [pdfEmailError, setPdfEmailError] = useState("");
@@ -2357,7 +2361,25 @@ export default function WizardQuote() {
   // Cierre post-reserva — replica lo que antes hacía el callback
   // bookingSuccessful del embed de Cal.com: limpiar el progreso guardado y
   // navegar a /gracias con el resumen de lo cotizado.
-  const handleBookingComplete = () => {
+  //
+  // bookedName/bookedEmail: lo que el cliente confirmó al agendar en
+  // BookingScheduler -- puede diferir de lo que escribió en el paso de la
+  // cotización (caso real: cliente pone su nombre con un typo al enviar la
+  // cotización y lo corrige recién al agendar la llamada). Sin esto, el
+  // lead en Firestore -- y por lo tanto la pestaña /propuestas de Meridian --
+  // se quedaba para siempre con el nombre viejo con el typo, aunque el
+  // cliente ya lo hubiera corregido en el mismo flujo minutos después.
+  const handleBookingComplete = async (bookedName: string, bookedEmail: string) => {
+    if (wizardLeadDocId && (bookedName.trim() !== pdfName.trim() || bookedEmail.trim() !== pdfEmail.trim())) {
+      try {
+        await updateDoc(doc(db, "wizardLeads", wizardLeadDocId), {
+          name: bookedName.trim(),
+          email: bookedEmail.trim(),
+        });
+      } catch (err) {
+        console.error("No se pudo sincronizar el nombre/correo corregido del lead:", err);
+      }
+    }
     trackEvent("lead_captured", { method: "wizard_booking" });
     trackEvent("wizard_step_complete", { step: 4 });
     const statePayload = {
@@ -2411,7 +2433,9 @@ export default function WizardQuote() {
       sector: selections.sector || null,
       language,
       createdAt: serverTimestamp(),
-    }).catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
+    })
+      .then((ref) => setWizardLeadDocId(ref.id))
+      .catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
 
     const emailPromise = fetch("https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",

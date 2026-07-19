@@ -68,6 +68,16 @@ service cloud.firestore {
     match /wizardLeads/{leadId} {
       allow create: if isValidId(leadId) &&
                     isValidWizardLead(request.resource.data);
+      // Sincroniza nombre/correo si el cliente los corrige recién al agendar
+      // la llamada (caso real: typo en el nombre al enviar la cotización,
+      // arreglado minutos después en BookingScheduler -- ver
+      // handleBookingComplete en WizardQuote.tsx). Acotado con diff() a
+      // SOLO esos dos campos -- nada más del lead (precio, addons, tipo) se
+      // puede tocar después de creado.
+      allow update: if isValidId(leadId) &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(["name", "email"]) &&
+                    request.resource.data.name is string && request.resource.data.name.size() <= 200 &&
+                    request.resource.data.email is string && request.resource.data.email.size() <= 200;
     }
 
     match /quoteSessions/{sessionId} {
