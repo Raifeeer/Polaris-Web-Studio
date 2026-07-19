@@ -961,10 +961,15 @@ export default function ClientDashboard() {
 
   // Change Password Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPasswordValue, setCurrentPasswordValue] = useState("");
   const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [confirmPasswordValue, setConfirmPasswordValue] = useState("");
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState<string | null>(null);
   const [passwordChangeError, setPasswordChangeError] = useState<string | null>(null);
   const [passwordChangeLoading, setPasswordChangeLoading] = useState(false);
+  const [showCurrentPasswordValue, setShowCurrentPasswordValue] = useState(false);
+  const [showNewPasswordValue, setShowNewPasswordValue] = useState(false);
+  const [showConfirmPasswordValue, setShowConfirmPasswordValue] = useState(false);
 
   // Cambio de contraseña obligatorio tras un alta automática (mustChangePassword,
   // ver auto-provision-client) — distinto del modal de arriba, que solo sirve
@@ -1219,50 +1224,59 @@ export default function ClientDashboard() {
     navigate("/login");
   };
 
+  // Mismo endpoint/requisitos que el cambio obligatorio tras el alta
+  // automática (handleForceChangePassword) -- antes este modal llamaba
+  // directo a Firebase updatePassword() sin pedir la contraseña actual y
+  // sin los mismos requisitos (solo "mínimo 6 caracteres"), y además
+  // fallaba en seco para usuarios logueados por el fallback local
+  // (AuthContext) que nunca tuvieron sesión real de Firebase.
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPasswordValue || newPasswordValue.length < 6) {
-      setPasswordChangeError(language === "es" ? "La contraseña debe tener al menos 6 caracteres." : "Password must be at least 6 characters.");
+    setPasswordChangeError(null);
+    setPasswordChangeSuccess(null);
+
+    if (newPasswordValue.length < 8 || !/\d/.test(newPasswordValue)) {
+      setPasswordChangeError(language === "es" ? "La nueva contraseña debe tener al menos 8 caracteres e incluir un número." : "The new password must be at least 8 characters and include a number.");
+      return;
+    }
+    if (newPasswordValue !== confirmPasswordValue) {
+      setPasswordChangeError(language === "es" ? "Las contraseñas no coinciden." : "Passwords don't match.");
       return;
     }
 
     setPasswordChangeLoading(true);
-    setPasswordChangeError(null);
-    setPasswordChangeSuccess(null);
-
     try {
-      const { auth } = await import("../lib/firebase");
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        const { updatePassword } = await import("firebase/auth");
-        await updatePassword(currentUser, newPasswordValue);
-        setPasswordChangeSuccess(language === "es" ? "¡Contraseña actualizada con éxito en Firebase!" : "Password updated successfully in Firebase Auth!");
-        setNewPasswordValue("");
-        setTimeout(() => {
-          setShowPasswordModal(false);
-          setPasswordChangeSuccess(null);
-        }, 2200);
-      } else {
-        setPasswordChangeError(
-          language === "es" 
-            ? "No se pudo cambiar la contraseña. Asegúrate de estar autenticado a través de Firebase Auth." 
-            : "Could not change password. Make sure you are authenticated with Firebase Auth."
-        );
+      const res = await fetch("/api/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ currentPassword: currentPasswordValue, newPassword: newPasswordValue }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setPasswordChangeError(data.error || (language === "es" ? "No se pudo cambiar la contraseña." : "Could not change password."));
+        return;
       }
-    } catch (err: any) {
-      console.error(err);
-      if (err.code === "auth/requires-recent-login") {
-        setPasswordChangeError(
-          language === "es" 
-            ? "Por seguridad, para cambiar su contraseña debe haber iniciado sesión recientemente. Por favor, cierre e inicie sesión de nuevo." 
-            : "For security, changing password requires a recent login. Please log out and log back in."
-        );
-      } else {
-        setPasswordChangeError(err.message || "Error al actualizar contraseña.");
-      }
+      setPasswordChangeSuccess(language === "es" ? "¡Contraseña actualizada con éxito!" : "Password updated successfully!");
+      setCurrentPasswordValue("");
+      setNewPasswordValue("");
+      setConfirmPasswordValue("");
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordChangeSuccess(null);
+      }, 2200);
+    } catch {
+      setPasswordChangeError(language === "es" ? "Error de conexión. Intenta de nuevo." : "Connection error. Try again.");
     } finally {
       setPasswordChangeLoading(false);
     }
+  };
+
+  const closeChangePasswordModal = () => {
+    setShowPasswordModal(false);
+    setCurrentPasswordValue("");
+    setNewPasswordValue("");
+    setConfirmPasswordValue("");
+    setPasswordChangeError(null);
   };
 
   const handleRefresh = () => {
@@ -5939,7 +5953,7 @@ export default function ClientDashboard() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  onClick={() => setShowPasswordModal(false)}
+                  onClick={closeChangePasswordModal}
                   className="absolute inset-0 bg-black/60 backdrop-blur-xl"
                 />
                 <motion.div
@@ -5954,7 +5968,7 @@ export default function ClientDashboard() {
                       <T en="Change Password">Cambiar Contraseña</T>
                     </h3>
                     <button
-                      onClick={() => setShowPasswordModal(false)}
+                      onClick={closeChangePasswordModal}
                       className="p-1 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors"
                       aria-label="Close"
                     >
@@ -5977,22 +5991,80 @@ export default function ClientDashboard() {
                   <form onSubmit={handleChangePassword} className="space-y-4">
                     <div className="space-y-2">
                       <label className="block text-xs font-bold text-[var(--color-text-secondary)]">
+                        <T en="Current Password">Contraseña Actual</T>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showCurrentPasswordValue ? "text" : "password"}
+                          required
+                          value={currentPasswordValue}
+                          onChange={(e) => setCurrentPasswordValue(e.target.value)}
+                          className="glass-input w-full px-4 py-3 pr-11 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentPasswordValue((v) => !v)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+                          title={showCurrentPasswordValue ? (language === "es" ? "Ocultar contraseña" : "Hide password") : (language === "es" ? "Mostrar contraseña" : "Show password")}
+                        >
+                          {showCurrentPasswordValue ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-[var(--color-text-secondary)]">
                         <T en="New Password">Nueva Contraseña</T>
                       </label>
-                      <input
-                        type="password"
-                        required
-                        value={newPasswordValue}
-                        onChange={(e) => setNewPasswordValue(e.target.value)}
-                        placeholder={language === "es" ? "Mínimo 6 caracteres" : "At least 6 characters"}
-                        className="glass-input w-full px-4 py-3 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)]"
-                      />
+                      <div className="relative">
+                        <input
+                          type={showNewPasswordValue ? "text" : "password"}
+                          required
+                          minLength={8}
+                          value={newPasswordValue}
+                          onChange={(e) => setNewPasswordValue(e.target.value)}
+                          className="glass-input w-full px-4 py-3 pr-11 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPasswordValue((v) => !v)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+                          title={showNewPasswordValue ? (language === "es" ? "Ocultar contraseña" : "Hide password") : (language === "es" ? "Mostrar contraseña" : "Show password")}
+                        >
+                          {showNewPasswordValue ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1.5">
+                        <T en="At least 8 characters, including a number.">Mínimo 8 caracteres, incluyendo un número.</T>
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-[var(--color-text-secondary)]">
+                        <T en="Confirm New Password">Confirma la Nueva Contraseña</T>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPasswordValue ? "text" : "password"}
+                          required
+                          minLength={8}
+                          value={confirmPasswordValue}
+                          onChange={(e) => setConfirmPasswordValue(e.target.value)}
+                          className="glass-input w-full px-4 py-3 pr-11 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPasswordValue((v) => !v)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+                          title={showConfirmPasswordValue ? (language === "es" ? "Ocultar contraseña" : "Hide password") : (language === "es" ? "Mostrar contraseña" : "Show password")}
+                        >
+                          {showConfirmPasswordValue ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
                     </div>
 
                     <div className="flex gap-3 pt-2">
                       <button
                         type="button"
-                        onClick={() => setShowPasswordModal(false)}
+                        onClick={closeChangePasswordModal}
                         className="flex-1 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:bg-[var(--color-surface-highlight)] transition-colors text-xs font-bold"
                       >
                         <T en="Cancel">Cancelar</T>
