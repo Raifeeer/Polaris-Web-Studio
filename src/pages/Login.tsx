@@ -41,8 +41,15 @@ export default function Login() {
     }
   };
 
+  // min-h-[100svh] en vez de min-h-dvh -- bug real reportado por el usuario
+  // (19 de julio): en Safari móvil, dvh ("dynamic viewport height") se
+  // recalcula grande cuando la barra de direcciones se oculta, pero el
+  // layout de esta página se centra respecto a ese alto "grande" incluso
+  // mientras la barra sigue visible y el viewport real es más chico -- el
+  // card de login quedaba centrado más abajo de lo visible. svh ("small
+  // viewport height") siempre usa el alto mínimo real, sin ese salto.
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative">
       <Navbar />
       <div className="flex-1 flex items-center justify-center p-4">
         <motion.div
