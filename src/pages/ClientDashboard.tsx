@@ -959,6 +959,13 @@ export default function ClientDashboard() {
   const contractDrawingRef = useRef(false);
   const contractHasDrawnRef = useRef(false);
 
+  // Modal de solo-lectura para ver el contrato (firmado o no) en vivo, con
+  // descargar/enviar por correo -- distinto del modal de arriba, que es el
+  // flujo de firma (legal-info -> review -> firmar).
+  const [showContractViewModal, setShowContractViewModal] = useState(false);
+  const [contractEmailSending, setContractEmailSending] = useState(false);
+  const [contractEmailSent, setContractEmailSent] = useState(false);
+
   // Change Password Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPasswordValue, setCurrentPasswordValue] = useState("");
@@ -1691,9 +1698,13 @@ export default function ClientDashboard() {
       if (!res.ok) throw new Error(`contract-pdf respondió ${res.status}`);
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
+      // El nombre real (ej. "C-P001B.pdf") lo decide el servidor vía
+      // Content-Disposition -- fetch+blob no lo aplica solo, hay que leerlo.
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const filenameMatch = /filename="([^"]+)"/.exec(disposition);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `contrato-${clientProject.id}.pdf`;
+      a.download = filenameMatch ? filenameMatch[1] : `contrato-${clientProject.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -1751,6 +1762,41 @@ export default function ClientDashboard() {
       setContractError("No se pudo cargar el contrato. Intenta de nuevo.");
     } finally {
       setContractHtmlLoading(false);
+    }
+  };
+
+  // "Ver mi contrato firmado" ya no descarga directo -- abre este modal de
+  // solo lectura con el HTML en vivo (el mismo que se firmó, con la firma
+  // ya estampada si aplica) y, ahí adentro, botones para descargar o
+  // reenviarlo por correo.
+  const openContractViewModal = async () => {
+    setContractError(null);
+    setContractEmailSent(false);
+    setShowContractViewModal(true);
+    await fetchContractHtml();
+  };
+
+  const sendContractEmail = async () => {
+    if (!clientProject?.id) return;
+    setContractEmailSending(true);
+    setContractError(null);
+    setContractEmailSent(false);
+    try {
+      const res = await fetch(`/api/portal/projects/${clientProject.id}/send-contract-email`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "No se pudo enviar el contrato por correo.");
+      }
+      setContractEmailSent(true);
+      setTimeout(() => setContractEmailSent(false), 4000);
+    } catch (err: any) {
+      console.error(err);
+      setContractError(err.message || "No se pudo enviar el contrato por correo.");
+    } finally {
+      setContractEmailSending(false);
     }
   };
 
@@ -3442,7 +3488,7 @@ export default function ClientDashboard() {
                           {(clientProject as any).contractStatus === "signed" ? (
                             <button
                               type="button"
-                              onClick={downloadContractPdf}
+                              onClick={openContractViewModal}
                               className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
                             >
                               Ver mi contrato firmado
@@ -5823,7 +5869,18 @@ export default function ClientDashboard() {
 
                   {contractStep === "review" && (
                     <div className="flex flex-col gap-4 min-h-0 flex-1">
-                      <div className="flex justify-end -mb-1">
+                      <div className="flex items-center justify-end gap-4 -mb-1">
+                        {contractEmailSent && (
+                          <span className="text-[11px] font-bold text-emerald-500">Enviado ✓</span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={sendContractEmail}
+                          disabled={contractEmailSending}
+                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline disabled:opacity-50"
+                        >
+                          {contractEmailSending ? "Enviando..." : "Enviar por correo"}
+                        </button>
                         <button
                           type="button"
                           onClick={downloadContractPdf}
@@ -5943,6 +6000,77 @@ export default function ClientDashboard() {
                       </button>
                     </div>
                   )}
+                </motion.div>
+              </div>
+            )}
+
+            {showContractViewModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowContractViewModal(false)}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-xl"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                  className="relative w-full max-w-2xl h-[85vh] p-6 bg-[var(--color-surface-base)] rounded-[var(--radius-bento)] border border-[var(--color-border-subtle)] bento-shadow overflow-hidden flex flex-col"
+                >
+                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--color-border-subtle)]/30 flex-shrink-0">
+                    <h3 className="text-lg font-display font-black flex items-center gap-2 text-[var(--color-text-primary)]">
+                      <FileText size={18} className="text-[var(--color-primary-base)]" />
+                      Mi contrato firmado
+                    </h3>
+                    <button
+                      onClick={() => setShowContractViewModal(false)}
+                      className="p-1 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors"
+                      aria-label="Close"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  {contractError && (
+                    <div className="mb-3 p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-xs flex-shrink-0">
+                      {contractError}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-end gap-4 mb-3 flex-shrink-0">
+                    {contractEmailSent && (
+                      <span className="text-[11px] font-bold text-emerald-500">Enviado ✓</span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={sendContractEmail}
+                      disabled={contractEmailSending}
+                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline disabled:opacity-50"
+                    >
+                      {contractEmailSending ? "Enviando..." : "Enviar por correo"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={downloadContractPdf}
+                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
+                    >
+                      Descargar PDF
+                    </button>
+                  </div>
+
+                  <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
+                    {contractHtmlLoading ? (
+                      <div className="h-full flex items-center justify-center text-xs text-[var(--color-text-secondary)]">Cargando contrato...</div>
+                    ) : (
+                      <iframe
+                        title="Mi contrato firmado"
+                        srcDoc={contractHtml}
+                        className="w-full h-full bg-white"
+                      />
+                    )}
+                  </div>
                 </motion.div>
               </div>
             )}

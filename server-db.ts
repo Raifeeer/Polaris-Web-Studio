@@ -102,6 +102,7 @@ export interface DbProject {
   contractHash?: string;             // SHA-256 del HTML exacto del contrato que el cliente vio al firmar
   contractIp?: string;
   contractPdfUrl?: string;           // URL de contract-pdf con los params ya resueltos, cacheada tras firmar
+  contractCode?: string;             // ej. "C-P001" -- asignado una sola vez (secuencia global), la letra final (A pendiente / B firmado) se deriva en runtime, no se guarda acá
 }
 
 export interface DbTask {
@@ -165,6 +166,7 @@ export interface DatabaseSchema {
   meetings: DbMeeting[];
   deploys: DbDeploy[];
   projectDisplayCounter: number;
+  contractCodeCounter: number;
 }
 
 // La persistencia real vive en Firestore (colección "portal_state", un solo
@@ -190,6 +192,7 @@ const STATE_DOC = firestore.collection("portal_state").doc("main");
 const getInitialSeededData = (): DatabaseSchema => {
   return {
     projectDisplayCounter: 1,
+    contractCodeCounter: 0,
     users: [
       {
         id: "usr-admin-1",
@@ -332,6 +335,19 @@ class PortalDatabase {
           }
           c.projectDisplayCounter = maxNum > 0 ? maxNum : 1;
         }
+        if (typeof c.contractCodeCounter !== "number") {
+          let maxContractNum = 0;
+          if (Array.isArray(c.projects)) {
+            for (const p of c.projects) {
+              const match = /^C-P(\d+)$/.exec(p.contractCode || "");
+              if (match) {
+                const num = parseInt(match[1], 10);
+                if (!isNaN(num) && num > maxContractNum) maxContractNum = num;
+              }
+            }
+          }
+          c.contractCodeCounter = maxContractNum;
+        }
         if (!Array.isArray(c.users)) c.users = [];
         if (!Array.isArray(c.projects)) c.projects = [];
         if (!Array.isArray(c.tasks)) c.tasks = [];
@@ -437,6 +453,18 @@ class PortalDatabase {
     const nextId = this.cache!.projectDisplayCounter.toString().padStart(6, "0");
     this.save();
     return nextId;
+  }
+
+  // Código de contrato (ej. "C-P001") -- secuencia global, asignado una sola
+  // vez por proyecto. La letra final (A/B) se deriva del contractStatus en
+  // tiempo real, nunca se guarda -- así no hay que re-consumir/migrar nada
+  // al firmar, solo cambia qué letra se muestra.
+  consumeNextContractCode(): string {
+    this.ensureInitialized();
+    this.cache!.contractCodeCounter++;
+    const code = `C-P${this.cache!.contractCodeCounter.toString().padStart(3, "0")}`;
+    this.save();
+    return code;
   }
 
   // Query Methods

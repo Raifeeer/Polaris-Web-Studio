@@ -506,6 +506,27 @@ function resolveContractPricing(project: import("./server-db.js").DbProject) {
   return { pkg, selectedAddons, oneTimeAddonsPrice, monthlyAddonsPrice, subtotal, discountedTotal, depositAmount, finalAmount };
 }
 
+// Código corto de contrato (ej. "C-P001A" / "C-P001B") -- reemplaza el
+// nombre de archivo largo con timestamp que traía antes. "C-P" = Contrato
+// Polaris, "001" = secuencia global de asignación (consumida una sola vez
+// por proyecto), y la letra final se deriva del estado real en cada
+// llamada (A = pendiente de firma, B = firmado) -- así nunca queda
+// desactualizada. Proyectos ya existentes sin código lo reciben acá mismo,
+// la primera vez que alguien pide su contrato.
+async function ensureContractCode(project: import("./server-db.js").DbProject): Promise<string> {
+  if (!project.contractCode) {
+    const code = dbInstance.consumeNextContractCode();
+    dbInstance.updateProject(project.id, { contractCode: code });
+    await dbInstance.flush();
+    project.contractCode = code;
+  }
+  return project.contractCode;
+}
+
+function contractFullCode(project: import("./server-db.js").DbProject): string {
+  return `${project.contractCode || "C-P000"}${project.contractStatus === "signed" ? "B" : "A"}`;
+}
+
 // Arma el payload que consume contract-pdf (Meridian) a partir de un
 // proyecto/cliente reales -- usado tanto para servir el HTML de revisión
 // (que el cliente firma tal cual) como para descargar el PDF final.
@@ -523,6 +544,7 @@ function buildContractPdfPayload(project: import("./server-db.js").DbProject, cl
     signerName: project.contractSignerName || null,
     signedAt: project.contractSignedAt || null,
     contractHash: project.contractHash || null,
+    contractCode: contractFullCode(project),
   };
 }
 
@@ -547,6 +569,7 @@ async function notifyContractSigned(params: {
   signerName: string;
   contractHash: string;
   signedAt: string;
+  contractCode?: string;
   pendingInvoice?: { concept: string; amount: number; dueDate?: string };
 }) {
   try {
@@ -560,6 +583,46 @@ async function notifyContractSigned(params: {
     }
   } catch (err) {
     console.error("Error notificando firma de contrato:", err);
+  }
+}
+
+// "Mándame una copia de mi contrato" -- a pedido del cliente, antes o
+// después de firmar (Cloud Function contract-email-send, Meridian).
+// Devuelve el resultado real (no fire-and-forget como notifyContractSigned)
+// porque acá sí importa mostrarle al cliente si el envío falló.
+async function notifyContractEmailRequest(params: {
+  clientEmail: string;
+  clientName: string;
+  cedula: string;
+  address: string;
+  projectName: string;
+  packageName: string;
+  addons: { name: string; price: number; isMonthly: boolean }[];
+  discountedTotal: number;
+  depositAmount: number;
+  finalAmount: number;
+  monthlyAddonsPrice: number;
+  signed: boolean;
+  signatureDataUrl?: string;
+  signerName?: string;
+  contractHash?: string;
+  signedAt?: string;
+  contractCode: string;
+}): Promise<boolean> {
+  try {
+    const res = await fetch("https://contract-email-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyContractEmailRequest failed:", res.status, await res.text());
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.error("Error mandando copia de contrato por correo:", err);
+    return false;
   }
 }
 
@@ -2200,7 +2263,7 @@ const PORT = 3000;
    * ownership check que el resto de los endpoints del proyecto.
    * Format: GET /api/portal/projects/:id/contract-data
    */
-  app.get("/api/portal/projects/:id/contract-data", authenticateToken, (req: any, res) => {
+  app.get("/api/portal/projects/:id/contract-data", authenticateToken, async (req: any, res) => {
     const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
     if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
     if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
@@ -2210,6 +2273,7 @@ const PORT = 3000;
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
 
     const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
+    await ensureContractCode(project);
 
     res.json({
       client: { name: client.name, email: client.email, cedula: client.cedula || "", address: client.address || "" },
@@ -2222,6 +2286,7 @@ const PORT = 3000;
         signedAt: project.contractSignedAt || null,
         signerName: project.contractSignerName || null,
         hash: project.contractHash || null,
+        code: contractFullCode(project),
       },
     });
   });
@@ -2240,6 +2305,7 @@ const PORT = 3000;
     }
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+    await ensureContractCode(project);
 
     try {
       const htmlRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app?format=html", {
@@ -2272,6 +2338,7 @@ const PORT = 3000;
     }
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+    await ensureContractCode(project);
 
     try {
       const pdfRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app", {
@@ -2282,7 +2349,7 @@ const PORT = 3000;
       if (!pdfRes.ok) throw new Error(`contract-pdf respondió ${pdfRes.status}`);
       const buf = Buffer.from(await pdfRes.arrayBuffer());
       res.set("Content-Type", "application/pdf");
-      res.set("Content-Disposition", `attachment; filename="contrato-${project.displayId}.pdf"`);
+      res.set("Content-Disposition", `attachment; filename="${contractFullCode(project)}.pdf"`);
       res.status(200).send(buf);
     } catch (err) {
       console.error("Error generando contract-pdf:", err);
@@ -2314,6 +2381,7 @@ const PORT = 3000;
     }
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+    await ensureContractCode(project);
 
     const contractHash = crypto.createHash("sha256").update(contractHtml).digest("hex");
     const signedAt = new Date().toISOString();
@@ -2328,6 +2396,7 @@ const PORT = 3000;
       contractIp: ip,
     });
     await dbInstance.flush();
+    project.contractStatus = "signed"; // para que contractFullCode ya devuelva la letra B acá abajo
 
     const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
 
@@ -2350,12 +2419,54 @@ const PORT = 3000;
       signatureDataUrl: signatureDataUrl || undefined,
       signerName: String(signerName).trim(),
       contractHash, signedAt,
+      contractCode: contractFullCode(project),
       pendingInvoice: pendingDepositInvoice
         ? { concept: pendingDepositInvoice.description, amount: pendingDepositInvoice.amount, dueDate: pendingDepositInvoice.dueDate }
         : undefined,
     });
 
     res.json({ success: true, contractHash, signedAt });
+  });
+
+  /**
+   * "Mándame una copia por correo" -- disponible tanto antes de firmar
+   * (copia de revisión, sin firma) como después (copia ya firmada). Mismo
+   * ownership check que el resto de los endpoints del contrato. Con límite
+   * de tasa (5/hora por proyecto) para que el botón no se use como cañón
+   * de correo hacia la propia bandeja del cliente.
+   * Format: POST /api/portal/projects/:id/send-contract-email
+   */
+  app.post("/api/portal/projects/:id/send-contract-email", authenticateToken, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    if (!rateLimit(`contract-email:${project.id}`, 5, 60 * 60 * 1000)) {
+      return res.status(429).json({ error: "Demasiados intentos. Intenta de nuevo más tarde." });
+    }
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+    await ensureContractCode(project);
+
+    const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
+
+    const sent = await notifyContractEmailRequest({
+      clientEmail: client.email, clientName: client.name,
+      cedula: client.cedula || "", address: client.address || "",
+      projectName: project.name, packageName: pkg.name,
+      addons: selectedAddons.map((a) => ({ name: a.name, price: a.price, isMonthly: a.isMonthly || false })),
+      discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice,
+      signed: project.contractStatus === "signed",
+      signatureDataUrl: project.contractSignatureDataUrl || undefined,
+      signerName: project.contractSignerName || undefined,
+      contractHash: project.contractHash || undefined,
+      signedAt: project.contractSignedAt || undefined,
+      contractCode: contractFullCode(project),
+    });
+
+    if (!sent) return res.status(502).json({ error: "No se pudo enviar el contrato por correo." });
+    res.json({ success: true });
   });
 
 async function startServer() {
