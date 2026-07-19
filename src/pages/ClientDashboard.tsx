@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import AISparkleIcon from "../components/AISparkleIcon";
 import Logo from "../components/Logo";
+import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
 import { collection, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
@@ -2065,9 +2066,7 @@ export default function ClientDashboard() {
                   {showForceNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1.5">
-                <T en="At least 8 characters, including a number.">Mínimo 8 caracteres, incluyendo un número.</T>
-              </p>
+              <PasswordStrengthMeter password={forceNewPassword} />
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
@@ -6112,9 +6111,7 @@ export default function ClientDashboard() {
                           {showNewPasswordValue ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
-                      <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1.5">
-                        <T en="At least 8 characters, including a number.">Mínimo 8 caracteres, incluyendo un número.</T>
-                      </p>
+                      <PasswordStrengthMeter password={newPasswordValue} />
                     </div>
                     <div className="space-y-2">
                       <label className="block text-xs font-bold text-[var(--color-text-secondary)]">
