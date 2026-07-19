@@ -722,7 +722,6 @@ const PORT = 3000;
    * Format: GET /api/check-domain?domain=example.com
    */
   app.get("/api/check-domain", async (req, res) => {
-    console.error("[check-domain] handler alcanzado, PORKBUN_API_KEY presente:", !!process.env.PORKBUN_API_KEY, "keys totales:", Object.keys(process.env).length);
     let domain = (req.query.domain as string || "").trim().toLowerCase();
     domain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0];
 
@@ -731,14 +730,20 @@ const PORT = 3000;
     }
 
     try {
-      const porkbunPromise = checkDomainViaPorkbun(domain);
-      const available = await checkDomainAvailability(domain);
-      // Pequeño margen extra (300ms) por si Porkbun está a punto de
-      // resolver -- nunca se espera más que eso una vez que RDAP ya
-      // respondió, así que el peor caso real es ~RDAP + 300ms, no 6s.
-      const porkbun = await Promise.race([
-        porkbunPromise,
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 300)),
+      // RDAP (disponibilidad) y Porkbun (precio) corren en paralelo desde
+      // el inicio, cada uno con su propio presupuesto de tiempo real --
+      // nada de encadenar la espera de Porkbun a cuándo termine RDAP.
+      // Bug real encontrado en vivo (19 de julio, con logging temporal):
+      // un primer intento le daba a Porkbun solo 300ms *después* de que
+      // RDAP resolviera -- Porkbun nunca fallaba ni se rate-limitaba,
+      // simplemente perdía la carrera casi siempre porque desde la red
+      // de Vercel tarda un poco más que desde este entorno de pruebas.
+      // Ahora Porkbun tiene su propia ventana de 3s desde el arranque,
+      // corriendo a la par de RDAP en vez de after RDAP + margen.
+      const porkbunDeadline = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
+      const [available, porkbun] = await Promise.all([
+        checkDomainAvailability(domain),
+        Promise.race([checkDomainViaPorkbun(domain), porkbunDeadline]),
       ]);
       if (porkbun) {
         return res.json({ available, price: porkbun.price, regularPrice: porkbun.regularPrice });
