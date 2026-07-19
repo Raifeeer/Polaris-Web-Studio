@@ -616,14 +616,18 @@ async function checkDomainViaPorkbun(domain: string): Promise<{ available: boole
       signal: controller.signal,
     });
     const data = await res.json();
-    if (data?.status !== "SUCCESS" || !data.response) return null;
+    if (data?.status !== "SUCCESS" || !data.response) {
+      console.error("[checkDomainViaPorkbun] respuesta no exitosa:", JSON.stringify(data));
+      return null;
+    }
     const r = data.response;
     return {
       available: r.avail === "yes",
       price: r.price !== undefined ? Number(r.price) : undefined,
       regularPrice: r.regularPrice !== undefined ? Number(r.regularPrice) : undefined,
     };
-  } catch {
+  } catch (err: any) {
+    console.error("[checkDomainViaPorkbun] error/timeout:", err?.name, err?.message);
     return null;
   } finally {
     clearTimeout(timeoutId);
