@@ -46,8 +46,19 @@ export default function Logo({
         className="relative flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shrink-0"
         style={{ width: size, height: size }}
       >
-        {/* Glow Effect */}
-        <div className="absolute inset-0 bg-[var(--color-primary-base)] blur-2xl md:blur-3xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity" />
+        {/* Glow Effect -- radial-gradient en vez de filter:blur(). blur()
+            combinado con rounded-full a veces renderiza con un borde
+            cuadrado visible (bug de compositing de Safari/WebKit en iOS,
+            intermitente -- visto en vivo en el loader de rutas entre
+            pestañas). El gradiente radial da el mismo resplandor difuso
+            sin usar filter, así que no lo dispara. */}
+        <div
+          className="absolute -inset-2 opacity-20 group-hover:opacity-40 transition-opacity"
+          style={{
+            background:
+              "radial-gradient(circle, var(--color-primary-base) 0%, transparent 70%)",
+          }}
+        />
 
         {/* Isotipo real -- estrella de 8 puntas (compás), trazado exacto
             extraído del logo oficial diseñado en Canva */}
