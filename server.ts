@@ -856,17 +856,17 @@ const PORT = 3000;
         {
           name: "Fase 1: Descubrimiento y Requerimientos",
           status: "active",
-          detail: "Definiendo propuesta técnica, objetivos de conversión SEO e integraciones API.",
+          detail: "Definiendo los objetivos, el contenido y las funciones de tu sitio.",
         },
         {
-          name: "Fase 2: Diseño de Experiencia de Usuario (UI/UX)",
+          name: "Fase 2: Diseño Visual y de Experiencia",
           status: "pending",
-          detail: "Pendiente de inicio. Estructuración en wireframes interactivos.",
+          detail: "Pendiente de inicio. Boceto y diseño visual de cada pantalla del sitio.",
         },
         {
-          name: "Fase 3: Desarrollo Core Frontend & Backend",
+          name: "Fase 3: Desarrollo del Sitio",
           status: "pending",
-          detail: "Construcción en pila tecnológica nativa (TypeScript, Tailwind, React).",
+          detail: "Construcción real de tu sitio, con tecnología moderna y de alto rendimiento.",
         },
       ],
     });
@@ -874,8 +874,8 @@ const PORT = 3000;
     dbInstance.addTask({
       id: `task-${Date.now()}`,
       projectId,
-      title: "Revisar Documento de Requerimientos de Software (SRS)",
-      description: "Por favor, valide los requerimientos, alcances y plazos iniciales descritos en la ficha de proyecto.",
+      title: "Revisar el alcance y plazos de tu proyecto",
+      description: "Por favor, confirma que los objetivos, alcances y plazos iniciales descritos en la ficha del proyecto son correctos.",
       status: "pending",
       createdAt: new Date().toISOString(),
     });
@@ -1183,17 +1183,17 @@ const PORT = 3000;
         {
           name: "Fase 1: Descubrimiento y Requerimientos",
           status: "active",
-          detail: "Definiendo propuesta técnica, objetivos de conversión SEO e integraciones API.",
+          detail: "Definiendo los objetivos, el contenido y las funciones de tu sitio.",
         },
         {
-          name: "Fase 2: Diseño de Experiencia de Usuario (UI/UX)",
+          name: "Fase 2: Diseño Visual y de Experiencia",
           status: "pending",
-          detail: "Pendiente de inicio. Estructuración en wireframes interactivos.",
+          detail: "Pendiente de inicio. Boceto y diseño visual de cada pantalla del sitio.",
         },
         {
-          name: "Fase 3: Desarrollo Core Frontend & Backend",
+          name: "Fase 3: Desarrollo del Sitio",
           status: "pending",
-          detail: "Construcción en pila tecnológica nativa (TypeScript, Tailwind, React).",
+          detail: "Construcción real de tu sitio, con tecnología moderna y de alto rendimiento.",
         }
       ]
     });
@@ -1201,8 +1201,8 @@ const PORT = 3000;
     dbInstance.addTask({
       id: `task-${Date.now()}`,
       projectId: projectId,
-      title: "Revisar Documento de Requerimientos de Software (SRS)",
-      description: "Por favor, valide los requerimientos, alcances y plazos iniciales descritos en la ficha de proyecto.",
+      title: "Revisar el alcance y plazos de tu proyecto",
+      description: "Por favor, confirma que los objetivos, alcances y plazos iniciales descritos en la ficha del proyecto son correctos.",
       status: "pending",
       createdAt: new Date().toISOString(),
     });
