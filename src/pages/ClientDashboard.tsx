@@ -5697,7 +5697,13 @@ export default function ClientDashboard() {
                         <input
                           type="text"
                           value={contractCedula}
-                          onChange={(e) => setContractCedula(e.target.value)}
+                          onChange={(e) => {
+                            const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
+                            const parts = [digits.slice(0, 3), digits.slice(3, 10), digits.slice(10, 11)].filter(Boolean);
+                            setContractCedula(parts.join("-"));
+                          }}
+                          inputMode="numeric"
+                          maxLength={13}
                           placeholder="000-0000000-0"
                           className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
                         />
