@@ -586,46 +586,6 @@ async function notifyContractSigned(params: {
   }
 }
 
-// "Mándame una copia de mi contrato" -- a pedido del cliente, antes o
-// después de firmar (Cloud Function contract-email-send, Meridian).
-// Devuelve el resultado real (no fire-and-forget como notifyContractSigned)
-// porque acá sí importa mostrarle al cliente si el envío falló.
-async function notifyContractEmailRequest(params: {
-  clientEmail: string;
-  clientName: string;
-  cedula: string;
-  address: string;
-  projectName: string;
-  packageName: string;
-  addons: { name: string; price: number; isMonthly: boolean }[];
-  discountedTotal: number;
-  depositAmount: number;
-  finalAmount: number;
-  monthlyAddonsPrice: number;
-  signed: boolean;
-  signatureDataUrl?: string;
-  signerName?: string;
-  contractHash?: string;
-  signedAt?: string;
-  contractCode: string;
-}): Promise<boolean> {
-  try {
-    const res = await fetch("https://contract-email-send-wdvfac6mgq-ue.a.run.app", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
-    });
-    if (!res.ok) {
-      console.error("notifyContractEmailRequest failed:", res.status, await res.text());
-      return false;
-    }
-    return true;
-  } catch (err) {
-    console.error("Error mandando copia de contrato por correo:", err);
-    return false;
-  }
-}
-
 /**
  * Helper to extract an attribute value from a specific XML tag using robust RegExp rules.
  * Keeps parsing lightweight and secure from XML External Entity (XXE) injections.
@@ -2426,47 +2386,6 @@ const PORT = 3000;
     });
 
     res.json({ success: true, contractHash, signedAt });
-  });
-
-  /**
-   * "Mándame una copia por correo" -- disponible tanto antes de firmar
-   * (copia de revisión, sin firma) como después (copia ya firmada). Mismo
-   * ownership check que el resto de los endpoints del contrato. Con límite
-   * de tasa (5/hora por proyecto) para que el botón no se use como cañón
-   * de correo hacia la propia bandeja del cliente.
-   * Format: POST /api/portal/projects/:id/send-contract-email
-   */
-  app.post("/api/portal/projects/:id/send-contract-email", authenticateToken, async (req: any, res) => {
-    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
-    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
-    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
-      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
-    }
-    if (!rateLimit(`contract-email:${project.id}`, 5, 60 * 60 * 1000)) {
-      return res.status(429).json({ error: "Demasiados intentos. Intenta de nuevo más tarde." });
-    }
-    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
-    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
-    await ensureContractCode(project);
-
-    const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
-
-    const sent = await notifyContractEmailRequest({
-      clientEmail: client.email, clientName: client.name,
-      cedula: client.cedula || "", address: client.address || "",
-      projectName: project.name, packageName: pkg.name,
-      addons: selectedAddons.map((a) => ({ name: a.name, price: a.price, isMonthly: a.isMonthly || false })),
-      discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice,
-      signed: project.contractStatus === "signed",
-      signatureDataUrl: project.contractSignatureDataUrl || undefined,
-      signerName: project.contractSignerName || undefined,
-      contractHash: project.contractHash || undefined,
-      signedAt: project.contractSignedAt || undefined,
-      contractCode: contractFullCode(project),
-    });
-
-    if (!sent) return res.status(502).json({ error: "No se pudo enviar el contrato por correo." });
-    res.json({ success: true });
   });
 
 async function startServer() {

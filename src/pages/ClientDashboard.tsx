@@ -960,11 +960,9 @@ export default function ClientDashboard() {
   const contractHasDrawnRef = useRef(false);
 
   // Modal de solo-lectura para ver el contrato (firmado o no) en vivo, con
-  // descargar/enviar por correo -- distinto del modal de arriba, que es el
-  // flujo de firma (legal-info -> review -> firmar).
+  // descargar/compartir por correo -- distinto del modal de arriba, que es
+  // el flujo de firma (legal-info -> review -> firmar).
   const [showContractViewModal, setShowContractViewModal] = useState(false);
-  const [contractEmailSending, setContractEmailSending] = useState(false);
-  const [contractEmailSent, setContractEmailSent] = useState(false);
 
   // Change Password Modal States
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -1689,8 +1687,8 @@ export default function ClientDashboard() {
   // El endpoint de contract-pdf exige el Bearer token (authenticateToken) --
   // un <a href> normal navega sin ese header y devuelve "Debe iniciar sesión".
   // Se descarga vía fetch autenticado y se fuerza la descarga desde un blob.
-  const downloadContractPdf = async () => {
-    if (!clientProject) return;
+  const downloadContractPdf = async (): Promise<string | null> => {
+    if (!clientProject) return null;
     try {
       const res = await fetch(`/api/portal/projects/${clientProject.id}/contract-pdf`, {
         headers: { Authorization: `Bearer ${tokenRef.current}` },
@@ -1702,17 +1700,34 @@ export default function ClientDashboard() {
       // Content-Disposition -- fetch+blob no lo aplica solo, hay que leerlo.
       const disposition = res.headers.get("Content-Disposition") || "";
       const filenameMatch = /filename="([^"]+)"/.exec(disposition);
+      const filename = filenameMatch ? filenameMatch[1] : `contrato-${clientProject.id}.pdf`;
       const a = document.createElement("a");
       a.href = url;
-      a.download = filenameMatch ? filenameMatch[1] : `contrato-${clientProject.id}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
+      return filename;
     } catch (err) {
       console.error(err);
       setContractError("No se pudo descargar el PDF del contrato.");
+      return null;
     }
+  };
+
+  // No hay forma de adjuntar un archivo a un mailto: (limitación real del
+  // estándar, ningún navegador lo soporta) -- así que se descarga el PDF y,
+  // a la vez, se abre el cliente de correo del propio usuario con un
+  // borrador ya redactado, pidiéndole que adjunte el archivo recién
+  // descargado. Así el envío sale de la cuenta del cliente, no de Polaris
+  // -- sin riesgo de mandarle el contrato a un correo mal escrito.
+  const shareContractByEmail = async () => {
+    const filename = await downloadContractPdf();
+    if (!filename) return;
+    const subject = `Contrato de servicio — Polaris Web Studio (${filename.replace(/\.pdf$/i, "")})`;
+    const body = `Hola,\n\nTe comparto mi contrato de servicio con Polaris Web Studio para tu revisión.\n\nAdjunta el archivo "${filename}" que se acaba de descargar antes de enviar este correo.\n\nSaludos.`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   // Contrato de servicio -- firma electrónica simple
@@ -1768,36 +1783,11 @@ export default function ClientDashboard() {
   // "Ver mi contrato firmado" ya no descarga directo -- abre este modal de
   // solo lectura con el HTML en vivo (el mismo que se firmó, con la firma
   // ya estampada si aplica) y, ahí adentro, botones para descargar o
-  // reenviarlo por correo.
+  // compartir por correo.
   const openContractViewModal = async () => {
     setContractError(null);
-    setContractEmailSent(false);
     setShowContractViewModal(true);
     await fetchContractHtml();
-  };
-
-  const sendContractEmail = async () => {
-    if (!clientProject?.id) return;
-    setContractEmailSending(true);
-    setContractError(null);
-    setContractEmailSent(false);
-    try {
-      const res = await fetch(`/api/portal/projects/${clientProject.id}/send-contract-email`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "No se pudo enviar el contrato por correo.");
-      }
-      setContractEmailSent(true);
-      setTimeout(() => setContractEmailSent(false), 4000);
-    } catch (err: any) {
-      console.error(err);
-      setContractError(err.message || "No se pudo enviar el contrato por correo.");
-    } finally {
-      setContractEmailSending(false);
-    }
   };
 
   const handleSaveLegalInfo = async () => {
@@ -5870,16 +5860,12 @@ export default function ClientDashboard() {
                   {contractStep === "review" && (
                     <div className="flex flex-col gap-4 min-h-0 flex-1">
                       <div className="flex items-center justify-end gap-4 -mb-1">
-                        {contractEmailSent && (
-                          <span className="text-[11px] font-bold text-emerald-500">Enviado ✓</span>
-                        )}
                         <button
                           type="button"
-                          onClick={sendContractEmail}
-                          disabled={contractEmailSending}
-                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline disabled:opacity-50"
+                          onClick={shareContractByEmail}
+                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
                         >
-                          {contractEmailSending ? "Enviando..." : "Enviar por correo"}
+                          Compartir por correo
                         </button>
                         <button
                           type="button"
@@ -6040,16 +6026,12 @@ export default function ClientDashboard() {
                   )}
 
                   <div className="flex items-center justify-end gap-4 mb-3 flex-shrink-0">
-                    {contractEmailSent && (
-                      <span className="text-[11px] font-bold text-emerald-500">Enviado ✓</span>
-                    )}
                     <button
                       type="button"
-                      onClick={sendContractEmail}
-                      disabled={contractEmailSending}
-                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline disabled:opacity-50"
+                      onClick={shareContractByEmail}
+                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
                     >
-                      {contractEmailSending ? "Enviando..." : "Enviar por correo"}
+                      Compartir por correo
                     </button>
                     <button
                       type="button"
