@@ -1,15 +1,22 @@
+// Debe ser el primer import: en ES modules las importaciones se evalúan en
+// el orden en que aparecen (antes que cualquier otra línea del archivo), así
+// que un dotenv.config() escrito más abajo corre DESPUÉS de que módulos como
+// ./server-db.js ya intentaron leer process.env.FIREBASE_* en su propio nivel
+// superior -- el .env quedaba cargado demasiado tarde para ellos. Bug real
+// encontrado en vivo (19 de julio) al intentar levantar el dev server local
+// con credenciales de Firebase Admin reales: fallaba con
+// "Service account object must contain a string project_id property" pese a
+// que el .env tenía el valor correcto.
+import "dotenv/config";
+
 import express from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { createServer as createViteServer } from "vite";
-import dotenv from "dotenv";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 import suggestDomainsHandler from "./api/suggest-domains.js";
-
-// Load environment variables
-dotenv.config();
 
 // --- Session token signing (HMAC) ---
 // Secreto para firmar los tokens de sesión locales. En producción DEBE definirse
