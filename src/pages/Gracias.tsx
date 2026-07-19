@@ -132,7 +132,7 @@ export default function Gracias() {
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm divide-y md:divide-y-0 md:divide-x divide-[var(--color-border-subtle)]">
-            <div className="space-y-4 pt-4 md:pt-0">
+            <div className="space-y-4 pt-4 pb-4 md:pt-0 md:pb-0">
               <div>
                 <span className="text-xs uppercase tracking-widest text-[var(--color-text-tertiary)] font-bold block mb-1">
                   <T en="Plan Chosen">Paquete Seleccionado</T>
@@ -150,7 +150,7 @@ export default function Gracias() {
                   <div className="flex flex-wrap gap-1.5 mt-1">
                     {state.addons.map((add: string, i: number) => (
                       <span key={i} className="px-2 py-0.5 bg-[var(--color-surface-highlight)] text-xs rounded border border-[var(--color-border-strong)] text-[var(--color-text-secondary)] font-medium">
-                        {add.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+                        {add}
                       </span>
                     ))}
                   </div>

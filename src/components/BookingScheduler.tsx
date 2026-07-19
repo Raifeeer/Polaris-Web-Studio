@@ -39,6 +39,7 @@ export default function BookingScheduler({
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [emailError, setEmailError] = useState("");
+  const [nameError, setNameError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState<"slot" | "generic" | null>(null);
 
@@ -66,12 +67,17 @@ export default function BookingScheduler({
   }, [slotsByDay, slotsLoading]);
 
   const handleConfirm = async () => {
+    if (!name.trim()) {
+      setNameError(translate("Ingresa tu nombre.", "Enter your name."));
+      return;
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       setEmailError(translate("Ingresa un email válido.", "Enter a valid email."));
       return;
     }
     if (!selectedSlot) return;
+    setNameError("");
     setEmailError("");
     setSubmitting(true);
     setBookingError(null);
@@ -184,13 +190,17 @@ export default function BookingScheduler({
           )}
 
           <div className="grid sm:grid-cols-2 gap-3">
-            <input
-              type="text"
-              placeholder={translate("Tu nombre", "Your name")}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
-            />
+            <div>
+              <input
+                type="text"
+                required
+                placeholder={translate("Tu nombre", "Your name")}
+                value={name}
+                onChange={(e) => { setName(e.target.value); setNameError(""); }}
+                className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${nameError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
+              />
+              {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
+            </div>
             <div>
               <input
                 type="email"
@@ -216,7 +226,7 @@ export default function BookingScheduler({
 
           <button
             type="button"
-            disabled={submitting || !selectedSlot || !email.trim()}
+            disabled={submitting || !selectedSlot || !name.trim() || !email.trim()}
             onClick={handleConfirm}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
