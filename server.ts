@@ -1081,8 +1081,8 @@ const PORT = 3000;
     if (!currentPassword || !newPassword || typeof newPassword !== "string") {
       return res.status(400).json({ success: false, error: "Faltan datos." });
     }
-    if (newPassword.length < 8) {
-      return res.status(400).json({ success: false, error: "La nueva contraseña debe tener al menos 8 caracteres." });
+    if (newPassword.length < 8 || !/\d/.test(newPassword)) {
+      return res.status(400).json({ success: false, error: "La nueva contraseña debe tener al menos 8 caracteres e incluir un número." });
     }
     const stored = req.user.password || DUMMY_PASSWORD_HASH;
     const { valid } = verifyPassword(stored, String(currentPassword));

@@ -977,8 +977,8 @@ export default function ClientDashboard() {
   const handleForceChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setForceChangeError(null);
-    if (forceNewPassword.length < 8) {
-      setForceChangeError(language === "es" ? "La nueva contraseña debe tener al menos 8 caracteres." : "The new password must be at least 8 characters.");
+    if (forceNewPassword.length < 8 || !/\d/.test(forceNewPassword)) {
+      setForceChangeError(language === "es" ? "La nueva contraseña debe tener al menos 8 caracteres e incluir un número." : "The new password must be at least 8 characters and include a number.");
       return;
     }
     if (forceNewPassword !== forceConfirmPassword) {
@@ -1962,6 +1962,9 @@ export default function ClientDashboard() {
                 onChange={(e) => setForceNewPassword(e.target.value)}
                 className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
               />
+              <p className="text-[11px] text-[var(--color-text-tertiary)] mt-1.5">
+                <T en="At least 8 characters, including a number.">Mínimo 8 caracteres, incluyendo un número.</T>
+              </p>
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
