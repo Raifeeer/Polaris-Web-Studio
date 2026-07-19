@@ -3420,7 +3420,7 @@ export default function ClientDashboard() {
                               <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato de servicio</div>
                               <div className="text-xs text-[var(--color-text-secondary)]">
                                 {(clientProject as any).contractStatus === "signed"
-                                  ? "Firmado -- puedes descargar tu copia cuando quieras."
+                                  ? "Firmado — puedes descargar tu copia cuando quieras."
                                   : "Revisa y firma el contrato antes de que tu proyecto avance."}
                               </div>
                             </div>
@@ -5769,7 +5769,7 @@ export default function ClientDashboard() {
                   {contractStep === "legal-info" && (
                     <div className="space-y-4 overflow-y-auto">
                       <p className="text-xs text-[var(--color-text-secondary)]">
-                        Antes de firmar necesitamos tu cédula y domicilio -- se usan solo para identificarte en el contrato.
+                        Antes de firmar necesitamos tu cédula y domicilio — se usan solo para identificarte en el contrato.
                       </p>
                       <div className="space-y-2">
                         <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula</label>
@@ -5919,7 +5919,7 @@ export default function ClientDashboard() {
 
                   {contractStep === "done" && (
                     <div className="text-center py-8 space-y-3">
-                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado -- te llegará una copia por correo.</div>
+                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado — te llegará una copia por correo.</div>
                       <button
                         type="button"
                         onClick={() => setShowContractModal(false)}

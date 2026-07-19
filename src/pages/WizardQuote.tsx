@@ -3223,13 +3223,13 @@ export default function WizardQuote() {
                                   </p>
                                 ) : domainOverage === null ? (
                                   <p className="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
-                                    <T en="Included in your package -- no extra cost.">Incluido en tu paquete, sin costo adicional.</T>
+                                    <T en="Included in your package — no extra cost.">Incluido en tu paquete, sin costo adicional.</T>
                                   </p>
                                 ) : (
                                   <div className="space-y-1">
                                     <p className="text-amber-600 dark:text-amber-400 font-medium text-xs">
-                                      <T en={`This domain costs $${domainStatus.price} for the first year -- $${domainOverage} above the $15 included.`}>
-                                        {`Este dominio cuesta $${domainStatus.price} el primer año -- $${domainOverage} sobre los $15 incluidos.`}
+                                      <T en={`This domain costs $${domainStatus.price} for the first year — $${domainOverage} above the $15 included.`}>
+                                        {`Este dominio cuesta $${domainStatus.price} el primer año — $${domainOverage} sobre los $15 incluidos.`}
                                       </T>
                                     </p>
                                     {domainStatus.regularPrice !== undefined && domainStatus.regularPrice > domainStatus.price && (
