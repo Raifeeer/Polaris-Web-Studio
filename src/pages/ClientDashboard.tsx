@@ -1687,8 +1687,8 @@ export default function ClientDashboard() {
   // El endpoint de contract-pdf exige el Bearer token (authenticateToken) --
   // un <a href> normal navega sin ese header y devuelve "Debe iniciar sesión".
   // Se descarga vía fetch autenticado y se fuerza la descarga desde un blob.
-  const downloadContractPdf = async (): Promise<string | null> => {
-    if (!clientProject) return null;
+  const downloadContractPdf = async () => {
+    if (!clientProject) return;
     try {
       const res = await fetch(`/api/portal/projects/${clientProject.id}/contract-pdf`, {
         headers: { Authorization: `Bearer ${tokenRef.current}` },
@@ -1700,34 +1700,17 @@ export default function ClientDashboard() {
       // Content-Disposition -- fetch+blob no lo aplica solo, hay que leerlo.
       const disposition = res.headers.get("Content-Disposition") || "";
       const filenameMatch = /filename="([^"]+)"/.exec(disposition);
-      const filename = filenameMatch ? filenameMatch[1] : `contrato-${clientProject.id}.pdf`;
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename;
+      a.download = filenameMatch ? filenameMatch[1] : `contrato-${clientProject.id}.pdf`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       window.URL.revokeObjectURL(url);
-      return filename;
     } catch (err) {
       console.error(err);
       setContractError("No se pudo descargar el PDF del contrato.");
-      return null;
     }
-  };
-
-  // No hay forma de adjuntar un archivo a un mailto: (limitación real del
-  // estándar, ningún navegador lo soporta) -- así que se descarga el PDF y,
-  // a la vez, se abre el cliente de correo del propio usuario con un
-  // borrador ya redactado, pidiéndole que adjunte el archivo recién
-  // descargado. Así el envío sale de la cuenta del cliente, no de Polaris
-  // -- sin riesgo de mandarle el contrato a un correo mal escrito.
-  const shareContractByEmail = async () => {
-    const filename = await downloadContractPdf();
-    if (!filename) return;
-    const subject = `Contrato de servicio — Polaris Web Studio (${filename.replace(/\.pdf$/i, "")})`;
-    const body = `Hola,\n\nTe comparto mi contrato de servicio con Polaris Web Studio para tu revisión.\n\nAdjunta el archivo "${filename}" que se acaba de descargar antes de enviar este correo.\n\nSaludos.`;
-    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   // Contrato de servicio -- firma electrónica simple
@@ -5859,14 +5842,7 @@ export default function ClientDashboard() {
 
                   {contractStep === "review" && (
                     <div className="flex flex-col gap-4 min-h-0 flex-1">
-                      <div className="flex items-center justify-end gap-4 -mb-1">
-                        <button
-                          type="button"
-                          onClick={shareContractByEmail}
-                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
-                        >
-                          Compartir por correo
-                        </button>
+                      <div className="flex items-center justify-end -mb-1">
                         <button
                           type="button"
                           onClick={downloadContractPdf}
@@ -6025,14 +6001,7 @@ export default function ClientDashboard() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-end gap-4 mb-3 flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={shareContractByEmail}
-                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
-                    >
-                      Compartir por correo
-                    </button>
+                  <div className="flex items-center justify-end mb-3 flex-shrink-0">
                     <button
                       type="button"
                       onClick={downloadContractPdf}
