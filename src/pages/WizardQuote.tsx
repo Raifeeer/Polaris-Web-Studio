@@ -1019,11 +1019,20 @@ export default function WizardQuote() {
       ? Math.round((domainStatus.price - DOMAIN_INCLUDED_CAP) * 100) / 100
       : null;
 
+  // Mismo dato de renovación que ya se muestra en el paso del wizard --
+  // agregado acá también porque este texto es el que viaja al resumen de
+  // /gracias, al correo de confirmación y al PDF de la cotización, así el
+  // cliente no pierde el dato de renovación al salir del paso del dominio.
+  const domainRenewalNote =
+    domainStatus?.regularPrice !== undefined && domainStatus?.price !== undefined && domainStatus.regularPrice > domainStatus.price
+      ? t(`, renews at $${domainStatus.regularPrice}/yr`, `, se renueva a $${domainStatus.regularPrice}/año`)
+      : "";
+
   const domainSummaryText =
     domainStatus && domainStatus.available
       ? domainOverage !== null
-        ? `${domainStatus.domain} ${t(`(+$${domainOverage} above what's included)`, `(+$${domainOverage} sobre lo incluido)`)}`
-        : `${domainStatus.domain} ${t("(Included, up to $15 USD)", "(Incluido, hasta $15 USD)")}`
+        ? `${domainStatus.domain} ${t(`(+$${domainOverage} above what's included)`, `(+$${domainOverage} sobre lo incluido)`)}${domainRenewalNote}`
+        : `${domainStatus.domain} ${t("(Included, up to $15 USD)", "(Incluido, hasta $15 USD)")}${domainRenewalNote}`
       : t("Standard Included ($15 default credit)", "Estándar Incluido ($15 crédito por defecto)");
 
   const getSectorName = (id: string) => {
@@ -3222,9 +3231,24 @@ export default function WizardQuote() {
                                     <T en="This domain appears to be available.">Este dominio parece estar disponible.</T>
                                   </p>
                                 ) : domainOverage === null ? (
-                                  <p className="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
-                                    <T en="Included in your package — no extra cost.">Incluido en tu paquete, sin costo adicional.</T>
-                                  </p>
+                                  <div className="space-y-1">
+                                    <p className="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
+                                      <T en="Included in your package — no extra cost the first year.">Incluido en tu paquete, sin costo adicional el primer año.</T>
+                                    </p>
+                                    {/* Bug real reportado por el usuario (19 de julio): casi todos los
+                                        dominios de Porkbun cuestan menos de $15 el primer año (por eso
+                                        caen acá, "incluido"), pero se renuevan mucho más caro -- y esta
+                                        rama nunca mostraba ese dato, a diferencia de la rama de arriba
+                                        (dominio por encima de los $15) que sí lo hacía. El cliente se
+                                        enteraba del costo real recién al momento de renovar. */}
+                                    {domainStatus.regularPrice !== undefined && domainStatus.regularPrice > domainStatus.price && (
+                                      <p className="text-[var(--color-text-secondary)] text-[11px]">
+                                        <T en={`Renews at $${domainStatus.regularPrice}/year after the first year.`}>
+                                          {`Se renueva a $${domainStatus.regularPrice}/año después del primer año.`}
+                                        </T>
+                                      </p>
+                                    )}
+                                  </div>
                                 ) : (
                                   <div className="space-y-1">
                                     <p className="text-amber-600 dark:text-amber-400 font-medium text-xs">
