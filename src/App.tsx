@@ -23,6 +23,7 @@ import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
 import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
 import { getCookieConsent, onCookieConsentChange } from "./lib/cookieConsent";
+import RouteErrorBoundary from "./components/RouteErrorBoundary";
 
 // Dynamic lazy imports for optimized code-splitting and small core bundle size
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -193,6 +194,7 @@ function AnimatedRoutes() {
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.22, ease: "easeInOut" }}
       >
+        <RouteErrorBoundary>
         <Suspense fallback={<RouteLoader />}>
           <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -228,6 +230,7 @@ function AnimatedRoutes() {
           </Routes>
           </motion.div>
         </Suspense>
+        </RouteErrorBoundary>
       </motion.div>
     </AnimatePresence>
   );
