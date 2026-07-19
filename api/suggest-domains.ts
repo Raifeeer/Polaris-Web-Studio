@@ -174,13 +174,20 @@ Ejemplo de respuesta esperada:
     })
   );
 
-  let verifiedSuggestions = results.filter((r) => r.available);
+  // Bug real (19 de julio): antes se filtraban a solo las disponibles --
+  // si la IA sugería 4 y solo 1 estaba libre, el cliente veía nada más
+  // esa 1, aunque la UI ya soporta marcar ocupadas con un punto rojo. Ahora
+  // se devuelven las 4 sugeridas siempre, con su estado real.
+  let verifiedSuggestions = results;
 
-  // If none of the 4 suggestions from AI are available, try Net/Co/Org alternatives
-  if (verifiedSuggestions.length === 0) {
+  // Si NINGUNA de las 4 sugeridas por la IA está disponible, se suman
+  // alternativas .net/.co/.org (sin reemplazar las 4 originales, para que
+  // el cliente siga viendo qué se le sugirió) hasta tener al menos una
+  // opción disponible real entre las mostradas.
+  if (!results.some((r) => r.available)) {
     const backupChecks: string[] = [];
     const tlds = ["net", "co", "org"];
-    
+
     // Take the first 2-3 suggestions, strip their extensions, and combine with net/co/org
     const topSuggestions = suggestions.slice(0, 2);
     for (const item of topSuggestions) {
@@ -197,9 +204,9 @@ Ejemplo de respuesta esperada:
       })
     );
 
-    verifiedSuggestions = backupResults.filter((r) => r.available);
+    verifiedSuggestions = [...results, ...backupResults.filter((r) => r.available)];
   }
 
-  // Limit suggestions to maximum 4
-  return res.status(200).json({ suggestions: verifiedSuggestions.slice(0, 4) });
+  // Limit suggestions to maximum 6 (las 4 originales + hasta 2 backups reales)
+  return res.status(200).json({ suggestions: verifiedSuggestions.slice(0, 6) });
 }

@@ -3332,7 +3332,7 @@ export default function WizardQuote() {
                                     }`}
                                   >
                                     <AISparkleIcon size={11} className="text-[var(--color-primary-base)] flex-shrink-0" />
-                                    <span className={`font-medium text-xs truncate flex-1 ${
+                                    <span className={`font-medium text-xs break-all flex-1 ${
                                       isSelected ? "text-[var(--color-primary-base)] font-bold" : "text-[var(--color-text-primary)]"
                                     }`}>
                                       {suggestion.domain}
