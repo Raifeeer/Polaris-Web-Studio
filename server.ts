@@ -722,6 +722,7 @@ const PORT = 3000;
    * Format: GET /api/check-domain?domain=example.com
    */
   app.get("/api/check-domain", async (req, res) => {
+    console.error("[check-domain] handler alcanzado, PORKBUN_API_KEY presente:", !!process.env.PORKBUN_API_KEY, "keys totales:", Object.keys(process.env).length);
     let domain = (req.query.domain as string || "").trim().toLowerCase();
     domain = domain.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0];
 
