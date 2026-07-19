@@ -1454,10 +1454,17 @@ const PORT = 3000;
     const invoices = dbInstance.getInvoices();
     const foundInvoice = invoices.find(i => i.id === req.params.id);
     if (!foundInvoice) return res.status(404).json({ error: "Factura no encontrada." });
-    if (!assertInvoiceAccess(req, foundInvoice, res)) return;
+    const invoiceProject = assertInvoiceAccess(req, foundInvoice, res);
+    if (!invoiceProject) return;
 
     if (foundInvoice.status === "paid") {
       return res.status(400).json({ error: "Esta factura ya está pagada." });
+    }
+
+    // El cliente no puede pagar hasta firmar el contrato -- un admin sí puede
+    // (ej. cobro manual acordado fuera del portal antes de que el cliente firme).
+    if (req.user.role !== "admin" && (invoiceProject as any).contractStatus !== "signed") {
+      return res.status(403).json({ error: "Debes firmar el contrato de servicio antes de poder pagar esta factura." });
     }
 
     try {

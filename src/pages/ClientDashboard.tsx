@@ -780,6 +780,7 @@ export default function ClientDashboard() {
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [paypalReady, setPaypalReady] = useState(false);
+  const [paypalRetryKey, setPaypalRetryKey] = useState(0);
   const paypalButtonsContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Forms / Management States
@@ -1103,13 +1104,32 @@ export default function ClientDashboard() {
     let cancelled = false;
     setPaypalReady(false);
 
+    // Con señal débil (el caso real que motivó esto) el fetch del client-id o la
+    // carga del script de PayPal pueden fallar de forma transitoria -- se reintenta
+    // un par de veces con backoff corto antes de mostrarle el error al cliente.
+    const withRetry = async <T,>(fn: () => Promise<T>, attempts = 3, delayMs = 800): Promise<T> => {
+      let lastErr: unknown;
+      for (let i = 0; i < attempts; i++) {
+        if (cancelled) throw new Error("cancelled");
+        try {
+          return await fn();
+        } catch (err) {
+          lastErr = err;
+          if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+        }
+      }
+      throw lastErr;
+    };
+
     (async () => {
       try {
-        const clientIdRes = await fetch("/api/portal/paypal/client-id", {
-          headers: { Authorization: `Bearer ${tokenRef.current}` },
+        const { clientId } = await withRetry(async () => {
+          const clientIdRes = await fetch("/api/portal/paypal/client-id", {
+            headers: { Authorization: `Bearer ${tokenRef.current}` },
+          });
+          if (!clientIdRes.ok) throw new Error("No se pudo obtener la configuración de PayPal.");
+          return clientIdRes.json();
         });
-        if (!clientIdRes.ok) throw new Error("No se pudo obtener la configuración de PayPal.");
-        const { clientId } = await clientIdRes.json();
         if (cancelled) return;
 
         const currency = payingInvoice.currency || "USD";
@@ -1120,7 +1140,9 @@ export default function ClientDashboard() {
         }
 
         if (!(window as any).paypal) {
-          await new Promise<void>((resolve, reject) => {
+          await withRetry(() => new Promise<void>((resolve, reject) => {
+            const prevScript = document.getElementById("paypal-sdk");
+            if (prevScript) prevScript.remove();
             const script = document.createElement("script");
             script.id = "paypal-sdk";
             script.dataset.currency = currency;
@@ -1128,7 +1150,7 @@ export default function ClientDashboard() {
             script.onload = () => resolve();
             script.onerror = () => reject(new Error("No se pudo cargar el SDK de PayPal."));
             document.body.appendChild(script);
-          });
+          }));
         }
         if (cancelled || !paypalButtonsContainerRef.current) return;
 
@@ -1182,7 +1204,7 @@ export default function ClientDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [payingInvoice?.id]);
+  }, [payingInvoice?.id, paypalRetryKey]);
 
   const handleLogout = () => {
     // Limpia los datos del panel además del token/usuario: si se deja el
@@ -4559,18 +4581,32 @@ export default function ClientDashboard() {
                                   )}
                                 </button>
                                 {inv.status === "pending" && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setErrorMsg(null);
-                                      setPaymentSuccess(false);
-                                      setPayingInvoice(inv);
-                                    }}
-                                    className="p-2 bg-[var(--color-primary-base)] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:opacity-90 transition cursor-pointer"
-                                  >
-                                    <span>Pagar</span>
-                                    <ExternalLink size={10} />
-                                  </button>
+                                  (() => {
+                                    const invProject = data?.projects.find((p: any) => p.id === inv.projectId);
+                                    const contractSigned = (invProject as any)?.contractStatus === "signed";
+                                    return contractSigned ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setErrorMsg(null);
+                                          setPaymentSuccess(false);
+                                          setPayingInvoice(inv);
+                                        }}
+                                        className="p-2 bg-[var(--color-primary-base)] text-white text-xs font-bold rounded-xl flex items-center gap-1 hover:opacity-90 transition cursor-pointer"
+                                      >
+                                        <span>Pagar</span>
+                                        <ExternalLink size={10} />
+                                      </button>
+                                    ) : (
+                                      <span
+                                        title="Debes firmar el contrato de servicio antes de poder pagar."
+                                        className="p-2 bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] text-xs font-bold rounded-xl flex items-center gap-1 cursor-not-allowed"
+                                      >
+                                        <Lock size={11} />
+                                        <span>Firma el contrato</span>
+                                      </span>
+                                    );
+                                  })()
                                 )}
                               </>
                             )}
@@ -5437,8 +5473,17 @@ export default function ClientDashboard() {
 
                     <div className="space-y-4">
                       {errorMsg && (
-                        <div className="p-3 rounded border border-red-500/20 bg-red-500/10 text-red-500 text-xs font-bold">
-                          {errorMsg}
+                        <div className="p-3 rounded border border-red-500/20 bg-red-500/10 text-red-500 text-xs font-bold flex items-center justify-between gap-3">
+                          <span>{errorMsg}</span>
+                          {!paypalReady && (
+                            <button
+                              type="button"
+                              onClick={() => { setErrorMsg(null); setPaypalRetryKey((k) => k + 1); }}
+                              className="shrink-0 underline hover:no-underline"
+                            >
+                              Reintentar
+                            </button>
+                          )}
                         </div>
                       )}
 
