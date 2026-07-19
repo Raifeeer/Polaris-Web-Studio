@@ -1027,8 +1027,15 @@ export default function WizardQuote() {
   // agregado acá también porque este texto es el que viaja al resumen de
   // /gracias, al correo de confirmación y al PDF de la cotización, así el
   // cliente no pierde el dato de renovación al salir del paso del dominio.
+  // Bug real reportado por el usuario (19 de julio): antes solo se avisaba
+  // la renovación si el precio subía respecto al primer año -- pero lo que
+  // cambia después del año 1 no es (necesariamente) el precio del
+  // registrador, es que Polaris deja de cubrirlo (el crédito de $15 es solo
+  // para el año 1). Aunque el dominio se renueve al mismo precio, el
+  // cliente igual tiene que pagarlo de su bolsillo a partir de ahí, así que
+  // el aviso debe salir siempre que haya un precio real de renovación.
   const domainRenewalNote =
-    domainStatus?.regularPrice !== undefined && domainStatus?.price !== undefined && domainStatus.regularPrice > domainStatus.price
+    domainStatus?.regularPrice !== undefined
       ? t(`, renews at $${domainStatus.regularPrice}/yr`, `, se renueva a $${domainStatus.regularPrice}/año`)
       : "";
 
@@ -2409,15 +2416,21 @@ export default function WizardQuote() {
   // lado) era código muerto -- eliminado, esta función lo reemplaza.
   const handleGetPdfQuote = async () => {
     setSendingPdf(true);
+    const startedAt = Date.now();
     const name = pdfName.trim();
     const email = pdfEmail.trim();
 
-    // Antes estas dos llamadas se disparaban sin esperar (fire-and-forget) y
-    // el botón volvía a su estado normal en el mismo tick -- el spinner de
-    // "Generando y enviando PDF..." nunca alcanzaba a pintarse, así que el
-    // botón se sentía como si no hiciera nada. Ahora se esperan de verdad
-    // (con Promise.allSettled para que un fallo en una no tumbe la otra) y
-    // recién ahí se marca como enviado.
+    // Bug real reportado por el usuario (19 de julio): esperar a que
+    // quote-confirmation-send termine de mandar el correo real (SMTP de
+    // Zoho, puede tardar varios segundos) antes de soltar el botón hacía
+    // que el paso se sintiera lento -- mismo patrón ya corregido antes en
+    // calcom-booking (no esperar el correo antes de responder). Ahora solo
+    // se espera el guardado del lead (rápido, y hace falta el id real para
+    // handleBookingComplete); el correo sigue disparándose siempre, solo
+    // que en segundo plano. Se agrega un piso mínimo de carga (1.2s) para
+    // que el spinner "Generando y enviando PDF..." no aparezca y desaparezca
+    // de golpe -- se sentía como si el botón no hubiera hecho nada.
+    const MIN_LOADING_MS = 1200;
     const leadPromise = addDoc(collection(db, "wizardLeads"), {
       name,
       email,
@@ -2437,7 +2450,9 @@ export default function WizardQuote() {
       .then((ref) => setWizardLeadDocId(ref.id))
       .catch((err) => console.error("No se pudo guardar el lead en Firestore:", err));
 
-    const emailPromise = fetch("https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app", {
+    // Fire-and-forget: el correo real (con el link al PDF) sigue saliendo
+    // siempre, pero ya no bloquea el botón -- ver comentario arriba.
+    fetch("https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -2451,7 +2466,11 @@ export default function WizardQuote() {
       }),
     }).catch((err) => console.error("Error triggering quote confirmation email: ", err));
 
-    await Promise.allSettled([leadPromise, emailPromise]);
+    await leadPromise;
+    const elapsed = Date.now() - startedAt;
+    if (elapsed < MIN_LOADING_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_LOADING_MS - elapsed));
+    }
 
     setSelections((prev) => ({ ...prev, email, name }));
     trackEvent("lead_captured", { method: "wizard_pdf_step" });
@@ -3265,7 +3284,7 @@ export default function WizardQuote() {
                                         rama nunca mostraba ese dato, a diferencia de la rama de arriba
                                         (dominio por encima de los $15) que sí lo hacía. El cliente se
                                         enteraba del costo real recién al momento de renovar. */}
-                                    {domainStatus.regularPrice !== undefined && domainStatus.regularPrice > domainStatus.price && (
+                                    {domainStatus.regularPrice !== undefined && (
                                       <p className="text-[var(--color-text-secondary)] text-[11px]">
                                         <T en={`Renews at $${domainStatus.regularPrice}/year after the first year.`}>
                                           {`Se renueva a $${domainStatus.regularPrice}/año después del primer año.`}
@@ -3280,7 +3299,7 @@ export default function WizardQuote() {
                                         {`Este dominio cuesta $${domainStatus.price} el primer año — $${domainOverage} sobre los $15 incluidos.`}
                                       </T>
                                     </p>
-                                    {domainStatus.regularPrice !== undefined && domainStatus.regularPrice > domainStatus.price && (
+                                    {domainStatus.regularPrice !== undefined && (
                                       <p className="text-[var(--color-text-secondary)] text-[11px]">
                                         <T en={`Renews at $${domainStatus.regularPrice}/year after the first year.`}>
                                           {`Se renueva a $${domainStatus.regularPrice}/año después del primer año.`}
