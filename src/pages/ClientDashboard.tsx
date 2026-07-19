@@ -5783,8 +5783,8 @@ export default function ClientDashboard() {
                             ref={contractCanvasRef}
                             width={560}
                             height={140}
-                            className="w-full rounded-xl border border-[var(--color-border-strong)] bg-white touch-none"
-                            style={{ height: 140 }}
+                            className="w-full rounded-xl border border-[var(--color-border-strong)] bg-white touch-none select-none"
+                            style={{ height: 140, WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                             onPointerDown={(e) => {
                               contractDrawingRef.current = true;
                               const canvas = contractCanvasRef.current!;
