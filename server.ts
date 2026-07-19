@@ -547,6 +547,7 @@ async function notifyContractSigned(params: {
   signerName: string;
   contractHash: string;
   signedAt: string;
+  pendingInvoice?: { concept: string; amount: number; dueDate?: string };
 }) {
   try {
     const res = await fetch("https://contract-sign-notify-wdvfac6mgq-ue.a.run.app", {
@@ -900,14 +901,11 @@ const PORT = 3000;
     // (bug real, ver comentario de flush() en server-db.ts).
     await dbInstance.flush();
 
-    // Aparte del correo de bienvenida al portal (lo manda proposal-send tras
-    // llamar acá), se avisa específicamente de la factura del depósito --
-    // no queda solo implícita en el portal. Se espera (igual que flush())
-    // para que no se pierda si Vercel congela el proceso tras responder.
-    await notifyInvoice({
-      type: "pending", clientEmail: emailClean, clientName: name,
-      concept: depositDescription, amount: depositAmount, dueDate: depositDueDate,
-    });
+    // El aviso de "factura pendiente" NO se manda acá -- se manda 3 minutos
+    // después del correo de contrato firmado (ver notifyContractSigned /
+    // POST .../sign-contract), a pedido del usuario: recibir la factura
+    // antes de siquiera haber visto/firmado el contrato generaba confusión.
+    // contract-sign-notify (Meridian) es quien la encola vía Cloud Tasks.
 
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
   });
@@ -2333,6 +2331,12 @@ const PORT = 3000;
 
     const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
 
+    // La factura del depósito (creada en auto-provision-client, todavía
+    // "pending" a esta altura) -- se le pasa a contract-sign-notify para que
+    // encole su aviso 3 minutos después de los correos de firma, en vez de
+    // mandarlo acá mismo (ver nota en auto-provision-client).
+    const pendingDepositInvoice = dbInstance.getInvoices().find((i) => i.projectId === project.id && i.status === "pending");
+
     // Fire-and-forget: no bloquea la respuesta al cliente por si el envío
     // del correo/PDF tarda -- mismo patrón que notifyInvoice/notifyLaunch.
     // Se manda el payload completo porque Meridian no tiene forma de volver
@@ -2346,6 +2350,9 @@ const PORT = 3000;
       signatureDataUrl: signatureDataUrl || undefined,
       signerName: String(signerName).trim(),
       contractHash, signedAt,
+      pendingInvoice: pendingDepositInvoice
+        ? { concept: pendingDepositInvoice.description, amount: pendingDepositInvoice.amount, dueDate: pendingDepositInvoice.dueDate }
+        : undefined,
     });
 
     res.json({ success: true, contractHash, signedAt });
