@@ -946,7 +946,8 @@ export default function ClientDashboard() {
   // (dibujada o tipeada, Ley 126-02 RD). Pasos: 1) completar cédula/domicilio
   // si faltan, 2) revisar el HTML exacto que se va a firmar, 3) firmar.
   const [showContractModal, setShowContractModal] = useState(false);
-  const [contractStep, setContractStep] = useState<"legal-info" | "review" | "done">("legal-info");
+  const [contractStep, setContractStep] = useState<"legal-info" | "review" | "signing" | "done">("legal-info");
+  const [contractCode, setContractCode] = useState("");
   const [contractCedula, setContractCedula] = useState("");
   const [contractAddress, setContractAddress] = useState("");
   const [contractHtml, setContractHtml] = useState("");
@@ -1735,6 +1736,7 @@ export default function ClientDashboard() {
       });
       const info = await res.json();
       const hasLegalInfo = !!(info?.client?.cedula && info?.client?.address);
+      setContractCode(info?.contract?.code || "");
       setContractCedula(info?.client?.cedula || "");
       setContractAddress(info?.client?.address || "");
       if (info?.contract?.status === "signed") {
@@ -1775,6 +1777,14 @@ export default function ClientDashboard() {
   const openContractViewModal = async () => {
     setContractError(null);
     setShowContractViewModal(true);
+    if (clientProject?.id) {
+      fetch(`/api/portal/projects/${clientProject.id}/contract-data`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((info) => setContractCode(info?.contract?.code || ""))
+        .catch((err) => console.error(err));
+    }
     await fetchContractHtml();
   };
 
@@ -1803,16 +1813,24 @@ export default function ClientDashboard() {
     }
     setContractError(null);
     try {
-      await fetch(`/api/portal/projects/${clientProject.id}/legal-info`, {
+      const res = await fetch(`/api/portal/projects/${clientProject.id}/legal-info`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ cedula: contractCedula.trim(), address: contractAddress.trim() }),
       });
+      // Bug real (19 de julio): si el PUT fallaba (400/403/500), el código
+      // seguía igual a "review" y cargaba el contrato -- que mostraba
+      // cédula/domicilio vacíos ("[pendiente]") porque nunca se guardaron,
+      // y el cliente terminaba firmando ese HTML sin notar el error.
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody?.error || `legal-info respondió ${res.status}`);
+      }
       setContractStep("review");
       await fetchContractHtml();
     } catch (err) {
       console.error(err);
-      setContractError("No se pudo guardar la información. Intenta de nuevo.");
+      setContractError(err instanceof Error ? err.message : "No se pudo guardar la información. Intenta de nuevo.");
     }
   };
 
@@ -1855,14 +1873,28 @@ export default function ClientDashboard() {
         body: JSON.stringify({ signatureDataUrl, signerName, contractHtml }),
       });
       if (!res.ok) throw new Error(`sign-contract respondió ${res.status}`);
-      setContractStep("done");
+      // Transición breve antes de la pantalla de éxito -- sin esto, el
+      // cambio de "review" a "done" se sentía instantáneo/brusco.
+      setContractStep("signing");
       setRefreshTrigger((prev) => prev + 1);
+      await new Promise((resolve) => setTimeout(resolve, 900));
+      setContractStep("done");
     } catch (err) {
       console.error(err);
       setContractError("No se pudo firmar el contrato. Intenta de nuevo.");
     } finally {
       setContractSigning(false);
     }
+  };
+
+  // Gmail/Zoho ya no aplican -- este HTML se renderiza en un <iframe> propio,
+  // pero el contenido de contract-pdf (Meridian) no fue pensado para caber
+  // en un panel angosto y puede forzar scroll horizontal. Se inyecta un
+  // <style> mínimo antes de </head> (o al inicio si no hay <head>) para
+  // que nunca desborde el ancho del modal, sin tocar el HTML del PDF real.
+  const withNoHorizontalScroll = (html: string) => {
+    const style = "<style>html,body{overflow-x:hidden!important;max-width:100vw;}*{max-width:100%;}</style>";
+    return html.includes("</head>") ? html.replace("</head>", `${style}</head>`) : style + html;
   };
 
   // 5. Create Invoice
@@ -5806,6 +5838,9 @@ export default function ClientDashboard() {
                     <h3 className="text-lg font-display font-black flex items-center gap-2 text-[var(--color-text-primary)]">
                       <FileText size={18} className="text-[var(--color-primary-base)]" />
                       Contrato de servicio
+                      {contractCode && (
+                        <span className="text-[10px] font-mono font-normal text-[var(--color-text-tertiary)]">{contractCode}</span>
+                      )}
                     </h3>
                     <button
                       onClick={() => setShowContractModal(false)}
@@ -5850,7 +5885,7 @@ export default function ClientDashboard() {
                           }}
                           maxLength={15}
                           placeholder="000-0000000-0 o número de pasaporte"
-                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
                         />
                       </div>
                       <div className="space-y-2">
@@ -5860,7 +5895,7 @@ export default function ClientDashboard() {
                           value={contractAddress}
                           onChange={(e) => setContractAddress(e.target.value)}
                           placeholder="Calle, número, sector, ciudad"
-                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
+                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
                         />
                       </div>
                       <button
@@ -5892,8 +5927,9 @@ export default function ClientDashboard() {
                         ) : (
                           <iframe
                             title="Contrato de servicio"
-                            srcDoc={contractHtml}
+                            srcDoc={withNoHorizontalScroll(contractHtml)}
                             className="w-full h-full min-h-[360px] bg-white"
+                            style={{ overflowX: "hidden", overflowY: "auto" }}
                           />
                         )}
                       </div>
@@ -5939,7 +5975,7 @@ export default function ClientDashboard() {
                           value={contractSignerName}
                           onChange={(e) => setContractSignerName(e.target.value)}
                           placeholder="Escribe tu nombre completo"
-                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm italic font-serif"
+                          className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm italic font-serif"
                         />
                       ) : (
                         <div className="space-y-1">
@@ -5995,6 +6031,13 @@ export default function ClientDashboard() {
                     </div>
                   )}
 
+                  {contractStep === "signing" && (
+                    <div className="text-center py-8 space-y-3">
+                      <Loader2 size={28} className="animate-spin mx-auto text-[var(--color-primary-base)]" />
+                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmando...</div>
+                    </div>
+                  )}
+
                   {contractStep === "done" && (
                     <div className="text-center py-8 space-y-3">
                       <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado — te llegará una copia por correo.</div>
@@ -6030,6 +6073,9 @@ export default function ClientDashboard() {
                     <h3 className="text-lg font-display font-black flex items-center gap-2 text-[var(--color-text-primary)]">
                       <FileText size={18} className="text-[var(--color-primary-base)]" />
                       Mi contrato firmado
+                      {contractCode && (
+                        <span className="text-[10px] font-mono font-normal text-[var(--color-text-tertiary)]">{contractCode}</span>
+                      )}
                     </h3>
                     <button
                       onClick={() => setShowContractViewModal(false)}
@@ -6064,8 +6110,9 @@ export default function ClientDashboard() {
                     ) : (
                       <iframe
                         title="Mi contrato firmado"
-                        srcDoc={contractHtml}
+                        srcDoc={withNoHorizontalScroll(contractHtml)}
                         className="w-full h-full bg-white"
+                        style={{ overflowX: "hidden", overflowY: "auto" }}
                       />
                     )}
                   </div>

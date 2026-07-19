@@ -167,6 +167,7 @@ export interface DatabaseSchema {
   deploys: DbDeploy[];
   projectDisplayCounter: number;
   contractCodeCounter: number;
+  invoiceCodeCounter: number;
 }
 
 // La persistencia real vive en Firestore (colección "portal_state", un solo
@@ -193,6 +194,7 @@ const getInitialSeededData = (): DatabaseSchema => {
   return {
     projectDisplayCounter: 1,
     contractCodeCounter: 0,
+    invoiceCodeCounter: 0,
     users: [
       {
         id: "usr-admin-1",
@@ -348,6 +350,13 @@ class PortalDatabase {
           }
           c.contractCodeCounter = maxContractNum;
         }
+        if (typeof c.invoiceCodeCounter !== "number") {
+          // Migración de formato: las facturas viejas usan "POL-2026-009"
+          // (por año); el contador nuevo es global, como Q-00126/C-P001. Se
+          // arranca en la cantidad de facturas ya emitidas para no repetir
+          // números aunque el formato visible cambie a partir de acá.
+          c.invoiceCodeCounter = Array.isArray(c.invoices) ? c.invoices.length : 0;
+        }
         if (!Array.isArray(c.users)) c.users = [];
         if (!Array.isArray(c.projects)) c.projects = [];
         if (!Array.isArray(c.tasks)) c.tasks = [];
@@ -463,6 +472,17 @@ class PortalDatabase {
     this.ensureInitialized();
     this.cache!.contractCodeCounter++;
     const code = `C-P${this.cache!.contractCodeCounter.toString().padStart(3, "0")}`;
+    this.save();
+    return code;
+  }
+
+  // Código de factura (ej. "P-00126") -- secuencia global, mismo estilo que
+  // el de cotizaciones (Q-00126) y contratos (C-P001), reemplazando el
+  // formato viejo por año ("POL-2026-009").
+  consumeNextInvoiceCode(): string {
+    this.ensureInitialized();
+    this.cache!.invoiceCodeCounter++;
+    const code = `P-${this.cache!.invoiceCodeCounter.toString().padStart(5, "0")}`;
     this.save();
     return code;
   }

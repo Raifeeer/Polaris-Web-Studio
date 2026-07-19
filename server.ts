@@ -233,7 +233,7 @@ function paypalApiBase(): string {
 let cachedPayPalToken: { token: string; expiresAt: number } | null = null;
 
 async function getPayPalAccessToken(): Promise<string> {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientId = process.env.PAYPAL_CLIENT_ID || process.env.VITE_PAYPAL_CLIENT_ID;
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
   if (!clientId || !clientSecret) throw new Error("Credenciales de PayPal no configuradas.");
 
@@ -916,7 +916,7 @@ const PORT = 3000;
     dbInstance.addInvoice({
       id: invoiceId,
       projectId,
-      invoiceNumber: generateInvoiceNumber(dbInstance.getInvoices()),
+      invoiceNumber: dbInstance.consumeNextInvoiceCode(),
       amount: depositAmount,
       currency: "USD",
       status: "pending",
@@ -1242,7 +1242,7 @@ const PORT = 3000;
     dbInstance.addInvoice({
       id: `inv-${Date.now()}`,
       projectId: projectId,
-      invoiceNumber: generateInvoiceNumber(dbInstance.getInvoices()),
+      invoiceNumber: dbInstance.consumeNextInvoiceCode(),
       amount: 1500,
       currency: "USD",
       status: "pending",
@@ -1310,26 +1310,6 @@ const PORT = 3000;
     res.json({ success: true });
   });
 
-  function generateInvoiceNumber(existingInvoices: any[]): string {
-    const year = new Date().getFullYear();
-    
-    // Filtrar facturas del año actual y extraer su secuencia
-    const thisYearInvoices = existingInvoices
-      .map(inv => {
-        const match = inv.invoiceNumber?.match(/^POL-(\d{4})-(\d+)$/);
-        return match && parseInt(match[1]) === year ? parseInt(match[2]) : 0;
-      })
-      .filter(n => n > 0);
-
-    // Siguiente número en secuencia
-    const nextNum = thisYearInvoices.length > 0 
-      ? Math.max(...thisYearInvoices) + 1 
-      : 1;
-
-    // Formato: POL-2026-001
-    return `POL-${year}-${String(nextNum).padStart(3, "0")}`;
-  }
-
   app.post("/api/portal/invoices", authenticateToken, requireAdmin, async (req, res) => {
     const { projectId, amount, description, items, status, date, dueDate, exchangeRate } = req.body;
 
@@ -1362,8 +1342,7 @@ const PORT = 3000;
       return res.status(400).json({ error: "Faltan campos obligatorios para la factura." });
     }
 
-    const allInvoices = dbInstance.getInvoices();
-    const invoiceNumber = generateInvoiceNumber(allInvoices);
+    const invoiceNumber = dbInstance.consumeNextInvoiceCode();
     const finalStatus = status || "pending";
     const finalDueDate = dueDate || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
@@ -1455,10 +1434,16 @@ const PORT = 3000;
   });
 
   app.get("/api/portal/paypal/client-id", authenticateToken, (_req, res) => {
-    if (!process.env.PAYPAL_CLIENT_ID) {
+    // Bug real (19 de julio): en Vercel solo existía VITE_PAYPAL_CLIENT_ID
+    // (para el build del cliente) -- nunca se creó PAYPAL_CLIENT_ID (server),
+    // así que este endpoint devolvía 503 siempre y el modal de pago se
+    // quedaba en "Cargando PayPal...". El client ID es público (va al
+    // navegador igual), así que reusar el mismo valor acá es seguro.
+    const clientId = process.env.PAYPAL_CLIENT_ID || process.env.VITE_PAYPAL_CLIENT_ID;
+    if (!clientId) {
       return res.status(503).json({ error: "PayPal no está configurado." });
     }
-    res.json({ clientId: process.env.PAYPAL_CLIENT_ID });
+    res.json({ clientId });
   });
 
   function assertInvoiceAccess(req: any, foundInvoice: any, res: any): any {
