@@ -3324,6 +3324,43 @@ export default function ClientDashboard() {
                           </div>
                         </div>
 
+                        {/* Contrato de servicio -- firma electrónica simple. Vive en
+                            Resumen (no en Facturas) porque es un documento único e
+                            importante, no algo recurrente como las facturas -- así el
+                            cliente lo ve de inmediato al entrar hasta que lo firme. */}
+                        <div className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex items-center justify-between gap-4 flex-wrap">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
+                              <FileText size={18} className="text-indigo-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato de servicio</div>
+                              <div className="text-xs text-[var(--color-text-secondary)]">
+                                {(clientProject as any).contractStatus === "signed"
+                                  ? "Firmado -- puedes descargar tu copia cuando quieras."
+                                  : "Revisa y firma el contrato antes de que tu proyecto avance."}
+                              </div>
+                            </div>
+                          </div>
+                          {(clientProject as any).contractStatus === "signed" ? (
+                            <a
+                              href={`/api/portal/projects/${clientProject.id}/contract-pdf`}
+                              target="_blank" rel="noopener noreferrer"
+                              className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
+                            >
+                              Ver mi contrato firmado
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={openContractModal}
+                              className="px-4 py-2 rounded-lg bg-[var(--color-primary-base)] text-white text-xs font-bold hover:opacity-95 whitespace-nowrap"
+                            >
+                              Revisar y firmar
+                            </button>
+                          )}
+                        </div>
+
                         {/* Resumen IA */}
                         {(aiSummaryLoading || aiSummary) && (
                           <div className="p-5 rounded-[var(--radius-bento)] bg-[var(--color-primary-base)]/5 border border-[var(--color-primary-base)]/15 flex items-start gap-3">
@@ -4253,42 +4290,6 @@ export default function ClientDashboard() {
                         </motion.form>
                       )}
                     </AnimatePresence>
-                  </div>
-                )}
-
-                {/* Contrato de servicio -- firma electrónica simple */}
-                {!isAdmin && clientProject && (
-                  <div className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex items-center justify-between gap-4 flex-wrap">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
-                        <FileText size={18} className="text-indigo-400" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato de servicio</div>
-                        <div className="text-xs text-[var(--color-text-secondary)]">
-                          {(clientProject as any).contractStatus === "signed"
-                            ? "Firmado -- puedes descargar tu copia cuando quieras."
-                            : "Revisa y firma el contrato antes de que tu proyecto avance."}
-                        </div>
-                      </div>
-                    </div>
-                    {(clientProject as any).contractStatus === "signed" ? (
-                      <a
-                        href={`/api/portal/projects/${clientProject.id}/contract-pdf`}
-                        target="_blank" rel="noopener noreferrer"
-                        className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
-                      >
-                        Ver mi contrato firmado
-                      </a>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={openContractModal}
-                        className="px-4 py-2 rounded-lg bg-[var(--color-primary-base)] text-white text-xs font-bold hover:opacity-95 whitespace-nowrap"
-                      >
-                        Revisar y firmar
-                      </button>
-                    )}
                   </div>
                 )}
 
