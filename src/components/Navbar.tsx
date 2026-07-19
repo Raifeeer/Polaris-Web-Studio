@@ -140,7 +140,7 @@ export default function Navbar() {
           <button
             onClick={() => navigate("/cotizar")}
             onMouseEnter={() => prefetchRoute("/cotizar")}
-            className="hidden sm:block px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-xs sm:text-sm hover:scale-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-[var(--color-surface-base)] whitespace-nowrap"
+            className="hidden sm:block px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-xs sm:text-sm hover:scale-95 transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-[var(--color-surface-base)] whitespace-nowrap"
           >
             <T en="Plan your Project">Planifica tu Proyecto</T>
           </button>
@@ -214,7 +214,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setLanguage("es")}
-                    className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                    className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-colors ${
                       language === "es"
                         ? "text-[var(--color-on-primary)]"
                         : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
@@ -236,7 +236,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setLanguage("en")}
-                    className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                    className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-colors ${
                       language === "en"
                         ? "text-[var(--color-on-primary)]"
                         : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"

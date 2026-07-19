@@ -352,3 +352,18 @@ input[type="time"]::-webkit-datetime-edit {
     font-size: 16px !important;
   }
 }
+
+/* Accesibilidad real: el sitio no tenía ningún soporte de
+   prefers-reduced-motion (WCAG 2.3.3) -- las 3 animaciones CSS en loop
+   infinito (marquee de logos, y los dos pulsos decorativos del botón CTA
+   flotante) seguían corriendo sin parar sin importar la preferencia del
+   sistema operativo. Movimiento constante e infinito es exactamente el
+   caso que esta media query existe para cubrir -- se detienen del todo en
+   vez de solo acortarse, ya que acá el movimiento ES la animación entera. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-cta-glow-pulse,
+  .animate-cta-ping {
+    animation: none !important;
+  }
+}

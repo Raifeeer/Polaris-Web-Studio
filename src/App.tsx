@@ -12,7 +12,7 @@ import {
 } from "react-router-dom";
 import { useEffect, useLayoutEffect, lazy, Suspense, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -488,22 +488,31 @@ export default function App() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <AuthProvider>
-            <LanguageProvider>
-              <ToastProvider>
-                <Router>
-                  <ScrollHandler />
-                  <ScrollProgressBar />
-                  <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
-                    <AnimatedRoutes />
-                    <ConditionalQuoteBot showBot={showBot} />
-                    <CookieConsent />
-                    <EasterEgg />
-                  </div>
-                </Router>
-              </ToastProvider>
-            </LanguageProvider>
-          </AuthProvider>
+          {/* reducedMotion="user" hace que TODA animación de Framer Motion del
+              sitio (los cientos de usos de motion y AnimatePresence en las
+              páginas) respete prefers-reduced-motion del sistema operativo
+              automáticamente -- en vez de tener que gatear cada instancia a
+              mano. Reduce a fade-only (mantiene opacity, tira transform/
+              posición), no las elimina del todo -- exactamente el
+              comportamiento que pide la categoría de accesibilidad de motion. */}
+          <MotionConfig reducedMotion="user">
+            <AuthProvider>
+              <LanguageProvider>
+                <ToastProvider>
+                  <Router>
+                    <ScrollHandler />
+                    <ScrollProgressBar />
+                    <div className="min-h-dvh bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+                      <AnimatedRoutes />
+                      <ConditionalQuoteBot showBot={showBot} />
+                      <CookieConsent />
+                      <EasterEgg />
+                    </div>
+                  </Router>
+                </ToastProvider>
+              </LanguageProvider>
+            </AuthProvider>
+          </MotionConfig>
         </motion.div>
       )}
     </>
