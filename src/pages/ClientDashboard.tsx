@@ -3387,13 +3387,22 @@ export default function ClientDashboard() {
                               Ver mi contrato firmado
                             </a>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={openContractModal}
-                              className="px-4 py-2 rounded-lg bg-[var(--color-primary-base)] text-white text-xs font-bold hover:opacity-95 whitespace-nowrap"
-                            >
-                              Revisar y firmar
-                            </button>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <a
+                                href={`/api/portal/projects/${clientProject.id}/contract-pdf`}
+                                target="_blank" rel="noopener noreferrer"
+                                className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
+                              >
+                                Descargar PDF
+                              </a>
+                              <button
+                                type="button"
+                                onClick={openContractModal}
+                                className="px-4 py-2 rounded-lg bg-[var(--color-primary-base)] text-white text-xs font-bold hover:opacity-95 whitespace-nowrap"
+                              >
+                                Revisar y firmar
+                              </button>
+                            </div>
                           )}
                         </div>
 
@@ -5730,6 +5739,15 @@ export default function ClientDashboard() {
 
                   {contractStep === "review" && (
                     <div className="flex flex-col gap-4 min-h-0 flex-1">
+                      <div className="flex justify-end -mb-1">
+                        <a
+                          href={clientProject ? `/api/portal/projects/${clientProject.id}/contract-pdf` : "#"}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
+                        >
+                          Descargar PDF para revisar
+                        </a>
+                      </div>
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
                         {contractHtmlLoading ? (
                           <div className="h-full flex items-center justify-center text-xs text-[var(--color-text-secondary)]">Cargando contrato...</div>
