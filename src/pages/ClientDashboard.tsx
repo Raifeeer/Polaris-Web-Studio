@@ -1643,6 +1643,31 @@ export default function ClientDashboard() {
     }
   };
 
+  // El endpoint de contract-pdf exige el Bearer token (authenticateToken) --
+  // un <a href> normal navega sin ese header y devuelve "Debe iniciar sesión".
+  // Se descarga vía fetch autenticado y se fuerza la descarga desde un blob.
+  const downloadContractPdf = async () => {
+    if (!clientProject) return;
+    try {
+      const res = await fetch(`/api/portal/projects/${clientProject.id}/contract-pdf`, {
+        headers: { Authorization: `Bearer ${tokenRef.current}` },
+      });
+      if (!res.ok) throw new Error(`contract-pdf respondió ${res.status}`);
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contrato-${clientProject.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error(err);
+      setContractError("No se pudo descargar el PDF del contrato.");
+    }
+  };
+
   // Contrato de servicio -- firma electrónica simple
   const openContractModal = async () => {
     setContractError(null);
@@ -3379,22 +3404,22 @@ export default function ClientDashboard() {
                             </div>
                           </div>
                           {(clientProject as any).contractStatus === "signed" ? (
-                            <a
-                              href={`/api/portal/projects/${clientProject.id}/contract-pdf`}
-                              target="_blank" rel="noopener noreferrer"
+                            <button
+                              type="button"
+                              onClick={downloadContractPdf}
                               className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
                             >
                               Ver mi contrato firmado
-                            </a>
+                            </button>
                           ) : (
                             <div className="flex items-center gap-2 flex-wrap">
-                              <a
-                                href={`/api/portal/projects/${clientProject.id}/contract-pdf`}
-                                target="_blank" rel="noopener noreferrer"
+                              <button
+                                type="button"
+                                onClick={downloadContractPdf}
                                 className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
                               >
                                 Descargar PDF
-                              </a>
+                              </button>
                               <button
                                 type="button"
                                 onClick={openContractModal}
@@ -5740,13 +5765,13 @@ export default function ClientDashboard() {
                   {contractStep === "review" && (
                     <div className="flex flex-col gap-4 min-h-0 flex-1">
                       <div className="flex justify-end -mb-1">
-                        <a
-                          href={clientProject ? `/api/portal/projects/${clientProject.id}/contract-pdf` : "#"}
-                          target="_blank" rel="noopener noreferrer"
+                        <button
+                          type="button"
+                          onClick={downloadContractPdf}
                           className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
                         >
                           Descargar PDF para revisar
-                        </a>
+                        </button>
                       </div>
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
                         {contractHtmlLoading ? (
