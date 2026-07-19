@@ -3270,7 +3270,13 @@ export default function WizardQuote() {
                                   <button
                                     key={suggestion.domain}
                                     type="button"
-                                    onClick={() => setDomainName(suggestion.domain)}
+                                    onClick={() => {
+                                      setDomainName(suggestion.domain);
+                                      setDomainStatus(null);
+                                      setDomainError('');
+                                      if (domainDebounceRef.current) clearTimeout(domainDebounceRef.current);
+                                      checkDomainAvailability(suggestion.domain);
+                                    }}
                                     className={`flex items-center gap-2 p-2 px-3 rounded-lg border transition-all duration-200 text-left cursor-pointer min-w-0 ${
                                       isSelected
                                         ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 shadow-sm"
