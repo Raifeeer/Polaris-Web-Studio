@@ -2208,16 +2208,27 @@ const PORT = 3000;
    * Format: PUT /api/portal/projects/:id/legal-info
    */
   app.put("/api/portal/projects/:id/legal-info", authenticateToken, async (req: any, res) => {
-    const { cedula, address } = req.body || {};
+    const cedula = String(req.body?.cedula || "").trim();
+    const address = String(req.body?.address || "").trim();
     const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
     if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
     if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
       return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
     }
-    dbInstance.updateUser(project.clientUserId, {
-      cedula: String(cedula || "").trim(),
-      address: String(address || "").trim(),
-    });
+    // Misma regla de validación que el modal de firma (ClientDashboard.tsx) --
+    // defensivo, porque este endpoint es real y podría llamarse directo sin
+    // pasar por el frontend. Cédula dominicana real: 11 dígitos exactos;
+    // pasaporte: al menos 6 caracteres (sin estándar único entre países).
+    const isPureDigits = /^[0-9-]+$/.test(cedula);
+    const digitsOnly = cedula.replace(/\D/g, "");
+    const idValid = cedula.length > 0 && (isPureDigits ? digitsOnly.length === 11 : cedula.replace(/\s/g, "").length >= 6);
+    if (!idValid) {
+      return res.status(400).json({ error: "Cédula o pasaporte inválido." });
+    }
+    if (address.length < 10) {
+      return res.status(400).json({ error: "Domicilio incompleto." });
+    }
+    dbInstance.updateUser(project.clientUserId, { cedula, address });
     await dbInstance.flush();
     res.json({ success: true });
   });

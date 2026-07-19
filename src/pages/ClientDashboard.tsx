@@ -959,6 +959,7 @@ export default function ClientDashboard() {
   const contractCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const contractDrawingRef = useRef(false);
   const contractHasDrawnRef = useRef(false);
+  const [contractDownloading, setContractDownloading] = useState(false);
 
   // Modal de solo-lectura para ver el contrato (firmado o no) en vivo, con
   // descargar/compartir por correo -- distinto del modal de arriba, que es
@@ -1689,7 +1690,8 @@ export default function ClientDashboard() {
   // un <a href> normal navega sin ese header y devuelve "Debe iniciar sesión".
   // Se descarga vía fetch autenticado y se fuerza la descarga desde un blob.
   const downloadContractPdf = async () => {
-    if (!clientProject) return;
+    if (!clientProject || contractDownloading) return;
+    setContractDownloading(true);
     try {
       const res = await fetch(`/api/portal/projects/${clientProject.id}/contract-pdf`, {
         headers: { Authorization: `Bearer ${tokenRef.current}` },
@@ -1711,6 +1713,8 @@ export default function ClientDashboard() {
     } catch (err) {
       console.error(err);
       setContractError("No se pudo descargar el PDF del contrato.");
+    } finally {
+      setContractDownloading(false);
     }
   };
 
@@ -1775,8 +1779,26 @@ export default function ClientDashboard() {
   };
 
   const handleSaveLegalInfo = async () => {
-    if (!clientProject?.id || !contractCedula.trim() || !contractAddress.trim()) {
-      setContractError("Completa cédula y domicilio para continuar.");
+    const idValue = contractCedula.trim();
+    const addressValue = contractAddress.trim();
+    if (!clientProject?.id || !idValue || !addressValue) {
+      setContractError("Completa cédula/pasaporte y domicilio para continuar.");
+      return;
+    }
+    // Misma regla que detecta el tipo de documento en el contrato final
+    // (contract-pdf, Meridian): cédula dominicana real = 11 dígitos exactos;
+    // cualquier otro valor numérico incompleto no es válido. Un pasaporte no
+    // tiene un largo único entre países, pero exigir al menos 6 caracteres
+    // evita el caso real reportado de avanzar con solo 2 letras.
+    const isPureDigits = /^[0-9-]+$/.test(idValue);
+    const digitsOnly = idValue.replace(/\D/g, "");
+    const idValid = isPureDigits ? digitsOnly.length === 11 : idValue.replace(/\s/g, "").length >= 6;
+    if (!idValid) {
+      setContractError("Ingresa una cédula completa (000-0000000-0) o un número de pasaporte válido.");
+      return;
+    }
+    if (addressValue.length < 10) {
+      setContractError("Ingresa tu domicilio completo (calle, número, sector, ciudad).");
       return;
     }
     setContractError(null);
@@ -3470,9 +3492,11 @@ export default function ClientDashboard() {
                               <button
                                 type="button"
                                 onClick={downloadContractPdf}
-                                className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap"
+                                disabled={contractDownloading}
+                                className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs font-bold text-[var(--color-text-primary)] hover:border-indigo-500/30 whitespace-nowrap disabled:opacity-60 flex items-center gap-1.5"
                               >
-                                Descargar PDF
+                                {contractDownloading && <Loader2 size={13} className="animate-spin" />}
+                                {contractDownloading ? "Generando..." : "Descargar PDF"}
                               </button>
                               <button
                                 type="button"
@@ -5801,21 +5825,31 @@ export default function ClientDashboard() {
                   {contractStep === "legal-info" && (
                     <div className="space-y-4 overflow-y-auto">
                       <p className="text-xs text-[var(--color-text-secondary)]">
-                        Antes de firmar necesitamos tu cédula y domicilio — se usan solo para identificarte en el contrato.
+                        Antes de firmar necesitamos tu cédula o pasaporte y tu domicilio — se usan solo para identificarte en el contrato.
                       </p>
                       <div className="space-y-2">
-                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula</label>
+                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula o pasaporte</label>
                         <input
                           type="text"
                           value={contractCedula}
                           onChange={(e) => {
-                            const digits = e.target.value.replace(/\D/g, "").slice(0, 11);
-                            const parts = [digits.slice(0, 3), digits.slice(3, 10), digits.slice(10, 11)].filter(Boolean);
-                            setContractCedula(parts.join("-"));
+                            const raw = e.target.value;
+                            // Si son solo dígitos (con o sin guiones), formatear como
+                            // cédula dominicana (000-0000000-0) mientras escribe. En
+                            // cuanto aparece una letra, se trata como pasaporte --
+                            // formato alfanumérico libre, sin un estándar único entre
+                            // países, así que no se le fuerza ningún patrón.
+                            const isPureDigits = /^[0-9-]*$/.test(raw);
+                            if (isPureDigits) {
+                              const digits = raw.replace(/\D/g, "").slice(0, 11);
+                              const parts = [digits.slice(0, 3), digits.slice(3, 10), digits.slice(10, 11)].filter(Boolean);
+                              setContractCedula(parts.join("-"));
+                            } else {
+                              setContractCedula(raw.toUpperCase().slice(0, 15));
+                            }
                           }}
-                          inputMode="numeric"
-                          maxLength={13}
-                          placeholder="000-0000000-0"
+                          maxLength={15}
+                          placeholder="000-0000000-0 o número de pasaporte"
                           className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm transition-all"
                         />
                       </div>
@@ -5845,9 +5879,11 @@ export default function ClientDashboard() {
                         <button
                           type="button"
                           onClick={downloadContractPdf}
-                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
+                          disabled={contractDownloading}
+                          className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline disabled:opacity-60 flex items-center gap-1.5"
                         >
-                          Descargar PDF para revisar
+                          {contractDownloading && <Loader2 size={11} className="animate-spin" />}
+                          {contractDownloading ? "Generando PDF..." : "Descargar PDF para revisar"}
                         </button>
                       </div>
                       <div className="flex-1 min-h-0 overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
@@ -5862,7 +5898,7 @@ export default function ClientDashboard() {
                         )}
                       </div>
 
-                      <label className="flex items-center gap-2 text-xs text-[var(--color-text-primary)]">
+                      <label className="flex items-center gap-2 text-xs text-[var(--color-text-primary)] select-none" style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}>
                         <input
                           type="checkbox"
                           checked={contractAccepted}
@@ -5872,18 +5908,26 @@ export default function ClientDashboard() {
                         Leí y acepto los términos de este contrato.
                       </label>
 
-                      <div className="flex items-center gap-3 text-xs">
+                      {/* select-none + WebkitTouchCallout evita que iOS Safari
+                          dispare el selector de texto nativo (menú Copiar/
+                          Consultar/Traducir) al tocar estos botones -- caso
+                          real reportado en el toggle "Prefiero escribir mi
+                          nombre". select-none solo no alcanza en iOS, hace
+                          falta también -webkit-touch-callout:none. */}
+                      <div className="flex items-center gap-3 text-xs select-none" style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}>
                         <button
                           type="button"
                           onClick={() => setContractUseTyped(false)}
-                          className={`px-3 py-1.5 rounded-lg font-bold ${!contractUseTyped ? "bg-[var(--color-primary-base)] text-white" : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"}`}
+                          className={`px-3 py-1.5 rounded-lg font-bold select-none ${!contractUseTyped ? "bg-[var(--color-primary-base)] text-white" : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"}`}
+                          style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                         >
                           Dibujar mi firma
                         </button>
                         <button
                           type="button"
                           onClick={() => setContractUseTyped(true)}
-                          className={`px-3 py-1.5 rounded-lg font-bold ${contractUseTyped ? "bg-[var(--color-primary-base)] text-white" : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"}`}
+                          className={`px-3 py-1.5 rounded-lg font-bold select-none ${contractUseTyped ? "bg-[var(--color-primary-base)] text-white" : "bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"}`}
+                          style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                         >
                           Prefiero escribir mi nombre
                         </button>
@@ -5931,7 +5975,8 @@ export default function ClientDashboard() {
                           <button
                             type="button"
                             onClick={clearSignaturePad}
-                            className="text-[11px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+                            className="text-[11px] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)] select-none"
+                            style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                           >
                             Limpiar
                           </button>
@@ -5942,7 +5987,8 @@ export default function ClientDashboard() {
                         type="button"
                         onClick={handleSignContract}
                         disabled={contractSigning}
-                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50"
+                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50 select-none"
+                        style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                       >
                         {contractSigning ? "Firmando..." : "Firmar y enviar"}
                       </button>
@@ -6004,9 +6050,11 @@ export default function ClientDashboard() {
                     <button
                       type="button"
                       onClick={downloadContractPdf}
-                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
+                      disabled={contractDownloading}
+                      className="text-[11px] font-bold text-[var(--color-primary-base)] hover:underline disabled:opacity-60 flex items-center gap-1.5"
                     >
-                      Descargar PDF
+                      {contractDownloading && <Loader2 size={11} className="animate-spin" />}
+                      {contractDownloading ? "Generando..." : "Descargar PDF"}
                     </button>
                   </div>
 
