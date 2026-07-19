@@ -599,7 +599,7 @@ async function checkDomainViaPorkbun(domain: string): Promise<{ available: boole
   if (!apiKey || !secretKey) return null;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const timeoutId = setTimeout(() => controller.abort(), 3000);
   try {
     const res = await fetch(`https://api.porkbun.com/api/json/v3/domain/checkDomain/${encodeURIComponent(domain)}`, {
       method: "POST",
@@ -694,8 +694,16 @@ app.use((req, res, next) => {
 const PORT = 3000;
 
   /**
-   * Proxy seguro de disponibilidad + precio real de dominio (Porkbun, con
-   * fallback a solo-disponibilidad vía RDAP si Porkbun falla).
+   * Proxy seguro de disponibilidad (RDAP, siempre) + precio real de dominio
+   * (Porkbun, cuando llega a tiempo). Corren en PARALELO -- la respuesta
+   * nunca espera a Porkbun más allá de lo que ya tarda RDAP + un margen
+   * corto, porque Porkbun tiene un límite real de 1 consulta cada 10
+   * segundos POR API KEY (no por dominio): en el wizard, escribir el
+   * dominio y tocar un botón de extensión dispara dos consultas casi
+   * seguidas, así que la segunda pierde el precio casi siempre si se
+   * espera a Porkbun de forma secuencial (bug real encontrado en vivo,
+   * 19 de julio -- antes también hacía esperar hasta 6s si Porkbun se
+   * colgaba, inaceptable en un wizard donde cada segundo cuenta).
    * Format: GET /api/check-domain?domain=example.com
    */
   app.get("/api/check-domain", async (req, res) => {
@@ -707,12 +715,18 @@ const PORT = 3000;
     }
 
     try {
-      const porkbun = await checkDomainViaPorkbun(domain);
-      if (porkbun) {
-        return res.json({ available: porkbun.available, price: porkbun.price, regularPrice: porkbun.regularPrice });
-      }
-      // Porkbun no disponible/con rate limit -- solo disponibilidad, sin precio.
+      const porkbunPromise = checkDomainViaPorkbun(domain);
       const available = await checkDomainAvailability(domain);
+      // Pequeño margen extra (300ms) por si Porkbun está a punto de
+      // resolver -- nunca se espera más que eso una vez que RDAP ya
+      // respondió, así que el peor caso real es ~RDAP + 300ms, no 6s.
+      const porkbun = await Promise.race([
+        porkbunPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 300)),
+      ]);
+      if (porkbun) {
+        return res.json({ available, price: porkbun.price, regularPrice: porkbun.regularPrice });
+      }
       return res.json({ available });
 
     } catch (err: any) {
