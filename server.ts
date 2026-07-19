@@ -596,7 +596,10 @@ import { checkDomainAvailability } from "./src/lib/domain-utils";
 async function checkDomainViaPorkbun(domain: string): Promise<{ available: boolean; price?: number; regularPrice?: number } | null> {
   const apiKey = process.env.PORKBUN_API_KEY;
   const secretKey = process.env.PORKBUN_SECRET_KEY;
-  if (!apiKey || !secretKey) return null;
+  if (!apiKey || !secretKey) {
+    console.error("[checkDomainViaPorkbun] faltan credenciales -- apiKey:", !!apiKey, "secretKey:", !!secretKey);
+    return null;
+  }
 
   const controller = new AbortController();
   // Tiene que ser MAYOR que el timeout de RDAP (5s en domain-utils.ts) --
