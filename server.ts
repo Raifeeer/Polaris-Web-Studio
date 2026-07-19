@@ -599,7 +599,15 @@ async function checkDomainViaPorkbun(domain: string): Promise<{ available: boole
   if (!apiKey || !secretKey) return null;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3000);
+  // Tiene que ser MAYOR que el timeout de RDAP (5s en domain-utils.ts) --
+  // si Porkbun se autocancela antes de que RDAP termine, el Promise.race
+  // de /api/check-domain ya lo encuentra resuelto a null (por el abort
+  // interno) aunque nunca hubo problema real con Porkbun, y el precio se
+  // pierde sin ser culpa del rate limit. Bug real encontrado en vivo el
+  // 19 de julio -- con 3000ms acá, cualquier RDAP que tardara 3-5s
+  // (frecuente en dominios .com nunca antes consultados) ya había matado
+  // a Porkbun de antemano.
+  const timeoutId = setTimeout(() => controller.abort(), 5500);
   try {
     const res = await fetch(`https://api.porkbun.com/api/json/v3/domain/checkDomain/${encodeURIComponent(domain)}`, {
       method: "POST",
