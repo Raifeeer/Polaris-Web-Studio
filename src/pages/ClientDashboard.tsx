@@ -2468,7 +2468,7 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div className="min-h-dvh bg-[var(--color-surface-base)] flex flex-col md:flex-row">
+    <div className="min-h-[100svh] bg-[var(--color-surface-base)] flex flex-col md:flex-row">
 
       {switchingLanguage && <LanguageSwitchLoader />}
 

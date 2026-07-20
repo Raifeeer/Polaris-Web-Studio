@@ -762,7 +762,7 @@ export default function LegalPage({ page }: LegalPageProps) {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
       <main className="flex-1 max-w-3xl mx-auto w-full pt-32 pb-20 px-6 relative z-10">

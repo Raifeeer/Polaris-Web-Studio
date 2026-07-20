@@ -58,7 +58,7 @@ export default class RouteErrorBoundary extends Component<Props, State> {
         return null;
       }
       return (
-        <div className="min-h-dvh flex flex-col items-center justify-center gap-4 bg-[var(--color-surface-base)] text-[var(--color-text-primary)] px-6 text-center">
+        <div className="min-h-[100svh] flex flex-col items-center justify-center gap-4 bg-[var(--color-surface-base)] text-[var(--color-text-primary)] px-6 text-center">
           <p className="text-lg font-bold">
             <T en="Something didn't load correctly.">Algo no cargó correctamente.</T>
           </p>

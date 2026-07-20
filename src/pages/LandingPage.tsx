@@ -425,7 +425,7 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
       {/* Floating Parallax Background Orbs & Shapes */}

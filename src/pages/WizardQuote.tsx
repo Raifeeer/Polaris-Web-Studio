@@ -2654,7 +2654,7 @@ export default function WizardQuote() {
   };
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-x-hidden">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative overflow-x-hidden">
       <Navbar />
 
       <main className="flex-1 min-w-0 max-w-5xl mx-auto w-full px-6 pt-10 pb-24 md:pt-24 relative z-10 flex flex-col">

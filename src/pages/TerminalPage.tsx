@@ -681,7 +681,7 @@ export default function TerminalPage() {
 
   return (
     <div
-      className="min-h-dvh bg-[#020205] text-[#d1d5db] flex flex-col font-mono text-xs overflow-hidden relative selection:bg-cyan-500/30 selection:text-white"
+      className="min-h-[100svh] bg-[#020205] text-[#d1d5db] flex flex-col font-mono text-xs overflow-hidden relative selection:bg-cyan-500/30 selection:text-white"
       onClick={() => inputRef.current?.focus()}
       style={{ transform: isFlipped ? "rotate(180deg)" : "none", transition: "transform 0.5s ease" }}
     >

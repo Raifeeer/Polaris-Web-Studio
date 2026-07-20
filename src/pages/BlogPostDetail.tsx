@@ -351,7 +351,7 @@ export default function BlogPostDetail() {
 
   if (!post) {
     return (
-      <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)]" id="blog-not-found">
+      <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)]" id="blog-not-found">
         <Navbar />
         <div className="flex-grow flex flex-col items-center justify-center p-10 text-center">
           <BookMarked size={48} className="text-red-500 animate-bounce mb-4" />
@@ -386,7 +386,7 @@ export default function BlogPostDetail() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden" 
+      className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden" 
       id="blog-detail-root"
     >
       <Navbar />

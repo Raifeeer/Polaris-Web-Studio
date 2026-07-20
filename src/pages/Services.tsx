@@ -963,7 +963,7 @@ export default function Services() {
   ];
 
   return (
-    <div className="min-h-dvh flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
+    <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
       <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
