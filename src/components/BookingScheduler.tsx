@@ -52,6 +52,7 @@ export default function BookingScheduler({
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
+  const [clientNote, setClientNote] = useState("");
   const [emailError, setEmailError] = useState("");
   const [nameError, setNameError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -104,7 +105,9 @@ export default function BookingScheduler({
           start: selectedSlot,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           language,
-          notes,
+          notes: clientNote.trim()
+            ? `${notes}\n\n${translate("Comentario del cliente:", "Client comment:")} ${clientNote.trim()}`
+            : notes,
           phone,
           type,
         }),
@@ -238,6 +241,20 @@ export default function BookingScheduler({
             </div>
           </div>
 
+          <div>
+            <textarea
+              rows={3}
+              placeholder={translate(
+                "¿Algo que quieras contarnos antes de la llamada? (opcional)",
+                "Anything you'd like us to know before the call? (optional)"
+              )}
+              value={clientNote}
+              onChange={(e) => setClientNote(e.target.value)}
+              maxLength={500}
+              className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all resize-none"
+            />
+          </div>
+
           {bookingError === "slot" && (
             <p className="text-xs text-amber-500">
               <T en="That time was just taken — pick another one, the times were refreshed.">Ese horario acaba de ocuparse — elige otro, los horarios se actualizaron.</T>
@@ -245,7 +262,7 @@ export default function BookingScheduler({
           )}
           {bookingError === "generic" && (
             <p className="text-xs text-red-500">
-              <T en="We couldn't book the meeting. Please try again or message us on WhatsApp.">No pudimos agendar la reunión. Inténtalo de nuevo o escríbenos por WhatsApp.</T>
+              <T en="We couldn't book the meeting. Please try again or email us at hola@polarisweb.studio.">No pudimos agendar la reunión. Inténtalo de nuevo o escríbenos a hola@polarisweb.studio.</T>
             </p>
           )}
 
