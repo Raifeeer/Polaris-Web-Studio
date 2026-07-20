@@ -5998,18 +5998,38 @@ export default function ClientDashboard() {
                             className="w-full rounded-xl border border-[var(--color-border-strong)] bg-white touch-none select-none"
                             style={{ height: 140, WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                             onPointerDown={(e) => {
+                              // preventDefault acá, no solo en CSS (touch-action/user-select) --
+                              // bug real reportado por el usuario (20 de julio): en iPhone/iPad
+                              // la lupa de selección de texto seguía apareciendo al tocar y
+                              // arrastrar, y un toque simple (sin arrastre, ej. para dejar un
+                              // punto) no dejaba marca. La lupa de iOS se dispara a nivel del
+                              // evento táctil nativo, no solo por CSS -- hace falta cancelarla
+                              // explícitamente acá. Los Pointer Events de React (a diferencia de
+                              // los Touch Events) no se registran como passive por defecto, así
+                              // que preventDefault() sí tiene efecto real.
+                              e.preventDefault();
                               contractDrawingRef.current = true;
                               const canvas = contractCanvasRef.current!;
                               const rect = canvas.getBoundingClientRect();
                               const ctx = canvas.getContext("2d")!;
                               ctx.strokeStyle = "#0f172a";
+                              ctx.fillStyle = "#0f172a";
                               ctx.lineWidth = 2;
                               ctx.lineCap = "round";
+                              const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+                              const y = (e.clientY - rect.top) * (canvas.height / rect.height);
                               ctx.beginPath();
-                              ctx.moveTo((e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height));
+                              ctx.moveTo(x, y);
+                              // Deja un punto visible de una vez -- un toque simple sin
+                              // arrastre (ej. para poner el punto de una "i") antes no dejaba
+                              // ninguna marca, porque el dibujo solo ocurría en pointermove.
+                              ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
+                              ctx.fill();
+                              contractHasDrawnRef.current = true;
                             }}
                             onPointerMove={(e) => {
                               if (!contractDrawingRef.current) return;
+                              e.preventDefault();
                               const canvas = contractCanvasRef.current!;
                               const rect = canvas.getBoundingClientRect();
                               const ctx = canvas.getContext("2d")!;
@@ -6017,7 +6037,7 @@ export default function ClientDashboard() {
                               ctx.stroke();
                               contractHasDrawnRef.current = true;
                             }}
-                            onPointerUp={() => { contractDrawingRef.current = false; }}
+                            onPointerUp={(e) => { e.preventDefault(); contractDrawingRef.current = false; }}
                             onPointerLeave={() => { contractDrawingRef.current = false; }}
                           />
                           <button
