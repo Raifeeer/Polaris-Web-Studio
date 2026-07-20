@@ -427,6 +427,32 @@ async function notifyUpsell(params: {
   }
 }
 
+// Avisa al cliente cuando un addon recurrente se suspende de verdad por
+// falta de pago (ver /api/portal/billing/run-cycle, Cláusula Novena del
+// contrato: 30 días de mora sin regularizar). Cloud Function
+// addon-suspend-notify (Meridian), mismo patrón/CRON_SECRET que el resto.
+async function notifySuspension(params: {
+  clientEmail: string;
+  clientName: string;
+  projectName: string;
+  suspendedAddons: { name: string; price: number }[];
+  pendingInvoiceNumber: string;
+  pendingAmount: number;
+}) {
+  try {
+    const res = await fetch("https://addon-suspend-notify-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifySuspension failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando suspensión de addon:", err);
+  }
+}
+
 // Avisa al cliente por correo cuando se crea un entregable (tarea) nuevo en
 // su proyecto (Cloud Function deliverable-notify-send, Meridian) -- mismo
 // patrón/CRON_SECRET que notifyInvoice.
@@ -2475,7 +2501,7 @@ const PORT = 3000;
     const todayStr = new Date().toISOString().split("T")[0];
     const today = new Date(todayStr);
     const UPSELL_CADENCE_DAYS = 120;
-    const results = { recurringBilled: 0, lateFeesCharged: 0, upsellsSent: 0, projectsScanned: 0, errors: [] as string[] };
+    const results = { recurringBilled: 0, lateFeesCharged: 0, addonsSuspended: 0, upsellsSent: 0, projectsScanned: 0, errors: [] as string[] };
 
     const projects = dbInstance.getProjects().filter((p) => !p.deletedAt && p.status === "active" && p.contractStatus === "signed");
 
@@ -2519,6 +2545,7 @@ const PORT = 3000;
               description: `Facturación mensual de addons recurrentes — ${items.map((it) => it.description).join(", ")}`,
               items,
               kind: "recurring",
+              suspendAddonIds: monthlyAddons.map((a) => a.id),
             });
 
             await notifyInvoice({
@@ -2539,7 +2566,12 @@ const PORT = 3000;
           }
         }
 
-        // --- 2. Mora: 2% mensual sobre facturas pendientes vencidas (Cláusula Décima Primera) ---
+        // --- 2. Mora: 5.6% mensual sobre facturas pendientes vencidas (Cláusula Décima Primera) ---
+        // Número real de mercado, no inventado: comparado en vivo contra el
+        // contrato vigente de Altice RD (mayo 2025) -- cobran 4.75% + 18% de
+        // impuesto sobre ese cargo (~5.6% efectivo). Se usa el total directo
+        // acá (sin desglosar impuesto) porque EL PRESTADOR no factura RNC
+        // todavía, así que no hay impuesto real que discriminar.
         const overdueInvoices = dbInstance
           .getInvoices()
           .filter((i) => i.projectId === project.id && i.status === "pending" && i.kind !== "late_fee" && new Date(i.dueDate) < today);
@@ -2552,7 +2584,7 @@ const PORT = 3000;
           if (periodsToCharge <= 0) continue;
 
           for (let i = 0; i < periodsToCharge; i++) {
-            const feeAmount = Math.round(inv.amount * 0.02 * 100) / 100;
+            const feeAmount = Math.round(inv.amount * 0.056 * 100) / 100;
             const feeDueDate = new Date(today);
             feeDueDate.setDate(feeDueDate.getDate() + 7);
             const feeDueDateStr = feeDueDate.toISOString().split("T")[0];
@@ -2566,7 +2598,7 @@ const PORT = 3000;
               status: "pending",
               date: todayStr,
               dueDate: feeDueDateStr,
-              description: `Cargo por mora (2% mensual, Cláusula Décima Primera) — Factura #${inv.invoiceNumber} vencida el ${inv.dueDate}`,
+              description: `Cargo por mora (5.6% mensual, Cláusula Décima Primera) — Factura #${inv.invoiceNumber} vencida el ${inv.dueDate}`,
               kind: "late_fee",
               relatedInvoiceId: inv.id,
             });
@@ -2584,6 +2616,34 @@ const PORT = 3000;
             results.lateFeesCharged++;
           }
           dbInstance.updateInvoice(inv.id, { lateFeePeriodsCharged: periodsAlreadyCharged + periodsToCharge });
+        }
+
+        // --- 2.5. Suspensión real de addons (Cláusula Novena): 30 días de
+        // mora sin regularizar en una factura de facturación recurrente ---
+        for (const inv of overdueInvoices) {
+          if (inv.kind !== "recurring" || inv.suspendedAt || !inv.suspendAddonIds?.length) continue;
+          const daysOverdue = Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / (24 * 60 * 60 * 1000));
+          if (daysOverdue < 30) continue;
+
+          const stillActive = inv.suspendAddonIds.filter((id) => (project.addonIds || []).includes(id));
+          if (stillActive.length > 0) {
+            const remaining = (project.addonIds || []).filter((id) => !stillActive.includes(id));
+            dbInstance.updateProject(project.id, { addonIds: remaining });
+          }
+          dbInstance.updateInvoice(inv.id, { suspendedAt: new Date().toISOString() });
+
+          const suspendedAddons = stillActive.map((id) => ({ name: ADDON_INFO[id]?.name || id, price: ADDON_INFO[id]?.price || 0 }));
+          if (suspendedAddons.length > 0) {
+            await notifySuspension({
+              clientEmail: client.email,
+              clientName: client.name,
+              projectName: project.name,
+              suspendedAddons,
+              pendingInvoiceNumber: inv.invoiceNumber,
+              pendingAmount: inv.amount,
+            });
+          }
+          results.addonsSuspended += suspendedAddons.length;
         }
 
         // --- 3. Upsell independiente (sin factura), cada ~120 días ---

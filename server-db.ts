@@ -150,6 +150,12 @@ export interface DbInvoice {
   kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee";
   relatedInvoiceId?: string;   // en una factura kind:"late_fee", la factura vencida que la originó
   lateFeePeriodsCharged?: number; // en la factura original vencida, cuántos períodos de 30 días de mora ya se cobraron -- evita cobrar el mismo período dos veces
+  // Suspensión real de addons (Cláusula Novena del contrato): en una
+  // factura kind:"recurring", qué addons cubre -- necesario para saber
+  // cuáles quitarle al proyecto si queda 30+ días sin pagar. suspendedAt
+  // marca que la suspensión ya se aplicó, para no repetirla.
+  suspendAddonIds?: string[];
+  suspendedAt?: string;
 }
 
 export interface DbMeeting {
