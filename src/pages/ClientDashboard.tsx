@@ -2468,7 +2468,14 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div className="min-h-[100svh] bg-[var(--color-surface-base)] flex flex-col md:flex-row">
+    <div className="bg-[var(--color-surface-base)] flex flex-col md:flex-row">
+      {/* Sin min-h-[100svh]: pedido explícito del usuario (20 de julio) --
+          con poco contenido (cuentas nuevas, pocas tareas/facturas), forzar
+          el layout a estirarse a la altura completa del viewport dejaba un
+          bloque vacío visible al final en pantallas altas como el iPad. Sin
+          el min-height, la barra lateral y el contenido miden lo que ocupan
+          las tarjetas reales -- se va a ver "lleno" solo cuando haya
+          suficiente contenido real. */}
 
       {switchingLanguage && <LanguageSwitchLoader />}
 
@@ -2864,7 +2871,7 @@ export default function ClientDashboard() {
       </aside>
 
       {/* Main Panel Content */}
-      <main className="flex-1 p-6 md:p-10 lg:p-12 overflow-y-auto">
+      <main className="flex-1 p-6 md:p-10 lg:p-12">
         
         {/* Navigation header section */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">

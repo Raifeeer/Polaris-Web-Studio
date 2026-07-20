@@ -129,12 +129,20 @@
       html.light { background-color: #f8fafc; }
       body { margin: 0; background-color: #020617; }
       html.light body { background-color: #f8fafc; }
+      /* position:fixed + inset:0 en vez de height:100vh/width:100vw -- bug
+         real reportado por el usuario (20 de julio): 100vh no siempre
+         coincide con el área visible real en Safari iPad/iOS (barra de
+         pestañas + dirección), así que el spinner quedaba centrado contra
+         una caja más alta que lo que se ve en pantalla, y se veía
+         descentrado. fixed+inset:0 se ancla al viewport visual real, mismo
+         patrón ya usado en Login.tsx y en las páginas standalone de
+         Meridian para este mismo tipo de bug. */
       #root:empty {
         display: flex;
         justify-content: center;
         align-items: center;
-        height: 100vh;
-        width: 100vw;
+        position: fixed;
+        inset: 0;
       }
       .spinner {
         width: 40px;
