@@ -881,6 +881,29 @@ const PORT = 3000;
   });
 
   /**
+   * Lista los proyectos activos con un sitio real en producción (customDomain,
+   * o vercelUrl de preview si todavía no hay dominio propio conectado) --
+   * consumido por client-uptime-check (Meridian) para monitorear de verdad
+   * si el sitio de un cliente real se cayó. Mismo patrón/auth que is-client.
+   * Format: GET /api/portal/active-sites
+   */
+  app.get("/api/portal/active-sites", (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const sites = dbInstance
+      .getProjects()
+      .filter((p) => !p.deletedAt && p.status === "active" && (p.customDomain || p.vercelUrl))
+      .map((p) => {
+        const client = dbInstance.getUsers().find((u) => u.id === p.clientUserId);
+        const url = p.customDomain ? `https://${p.customDomain.replace(/^https?:\/\//, "")}` : p.vercelUrl!;
+        return { id: p.id, name: p.name, url, clientName: client?.name || "", clientEmail: client?.email || "" };
+      });
+    return res.json({ sites });
+  });
+
+  /**
    * Disparado por la Cloud Function proposal-send (Meridian) cuando un
    * cliente aprueba una propuesta comercial en línea: crea su cuenta real en
    * el portal (rol "client"), un proyecto inicial, la primera tarea, y la
