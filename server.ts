@@ -1334,6 +1334,50 @@ const PORT = 3000;
   // --- Admin actions ---
 
   // 1. Create a client and their project & deliverables
+  /**
+   * Alta de un cliente REAL ya existente (ej. Tano Excursions -- sitio ya
+   * en producción hace meses, gestionado fuera del portal en su propio
+   * proyecto Firebase aislado) -- a diferencia de POST /api/portal/clients
+   * (pensado para una venta nueva: manda factura de depósito falsa y arma
+   * fases de "Descubrimiento"), este endpoint no factura nada, no manda
+   * ningún correo, y el proyecto queda directo en estado completado/lanzado.
+   * Solo para que el proyecto entre en flujos reales que dependen de un
+   * DbProject (ej. el barrido mensual de reporte de tráfico) sin inventar
+   * datos comerciales que no aplican.
+   * Format: POST /api/portal/clients/register-existing
+   */
+  app.post("/api/portal/clients/register-existing", authenticateToken, requireAdmin, async (req, res) => {
+    const { email, password, name, companyName, projectName, projectDescription, customDomain, ga4PropertyId, gscSiteUrl } = req.body;
+    if (!email || !password || !name || !companyName || !projectName) {
+      return res.status(400).json({ error: "Faltan datos obligatorios para registrar el cliente." });
+    }
+    const emailClean = String(email).trim().toLowerCase();
+    const existing = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
+    if (existing) return res.status(400).json({ error: "Ya existe un usuario registrado con este correo." });
+
+    const clientId = `usr-${Date.now()}`;
+    const projectId = `proj-${Date.now()}`;
+    dbInstance.addUser({ id: clientId, email: emailClean, password: hashPassword(String(password)), name, role: "client", companyName });
+    const displayId = dbInstance.consumeNextDisplayId();
+    dbInstance.addProject({
+      id: projectId,
+      displayId,
+      clientUserId: clientId,
+      name: projectName,
+      currentPhase: "Sitio en producción",
+      progress: 100,
+      description: projectDescription || "Proyecto real ya entregado y en producción.",
+      status: "active",
+      phases: [{ name: "Sitio en producción", status: "completed", detail: "Proyecto ya entregado y funcionando en producción." }],
+      customDomain: customDomain || undefined,
+      launchedAt: new Date().toISOString(),
+      ga4PropertyId: ga4PropertyId || undefined,
+      gscSiteUrl: gscSiteUrl || undefined,
+    });
+    await dbInstance.flush();
+    res.json({ success: true, clientId, projectId });
+  });
+
   app.post("/api/portal/clients", authenticateToken, requireAdmin, async (req, res) => {
     const { email, password, name, companyName, projectName, projectDescription } = req.body;
 
