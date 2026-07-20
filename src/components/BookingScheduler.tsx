@@ -18,12 +18,20 @@ export default function BookingScheduler({
   initialName = "",
   initialEmail = "",
   phone = "",
+  // Tipo de evento real de Cal.com a reservar -- "consultoria" (30 min,
+  // default, wizard + CTA final de la landing), "alineacion" (15 min,
+  // /proceso) o "reporte" (30 min, reporte mensual de tráfico). Cada uno
+  // tiene su propio tipo de evento en Cal.com (calcom-booking, Meridian) en
+  // vez de reusar siempre el mismo -- evita el bug real de copy que promete
+  // "15 minutos" pero reserva el evento de 30.
+  type = "consultoria",
   onBooked,
 }: {
   notes: string;
   initialName?: string;
   initialEmail?: string;
   phone?: string;
+  type?: "consultoria" | "alineacion" | "reporte";
   // Recibe el nombre/correo con el que el cliente terminó confirmando la
   // reserva -- puede diferir de initialName/initialEmail si lo corrigió acá
   // mismo (caso real: typo en el nombre al enviar la cotización, arreglado
@@ -53,7 +61,7 @@ export default function BookingScheduler({
     if (slotsByDay || slotsLoading) return;
     setSlotsLoading(true);
     setSlotsError(false);
-    fetch(`${BOOKING_URL}?action=slots&days=21`)
+    fetch(`${BOOKING_URL}?action=slots&days=21&type=${type}`)
       .then((res) => res.json())
       .then((data) => {
         const grouped: Record<string, string[]> = {};
@@ -98,6 +106,7 @@ export default function BookingScheduler({
           language,
           notes,
           phone,
+          type,
         }),
       });
       const data = await res.json().catch(() => ({}));

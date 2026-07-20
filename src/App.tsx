@@ -39,6 +39,7 @@ const WizardQuote = lazy(() => import("./pages/WizardQuote"));
 const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const Gracias = lazy(() => import("./pages/Gracias"));
+const Schedule = lazy(() => import("./pages/Schedule"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
 const TerminalPage = lazy(() => import("./pages/TerminalPage"));
 
@@ -212,6 +213,7 @@ function AnimatedRoutes() {
             <Route path="/blog/:slug" element={<BlogPostDetail />} />
             <Route path="/cotizar" element={<WizardQuote />} />
             <Route path="/gracias" element={<Gracias />} />
+            <Route path="/agendar" element={<Schedule />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ClientDashboard />} />
             <Route path="/terminal" element={<TerminalPage />} />

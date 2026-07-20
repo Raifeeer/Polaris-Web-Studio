@@ -12,8 +12,8 @@ export default function FinalCTA() {
         <T en="Still have doubts?">¿Todavía tienes dudas?</T>
       </h2>
       <p className="text-lg text-[var(--color-text-secondary)] mb-8">
-        <T en="Schedule a free 15-minute call without commitment.">
-          Agenda una llamada gratuita de 15 minutos sin compromiso.
+        <T en="Schedule a free 30-minute call without commitment.">
+          Agenda una llamada gratuita de 30 minutos sin compromiso.
         </T>
       </p>
       <div className="flex justify-center">

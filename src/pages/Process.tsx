@@ -609,6 +609,7 @@ export default function Process() {
                     </motion.div>
                   ) : (
                     <BookingScheduler
+                      type="alineacion"
                       notes={
                         language === "en"
                           ? "Direct consultation booked from the Work Methodology page."
