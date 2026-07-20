@@ -2070,6 +2070,15 @@ export default function LandingPage() {
                 Precios fijos, sin costos ocultos. Un pago y tu sitio en línea en semanas.
               </T>
             </p>
+            {/* Ancla de valor: agencias promedio $2,000-$8,000 por sitio (ecommerce $5,000-$30,000+),
+                dato real de mercado 2026 -- ver auditoría CRO. Nunca se nombra una agencia específica. */}
+            <p className="text-[var(--color-text-tertiary)] text-xs max-w-lg mx-auto pt-1">
+              <T en="The average agency charges $2,000–$8,000 for a professional website (ecommerce projects run $5,000–$30,000+). Our fixed prices start at a fraction of that.">
+                El promedio de una agencia es de $2,000–$8,000 por un sitio profesional
+                (proyectos e-commerce llegan a $5,000–$30,000+). Nuestros precios fijos
+                arrancan en una fracción de eso.
+              </T>
+            </p>
           </div>
 
           {isOfferActive && (
