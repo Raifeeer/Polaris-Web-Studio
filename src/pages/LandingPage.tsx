@@ -27,6 +27,8 @@ import Footer from "../components/Footer";
 import Logo from "../components/Logo";
 import MockupFrame from "../components/MockupFrame";
 import CountdownPill from "../components/CountdownPill";
+import WhyPolaris from "../components/WhyPolaris";
+import Testimonials from "../components/Testimonials";
 import { T, useLanguage } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
 
@@ -321,7 +323,12 @@ export default function LandingPage() {
       ),
       stack: ["React", "Framer Motion", "Vite", "Tailwind CSS"],
       colorClass: "from-cyan-500/20 to-indigo-500/5 hover:border-cyan-500/40",
-      perfScore: 97,
+      // SEO 100/100, no "Rendimiento" -- medido en vivo con Google PageSpeed
+      // Insights (17 de julio): Performance real es 69/100 mobile, no un
+      // número que resista mostrarse en la landing. SEO 100/100 sí es real
+      // y verificable (mismo dato ya usado en el Email 1 del Lead Drip).
+      scoreLabel: <T en="SEO">SEO</T>,
+      perfScore: 100,
     },
     {
       title: "Nexus Realty",
@@ -367,6 +374,30 @@ export default function LandingPage() {
       ),
     },
     {
+      q: <T en="Do you offer payment plans?">¿Ofrecen facilidades de pago?</T>,
+      a: (
+        <T en="Yes, we work with a 50% upfront and 50% upon launch structure. For large projects like e-commerce, we can structure milestone payments.">
+          Sí, trabajamos con un esquema de 50% al iniciar el proyecto y 50% al
+          momento del lanzamiento. Para proyectos grandes como e-commerce,
+          podemos estructurar pagos por fases.
+        </T>
+      ),
+    },
+    {
+      q: (
+        <T en="What if I'm not happy with the result?">
+          ¿Qué pasa si el resultado no me convence?
+        </T>
+      ),
+      a: (
+        <T en="Every package includes a post-launch warranty (30 to 90 days depending on the plan) to fix anything that doesn't match what we agreed on — at no extra cost.">
+          Todos los paquetes incluyen una garantía post-lanzamiento (de 30 a 90
+          días según el plan) para corregir cualquier cosa que no coincida con
+          lo acordado — sin costo adicional.
+        </T>
+      ),
+    },
+    {
       q: (
         <T en="How long does a project take?">
           ¿Cuánto tiempo toma un proyecto?
@@ -390,15 +421,6 @@ export default function LandingPage() {
       ),
     },
     {
-      q: <T en="Do you work with SEO?">¿Trabajan con SEO?</T>,
-      a: (
-        <T en="Absolutely. All our websites are born with an optimized on-page SEO structure.">
-          Totalmente. Todas nuestras webs nacen con una estructura optimizada
-          para motores de búsqueda (SEO On-page).
-        </T>
-      ),
-    },
-    {
       q: (
         <T en="What does the maintenance service include?">
           ¿Qué incluye el servicio de mantenimiento?
@@ -413,12 +435,11 @@ export default function LandingPage() {
       ),
     },
     {
-      q: <T en="Do you offer payment plans?">¿Ofrecen facilidades de pago?</T>,
+      q: <T en="Do you work with SEO?">¿Trabajan con SEO?</T>,
       a: (
-        <T en="Yes, we work with a 50% upfront and 50% upon launch structure. For large projects like e-commerce, we can structure milestone payments.">
-          Sí, trabajamos con un esquema de 50% al iniciar el proyecto y 50% al
-          momento del lanzamiento. Para proyectos grandes como e-commerce,
-          podemos estructurar pagos por fases.
+        <T en="Absolutely. All our websites are born with an optimized on-page SEO structure.">
+          Totalmente. Todas nuestras webs nacen con una estructura optimizada
+          para motores de búsqueda (SEO On-page).
         </T>
       ),
     },
@@ -574,6 +595,11 @@ export default function LandingPage() {
                     </span>
                   </div>
                 </div>
+                <p className="text-[10px] sm:text-xs text-[var(--color-text-tertiary)] font-medium mt-2">
+                  <T en="Free initial consultation · No commitment">
+                    Asesoría inicial 100% gratuita · Sin compromiso
+                  </T>
+                </p>
               </motion.div>
             </div>
           </motion.div>
@@ -1435,7 +1461,7 @@ export default function LandingPage() {
                       {p.perfScore && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500 transition-colors">
                           <Zap size={10} className="shrink-0" />
-                          {p.perfScore}/100 <T en="Performance">Rendimiento</T>
+                          {p.perfScore}/100 {p.scoreLabel || <T en="Performance">Rendimiento</T>}
                         </span>
                       )}
                     </div>
@@ -1508,7 +1534,7 @@ export default function LandingPage() {
                             {p.perfScore && (
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500">
                                 <Zap size={10} className="shrink-0" />
-                                {p.perfScore}/100 <T en="Performance">Rendimiento</T>
+                                {p.perfScore}/100 {p.scoreLabel || <T en="Performance">Rendimiento</T>}
                               </span>
                             )}
                           </div>
@@ -2015,6 +2041,12 @@ export default function LandingPage() {
         </div>
       </main>
 
+      {/* Why Polaris — comparativa real vs. otras agencias (movida a la home, antes solo en /servicios) */}
+      <WhyPolaris />
+
+      {/* Caso real — reemplaza los testimonios inventados */}
+      <Testimonials />
+
       {/* Pricing Preview Section */}
       <section className="py-24 px-6 md:px-12 relative overflow-hidden">
         {/* Background glow */}
@@ -2097,7 +2129,6 @@ export default function LandingPage() {
                   { es: "Botón de WhatsApp integrado", en: "WhatsApp button integrated" },
                   { es: "SEO On-Page incluido", en: "On-Page SEO included" },
                   { es: "Entrega en 1–2 semanas", en: "Delivered in 1–2 weeks" },
-                  { es: "30 días de garantía post-lanzamiento", en: "30-day post-launch warranty" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-amber-500 shrink-0" />
@@ -2105,6 +2136,10 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+                <ShieldCheck size={14} className="shrink-0" />
+                <T en="30-day post-launch warranty">30 días de garantía post-lanzamiento</T>
+              </div>
               <button
                 onClick={() => navigate("/cotizar")}
                 className="w-full py-2.5 rounded-xl border border-amber-500/30 text-amber-500 text-sm font-bold hover:bg-amber-500/10 transition-all"
@@ -2163,7 +2198,6 @@ export default function LandingPage() {
                   { es: "Chatbot 24/7 con IA", en: "24/7 AI Chatbot" },
                   { es: "SEO Técnico + Search Console", en: "Technical SEO + Search Console" },
                   { es: "Google Analytics 4", en: "Google Analytics 4" },
-                  { es: "60 días de garantía post-lanzamiento", en: "60-day post-launch warranty" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-[var(--color-primary-base)] shrink-0" />
@@ -2171,6 +2205,10 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="flex items-center gap-2 text-xs font-bold text-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 rounded-lg px-3 py-2">
+                <ShieldCheck size={14} className="shrink-0" />
+                <T en="60-day post-launch warranty">60 días de garantía post-lanzamiento</T>
+              </div>
               <button
                 onClick={() => navigate("/cotizar")}
                 className="w-full py-2.5 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:bg-[var(--color-primary-base)]/90 transition-all shadow-lg shadow-[var(--color-primary-base)]/20"
@@ -2223,7 +2261,6 @@ export default function LandingPage() {
                   { es: "Panel admin personalizado", en: "Custom admin panel" },
                   { es: "Schema Markup para Google", en: "Schema Markup for Google" },
                   { es: "1 herramienta IA incluida", en: "1 AI tool included" },
-                  { es: "90 días de garantía prioritaria", en: "90-day priority warranty" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-violet-400 shrink-0" />
@@ -2231,6 +2268,10 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
+              <div className="flex items-center gap-2 text-xs font-bold text-violet-400 bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-2">
+                <ShieldCheck size={14} className="shrink-0" />
+                <T en="90-day priority warranty">90 días de garantía prioritaria</T>
+              </div>
               <button
                 onClick={() => navigate("/cotizar")}
                 className="w-full py-2.5 rounded-xl border border-violet-500/30 text-violet-400 text-sm font-bold hover:bg-violet-500/10 transition-all"

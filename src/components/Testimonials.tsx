@@ -1,126 +1,51 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { T, useLanguage } from '../context/LanguageContext';
+import { motion } from 'framer-motion';
+import { ExternalLink } from 'lucide-react';
+import { T } from '../context/LanguageContext';
 
+// Un solo caso real (Tano Excursions, único cliente real hoy) en vez de
+// testimonios inventados con nombres/cifras ficticias -- ver auditoría CRO
+// del 20 de julio. Sin cita textual del cliente porque no existe una real
+// todavía; se muestra como caso de estudio con datos verificables (GA4,
+// Fase 32 de CLAUDE.md), no como reseña de boca del cliente.
 export default function Testimonials() {
-  const { translate } = useLanguage();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const testimonials = [
-    {
-      name: "Juan P.",
-      role: translate("Restaurante", "Restaurant"),
-      text: translate(
-        "Aumenté mis reservas un 40% en 2 meses con la nueva landing.",
-        "I increased my reservations by 40% in 2 months with the new landing page."
-      ),
-    },
-    {
-      name: "Maria L.",
-      role: translate("Consultora", "Consultant"),
-      text: translate(
-        "Polaris transformó mi web corporativa, ahora transmito autoridad real.",
-        "Polaris transformed my corporate website, now I convey real authority."
-      ),
-    },
-    {
-      name: "Carlos F.",
-      role: translate("Tienda Online", "Online Store"),
-      text: translate(
-        "Las ventas automatizadas me ahorran 10 horas de trabajo semanal.",
-        "Automated sales save me 10 hours of work a week."
-      ),
-    },
-  ];
-
-  const handlePrev = () => setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  const handleNext = () => setActiveIndex((prev) => (prev + 1) % testimonials.length);
-
-  React.useEffect(() => {
-    const interval = setInterval(handleNext, 5000);
-    return () => clearInterval(interval);
-  }, [activeIndex]);
-
   return (
     <section className="py-4 bg-transparent">
-      <div className="max-w-7xl mx-auto px-6 text-center">
-        <h2 className="text-3xl font-display font-black tracking-tight mb-4">
-          <T en="What our clients say">Lo que dicen nuestros clientes</T>
+      <div className="max-w-3xl mx-auto px-6 text-center">
+        <h2 className="text-3xl font-display font-black tracking-tight mb-8">
+          <T en="A real case">Un caso real</T>
         </h2>
 
-        {/* Desktop View */}
-        <div className="hidden md:grid grid-cols-3 gap-8">
-          {testimonials.map((t, i) => (
-            <div key={i} className="p-6 bg-[var(--color-surface-base)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm">
-              <p className="text-[var(--color-text-secondary)] italic mb-4">"{t.text}"</p>
-              <div className="font-bold text-[var(--color-text-primary)]">{t.name}</div>
-              <div className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wider">{t.role}</div>
+        <motion.a
+          href="https://tanoexcursions.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.5 }}
+          className="group block p-8 bg-[var(--color-surface-base)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm hover:border-[var(--color-primary-base)] transition-colors text-left"
+        >
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div>
+              <div className="font-bold text-lg text-[var(--color-text-primary)]">Tano Excursions</div>
+              <div className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wider">
+                <T en="Tourism · Reservation platform">Turismo · Plataforma de reservas</T>
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Mobile View */}
-        <div className="md:hidden relative flex items-center justify-center overflow-hidden py-2">
-          {/* Gradients for fade effect */}
-          <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[var(--color-surface-base)] to-transparent z-30 pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[var(--color-surface-base)] to-transparent z-30 pointer-events-none" />
-
-          <button
-            onClick={handlePrev}
-            aria-label={translate("Testimonio anterior", "Previous testimonial")}
-            className="absolute left-1 z-40 p-1.5 rounded-full text-[var(--color-text-tertiary)] opacity-50 hover:opacity-100 hover:text-[var(--color-primary-base)] transition-all"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="relative w-full h-[220px] flex items-center justify-center">
-            <AnimatePresence initial={false} mode="wait">
-              {testimonials.map((t, i) => {
-                const isActive = i === activeIndex;
-                const isPrev = i === (activeIndex - 1 + testimonials.length) % testimonials.length;
-                const isNext = i === (activeIndex + 1) % testimonials.length;
-
-                if (!isActive && !isPrev && !isNext) return null;
-
-                return (
-                  <motion.div
-                    key={i}
-                    drag="x"
-                    dragConstraints={{ left: 0, right: 0 }}
-                    onDragEnd={(e, { offset, velocity }) => {
-                      const swipe = Math.abs(offset.x) * velocity.x;
-                      if (swipe < -10000) handleNext();
-                      else if (swipe > 10000) handlePrev();
-                    }}
-                    initial={{ opacity: 0, x: isActive ? 0 : isPrev ? -90 : 90, scale: 0.65 }}
-                    animate={{
-                      opacity: isActive ? 1 : 0.6,
-                      x: isActive ? 0 : isPrev ? -100 : 100,
-                      scale: isActive ? 1 : 0.7,
-                      filter: isActive ? 'blur(0px)' : 'blur(1px)',
-                      zIndex: isActive ? 10 : 5
-                    }}
-                    exit={{ opacity: 0, scale: 0.65 }}
-                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-                    className="absolute w-[80%] max-w-[280px] p-6 bg-[var(--color-surface-base)] rounded-2xl border border-[var(--color-border-subtle)] shadow-sm cursor-grab active:cursor-grabbing"
-                  >
-                    <p className="text-[var(--color-text-secondary)] italic mb-4 text-sm">"{t.text}"</p>
-                    <div className="font-bold text-[var(--color-text-primary)]">{t.name}</div>
-                    <div className="text-xs text-[var(--color-text-tertiary)] uppercase tracking-wider">{t.role}</div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
+            <ExternalLink size={18} className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] transition-colors shrink-0" />
           </div>
-
-          <button
-            onClick={handleNext}
-            aria-label={translate("Siguiente testimonio", "Next testimonial")}
-            className="absolute right-1 z-40 p-1.5 rounded-full text-[var(--color-text-tertiary)] opacity-50 hover:opacity-100 hover:text-[var(--color-primary-base)] transition-all"
-          >
-            <ChevronRight size={20} />
-          </button>
-        </div>
+          <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
+            <T en="A tour reservation platform with real-time capacity control, automatic references, and PayPal payments — live and processing bookings today.">
+              Plataforma de reservas de excursiones con control de cupo en
+              tiempo real, referencias automáticas y pagos con PayPal — en
+              producción, procesando reservas hoy.
+            </T>
+          </p>
+          <div className="mt-4 text-xs font-bold text-[var(--color-primary-base)] inline-flex items-center gap-1.5">
+            <T en="Visit the real site">Visitar el sitio real</T>
+            <ExternalLink size={12} />
+          </div>
+        </motion.a>
       </div>
     </section>
   );
