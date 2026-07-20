@@ -97,6 +97,18 @@ function PrivacyContent() {
             proyecto — entregables, facturas, reuniones y novedades.
           </T>
         </p>
+        <SubHeading><T en="Service Agreement (electronic signature)">Contrato de servicio (firma electrónica)</T></SubHeading>
+        <p>
+          <T en="If your project requires a signed Service Agreement, we also collect your ID number (cédula) and address for the agreement itself, plus a record of the electronic signature process: the exact document content you accepted, the signature (drawn or typed), the IP address, and the date/time of acceptance — required to make the signature legally valid under Law No. 126-02 on Electronic Commerce, Documents and Signatures of the Dominican Republic. A copy of the signed document is emailed to you and to us at the moment of signing.">
+            Si tu proyecto requiere un Contrato de servicio firmado, también recolectamos tu cédula
+            y domicilio para el contrato en sí, además de un registro del proceso de firma
+            electrónica: el contenido exacto del documento que aceptaste, la firma (dibujada o
+            tipeada), la dirección IP y la fecha/hora de aceptación — necesario para que la firma
+            sea legalmente válida bajo la Ley No. 126-02 sobre Comercio Electrónico, Documentos y
+            Firmas Digitales de la República Dominicana. Una copia del documento firmado se envía
+            por correo a vos y a nosotros en el momento de la firma.
+          </T>
+        </p>
         <SubHeading><T en="Payments">Pagos</T></SubHeading>
         <p>
           <T en="Invoices in your portal can be paid via PayPal or manually confirmed (bank transfer / cash). We never see or store your card or bank account numbers — PayPal processes online payments directly, and we only receive confirmation of payment status and amount.">
@@ -322,6 +334,16 @@ function TermsContent() {
             primer paso. La relación se vuelve vinculante cuando aceptas explícitamente una
             cotización concreta (por escrito, por correo o desde el portal) y, cuando corresponda,
             pagas el anticipo acordado.
+          </T>
+        </p>
+        <p>
+          <T en="For full projects, once your quote is approved you'll also sign a specific Service Agreement electronically within your portal, covering the exact price, timeline, and intellectual property terms for your project. That Agreement complements these Terms — it governs the specific commercial terms of your project, and these Terms govern everything else (refund policy, portal account, liability, etc.) not repeated there.">
+            Para proyectos completos, una vez aprobada tu cotización también firmás electrónicamente
+            un Contrato de Prestación de Servicios específico dentro de tu portal, con el precio,
+            plazo y términos de propiedad intelectual exactos de tu proyecto. Ese Contrato
+            complementa estos Términos — regula las condiciones comerciales específicas de tu
+            proyecto, y estos Términos rigen todo lo demás (política de reembolso, cuenta del
+            portal, responsabilidad, etc.) que no se repite ahí.
           </T>
         </p>
       </Section>
