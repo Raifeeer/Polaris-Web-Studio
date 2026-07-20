@@ -216,6 +216,7 @@ export const projects: Project[] = [
       },
     ],
     techStack: ["Next.js", "Zustand", "Stripe (UI)", "Tailwind"],
+    liveUrl: "https://chroma-tech-store-azure.vercel.app/",
     desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FChromaPC.png?alt=media&token=7071ec72-9030-4227-bb96-c4359ceb3edd",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FChromaMobile.png?alt=media&token=4302a794-dad8-4ae7-9946-67144345315a",
   },
