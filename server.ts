@@ -382,6 +382,13 @@ async function notifyInvoice(params: {
   amount: number;
   dueDate?: string;
   paidDate?: string;
+  // Facturación recurrente (ver /api/portal/billing/run-cycle): marca el
+  // correo como cargo por mora (copy distinto, no confundir con un addon
+  // nuevo) y/o le agrega un bloque de "addons que todavía no tenés" al
+  // final -- reusa la misma plantilla de invoice-notify-send en vez de
+  // crear un correo aparte.
+  isLateFee?: boolean;
+  upsellSuggestions?: { name: string; price: number }[];
 }) {
   try {
     const res = await fetch("https://invoice-notify-send-wdvfac6mgq-ue.a.run.app", {
@@ -394,6 +401,29 @@ async function notifyInvoice(params: {
     }
   } catch (err) {
     console.error("Error notificando factura/pago:", err);
+  }
+}
+
+// Correo de upsell independiente (sin factura de por medio) -- ver
+// /api/portal/billing/run-cycle. Cloud Function addon-upsell-send
+// (Meridian), mismo patrón/CRON_SECRET que el resto de las notify*.
+async function notifyUpsell(params: {
+  clientEmail: string;
+  clientName: string;
+  projectName: string;
+  suggestions: { name: string; price: number }[];
+}) {
+  try {
+    const res = await fetch("https://addon-upsell-send-wdvfac6mgq-ue.a.run.app", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
+      body: JSON.stringify({ ...params, language: "es" }),
+    });
+    if (!res.ok) {
+      console.error("notifyUpsell failed:", res.status, await res.text());
+    }
+  } catch (err) {
+    console.error("Error notificando upsell:", err);
   }
 }
 
@@ -939,6 +969,7 @@ const PORT = 3000;
       date: new Date().toISOString().split("T")[0],
       dueDate: depositDueDate,
       description: depositDescription,
+      kind: "deposit",
     });
 
     // Espera a que la escritura real a Firestore termine antes de responder
@@ -2405,6 +2436,181 @@ const PORT = 3000;
     });
 
     res.json({ success: true, contractHash, signedAt });
+  });
+
+  /**
+   * Ciclo diario de facturación recurrente + mora + upsell independiente,
+   * pedido explícito del usuario (20 de julio) tras notar que el contrato
+   * menciona addons mensuales y una cláusula de mora (Décima Primera) que
+   * hoy nada cobraba de verdad. Disparado por Cloud Scheduler directo
+   * contra esta URL (billing-cycle-daily-job) -- mismo patrón que
+   * /api/is-client, protegido por CRON_SECRET vía header x-cron-secret,
+   * sin sesión.
+   *
+   * Hace 3 cosas, por cada proyecto activo con contrato firmado:
+   * 1. Si tiene addons mensuales y ya venció su próxima fecha de cobro,
+   *    genera la factura real (reusa POST /api/portal/invoices con
+   *    kind:"recurring" -- dispara notifyInvoice automáticamente, mismo
+   *    correo de "Factura Pendiente" que ya existe) y adelanta la fecha
+   *    30 días. La primera vez que ve un proyecto sin fecha todavía, solo
+   *    la inicializa (30 días después del lanzamiento real, o de la firma
+   *    si el sitio no se lanzó) -- no cobra nada en esa primera pasada.
+   * 2. Cláusula Décima Primera del contrato: 2% mensual sobre cualquier
+   *    factura pendiente vencida. Por cada período de 30 días vencido sin
+   *    cobrar todavía (lateFeePeriodsCharged), genera una factura nueva y
+   *    chica (kind:"late_fee") referenciando la original -- nunca modifica
+   *    el monto de la factura original, para no perder el historial real.
+   * 3. Upsell independiente (sin factura): a los clientes con al menos un
+   *    addon disponible que no tienen, cada ~120 días, un correo aparte
+   *    ofreciendo sumarlo -- solo si NO se generó ya un correo de
+   *    facturación recurrente en esta misma corrida (evita mandar dos
+   *    correos de venta el mismo día al mismo cliente).
+   */
+  app.post("/api/portal/billing/run-cycle", async (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const today = new Date(todayStr);
+    const UPSELL_CADENCE_DAYS = 120;
+    const results = { recurringBilled: 0, lateFeesCharged: 0, upsellsSent: 0, projectsScanned: 0, errors: [] as string[] };
+
+    const projects = dbInstance.getProjects().filter((p) => !p.deletedAt && p.status === "active" && p.contractStatus === "signed");
+
+    for (const project of projects) {
+      results.projectsScanned++;
+      try {
+        const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId && !u.deletedAt);
+        if (!client) continue;
+
+        const { selectedAddons } = resolveContractPricing(project);
+        const monthlyAddons = selectedAddons.filter((a) => a.isMonthly);
+        const purchasedIds = new Set(project.addonIds || []);
+        const upsellSuggestions = Object.entries(ADDON_INFO)
+          .filter(([id]) => !purchasedIds.has(id))
+          .map(([, info]) => ({ name: info.name, price: info.price }));
+
+        let recurringInvoicedNow = false;
+
+        // --- 1. Facturación recurrente de addons mensuales ---
+        if (monthlyAddons.length > 0) {
+          if (!project.nextBillingDate) {
+            const anchor = new Date(project.launchedAt || project.contractSignedAt || todayStr);
+            anchor.setDate(anchor.getDate() + 30);
+            dbInstance.updateProject(project.id, { nextBillingDate: anchor.toISOString().split("T")[0] });
+          } else if (new Date(project.nextBillingDate) <= today) {
+            const items = monthlyAddons.map((a) => ({ description: a.name, price: a.price, quantity: 1 }));
+            const amount = Math.round(items.reduce((s, it) => s + it.price * it.quantity, 0) * 100) / 100;
+            const dueDate = new Date(today);
+            dueDate.setDate(dueDate.getDate() + 7);
+            const dueDateStr = dueDate.toISOString().split("T")[0];
+
+            dbInstance.addInvoice({
+              id: `inv-${Date.now()}-rec-${project.id}`,
+              projectId: project.id,
+              invoiceNumber: dbInstance.consumeNextInvoiceCode(),
+              amount,
+              currency: "USD",
+              status: "pending",
+              date: todayStr,
+              dueDate: dueDateStr,
+              description: `Facturación mensual de addons recurrentes — ${items.map((it) => it.description).join(", ")}`,
+              items,
+              kind: "recurring",
+            });
+
+            await notifyInvoice({
+              type: "pending",
+              clientEmail: client.email,
+              clientName: client.name,
+              concept: `Facturación mensual — ${project.name}`,
+              amount,
+              dueDate: dueDateStr,
+              upsellSuggestions: upsellSuggestions.length > 0 ? upsellSuggestions : undefined,
+            });
+
+            const next = new Date(project.nextBillingDate);
+            next.setDate(next.getDate() + 30);
+            dbInstance.updateProject(project.id, { nextBillingDate: next.toISOString().split("T")[0] });
+            results.recurringBilled++;
+            recurringInvoicedNow = true;
+          }
+        }
+
+        // --- 2. Mora: 2% mensual sobre facturas pendientes vencidas (Cláusula Décima Primera) ---
+        const overdueInvoices = dbInstance
+          .getInvoices()
+          .filter((i) => i.projectId === project.id && i.status === "pending" && i.kind !== "late_fee" && new Date(i.dueDate) < today);
+
+        for (const inv of overdueInvoices) {
+          const daysOverdue = Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / (24 * 60 * 60 * 1000));
+          const periodsElapsed = Math.floor(daysOverdue / 30);
+          const periodsAlreadyCharged = inv.lateFeePeriodsCharged || 0;
+          const periodsToCharge = periodsElapsed - periodsAlreadyCharged;
+          if (periodsToCharge <= 0) continue;
+
+          for (let i = 0; i < periodsToCharge; i++) {
+            const feeAmount = Math.round(inv.amount * 0.02 * 100) / 100;
+            const feeDueDate = new Date(today);
+            feeDueDate.setDate(feeDueDate.getDate() + 7);
+            const feeDueDateStr = feeDueDate.toISOString().split("T")[0];
+
+            dbInstance.addInvoice({
+              id: `inv-${Date.now()}-fee${periodsAlreadyCharged + i + 1}-${inv.id}`,
+              projectId: project.id,
+              invoiceNumber: dbInstance.consumeNextInvoiceCode(),
+              amount: feeAmount,
+              currency: "USD",
+              status: "pending",
+              date: todayStr,
+              dueDate: feeDueDateStr,
+              description: `Cargo por mora (2% mensual, Cláusula Décima Primera) — Factura #${inv.invoiceNumber} vencida el ${inv.dueDate}`,
+              kind: "late_fee",
+              relatedInvoiceId: inv.id,
+            });
+
+            await notifyInvoice({
+              type: "pending",
+              clientEmail: client.email,
+              clientName: client.name,
+              concept: `Cargo por mora — Factura #${inv.invoiceNumber}`,
+              amount: feeAmount,
+              dueDate: feeDueDateStr,
+              isLateFee: true,
+            });
+
+            results.lateFeesCharged++;
+          }
+          dbInstance.updateInvoice(inv.id, { lateFeePeriodsCharged: periodsAlreadyCharged + periodsToCharge });
+        }
+
+        // --- 3. Upsell independiente (sin factura), cada ~120 días ---
+        if (!recurringInvoicedNow && upsellSuggestions.length > 0) {
+          const lastSent = project.lastUpsellEmailAt ? new Date(project.lastUpsellEmailAt) : null;
+          const daysSinceLastUpsell = lastSent ? Math.floor((today.getTime() - lastSent.getTime()) / (24 * 60 * 60 * 1000)) : Infinity;
+          const daysSinceSigned = project.contractSignedAt
+            ? Math.floor((today.getTime() - new Date(project.contractSignedAt).getTime()) / (24 * 60 * 60 * 1000))
+            : 0;
+          if (daysSinceLastUpsell >= UPSELL_CADENCE_DAYS && daysSinceSigned >= UPSELL_CADENCE_DAYS) {
+            await notifyUpsell({
+              clientEmail: client.email,
+              clientName: client.name,
+              projectName: project.name,
+              suggestions: upsellSuggestions,
+            });
+            dbInstance.updateProject(project.id, { lastUpsellEmailAt: todayStr });
+            results.upsellsSent++;
+          }
+        }
+      } catch (err: any) {
+        results.errors.push(`${project.id}: ${err?.message || String(err)}`);
+      }
+    }
+
+    await dbInstance.flush();
+    res.json({ success: true, ...results });
   });
 
 async function startServer() {

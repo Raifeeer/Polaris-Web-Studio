@@ -103,6 +103,14 @@ export interface DbProject {
   contractIp?: string;
   contractPdfUrl?: string;           // URL de contract-pdf con los params ya resueltos, cacheada tras firmar
   contractCode?: string;             // ej. "C-P001" -- asignado una sola vez (secuencia global), la letra final (A pendiente / B firmado) se deriva en runtime, no se guarda acá
+  // Facturación recurrente de addons mensuales (hosting, agente IA, etc.) --
+  // ver /api/portal/billing/run-cycle. Se inicializa la primera vez que el
+  // ciclo diario ve un proyecto firmado con addons mensuales y sin fecha
+  // todavía (30 días después del lanzamiento real, o de la firma si el
+  // proyecto no se lanzó todavía); se adelanta 30 días cada vez que se
+  // factura de verdad.
+  nextBillingDate?: string;
+  lastUpsellEmailAt?: string; // último envío del correo de upsell independiente (sin factura), cadencia ~120 días
 }
 
 export interface DbTask {
@@ -135,6 +143,13 @@ export interface DbInvoice {
   paypalRefundId?: string;
   refundedAt?: string;
   voidedAfterManualPayment?: boolean;
+  // Clasifica el origen de la factura -- "recurring"/"late_fee" las genera
+  // /api/portal/billing/run-cycle solo; las demás siguen siendo manuales
+  // (depósito/entrega final vía auto-provision-client, o admin ad-hoc).
+  // undefined en facturas viejas = manual, comportamiento sin cambios.
+  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee";
+  relatedInvoiceId?: string;   // en una factura kind:"late_fee", la factura vencida que la originó
+  lateFeePeriodsCharged?: number; // en la factura original vencida, cuántos períodos de 30 días de mora ya se cobraron -- evita cobrar el mismo período dos veces
 }
 
 export interface DbMeeting {
