@@ -18,7 +18,7 @@ export default function FinalCTA() {
       </p>
       <div className="flex justify-center">
         <RippleButton
-          onClick={() => navigate("/cotizar?step=schedule")}
+          onClick={() => navigate("/agendar?type=consultoria&src=servicios-final-cta")}
           className="px-8 py-4 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] rounded-xl font-bold hover:bg-[var(--color-primary-base)]/90 hover:scale-105 transition-all shadow-lg focus-visible:outline-none cursor-pointer"
         >
           <T en="Schedule a call">Agendar llamada</T>

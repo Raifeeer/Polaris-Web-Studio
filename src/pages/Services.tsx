@@ -1601,7 +1601,7 @@ export default function Services() {
             }`}
           >
             {/* Más popular badge */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap">
               <T en="Most Popular">Más Popular</T>
             </div>
             <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
