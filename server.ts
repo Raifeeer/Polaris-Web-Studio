@@ -737,6 +737,22 @@ app.use((req, res, next) => {
   dbInstance.waitUntilReady().then(() => next()).catch(next);
 });
 
+// Bug real de producción (20 de julio): un contrato firmado -- con correo
+// de confirmación real ya enviado -- volvió a aparecer como "pendiente".
+// Causa raíz: cada instancia serverless de Vercel carga portal_state/main
+// UNA vez al arrancar y lo cachea en memoria para siempre; cada mutación
+// sobreescribe el documento ENTERO con esa copia (ver saveAsync en
+// server-db.ts). Si dos instancias quedan calientes a la vez (normal bajo
+// tráfico real), la más vieja puede pisar un cambio ya guardado por la
+// otra. Fix: en cualquier request que mute datos (no GET), releer el
+// estado real de Firestore antes de aplicar la mutación -- no es un fix
+// perfecto contra dos escrituras concurrentes en la misma fracción de
+// segundo, pero corta de raíz el caso real que causó este bug.
+app.use((req, res, next) => {
+  if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
+  dbInstance.refreshFromRemote().then(() => next()).catch(next);
+});
+
 const PORT = 3000;
 
   /**

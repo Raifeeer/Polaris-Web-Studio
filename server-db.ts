@@ -307,6 +307,38 @@ class PortalDatabase {
     await this.readyPromise;
   }
 
+  // Bug real de producción encontrado el 20 de julio: un contrato firmado
+  // (con correo de confirmación real ya enviado) volvió a aparecer como
+  // "pendiente" -- causa raíz confirmada leyendo portal_state/main directo
+  // en Firestore. Este servidor corre en funciones serverless de Vercel:
+  // cada instancia "caliente" carga el documento UNA sola vez al arrancar
+  // (`load()`, en el constructor) y lo guarda en memoria para siempre. Cada
+  // mutación hace un `.set()` del documento ENTERO con esa copia en
+  // memoria (ver saveAsync abajo) -- si dos instancias distintas quedan
+  // calientes al mismo tiempo (algo normal bajo tráfico real, no un caso
+  // raro), la instancia con el estado más viejo puede escribir por encima
+  // de un cambio real ya guardado por la otra, sin ningún aviso ni error.
+  // Fix: releer el documento real de Firestore antes de aplicar cualquier
+  // mutación (no solo al arrancar) -- ver el middleware en server.ts que
+  // llama a esto antes de cualquier método POST/PUT/DELETE/PATCH. No
+  // elimina el 100% de las condiciones de carrera (dos escrituras
+  // concurrentes en la misma fracción de segundo siguen siendo posibles),
+  // pero corta de raíz el caso real que causó este bug: una instancia
+  // vieja, tibia desde hace rato, pisando un cambio ya persistido.
+  async refreshFromRemote(): Promise<void> {
+    try {
+      const snap = await STATE_DOC.get();
+      if (snap.exists) {
+        this.cache = this.normalize(snap.data() as DatabaseSchema);
+      }
+    } catch (err) {
+      // Si falla la relectura, seguimos con lo que ya había en memoria en
+      // vez de tumbar el request -- más seguro que bloquear el portal
+      // entero por un blip transitorio de Firestore.
+      console.error("No se pudo refrescar el estado desde Firestore antes de mutar:", err);
+    }
+  }
+
   // save() es fire-and-forget a propósito (para no bloquear cada mutación
   // síncrona con un round-trip a Firestore) -- pero eso es un problema real
   // en endpoints serverless de Vercel: si el handler responde con res.json()
@@ -320,50 +352,56 @@ class PortalDatabase {
     await this.saveAsync();
   }
 
+  // Compartido entre load() (arranque en frío) y refreshFromRemote()
+  // (releído antes de cada mutación, ver más arriba) -- misma lógica de
+  // migración/defaults en los dos casos, para no duplicarla ni desincronizarla.
+  private normalize(c: DatabaseSchema): DatabaseSchema {
+    if (typeof c.projectDisplayCounter !== "number") {
+      let maxNum = 0;
+      if (Array.isArray(c.projects)) {
+        for (const p of c.projects) {
+          if (p.displayId) {
+            const num = parseInt(p.displayId, 10);
+            if (!isNaN(num) && num > maxNum) maxNum = num;
+          }
+        }
+      }
+      c.projectDisplayCounter = maxNum > 0 ? maxNum : 1;
+    }
+    if (typeof c.contractCodeCounter !== "number") {
+      let maxContractNum = 0;
+      if (Array.isArray(c.projects)) {
+        for (const p of c.projects) {
+          const match = /^C-P(\d+)$/.exec(p.contractCode || "");
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxContractNum) maxContractNum = num;
+          }
+        }
+      }
+      c.contractCodeCounter = maxContractNum;
+    }
+    if (typeof c.invoiceCodeCounter !== "number") {
+      // Migración de formato: las facturas viejas usan "POL-2026-009"
+      // (por año); el contador nuevo es global, como Q-00126/C-P001. Se
+      // arranca en la cantidad de facturas ya emitidas para no repetir
+      // números aunque el formato visible cambie a partir de acá.
+      c.invoiceCodeCounter = Array.isArray(c.invoices) ? c.invoices.length : 0;
+    }
+    if (!Array.isArray(c.users)) c.users = [];
+    if (!Array.isArray(c.projects)) c.projects = [];
+    if (!Array.isArray(c.tasks)) c.tasks = [];
+    if (!Array.isArray(c.invoices)) c.invoices = [];
+    if (!Array.isArray(c.meetings)) c.meetings = [];
+    if (!Array.isArray(c.deploys)) c.deploys = [];
+    return c;
+  }
+
   private async load(): Promise<void> {
     try {
       const snap = await STATE_DOC.get();
       if (snap.exists) {
-        const c = snap.data() as DatabaseSchema;
-        if (typeof c.projectDisplayCounter !== "number") {
-          let maxNum = 0;
-          if (Array.isArray(c.projects)) {
-            for (const p of c.projects) {
-              if (p.displayId) {
-                const num = parseInt(p.displayId, 10);
-                if (!isNaN(num) && num > maxNum) maxNum = num;
-              }
-            }
-          }
-          c.projectDisplayCounter = maxNum > 0 ? maxNum : 1;
-        }
-        if (typeof c.contractCodeCounter !== "number") {
-          let maxContractNum = 0;
-          if (Array.isArray(c.projects)) {
-            for (const p of c.projects) {
-              const match = /^C-P(\d+)$/.exec(p.contractCode || "");
-              if (match) {
-                const num = parseInt(match[1], 10);
-                if (!isNaN(num) && num > maxContractNum) maxContractNum = num;
-              }
-            }
-          }
-          c.contractCodeCounter = maxContractNum;
-        }
-        if (typeof c.invoiceCodeCounter !== "number") {
-          // Migración de formato: las facturas viejas usan "POL-2026-009"
-          // (por año); el contador nuevo es global, como Q-00126/C-P001. Se
-          // arranca en la cantidad de facturas ya emitidas para no repetir
-          // números aunque el formato visible cambie a partir de acá.
-          c.invoiceCodeCounter = Array.isArray(c.invoices) ? c.invoices.length : 0;
-        }
-        if (!Array.isArray(c.users)) c.users = [];
-        if (!Array.isArray(c.projects)) c.projects = [];
-        if (!Array.isArray(c.tasks)) c.tasks = [];
-        if (!Array.isArray(c.invoices)) c.invoices = [];
-        if (!Array.isArray(c.meetings)) c.meetings = [];
-        if (!Array.isArray(c.deploys)) c.deploys = [];
-        this.cache = c;
+        this.cache = this.normalize(snap.data() as DatabaseSchema);
       } else {
         this.cache = getInitialSeededData();
         await this.saveAsync();

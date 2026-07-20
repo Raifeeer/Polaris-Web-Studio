@@ -2468,14 +2468,16 @@ export default function ClientDashboard() {
   };
 
   return (
-    <div className="bg-[var(--color-surface-base)] flex flex-col md:flex-row">
-      {/* Sin min-h-[100svh]: pedido explícito del usuario (20 de julio) --
-          con poco contenido (cuentas nuevas, pocas tareas/facturas), forzar
-          el layout a estirarse a la altura completa del viewport dejaba un
-          bloque vacío visible al final en pantallas altas como el iPad. Sin
-          el min-height, la barra lateral y el contenido miden lo que ocupan
-          las tarjetas reales -- se va a ver "lleno" solo cuando haya
-          suficiente contenido real. */}
+    <div className="bg-[var(--color-surface-base)] flex flex-col">
+      {/* Segunda vuelta del pedido del usuario (20 de julio): sacar
+          min-h-[100svh] del todo dejaba la barra lateral cortada a mitad de
+          pantalla en cuentas con poco contenido -- se veía mal, no
+          "ajustada". La barra lateral de escritorio (más abajo) pasa a
+          position:fixed con su propia altura de viewport (siempre llega
+          hasta el fondo, sin importar el contenido), y <main> se desacopla
+          del todo de esa altura (md:ml-64 para no quedar tapado) -- mide
+          exactamente lo que ocupan sus tarjetas, sin el bloque vacío de
+          antes. Ya no comparten una misma caja con "align-items:stretch". */}
 
       {switchingLanguage && <LanguageSwitchLoader />}
 
@@ -2711,8 +2713,11 @@ export default function ClientDashboard() {
         </div>
       </aside>
 
-      {/* Sidebar navigation (Desktop only) */}
-      <aside className="hidden md:flex w-64 border-r border-[var(--color-border-subtle)] glass-panel p-6 flex-col gap-8 shrink-0 justify-between">
+      {/* Sidebar navigation (Desktop only) -- fixed y con su propia altura de
+          viewport (min-h-[100svh], no dvh -- mismo motivo que el resto del
+          sitio, ver fix anterior) para que siempre llegue hasta el fondo de
+          la pantalla, sin depender de cuánto contenido tenga <main>. */}
+      <aside className="hidden md:flex md:fixed md:inset-y-0 md:left-0 w-64 min-h-[100svh] border-r border-[var(--color-border-subtle)] glass-panel p-6 flex-col gap-8 shrink-0 justify-between z-30">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <img src="/brand/lockup-horizontal-blanco.svg" alt="Polaris Web Studio" className="h-12 w-auto [.light_&]:hidden" />
@@ -2871,7 +2876,7 @@ export default function ClientDashboard() {
       </aside>
 
       {/* Main Panel Content */}
-      <main className="flex-1 p-6 md:p-10 lg:p-12">
+      <main className="flex-1 p-6 md:p-10 lg:p-12 md:ml-64">
         
         {/* Navigation header section */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
