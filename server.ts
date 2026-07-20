@@ -904,6 +904,71 @@ const PORT = 3000;
   });
 
   /**
+   * Guarda la propiedad real de GA4 / sitio real de Search Console de un
+   * proyecto -- ambos vacíos hasta que se cargan a mano (nunca inventados),
+   * consumido por monthly-traffic-report-send (Meridian) para saber a
+   * quién generarle el reporte real.
+   * Format: PUT /api/portal/projects/:id/analytics
+   */
+  app.put("/api/portal/projects/:id/analytics", authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { ga4PropertyId, gscSiteUrl } = req.body;
+    const project = dbInstance.getProjects().find((p) => p.id === id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    dbInstance.updateProject(id, { ga4PropertyId, gscSiteUrl });
+    await dbInstance.flush();
+    res.json({ success: true });
+  });
+
+  /**
+   * Lista los proyectos activos con GA4/Search Console real configurado --
+   * consumido por monthly-traffic-report-send (Meridian) para saber a
+   * quién generarle el reporte mensual real. Mismo patrón/auth que
+   * active-sites.
+   * Format: GET /api/portal/traffic-report-targets
+   */
+  app.get("/api/portal/traffic-report-targets", (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const targets = dbInstance
+      .getProjects()
+      .filter((p) => !p.deletedAt && p.status === "active" && p.ga4PropertyId && p.gscSiteUrl)
+      .map((p) => {
+        const client = dbInstance.getUsers().find((u) => u.id === p.clientUserId);
+        return {
+          id: p.id,
+          name: p.name,
+          ga4PropertyId: p.ga4PropertyId,
+          gscSiteUrl: p.gscSiteUrl,
+          clientName: client?.name || "",
+          clientEmail: client?.email || "",
+          lastTrafficReportAt: p.lastTrafficReportAt || null,
+        };
+      });
+    return res.json({ targets });
+  });
+
+  /**
+   * Marca cuándo se mandó el último reporte de tráfico real para un
+   * proyecto -- llamado por monthly-traffic-report-send (Meridian) al
+   * terminar de mandarlo, para la cadencia mensual del cron.
+   * Format: POST /api/portal/projects/:id/traffic-report-sent
+   */
+  app.post("/api/portal/projects/:id/traffic-report-sent", async (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    dbInstance.updateProject(project.id, { lastTrafficReportAt: new Date().toISOString() });
+    await dbInstance.flush();
+    res.json({ success: true });
+  });
+
+  /**
    * Disparado por la Cloud Function proposal-send (Meridian) cuando un
    * cliente aprueba una propuesta comercial en línea: crea su cuenta real en
    * el portal (rol "client"), un proyecto inicial, la primera tarea, y la

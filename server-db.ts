@@ -111,6 +111,15 @@ export interface DbProject {
   // factura de verdad.
   nextBillingDate?: string;
   lastUpsellEmailAt?: string; // último envío del correo de upsell independiente (sin factura), cadencia ~120 días
+  // Reporte mensual de tráfico real (ver /api/portal/traffic-report/:id) --
+  // ambos vacíos por defecto; sin cargarlos, el proyecto simplemente no
+  // aparece en la corrida mensual (nunca se inventa un reporte sin fuente
+  // real). ga4PropertyId es el ID numérico ("properties/123..." sin el
+  // prefijo), gscSiteUrl el site exacto como aparece en Search Console
+  // (ej. "https://tanoexcursions.com/" o "sc-domain:polarisweb.studio").
+  ga4PropertyId?: string;
+  gscSiteUrl?: string;
+  lastTrafficReportAt?: string;
 }
 
 export interface DbTask {
