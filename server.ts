@@ -374,6 +374,19 @@ const TLD_PRICES_ESTIMATE: Record<string, number> = {
 // protegido por el mismo CRON_SECRET que ya usa auto-provision-client. No
 // bloquea la operación real si falla (la factura/pago ya quedó registrado),
 // solo se registra el error.
+// Resuelve el idioma real del cliente por su email (DbUser.language,
+// guardado al crear la cuenta -- ver auto-provision-client/register-existing/
+// POST clients). "es" si el cliente no existe o no tiene idioma guardado
+// (cuentas viejas creadas antes de este campo). Usado por las notify* de
+// abajo en vez del "language: es" fijo que tenían antes -- bug real
+// corregido el 20 de julio: esas 4 notificaciones mandaban siempre en
+// español aunque las Cloud Functions ya soportaban inglés.
+function resolveClientLanguage(clientEmail: string): "es" | "en" {
+  const emailClean = String(clientEmail || "").trim().toLowerCase();
+  const client = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
+  return client?.language === "en" ? "en" : "es";
+}
+
 async function notifyInvoice(params: {
   type: "pending" | "paid";
   clientEmail: string;
@@ -394,7 +407,7 @@ async function notifyInvoice(params: {
     const res = await fetch("https://invoice-notify-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifyInvoice failed:", res.status, await res.text());
@@ -417,7 +430,7 @@ async function notifyUpsell(params: {
     const res = await fetch("https://addon-upsell-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifyUpsell failed:", res.status, await res.text());
@@ -443,7 +456,7 @@ async function notifySuspension(params: {
     const res = await fetch("https://addon-suspend-notify-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifySuspension failed:", res.status, await res.text());
@@ -466,7 +479,7 @@ async function notifyDeliverable(params: {
     const res = await fetch("https://deliverable-notify-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifyDeliverable failed:", res.status, await res.text());
@@ -491,7 +504,7 @@ async function notifyLaunch(params: {
     const res = await fetch("https://launch-notify-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifyLaunch failed:", res.status, await res.text());
@@ -518,7 +531,7 @@ async function notifyDeploy(params: {
     const res = await fetch("https://deploy-notify-send-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifyDeploy failed:", res.status, await res.text());
@@ -639,7 +652,7 @@ async function notifyContractSigned(params: {
     const res = await fetch("https://contract-sign-notify-wdvfac6mgq-ue.a.run.app", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.CRON_SECRET || ""}` },
-      body: JSON.stringify({ ...params, language: "es" }),
+      body: JSON.stringify({ ...params, language: resolveClientLanguage(params.clientEmail) }),
     });
     if (!res.ok) {
       console.error("notifyContractSigned failed:", res.status, await res.text());
@@ -982,10 +995,11 @@ const PORT = 3000;
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
     }
-    const { email, name, packageId, addonIds, businessType, projectName: projectNameInput } = req.body || {};
+    const { email, name, packageId, addonIds, businessType, projectName: projectNameInput, language } = req.body || {};
     if (!email || !name || !packageId) {
       return res.status(400).json({ error: "missing_fields" });
     }
+    const clientLanguage: "es" | "en" = language === "en" ? "en" : "es";
     const emailClean = String(email).trim().toLowerCase();
     const existing = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
     if (existing) {
@@ -1013,6 +1027,7 @@ const PORT = 3000;
       role: "client",
       companyName: name,
       mustChangePassword: true,
+      language: clientLanguage,
     });
 
     const displayId = dbInstance.consumeNextDisplayId();
@@ -1347,7 +1362,7 @@ const PORT = 3000;
    * Format: POST /api/portal/clients/register-existing
    */
   app.post("/api/portal/clients/register-existing", authenticateToken, requireAdmin, async (req, res) => {
-    const { email, password, name, companyName, projectName, projectDescription, customDomain, ga4PropertyId, gscSiteUrl } = req.body;
+    const { email, password, name, companyName, projectName, projectDescription, customDomain, ga4PropertyId, gscSiteUrl, language } = req.body;
     if (!email || !password || !name || !companyName || !projectName) {
       return res.status(400).json({ error: "Faltan datos obligatorios para registrar el cliente." });
     }
@@ -1357,7 +1372,7 @@ const PORT = 3000;
 
     const clientId = `usr-${Date.now()}`;
     const projectId = `proj-${Date.now()}`;
-    dbInstance.addUser({ id: clientId, email: emailClean, password: hashPassword(String(password)), name, role: "client", companyName });
+    dbInstance.addUser({ id: clientId, email: emailClean, password: hashPassword(String(password)), name, role: "client", companyName, language: language === "en" ? "en" : "es" });
     const displayId = dbInstance.consumeNextDisplayId();
     dbInstance.addProject({
       id: projectId,
@@ -1379,7 +1394,7 @@ const PORT = 3000;
   });
 
   app.post("/api/portal/clients", authenticateToken, requireAdmin, async (req, res) => {
-    const { email, password, name, companyName, projectName, projectDescription } = req.body;
+    const { email, password, name, companyName, projectName, projectDescription, language } = req.body;
 
     if (!email || !password || !name || !companyName || !projectName) {
       return res.status(400).json({ error: "Faltan datos obligatorios para crear el cliente." });
@@ -1401,6 +1416,7 @@ const PORT = 3000;
       name,
       role: "client",
       companyName,
+      language: language === "en" ? "en" : "es",
     });
 
     const displayId = dbInstance.consumeNextDisplayId();

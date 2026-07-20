@@ -14,6 +14,14 @@ export interface DbUser {
   mustChangePassword?: boolean; // true tras el alta automática con contraseña temporal (ver auto-provision-client)
   cedula?: string; // datos legales para el contrato de servicio -- opcionales hasta que el cliente los complete
   address?: string;
+  // Idioma real del cliente, tomado de la propuesta/lead que originó la
+  // cuenta (commercialProposals.language / wizardLeads.language) --
+  // "es" si no se especifica. Usado por notifyInvoice/notifyDeliverable/
+  // notifyUpsell/notifySuspension para no mandar todo en español a un
+  // cliente que cotizó y leyó todo en inglés (bug real corregido el 20 de
+  // julio: esas 4 notificaciones mandaban "language: es" fijo aunque las
+  // Cloud Functions ya soportaban inglés).
+  language?: "es" | "en";
 }
 
 // --- Password hashing (scrypt, sin dependencias externas) ---
