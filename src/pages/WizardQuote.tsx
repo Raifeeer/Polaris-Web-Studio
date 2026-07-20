@@ -3513,14 +3513,25 @@ export default function WizardQuote() {
 
                             <div>
                               <label className="block text-xs font-bold uppercase tracking-wider mb-2 text-[var(--color-text-secondary)]">
-                                <T en="Email Address">Correo Electrónico</T>
+                                <T en="Email Address">Correo Electrónico</T> <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="email"
+                                required
+                                autoComplete="email"
                                 value={pdfEmail}
                                 onChange={(e) => {
                                   setPdfEmail(e.target.value);
                                   setPdfEmailError("");
+                                }}
+                                onBlur={() => {
+                                  if (!pdfEmail.trim()) return;
+                                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                  if (!emailRegex.test(pdfEmail.trim())) {
+                                    setPdfEmailError(
+                                      language === "en" ? "Please enter a valid email address" : "Por favor, ingresa un correo electrónico válido"
+                                    );
+                                  }
                                 }}
                                 placeholder="tu@correo.com"
                                 className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${
@@ -3534,7 +3545,7 @@ export default function WizardQuote() {
 
                             <button
                               type="button"
-                              disabled={sendingPdf}
+                              disabled={sendingPdf || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(pdfEmail.trim())}
                               onClick={async () => {
                                 if (!pdfEmail.trim()) {
                                   setPdfEmailError(
@@ -3556,7 +3567,7 @@ export default function WizardQuote() {
 
                                 await handleGetPdfQuote();
                               }}
-                              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none"
+                              className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100 disabled:active:scale-100"
                             >
                               {sendingPdf ? (
                                 <>

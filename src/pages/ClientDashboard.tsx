@@ -960,6 +960,10 @@ export default function ClientDashboard() {
   const contractCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const contractDrawingRef = useRef(false);
   const contractHasDrawnRef = useRef(false);
+  // Espejo en estado del ref de arriba, solo para poder deshabilitar
+  // "Firmar y enviar" reactivamente hasta que haya trazo real -- un ref no
+  // dispara re-render por sí solo.
+  const [contractHasDrawn, setContractHasDrawn] = useState(false);
   const [contractDownloading, setContractDownloading] = useState(false);
 
   // Modal de solo-lectura para ver el contrato (firmado o no) en vivo, con
@@ -1840,6 +1844,7 @@ export default function ClientDashboard() {
     const ctx = canvas.getContext("2d");
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
     contractHasDrawnRef.current = false;
+    setContractHasDrawn(false);
   };
 
   const handleSignContract = async () => {
@@ -2133,7 +2138,9 @@ export default function ClientDashboard() {
                   minLength={8}
                   value={forceConfirmPassword}
                   onChange={(e) => setForceConfirmPassword(e.target.value)}
-                  className="glass-input w-full px-4 py-3 pr-11 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all"
+                  className={`glass-input w-full px-4 py-3 pr-11 rounded-xl border text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${
+                    forceConfirmPassword && forceConfirmPassword !== forceNewPassword ? "border-red-500" : "border-[var(--color-border-strong)]"
+                  }`}
                 />
                 <button
                   type="button"
@@ -2144,14 +2151,25 @@ export default function ClientDashboard() {
                   {showForceConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              {forceConfirmPassword && forceConfirmPassword !== forceNewPassword && (
+                <p className="text-xs text-red-500 mt-1">
+                  <T en="Passwords don't match.">Las contraseñas no coinciden.</T>
+                </p>
+              )}
             </div>
             {forceChangeError && (
               <p className="text-xs text-red-500">{forceChangeError}</p>
             )}
             <button
               type="submit"
-              disabled={forceChangeLoading}
-              className="w-full bg-[var(--color-primary-base)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 cursor-pointer"
+              disabled={
+                forceChangeLoading ||
+                !forceCurrentPassword ||
+                forceNewPassword.length < 8 ||
+                !/\d/.test(forceNewPassword) ||
+                forceNewPassword !== forceConfirmPassword
+              }
+              className="w-full bg-[var(--color-primary-base)] hover:bg-[var(--color-primary-hover)] text-white font-bold py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {forceChangeLoading ? (
                 <T en="Saving...">Guardando...</T>
@@ -5875,9 +5893,10 @@ export default function ClientDashboard() {
                         Antes de firmar necesitamos tu cédula o pasaporte y tu domicilio — se usan solo para identificarte en el contrato.
                       </p>
                       <div className="space-y-2">
-                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula o pasaporte</label>
+                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula o pasaporte <span className="text-red-500">*</span></label>
                         <input
                           type="text"
+                          required
                           value={contractCedula}
                           onChange={(e) => {
                             const raw = e.target.value;
@@ -5901,9 +5920,10 @@ export default function ClientDashboard() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Domicilio</label>
+                        <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Domicilio <span className="text-red-500">*</span></label>
                         <input
                           type="text"
+                          required
                           value={contractAddress}
                           onChange={(e) => setContractAddress(e.target.value)}
                           placeholder="Calle, número, sector, ciudad"
@@ -5912,8 +5932,9 @@ export default function ClientDashboard() {
                       </div>
                       <button
                         type="button"
+                        disabled={!contractCedula.trim() || !contractAddress.trim()}
                         onClick={handleSaveLegalInfo}
-                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95"
+                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50"
                       >
                         Continuar
                       </button>
@@ -5984,9 +6005,10 @@ export default function ClientDashboard() {
                       {contractUseTyped ? (
                         <input
                           type="text"
+                          required
                           value={contractSignerName}
                           onChange={(e) => setContractSignerName(e.target.value)}
-                          placeholder="Escribe tu nombre completo"
+                          placeholder="Escribe tu nombre completo *"
                           className="glass-input w-full px-4 py-3 rounded-xl border border-[var(--color-border-strong)] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-sm italic font-serif"
                         />
                       ) : (
@@ -6026,6 +6048,7 @@ export default function ClientDashboard() {
                               ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
                               ctx.fill();
                               contractHasDrawnRef.current = true;
+                              setContractHasDrawn(true);
                             }}
                             onPointerMove={(e) => {
                               if (!contractDrawingRef.current) return;
@@ -6036,6 +6059,7 @@ export default function ClientDashboard() {
                               ctx.lineTo((e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height));
                               ctx.stroke();
                               contractHasDrawnRef.current = true;
+                              setContractHasDrawn(true);
                             }}
                             onPointerUp={(e) => { e.preventDefault(); contractDrawingRef.current = false; }}
                             onPointerLeave={() => { contractDrawingRef.current = false; }}
@@ -6054,8 +6078,12 @@ export default function ClientDashboard() {
                       <button
                         type="button"
                         onClick={handleSignContract}
-                        disabled={contractSigning}
-                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50 select-none"
+                        disabled={
+                          contractSigning ||
+                          !contractAccepted ||
+                          (contractUseTyped ? !contractSignerName.trim() : !contractHasDrawn)
+                        }
+                        className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:opacity-50 select-none"
                         style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
                       >
                         {contractSigning ? "Firmando..." : "Firmar y enviar"}
@@ -6251,7 +6279,9 @@ export default function ClientDashboard() {
                           minLength={8}
                           value={confirmPasswordValue}
                           onChange={(e) => setConfirmPasswordValue(e.target.value)}
-                          className="glass-input w-full px-4 py-3 pr-11 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)]"
+                          className={`glass-input w-full px-4 py-3 pr-11 rounded-xl bg-[var(--color-surface-highlight)] border focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm text-[var(--color-text-primary)] ${
+                            confirmPasswordValue && confirmPasswordValue !== newPasswordValue ? "border-red-500" : "border-[var(--color-border-subtle)]"
+                          }`}
                         />
                         <button
                           type="button"
@@ -6262,6 +6292,13 @@ export default function ClientDashboard() {
                           {showConfirmPasswordValue ? <EyeOff size={16} /> : <Eye size={16} />}
                         </button>
                       </div>
+                      {/* Validación en línea, no solo al enviar -- se marca no bien las
+                          contraseñas dejan de coincidir, sin esperar al submit. */}
+                      {confirmPasswordValue && confirmPasswordValue !== newPasswordValue && (
+                        <p className="text-xs text-red-500 mt-1">
+                          <T en="Passwords don't match.">Las contraseñas no coinciden.</T>
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex gap-3 pt-2">
@@ -6274,8 +6311,14 @@ export default function ClientDashboard() {
                       </button>
                       <button
                         type="submit"
-                        disabled={passwordChangeLoading}
-                        className="flex-1 py-3 rounded-xl bg-[var(--color-primary-base)] hover:opacity-90 text-white font-black transition-all disabled:opacity-50 text-xs flex justify-center items-center gap-1.5 cursor-pointer"
+                        disabled={
+                          passwordChangeLoading ||
+                          !currentPasswordValue ||
+                          newPasswordValue.length < 8 ||
+                          !/\d/.test(newPasswordValue) ||
+                          newPasswordValue !== confirmPasswordValue
+                        }
+                        className="flex-1 py-3 rounded-xl bg-[var(--color-primary-base)] hover:opacity-90 text-white font-black transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs flex justify-center items-center gap-1.5 cursor-pointer"
                       >
                         {passwordChangeLoading ? (
                           <T en="Updating...">Actualizando...</T>

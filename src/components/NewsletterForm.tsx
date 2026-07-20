@@ -5,10 +5,12 @@ import { T, useLanguage } from "../context/LanguageContext";
 import { useToast } from "../context/ToastContext";
 
 const SUBSCRIBE_URL = "https://newsletter-subscribe-wdvfac6mgq-ue.a.run.app";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function NewsletterForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [emailError, setEmailError] = useState("");
   const { success, error: toastError } = useToast();
   const { language } = useLanguage();
 
@@ -17,10 +19,11 @@ export default function NewsletterForm() {
     const clean = email.trim().toLowerCase();
     // Validación básica de formato en el cliente — el servidor la repite
     // igual, esto es solo para no gastar una llamada de red en algo obvio.
-    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
-      setStatus("error");
-      toastError(
-        <T en="Please enter a valid email address.">Por favor, ingresa un correo electrónico válido.</T>
+    // El campo ya se valida en línea al salir (onBlur); esto es el
+    // resguardo final por si se envía el form sin pasar por ahí (ej. Enter).
+    if (!clean || !EMAIL_REGEX.test(clean)) {
+      setEmailError(
+        language === "en" ? "Please enter a valid email address." : "Por favor, ingresa un correo electrónico válido."
       );
       return;
     }
@@ -103,16 +106,31 @@ export default function NewsletterForm() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="ejemplo@empresa.com"
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError("");
+                  }}
+                  onBlur={() => {
+                    const clean = email.trim();
+                    if (clean && !EMAIL_REGEX.test(clean)) {
+                      setEmailError(
+                        language === "en" ? "Please enter a valid email address." : "Por favor, ingresa un correo electrónico válido."
+                      );
+                    }
+                  }}
+                  placeholder="ejemplo@empresa.com *"
                   disabled={status === "loading"}
-                  className="glass-input w-full rounded-xl px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] transition-all disabled:opacity-50"
+                  className={`glass-input w-full rounded-xl px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] transition-all disabled:opacity-50 ${emailError ? "border-red-500" : ""}`}
                 />
+                {emailError && (
+                  <p className="text-xs text-red-500 mt-1">{emailError}</p>
+                )}
               </div>
               <button
                 type="submit"
-                disabled={status === "loading" || !email}
+                disabled={status === "loading" || !EMAIL_REGEX.test(email.trim())}
                 className="w-full bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 text-white rounded-xl py-3 px-4 text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center"
               >
                 {status === "loading" ? (

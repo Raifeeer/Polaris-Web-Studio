@@ -11,6 +11,7 @@ import { T, useLanguage } from "../context/LanguageContext";
 // donde quedan esos correos como registro) y el cliente recibe uno solo: el de
 // Polaris, con el link real de Google Meet y la invitación .ics adjunta.
 const BOOKING_URL = "https://calcom-booking-wdvfac6mgq-ue.a.run.app";
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function BookingScheduler({
   notes,
@@ -76,8 +77,7 @@ export default function BookingScheduler({
       setNameError(translate("Ingresa tu nombre.", "Enter your name."));
       return;
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email.trim())) {
+    if (!EMAIL_REGEX.test(email.trim())) {
       setEmailError(translate("Ingresa un email válido.", "Enter a valid email."));
       return;
     }
@@ -199,9 +199,13 @@ export default function BookingScheduler({
               <input
                 type="text"
                 required
-                placeholder={translate("Tu nombre", "Your name")}
+                autoComplete="name"
+                placeholder={translate("Tu nombre *", "Your name *")}
                 value={name}
                 onChange={(e) => { setName(e.target.value); setNameError(""); }}
+                onBlur={() => {
+                  if (!name.trim()) setNameError(translate("Ingresa tu nombre.", "Enter your name."));
+                }}
                 className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${nameError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
               />
               {nameError && <p className="text-xs text-red-500 mt-1">{nameError}</p>}
@@ -209,9 +213,16 @@ export default function BookingScheduler({
             <div>
               <input
                 type="email"
-                placeholder={translate("tu@correo.com", "your@email.com")}
+                required
+                autoComplete="email"
+                placeholder={translate("tu@correo.com *", "your@email.com *")}
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
+                onBlur={() => {
+                  if (email.trim() && !EMAIL_REGEX.test(email.trim())) {
+                    setEmailError(translate("Ingresa un email válido.", "Enter a valid email."));
+                  }
+                }}
                 className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${emailError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
               />
               {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
@@ -231,7 +242,7 @@ export default function BookingScheduler({
 
           <button
             type="button"
-            disabled={submitting || !selectedSlot || !name.trim() || !email.trim()}
+            disabled={submitting || !selectedSlot || !name.trim() || !EMAIL_REGEX.test(email.trim())}
             onClick={handleConfirm}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >

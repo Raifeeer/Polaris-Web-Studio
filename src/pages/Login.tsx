@@ -94,9 +94,10 @@ export default function Login() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
+                  placeholder={translate("Email *", "Email *")}
                   aria-label="Email"
                   className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
@@ -109,9 +110,10 @@ export default function Login() {
                 <input
                   type="password"
                   required
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder={translate("Contraseña", "Password")}
+                  placeholder={translate("Contraseña *", "Password *")}
                   aria-label={translate("Contraseña", "Password")}
                   className="glass-input w-full pl-12 pr-4 py-3.5 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)] focus:outline-none transition-colors text-sm"
                 />
@@ -124,8 +126,8 @@ export default function Login() {
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-3.5 rounded-xl bg-[var(--color-primary-base)] text-white font-black flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 text-sm cursor-pointer"
+              disabled={loading || !email.trim() || !password}
+              className="w-full py-3.5 rounded-xl bg-[var(--color-primary-base)] text-white font-black flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm cursor-pointer"
             >
               {loading ? (
                 <T en="Authenticating...">Autenticando...</T>
