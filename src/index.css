@@ -30,6 +30,15 @@
 }
 
 .light {
+  /* Bug real reportado por el usuario (20 de julio): color-scheme quedaba
+     fijo en "dark" (heredado de :root) sin importar el tema real de la
+     página -- en modo claro, Safari igual pintaba el área de rebote del
+     scroll (overscroll bounce, arriba/abajo del todo) en negro, porque
+     cree que la página es oscura. Esa franja negra hacía ver "descentrados"
+     los modales que se centran contra el viewport visual. Con
+     color-scheme: light acá, el navegador pinta esa franja con el color
+     claro real de la página. */
+  color-scheme: light;
   --color-surface-base: #f8fafc;
   --color-surface-elevated: #ffffff;
   --color-surface-highlight: #f1f5f9;
@@ -111,6 +120,14 @@
 
 
 @layer base {
+  /* El área de rebote del scroll (overscroll bounce) en iOS se pinta con
+     el fondo de <html>, no el de <body> -- sin esto, aunque body sí tenga
+     el color correcto, la franja de rebote seguía usando el fondo por
+     default del navegador (ver fix de color-scheme arriba, mismo bug). */
+  html {
+    background-color: var(--color-surface-base);
+  }
+
   body {
     background-color: var(--color-surface-base);
     color: var(--color-text-primary);
