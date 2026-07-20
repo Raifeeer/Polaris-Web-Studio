@@ -3330,8 +3330,17 @@ export default function WizardQuote() {
                                 <T en="Suggested Domains">Dominios Sugeridos</T>
                               </h4>
                             </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                              {domainSuggestions.map((suggestion: {domain: string, available: boolean}) => {
+                            {/* Lista de una sola columna, no grid -- pedido explícito del
+                                usuario (20 de julio, probado en iPad): el grid de 2-3
+                                columnas dejaba muy poco ancho por chip y el nombre del
+                                dominio (siempre largo, "marca+palabra.com") se cortaba en
+                                3-4 líneas dentro de una caja chica, viéndose horrible.
+                                Con una sola columna cada chip tiene el ancho completo del
+                                panel y el dominio entra en una línea. Tope de 3 (antes 4,
+                                a veces 6 con los backups .net/.co/.org) para no ocupar
+                                demasiado espacio vertical. */}
+                            <div className="flex flex-col gap-2">
+                              {domainSuggestions.slice(0, 3).map((suggestion: {domain: string, available: boolean}) => {
                                 const isSelected = domainName.trim().toLowerCase() === suggestion.domain.toLowerCase();
                                 return (
                                   <button
@@ -3344,14 +3353,14 @@ export default function WizardQuote() {
                                       if (domainDebounceRef.current) clearTimeout(domainDebounceRef.current);
                                       checkDomainAvailability(suggestion.domain);
                                     }}
-                                    className={`flex items-center gap-2 p-2 px-3 rounded-lg border transition-all duration-200 text-left cursor-pointer min-w-0 ${
+                                    className={`w-full flex items-center gap-2 py-2 px-3 rounded-lg border transition-all duration-200 text-left cursor-pointer min-w-0 ${
                                       isSelected
                                         ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/10 shadow-sm"
                                         : "border-[var(--color-border-subtle)] bg-[var(--color-surface-soft)] hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary-base)]/50"
                                     }`}
                                   >
                                     <AISparkleIcon size={11} className="text-[var(--color-primary-base)] flex-shrink-0" />
-                                    <span className={`font-medium text-xs break-all flex-1 ${
+                                    <span className={`font-medium text-xs truncate flex-1 ${
                                       isSelected ? "text-[var(--color-primary-base)] font-bold" : "text-[var(--color-text-primary)]"
                                     }`}>
                                       {suggestion.domain}
