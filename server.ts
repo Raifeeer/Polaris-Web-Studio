@@ -2481,11 +2481,11 @@ const PORT = 3000;
    *    30 días. La primera vez que ve un proyecto sin fecha todavía, solo
    *    la inicializa (30 días después del lanzamiento real, o de la firma
    *    si el sitio no se lanzó) -- no cobra nada en esa primera pasada.
-   * 2. Cláusula Décima Primera del contrato: 2% mensual sobre cualquier
-   *    factura pendiente vencida. Por cada período de 30 días vencido sin
-   *    cobrar todavía (lateFeePeriodsCharged), genera una factura nueva y
-   *    chica (kind:"late_fee") referenciando la original -- nunca modifica
-   *    el monto de la factura original, para no perder el historial real.
+   * 2. Cláusula Décima Primera del contrato: 5.6% de mora, una sola vez,
+   *    sobre cualquier factura pendiente que ya pasó su fecha límite (que
+   *    ya incluye 5 días de gracia -- ver el +5 al crear la factura). Ese
+   *    mismo momento la factura queda "declarada vencida" (kind:"late_fee"
+   *    referenciando la original, sin modificar su monto).
    * 3. Upsell independiente (sin factura): a los clientes con al menos un
    *    addon disponible que no tienen, cada ~120 días, un correo aparte
    *    ofreciendo sumarlo -- solo si NO se generó ya un correo de
@@ -2529,8 +2529,11 @@ const PORT = 3000;
           } else if (new Date(project.nextBillingDate) <= today) {
             const items = monthlyAddons.map((a) => ({ description: a.name, price: a.price, quantity: 1 }));
             const amount = Math.round(items.reduce((s, it) => s + it.price * it.quantity, 0) * 100) / 100;
+            // 5 días de gracia sin mora (mismo esquema que Altice RD): la
+            // fecha límite real de la factura ya incluye ese margen -- pasar
+            // esta fecha es lo que la "declara" vencida más abajo.
             const dueDate = new Date(today);
-            dueDate.setDate(dueDate.getDate() + 7);
+            dueDate.setDate(dueDate.getDate() + 5);
             const dueDateStr = dueDate.toISOString().split("T")[0];
 
             dbInstance.addInvoice({
@@ -2577,53 +2580,53 @@ const PORT = 3000;
           .filter((i) => i.projectId === project.id && i.status === "pending" && i.kind !== "late_fee" && new Date(i.dueDate) < today);
 
         for (const inv of overdueInvoices) {
-          const daysOverdue = Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / (24 * 60 * 60 * 1000));
-          const periodsElapsed = Math.floor(daysOverdue / 30);
-          const periodsAlreadyCharged = inv.lateFeePeriodsCharged || 0;
-          const periodsToCharge = periodsElapsed - periodsAlreadyCharged;
-          if (periodsToCharge <= 0) continue;
+          // Se cobra una sola vez, el mismo día en que la factura queda
+          // "declarada" vencida (justo al pasar su fecha límite, que ya
+          // incluye los 5 días de gracia) -- no es un cargo que se repite
+          // cada 30 días. lateFeePeriodsCharged se reusa como bandera 0/1.
+          if (inv.lateFeePeriodsCharged) continue;
 
-          for (let i = 0; i < periodsToCharge; i++) {
-            const feeAmount = Math.round(inv.amount * 0.056 * 100) / 100;
-            const feeDueDate = new Date(today);
-            feeDueDate.setDate(feeDueDate.getDate() + 7);
-            const feeDueDateStr = feeDueDate.toISOString().split("T")[0];
+          const feeAmount = Math.round(inv.amount * 0.056 * 100) / 100;
+          const feeDueDate = new Date(today);
+          feeDueDate.setDate(feeDueDate.getDate() + 7);
+          const feeDueDateStr = feeDueDate.toISOString().split("T")[0];
 
-            dbInstance.addInvoice({
-              id: `inv-${Date.now()}-fee${periodsAlreadyCharged + i + 1}-${inv.id}`,
-              projectId: project.id,
-              invoiceNumber: dbInstance.consumeNextInvoiceCode(),
-              amount: feeAmount,
-              currency: "USD",
-              status: "pending",
-              date: todayStr,
-              dueDate: feeDueDateStr,
-              description: `Cargo por mora (5.6% mensual, Cláusula Décima Primera) — Factura #${inv.invoiceNumber} vencida el ${inv.dueDate}`,
-              kind: "late_fee",
-              relatedInvoiceId: inv.id,
-            });
+          dbInstance.addInvoice({
+            id: `inv-${Date.now()}-fee-${inv.id}`,
+            projectId: project.id,
+            invoiceNumber: dbInstance.consumeNextInvoiceCode(),
+            amount: feeAmount,
+            currency: "USD",
+            status: "pending",
+            date: todayStr,
+            dueDate: feeDueDateStr,
+            description: `Cargo por mora (5.6%, Cláusula Décima Primera) — Factura #${inv.invoiceNumber} declarada vencida el ${todayStr}`,
+            kind: "late_fee",
+            relatedInvoiceId: inv.id,
+          });
 
-            await notifyInvoice({
-              type: "pending",
-              clientEmail: client.email,
-              clientName: client.name,
-              concept: `Cargo por mora — Factura #${inv.invoiceNumber}`,
-              amount: feeAmount,
-              dueDate: feeDueDateStr,
-              isLateFee: true,
-            });
+          await notifyInvoice({
+            type: "pending",
+            clientEmail: client.email,
+            clientName: client.name,
+            concept: `Cargo por mora — Factura #${inv.invoiceNumber}`,
+            amount: feeAmount,
+            dueDate: feeDueDateStr,
+            isLateFee: true,
+          });
 
-            results.lateFeesCharged++;
-          }
-          dbInstance.updateInvoice(inv.id, { lateFeePeriodsCharged: periodsAlreadyCharged + periodsToCharge });
+          results.lateFeesCharged++;
+          dbInstance.updateInvoice(inv.id, { lateFeePeriodsCharged: 1 });
         }
 
-        // --- 2.5. Suspensión real de addons (Cláusula Novena): 30 días de
-        // mora sin regularizar en una factura de facturación recurrente ---
+        // --- 2.5. Suspensión real de addons (Cláusula Novena): 25 días desde
+        // que la factura de facturación recurrente quedó declarada vencida
+        // (su fecha límite, que ya incluye los 5 días de gracia) sin
+        // regularizar -- mismo esquema que Altice RD. ---
         for (const inv of overdueInvoices) {
           if (inv.kind !== "recurring" || inv.suspendedAt || !inv.suspendAddonIds?.length) continue;
           const daysOverdue = Math.floor((today.getTime() - new Date(inv.dueDate).getTime()) / (24 * 60 * 60 * 1000));
-          if (daysOverdue < 30) continue;
+          if (daysOverdue < 25) continue;
 
           const stillActive = inv.suspendAddonIds.filter((id) => (project.addonIds || []).includes(id));
           if (stillActive.length > 0) {

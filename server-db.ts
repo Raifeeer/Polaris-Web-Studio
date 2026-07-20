@@ -149,11 +149,12 @@ export interface DbInvoice {
   // undefined en facturas viejas = manual, comportamiento sin cambios.
   kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee";
   relatedInvoiceId?: string;   // en una factura kind:"late_fee", la factura vencida que la originó
-  lateFeePeriodsCharged?: number; // en la factura original vencida, cuántos períodos de 30 días de mora ya se cobraron -- evita cobrar el mismo período dos veces
+  lateFeePeriodsCharged?: number; // en la factura original vencida, 0/1 -- si ya se cobró el cargo por mora (único, no recurrente); evita cobrarlo dos veces
   // Suspensión real de addons (Cláusula Novena del contrato): en una
   // factura kind:"recurring", qué addons cubre -- necesario para saber
-  // cuáles quitarle al proyecto si queda 30+ días sin pagar. suspendedAt
-  // marca que la suspensión ya se aplicó, para no repetirla.
+  // cuáles quitarle al proyecto si queda 25+ días vencida sin pagar (desde
+  // que se declaró vencida, no desde la emisión). suspendedAt marca que la
+  // suspensión ya se aplicó, para no repetirla.
   suspendAddonIds?: string[];
   suspendedAt?: string;
 }
