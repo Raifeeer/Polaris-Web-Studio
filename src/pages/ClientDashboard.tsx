@@ -1857,7 +1857,7 @@ export default function ClientDashboard() {
     let signerName = "";
     if (contractUseTyped) {
       signerName = contractSignerName.trim();
-      if (!signerName) {
+      if (signerName.length < 2) {
         setContractError("Escribe tu nombre completo para firmar.");
         return;
       }

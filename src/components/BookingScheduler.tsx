@@ -82,8 +82,8 @@ export default function BookingScheduler({
   }, [slotsByDay, slotsLoading]);
 
   const handleConfirm = async () => {
-    if (!name.trim()) {
-      setNameError(translate("Ingresa tu nombre.", "Enter your name."));
+    if (name.trim().length < 2) {
+      setNameError(translate("Ingresa tu nombre completo.", "Enter your full name."));
       return;
     }
     if (!EMAIL_REGEX.test(email.trim())) {
@@ -216,7 +216,7 @@ export default function BookingScheduler({
                 value={name}
                 onChange={(e) => { setName(e.target.value); setNameError(""); }}
                 onBlur={() => {
-                  if (!name.trim()) setNameError(translate("Ingresa tu nombre.", "Enter your name."));
+                  if (name.trim().length < 2) setNameError(translate("Ingresa tu nombre completo.", "Enter your full name."));
                 }}
                 className={`glass-input w-full px-4 py-3 rounded-xl border text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary-base)] text-base md:text-sm transition-all ${nameError ? "border-red-500" : "border-[var(--color-border-strong)]"}`}
               />
@@ -268,7 +268,7 @@ export default function BookingScheduler({
 
           <button
             type="button"
-            disabled={submitting || !selectedSlot || !name.trim() || !EMAIL_REGEX.test(email.trim())}
+            disabled={submitting || !selectedSlot || name.trim().length < 2 || !EMAIL_REGEX.test(email.trim())}
             onClick={handleConfirm}
             className="w-full flex items-center justify-center gap-2 py-3.5 px-4 bg-[var(--color-primary-base)] hover:brightness-110 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm cursor-pointer border-none shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
           >
