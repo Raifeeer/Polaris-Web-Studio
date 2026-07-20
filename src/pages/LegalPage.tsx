@@ -520,7 +520,22 @@ function TermsContent() {
         </p>
       </Section>
 
-      <Section heading={<T en="12. Changes to these terms">12. Cambios a estos términos</T>}>
+      <Section heading={<T en="12. Individual dispute resolution; no class actions">12. Resolución individual de disputas; sin acciones colectivas</T>}>
+        <p>
+          <T en="Any dispute arising from these Terms or your use of the site/portal will be resolved individually between you and Polaris Web Studio — not as part of a class, consolidated, or representative action of any kind, to the extent permitted by applicable law. Either party may elect to submit the dispute to binding arbitration under Law No. 181-09 on Commercial Arbitration of the Dominican Republic instead of the ordinary courts referenced in Section 11. This clause doesn't prevent you from filing a complaint with an applicable consumer-protection authority.">
+            Cualquier disputa derivada de estos Términos o de tu uso del sitio/portal se resolverá
+            de forma individual entre vos y Polaris Web Studio — no como parte de una demanda
+            colectiva, consolidada o representativa de ningún tipo, en la medida permitida por la
+            ley aplicable. Cualquiera de las partes puede optar por someter la disputa a arbitraje
+            vinculante conforme a la Ley No. 181-09 sobre Arbitraje Comercial de la República
+            Dominicana, en lugar de los tribunales ordinarios mencionados en la Sección 11. Esta
+            cláusula no te impide presentar un reclamo ante una autoridad de protección al
+            consumidor que corresponda.
+          </T>
+        </p>
+      </Section>
+
+      <Section heading={<T en="13. Changes to these terms">13. Cambios a estos términos</T>}>
         <p>
           <T en="We may update these terms as our services evolve. Changes apply to new quotes accepted after the update — an already-accepted quote is governed by the terms in effect when you accepted it.">
             Podemos actualizar estos términos a medida que evolucionan nuestros servicios. Los
@@ -531,7 +546,7 @@ function TermsContent() {
         </p>
       </Section>
 
-      <Section heading={<T en="13. Contact">13. Contacto</T>}>
+      <Section heading={<T en="14. Contact">14. Contacto</T>}>
         <p>
           <a href="mailto:hola@polarisweb.studio" className="text-[var(--color-primary-base)] underline">
             hola@polarisweb.studio
