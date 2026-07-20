@@ -101,9 +101,34 @@
         ]
       }
     </script>
-    <!-- Initial Loader Styles -->
+    <!-- Tema inicial aplicado de forma SÍNCRONA, antes del primer pintado --
+         misma lógica que src/hooks/useTheme.ts (localStorage con fallback a
+         prefers-color-scheme), pero acá corre bloqueante en <head>, no en un
+         useEffect de React. Bug real reportado por el usuario (20 de julio):
+         sin esto, entre que carga el CSS y que React hidrata (~1.5MB de
+         bundle, nada instantáneo en Safari móvil), <html> se queda sin la
+         clase .light aunque el tema guardado sea claro -- si el usuario
+         scrollea/hace overscroll en esa ventana, ve el fondo oscuro de
+         :root por default en vez del real. Con esto, la clase queda puesta
+         antes de que el navegador pinte un solo píxel. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('polaris-theme');
+          var theme = saved || (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+          if (theme === 'light') document.documentElement.classList.add('light');
+        } catch (e) {}
+      })();
+    </script>
+    <!-- Initial Loader Styles -- selectores por la clase .light (recién
+         puesta arriba), no por prefers-color-scheme, para que coincidan
+         siempre con el tema real guardado y no con la preferencia del
+         sistema (pueden no ser lo mismo). -->
     <style>
+      html { background-color: #020617; }
+      html.light { background-color: #f8fafc; }
       body { margin: 0; background-color: #020617; }
+      html.light body { background-color: #f8fafc; }
       #root:empty {
         display: flex;
         justify-content: center;
@@ -119,9 +144,6 @@
       @keyframes pulse-loader {
         0%, 100% { transform: scale(0.9); }
         50% { transform: scale(1); }
-      }
-      @media (prefers-color-scheme: light) {
-        body { background-color: #f8fafc; }
       }
     </style>
   </head>
