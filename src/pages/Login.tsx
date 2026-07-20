@@ -41,17 +41,17 @@ export default function Login() {
     }
   };
 
-  // min-h-[100svh] en vez de min-h-dvh -- bug real reportado por el usuario
-  // (19 de julio): en Safari móvil, dvh ("dynamic viewport height") se
-  // recalcula grande cuando la barra de direcciones se oculta, pero el
-  // layout de esta página se centra respecto a ese alto "grande" incluso
-  // mientras la barra sigue visible y el viewport real es más chico -- el
-  // card de login quedaba centrado más abajo de lo visible. svh ("small
-  // viewport height") siempre usa el alto mínimo real, sin ese salto.
+  // position:fixed en vez de min-h-dvh/min-h-[100svh] -- bug real reportado
+  // por el usuario (20 de julio): ninguna unidad de viewport (dvh ni svh)
+  // centraba de forma consistente en el navegador móvil real que usa --
+  // el soporte de svh no es parejo. Un elemento fixed con inset se
+  // posiciona contra el viewport VISUAL real en iOS (no el que crece al
+  // ocultarse la barra de direcciones), así que centra siempre sobre el
+  // área que se ve de verdad. top-16 dejando lugar para el Navbar (h-16).
   return (
-    <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative">
+    <div className="min-h-screen flex flex-col bg-[var(--color-surface-base)] relative">
       <Navbar />
-      <div className="flex-1 flex items-center justify-center p-4">
+      <div className="fixed inset-0 top-16 flex items-center justify-center p-4 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
