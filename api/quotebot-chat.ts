@@ -1,5 +1,13 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
+// Backend de texto libre para el chatbot flotante (Atlas Terminal) --
+// reemplaza el modo puramente guiado (quiz de opciones fijas) con una
+// opción de pregunta abierta. DeepSeek (deepseek-chat, el modelo más barato
+// de su catálogo) como primario, xAI Grok como respaldo si DeepSeek falla.
+// Reusa casi entero el handler que se había armado para el viejo Atlas
+// Terminal de página completa (api/terminal-ai.ts, nunca llegó a
+// conectarse) -- esa página se eliminó, este archivo la reemplaza.
+
 const MAX_MESSAGE_CHARS = 2000;
 const MAX_HISTORY_TURNS = 20;
 
@@ -51,11 +59,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
   const history = sanitizeHistory((req.body || {}).history);
 
-  const systemPrompt = `Eres Atlas, el asistente técnico de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA.
+  const systemPrompt = `Eres Atlas Terminal, el asistente del chatbot flotante de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA.
 
 Planes disponibles:
 - Destello: $299 USD — Landing page 1 página, entrega 1-2 semanas
-- Constelación: $699 USD — Web corporativa hasta 5 páginas, chatbot IA, entrega 2-4 semanas  
+- Constelación: $699 USD — Web corporativa hasta 5 páginas, chatbot IA, entrega 2-4 semanas
 - Nova: $1,299 USD — E-commerce + panel admin + herramienta IA, entrega 4-6 semanas
 
 Contacto: hola@polarisweb.studio | +1 (829) 920-0544 | @polariswebstudio | Punta Cana, RD
@@ -64,60 +72,51 @@ Cotizador: /cotizar
 REGLAS:
 - Responde SIEMPRE en el idioma del usuario (español o inglés)
 - Máximo 60 palabras por respuesta
-- Tono técnico pero accesible, directo, sin relleno
+- Tono directo y cercano, sin relleno corporativo
 - Si preguntan por precios, da el plan más relevante con precio exacto
 - Si preguntan por tecnologías, menciona el stack real
-- Si quieren contratar, diles que escriban "hire" o vayan a /cotizar
-- Nunca inventes funcionalidades o precios que no existen
-- Formato terminal: sin markdown, sin bullets con *, usa → para listas si es necesario`;
+- Si quieren contratar o hablar con alguien, diles que vayan a /cotizar o escriban por WhatsApp
+- Nunca inventes funcionalidades, precios o plazos que no existen
+- Sin markdown, sin bullets con *, usa → para listas si hace falta`;
 
-  const messages = [
-    ...(history || []),
-    { role: "user", content: message }
-  ];
+  const messages = [...(history || []), { role: "user", content: message }];
 
   try {
-    // Intento 1 — Gemini 3.1 Flash Lite
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: messages.map(m => ({
-            role: m.role === "assistant" ? "model" : "user",
-            parts: [{ text: m.content }]
-          })),
-          generationConfig: { temperature: 0.8, maxOutputTokens: 150 }
-        })
-      }
-    );
+    // Intento 1 — DeepSeek Chat (el modelo más barato de su catálogo)
+    const dsRes = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
+        temperature: 0.8,
+        max_tokens: 150,
+      }),
+    });
 
-    if (!geminiRes.ok) throw new Error("Gemini failed");
-    const geminiData = await geminiRes.json();
-    const text = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+    if (!dsRes.ok) throw new Error("DeepSeek failed");
+    const dsData = await dsRes.json();
+    const text = dsData.choices?.[0]?.message?.content?.trim() || "";
     if (!text) throw new Error("Empty response");
-    return res.status(200).json({ reply: text, provider: "gemini" });
-
+    return res.status(200).json({ reply: text, provider: "deepseek" });
   } catch {
-    // Fallback — Grok 4.3
+    // Fallback — Grok
     try {
       const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.GROK_API_KEY}`
+          "Authorization": `Bearer ${process.env.GROK_API_KEY}`,
         },
         body: JSON.stringify({
           model: "grok-4.3",
-          messages: [
-            { role: "system", content: systemPrompt },
-            ...messages
-          ],
+          messages: [{ role: "system", content: systemPrompt }, ...messages],
           temperature: 0.8,
-          max_tokens: 150
-        })
+          max_tokens: 150,
+        }),
       });
 
       if (!grokRes.ok) throw new Error("Grok failed");
@@ -125,7 +124,6 @@ REGLAS:
       const text = grokData.choices?.[0]?.message?.content?.trim() || "";
       if (!text) throw new Error("Empty response");
       return res.status(200).json({ reply: text, provider: "grok" });
-
     } catch {
       return res.status(500).json({ error: "all_providers_failed" });
     }

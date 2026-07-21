@@ -17,6 +17,7 @@ import { createServer as createViteServer } from "vite";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 import suggestDomainsHandler from "./api/suggest-domains.js";
+import quoteBotChatHandler from "./api/quotebot-chat.js";
 
 // --- Session token signing (HMAC) ---
 // Secreto para firmar los tokens de sesión locales. En producción DEBE definirse
@@ -1156,6 +1157,15 @@ const PORT = 3000;
       await generateAddonDescriptionsHandler(req as any, res as any);
     } catch (error: any) {
       console.error("Error generating addon descriptions:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
+  app.post("/api/quotebot-chat", async (req, res) => {
+    try {
+      await quoteBotChatHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in quotebot chat:", error);
       res.status(500).json({ error: error?.message || "Internal server error" });
     }
   });

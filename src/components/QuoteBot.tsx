@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2 } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
+
+type AiMessage = { role: "user" | "assistant"; content: string };
 
 type Question = {
   id: number;
@@ -108,17 +110,52 @@ export default function QuoteBot() {
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Modo de texto libre con IA (DeepSeek, con Grok como respaldo) --
+  // independiente del quiz guiado de arriba, disponible en cualquier
+  // momento vía el input fijo al pie del panel.
+  const [aiMessages, setAiMessages] = useState<AiMessage[]>([]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(false);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }, 100); // small delay to allow DOM updates
   };
 
+  const sendAiMessage = async () => {
+    const text = aiInput.trim();
+    if (!text || aiLoading) return;
+    setAiInput("");
+    setAiError(false);
+    const nextMessages: AiMessage[] = [...aiMessages, { role: "user", content: text }];
+    setAiMessages(nextMessages);
+    setAiLoading(true);
+    scrollToBottom();
+    try {
+      const res = await fetch("/api/quotebot-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history: nextMessages.slice(0, -1) }),
+      });
+      if (!res.ok) throw new Error("bad status");
+      const data = await res.json();
+      if (!data.reply) throw new Error("empty reply");
+      setAiMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+    } catch {
+      setAiError(true);
+    } finally {
+      setAiLoading(false);
+      scrollToBottom();
+    }
+  };
+
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [currentStep, isTyping, isOpen]);
+  }, [currentStep, isTyping, isOpen, aiMessages.length, aiLoading]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -465,7 +502,71 @@ export default function QuoteBot() {
                   </div>
                 </motion.div>
               )}
+
+              {/* Mensajes del modo de texto libre (IA) */}
+              {aiMessages.map((m, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, x: m.role === "user" ? 10 : -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={
+                      m.role === "user"
+                        ? "max-w-[85%] p-3 rounded-2xl rounded-tr-none bg-[var(--color-primary-muted)] text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 shadow-sm"
+                        : "max-w-[85%] p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]"
+                    }
+                  >
+                    <p className={`text-sm leading-relaxed ${m.role === "user" ? "font-bold" : "text-[var(--color-text-primary)]"}`}>
+                      {m.content}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+
+              {aiLoading && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
+                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-1.5 h-[42px] px-4">
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                  </div>
+                </motion.div>
+              )}
+
+              {aiError && (
+                <p className="text-xs text-red-500 px-1">
+                  <T en="Something went wrong. Try again or write to us on WhatsApp.">
+                    Algo falló. Intenta de nuevo o escríbenos por WhatsApp.
+                  </T>
+                </p>
+              )}
+
               <div ref={chatEndRef} />
+            </div>
+
+            {/* Input de texto libre -- siempre disponible, independiente del quiz */}
+            <div className="p-3 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] flex items-center gap-2">
+              <input
+                type="text"
+                value={aiInput}
+                onChange={(e) => setAiInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") sendAiMessage();
+                }}
+                placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
+                maxLength={2000}
+                className="flex-1 text-sm bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-full px-4 py-2 outline-none focus:border-[var(--color-primary-base)] transition-colors placeholder:text-[var(--color-text-tertiary)]"
+              />
+              <button
+                onClick={sendAiMessage}
+                disabled={!aiInput.trim() || aiLoading}
+                aria-label={translate("Enviar mensaje", "Send message")}
+                className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+              >
+                <Send size={14} />
+              </button>
             </div>
           </motion.div>
         )}
