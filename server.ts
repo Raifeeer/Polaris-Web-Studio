@@ -225,6 +225,55 @@ async function askAI(prompt: string): Promise<string> {
   }
 }
 
+// Notas actualizadas del proyecto desde el vault de Obsidian (repo
+// Raifeeer/memoria-polaris, ver Fase 8 de CLAUDE.md en Meridian) -- se leen
+// en vivo vía la Cloud Function repo-file (GitHub API real, sin caché/RAG
+// de por medio, así el asistente del cliente siempre ve la nota más
+// reciente). Solo se usa la carpeta del proyecto real del cliente (matcheada
+// por vercelProjectId contra el nombre de carpeta en el vault) -- nunca se
+// mezclan notas de otros proyectos/clientes acá, a diferencia del asistente
+// admin de Meridian, que sí tiene acceso al vault completo.
+const REPO_FILE_URL = "https://repo-file-wdvfac6mgq-ue.a.run.app";
+async function fetchProjectVaultNotes(vercelProjectId: string | undefined | null): Promise<string | null> {
+  if (!vercelProjectId) return null;
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return null;
+  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+  try {
+    const treeRes = await fetch(`${REPO_FILE_URL}?repo=memoria-polaris&tree=1`, {
+      headers: { Authorization: `Bearer ${cronSecret}` },
+    });
+    if (!treeRes.ok) return null;
+    const treeData = await treeRes.json();
+    const paths: string[] = treeData.paths || [];
+    const target = normalize(vercelProjectId);
+    const folder = paths
+      .map((p) => p.split("/")[0])
+      .find((f) => normalize(f) === target);
+    if (!folder) return null;
+
+    const mdPaths = paths
+      .filter((p) => p.startsWith(`${folder}/`) && p.endsWith(".md"))
+      .sort()
+      .reverse()
+      .slice(0, 6);
+
+    let combined = "";
+    for (const p of mdPaths) {
+      const fileRes = await fetch(`${REPO_FILE_URL}?repo=memoria-polaris&path=${encodeURIComponent(p)}`, {
+        headers: { Authorization: `Bearer ${cronSecret}` },
+      });
+      if (!fileRes.ok) continue;
+      const fileData = await fileRes.json();
+      if (fileData.content) combined += `\n### ${p}\n${String(fileData.content).slice(0, 1200)}\n`;
+      if (combined.length > 5000) break;
+    }
+    return combined.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 // Variante "chat" (mensajes con roles, no un solo string) para el asistente
 // de IA del portal de cliente -- DeepSeek (deepseek-chat, el modelo más
 // barato de su catálogo) como primario, Grok como respaldo si DeepSeek
@@ -2285,10 +2334,13 @@ const PORT = 3000;
         contract: contractData,
       });
 
+      const vaultNotes = await fetchProjectVaultNotes(project.vercelProjectId);
+
       const systemPrompt = `Eres Atlas Terminal, el asistente personal de ${clientFirstName} para su proyecto "${project.name}" en Polaris Web Studio. Conoces a fondo este proyecto específico: su progreso, entregables, facturas, últimos cambios publicados, reuniones agendadas y el contrato firmado (o pendiente de firmar). Responde SIEMPRE en ${clientLanguage === "en" ? "inglés" : "español"}, sin importar en qué idioma esté esta instrucción.
 
 DATOS REALES DE ESTE PROYECTO (única fuente de verdad -- nunca inventes ni asumas datos que no estén acá):
 ${realDataBlock}
+${vaultNotes ? `\nNOTAS RECIENTES DEL PROYECTO (extraídas en vivo de la bitácora interna de desarrollo -- úsalas solo como contexto adicional de qué se hizo/está pasando técnicamente, nunca las cites como si fueran una fuente que el cliente conoce ni reveles que existe una "bitácora"; si contradicen los datos reales de arriba, los datos reales de arriba mandan):\n${vaultNotes}\n` : ""}
 
 REGLAS:
 - Sé cálido y directo, como parte del equipo de Polaris, no como un bot genérico.
