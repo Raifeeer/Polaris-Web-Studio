@@ -531,6 +531,7 @@ async function notifyInvoice(params: {
   // final -- reusa la misma plantilla de invoice-notify-send en vez de
   // crear un correo aparte.
   isLateFee?: boolean;
+  isDomainRenewal?: boolean;
   upsellSuggestions?: { name: string; price: number }[];
 }) {
   try {
@@ -544,6 +545,37 @@ async function notifyInvoice(params: {
     }
   } catch (err) {
     console.error("Error notificando factura/pago:", err);
+  }
+}
+
+// Renovación real en Porkbun, disparada SOLO cuando se confirma un pago
+// REAL de una factura kind:"domain_renewal" (webhook/captura de PayPal) --
+// nunca desde un toggle manual de admin (/api/portal/invoices/:id/toggle-pay
+// no llama a esto, a propósito: un admin marcando "pagado" a mano no debe
+// mover dinero real hacia Porkbun). Idempotente vía domainRenewalCompletedAt
+// -- si ya está seteado, no reintenta (protege contra reintentos del
+// webhook de PayPal disparando la renovación/el cobro real dos veces).
+async function maybeRenewDomainForInvoice(invoice: import("./server-db.js").DbInvoice) {
+  if (invoice.kind !== "domain_renewal" || invoice.domainRenewalCompletedAt) return;
+  const project = dbInstance.getProjects().find((p) => p.id === invoice.projectId);
+  if (!project?.customDomain || project.domainRegistrar !== "porkbun") return;
+
+  const result = await renewDomainAtPorkbun(project.customDomain);
+  if (result.success) {
+    const newExpiry = new Date(project.domainExpiresAt || new Date());
+    newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+    dbInstance.updateInvoice(invoice.id, { domainRenewalCompletedAt: new Date().toISOString() });
+    dbInstance.updateProject(project.id, {
+      domainExpiresAt: newExpiry.toISOString(),
+      lastDomainRenewalAt: new Date().toISOString(),
+    });
+    await dbInstance.flush();
+    console.log(`[Renovación de dominio] ${project.customDomain} renovado OK (factura ${invoice.id}, costo real $${result.costUsd}).`);
+  } else {
+    // El cliente ya pagó pero la renovación real falló -- caso urgente,
+    // sin bandera de éxito seteada así puede reintentarse (a mano o en la
+    // próxima corrida) sin haber cobrado nada real todavía en Porkbun.
+    console.error(`[Renovación de dominio] FALLÓ ${project.customDomain} (factura ${invoice.id}, cliente ya pagó): ${result.error}`);
   }
 }
 
@@ -867,6 +899,76 @@ async function checkDomainViaPorkbun(domain: string): Promise<{ available: boole
   }
 }
 
+// Precio REAL de renovación (distinto de checkDomainViaPorkbun de arriba,
+// que expone el precio de REGISTRO -- mismo valor solo quirúrgicamente por
+// coincidencia en algunos TLD, pero el campo correcto para renovar es
+// response.additional.renewal.price, confirmado en vivo el 21 de julio
+// contra la API real). Sin rate-limit especial acá porque esto solo lo usa
+// el chequeo diario de facturación, nunca el wizard público.
+async function getRealDomainRenewalPrice(domain: string): Promise<number | null> {
+  const apiKey = process.env.PORKBUN_API_KEY;
+  const secretKey = process.env.PORKBUN_SECRET_KEY;
+  if (!apiKey || !secretKey) return null;
+  try {
+    const res = await fetch(`https://api.porkbun.com/api/json/v3/domain/checkDomain/${encodeURIComponent(domain)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apikey: apiKey, secretapikey: secretKey }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const data = await res.json();
+    const renewalPrice = data?.response?.additional?.renewal?.price;
+    return renewalPrice !== undefined ? Number(renewalPrice) : null;
+  } catch (err: any) {
+    console.error("[getRealDomainRenewalPrice] error:", err?.message);
+    return null;
+  }
+}
+
+// Renovación real en Porkbun -- robusta a propósito (pedido explícito del
+// usuario), con dos capas de protección reales que ofrece la propia API de
+// Porkbun (no inventadas acá): (1) dryRun:true primero, que valida todo sin
+// cobrar nada; (2) el campo "cost" tiene que coincidir EXACTO (en centavos)
+// con el precio real vigente en Porkbun en ese momento, o la API entera
+// rechaza la operación -- así nunca se puede renovar a un precio viejo/
+// desactualizado por error de este lado. Nunca usa el precio que quedó
+// guardado en la factura (pudo quedar desactualizado entre la fecha de
+// facturación y el pago) -- siempre re-consulta el precio real justo antes
+// de intentar renovar.
+async function renewDomainAtPorkbun(domain: string): Promise<{ success: boolean; error?: string; costUsd?: number }> {
+  const apiKey = process.env.PORKBUN_API_KEY;
+  const secretKey = process.env.PORKBUN_SECRET_KEY;
+  if (!apiKey || !secretKey) return { success: false, error: "PORKBUN_API_KEY/PORKBUN_SECRET_KEY no configuradas" };
+
+  const realPrice = await getRealDomainRenewalPrice(domain);
+  if (realPrice === null) return { success: false, error: "No se pudo obtener el precio real de renovación desde Porkbun" };
+  const costCents = Math.round(realPrice * 100);
+
+  const callRenew = async (dryRun: boolean) => {
+    const res = await fetch(`https://api.porkbun.com/api/json/v3/domain/renew/${encodeURIComponent(domain)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apikey: apiKey, secretapikey: secretKey, cost: costCents, dryRun }),
+      signal: AbortSignal.timeout(15000),
+    });
+    return res.json();
+  };
+
+  try {
+    const dryRunResult = await callRenew(true);
+    if (dryRunResult?.status !== "SUCCESS" || dryRunResult?.wouldSucceed !== true) {
+      return { success: false, error: dryRunResult?.message || "El dryRun de renovación no pasó la validación" };
+    }
+    const realResult = await callRenew(false);
+    if (realResult?.status !== "SUCCESS") {
+      return { success: false, error: realResult?.message || "Porkbun rechazó la renovación real" };
+    }
+    return { success: true, costUsd: realPrice };
+  } catch (err: any) {
+    return { success: false, error: err?.message || "Error de red al contactar a Porkbun" };
+  }
+}
+
 export const app = express();
 app.disable("x-powered-by");
 
@@ -1059,6 +1161,30 @@ const PORT = 3000;
     const project = dbInstance.getProjects().find((p) => p.id === id);
     if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
     dbInstance.updateProject(id, { ga4PropertyId, gscSiteUrl });
+    await dbInstance.flush();
+    res.json({ success: true });
+  });
+
+  /**
+   * Guarda la fecha real de vencimiento del dominio y si está en la cuenta
+   * de Porkbun de Polaris (domainRegistrar:"porkbun" habilita el pipeline
+   * de renovación automática real -- ver POST /api/portal/billing/run-cycle
+   * y maybeRenewDomainForInvoice; cualquier otro valor lo deja fuera por
+   * completo, sin inventar ninguna renovación). Ambos vacíos por defecto.
+   * Format: PUT /api/portal/projects/:id/domain-billing
+   */
+  app.put("/api/portal/projects/:id/domain-billing", authenticateToken, requireAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { domainExpiresAt, domainRegistrar } = req.body;
+    if (domainRegistrar !== undefined && domainRegistrar !== "porkbun" && domainRegistrar !== "other" && domainRegistrar !== "") {
+      return res.status(400).json({ error: "domainRegistrar inválido." });
+    }
+    const project = dbInstance.getProjects().find((p) => p.id === id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    dbInstance.updateProject(id, {
+      domainExpiresAt: domainExpiresAt || undefined,
+      domainRegistrar: domainRegistrar || undefined,
+    });
     await dbInstance.flush();
     res.json({ success: true });
   });
@@ -1897,7 +2023,11 @@ const PORT = 3000;
         type: "paid", clientEmail: req.user.email, clientName: req.user.name,
         concept: foundInvoice.description, amount: foundInvoice.amount,
         paidDate: new Date().toLocaleDateString("es-DO", { day: "numeric", month: "long", year: "numeric" }),
+        isDomainRenewal: foundInvoice.kind === "domain_renewal",
       });
+      if (foundInvoice.kind === "domain_renewal") {
+        await maybeRenewDomainForInvoice({ ...foundInvoice, status: "paid", paypalCaptureId: captureUnit.id });
+      }
 
       res.json({ success: true, status: "paid" });
     } catch (error: any) {
@@ -2517,7 +2647,11 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
                   type: "paid", clientEmail: webhookClient.email, clientName: webhookClient.name,
                   concept: foundInvoice.description, amount: foundInvoice.amount,
                   paidDate: new Date().toLocaleDateString("es-DO", { day: "numeric", month: "long", year: "numeric" }),
+                  isDomainRenewal: foundInvoice.kind === "domain_renewal",
                 });
+              }
+              if (foundInvoice.kind === "domain_renewal") {
+                await maybeRenewDomainForInvoice({ ...foundInvoice, status: "paid", paypalCaptureId: captureId });
               }
             } else {
               console.error(`[Webhook PayPal] Monto no coincide para factura ${foundInvoice.id}: esperado ${foundInvoice.amount} ${foundInvoice.currency}, recibido ${amount} ${currency}`);
@@ -2908,7 +3042,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     const todayStr = new Date().toISOString().split("T")[0];
     const today = new Date(todayStr);
     const UPSELL_CADENCE_DAYS = 120;
-    const results = { recurringBilled: 0, lateFeesCharged: 0, addonsSuspended: 0, upsellsSent: 0, projectsScanned: 0, errors: [] as string[] };
+    const results = { recurringBilled: 0, lateFeesCharged: 0, addonsSuspended: 0, upsellsSent: 0, domainRenewalsInvoiced: 0, projectsScanned: 0, errors: [] as string[] };
 
     const projects = dbInstance.getProjects().filter((p) => !p.deletedAt && p.status === "active" && p.contractStatus === "signed");
 
@@ -3072,6 +3206,56 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
             });
             dbInstance.updateProject(project.id, { lastUpsellEmailAt: todayStr });
             results.upsellsSent++;
+          }
+        }
+
+        // --- 4. Renovación de dominio: factura real 15 días antes del
+        // vencimiento -- SOLO para dominios reales en la cuenta de Porkbun
+        // de Polaris (domainRegistrar:"porkbun"). Cualquier otro dominio
+        // (comprado por el cliente, vía Vercel, etc.) queda fuera de este
+        // paso por completo, nunca se inventa una factura para eso. ---
+        if (project.customDomain && project.domainRegistrar === "porkbun" && project.domainExpiresAt) {
+          const expiresAt = new Date(project.domainExpiresAt);
+          const daysUntilExpiry = Math.floor((expiresAt.getTime() - today.getTime()) / (24 * 60 * 60 * 1000));
+          const expiryYear = expiresAt.getFullYear();
+          if (daysUntilExpiry <= 15 && project.domainRenewalInvoiceYear !== expiryYear) {
+            const realPrice = await getRealDomainRenewalPrice(project.customDomain);
+            if (realPrice !== null) {
+              // Vence 3 días antes del vencimiento real del dominio -- deja
+              // margen para procesar el pago y disparar la renovación real
+              // en Porkbun antes de que el dominio efectivamente caduque.
+              const domainDueDate = new Date(expiresAt);
+              domainDueDate.setDate(domainDueDate.getDate() - 3);
+              const domainDueDateStr = domainDueDate.toISOString().split("T")[0];
+
+              dbInstance.addInvoice({
+                id: `inv-${Date.now()}-dom-${project.id}`,
+                projectId: project.id,
+                invoiceNumber: dbInstance.consumeNextInvoiceCode(),
+                amount: realPrice,
+                currency: "USD",
+                status: "pending",
+                date: todayStr,
+                dueDate: domainDueDateStr,
+                description: `Renovación anual del dominio ${project.customDomain}`,
+                kind: "domain_renewal",
+              });
+
+              await notifyInvoice({
+                type: "pending",
+                clientEmail: client.email,
+                clientName: client.name,
+                concept: `Renovación de dominio — ${project.customDomain}`,
+                amount: realPrice,
+                dueDate: domainDueDateStr,
+                isDomainRenewal: true,
+              });
+
+              dbInstance.updateProject(project.id, { domainRenewalInvoiceYear: expiryYear });
+              results.domainRenewalsInvoiced++;
+            } else {
+              results.errors.push(`${project.id}: no se pudo obtener el precio real de renovación para ${project.customDomain}`);
+            }
           }
         }
       } catch (err: any) {

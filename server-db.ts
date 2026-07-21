@@ -128,6 +128,21 @@ export interface DbProject {
   ga4PropertyId?: string;
   gscSiteUrl?: string;
   lastTrafficReportAt?: string;
+  // Renovación real de dominio (ver POST /api/portal/billing/run-cycle) --
+  // domainExpiresAt es la fecha real de vencimiento (fuente de verdad:
+  // Porkbun, `domain/listAll`/`domain/checkDomain`), guardada acá como
+  // caché para no consultar la API en cada corrida diaria. domainRegistrar
+  // solo vale "porkbun" cuando el dominio del cliente está REALMENTE en la
+  // cuenta de Porkbun de Polaris (hoy no hay ninguno -- Tano se compró vía
+  // Vercel) -- cualquier otro valor u ausente deja el proyecto fuera del
+  // pipeline de renovación automática por completo, nunca se intenta nada.
+  // domainRenewalInvoiceYear guarda el año calendario de domainExpiresAt
+  // para el que ya se generó la factura de renovación, evitando duplicarla
+  // en corridas diarias sucesivas del mismo ciclo.
+  domainExpiresAt?: string;
+  domainRegistrar?: "porkbun" | "other";
+  domainRenewalInvoiceYear?: number;
+  lastDomainRenewalAt?: string;
 }
 
 export interface DbTask {
@@ -164,7 +179,7 @@ export interface DbInvoice {
   // /api/portal/billing/run-cycle solo; las demás siguen siendo manuales
   // (depósito/entrega final vía auto-provision-client, o admin ad-hoc).
   // undefined en facturas viejas = manual, comportamiento sin cambios.
-  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee";
+  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee" | "domain_renewal";
   relatedInvoiceId?: string;   // en una factura kind:"late_fee", la factura vencida que la originó
   lateFeePeriodsCharged?: number; // en la factura original vencida, 0/1 -- si ya se cobró el cargo por mora (único, no recurrente); evita cobrarlo dos veces
   // Suspensión real de addons (Cláusula Novena del contrato): en una
@@ -174,6 +189,13 @@ export interface DbInvoice {
   // suspensión ya se aplicó, para no repetirla.
   suspendAddonIds?: string[];
   suspendedAt?: string;
+  // Renovación real en Porkbun (factura kind:"domain_renewal") -- se marca
+  // SOLO después de que la llamada real a domain/renew de Porkbun devuelve
+  // éxito, nunca al capturar el pago de PayPal. Es la bandera de
+  // idempotencia real: si el webhook de PayPal se dispara más de una vez
+  // para la misma captura, esto evita renovar el dominio (y cobrarle a
+  // Polaris) dos veces.
+  domainRenewalCompletedAt?: string;
 }
 
 export interface DbMeeting {
