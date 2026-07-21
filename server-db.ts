@@ -179,7 +179,7 @@ export interface DbInvoice {
   // /api/portal/billing/run-cycle solo; las demás siguen siendo manuales
   // (depósito/entrega final vía auto-provision-client, o admin ad-hoc).
   // undefined en facturas viejas = manual, comportamiento sin cambios.
-  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee" | "domain_renewal";
+  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee" | "domain_renewal" | "transfer_fee" | "db_connection_fee";
   relatedInvoiceId?: string;   // en una factura kind:"late_fee", la factura vencida que la originó
   lateFeePeriodsCharged?: number; // en la factura original vencida, 0/1 -- si ya se cobró el cargo por mora (único, no recurrente); evita cobrarlo dos veces
   // Suspensión real de addons (Cláusula Novena del contrato): en una

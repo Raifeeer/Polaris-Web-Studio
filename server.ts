@@ -1246,6 +1246,91 @@ const PORT = 3000;
   });
 
   /**
+   * Cargo único de traspaso (Cláusula Décima Novena del contrato, 8% sobre
+   * el precio del paquete original -- pkg.price de resolveContractPricing,
+   * sin addons ni descuento) -- cuando un cliente pide llevarse
+   * dominio/código/hosting/base de datos a sus propias cuentas al terminar
+   * la relación. Acción manual del admin, sin disparador automático (no hay
+   * forma de detectar "el cliente pidió irse" solo).
+   * Format: POST /api/portal/projects/:id/transfer-fee
+   */
+  app.post("/api/portal/projects/:id/transfer-fee", authenticateToken, requireAdmin, async (req, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    const { pkg } = resolveContractPricing(project);
+    const amount = Math.round(pkg.price * 0.08 * 100) / 100;
+    const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const description = `Cargo de traspaso (Cláusula Décima Novena) — ${project.name}`;
+
+    const invoiceId = `inv-${Date.now()}-transfer-${project.id}`;
+    dbInstance.addInvoice({
+      id: invoiceId,
+      projectId: project.id,
+      invoiceNumber: dbInstance.consumeNextInvoiceCode(),
+      amount, currency: "USD", status: "pending",
+      date: new Date().toISOString().split("T")[0],
+      dueDate, description, kind: "transfer_fee",
+    });
+    await dbInstance.flush();
+
+    await notifyInvoice({
+      type: "pending", clientEmail: client.email, clientName: client.name,
+      concept: description, amount, dueDate,
+    });
+
+    res.json({ success: true, invoiceId, amount });
+  });
+
+  /**
+   * Cargo único de conexión de base de datos propia (Cláusula Novena, 5%
+   * sobre el precio del paquete original) -- cuando el cliente pide
+   * conectar su propio proyecto de base de datos en vez del compartido.
+   * Sin cargo si se pide dentro de los 15 días de project.launchedAt
+   * (excepción real del contrato). Acción manual del admin.
+   * Format: POST /api/portal/projects/:id/db-connection-fee
+   */
+  app.post("/api/portal/projects/:id/db-connection-fee", authenticateToken, requireAdmin, async (req, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.id);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    const daysSinceLaunch = project.launchedAt
+      ? Math.floor((Date.now() - new Date(project.launchedAt).getTime()) / (24 * 60 * 60 * 1000))
+      : null;
+    const isWaived = daysSinceLaunch !== null && daysSinceLaunch <= 15;
+    if (isWaived) {
+      return res.json({ success: true, waived: true, reason: "Solicitado dentro de los 15 días del lanzamiento -- sin cargo (Cláusula Novena)." });
+    }
+
+    const { pkg } = resolveContractPricing(project);
+    const amount = Math.round(pkg.price * 0.05 * 100) / 100;
+    const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const description = `Cargo de conexión de base de datos propia (Cláusula Novena) — ${project.name}`;
+
+    const invoiceId = `inv-${Date.now()}-dbconn-${project.id}`;
+    dbInstance.addInvoice({
+      id: invoiceId,
+      projectId: project.id,
+      invoiceNumber: dbInstance.consumeNextInvoiceCode(),
+      amount, currency: "USD", status: "pending",
+      date: new Date().toISOString().split("T")[0],
+      dueDate, description, kind: "db_connection_fee",
+    });
+    await dbInstance.flush();
+
+    await notifyInvoice({
+      type: "pending", clientEmail: client.email, clientName: client.name,
+      concept: description, amount, dueDate,
+    });
+
+    res.json({ success: true, waived: false, invoiceId, amount });
+  });
+
+  /**
    * Lista los proyectos activos con GA4/Search Console real configurado --
    * consumido por monthly-traffic-report-send (Meridian) para saber a
    * quién generarle el reporte mensual real. Mismo patrón/auth que
