@@ -41,7 +41,6 @@ const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const Gracias = lazy(() => import("./pages/Gracias"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
-const TerminalPage = lazy(() => import("./pages/TerminalPage"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
@@ -216,7 +215,6 @@ function AnimatedRoutes() {
             <Route path="/agendar" element={<Schedule />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ClientDashboard />} />
-            <Route path="/terminal" element={<TerminalPage />} />
             <Route
               path="/privacidad"
               element={<LegalPage page="privacy" />}
