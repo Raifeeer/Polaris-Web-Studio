@@ -969,6 +969,62 @@ async function renewDomainAtPorkbun(domain: string): Promise<{ success: boolean;
   }
 }
 
+// Detección automática: lista los dominios REALES de la cuenta de Porkbun
+// de Polaris (`domain/listAll`) y devuelve un mapa dominio→fecha real de
+// vencimiento. Fuente de verdad real, no algo que haya que cargar a mano
+// -- ver syncDomainsFromPorkbun() más abajo, que la usa para autocompletar
+// domainExpiresAt/domainRegistrar en cada corrida diaria.
+async function listPorkbunDomains(): Promise<Map<string, string>> {
+  const apiKey = process.env.PORKBUN_API_KEY;
+  const secretKey = process.env.PORKBUN_SECRET_KEY;
+  const map = new Map<string, string>();
+  if (!apiKey || !secretKey) return map;
+  try {
+    const res = await fetch("https://api.porkbun.com/api/json/v3/domain/listAll", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apikey: apiKey, secretapikey: secretKey }),
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await res.json();
+    if (data?.status !== "SUCCESS" || !Array.isArray(data.domains)) return map;
+    for (const d of data.domains) {
+      // Porkbun devuelve "YYYY-MM-DD HH:MM:SS" -- se normaliza a ISO real.
+      if (d?.domain && d?.expireDate) {
+        const iso = new Date(String(d.expireDate).replace(" ", "T") + "Z").toISOString();
+        map.set(String(d.domain).toLowerCase(), iso);
+      }
+    }
+  } catch (err: any) {
+    console.error("[listPorkbunDomains] error:", err?.message);
+  }
+  return map;
+}
+
+// Autocompleta domainExpiresAt/domainRegistrar de cada proyecto activo
+// cruzando su customDomain real contra la cuenta real de Porkbun -- sin
+// esto, el admin tenía que cargar la fecha de vencimiento a mano en
+// /polaris. Solo TOCA proyectos cuyo dominio de verdad aparece en la
+// cuenta de Porkbun (domainRegistrar pasa a "porkbun" automáticamente);
+// para cualquier dominio que no aparezca ahí (comprado en otro lado, ej.
+// Tano vía Vercel) nunca asume ni adivina nada -- si un admin ya marcó
+// "other" a mano, tampoco lo pisa, respeta la elección explícita.
+async function syncDomainsFromPorkbun(): Promise<number> {
+  const porkbunDomains = await listPorkbunDomains();
+  if (porkbunDomains.size === 0) return 0;
+  let updated = 0;
+  for (const project of dbInstance.getProjects()) {
+    if (!project.customDomain || project.deletedAt) continue;
+    const realExpiry = porkbunDomains.get(project.customDomain.toLowerCase());
+    if (!realExpiry) continue;
+    if (project.domainRegistrar === "other") continue;
+    if (project.domainRegistrar === "porkbun" && project.domainExpiresAt === realExpiry) continue;
+    dbInstance.updateProject(project.id, { domainExpiresAt: realExpiry, domainRegistrar: "porkbun" });
+    updated++;
+  }
+  return updated;
+}
+
 export const app = express();
 app.disable("x-powered-by");
 
@@ -3042,7 +3098,18 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     const todayStr = new Date().toISOString().split("T")[0];
     const today = new Date(todayStr);
     const UPSELL_CADENCE_DAYS = 120;
-    const results = { recurringBilled: 0, lateFeesCharged: 0, addonsSuspended: 0, upsellsSent: 0, domainRenewalsInvoiced: 0, projectsScanned: 0, errors: [] as string[] };
+    const results = { domainsSynced: 0, recurringBilled: 0, lateFeesCharged: 0, addonsSuspended: 0, upsellsSent: 0, domainRenewalsInvoiced: 0, projectsScanned: 0, errors: [] as string[] };
+
+    // --- 0. Detección automática de dominios reales en Porkbun -- antes de
+    // cualquier otro paso, así el Paso 4 de abajo ya trabaja con la fecha
+    // de vencimiento real y actualizada del día, sin depender de que un
+    // admin la haya cargado a mano en /polaris. ---
+    try {
+      results.domainsSynced = await syncDomainsFromPorkbun();
+      if (results.domainsSynced > 0) await dbInstance.flush();
+    } catch (err: any) {
+      results.errors.push(`syncDomainsFromPorkbun: ${err?.message || String(err)}`);
+    }
 
     const projects = dbInstance.getProjects().filter((p) => !p.deletedAt && p.status === "active" && p.contractStatus === "signed");
 
