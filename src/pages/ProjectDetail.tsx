@@ -16,7 +16,7 @@ import { projects } from "../constants/projects";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 function ProjectImageCarousel({
   desktopImg,
@@ -129,6 +129,23 @@ export default function ProjectDetail() {
     project ? `${project.title} | Portfolio | Polaris Web Studio` : "Project not found | Polaris Web Studio",
     project?.shortDesc,
     project?.shortDescEN || project?.shortDesc,
+    project ? { image: project.desktopImg, path: `/portafolio/${project.slug}` } : undefined,
+  );
+
+  useJsonLd(
+    "project-detail-schema",
+    project
+      ? {
+          "@context": "https://schema.org",
+          "@type": "CreativeWork",
+          name: project.title,
+          description: language === "es" ? project.shortDesc : project.shortDescEN || project.shortDesc,
+          image: project.desktopImg,
+          creator: { "@type": "Organization", name: "Polaris Web Studio" },
+          url: `https://polarisweb.studio/portafolio/${project.slug}`,
+          keywords: project.techStack.join(", "),
+        }
+      : null,
   );
 
   if (!project) {

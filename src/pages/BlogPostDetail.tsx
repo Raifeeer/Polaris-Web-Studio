@@ -17,7 +17,7 @@ import NewsletterForm from "../components/NewsletterForm";
 import { BLOG_POSTS, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 import { formatDate } from "../lib/utils";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 interface LinkDef {
   slug: string;
@@ -331,6 +331,27 @@ export default function BlogPostDetail() {
     post ? `${post.titleEn} | Blog | Polaris Web Studio` : "Article not found | Polaris Web Studio",
     post?.summary,
     post?.summaryEn,
+  );
+
+  useJsonLd(
+    "blog-post-schema",
+    post
+      ? {
+          "@context": "https://schema.org",
+          "@type": "BlogPosting",
+          headline: language === "es" ? post.title : post.titleEn,
+          description: language === "es" ? post.summary : post.summaryEn,
+          datePublished: post.publishedAt,
+          dateModified: post.publishedAt,
+          author: { "@type": "Person", name: post.author.name },
+          publisher: {
+            "@type": "Organization",
+            name: "Polaris Web Studio",
+            logo: { "@type": "ImageObject", url: "https://polarisweb.studio/favicon.svg" },
+          },
+          mainEntityOfPage: `https://polarisweb.studio/blog/${post.slug}`,
+        }
+      : null,
   );
 
   useEffect(() => {
