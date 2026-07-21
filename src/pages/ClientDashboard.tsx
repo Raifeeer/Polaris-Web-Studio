@@ -38,7 +38,9 @@ import {
   Sparkles,
   Mail,
   Loader2,
-  Globe
+  Globe,
+  Rocket,
+  PenTool
 } from "lucide-react";
 import AISparkleIcon from "../components/AISparkleIcon";
 import Logo from "../components/Logo";
@@ -638,6 +640,172 @@ function LanguageSwitchLoader() {
   );
 }
 
+// Tarjetas visuales que Atlas Terminal adjunta a sus respuestas cuando el
+// backend elige un widget (ver PORTAL_WIDGET_TYPES en server.ts) -- el texto
+// de la burbuja puede ser breve porque la tarjeta completa el detalle con
+// datos reales ya resueltos del lado del servidor (nunca inventados por el
+// modelo). Compacta a propósito, para caber en el panel angosto del chat.
+function ChatWidgetCard({ widget }: { widget: { type: string; data: any } }) {
+  const { type, data } = widget;
+  const money = (n: number, currency = "USD") =>
+    `${currency === "USD" ? "$" : currency + " "}${Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  if (type === "progress" && data) {
+    return (
+      <div className="mt-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-text-primary)]">
+            <TrendingUp size={12} className="text-[var(--color-primary-base)]" /> Progreso
+          </span>
+          <span className="text-[11px] font-bold text-[var(--color-primary-base)]">{data.progress ?? 0}%</span>
+        </div>
+        <div className="h-1.5 rounded-full bg-[var(--color-surface-base)] overflow-hidden">
+          <div className="h-full rounded-full bg-[var(--color-primary-base)]" style={{ width: `${data.progress ?? 0}%` }} />
+        </div>
+        {data.currentPhase && (
+          <p className="text-[10px] text-[var(--color-text-secondary)]">Fase actual: <span className="text-[var(--color-text-primary)] font-medium">{data.currentPhase}</span></p>
+        )}
+        {Array.isArray(data.phases) && data.phases.length > 0 && (
+          <div className="space-y-1 pt-1">
+            {data.phases.map((p: any, i: number) => (
+              <div key={i} className="flex items-center gap-1.5 text-[10px]">
+                {p.status === "done" || p.status === "completed" ? (
+                  <CheckCircle2 size={11} className="text-emerald-500 shrink-0" />
+                ) : p.status === "in_progress" || p.status === "active" ? (
+                  <Clock size={11} className="text-[var(--color-primary-base)] shrink-0" />
+                ) : (
+                  <div className="w-[11px] h-[11px] rounded-full border border-[var(--color-border-subtle)] shrink-0" />
+                )}
+                <span className="text-[var(--color-text-secondary)]">{p.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {(data.customDomain || data.vercelUrl) && (
+          <a href={`https://${data.customDomain || data.vercelUrl}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[10px] text-[var(--color-primary-base)] hover:underline pt-1">
+            <Globe size={10} /> {data.customDomain || data.vercelUrl}
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  if (type === "invoices" && Array.isArray(data)) {
+    if (data.length === 0) return null;
+    return (
+      <div className="mt-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] p-3 space-y-1.5">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-text-primary)]"><Receipt size={12} className="text-[var(--color-primary-base)]" /> Facturas</span>
+        {data.slice(0, 5).map((inv: any, i: number) => (
+          <div key={i} className="flex items-center justify-between text-[10px] border-t border-[var(--color-border-subtle)]/60 pt-1.5 first:border-t-0 first:pt-0">
+            <div className="flex flex-col">
+              <span className="text-[var(--color-text-primary)] font-medium">{inv.invoiceNumber || inv.description}</span>
+              <span className="text-[var(--color-text-tertiary)]">{inv.dueDate}</span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="font-bold text-[var(--color-text-primary)]">{money(inv.amount, inv.currency)}</span>
+              <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                inv.status === "paid" ? "bg-emerald-500/10 text-emerald-500" :
+                inv.status === "overdue" ? "bg-red-500/10 text-red-500" :
+                "bg-amber-500/10 text-amber-500"
+              }`}>{inv.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "deliverables" && Array.isArray(data)) {
+    if (data.length === 0) return null;
+    return (
+      <div className="mt-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] p-3 space-y-1.5">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-text-primary)]"><FileText size={12} className="text-[var(--color-primary-base)]" /> Entregables</span>
+        {data.slice(0, 6).map((t: any, i: number) => (
+          <div key={i} className="flex items-start gap-1.5 text-[10px] border-t border-[var(--color-border-subtle)]/60 pt-1.5 first:border-t-0 first:pt-0">
+            {t.status === "approved" ? <CheckCircle2 size={11} className="text-emerald-500 shrink-0 mt-[1px]" /> : t.status === "rejected" ? <AlertCircle size={11} className="text-red-500 shrink-0 mt-[1px]" /> : <Clock size={11} className="text-amber-500 shrink-0 mt-[1px]" />}
+            <div className="flex flex-col">
+              <span className="text-[var(--color-text-primary)] font-medium">{t.title}</span>
+              {t.link && <a href={t.link} target="_blank" rel="noopener noreferrer" className="text-[var(--color-primary-base)] hover:underline flex items-center gap-0.5"><ExternalLink size={9} /> Ver</a>}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "deploys" && Array.isArray(data)) {
+    if (data.length === 0) return null;
+    return (
+      <div className="mt-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] p-3 space-y-1.5">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-text-primary)]"><Rocket size={12} className="text-[var(--color-primary-base)]" /> Últimos cambios</span>
+        {data.slice(0, 5).map((d: any, i: number) => (
+          <div key={i} className="flex items-start gap-1.5 text-[10px] border-t border-[var(--color-border-subtle)]/60 pt-1.5 first:border-t-0 first:pt-0">
+            <div className={`w-1.5 h-1.5 rounded-full mt-[3px] shrink-0 ${d.state === "ready" ? "bg-emerald-500" : d.state === "error" ? "bg-red-500" : "bg-amber-500"}`} />
+            <div className="flex flex-col">
+              <span className="text-[var(--color-text-primary)]">{d.commitMessage}</span>
+              <span className="text-[var(--color-text-tertiary)]">{d.date}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "meetings" && Array.isArray(data)) {
+    if (data.length === 0) return null;
+    return (
+      <div className="mt-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] p-3 space-y-1.5">
+        <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-text-primary)]"><Calendar size={12} className="text-[var(--color-primary-base)]" /> Reuniones</span>
+        {data.slice(0, 4).map((m: any, i: number) => (
+          <div key={i} className="flex items-start gap-1.5 text-[10px] border-t border-[var(--color-border-subtle)]/60 pt-1.5 first:border-t-0 first:pt-0">
+            <Clock size={11} className="text-[var(--color-primary-base)] shrink-0 mt-[1px]" />
+            <div className="flex flex-col">
+              <span className="text-[var(--color-text-primary)] font-medium">{m.title}</span>
+              <span className="text-[var(--color-text-tertiary)]">{m.date} · {m.time}</span>
+              {m.meetLink && <a href={m.meetLink} target="_blank" rel="noopener noreferrer" className="text-[var(--color-primary-base)] hover:underline flex items-center gap-0.5"><ExternalLink size={9} /> Unirse</a>}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (type === "contract" && data) {
+    return (
+      <div className="mt-1.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] p-3 space-y-1.5">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--color-text-primary)]"><PenTool size={12} className="text-[var(--color-primary-base)]" /> Contrato</span>
+          <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${data.status === "signed" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>
+            {data.status === "signed" ? "Firmado" : "Pendiente"}
+          </span>
+        </div>
+        <p className="text-[10px] text-[var(--color-text-secondary)]">Paquete <span className="text-[var(--color-text-primary)] font-medium">{data.packageName}</span></p>
+        {Array.isArray(data.addons) && data.addons.length > 0 && (
+          <p className="text-[10px] text-[var(--color-text-tertiary)]">
+            Addons: {data.addons.map((a: any) => a.name).join(", ")}
+          </p>
+        )}
+        <div className="flex items-center justify-between text-[10px] pt-1 border-t border-[var(--color-border-subtle)]/60">
+          <span className="text-[var(--color-text-secondary)]">Depósito 50%</span>
+          <span className="font-bold text-[var(--color-text-primary)]">{money(data.deposit)}</span>
+        </div>
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-[var(--color-text-secondary)]">Pago final 50%</span>
+          <span className="font-bold text-[var(--color-text-primary)]">{money(data.finalPayment)}</span>
+        </div>
+        {data.monthlyAddonsPrice > 0 && (
+          <div className="flex items-center justify-between text-[10px]">
+            <span className="text-[var(--color-text-secondary)]">Mensual (addons)</span>
+            <span className="font-bold text-[var(--color-text-primary)]">{money(data.monthlyAddonsPrice)}/mes</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
   const { language, setLanguage } = useLanguage();
@@ -862,7 +1030,7 @@ export default function ClientDashboard() {
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{role: "user"|"assistant", text: string}[]>([]);
+  const [chatMessages, setChatMessages] = useState<{role: "user"|"assistant", text: string, widget?: {type: string, data: any} | null}[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
@@ -1332,6 +1500,33 @@ export default function ClientDashboard() {
     if (!res.ok) throw new Error(data.error || "Error de IA");
     if (!data.text) throw new Error("Sin respuesta de IA");
     return data.text;
+  };
+
+  // Variante del chat que además envía el historial (para que Atlas Terminal
+  // recuerde la conversación) y devuelve el widget visual que el backend haya
+  // elegido, si aplica -- separado de askAIFrontend porque ese helper lo usa
+  // también generateClientSummary, que no necesita nada de esto.
+  const askPortalChat = async (
+    projectId: string,
+    message: string,
+    history: { role: "user" | "assistant"; text: string }[]
+  ): Promise<{ text: string; widget: { type: string; data: any } | null }> => {
+    const res = await fetch("/api/ai/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tokenRef.current}`,
+      },
+      body: JSON.stringify({
+        projectId,
+        message,
+        history: history.slice(-16).map(m => ({ role: m.role, content: m.text })),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error de IA");
+    if (!data.text) throw new Error("Sin respuesta de IA");
+    return { text: data.text, widget: data.widget || null };
   };
 
   const generateClientSummary = async (project: any) => {
@@ -5725,15 +5920,16 @@ export default function ClientDashboard() {
                       </svg>
                     </div>
                     <p className="text-xs text-[var(--color-text-secondary)]">
-                      Hola {user?.name?.split(" ")[0]}! Puedo responderte preguntas sobre el estado de tu proyecto, entregables o facturas.
+                      Hola {user?.name?.split(" ")[0]}! Conozco todo tu proyecto -- progreso, entregables, facturas, contrato, últimos cambios y reuniones. Pregúntame lo que necesites.
                     </p>
                     <div className="flex flex-wrap gap-1.5 justify-center pt-2 mt-4">
                       {[
-                        "¿Cuándo estará listo?", 
-                        "¿Qué falta por hacer?", 
+                        "¿Cuándo estará listo?",
+                        "¿Qué falta por hacer?",
                         "¿Tengo pagos pendientes?",
                         "¿Cuál es el progreso actual?",
-                        "¿Cómo me comunico con soporte?"
+                        "¿Qué dice mi contrato?",
+                        "¿Cuáles fueron los últimos cambios?"
                       ].map(q => (
                         <button
                           key={q}
@@ -5746,11 +5942,8 @@ export default function ClientDashboard() {
                             try {
                               const project = clientProject;
                               if (!project) throw new Error("No active project");
-                              const reply = await askAIFrontend({
-                                projectId: project.id,
-                                message: userMsg
-                              });
-                              saveChatMessages([...newMsgs, { role: "assistant" as const, text: reply }]);
+                              const { text, widget } = await askPortalChat(project.id, userMsg, chatMessages);
+                              saveChatMessages([...newMsgs, { role: "assistant" as const, text, widget }]);
                             } catch (e) {
                               saveChatMessages([...newMsgs, { role: "assistant" as const, text: "No pude procesar tu pregunta. Contáctanos directamente." }]);
                             } finally {
@@ -5766,7 +5959,7 @@ export default function ClientDashboard() {
                   </div>
                 )}
                 {chatMessages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                     <div className={`max-w-[80%] px-3 py-2 rounded-xl text-xs leading-relaxed ${
                       msg.role === "user"
                         ? "bg-[var(--color-primary-base)] text-white rounded-br-none"
@@ -5774,6 +5967,11 @@ export default function ClientDashboard() {
                     }`}>
                       {msg.text}
                     </div>
+                    {msg.role === "assistant" && msg.widget && (
+                      <div className="max-w-[92%] w-full">
+                        <ChatWidgetCard widget={msg.widget} />
+                      </div>
+                    )}
                   </div>
                 ))}
                 {chatLoading && (
@@ -5831,11 +6029,8 @@ export default function ClientDashboard() {
                     try {
                       const project = clientProject;
                       if (!project) throw new Error("No active project");
-                      const reply = await askAIFrontend({
-                        projectId: project.id,
-                        message: userMsg
-                      });
-                      saveChatMessages([...newMsgs, { role: "assistant" as const, text: reply }]);
+                      const { text, widget } = await askPortalChat(project.id, userMsg, chatMessages);
+                      saveChatMessages([...newMsgs, { role: "assistant" as const, text, widget }]);
                     } catch (e) {
                       saveChatMessages([...newMsgs, { role: "assistant" as const, text: "No pude procesar tu pregunta. Contáctanos directamente." }]);
                     } finally {
