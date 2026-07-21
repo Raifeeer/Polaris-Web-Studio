@@ -23,6 +23,7 @@ import AISparkleIcon from "../components/AISparkleIcon";
 import { BLOG_POSTS, querySemanticBlog, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 import { formatDate } from "../lib/utils";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // Words (2+ letters) from the search query used to highlight matches in titles/previews
 const getHighlightWords = (query: string): string[] => {
@@ -83,6 +84,13 @@ export default function Blog() {
   const navigate = useNavigate();
   const navigationType = useNavigationType();
   const { language, translate } = useLanguage();
+
+  useDocumentTitle(
+    "Blog | Guías de Desarrollo Web, SEO y Rendimiento",
+    "Blog | Web Development, SEO & Performance Guides",
+    "Artículos reales sobre velocidad, SEO técnico, e-commerce e inteligencia artificial aplicada a sitios web.",
+    "Real articles about speed, technical SEO, e-commerce, and AI applied to websites.",
+  );
 
   // Search, Categories, Sort, Date range Filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");

@@ -5,6 +5,7 @@ import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 import Navbar from "../components/Navbar";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,6 +15,11 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useDocumentTitle(
+    "Iniciar Sesión | Portal de Cliente | Polaris Web Studio",
+    "Log In | Client Portal | Polaris Web Studio",
+  );
 
   // Auto redirect if already logged in
   useEffect(() => {

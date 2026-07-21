@@ -28,6 +28,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
@@ -239,6 +240,13 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
 export default function Portfolio() {
   const navigate = useNavigate();
   const { language, translate } = useLanguage();
+
+  useDocumentTitle(
+    "Nuestro Portafolio de Proyectos Web | Casos de Éxito",
+    "Our Web Projects Portfolio | Live Demos & Success Cases",
+    "Explora proyectos reales impecablemente optimizados: Lúmina Sky, Nexus Realty, y Chroma Tech Store construidos en código limpio.",
+    "Explore high-fidelity, real-world custom projects: Lumina Sky, Nexus Realty, and Chroma Tech Store meticulously engineered.",
+  );
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState("");

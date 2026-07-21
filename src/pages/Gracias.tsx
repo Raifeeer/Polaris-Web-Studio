@@ -7,6 +7,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T } from "../context/LanguageContext";
 import { useToast } from "../context/ToastContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
@@ -15,6 +16,11 @@ export default function Gracias() {
   const navigate = useNavigate();
   const state = location.state || {};
   const { success: toastSuccess } = useToast();
+
+  useDocumentTitle(
+    "¡Gracias! | Polaris Web Studio",
+    "Thank You! | Polaris Web Studio",
+  );
 
   useEffect(() => {
     // Scroll to top

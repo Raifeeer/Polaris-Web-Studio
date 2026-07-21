@@ -48,6 +48,7 @@ import { useAuth } from "../context/AuthContext";
 import { collection, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { formatDate } from "../lib/utils";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 enum OperationType {
   CREATE = 'create',
@@ -650,6 +651,11 @@ export default function ClientDashboard() {
   // la rechaza con 403. Leer siempre tokenRef.current evita ese closure obsoleto.
   const tokenRef = useRef(token);
   tokenRef.current = token;
+
+  useDocumentTitle(
+    "Portal de Cliente | Polaris Web Studio",
+    "Client Portal | Polaris Web Studio",
+  );
 
   // Redirect if not authenticated
   useEffect(() => {

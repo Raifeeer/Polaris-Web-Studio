@@ -22,6 +22,7 @@ import GlobeSearchIcon from "../components/GlobeSearchIcon";
 import BookingScheduler from "../components/BookingScheduler";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { useToast } from "../context/ToastContext";
 import { collection, doc, addDoc, setDoc, updateDoc, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db, auth } from "../lib/firebase";
@@ -505,6 +506,13 @@ export default function WizardQuote() {
   const { language, translate } = useLanguage();
   const { success: toastSuccess, error: toastError } = useToast();
   const location = useLocation();
+
+  useDocumentTitle(
+    "Cotiza tu Proyecto Web | Precios Instantáneos | Polaris Web Studio",
+    "Get a Quote for your Website | Instant Pricing | Polaris Web Studio",
+    "Configura tu proyecto y recibe un precio real al instante: landing page, sitio corporativo o e-commerce, sin sorpresas.",
+    "Configure your project and get a real price instantly: landing page, corporate site, or e-commerce, no surprises.",
+  );
 
   // Domain search / check state definitions
   const [domainName, setDomainName] = useState("");

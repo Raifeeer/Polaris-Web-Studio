@@ -16,6 +16,7 @@ import { projects } from "../constants/projects";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 function ProjectImageCarousel({
   desktopImg,
@@ -122,6 +123,13 @@ export default function ProjectDetail() {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const project = projects.find((p) => p.slug === slug);
+
+  useDocumentTitle(
+    project ? `${project.title} | Portafolio | Polaris Web Studio` : "Proyecto no encontrado | Polaris Web Studio",
+    project ? `${project.title} | Portfolio | Polaris Web Studio` : "Project not found | Polaris Web Studio",
+    project?.shortDesc,
+    project?.shortDescEN || project?.shortDesc,
+  );
 
   if (!project) {
     return (

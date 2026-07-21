@@ -21,9 +21,17 @@ import Footer from "../components/Footer";
 import ContactSection from "../components/ContactSection";
 import { T } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 export default function About() {
   const navigate = useNavigate();
+
+  useDocumentTitle(
+    "Sobre Nosotros | Polaris Web Studio",
+    "About Us | Polaris Web Studio",
+    "Conoce al estudio detrás de Polaris Web Studio: desarrollo web 100% original, sin plantillas, para negocios que buscan resultados reales.",
+    "Meet the studio behind Polaris Web Studio: 100% original web development, no templates, for businesses that want real results.",
+  );
 
   const values = [
     {

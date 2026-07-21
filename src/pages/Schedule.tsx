@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import BookingScheduler from "../components/BookingScheduler";
 import { T, useLanguage } from "../context/LanguageContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // Página dedicada de agendado (/agendar) -- versión standalone del mismo
 // BookingScheduler ya usado embebido en el paso 4 de /cotizar y en el modal
@@ -41,6 +42,18 @@ export default function Schedule() {
       ? "Direct consultation booked from the standalone scheduling page."
       : "Consulta directa programada desde la página de agendado independiente.") +
     (src ? ` (src: ${src})` : "");
+
+  const titleByType: Record<typeof type, string> = {
+    consultoria: "Hablemos de tu proyecto | Agendar | Polaris Web Studio",
+    alineacion: "Llamada rápida de alineación | Agendar | Polaris Web Studio",
+    reporte: "Hablemos de tu reporte | Agendar | Polaris Web Studio",
+  };
+  const titleByTypeEn: Record<typeof type, string> = {
+    consultoria: "Let's talk about your project | Schedule | Polaris Web Studio",
+    alineacion: "Quick alignment call | Schedule | Polaris Web Studio",
+    reporte: "Let's talk about your report | Schedule | Polaris Web Studio",
+  };
+  useDocumentTitle(titleByType[type], titleByTypeEn[type]);
 
   const copyByType = {
     consultoria: {

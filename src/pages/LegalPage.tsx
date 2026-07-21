@@ -6,6 +6,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { getCookieConsent, setCookieConsent, setCookieSettingsPanelOpen } from "../lib/cookieConsent";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 type LegalPageKind = "privacy" | "terms" | "cookies";
 
@@ -791,6 +792,21 @@ export default function LegalPage({ page }: LegalPageProps) {
     terms: <T en="Terms and Conditions">Términos y Condiciones</T>,
     cookies: <T en="Cookie Policy">Política de Cookies</T>,
   };
+
+  const plainTitlesEs: Record<LegalPageKind, string> = {
+    privacy: "Política de Privacidad",
+    terms: "Términos y Condiciones",
+    cookies: "Política de Cookies",
+  };
+  const plainTitlesEn: Record<LegalPageKind, string> = {
+    privacy: "Privacy Policy",
+    terms: "Terms and Conditions",
+    cookies: "Cookie Policy",
+  };
+  useDocumentTitle(
+    `${plainTitlesEs[page]} | Polaris Web Studio`,
+    `${plainTitlesEn[page]} | Polaris Web Studio`,
+  );
 
   const content: Record<LegalPageKind, React.ReactNode> = {
     privacy: <PrivacyContent />,

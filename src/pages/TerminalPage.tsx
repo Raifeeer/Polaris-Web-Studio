@@ -26,6 +26,7 @@ import {
   Phone
 } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // ── Tipos ──────────────────────────────────────────────────────────────────
 type EntryType = "input" | "output" | "atlas" | "build" | "matrix" | "neofetch" | "hack" | "polaris-egg" | "flip";
@@ -388,6 +389,11 @@ export default function TerminalPage() {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const es = language === "es";
+
+  useDocumentTitle(
+    "Atlas Terminal | Polaris Web Studio",
+    "Atlas Terminal | Polaris Web Studio",
+  );
 
   const [input, setInput] = useState("");
   const [history, setHistory] = useState<TerminalEntry[]>([]);

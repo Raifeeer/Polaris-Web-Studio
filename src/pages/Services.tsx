@@ -28,6 +28,7 @@ import Testimonials from "../components/Testimonials";
 import WhyPolaris from "../components/WhyPolaris";
 import FinalCTA from "../components/FinalCTA";
 import CountdownPill from "../components/CountdownPill";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { T, useLanguage } from "../context/LanguageContext";
 import AISparkleIcon from "../components/AISparkleIcon";
 
@@ -306,6 +307,13 @@ export default function Services() {
   const { language } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
+
+  useDocumentTitle(
+    "Nuestros Servicios Web | Landing Pages, E-commerce y Corporativas",
+    "Our Web Services | Landing Pages, E-commerce & Corporate Websites",
+    "Soluciones web de software original optimizados para conversión. Creamos tiendas virtuales, webs elegantes y landing pages eficaces.",
+    "Custom web software optimized for conversion. We build online stores, elegant corporate sites, and high-converting landing pages.",
+  );
   const [showComparison, setShowComparison] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const [activePricePlan, setActivePricePlan] = useState<string>("flash");

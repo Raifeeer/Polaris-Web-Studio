@@ -17,6 +17,7 @@ import NewsletterForm from "../components/NewsletterForm";
 import { BLOG_POSTS, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 import { formatDate } from "../lib/utils";
+import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 interface LinkDef {
   slug: string;
@@ -324,6 +325,13 @@ export default function BlogPostDetail() {
 
   // Find matching blog post
   const post = BLOG_POSTS.find((p) => p.slug === slug);
+
+  useDocumentTitle(
+    post ? `${post.title} | Blog | Polaris Web Studio` : "Artículo no encontrado | Polaris Web Studio",
+    post ? `${post.titleEn} | Blog | Polaris Web Studio` : "Article not found | Polaris Web Studio",
+    post?.summary,
+    post?.summaryEn,
+  );
 
   useEffect(() => {
     // If post not found, redirect after a short delay or stay on error screen
