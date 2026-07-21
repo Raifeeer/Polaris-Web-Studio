@@ -17,6 +17,9 @@
     { "source": "/api/check-domain", "destination": "/api/check-domain" },
     { "source": "/api/generate-addon-descriptions", "destination": "/api/generate-addon-descriptions" },
     { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/aprobar", "destination": "https://proposal-send-wdvfac6mgq-ue.a.run.app" },
+    { "source": "/preferencias-boletin", "destination": "https://newsletter-prefs-wdvfac6mgq-ue.a.run.app" },
+    { "source": "/preferencias-cotizacion", "destination": "https://lead-drip-send-wdvfac6mgq-ue.a.run.app" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
