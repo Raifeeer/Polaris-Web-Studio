@@ -3342,7 +3342,9 @@ export default function ClientDashboard() {
                                           >
                                             {aiLoadingProgress === project.id ? (
                                               <div className="w-3 h-3 border border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                                            ) : "🤖"}
+                                            ) : (
+                                              <Sparkles className="w-3 h-3" />
+                                            )}
                                             Auto-avanzar fase
                                           </button>
                                         </div>
@@ -3389,7 +3391,7 @@ export default function ClientDashboard() {
                                               >
                                                 <div className="flex justify-between items-center mb-1">
                                                   <span className="text-[10px] uppercase font-black tracking-widest">
-                                                    {phase.status === "completed" ? "✔ Listo" : phase.status === "active" ? "⚡ En Curso" : "⏳ Pendiente"}
+                                                    {phase.status === "completed" ? "Listo" : phase.status === "active" ? "En Curso" : "Pendiente"}
                                                   </span>
                                                 </div>
                                                 <p className="text-xs font-bold text-[var(--color-text-primary)] truncate">{phase.name}</p>
@@ -4199,17 +4201,17 @@ export default function ClientDashboard() {
                                     
                                     {task.status === "approved" && (
                                       <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-emerald-400 px-2 py-0.5 rounded">
-                                        ✔ Aprobado Oficialmente
+                                        Aprobado Oficialmente
                                       </span>
                                     )}
                                     {task.status === "rejected" && (
                                       <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
-                                        ❌ Observado (Requiere Cambios)
+                                        Observado (Requiere Cambios)
                                       </span>
                                     )}
                                     {task.status === "pending" && (
                                       <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-blue-400 px-2 py-0.5 rounded animate-pulse">
-                                        ⏳ {isAdmin ? "Esperando Aprobación del Cliente" : "Esperando Tu Aprobación"}
+                                        {isAdmin ? "Esperando Aprobación del Cliente" : "Esperando Tu Aprobación"}
                                       </span>
                                     )}
                                   </div>
@@ -4405,12 +4407,12 @@ export default function ClientDashboard() {
                                             
                                             {task.status === "approved" && (
                                               <span className="glass-badge text-[10px] uppercase font-bold tracking-wider text-emerald-400 px-2 py-0.5 rounded">
-                                                ✔ Aprobado Oficialmente
+                                                Aprobado Oficialmente
                                               </span>
                                             )}
                                             {task.status === "rejected" && (
                                               <span className="text-[10px] uppercase font-bold tracking-wider text-red-400 bg-red-500/10 px-2 py-0.5 rounded">
-                                                ❌ Observado (Requiere Cambios)
+                                                Observado (Requiere Cambios)
                                               </span>
                                             )}
                                           </div>
@@ -5712,7 +5714,7 @@ export default function ClientDashboard() {
                       </div>
                       <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/15 space-y-1.5">
                         <p className="text-[10px] text-amber-600 dark:text-amber-400 font-black">
-                          ⚠️ Copia este secret ahora y pégalo en:
+                          Copia este secret ahora y pégalo en:
                         </p>
                         <ol className="text-[10px] text-amber-600/80 dark:text-amber-400/80 space-y-1 list-decimal list-inside">
                           <li>GitHub → cada repo cliente → Settings → Webhooks → Secret</li>

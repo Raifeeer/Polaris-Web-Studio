@@ -14,6 +14,7 @@ import {
   Menu,
   ChevronDown,
   Landmark,
+  Utensils,
 } from "lucide-react";
 
 interface MockupFrameProps {
@@ -337,7 +338,7 @@ const MOCKUP_CONTENT: Record<
           <div className="flex gap-2 text-[6px] font-bold uppercase opacity-60">
             <span>Productos</span>
             <span>Ofertas</span>
-            <span>Carrito 🛒</span>
+            <span>Carrito</span>
           </div>
         </nav>
         <div className="p-4 space-y-3">
@@ -380,7 +381,7 @@ const MOCKUP_CONTENT: Record<
             MERCANIKA
           </span>
           <div className="flex gap-2 text-[8px] font-bold uppercase opacity-80">
-            <span>🛒 1</span>
+            <span>1</span>
           </div>
         </nav>
         <div className="mt-4 flex flex-col flex-1 space-y-4">
@@ -423,7 +424,7 @@ const MOCKUP_CONTENT: Record<
       <div className="absolute inset-0 bg-[#041d13] text-white p-4 pt-10 flex flex-col font-sans">
         <div className="flex flex-col items-center text-center space-y-4">
           <div className="flex items-center gap-2">
-            <span className="text-emerald-500 text-lg">✚</span>
+            <span className="text-emerald-500 text-lg">+</span>
             <span className="text-[10px] font-black tracking-widest uppercase">
               Bienestar RD
             </span>
@@ -464,7 +465,7 @@ const MOCKUP_CONTENT: Record<
       <div className="absolute inset-0 bg-[#1f0e08] text-white p-4 pt-10 flex flex-col font-sans relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-3xl rounded-full" />
         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
-          <div className="text-2xl">🍽️</div>
+          <Utensils className="w-6 h-6 text-orange-400" />
           <div className="text-[12px] font-black uppercase tracking-tighter">
             Sabor Auténtico
           </div>
@@ -500,7 +501,7 @@ const MOCKUP_CONTENT: Record<
         </div>
         <div className="mt-auto pb-4 flex justify-center">
           <div className="bg-white/10 px-3 py-1 rounded-full text-[8px] font-black text-orange-200 border border-orange-500/20">
-            ⭐ 4.9 en Google Maps
+            4.9 en Google Maps
           </div>
         </div>
       </div>

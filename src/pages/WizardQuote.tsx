@@ -3242,7 +3242,7 @@ export default function WizardQuote() {
 
                         {domainError && (
                           <div className="text-xs md:text-sm text-red-500 font-medium bg-red-500/10 p-4 rounded-xl border border-red-500/20 max-w-lg flex items-start gap-2">
-                            <span>⚠</span>
+                            <Info className="w-4 h-4 shrink-0 mt-0.5" />
                             <span>{domainError}</span>
                           </div>
                         )}

@@ -58,7 +58,7 @@ export default function NewsletterForm() {
         );
       } else {
         success(
-          <T en="Successfully subscribed to our newsletter! 🎉">¡Suscripción al boletín confirmada con éxito! 🎉</T>
+          <T en="Successfully subscribed to our newsletter!">¡Suscripción al boletín confirmada con éxito!</T>
         );
       }
     } catch (error) {

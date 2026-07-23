@@ -28,7 +28,7 @@ export default function Gracias() {
 
     // Show a premium global toast confirmation
     toastSuccess(
-      <T en="Quote successfully submitted & strategic session scheduled! 🎉">¡Cotización enviada con éxito y sesión estratégica agendada! 🎉</T>,
+      <T en="Quote successfully submitted & strategic session scheduled!">¡Cotización enviada con éxito y sesión estratégica agendada!</T>,
       6000
     );
 

@@ -17,8 +17,8 @@ type Question = {
 const QUESTIONS: Question[] = [
   {
     id: 1,
-    text: "¡Hola! 👋 ¿Qué tipo de negocio tienes?",
-    textEN: "Hi! 👋 What type of business do you have?",
+    text: "¡Hola! ¿Qué tipo de negocio tienes?",
+    textEN: "Hi! What type of business do you have?",
     options: [
       "Restaurante/Café",
       "Tienda/Retail",
@@ -445,13 +445,13 @@ export default function QuoteBot() {
                             <span className="font-black uppercase">
                               {rec.name}
                             </span>{" "}
-                            is ideal for you 🎯
+                            is ideal for you
                           </>
                         }
                       >
                         Basado en lo que me contaste, el{" "}
                         <span className="font-black uppercase">{rec.name}</span>{" "}
-                        es ideal para ti 🎯
+                        es ideal para ti
                       </T>
                     </p>
                     <p className="text-xs opacity-90 leading-relaxed mb-4">

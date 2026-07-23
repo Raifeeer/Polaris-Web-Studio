@@ -28,7 +28,7 @@ if (typeof window !== "undefined") {
   console.log("%cPOLARIS WEB STUDIO", styles.brand);
   console.log("%cv1.0 · Punta Cana, República Dominicana", styles.sub);
   console.log(
-    "%c\n👋 Si estás viendo esto, probablemente sabes lo que haces.\n\nEste sitio está construido con React 19 + Vite 6 + Tailwind CSS 4.\nSin plantillas. Sin WordPress. Sin atajos. Solo código limpio.\n\n¿Te interesa trabajar juntos o tienes un proyecto en mente?",
+    "%c\nSi estás viendo esto, probablemente sabes lo que haces.\n\nEste sitio está construido con React 19 + Vite 6 + Tailwind CSS 4.\nSin plantillas. Sin WordPress. Sin atajos. Solo código limpio.\n\n¿Te interesa trabajar juntos o tienes un proyecto en mente?",
     styles.text
   );
   console.log("%c→ hola@polarisweb.studio", styles.link);
