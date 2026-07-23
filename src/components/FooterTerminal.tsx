@@ -164,7 +164,7 @@ export default function FooterTerminal() {
       case "vim":
       case "vi":
         output = es
-          ? "Entraste a Vim. Nadie sabe cómo salir. Probá :q, :wq o Ctrl+C."
+          ? "Entraste a Vim. Nadie sabe cómo salir. Prueba con :q, :wq o Ctrl+C."
           : "You entered Vim. Nobody knows how to leave. Try :q, :wq or Ctrl+C.";
         break;
       case ":q":
@@ -210,7 +210,7 @@ export default function FooterTerminal() {
         break;
       case "polaris":
         output = es
-          ? "Esa secuencia no es acá adentro. Probá escribirla en cualquier otra parte del sitio."
+          ? "Esa secuencia no es acá adentro. Pruébala en cualquier otra parte del sitio."
           : "That sequence isn't in here. Try typing it anywhere else on the site.";
         break;
       default:
