@@ -1,10 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
-  Users,
-  ChevronRight,
-  Globe,
   Gem,
   Search,
   Compass,
@@ -24,21 +20,68 @@ interface MockupFrameProps {
   children?: React.ReactNode;
 }
 
+// Paleta y tipografía calcadas 1:1 del archivo real de Claude Design
+// ("Lúmina Sky Mockup.dc.html", proyecto 9692471c-e6cc-4ed9-b30c-335132121b33)
+// -- no son los tokens de marca de Polaris (esos son índigo/Cormorant), son
+// los del propio proyecto de cliente que se está mostrando en el mockup.
 const LUMINA_GOLD = "#D4AF37";
 const LUMINA_DARK = "#1a1a1a";
+const LUMINA_HERO_DARK = "#0b1320";
+const LUMINA_BG = "#fdfbf7";
+const LUMINA_SAND = "#f4efe6";
+const LUMINA_GRAY = "#6b7280";
+const LUMINA_LGRAY = "#e5e7eb";
+const LUMINA_FOOTER_BG = "#121212";
+const LUMINA_SERIF = '"Playfair Display", Georgia, serif';
+const LUMINA_SANS = '"Inter", sans-serif';
 const LUMINA_IMG = {
   hero: "https://i.imgur.com/VUKpL5x.jpeg",
   loft: "https://i.imgur.com/p182CEs.jpeg",
   pool: "https://i.imgur.com/gNDwbNG.jpeg",
   dining: "https://i.imgur.com/j5Yn6M0.jpeg",
+  lounge: "https://i.imgur.com/urg42nu.jpeg",
 };
+const LUMINA_NAV_ES = ["SUITES", "GASTRONOMÍA", "SPA", "EXPERIENCIAS", "A MEDIDA", "JOURNAL", "CONTACTO"];
+const LUMINA_NAV_EN = ["SUITES", "DINING", "SPA", "EXPERIENCES", "BESPOKE", "JOURNAL", "CONTACT"];
 
-function LuminaSkyMockup() {
+function LuminaLogo({ size = "lg" }: { size?: "lg" | "sm" }) {
+  const big = size === "lg";
+  return (
+    <div
+      style={{
+        fontFamily: LUMINA_SERIF,
+        fontSize: big ? 15 : 11,
+        letterSpacing: "0.06em",
+        textTransform: "uppercase",
+        color: LUMINA_GOLD,
+        fontWeight: 300,
+        lineHeight: 1,
+        display: "flex",
+        alignItems: "baseline",
+      }}
+    >
+      <span>L</span>
+      <span>úmina</span>
+      <span style={{ marginLeft: 4, fontFamily: LUMINA_SANS, fontSize: big ? 7 : 5, color: "#fff", fontWeight: 700, letterSpacing: "0.2em" }}>
+        SKY
+      </span>
+    </div>
+  );
+}
+
+// Página completa de Lúmina Sky (header, hero, booking bar, suites,
+// amenities, cita, footer) -- reconstrucción fiel de la función page(desktop)
+// del .dc.html real, en JSX, parametrizada por ancho (desktop/mobile) e
+// idioma. La reserva sigue siendo interactiva de verdad (a diferencia del
+// mockup original de Design, que era estático) -- eso es lo único que se
+// mantiene como mejora sobre el diseño importado.
+function LuminaSkyPage({ desktop, lang }: { desktop: boolean; lang: "EN" | "ESP" }) {
+  const es = lang === "ESP";
   const [adults, setAdults] = useState(2);
-  const [dateRange, setDateRange] = useState("15 Jun — 20 Jun");
+  const [dateRange, setDateRange] = useState(es ? "17 jun. — 20 jun., 2026" : "Jun 17 – Jun 20, 2026");
   const [isProcessing, setIsProcessing] = useState(false);
   const [successCode, setSuccessCode] = useState<string | null>(null);
-  const [lang, setLang] = useState<"EN" | "ESP">("ESP");
+  const navLinks = es ? LUMINA_NAV_ES : LUMINA_NAV_EN;
 
   const handleCheckAvailability = () => {
     setIsProcessing(true);
@@ -46,340 +89,362 @@ function LuminaSkyMockup() {
     setTimeout(() => {
       setIsProcessing(false);
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      const randomCode = Array.from(
-        { length: 5 },
-        () => chars[Math.floor(Math.random() * chars.length)],
-      ).join("");
+      const randomCode = Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
       setSuccessCode(`LUM-${randomCode}`);
-    }, 1200);
+    }, 1100);
   };
 
   return (
-    <div className="absolute inset-0 bg-[#0b1320] text-white flex flex-col overflow-hidden font-sans select-none">
-      {/* Background with Elegant Gradients */}
-      <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0b1320]/85 via-[#0b1320]/35 to-[#0b1320] z-[1]" />
-        <img
-          src={LUMINA_IMG.hero}
-          alt="Lumina Sky View"
-          className="w-full h-full object-cover opacity-80"
-          referrerPolicy="no-referrer"
-          loading="lazy"
-          decoding="async"
-          fetchPriority="low"
-          width="800"
-          height="600"
-        />
-      </div>
+    <div style={{ fontFamily: LUMINA_SANS, background: LUMINA_BG, position: "relative" }}>
+      {/* Header */}
+      <header
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          padding: desktop ? "16px 24px" : "10px 14px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <LuminaLogo size={desktop ? "lg" : "sm"} />
+        {desktop && (
+          <nav style={{ display: "flex", gap: 14, alignItems: "center" }}>
+            {navLinks.map((l) => (
+              <span key={l} style={{ fontSize: 6, letterSpacing: "0.12em", color: "#fff", fontFamily: LUMINA_SANS }}>
+                {l}
+              </span>
+            ))}
+          </nav>
+        )}
+        <button
+          style={{
+            background: LUMINA_GOLD,
+            color: LUMINA_DARK,
+            border: "none",
+            padding: desktop ? "6px 14px" : "5px 10px",
+            fontSize: desktop ? 6 : 6,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            fontFamily: LUMINA_SANS,
+            fontWeight: 500,
+          }}
+        >
+          {es ? "Reservar" : "Book Now"}
+        </button>
+      </header>
 
-      {/* Luxury Navbar */}
-      <nav className="relative z-10 flex justify-between items-center px-4 py-2 shrink-0">
-        <div className="flex items-center gap-2">
-          <span
-            className="font-serif text-[11px] font-normal tracking-[0.06em] uppercase"
-            style={{ color: LUMINA_GOLD }}
-          >
-            Lúmina<span className="text-white ml-0.5">Sky</span>
-          </span>
-          <button
-            onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
-            className="flex items-center gap-0.5 text-[6px] tracking-widest uppercase border border-white/20 px-1 py-0.5 text-white/80 hover:border-white/50"
-            style={{ color: undefined }}
-          >
-            <Globe className="w-1.5 h-1.5" /> {lang === "EN" ? "ESP" : "EN"}
-          </button>
+      {/* Hero */}
+      <section
+        style={{
+          position: "relative",
+          height: desktop ? 300 : 220,
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${LUMINA_IMG.hero})`, backgroundSize: "cover", backgroundPosition: "center" }} />
+        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, ${LUMINA_HERO_DARK}cc, transparent, ${LUMINA_HERO_DARK}99)` }} />
+        <div style={{ position: "relative", zIndex: 10, textAlign: "center", padding: "0 12px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <h1 style={{ fontFamily: LUMINA_SERIF, color: "#fff", fontSize: desktop ? 32 : 22, margin: "0 0 6px", fontWeight: 400, letterSpacing: "-0.01em" }}>
+            Lúmina Sky
+          </h1>
+          <p style={{ color: "rgba(255,255,255,0.9)", fontSize: desktop ? 7 : 6, fontFamily: LUMINA_SANS, fontWeight: 300, margin: "0 0 12px", maxWidth: desktop ? 220 : 170 }}>
+            {es ? "En una ciudad que nunca descansa, construimos un espacio que sí." : "In a city that never rests, we built a space that does."}
+          </p>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+            <span style={{ fontSize: 4.5, letterSpacing: "0.3em", color: "rgba(255,255,255,0.6)", fontFamily: LUMINA_SANS, textTransform: "uppercase" }}>
+              {es ? "Desliza para explorar" : "Scroll to Explore"}
+            </span>
+            <div style={{ width: 1, height: 16, background: "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)" }} />
+          </div>
         </div>
-        <div className="hidden sm:flex gap-2.5 text-[6px] font-medium uppercase tracking-[0.15em] text-white/85">
-          <span className="hover:text-white transition-colors cursor-pointer">
-            {lang === "ESP" ? "Suites" : "Suites"}
-          </span>
-          <span className="hover:text-white transition-colors cursor-pointer">
-            {lang === "ESP" ? "Gastronomía" : "Dining"}
-          </span>
-          <span className="hover:text-white transition-colors cursor-pointer">
-            {lang === "ESP" ? "Experiencias" : "Experiences"}
-          </span>
+      </section>
+
+      {/* Booking bar */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 20,
+          marginTop: desktop ? -22 : -14,
+          marginLeft: desktop ? 24 : 12,
+          marginRight: desktop ? 24 : 12,
+          background: LUMINA_BG,
+          boxShadow: "0 10px 24px rgba(0,0,0,0.12)",
+          display: "flex",
+          flexDirection: desktop ? "row" : "column",
+          padding: 3,
+        }}
+      >
+        <div style={{ display: "flex", flex: 1, flexDirection: desktop ? "row" : "column", background: LUMINA_LGRAY, gap: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: desktop ? "6px 10px" : "5px 8px", flex: 1, background: LUMINA_BG }}>
+            <span style={{ fontSize: 4.5, letterSpacing: "0.1em", textTransform: "uppercase", color: LUMINA_GRAY, marginBottom: 1, fontFamily: LUMINA_SANS }}>
+              {es ? "Estancia" : "Check-in – Check-out"}
+            </span>
+            <input
+              value={dateRange}
+              onChange={(e) => setDateRange(e.target.value)}
+              aria-label={es ? "Fechas de estancia" : "Stay dates"}
+              style={{ fontSize: 6, color: LUMINA_DARK, fontFamily: LUMINA_SANS, background: "transparent", border: "none", outline: "none", padding: 0, width: "100%" }}
+            />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", padding: desktop ? "6px 10px" : "5px 8px", flex: 1, background: LUMINA_BG }}>
+            <span style={{ fontSize: 4.5, letterSpacing: "0.1em", textTransform: "uppercase", color: LUMINA_GRAY, marginBottom: 1, fontFamily: LUMINA_SANS }}>
+              {es ? "Huéspedes" : "Guests"}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: 6, color: LUMINA_DARK, fontFamily: LUMINA_SANS }}>
+                {adults} {adults === 1 ? (es ? "Adulto" : "Adult") : es ? "Adultos" : "Adults"}
+              </span>
+              <div style={{ display: "flex", gap: 2 }}>
+                <button
+                  type="button"
+                  onClick={() => setAdults((p) => Math.max(1, p - 1))}
+                  style={{ width: 10, height: 10, border: `1px solid ${LUMINA_LGRAY}`, background: "#fff", fontSize: 5, lineHeight: 1 }}
+                >
+                  -
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAdults((p) => p + 1)}
+                  style={{ width: 10, height: 10, border: `1px solid ${LUMINA_LGRAY}`, background: "#fff", fontSize: 5, lineHeight: 1 }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
         <button
-          className="text-[6px] font-semibold tracking-widest uppercase px-2 py-1 transition-colors"
-          style={{ background: LUMINA_GOLD, color: LUMINA_DARK }}
+          onClick={handleCheckAvailability}
+          disabled={isProcessing}
+          style={{
+            background: LUMINA_DARK,
+            color: "#fff",
+            border: "none",
+            padding: desktop ? "0 18px" : "8px",
+            fontSize: 5.5,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            fontFamily: LUMINA_SANS,
+            fontWeight: 500,
+            marginTop: desktop ? 0 : 2,
+            marginLeft: desktop ? 1 : 0,
+            opacity: isProcessing ? 0.6 : 1,
+          }}
         >
-          {lang === "ESP" ? "RESERVAR" : "BOOK NOW"}
+          {isProcessing ? (es ? "Procesando…" : "Processing…") : es ? "Ver Disponibilidad" : "Check Availability"}
         </button>
-      </nav>
-
-      {/* Main Hero & Content area resized down to fit aspect-video perfectly */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-between px-3 pb-2 text-center">
-        {/* Title Group */}
-        <div className="space-y-1 mt-3 max-w-[85%] flex flex-col items-center">
-          <div className="text-2xl sm:text-3xl font-serif font-normal text-white tracking-tight drop-shadow-md">
-            Lúmina Sky
-          </div>
-          <p className="text-[6px] text-white/90 tracking-widest font-light max-w-[220px]">
-            {lang === "ESP"
-              ? "En una ciudad que nunca descansa, construimos un espacio que sí."
-              : "In a city that never rests, we built a space that does."}
-          </p>
-          <div className="flex flex-col items-center gap-0.5 mt-1 opacity-70">
-            <span className="text-[4.5px] tracking-[0.3em] uppercase">
-              {lang === "ESP" ? "Desliza para explorar" : "Scroll to explore"}
-            </span>
-            <div className="w-px h-4 bg-gradient-to-b from-white/60 to-transparent" />
-          </div>
-        </div>
-
-        {/* Dynamic & Interactive Reservation Widget */}
-        <div className="w-full max-w-[340px] bg-[#fdfbf7] shadow-xl p-1 flex flex-col gap-1 mt-auto [color-scheme:light]">
-          <div className="grid grid-cols-2 gap-px bg-[#e5e7eb] text-left text-black">
-            {/* Range Date */}
-            <div className="bg-[#fdfbf7] p-1 flex flex-col justify-center">
-              <span className="text-[5px] uppercase tracking-wider text-[#6b7280] leading-none mb-0.5">
-                {lang === "ESP" ? "Estancia" : "Stay"}
-              </span>
-              <div className="flex items-center gap-1">
-                <Calendar className="w-1.5 h-1.5 shrink-0" style={{ color: LUMINA_GOLD }} />
-                <input
-                  type="text"
-                  value={dateRange}
-                  onChange={(e) => setDateRange(e.target.value)}
-                  className="glass-input border-none outline-none font-sans text-[7px] tracking-wide w-full p-0 h-auto"
-                  aria-label="Fechas de estancia"
-                />
-              </div>
-            </div>
-
-            {/* Guest Selector inside Widget */}
-            <div className="bg-[#fdfbf7] p-1 flex flex-col justify-center">
-              <span className="text-[5px] uppercase tracking-wider text-[#6b7280] leading-none mb-0.5">
-                {lang === "ESP" ? "Huéspedes" : "Guests"}
-              </span>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <Users className="w-1.5 h-1.5 shrink-0" style={{ color: LUMINA_GOLD }} />
-                  <span className="font-sans text-[7px] tracking-tight truncate leading-none text-[#1a1a1a]">
-                    {adults}{" "}
-                    {adults === 1
-                      ? lang === "ESP"
-                        ? "Adulto"
-                        : "Adult"
-                      : lang === "ESP"
-                        ? "Adultos"
-                        : "Adults"}
-                  </span>
-                </div>
-                <div className="flex gap-0.5 leading-none shrink-0 scale-[0.85] origin-right">
-                  <button
-                    type="button"
-                    onClick={() => setAdults((prev) => Math.max(1, prev - 1))}
-                    className="w-3 h-3 border border-gray-300 hover:border-black rounded-sm flex items-center justify-center font-sans text-[6px] bg-white"
-                  >
-                    -
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAdults((prev) => prev + 1)}
-                    className="w-3 h-3 border border-gray-300 hover:border-black rounded-sm flex items-center justify-center font-sans text-[6px] bg-white"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleCheckAvailability}
-            disabled={isProcessing}
-            className="w-full bg-[#1a1a1a] text-white py-1 text-[6px] tracking-widest uppercase font-semibold flex items-center justify-center gap-1 transition-colors duration-300 disabled:opacity-50"
-          >
-            {isProcessing ? (
-              <span className="flex items-center gap-0.5">
-                <span className="w-1.5 h-1.5 border border-white border-t-transparent rounded-full animate-spin" />
-                {lang === "ESP" ? "PROCESANDO..." : "PROCESSING..."}
-              </span>
-            ) : (
-              <span className="flex items-center gap-0.5">
-                {lang === "ESP" ? "VER DISPONIBILIDAD" : "CHECK AVAILABILITY"}
-                <ChevronRight className="w-1.5 h-1.5" />
-              </span>
-            )}
-          </button>
-        </div>
-
-        {/* Real-time Reservation Notification Modal */}
-        <AnimatePresence>
-          {successCode && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 5 }}
-              className="absolute bottom-1 right-1 left-1 bg-[#0d1521]/95 backdrop-blur-md border-l-2 p-1.5 text-left shadow-2xl z-20 text-white"
-              style={{ borderColor: LUMINA_GOLD }}
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <p
-                    className="text-[4.5px] uppercase tracking-wider font-semibold leading-none mb-0.5"
-                    style={{ color: LUMINA_GOLD }}
-                  >
-                    {lang === "ESP" ? "SUITE DISPONIBLE" : "SUITE AVAILABLE"}
-                  </p>
-                  <p className="text-[5.5px] text-white/80 leading-normal">
-                    {lang === "ESP"
-                      ? "Lúmina Suite con vista panorámica reservable con descuento."
-                      : "Lumina Suite with panoramic city view available for direct booking."}
-                  </p>
-                </div>
-                <span className="font-mono text-[6px] text-white bg-white/10 px-1 py-0.5 leading-none font-semibold select-all">
-                  {successCode}
-                </span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {successCode && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            style={{
+              margin: desktop ? "6px 24px 0" : "6px 12px 0",
+              background: `${LUMINA_HERO_DARK}f2`,
+              borderLeft: `2px solid ${LUMINA_GOLD}`,
+              padding: "6px 8px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 6,
+            }}
+          >
+            <div>
+              <p style={{ fontSize: 4.5, letterSpacing: "0.08em", textTransform: "uppercase", color: LUMINA_GOLD, fontWeight: 700, margin: 0, marginBottom: 2 }}>
+                {es ? "Suite Disponible" : "Suite Available"}
+              </p>
+              <p style={{ fontSize: 5.5, color: "rgba(255,255,255,0.8)", margin: 0, fontFamily: LUMINA_SANS }}>
+                {es ? "Lúmina Suite con vista panorámica reservable con descuento." : "Lumina Suite with panoramic city view available for direct booking."}
+              </p>
+            </div>
+            <span style={{ fontFamily: "monospace", fontSize: 6, color: "#fff", background: "rgba(255,255,255,0.1)", padding: "2px 4px", fontWeight: 700 }}>
+              {successCode}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Suites */}
+      <section style={{ padding: desktop ? "36px 24px 20px" : "24px 12px 14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", maxWidth: 460, margin: "0 auto 14px" }}>
+          <h2 style={{ fontFamily: LUMINA_SERIF, fontSize: desktop ? 16 : 13, fontWeight: 400, margin: 0, color: LUMINA_DARK }}>
+            {es ? "Nuestras Suites" : "Our Suites"}
+          </h2>
+          {desktop && (
+            <div style={{ display: "flex", gap: 4 }}>
+              {["←", "→"].map((arrow) => (
+                <div
+                  key={arrow}
+                  style={{ width: 16, height: 16, borderRadius: "50%", border: `1px solid ${LUMINA_LGRAY}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, color: LUMINA_DARK }}
+                >
+                  {arrow}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div style={{ maxWidth: 420, margin: "0 auto" }}>
+          <div style={{ aspectRatio: desktop ? "21/9" : "16/10", background: LUMINA_LGRAY, marginBottom: 8, overflow: "hidden" }}>
+            <img src={LUMINA_IMG.loft} alt="Skyline Loft" style={{ width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
+            <h3 style={{ fontFamily: LUMINA_SERIF, fontSize: desktop ? 11 : 9, fontWeight: 400, margin: 0, color: LUMINA_DARK }}>Skyline Loft</h3>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ display: "block", fontSize: 4.5, letterSpacing: "0.1em", textTransform: "uppercase", color: LUMINA_GRAY, fontFamily: LUMINA_SANS }}>
+                {es ? "Desde" : "From"}
+              </span>
+              <span style={{ fontFamily: LUMINA_SERIF, fontSize: desktop ? 8.5 : 7, color: LUMINA_DARK }}>
+                $1,250 <span style={{ fontSize: 5.5, color: LUMINA_GRAY, fontFamily: LUMINA_SANS }}>/{es ? "noche" : "night"}</span>
+              </span>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 10 }}>
+            {(es ? ["Vista a la Avenida", "Piso 25", "Ventanales de Piso a Techo"] : ["Avenue View", "25th Floor", "Floor-to-Ceiling Glass"]).map((t) => (
+              <span key={t} style={{ background: LUMINA_BG, padding: "2px 6px", fontSize: 4.5, letterSpacing: "0.08em", textTransform: "uppercase", color: LUMINA_GRAY, fontFamily: LUMINA_SANS }}>
+                {t}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 3 }}>
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} style={{ width: 3, height: 3, borderRadius: "50%", background: i === 0 ? LUMINA_DARK : "transparent", border: `1px solid ${LUMINA_DARK}` }} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Amenities */}
+      <section style={{ padding: desktop ? "28px 24px" : "18px 12px", background: LUMINA_BG }}>
+        <h2 style={{ fontFamily: LUMINA_SERIF, fontSize: desktop ? 16 : 13, fontWeight: 400, textAlign: "center", marginBottom: desktop ? 16 : 10, color: LUMINA_DARK }}>
+          {es ? "Amenidades de Ciudad" : "City Amenities"}
+        </h2>
+        <div style={{ display: "flex", flexDirection: desktop ? "row" : "column", gap: 6, maxWidth: 460, margin: "0 auto" }}>
+          <AmenityTile img={LUMINA_IMG.pool} title={es ? "Piscina y Sauna en la Azotea" : "Rooftop Pool & Sauna"} desc={es ? "Renueva tus sentidos con vistas a la ciudad desde nuestra piscina infinita climatizada." : "Rejuvenate your senses with skyline views from our temperature-controlled infinity pool."} big flex={2} />
+          <div style={{ display: "flex", flexDirection: desktop ? "column" : "row", gap: 6, flex: 1 }}>
+            <AmenityTile img={LUMINA_IMG.dining} title={es ? "Gastronomía en las Alturas" : "Skyline Dining"} desc={es ? "Un viaje culinario sobre el horizonte de la ciudad." : "A culinary journey above the city skyline."} flex={1} />
+            <AmenityTile img={LUMINA_IMG.lounge} title={es ? "Salón de Negocios" : "Business Lounge"} flex={1} />
+          </div>
+        </div>
+      </section>
+
+      {/* Quote */}
+      <section style={{ padding: desktop ? "40px 24px" : "24px 14px", background: LUMINA_SAND, textAlign: "center" }}>
+        <div style={{ width: 1, height: 20, background: `${LUMINA_DARK}33`, margin: "0 auto 10px" }} />
+        <h2 style={{ fontFamily: LUMINA_SERIF, fontSize: desktop ? 12 : 10, fontWeight: 400, color: LUMINA_DARK, maxWidth: 320, margin: "0 auto 8px", lineHeight: 1.4 }}>
+          "{es ? "En una ciudad que nunca descansa, construimos un espacio que sí." : "In a city that never rests, we built a space that does."}"
+        </h2>
+        <p style={{ fontSize: desktop ? 6 : 5.5, color: `${LUMINA_DARK}b3`, fontFamily: LUMINA_SANS, fontWeight: 300, lineHeight: 1.5, maxWidth: 300, margin: "0 auto" }}>
+          {es
+            ? "Un contraste entre la energía urbana vibrante de Santo Domingo y la serenidad meticulosa de nuestro estado elevado."
+            : "A contrast between the vibrant urban energy of Santo Domingo and the meticulous serenity of our elevated estate."}
+        </p>
+      </section>
+
+      {/* Footer */}
+      <footer style={{ background: LUMINA_FOOTER_BG, padding: desktop ? "28px 24px 14px" : "18px 12px 12px" }}>
+        <div style={{ display: "flex", flexDirection: desktop ? "row" : "column", gap: desktop ? 18 : 14, marginBottom: 20, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, minWidth: desktop ? 100 : "100%" }}>
+            <LuminaLogo size="sm" />
+            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 6, fontFamily: LUMINA_SANS, fontWeight: 300, margin: 0 }}>
+              {es ? "En una ciudad que nunca descansa, construimos un espacio que sí." : "In a city that never rests, we built a space that does."}
+            </p>
+          </div>
+          <FooterCol title={es ? "Navegación" : "Navigation"} items={navLinks} />
+          <FooterCol title={es ? "Contacto" : "Contact"} items={["+1 (809) 333 0000", "reservations@luminasky.com"]} />
+          <FooterCol title={es ? "Seguir" : "Follow"} items={["Instagram", "Facebook", "Pinterest"]} />
+        </div>
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: 10, display: "flex", flexDirection: desktop ? "row" : "column", justifyContent: "space-between", alignItems: desktop ? "center" : "flex-start", gap: 6 }}>
+          <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 5, fontFamily: LUMINA_SANS }}>
+            {es ? "© 2026 Lúmina Sky. Todos los derechos reservados." : "© 2026 Lúmina Sky. All rights reserved."}
+          </span>
+          <span style={{ color: LUMINA_GOLD, fontSize: 4, letterSpacing: "0.15em", border: `1px solid ${LUMINA_GOLD}33`, padding: "1px 5px", fontFamily: "monospace", textTransform: "uppercase" }}>
+            Demo
+          </span>
+        </div>
+      </footer>
     </div>
   );
 }
 
-// Versión móvil real del mockup -- a diferencia de la de escritorio (que
-// solo muestra el hero, todo lo que entra en el recorte aspect-video),
-// el marco de celular tiene alto real (580px) y sí puede scrollear, así
-// que acá se refleja el resto de las secciones del diseño importado de
-// Claude Design (suites, amenities, cierre) en vez de una captura estática.
+function AmenityTile({ img, title, desc, big, flex }: { img: string; title: string; desc?: string; big?: boolean; flex: number }) {
+  return (
+    <a style={{ position: "relative", display: "flex", overflow: "hidden", aspectRatio: "4/3", flex, textDecoration: "none" }}>
+      <img src={img} alt={title} style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover" }} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(to top, ${LUMINA_HERO_DARK}cc, transparent)`,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          padding: big ? 10 : 6,
+        }}
+      >
+        <h3 style={{ fontFamily: LUMINA_SERIF, color: "#fff", fontSize: big ? 9 : 7, margin: "0 0 2px", fontWeight: 400 }}>{title}</h3>
+        {desc && <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 5, fontFamily: LUMINA_SANS, fontWeight: 300, margin: 0, maxWidth: 140 }}>{desc}</p>}
+      </div>
+    </a>
+  );
+}
+
+function FooterCol({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 90 }}>
+      <h3 style={{ color: LUMINA_GOLD, textTransform: "uppercase", fontSize: 4.5, letterSpacing: "0.12em", margin: 0, marginBottom: 2, fontFamily: LUMINA_SANS }}>
+        {title}
+      </h3>
+      {items.map((i) => (
+        <span key={i} style={{ color: "rgba(255,255,255,0.6)", fontSize: 5.5, fontFamily: LUMINA_SANS, fontWeight: 300 }}>
+          {i}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function LuminaSkyMockup() {
+  const [lang, setLang] = useState<"EN" | "ESP">("ESP");
+  return (
+    <div className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto select-none [color-scheme:light]">
+      <button
+        onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
+        className="absolute top-1.5 right-1.5 z-[60] text-[6px] tracking-widest uppercase border border-white/30 px-1 py-0.5 text-white bg-black/20"
+      >
+        {lang === "EN" ? "ESP" : "EN"}
+      </button>
+      <LuminaSkyPage desktop lang={lang} />
+    </div>
+  );
+}
+
+// Versión móvil real del mockup -- a diferencia del recorte aspect-video de
+// escritorio, el marco de celular tiene alto real (580px) y sí puede
+// scrollear -- ambas versiones renderizan la misma LuminaSkyPage (fiel al
+// .dc.html real de Claude Design), solo cambia el ancho/escala.
 function LuminaSkyMockupMobile() {
   const [lang, setLang] = useState<"EN" | "ESP">("ESP");
-
   return (
-    <div className="absolute inset-0 bg-[#fdfbf7] text-[#1a1a1a] overflow-y-auto font-sans select-none [color-scheme:light]">
-      {/* Hero */}
-      <div className="relative h-[300px] flex flex-col justify-end">
-        <div className="absolute inset-0">
-          <img
-            src={LUMINA_IMG.hero}
-            alt="Lumina Sky View"
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            decoding="async"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0b1320]/80 via-[#0b1320]/10 to-[#fdfbf7]" />
-        </div>
-        {/* pt-8 despeja el notch del marco de celular (MockupFrame), que se
-            superpone físicamente sobre los primeros ~24px de la pantalla */}
-        <nav className="relative z-10 flex justify-between items-center px-3 pt-8 pb-2">
-          <span
-            className="font-serif text-[13px] font-normal tracking-[0.06em] uppercase"
-            style={{ color: LUMINA_GOLD }}
-          >
-            Lúmina<span className="text-white ml-0.5">Sky</span>
-          </span>
-          <button
-            onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
-            className="text-[8px] tracking-widest uppercase border border-white/30 px-1.5 py-0.5 text-white"
-          >
-            {lang === "EN" ? "ESP" : "EN"}
-          </button>
-        </nav>
-        <div className="relative z-10 text-center pb-8 px-4">
-          <div className="text-3xl font-serif text-white drop-shadow-md">Lúmina Sky</div>
-          <p className="text-[9px] text-white/90 mt-1 tracking-wide">
-            {lang === "ESP"
-              ? "En una ciudad que nunca descansa, construimos un espacio que sí."
-              : "In a city that never rests, we built a space that does."}
-          </p>
-        </div>
-      </div>
-
-      {/* Booking bar */}
-      <div className="relative z-10 -mt-6 mx-4 bg-white shadow-xl p-2.5 flex flex-col gap-2">
-        <div className="grid grid-cols-1 divide-y divide-[#e5e7eb] border border-[#e5e7eb]">
-          <div className="p-2 flex flex-col">
-            <span className="text-[8px] uppercase tracking-wider text-[#6b7280] mb-0.5">
-              {lang === "ESP" ? "Estancia" : "Stay"}
-            </span>
-            <span className="text-[11px]">26 Jul — 29 Jul, 2026</span>
-          </div>
-          <div className="p-2 flex flex-col">
-            <span className="text-[8px] uppercase tracking-wider text-[#6b7280] mb-0.5">
-              {lang === "ESP" ? "Huéspedes" : "Guests"}
-            </span>
-            <span className="text-[11px]">2 {lang === "ESP" ? "Adultos" : "Adults"}</span>
-          </div>
-        </div>
-        <button
-          className="w-full py-2.5 text-[9px] tracking-widest uppercase font-semibold text-white"
-          style={{ background: LUMINA_DARK }}
-        >
-          {lang === "ESP" ? "Ver Disponibilidad" : "Check Availability"}
-        </button>
-      </div>
-
-      {/* Suite teaser */}
-      <div className="px-4 pt-8 pb-6">
-        <h3 className="font-serif text-lg mb-3">{lang === "ESP" ? "Nuestras Suites" : "Our Suites"}</h3>
-        <div className="aspect-[16/10] bg-[#e5e7eb] overflow-hidden mb-2">
-          <img
-            src={LUMINA_IMG.loft}
-            alt="Skyline Loft"
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-        <div className="flex justify-between items-start">
-          <span className="font-serif text-base">Skyline Loft</span>
-          <span className="font-serif text-sm">
-            $1,250 <span className="text-[9px] text-[#6b7280] font-sans">/{lang === "ESP" ? "noche" : "night"}</span>
-          </span>
-        </div>
-      </div>
-
-      {/* Amenities strip */}
-      <div className="px-4 pb-8 grid grid-cols-2 gap-2">
-        <a className="relative aspect-square overflow-hidden block">
-          <img
-            src={LUMINA_IMG.pool}
-            alt="Rooftop Pool"
-            className="absolute inset-0 w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            decoding="async"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1320]/80 to-transparent flex items-end p-2">
-            <span className="text-white text-[10px] font-serif leading-tight">
-              {lang === "ESP" ? "Piscina en la Azotea" : "Rooftop Pool"}
-            </span>
-          </div>
-        </a>
-        <a className="relative aspect-square overflow-hidden block">
-          <img
-            src={LUMINA_IMG.dining}
-            alt="Skyline Dining"
-            className="absolute inset-0 w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-            loading="lazy"
-            decoding="async"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0b1320]/80 to-transparent flex items-end p-2">
-            <span className="text-white text-[10px] font-serif leading-tight">
-              {lang === "ESP" ? "Gastronomía en las Alturas" : "Skyline Dining"}
-            </span>
-          </div>
-        </a>
-      </div>
-
-      {/* Footer strip */}
-      <div className="bg-[#121212] text-white/70 px-4 py-6 text-center">
-        <span
-          className="font-serif text-[11px] tracking-[0.06em] uppercase block mb-1"
-          style={{ color: LUMINA_GOLD }}
-        >
-          Lúmina Sky
-        </span>
-        <p className="text-[8px]">© 2026 Lúmina Sky.</p>
-      </div>
+    <div className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto select-none [color-scheme:light]">
+      <button
+        onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
+        className="absolute top-8 right-2 z-[60] text-[8px] tracking-widest uppercase border border-white/30 px-1.5 py-0.5 text-white bg-black/20"
+      >
+        {lang === "EN" ? "ESP" : "EN"}
+      </button>
+      <LuminaSkyPage desktop={false} lang={lang} />
     </div>
   );
 }
