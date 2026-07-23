@@ -17,16 +17,23 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
+import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
 
 function ProjectImageCarousel({
   desktopImg,
   mobileImg,
   projectName,
+  projectSlug,
 }: {
   desktopImg?: string;
   mobileImg?: string;
   projectName: string;
+  projectSlug?: string;
 }) {
+  // Algunos proyectos (hoy solo Lúmina Sky) tienen un mockup interactivo real
+  // (MockupFrame.tsx, importado de un diseño de Claude Design) en vez de
+  // capturas estáticas -- se prioriza sobre desktopImg/mobileImg cuando existe.
+  const interactive = hasMockupContent(projectSlug);
   // Inicia en el primer tipo de imagen disponible: si un proyecto solo tiene
   // captura mobile, arrancar en "desktop" dejaba un hueco en blanco.
   const [active, setActive] = useState<"desktop" | "mobile">(
@@ -40,10 +47,12 @@ function ProjectImageCarousel({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const images = [
-    ...(desktopImg ? [{ type: "desktop" as const, src: desktopImg }] : []),
-    ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
-  ];
+  const images = interactive
+    ? [{ type: "desktop" as const, src: "" }, { type: "mobile" as const, src: "" }]
+    : [
+        ...(desktopImg ? [{ type: "desktop" as const, src: desktopImg }] : []),
+        ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
+      ];
 
   if (images.length === 0) return null;
 
@@ -101,16 +110,52 @@ function ProjectImageCarousel({
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: active === img.type ? "auto" : "none" }}
           >
-            <img
-              src={img.src}
-              alt={`${projectName} — ${img.type}`}
-              loading="lazy"
-              className={
-                img.type === "mobile"
-                  ? "h-full w-auto max-w-[240px] object-contain mx-auto rounded-2xl"
-                  : "w-full h-full object-contain rounded-2xl"
-              }
-            />
+            {interactive ? (
+              img.type === "mobile" ? (
+                // El frame de celular de MockupFrame mide 280x580 fijo -- se
+                // escala para caber en la altura fija del carrusel en vez de
+                // recortarlo, así el mockup interactivo sigue siendo
+                // clickeable/usable a cualquier tamaño de contenedor. El
+                // wrapper exterior toma ya el tamaño *escalado* (no el
+                // original) para que el centrado flex del padre sea correcto
+                // -- transformar solo con scale() sin achicar la caja de
+                // layout dejaba el frame descentrado y recortado arriba.
+                (() => {
+                  const mobileScale = Math.min(1, (containerHeight - 16) / 580);
+                  return (
+                    <div
+                      style={{ width: 280 * mobileScale, height: 580 * mobileScale }}
+                    >
+                      <div
+                        style={{
+                          width: 280,
+                          height: 580,
+                          transform: `scale(${mobileScale})`,
+                          transformOrigin: "top left",
+                        }}
+                      >
+                        <MockupFrame type="mobile" projectSlug={projectSlug} />
+                      </div>
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="w-full max-w-2xl px-4">
+                  <MockupFrame type="browser" projectSlug={projectSlug} />
+                </div>
+              )
+            ) : (
+              <img
+                src={img.src}
+                alt={`${projectName} — ${img.type}`}
+                loading="lazy"
+                className={
+                  img.type === "mobile"
+                    ? "h-full w-auto max-w-[240px] object-contain mx-auto rounded-2xl"
+                    : "w-full h-full object-contain rounded-2xl"
+                }
+              />
+            )}
           </motion.div>
         ))}
       </div>
@@ -263,6 +308,7 @@ export default function ProjectDetail() {
               desktopImg={project.desktopImg}
               mobileImg={project.mobileImg}
               projectName={project.title}
+              projectSlug={project.slug}
             />
           </motion.div>
           </section>
