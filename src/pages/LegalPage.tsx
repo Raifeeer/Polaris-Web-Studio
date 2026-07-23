@@ -107,7 +107,7 @@ function PrivacyContent() {
             tipeada), la dirección IP y la fecha/hora de aceptación — necesario para que la firma
             sea legalmente válida bajo la Ley No. 126-02 sobre Comercio Electrónico, Documentos y
             Firmas Digitales de la República Dominicana. Una copia del documento firmado se envía
-            por correo a vos y a nosotros en el momento de la firma.
+            por correo a ti y a nosotros en el momento de la firma.
           </T>
         </p>
         <SubHeading><T en="Payments">Pagos</T></SubHeading>
@@ -339,7 +339,7 @@ function TermsContent() {
         </p>
         <p>
           <T en="For full projects, once your quote is approved you'll also sign a specific Service Agreement electronically within your portal, covering the exact price, timeline, and intellectual property terms for your project. That Agreement complements these Terms — it governs the specific commercial terms of your project, and these Terms govern everything else (refund policy, portal account, liability, etc.) not repeated there.">
-            Para proyectos completos, una vez aprobada tu cotización también firmás electrónicamente
+            Para proyectos completos, una vez aprobada tu cotización también firmas electrónicamente
             un Contrato de Prestación de Servicios específico dentro de tu portal, con el precio,
             plazo y términos de propiedad intelectual exactos de tu proyecto. Ese Contrato
             complementa estos Términos — regula las condiciones comerciales específicas de tu
@@ -482,7 +482,7 @@ function TermsContent() {
       <Section heading={<T en="8. Client portal account">8. Cuenta del portal de clientes</T>}>
         <p>
           <T en="You're responsible for keeping your portal password confidential and for any activity under your account. Notify us immediately if you suspect unauthorized access.">
-            Sos responsable de mantener tu contraseña del portal confidencial y de cualquier
+            Eres responsable de mantener tu contraseña del portal confidencial y de cualquier
             actividad bajo tu cuenta. Avísanos de inmediato si sospechas de un acceso no
             autorizado.
           </T>
@@ -525,7 +525,7 @@ function TermsContent() {
         <p>
           <T en="Any dispute arising from these Terms or your use of the site/portal will be resolved individually between you and Polaris Web Studio — not as part of a class, consolidated, or representative action of any kind, to the extent permitted by applicable law. Either party may elect to submit the dispute to binding arbitration under Law No. 181-09 on Commercial Arbitration of the Dominican Republic instead of the ordinary courts referenced in Section 11. This clause doesn't prevent you from filing a complaint with an applicable consumer-protection authority.">
             Cualquier disputa derivada de estos Términos o de tu uso del sitio/portal se resolverá
-            de forma individual entre vos y Polaris Web Studio — no como parte de una demanda
+            de forma individual entre tú y Polaris Web Studio — no como parte de una demanda
             colectiva, consolidada o representativa de ningún tipo, en la medida permitida por la
             ley aplicable. Cualquiera de las partes puede optar por someter la disputa a arbitraje
             vinculante conforme a la Ley No. 181-09 sobre Arbitraje Comercial de la República

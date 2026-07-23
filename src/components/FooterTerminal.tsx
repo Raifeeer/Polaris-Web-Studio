@@ -215,7 +215,7 @@ export default function FooterTerminal() {
         break;
       default:
         output = es
-          ? `comando no encontrado: ${cmd} (probá "help")`
+          ? `comando no encontrado: ${cmd} (prueba "help")`
           : `command not found: ${cmd} (try "help")`;
     }
 
