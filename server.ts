@@ -13,6 +13,7 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
+import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
@@ -1572,6 +1573,67 @@ const PORT = 3000;
     } catch (error: any) {
       console.error("Error suggesting domains:", error);
       res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
+  // Formulario de contacto de /contacto -- pensado como un canal simple de
+  // "escribinos" sin depender de WhatsApp (pedido explícito del usuario).
+  // Manda un correo real a hola@polarisweb.studio por SMTP de Zoho (misma
+  // cuenta/patrón ya usado en el resto del ecosistema de Polaris), con
+  // replyTo al correo de quien escribe para poder contestarle directo.
+  app.post("/api/contact", async (req, res) => {
+    try {
+      const { name, email, message, company } = req.body || {};
+      // "company" es un honeypot -- campo invisible en el form real; si
+      // viene relleno, es casi seguro un bot. Se responde éxito igual para
+      // no delatar el mecanismo, sin mandar ningún correo real.
+      if (company) {
+        res.json({ success: true });
+        return;
+      }
+      if (
+        typeof name !== "string" || !name.trim() ||
+        typeof email !== "string" || !email.trim() ||
+        typeof message !== "string" || !message.trim()
+      ) {
+        res.status(400).json({ error: "Faltan campos requeridos." });
+        return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        res.status(400).json({ error: "El correo no es válido." });
+        return;
+      }
+      if (name.length > 200 || email.length > 200 || message.length > 5000) {
+        res.status(400).json({ error: "Uno de los campos es demasiado largo." });
+        return;
+      }
+
+      const zohoPassword = process.env.ZOHO_PASSWORD;
+      if (!zohoPassword) {
+        console.error("ZOHO_PASSWORD no configurado -- no se puede enviar el mensaje de contacto.");
+        res.status(500).json({ error: "No se pudo enviar el mensaje. Intenta más tarde." });
+        return;
+      }
+
+      const transporter = nodemailer.createTransport({
+        host: "smtp.zoho.com",
+        port: 465,
+        secure: true,
+        auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+      });
+
+      await transporter.sendMail({
+        from: '"Formulario de contacto — Polaris Web Studio" <hola@polarisweb.studio>',
+        to: "hola@polarisweb.studio",
+        replyTo: email,
+        subject: `Nuevo mensaje de contacto de ${name}`,
+        text: `Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`,
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error enviando mensaje de contacto:", error);
+      res.status(500).json({ error: "No se pudo enviar el mensaje. Intenta más tarde." });
     }
   });
 

@@ -171,9 +171,12 @@ export default function Footer({
         {/* Contact */}
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)]">
+            <Link
+              to="/contacto"
+              className="font-display font-bold uppercase tracking-widest text-xs text-[var(--color-text-primary)] hover:text-[var(--color-primary-base)] transition-colors"
+            >
               <T en="Contact">Contacto</T>
-            </h3>
+            </Link>
             {/* Language Switcher */}
             <div className="flex items-center gap-2 border border-[var(--color-border-subtle)] rounded-full px-2 py-1 bg-[var(--color-surface-base)]">
               <Globe size={12} className="text-[var(--color-text-secondary)]" />

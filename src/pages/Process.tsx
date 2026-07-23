@@ -17,7 +17,7 @@ import Footer from "../components/Footer";
 import AISparkleIcon from "../components/AISparkleIcon";
 import { T, useLanguage } from "../context/LanguageContext";
 import BookingScheduler from "../components/BookingScheduler";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 export default function Process() {
   const navigate = useNavigate();
@@ -32,6 +32,14 @@ export default function Process() {
     "Conoce los 3 sencillos pasos que transformarán tu visión en una realidad digital de alto rendimiento: Planificas, Diseñamos y Lanzamos.",
     "Learn the 3 simple steps to transform your vision into high-performance digital reality: Plan, Design, and Launch.",
   );
+  useJsonLd("jsonld-proceso-breadcrumb", {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: language === "es" ? "Inicio" : "Home", item: "https://polarisweb.studio/" },
+      { "@type": "ListItem", position: 2, name: language === "es" ? "Metodología" : "Process", item: "https://polarisweb.studio/proceso" },
+    ],
+  });
 
   const steps = [
     {

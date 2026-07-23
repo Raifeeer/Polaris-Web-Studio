@@ -28,7 +28,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 
@@ -247,6 +247,14 @@ export default function Portfolio() {
     "Explora proyectos reales impecablemente optimizados: Lúmina Sky, Nexus Realty, y Chroma Tech Store construidos en código limpio.",
     "Explore high-fidelity, real-world custom projects: Lumina Sky, Nexus Realty, and Chroma Tech Store meticulously engineered.",
   );
+  useJsonLd("jsonld-portafolio-breadcrumb", {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: translate("Inicio", "Home"), item: "https://polarisweb.studio/" },
+      { "@type": "ListItem", position: 2, name: translate("Portafolio", "Portfolio"), item: "https://polarisweb.studio/portafolio" },
+    ],
+  });
 
   // Search and Filter States
   const [searchQuery, setSearchQuery] = useState("");

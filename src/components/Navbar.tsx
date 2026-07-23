@@ -68,6 +68,7 @@ export default function Navbar() {
     { name: <T en="Process">Metodología</T>, path: "/proceso" },
     { name: <T en="Portfolio">Portafolio</T>, path: "/portafolio" },
     { name: <T en="Blog">Blog</T>, path: "/blog" },
+    { name: <T en="Contact">Contacto</T>, path: "/contacto" },
     { name: <T en="Client Portal">Portal</T>, path: "/login" },
   ];
 

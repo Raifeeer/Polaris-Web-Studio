@@ -23,6 +23,7 @@ const staticPages: Entry[] = [
   { loc: `${SITE}/proceso`, lastmod: today, changefreq: "monthly", priority: "0.8" },
   { loc: `${SITE}/portafolio`, lastmod: today, changefreq: "weekly", priority: "0.9" },
   { loc: `${SITE}/nosotros`, lastmod: today, changefreq: "monthly", priority: "0.7" },
+  { loc: `${SITE}/contacto`, lastmod: today, changefreq: "monthly", priority: "0.7" },
   { loc: `${SITE}/blog`, lastmod: today, changefreq: "weekly", priority: "0.8" },
   { loc: `${SITE}/cotizar`, lastmod: today, changefreq: "monthly", priority: "0.9" },
 ];

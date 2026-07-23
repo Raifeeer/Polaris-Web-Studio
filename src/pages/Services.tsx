@@ -28,7 +28,7 @@ import Testimonials from "../components/Testimonials";
 import WhyPolaris from "../components/WhyPolaris";
 import FinalCTA from "../components/FinalCTA";
 import CountdownPill from "../components/CountdownPill";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import { T, useLanguage } from "../context/LanguageContext";
 import AISparkleIcon from "../components/AISparkleIcon";
 
@@ -314,6 +314,17 @@ export default function Services() {
     "Soluciones web de software original optimizados para conversión. Creamos tiendas virtuales, webs elegantes y landing pages eficaces.",
     "Custom web software optimized for conversion. We build online stores, elegant corporate sites, and high-converting landing pages.",
   );
+  // BreadcrumbList -- ayuda a Google a entender la jerarquía real del sitio,
+  // un factor real (no garantizado) para que aparezcan sitelinks de
+  // navegación en los resultados de búsqueda (pedido explícito, 23 de julio).
+  useJsonLd("jsonld-servicios-breadcrumb", {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: language === "es" ? "Inicio" : "Home", item: "https://polarisweb.studio/" },
+      { "@type": "ListItem", position: 2, name: language === "es" ? "Servicios" : "Services", item: "https://polarisweb.studio/servicios" },
+    ],
+  });
   const [showComparison, setShowComparison] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const [activePricePlan, setActivePricePlan] = useState<string>("flash");

@@ -23,7 +23,7 @@ import AISparkleIcon from "../components/AISparkleIcon";
 import { BLOG_POSTS, querySemanticBlog, BlogPost } from "../data/blogData";
 import { T, useLanguage } from "../context/LanguageContext";
 import { formatDate } from "../lib/utils";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 // Words (2+ letters) from the search query used to highlight matches in titles/previews
 const getHighlightWords = (query: string): string[] => {
