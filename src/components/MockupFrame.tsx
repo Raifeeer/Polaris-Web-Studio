@@ -477,8 +477,17 @@ function NexusRealtyMockup() {
   );
 }
 
+// MOCKUP_CONTENT tiene entradas para 5 proyectos, pero solo la de Lúmina Sky
+// fue revisada/verificada visualmente (pedido explícito del usuario) -- las
+// otras 4 (Nexus Realty, Chroma, Vitality Clinic, Sabor Auténtico) llevaban
+// meses como código muerto sin usarse en ningún lado del sitio, y activarlas
+// de golpe junto con Lúmina Sky se saldría del pedido real. Esta lista acota
+// a propósito qué proyectos ya pasaron esa revisión y pueden mostrar el
+// mockup interactivo en vez de la captura estática.
+const VERIFIED_INTERACTIVE_SLUGS = new Set(["lumina-sky-concept"]);
+
 export function hasMockupContent(projectSlug?: string): boolean {
-  return !!projectSlug && projectSlug in MOCKUP_CONTENT;
+  return !!projectSlug && projectSlug in MOCKUP_CONTENT && VERIFIED_INTERACTIVE_SLUGS.has(projectSlug);
 }
 
 const MOCKUP_CONTENT: Record<

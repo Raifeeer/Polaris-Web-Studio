@@ -31,6 +31,15 @@ import Footer from "../components/Footer";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
+import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
+
+// El frame de celular de MockupFrame es de tamaño fijo (280x580) -- misma
+// relación de aspecto que usa la ventana de escritorio (aspect-video, 16/9)
+// para que el cálculo de alto de la tarjeta (basado en aspecto) siga
+// funcionando igual que con las capturas estáticas, sin tener que medir
+// una imagen real (no hay imagen: el mockup se renderiza en vivo).
+const MOCKUP_DESKTOP_ASPECT = 16 / 9;
+const MOCKUP_MOBILE_ASPECT = 280 / 580;
 
 const CINEMA_STATE_KEY = "polaris_portfolio_cinema_state";
 
@@ -58,8 +67,13 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState(0);
-  const [desktopAspect, setDesktopAspect] = React.useState<number | null>(null);
-  const [mobileAspect, setMobileAspect] = React.useState<number | null>(null);
+  const interactive = hasMockupContent(project.slug);
+  const [desktopAspect, setDesktopAspect] = React.useState<number | null>(
+    interactive ? MOCKUP_DESKTOP_ASPECT : null
+  );
+  const [mobileAspect, setMobileAspect] = React.useState<number | null>(
+    interactive ? MOCKUP_MOBILE_ASPECT : null
+  );
 
   React.useEffect(() => {
     if (fillParent || fixedHeights) return;
@@ -79,7 +93,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   // Si ya viene una altura fija (modo cine: calculada una sola vez en el padre
   // para que no cambie de tamaño entre un proyecto y otro), esto no hace falta.
   React.useEffect(() => {
-    if (fixedHeights) return;
+    if (fixedHeights || interactive) return;
     if (project.desktopImg) {
       const img = new Image();
       img.onload = () => setDesktopAspect(img.naturalWidth / img.naturalHeight);
@@ -193,7 +207,11 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: view === "desktop" ? "auto" : "none", willChange: "opacity, transform" }}
           >
-            {project.desktopImg ? (
+            {interactive ? (
+              <div className="w-full px-2">
+                <MockupFrame type="browser" projectSlug={project.slug} />
+              </div>
+            ) : project.desktopImg ? (
               <img
                 src={project.desktopImg}
                 alt={`${project.title} Desktop`}
@@ -218,7 +236,28 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: view === "mobile" ? "auto" : "none", willChange: "opacity, transform" }}
           >
-            {project.mobileImg ? (
+            {interactive ? (
+              (() => {
+                // El frame de celular de MockupFrame mide 280x580 fijo -- se
+                // escala para caber en targetHeight (la caja variable de la
+                // tarjeta), igual que en ProjectDetail.tsx.
+                const mobileScale = Math.min(1, (targetHeight - 8) / 580);
+                return (
+                  <div style={{ width: 280 * mobileScale, height: 580 * mobileScale }}>
+                    <div
+                      style={{
+                        width: 280,
+                        height: 580,
+                        transform: `scale(${mobileScale})`,
+                        transformOrigin: "top left",
+                      }}
+                    >
+                      <MockupFrame type="mobile" projectSlug={project.slug} />
+                    </div>
+                  </div>
+                );
+              })()
+            ) : project.mobileImg ? (
               <img
                 src={project.mobileImg}
                 alt={`${project.title} Mobile`}
