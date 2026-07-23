@@ -69,8 +69,17 @@
     <link rel="canonical" href="https://polarisweb.studio" />
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
-    <link rel="shortcut icon" type="image/svg+xml" href="/favicon.svg?v=3" />
+    <!-- El favicon no salía en resultados de Google (solo el ícono
+         genérico de globo) con SVG-only -- el rastreador de favicons de
+         Google es un bot aparte del Googlebot normal y tiene soporte poco
+         confiable para SVG; sus propias guías piden un formato de imagen
+         estática (ICO/PNG/GIF, cuadrado, ideal 48x48). Se agregan como
+         respaldo sin sacar el SVG (que sigue sirviendo a navegadores
+         modernos vía sizes="any"). -->
+    <link rel="icon" type="image/svg+xml" sizes="any" href="/favicon.svg?v=3" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png?v=1" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png?v=1" />
+    <link rel="shortcut icon" href="/favicon.ico?v=1" />
     <link rel="alternate icon" type="image/svg+xml" href="/favicon.svg?v=3" />
 
     <!-- Open Graph / Facebook -->
