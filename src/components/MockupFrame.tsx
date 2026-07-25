@@ -422,14 +422,16 @@ function FooterCol({ title, items }: { title: string; items: string[] }) {
   );
 }
 
-// Ancho "de diseño" del mockup de escritorio -- las secciones internas de
-// LuminaSkyPage usan maxWidth fijo (~420-460px), así que este valor asume
-// ese target. Se mide el contenedor real vía ResizeObserver y se escala
-// hacia abajo (nunca hacia arriba) para que quepa siempre sin desbordar,
-// en vez de dejar que el contenido de ancho fijo se desborde y quede
-// scrolleable horizontalmente (bug real reportado por el usuario: el
-// mockup "se desliza horizontalmente" en tarjetas angostas de Portfolio).
-const LUMINA_BROWSER_BASE_WIDTH = 480;
+// Ancho "de diseño" del mockup de escritorio. Se mide el contenedor real vía
+// ResizeObserver y se escala hacia abajo (nunca hacia arriba) para que quepa
+// siempre sin desbordar, en vez de dejar que el contenido de ancho fijo se
+// desborde y quede scrolleable horizontalmente (bug real reportado por el
+// usuario: el mockup "se desliza horizontalmente" en tarjetas angostas de
+// Portfolio). 480 no alcanzaba -- el header (logo + 7 links de nav + botón
+// "Reservar", en una sola fila sin wrap, con padding 24px a cada lado) mide
+// más de eso y el botón quedaba cortado ("RESERV...") aunque el desborde se
+// escalara proporcionalmente. 640 le da margen real a esa fila completa.
+const LUMINA_BROWSER_BASE_WIDTH = 640;
 
 function LuminaSkyMockup() {
   const [lang, setLang] = useState<"EN" | "ESP">("ESP");
