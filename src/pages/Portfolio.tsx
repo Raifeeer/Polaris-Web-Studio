@@ -76,7 +76,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   );
 
   React.useEffect(() => {
-    if (fillParent || fixedHeights) return;
+    if (fixedHeights) return;
     const el = containerRef.current;
     if (!el) return;
     const observer = new ResizeObserver(entries => {
@@ -85,7 +85,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
     });
     observer.observe(el);
     return () => observer.disconnect();
-  }, [fillParent, fixedHeights]);
+  }, [fixedHeights]);
 
   // Precarga las imágenes y captura su proporción real para que el recuadro
   // del mockup encaje exacto con la foto, sin franjas vacías (object-contain
@@ -119,7 +119,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   targetHeight = Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, targetHeight));
 
   return (
-    <div className={`w-full ${fillParent ? "relative h-full min-h-0" : "flex flex-col gap-4"}`} ref={containerRef}>
+    <div className={`w-full relative ${fillParent ? "" : "flex flex-col gap-4"}`} ref={containerRef}>
       {/* Premium minimal floating HUD Bar above mockup. En bento (fillParent) flota
           superpuesta sobre la imagen para no robarle alto al mockup dentro de la
           tarjeta, que ya tiene poco espacio vertical disponible. */}
@@ -179,7 +179,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
 
       <motion.div
         initial={false}
-        animate={fillParent ? { height: "100%" } : { height: targetHeight }}
+        animate={{ height: targetHeight }}
         transition={{
           duration: 0.4,
           ease: [0.25, 0.46, 0.45, 0.94]
@@ -192,7 +192,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
           if (swipe < -8000) onSwipeProject(1);
           else if (swipe > 8000) onSwipeProject(-1);
         } : undefined}
-        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${fillParent ? "h-full" : ""} ${onSwipeProject ? "cursor-grab active:cursor-grabbing" : ""}`}
+        className={`relative w-full overflow-hidden rounded-xl bg-transparent ${onSwipeProject ? "cursor-grab active:cursor-grabbing" : ""}`}
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
@@ -734,7 +734,7 @@ export default function Portfolio() {
         {viewMode === "bento" && filteredProjects.length > 0 && (
           <motion.div
             layout
-            className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-[550px] pb-24"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-[minmax(550px,auto)] pb-24"
           >
             <AnimatePresence mode="popLayout">
               {filteredProjects.map((project, i) => (
@@ -748,6 +748,16 @@ export default function Portfolio() {
                   transition={{ duration: 0.4 }}
                   className={`rounded-[var(--radius-bento)] p-6 lg:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col group overflow-hidden relative bento-glow-hover transition-colors duration-500 ${
                     i === filteredProjects.length - 1 && filteredProjects.length % 2 !== 0 ? "md:col-span-2" : ""
+                  } ${
+                    // El mockup interactivo crece de alto real al cambiar a
+                    // vista Mobile (aspecto de celular, mucho más angosto y
+                    // alto que el 16:9 de escritorio) -- pedido explícito del
+                    // usuario ("el div debería alargarse al cambiar de
+                    // vista"). self-start saca esta tarjeta puntual del
+                    // stretch por default del grid, así solo ella crece con
+                    // su propio contenido sin forzar a las demás tarjetas
+                    // (que sí quedan uniformes a 550px) a estirarse también.
+                    hasMockupContent(project.slug) ? "md:self-start" : ""
                   }`}
                 >
                   {/* Decorative faint background glow */}
