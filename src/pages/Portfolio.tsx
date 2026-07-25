@@ -868,8 +868,12 @@ export default function Portfolio() {
                     )}
                   </div>
 
-                  {/* Mockup Frame presentation with custom responsive scale */}
-                  <div className="relative z-10 w-full mt-6 rounded-2xl overflow-hidden transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-[var(--color-border-subtle)] bg-transparent">
+                  {/* Mockup Frame presentation with custom responsive scale.
+                      p-2 le da aire al toggle contra el borde superior y
+                      evita que las esquinas redondeadas del mockup (barra de
+                      navegador/bisel) queden cortadas al tocar el borde
+                      exterior con overflow-hidden. */}
+                  <div className="relative z-10 w-full mt-6 p-2 rounded-2xl overflow-hidden transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-[var(--color-border-subtle)] bg-transparent">
                     <ProjectScreenshot project={project} fillParent />
                   </div>
 
