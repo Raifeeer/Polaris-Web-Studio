@@ -209,7 +209,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
           >
             {interactive ? (
               <div className="w-full px-2">
-                <MockupFrame type="browser" projectSlug={project.slug} />
+                <MockupFrame type="browser" projectSlug={project.slug} chrome={false} />
               </div>
             ) : project.desktopImg ? (
               <img
@@ -240,8 +240,9 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               (() => {
                 // El frame de celular de MockupFrame mide 280x580 fijo -- se
                 // escala para caber en targetHeight (la caja variable de la
-                // tarjeta), igual que en ProjectDetail.tsx.
-                const mobileScale = Math.min(1, (targetHeight - 8) / 580);
+                // tarjeta), igual que en ProjectDetail.tsx. Sin bisel
+                // (chrome=false) no hace falta reservar los 8px de borde.
+                const mobileScale = Math.min(1, targetHeight / 580);
                 return (
                   <div style={{ width: 280 * mobileScale, height: 580 * mobileScale }}>
                     <div
@@ -252,7 +253,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                         transformOrigin: "top left",
                       }}
                     >
-                      <MockupFrame type="mobile" projectSlug={project.slug} />
+                      <MockupFrame type="mobile" projectSlug={project.slug} chrome={false} />
                     </div>
                   </div>
                 );

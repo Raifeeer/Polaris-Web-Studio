@@ -18,6 +18,13 @@ interface MockupFrameProps {
   color?: string;
   projectSlug?: string;
   children?: React.ReactNode;
+  // Cuando es false, se omite la barra falsa de navegador (puntos + URL) o
+  // el bisel de celular (notch + home indicator) -- pedido explícito del
+  // usuario para los mockups interactivos, donde ese "div" adicional se
+  // solapaba con el propio toggle Desktop/Mobile de la tarjeta (ambos
+  // flotando en la misma esquina superior). Default true para no tocar el
+  // resto de los mockups (capturas estáticas), que no tienen ese problema.
+  chrome?: boolean;
 }
 
 // Paleta y tipografía calcadas 1:1 del archivo real de Claude Design
@@ -415,17 +422,44 @@ function FooterCol({ title, items }: { title: string; items: string[] }) {
   );
 }
 
+// Ancho "de diseño" del mockup de escritorio -- las secciones internas de
+// LuminaSkyPage usan maxWidth fijo (~420-460px), así que este valor asume
+// ese target. Se mide el contenedor real vía ResizeObserver y se escala
+// hacia abajo (nunca hacia arriba) para que quepa siempre sin desbordar,
+// en vez de dejar que el contenido de ancho fijo se desborde y quede
+// scrolleable horizontalmente (bug real reportado por el usuario: el
+// mockup "se desliza horizontalmente" en tarjetas angostas de Portfolio).
+const LUMINA_BROWSER_BASE_WIDTH = 480;
+
 function LuminaSkyMockup() {
   const [lang, setLang] = useState<"EN" | "ESP">("ESP");
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  React.useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setScale(Math.min(1, el.clientWidth / LUMINA_BROWSER_BASE_WIDTH));
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto select-none [color-scheme:light]">
-      <button
-        onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
-        className="absolute top-1.5 right-1.5 z-[60] text-[6px] tracking-widest uppercase border border-white/30 px-1 py-0.5 text-white bg-black/20"
-      >
-        {lang === "EN" ? "ESP" : "EN"}
-      </button>
-      <LuminaSkyPage desktop lang={lang} />
+    <div
+      ref={containerRef}
+      className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto overflow-x-hidden select-none [color-scheme:light]"
+    >
+      <div style={{ width: LUMINA_BROWSER_BASE_WIDTH, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+        <button
+          onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
+          className="absolute top-1.5 right-1.5 z-[60] text-[6px] tracking-widest uppercase border border-white/30 px-1 py-0.5 text-white bg-black/20"
+        >
+          {lang === "EN" ? "ESP" : "EN"}
+        </button>
+        <LuminaSkyPage desktop lang={lang} />
+      </div>
     </div>
   );
 }
@@ -437,7 +471,7 @@ function LuminaSkyMockup() {
 function LuminaSkyMockupMobile() {
   const [lang, setLang] = useState<"EN" | "ESP">("ESP");
   return (
-    <div className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto select-none [color-scheme:light]">
+    <div className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto overflow-x-hidden select-none [color-scheme:light]">
       <button
         onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
         className="absolute top-8 right-2 z-[60] text-[8px] tracking-widest uppercase border border-white/30 px-1.5 py-0.5 text-white bg-black/20"
@@ -751,12 +785,26 @@ export default function MockupFrame({
   color = "var(--color-surface-elevated)",
   projectSlug,
   children,
+  chrome = true,
 }: MockupFrameProps) {
   const customContent = projectSlug
     ? MOCKUP_CONTENT[projectSlug]?.[type]
     : null;
 
   if (type === "browser") {
+    if (!chrome) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="w-full aspect-video relative overflow-hidden rounded-xl shadow-2xl"
+          style={{ backgroundColor: !customContent ? color : undefined }}
+        >
+          {customContent || children}
+        </motion.div>
+      );
+    }
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -780,6 +828,20 @@ export default function MockupFrame({
         >
           {customContent || children}
         </div>
+      </motion.div>
+    );
+  }
+
+  if (!chrome) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 0.3 }}
+        className="w-[280px] h-[580px] rounded-[1.5rem] relative shadow-2xl overflow-hidden mx-auto bg-[var(--color-surface-base)]"
+        style={{ backgroundColor: !customContent ? color : undefined }}
+      >
+        {customContent || children}
       </motion.div>
     );
   }
