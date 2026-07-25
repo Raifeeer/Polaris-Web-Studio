@@ -821,7 +821,7 @@ export default function MockupFrame({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full aspect-video relative overflow-hidden rounded-xl shadow-2xl"
+          className="w-full aspect-video relative overflow-hidden rounded-xl shadow-lg"
           style={{ backgroundColor: !customContent ? color : undefined }}
         >
           {content}
@@ -833,7 +833,7 @@ export default function MockupFrame({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="w-full rounded-xl overflow-hidden border border-[var(--color-border-strong)] bg-[var(--color-surface-base)] shadow-2xl"
+        className="w-full rounded-xl overflow-hidden border border-[var(--color-border-strong)] bg-[var(--color-surface-base)] shadow-lg"
       >
         {/* Browser Header. Las esquinas superiores se redondean acá mismo
             (rounded-t-[11px] = los 12px del rounded-xl del padre menos su
@@ -868,7 +868,7 @@ export default function MockupFrame({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3 }}
-        className="w-[280px] h-[580px] rounded-[1.5rem] relative shadow-2xl overflow-hidden mx-auto bg-[var(--color-surface-base)]"
+        className="w-[280px] h-[580px] rounded-[1.5rem] relative shadow-lg overflow-hidden mx-auto bg-[var(--color-surface-base)]"
         style={{ backgroundColor: !customContent ? color : undefined }}
       >
         {content}
@@ -881,7 +881,7 @@ export default function MockupFrame({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.3 }}
-      className="w-[280px] h-[580px] rounded-[3rem] border-[8px] border-[var(--color-border-strong)] bg-[var(--color-border-strong)] relative shadow-2xl overflow-hidden mx-auto"
+      className="w-[280px] h-[580px] rounded-[3rem] border-[8px] border-[var(--color-border-strong)] bg-[var(--color-border-strong)] relative shadow-lg overflow-hidden mx-auto"
     >
       {/* Notch */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[var(--color-border-strong)] rounded-b-2xl z-20" />
