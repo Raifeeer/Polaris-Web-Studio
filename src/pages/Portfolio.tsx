@@ -119,11 +119,13 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   targetHeight = Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, targetHeight));
 
   return (
-    <div className={`w-full relative ${fillParent ? "" : "flex flex-col gap-4"}`} ref={containerRef}>
-      {/* Premium minimal floating HUD Bar above mockup. En bento (fillParent) flota
-          superpuesta sobre la imagen para no robarle alto al mockup dentro de la
-          tarjeta, que ya tiene poco espacio vertical disponible. */}
-      <div className={`flex items-center justify-between w-full ${fillParent ? "absolute top-0 left-0 right-0 z-10 px-3 pt-3" : "px-1"}`}>
+    <div className="w-full relative flex flex-col gap-4" ref={containerRef}>
+      {/* El toggle Desktop/Mobile vive siempre en su propia fila, nunca
+          flotando encima del mockup -- pedido explícito del usuario: cuando
+          flotaba sobre el contenido interactivo (bento), tapaba la barra de
+          navegación real del sitio que se estaba mostrando. Antes solo se
+          comportaba así fuera de "fillParent" (bento); ahora es uniforme. */}
+      <div className="flex items-center justify-between w-full px-1">
         <div className="flex items-center gap-2">
           {/* Device selection tabs with matching styling cues */}
           <div className="flex bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
@@ -209,11 +211,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
           >
             {interactive ? (
               <div className="w-full px-2">
-                {/* topInset solo en bento (fillParent): ahí el toggle
-                    Desktop/Mobile flota encima del mockup en vez de tener
-                    su propia fila (como en modo cine), así que sin este
-                    margen tapaba la barra de navegación real del sitio. */}
-                <MockupFrame type="browser" projectSlug={project.slug} chrome={false} topInset={fillParent ? 44 : 0} />
+                <MockupFrame type="browser" projectSlug={project.slug} />
               </div>
             ) : project.desktopImg ? (
               <img
@@ -244,9 +242,9 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               (() => {
                 // El frame de celular de MockupFrame mide 280x580 fijo -- se
                 // escala para caber en targetHeight (la caja variable de la
-                // tarjeta), igual que en ProjectDetail.tsx. Sin bisel
-                // (chrome=false) no hace falta reservar los 8px de borde.
-                const mobileScale = Math.min(1, targetHeight / 580);
+                // tarjeta), igual que en ProjectDetail.tsx. Con bisel real
+                // (border-8, 16px total) sí hace falta reservar ese margen.
+                const mobileScale = Math.min(1, (targetHeight - 16) / 580);
                 return (
                   <div style={{ width: 280 * mobileScale, height: 580 * mobileScale }}>
                     <div
@@ -257,18 +255,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                         transformOrigin: "top left",
                       }}
                     >
-                      {/* topInset se divide por mobileScale para que el
-                          margen real en pantalla se mantenga constante (~44px)
-                          sin importar cuánto se achique este frame -- el valor
-                          vive "adentro" del transform:scale de arriba, así que
-                          sin dividir el margen visible encogía junto con todo
-                          lo demás y dejaba de alcanzar para tapar el toggle. */}
-                      <MockupFrame
-                        type="mobile"
-                        projectSlug={project.slug}
-                        chrome={false}
-                        topInset={fillParent ? 44 / mobileScale : 0}
-                      />
+                      <MockupFrame type="mobile" projectSlug={project.slug} />
                     </div>
                   </div>
                 );

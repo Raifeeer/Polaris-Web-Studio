@@ -119,10 +119,10 @@ function ProjectImageCarousel({
                 // wrapper exterior toma ya el tamaño *escalado* (no el
                 // original) para que el centrado flex del padre sea correcto
                 // -- transformar solo con scale() sin achicar la caja de
-                // layout dejaba el frame descentrado y recortado arriba. Sin
-                // bisel (chrome=false) no hace falta reservar los 16px de borde.
+                // layout dejaba el frame descentrado y recortado arriba. Con
+                // bisel real (border-8, 16px total) sí hace falta reservarlo.
                 (() => {
-                  const mobileScale = Math.min(1, containerHeight / 580);
+                  const mobileScale = Math.min(1, (containerHeight - 16) / 580);
                   return (
                     <div
                       style={{ width: 280 * mobileScale, height: 580 * mobileScale }}
@@ -135,14 +135,14 @@ function ProjectImageCarousel({
                           transformOrigin: "top left",
                         }}
                       >
-                        <MockupFrame type="mobile" projectSlug={projectSlug} chrome={false} />
+                        <MockupFrame type="mobile" projectSlug={projectSlug} />
                       </div>
                     </div>
                   );
                 })()
               ) : (
                 <div className="w-full max-w-2xl px-4">
-                  <MockupFrame type="browser" projectSlug={projectSlug} chrome={false} />
+                  <MockupFrame type="browser" projectSlug={projectSlug} />
                 </div>
               )
             ) : (

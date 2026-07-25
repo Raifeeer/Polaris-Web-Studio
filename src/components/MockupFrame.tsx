@@ -25,18 +25,7 @@ interface MockupFrameProps {
   // flotando en la misma esquina superior). Default true para no tocar el
   // resto de los mockups (capturas estáticas), que no tienen ese problema.
   chrome?: boolean;
-  // Espacio real (px, sin escalar) reservado arriba del contenido interactivo
-  // para que un toggle flotante externo (ej. el selector Desktop/Mobile de
-  // la tarjeta bento) no tape la barra de navegación real del sitio que se
-  // está mostrando -- pedido explícito del usuario ("el toggle está tapando
-  // contenido de la web"). Aplica por fuera del transform:scale() del
-  // contenido para que sea un margen constante sin importar la escala. 0
-  // por defecto (los usos donde el toggle vive en su propia fila, no
-  // flotando encima, no lo necesitan).
-  topInset?: number;
 }
-
-const TopInsetContext = React.createContext(0);
 
 // Paleta y tipografía calcadas 1:1 del archivo real de Claude Design
 // ("Lúmina Sky Mockup.dc.html", proyecto 9692471c-e6cc-4ed9-b30c-335132121b33)
@@ -447,33 +436,51 @@ const LUMINA_BROWSER_BASE_WIDTH = 640;
 function LuminaSkyMockup() {
   const [lang, setLang] = useState<"EN" | "ESP">("ESP");
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const contentRef = React.useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const topInset = React.useContext(TopInsetContext);
+  // Alto real (sin escalar) del contenido, medido en vivo -- necesario porque
+  // el navegador calcula el alto scrolleable del contenedor contra el layout
+  // SIN transformar del hijo, no contra su tamaño visual ya escalado. Sin
+  // esto, el contenedor deja scrollear mucho más allá del contenido visible
+  // real hacia una franja en blanco (bug real reportado por el usuario:
+  // "sigue haciendo scroll infinito luego del footer"). Envolver el
+  // contenido escalado en un wrapper con este alto ya multiplicado por la
+  // escala hace que el alto de layout coincida con el alto visual real.
+  const [naturalHeight, setNaturalHeight] = useState(0);
 
   React.useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const update = () => setScale(Math.min(1, el.clientWidth / LUMINA_BROWSER_BASE_WIDTH));
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return;
+    const update = () => {
+      setScale(Math.min(1, container.clientWidth / LUMINA_BROWSER_BASE_WIDTH));
+      setNaturalHeight(content.offsetHeight);
+    };
     update();
     const ro = new ResizeObserver(update);
-    ro.observe(el);
+    ro.observe(container);
+    ro.observe(content);
     return () => ro.disconnect();
   }, []);
 
   return (
     <div
       ref={containerRef}
-      className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto overflow-x-hidden select-none [color-scheme:light]"
-      style={{ paddingTop: topInset }}
+      className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto overflow-x-hidden overscroll-contain select-none [color-scheme:light]"
     >
-      <div style={{ width: LUMINA_BROWSER_BASE_WIDTH, transform: `scale(${scale})`, transformOrigin: "top left" }}>
-        <button
-          onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
-          className="absolute top-1.5 right-1.5 z-[60] text-[6px] tracking-widest uppercase border border-white/30 px-1 py-0.5 text-white bg-black/20"
+      <div style={{ height: naturalHeight * scale || undefined }}>
+        <div
+          ref={contentRef}
+          style={{ width: LUMINA_BROWSER_BASE_WIDTH, transform: `scale(${scale})`, transformOrigin: "top left" }}
         >
-          {lang === "EN" ? "ESP" : "EN"}
-        </button>
-        <LuminaSkyPage desktop lang={lang} />
+          <button
+            onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
+            className="absolute top-1.5 right-1.5 z-[60] text-[6px] tracking-widest uppercase border border-white/30 px-1 py-0.5 text-white bg-black/20"
+          >
+            {lang === "EN" ? "ESP" : "EN"}
+          </button>
+          <LuminaSkyPage desktop lang={lang} />
+        </div>
       </div>
     </div>
   );
@@ -485,12 +492,8 @@ function LuminaSkyMockup() {
 // .dc.html real de Claude Design), solo cambia el ancho/escala.
 function LuminaSkyMockupMobile() {
   const [lang, setLang] = useState<"EN" | "ESP">("ESP");
-  const topInset = React.useContext(TopInsetContext);
   return (
-    <div
-      className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto overflow-x-hidden select-none [color-scheme:light]"
-      style={{ paddingTop: topInset }}
-    >
+    <div className="absolute inset-0 bg-[#fdfbf7] overflow-y-auto overflow-x-hidden overscroll-contain select-none [color-scheme:light]">
       <button
         onClick={() => setLang((l) => (l === "EN" ? "ESP" : "EN"))}
         className="absolute top-8 right-2 z-[60] text-[8px] tracking-widest uppercase border border-white/30 px-1.5 py-0.5 text-white bg-black/20"
@@ -805,14 +808,11 @@ export default function MockupFrame({
   projectSlug,
   children,
   chrome = true,
-  topInset = 0,
 }: MockupFrameProps) {
   const customContent = projectSlug
     ? MOCKUP_CONTENT[projectSlug]?.[type]
     : null;
-  const content = (
-    <TopInsetContext.Provider value={topInset}>{customContent || children}</TopInsetContext.Provider>
-  );
+  const content = customContent || children;
 
   if (type === "browser") {
     if (!chrome) {
