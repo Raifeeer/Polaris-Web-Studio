@@ -209,7 +209,11 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
           >
             {interactive ? (
               <div className="w-full px-2">
-                <MockupFrame type="browser" projectSlug={project.slug} chrome={false} />
+                {/* topInset solo en bento (fillParent): ahí el toggle
+                    Desktop/Mobile flota encima del mockup en vez de tener
+                    su propia fila (como en modo cine), así que sin este
+                    margen tapaba la barra de navegación real del sitio. */}
+                <MockupFrame type="browser" projectSlug={project.slug} chrome={false} topInset={fillParent ? 44 : 0} />
               </div>
             ) : project.desktopImg ? (
               <img
@@ -253,7 +257,18 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                         transformOrigin: "top left",
                       }}
                     >
-                      <MockupFrame type="mobile" projectSlug={project.slug} chrome={false} />
+                      {/* topInset se divide por mobileScale para que el
+                          margen real en pantalla se mantenga constante (~44px)
+                          sin importar cuánto se achique este frame -- el valor
+                          vive "adentro" del transform:scale de arriba, así que
+                          sin dividir el margen visible encogía junto con todo
+                          lo demás y dejaba de alcanzar para tapar el toggle. */}
+                      <MockupFrame
+                        type="mobile"
+                        projectSlug={project.slug}
+                        chrome={false}
+                        topInset={fillParent ? 44 / mobileScale : 0}
+                      />
                     </div>
                   </div>
                 );
@@ -757,7 +772,13 @@ export default function Portfolio() {
                     // stretch por default del grid, así solo ella crece con
                     // su propio contenido sin forzar a las demás tarjetas
                     // (que sí quedan uniformes a 550px) a estirarse también.
-                    hasMockupContent(project.slug) ? "md:self-start" : ""
+                    // Bug real encontrado en vivo: con el prefijo "md:" esto
+                    // nunca se activaba en mobile (<768px, donde igual el
+                    // grid es de 1 columna) -- la tarjeta se quedaba pegada
+                    // a los 550px del grid aunque el mockup necesitara
+                    // mucho menos, dejando ese sobrante como espacio vacío
+                    // real dentro del propio borde de la tarjeta.
+                    hasMockupContent(project.slug) ? "self-start" : ""
                   }`}
                 >
                   {/* Decorative faint background glow */}
