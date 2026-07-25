@@ -813,6 +813,17 @@ export default function MockupFrame({
     ? MOCKUP_CONTENT[projectSlug]?.[type]
     : null;
   const content = customContent || children;
+  // Bug real de iOS Safari: un elemento con overflow:hidden + border-radius
+  // no recorta bien sus hijos cuando además tiene una animación con
+  // transform (la entrada opacity+y/scale de Framer Motion de acá abajo) --
+  // reportado en vivo por el usuario, la esquina superior de la barra del
+  // navegador quedaba cuadrada en vez de redondeada. Este mask-image fuerza
+  // a WebKit a recalcular el recorte correctamente; es el workaround
+  // estándar para este bug, no cambia nada visualmente en navegadores sin
+  // el bug.
+  const iosClipFix: React.CSSProperties = {
+    WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+  };
 
   if (type === "browser") {
     if (!chrome) {
@@ -822,7 +833,7 @@ export default function MockupFrame({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="w-full aspect-video relative overflow-hidden rounded-xl shadow-2xl"
-          style={{ backgroundColor: !customContent ? color : undefined }}
+          style={{ backgroundColor: !customContent ? color : undefined, ...iosClipFix }}
         >
           {content}
         </motion.div>
@@ -834,6 +845,7 @@ export default function MockupFrame({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="w-full rounded-xl overflow-hidden border border-[var(--color-border-strong)] bg-[var(--color-surface-base)] shadow-2xl"
+        style={iosClipFix}
       >
         {/* Browser Header */}
         <div className="h-10 bg-[var(--color-surface-highlight)] border-b border-[var(--color-border-subtle)] flex items-center px-4 gap-1.5">
@@ -862,7 +874,7 @@ export default function MockupFrame({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.3 }}
         className="w-[280px] h-[580px] rounded-[1.5rem] relative shadow-2xl overflow-hidden mx-auto bg-[var(--color-surface-base)]"
-        style={{ backgroundColor: !customContent ? color : undefined }}
+        style={{ backgroundColor: !customContent ? color : undefined, ...iosClipFix }}
       >
         {content}
       </motion.div>
@@ -875,6 +887,7 @@ export default function MockupFrame({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: 0.3 }}
       className="w-[280px] h-[580px] rounded-[3rem] border-[8px] border-[var(--color-border-strong)] bg-[var(--color-border-strong)] relative shadow-2xl overflow-hidden mx-auto"
+      style={iosClipFix}
     >
       {/* Notch */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[var(--color-border-strong)] rounded-b-2xl z-20" />
