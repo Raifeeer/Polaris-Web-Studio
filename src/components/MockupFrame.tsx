@@ -845,9 +845,14 @@ export default function MockupFrame({
           className="h-10 bg-[var(--color-surface-highlight)] border-b border-[var(--color-border-subtle)] flex items-center px-4 gap-1.5"
           style={{ borderTopLeftRadius: 11, borderTopRightRadius: 11 }}
         >
-          <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+          {/* Puntos a color pleno (antes /40, pastel) -- además de verse más
+              fieles a los de macOS real, sirven de marcador visual para
+              confirmar de un vistazo si un dispositivo está cargando el build
+              nuevo o uno cacheado, sin depender del redondeo que estamos
+              diagnosticando. */}
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
           <div className="ml-4 flex-1 max-w-[400px]">
             <div className="h-5 bg-[var(--color-surface-base)] rounded-md border border-[var(--color-border-subtle)]" />
           </div>
