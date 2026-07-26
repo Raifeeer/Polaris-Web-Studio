@@ -20,6 +20,7 @@ import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import Logo from "./components/Logo";
 import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
+import { prefetchPortfolioMediaIdle } from "./lib/mediaPrefetch";
 import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
 import { getCookieConsent, onCookieConsentChange } from "./lib/cookieConsent";
@@ -349,6 +350,12 @@ export default function App() {
     // Calienta en segundo plano los chunks de las demás páginas, sin
     // competir con la carga/render inicial (solo corre en tiempo ocioso).
     prefetchAllRoutesIdle();
+
+    // Mismo criterio, para los mockups pesados del portafolio (WebP/GIF de
+    // Lúmina Sky y, a futuro, de los demás proyectos): para cuando el
+    // visitante llegue a /portafolio, el navegador ya los tiene en su
+    // caché HTTP -- se sienten instantáneos en vez de tardar en cargar.
+    prefetchPortfolioMediaIdle();
 
     // 1. Defer chatbot to save initial bundles & execution cycles
     const botTimer = setTimeout(() => {
