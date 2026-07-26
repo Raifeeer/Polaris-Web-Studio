@@ -23,23 +23,31 @@ export function useResumeVideoOnVisible(videoRef: RefObject<HTMLVideoElement | n
       video.play().catch(() => {
         // Autoplay puede rechazarse si el navegador todavía no registró
         // interacción del usuario en esta sesión -- no hay nada más que
-        // hacer acá, el video simplemente queda pausado hasta que algo
-        // más lo dispare.
+        // hacer acá, el polling de abajo lo va a reintentar solo.
       });
     };
     const handleVisibility = () => {
       if (document.visibilityState === "visible") resume();
     };
-    // visibilitychange cubre la mayoría de los casos (cambiar de pestaña o
-    // de app y volver); pageshow con persisted:true cubre el caso de que
-    // Safari restaure la página completa desde su caché de retroceso
-    // (bfcache) en vez de solo des-ocultar la pestaña -- ahí visibilitychange
-    // puede no disparar, pero pageshow sí.
+    // visibilitychange + pageshow (restauración desde bfcache) cubren la
+    // mayoría de los casos, pero en la práctica (reportado en dispositivo
+    // real) no siempre alcanzan a disparar de forma confiable al volver
+    // de cambiar de app en iOS -- como red de seguridad, se agrega un
+    // chequeo periódico: mientras la pestaña esté visible y el video
+    // siga pausado sin que el usuario lo haya pausado a propósito (acá
+    // nunca hay un botón de pausa, así que cualquier pausa mientras está
+    // visible es user-agent, no del usuario), se reintenta reanudar.
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") resume();
+    }, 1000);
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("pageshow", resume);
+    window.addEventListener("focus", resume);
     return () => {
+      window.clearInterval(interval);
       document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("pageshow", resume);
+      window.removeEventListener("focus", resume);
     };
   }, [videoRef]);
 }
