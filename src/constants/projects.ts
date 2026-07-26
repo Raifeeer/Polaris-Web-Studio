@@ -29,6 +29,12 @@ export interface Project {
   liveUrl?: string;
   desktopImg?: string;
   mobileImg?: string;
+  // Video real (mp4/h264) del scroll del sitio, en vez de un mockup
+  // interactivo -- ver la nota junto a "lumina-sky-concept" más abajo.
+  // Cuando existe, tiene prioridad sobre desktopImg en la vista de
+  // escritorio; desktopImg queda como imagen fija de respaldo (og:image,
+  // navegadores sin soporte de video, etc.).
+  previewVideo?: string;
   cinemaColor?: string;
 
   // Case Study Details
@@ -60,30 +66,29 @@ export const projects: Project[] = [
     type: "Turismo · Web Corporativa",
     typeEN: "Tourism · Corporate Web",
     liveUrl: "https://lumina-sky-demo.vercel.app/",
-    // WebP animado (scroll real grabado del sitio en vivo, 860x537 @30fps,
-    // capturado con screenshots por-paso en vez de video -- el screencast
-    // de Chromium tiene un techo real de ~25fps, así que 30/60fps reales
-    // solo se consiguen tomando un screenshot por cada paso de scroll, no
-    // grabando video) en vez del mockup interactivo -- ver la nota en
-    // VERIFIED_INTERACTIVE_SLUGS de MockupFrame.tsx sobre el bug real de
-    // esquinas cuadradas en WebKit/iOS que este cambio evita por completo
-    // (21 de julio). WebP animado en vez de GIF: mismo contenido a mucha
-    // mejor calidad/tamaño (GIF a esta resolución/fps pesaba 30+ MB con
-    // dithering) -- soportado en todo navegador moderno, incluyendo
-    // Safari/iOS actual.
-    // Se probó una versión a 1600x1000 ("1080p", LuminaPreviewHD-v3.webp,
-    // 13.5 MB) -- descartada real: el archivo en sí codifica 30fps
-    // correctos (verificado leyendo los bytes crudos de duración de cada
-    // chunk ANMF del WebP, 33ms/frame), pero el decoder de WebP animado
-    // del dispositivo del usuario no llega a decodificar 299 frames de
-    // 1600x1000 en tiempo real -- se percibía como scroll "a los
-    // trompicones"/lento, un cuello de botella de decodificación real, no
-    // un bug de la grabación ni del encoding. 860x537 es el punto donde
-    // se mantiene fluido en el dispositivo real. Nombre de archivo
-    // versionado (v2) a propósito: el objeto de Storage cachea 1h por
-    // URL, renombrar fuerza que se sirva el archivo nuevo en vez de una
-    // copia vieja cacheada.
+    // Historial real de esta tarjeta, por si hace falta retomar el hilo:
+    // (1) mockup interactivo real (MockupFrame.tsx) -- descartado por un
+    //     bug real de esquinas cuadradas en WebKit/iOS, ver la nota en
+    //     VERIFIED_INTERACTIVE_SLUGS de MockupFrame.tsx (21 de julio);
+    // (2) GIF, luego WebP animado a distintas resoluciones/fps -- WebP a
+    //     1600x1000@30fps codificaba bien (verificado leyendo los bytes
+    //     crudos de duración de cada chunk ANMF, 33ms/frame) pero el
+    //     dispositivo real no daba abasto decodificando 299 frames a esa
+    //     resolución en tiempo real -- se sentía "a los trompicones" pese
+    //     a que el archivo era correcto;
+    // (3) video real (mp4/h264, ver previewVideo abajo) -- decodificado
+    //     por hardware en cualquier iPhone, a diferencia de WebP/GIF que
+    //     decodifican por software cuadro a cuadro. Mismo contenido
+    //     (scroll real grabado del sitio en vivo, 30fps reales, capturado
+    //     con screenshots por-paso porque el screencast de video de
+    //     Chromium tiene un techo real de ~25fps), 1200x750, 1.8 MB --
+    //     mucho más liviano Y mucho más fluido que cualquier intento con
+    //     GIF/WebP.
+    // desktopImg queda con la versión WebP como respaldo (og:image,
+    // navegadores sin soporte de <video>, etc.) -- previewVideo tiene
+    // prioridad real en la tarjeta.
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD-v2.webp",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview.mp4",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",

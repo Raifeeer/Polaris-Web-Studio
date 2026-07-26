@@ -94,7 +94,12 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   // para que no cambie de tamaño entre un proyecto y otro), esto no hace falta.
   React.useEffect(() => {
     if (fixedHeights || interactive) return;
-    if (project.desktopImg) {
+    if (project.previewVideo) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => setDesktopAspect(video.videoWidth / video.videoHeight);
+      video.src = project.previewVideo;
+    } else if (project.desktopImg) {
       const img = new Image();
       img.onload = () => setDesktopAspect(img.naturalWidth / img.naturalHeight);
       img.src = project.desktopImg;
@@ -104,7 +109,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
       img.onload = () => setMobileAspect(img.naturalWidth / img.naturalHeight);
       img.src = project.mobileImg;
     }
-  }, [project.desktopImg, project.mobileImg, fixedHeights]);
+  }, [project.previewVideo, project.desktopImg, project.mobileImg, fixedHeights]);
 
   let targetHeight: number;
   if (fixedHeights) {
@@ -218,6 +223,17 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               <div className="w-full px-2">
                 <MockupFrame type="browser" projectSlug={project.slug} />
               </div>
+            ) : project.previewVideo ? (
+              <video
+                src={project.previewVideo}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain object-center bg-transparent"
+                aria-label={`${project.title} Desktop`}
+              />
             ) : project.desktopImg ? (
               <img
                 src={project.desktopImg}
@@ -386,15 +402,22 @@ export default function Portfolio() {
   // entra a modo cine se nota un pequeño tirón mientras la imagen se descarga
   // y decodifica al mismo tiempo que corren las animaciones de entrada.
   useEffect(() => {
-    const sources = [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg].filter(
-      (src): src is string => Boolean(src)
-    );
-    if (sources.length === 0) return;
+    const imageSources = [
+      currentCinemaProject?.previewVideo ? undefined : currentCinemaProject?.desktopImg,
+      currentCinemaProject?.mobileImg,
+    ].filter((src): src is string => Boolean(src));
+    const videoSrc = currentCinemaProject?.previewVideo;
+    if (imageSources.length === 0 && !videoSrc) return;
     const preload = () => {
-      sources.forEach((src) => {
+      imageSources.forEach((src) => {
         const img = new Image();
         img.src = src;
       });
+      if (videoSrc) {
+        const video = document.createElement("video");
+        video.preload = "auto";
+        video.src = videoSrc;
+      }
     };
     if (typeof window.requestIdleCallback === "function") {
       const id = window.requestIdleCallback(preload);
@@ -402,7 +425,7 @@ export default function Portfolio() {
     }
     const id = window.setTimeout(preload, 200);
     return () => window.clearTimeout(id);
-  }, [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg]);
+  }, [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg, currentCinemaProject?.previewVideo]);
 
   // Altura del mockup en modo cine: se calcula una sola vez para TODO el
   // portafolio (promedio real de proporción de cada captura) y se mide el

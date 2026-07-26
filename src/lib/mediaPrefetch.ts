@@ -1,14 +1,20 @@
 import { projects } from "../constants/projects";
 
-// Assets pesados del portafolio (mockups WebP/GIF de escritorio y móvil) --
-// se calientan en el caché HTTP del navegador desde el momento en que el
-// visitante entra a cualquier página del sitio, no recién cuando llega a
-// /portafolio. Pensado para escalar: a medida que se agreguen más mockups
-// grabados (mismo patrón que Lúmina Sky) para otros proyectos, esta lista
-// los recoge solos sin tocar este archivo.
+// Assets pesados del portafolio (mockups en video/WebP/GIF de escritorio y
+// móvil) -- se calientan en el caché HTTP del navegador desde el momento en
+// que el visitante entra a cualquier página del sitio, no recién cuando
+// llega a /portafolio. Pensado para escalar: a medida que se agreguen más
+// mockups grabados (mismo patrón que Lúmina Sky) para otros proyectos, esta
+// lista los recoge solos sin tocar este archivo. previewVideo tiene
+// prioridad sobre desktopImg (mismo criterio que el render real en
+// Portfolio.tsx/ProjectDetail.tsx) -- si existe video, no tiene sentido
+// gastarle datos al visitante precargando también la imagen de respaldo
+// que no se va a mostrar.
 const MEDIA_URLS: string[] = Array.from(
   new Set(
-    projects.flatMap((p) => [p.desktopImg, p.mobileImg].filter((u): u is string => !!u))
+    projects.flatMap((p) =>
+      [p.previewVideo || p.desktopImg, p.mobileImg].filter((u): u is string => !!u)
+    )
   )
 );
 

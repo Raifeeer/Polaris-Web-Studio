@@ -22,11 +22,13 @@ import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
 function ProjectImageCarousel({
   desktopImg,
   mobileImg,
+  previewVideo,
   projectName,
   projectSlug,
 }: {
   desktopImg?: string;
   mobileImg?: string;
+  previewVideo?: string;
   projectName: string;
   projectSlug?: string;
 }) {
@@ -37,7 +39,7 @@ function ProjectImageCarousel({
   // Inicia en el primer tipo de imagen disponible: si un proyecto solo tiene
   // captura mobile, arrancar en "desktop" dejaba un hueco en blanco.
   const [active, setActive] = useState<"desktop" | "mobile">(
-    desktopImg ? "desktop" : "mobile"
+    desktopImg || previewVideo ? "desktop" : "mobile"
   );
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
 
@@ -50,7 +52,7 @@ function ProjectImageCarousel({
   const images = interactive
     ? [{ type: "desktop" as const, src: "" }, { type: "mobile" as const, src: "" }]
     : [
-        ...(desktopImg ? [{ type: "desktop" as const, src: desktopImg }] : []),
+        ...(desktopImg || previewVideo ? [{ type: "desktop" as const, src: desktopImg || "" }] : []),
         ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
       ];
 
@@ -147,6 +149,17 @@ function ProjectImageCarousel({
                   <MockupFrame type="browser" projectSlug={projectSlug} />
                 </div>
               )
+            ) : img.type === "desktop" && previewVideo ? (
+              <video
+                src={previewVideo}
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                className="w-full h-full object-contain rounded-2xl"
+                aria-label={`${projectName} — desktop`}
+              />
             ) : (
               <img
                 src={img.src}
@@ -310,6 +323,7 @@ export default function ProjectDetail() {
             <ProjectImageCarousel
               desktopImg={project.desktopImg}
               mobileImg={project.mobileImg}
+              previewVideo={project.previewVideo}
               projectName={project.title}
               projectSlug={project.slug}
             />
