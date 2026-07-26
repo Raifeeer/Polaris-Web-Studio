@@ -605,7 +605,19 @@ function NexusRealtyMockup() {
 // de golpe junto con Lúmina Sky se saldría del pedido real. Esta lista acota
 // a propósito qué proyectos ya pasaron esa revisión y pueden mostrar el
 // mockup interactivo en vez de la captura estática.
-const VERIFIED_INTERACTIVE_SLUGS = new Set(["lumina-sky-concept"]);
+//
+// "lumina-sky-concept" se sacó de esta lista a propósito (21 de julio): el
+// mockup interactivo de escritorio tenía un bug real de esquinas cuadradas
+// en WebKit/iOS -- confirmado en dispositivo real, invisible en Chromium,
+// sobrevivió a 4 rondas de fixes distintos (quitar overflow-hidden, quitar
+// will-change, separar el transform del wrapper del hover, quitar el scale
+// permanente que Framer Motion deja en los crossfades). Ninguno lo resolvió
+// y no se encontró la causa raíz real. En vez de seguir persiguiéndolo, el
+// proyecto ahora usa un GIF (scroll real grabado del sitio en vivo, ver
+// `project.desktopImg` en constants/projects.ts) por la rama no-interactiva
+// de ProjectScreenshot -- sortea la categoría entera del bug al no tener
+// ningún frame/chrome con overflow-hidden+border-radius de por medio.
+const VERIFIED_INTERACTIVE_SLUGS = new Set<string>([]);
 
 export function hasMockupContent(projectSlug?: string): boolean {
   return !!projectSlug && projectSlug in MOCKUP_CONTENT && VERIFIED_INTERACTIVE_SLUGS.has(projectSlug);
