@@ -868,13 +868,18 @@ export default function Portfolio() {
                     )}
                   </div>
 
-                  {/* Mockup Frame presentation with custom responsive scale.
-                      p-2 le da aire al toggle contra el borde superior y
-                      evita que las esquinas redondeadas del mockup (barra de
-                      navegador/bisel) queden cortadas al tocar el borde
-                      exterior con overflow-hidden. */}
-                  <div className="relative z-10 w-full mt-6 p-2 rounded-2xl overflow-hidden transition-all duration-500 group-hover:-translate-y-2 flex-grow flex flex-col opacity-90 group-hover:opacity-100 border border-[var(--color-border-subtle)] bg-transparent">
-                    <ProjectScreenshot project={project} fillParent />
+                  {/* Mockup Frame presentation con escala responsiva.
+                      OJO: el transform de hover (group-hover:-translate-y-2) va
+                      en un wrapper EXTERIOR sin overflow-hidden/rounded -- en
+                      WebKit/iOS, un elemento con overflow-hidden + border-radius
+                      que ADEMÁS tiene (o transiciona) un transform puede perder
+                      el redondeo de las esquinas por completo. El div interior
+                      (p-2, rounded-2xl, overflow-hidden) nunca se mueve, solo
+                      recorta -- así el clip y el transform quedan separados. */}
+                  <div className="relative z-10 w-full mt-6 transition-transform duration-500 group-hover:-translate-y-2 flex-grow flex flex-col">
+                    <div className="w-full h-full p-2 rounded-2xl overflow-hidden flex-grow flex flex-col opacity-90 group-hover:opacity-100 transition-opacity duration-500 border border-[var(--color-border-subtle)] bg-transparent">
+                      <ProjectScreenshot project={project} fillParent />
+                    </div>
                   </div>
 
                   {/* Click to open full details banner on hover */}
