@@ -60,11 +60,15 @@ export const projects: Project[] = [
     type: "Turismo · Web Corporativa",
     typeEN: "Tourism · Corporate Web",
     liveUrl: "https://lumina-sky-demo.vercel.app/",
-    // GIF (scroll real grabado del sitio en vivo) en vez del mockup
-    // interactivo -- ver la nota en VERIFIED_INTERACTIVE_SLUGS de
-    // MockupFrame.tsx sobre el bug real de esquinas cuadradas en WebKit/iOS
-    // que este cambio evita por completo (21 de julio).
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview.gif",
+    // WebP animado (scroll real grabado del sitio en vivo, 860x537 @15fps)
+    // en vez del mockup interactivo -- ver la nota en
+    // VERIFIED_INTERACTIVE_SLUGS de MockupFrame.tsx sobre el bug real de
+    // esquinas cuadradas en WebKit/iOS que este cambio evita por completo
+    // (21 de julio). WebP animado en vez de GIF: mismo contenido a mucha
+    // mejor calidad/tamaño (GIF a esta resolución/fps pesaba 30+ MB con
+    // dithering, o se veía notablemente peor sin él) -- soportado en todo
+    // navegador moderno, incluyendo Safari/iOS actual.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD.webp",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
