@@ -198,13 +198,18 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
       >
         {/* Concurrent image container with modern GPU crossfade transitions */}
         <div className="w-full h-full relative flex items-center justify-center">
-          {/* Desktop View Wrapper */}
+          {/* Desktop View Wrapper.
+              Sin "scale" en animate a propósito: aunque en reposo valga 1,
+              Framer Motion deja un transform inline PERMANENTE en el
+              elemento (no solo durante la transición) -- ese transform en
+              un ancestro, por encima de un descendiente con overflow-hidden
+              + border-radius (el frame del mockup), es justo la combinación
+              que rompe el redondeo de esquinas en WebKit/iOS real (bug
+              confirmado en dispositivo, invisible en Chromium). Opacity
+              sola no fuerza ese transform. */}
           <motion.div
             initial={false}
-            animate={{
-              opacity: view === "desktop" ? 1 : 0,
-              scale: view === "desktop" ? 1 : 0.96
-            }}
+            animate={{ opacity: view === "desktop" ? 1 : 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: view === "desktop" ? "auto" : "none" }}
@@ -227,13 +232,11 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             )}
           </motion.div>
 
-          {/* Mobile View Wrapper */}
+          {/* Mobile View Wrapper -- ver nota en el wrapper de escritorio
+              sobre por qué "scale" no va en animate acá tampoco. */}
           <motion.div
             initial={false}
-            animate={{
-              opacity: view === "mobile" ? 1 : 0,
-              scale: view === "mobile" ? 1 : 0.96
-            }}
+            animate={{ opacity: view === "mobile" ? 1 : 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: view === "mobile" ? "auto" : "none" }}

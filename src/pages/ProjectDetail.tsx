@@ -93,7 +93,12 @@ function ProjectImageCarousel({
         </div>
       )}
 
-      {/* Crossfade entre vista desktop y mobile, igual que en el modo cine del Portafolio */}
+      {/* Crossfade entre vista desktop y mobile, igual que en el modo cine del Portafolio.
+          Sin "scale" en animate a propósito -- ver la misma nota en
+          Portfolio.tsx: Framer Motion deja un transform inline permanente
+          (incluso en scale:1 de reposo) que, como ancestro de un frame con
+          overflow-hidden + border-radius, rompe el redondeo de esquinas en
+          WebKit/iOS real. */}
       <div
         style={{ height: containerHeight }}
         className="relative w-full overflow-hidden rounded-2xl transition-[height] duration-300"
@@ -102,10 +107,7 @@ function ProjectImageCarousel({
           <motion.div
             key={img.type}
             initial={false}
-            animate={{
-              opacity: active === img.type ? 1 : 0,
-              scale: active === img.type ? 1 : 0.98,
-            }}
+            animate={{ opacity: active === img.type ? 1 : 0 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center"
             style={{ pointerEvents: active === img.type ? "auto" : "none" }}
