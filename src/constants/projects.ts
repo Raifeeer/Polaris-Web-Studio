@@ -87,8 +87,23 @@ export const projects: Project[] = [
     // desktopImg queda con la versión WebP como respaldo (og:image,
     // navegadores sin soporte de <video>, etc.) -- previewVideo tiene
     // prioridad real en la tarjeta.
+    // v2 del video (21 de julio, mismo día): la primera grabación tomaba
+    // cada screenshot con cero espera real después de saltar el scroll --
+    // las animaciones whileInView reales del sitio (fade + slide-up en
+    // "City Amenities" y el resto de las secciones, ~0.6-0.9s con
+    // stagger) no tenían tiempo de progresar entre un frame y el
+    // siguiente, así que al reproducirse a 30fps parejos se veían como un
+    // salto en vez de un fundido -- el bug estaba en la grabación, no en
+    // el sitio (el código de Home.tsx ya tenía whileInView bien
+    // implementado en las 4 secciones). Fix real: durante la grabación,
+    // después de cada scroll se compara el style inline (opacity+
+    // transform) de los elementos animados en dos instantes reales
+    // separados por ~45ms -- mientras siga cambiando, se siguen tomando
+    // capturas extra (sin avanzar el scroll) hasta que se asienta. Así
+    // cada whileInView real queda muestreado en varios frames reales
+    // consecutivos, no comprimido a un salto.
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD-v2.webp",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview.mp4",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview-v2.mp4",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
