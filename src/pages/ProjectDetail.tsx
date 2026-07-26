@@ -18,7 +18,7 @@ import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
-import { useResumeVideoOnVisible } from "../hooks/useResumeVideoOnVisible";
+import AutoResumeVideo from "../components/AutoResumeVideo";
 
 function ProjectImageCarousel({
   desktopImg,
@@ -42,8 +42,6 @@ function ProjectImageCarousel({
   const [active, setActive] = useState<"desktop" | "mobile">(
     desktopImg || previewVideo ? "desktop" : "mobile"
   );
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  useResumeVideoOnVisible(videoRef);
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
 
   useEffect(() => {
@@ -153,16 +151,10 @@ function ProjectImageCarousel({
                 </div>
               )
             ) : img.type === "desktop" && previewVideo ? (
-              <video
-                ref={videoRef}
+              <AutoResumeVideo
                 src={previewVideo}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
                 className="w-full h-full object-contain rounded-2xl"
-                aria-label={`${projectName} — desktop`}
+                ariaLabel={`${projectName} — desktop`}
               />
             ) : (
               <img

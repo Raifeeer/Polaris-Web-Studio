@@ -32,7 +32,7 @@ import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
-import { useResumeVideoOnVisible } from "../hooks/useResumeVideoOnVisible";
+import AutoResumeVideo from "../components/AutoResumeVideo";
 
 // El frame de celular de MockupFrame es de tamaño fijo (280x580) -- misma
 // relación de aspecto que usa la ventana de escritorio (aspect-video, 16/9)
@@ -67,8 +67,6 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   const { translate } = useLanguage();
   const [view, setView] = useState<"desktop" | "mobile">("desktop");
   const containerRef = React.useRef<HTMLDivElement>(null);
-  const videoRef = React.useRef<HTMLVideoElement>(null);
-  useResumeVideoOnVisible(videoRef);
   const [containerWidth, setContainerWidth] = React.useState(0);
   const interactive = hasMockupContent(project.slug);
   const [desktopAspect, setDesktopAspect] = React.useState<number | null>(
@@ -227,16 +225,10 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                 <MockupFrame type="browser" projectSlug={project.slug} />
               </div>
             ) : project.previewVideo ? (
-              <video
-                ref={videoRef}
+              <AutoResumeVideo
                 src={project.previewVideo}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
                 className="w-full h-full object-contain object-center bg-transparent"
-                aria-label={`${project.title} Desktop`}
+                ariaLabel={`${project.title} Desktop`}
               />
             ) : project.desktopImg ? (
               <img
