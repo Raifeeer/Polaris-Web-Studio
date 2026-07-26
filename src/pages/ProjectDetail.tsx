@@ -24,12 +24,14 @@ function ProjectImageCarousel({
   desktopImg,
   mobileImg,
   previewVideo,
+  previewPoster,
   projectName,
   projectSlug,
 }: {
   desktopImg?: string;
   mobileImg?: string;
   previewVideo?: string;
+  previewPoster?: string;
   projectName: string;
   projectSlug?: string;
 }) {
@@ -153,6 +155,7 @@ function ProjectImageCarousel({
             ) : img.type === "desktop" && previewVideo ? (
               <AutoResumeVideo
                 src={previewVideo}
+                poster={previewPoster}
                 className="w-full h-full object-contain rounded-2xl"
                 ariaLabel={`${projectName} — desktop`}
               />
@@ -320,6 +323,7 @@ export default function ProjectDetail() {
               desktopImg={project.desktopImg}
               mobileImg={project.mobileImg}
               previewVideo={project.previewVideo}
+              previewPoster={project.previewPoster}
               projectName={project.title}
               projectSlug={project.slug}
             />

@@ -227,6 +227,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             ) : project.previewVideo ? (
               <AutoResumeVideo
                 src={project.previewVideo}
+                poster={project.previewPoster}
                 className="w-full h-full object-contain object-center bg-transparent"
                 ariaLabel={`${project.title} Desktop`}
               />

@@ -22,12 +22,21 @@ import { Play } from "lucide-react";
 //    cualquier reintento de reanudar (visibilitychange/pageshow/focus/
 //    polling) que encuentre el video pausado con la tarjeta visible en
 //    pantalla, no solo en el evento pause.
+// 3. `poster` (un jpg/png real, un solo cuadro -- no un WebP/GIF animado):
+//    Safari/iOS es conservador bajando los bytes reales del video incluso
+//    con preload="auto", así que sin poster el recuadro queda vacío hasta
+//    que el usuario scrollea hasta ahí -- se sentía como que el mockup
+//    "aparecía de la nada" en vez de estar siempre ahí, ya animándose
+//    recién al llegar. Con poster, ese primer cuadro está desde que carga
+//    la página; el video retoma exactamente esa misma imagen al arrancar.
 export default function AutoResumeVideo({
   src,
+  poster,
   className,
   ariaLabel,
 }: {
   src: string;
+  poster?: string;
   className?: string;
   ariaLabel?: string;
 }) {
@@ -95,6 +104,7 @@ export default function AutoResumeVideo({
       <video
         ref={videoRef}
         src={src}
+        poster={poster}
         loop
         muted
         playsInline
