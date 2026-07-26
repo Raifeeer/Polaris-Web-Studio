@@ -60,15 +60,20 @@ export const projects: Project[] = [
     type: "Turismo · Web Corporativa",
     typeEN: "Tourism · Corporate Web",
     liveUrl: "https://lumina-sky-demo.vercel.app/",
-    // WebP animado (scroll real grabado del sitio en vivo, 860x537 @15fps)
-    // en vez del mockup interactivo -- ver la nota en
+    // WebP animado (scroll real grabado del sitio en vivo, 860x537 @30fps,
+    // capturado con screenshots por-paso en vez de video -- el screencast
+    // de Chromium tiene un techo real de ~25fps, así que 30/60fps reales
+    // solo se consiguen tomando un screenshot por cada paso de scroll, no
+    // grabando video) en vez del mockup interactivo -- ver la nota en
     // VERIFIED_INTERACTIVE_SLUGS de MockupFrame.tsx sobre el bug real de
     // esquinas cuadradas en WebKit/iOS que este cambio evita por completo
     // (21 de julio). WebP animado en vez de GIF: mismo contenido a mucha
     // mejor calidad/tamaño (GIF a esta resolución/fps pesaba 30+ MB con
-    // dithering, o se veía notablemente peor sin él) -- soportado en todo
-    // navegador moderno, incluyendo Safari/iOS actual.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD.webp",
+    // dithering) -- soportado en todo navegador moderno, incluyendo
+    // Safari/iOS actual. Nombre de archivo versionado (v2) a propósito: el
+    // objeto de Storage cachea 1h por URL, renombrar fuerza que se sirva
+    // el archivo nuevo en vez de una copia vieja cacheada.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD-v2.webp",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
