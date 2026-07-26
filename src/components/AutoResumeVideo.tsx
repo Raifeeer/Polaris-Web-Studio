@@ -1,15 +1,27 @@
 import React from "react";
 import { Play } from "lucide-react";
-import { useResumeVideoOnVisible } from "../hooks/useResumeVideoOnVisible";
 
-// <video autoPlay loop muted playsInline> de un mockup de portafolio.
-// Además de los reintentos automáticos de useResumeVideoOnVisible
-// (visibilitychange/pageshow/focus/polling), acá se agrega una salida
-// visible garantizada: si el video queda pausado mientras la pestaña está
-// visible (reportado real en dispositivo -- cambiar de app y volver lo
-// deja congelado pese a los reintentos automáticos), se muestra un botón
-// de play encima para reanudarlo con un toque, sin depender de que algún
-// evento del navegador dispare a tiempo.
+// <video loop muted playsInline> de un mockup de portafolio, con dos
+// comportamientos reales pedidos por el usuario:
+//
+// 1. Arranca recién cuando la tarjeta entra en pantalla (IntersectionObserver
+//    -- sin autoPlay) y se pausa al salir de pantalla. Sin esto, si el
+//    visitante tarda en bajar hasta la tarjeta, el video ya viene
+//    reproduciéndose "por el footer" del loop en vez de arrancar del
+//    principio cuando por fin lo ve.
+// 2. Si el video queda pausado por el navegador (Safari/iOS pausa los
+//    <video> de una pestaña en segundo plano al cambiar de app, y no
+//    siempre se reanuda solo) mientras la tarjeta sigue visible en
+//    pantalla, se muestra un botón de play real para reanudarlo con un
+//    toque -- nunca se asume en silencio que se resolvió solo. Bug real
+//    corregido acá: la versión anterior solo armaba el botón dentro del
+//    evento 'pause' chequeando document.visibilityState === 'visible' en
+//    ese momento -- pero 'pause' dispara justo AL pasar a segundo plano,
+//    cuando visibilityState casi siempre ya es 'hidden' en ese instante
+//    exacto, así que el botón nunca se armaba. Ahora se arma en
+//    cualquier reintento de reanudar (visibilitychange/pageshow/focus/
+//    polling) que encuentre el video pausado con la tarjeta visible en
+//    pantalla, no solo en el evento pause.
 export default function AutoResumeVideo({
   src,
   className,
@@ -20,37 +32,87 @@ export default function AutoResumeVideo({
   ariaLabel?: string;
 }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
-  useResumeVideoOnVisible(videoRef);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
   const [showResume, setShowResume] = React.useState(false);
+  // "En pantalla" real (IntersectionObserver), distinto de "la pestaña
+  // está visible" (document.visibilityState) -- necesitamos ambos: no
+  // reproducir/reanudar una tarjeta que está scrolleada fuera de vista,
+  // aunque la pestaña esté al frente.
+  const isIntersectingRef = React.useRef(false);
 
-  const handleResumeClick = () => {
+  const attemptResume = React.useCallback(() => {
     const video = videoRef.current;
-    if (!video) return;
+    if (!video || document.visibilityState !== "visible" || !isIntersectingRef.current) return;
+    if (!video.paused) {
+      setShowResume(false);
+      return;
+    }
     if (video.readyState === 0) video.load();
-    video.play().then(() => setShowResume(false)).catch(() => {});
-  };
+    video.play().then(() => setShowResume(false)).catch(() => setShowResume(true));
+  }, []);
+
+  React.useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        isIntersectingRef.current = entry.isIntersecting;
+        if (entry.isIntersecting) {
+          attemptResume();
+        } else {
+          // Pausar fuera de pantalla ahorra batería/CPU -- al volver a
+          // entrar en pantalla, attemptResume lo retoma solo.
+          videoRef.current?.pause();
+          setShowResume(false);
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(wrapper);
+    return () => observer.disconnect();
+  }, [attemptResume]);
+
+  React.useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") attemptResume();
+    };
+    const interval = window.setInterval(attemptResume, 1000);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pageshow", attemptResume);
+    window.addEventListener("focus", attemptResume);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pageshow", attemptResume);
+      window.removeEventListener("focus", attemptResume);
+    };
+  }, [attemptResume]);
 
   return (
-    <div className="relative w-full h-full">
+    <div ref={wrapperRef} className="relative w-full h-full">
       <video
         ref={videoRef}
         src={src}
-        autoPlay
         loop
         muted
         playsInline
         preload="auto"
         className={className}
         aria-label={ariaLabel}
-        onPause={() => {
-          if (document.visibilityState === "visible") setShowResume(true);
-        }}
+        onPause={attemptResume}
         onPlay={() => setShowResume(false)}
       />
       {showResume && (
         <button
           type="button"
-          onClick={handleResumeClick}
+          onClick={() => {
+            const video = videoRef.current;
+            if (!video) return;
+            if (video.readyState === 0) video.load();
+            video.play().then(() => setShowResume(false)).catch(() => {});
+          }}
           aria-label="Reanudar video"
           className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
         >
