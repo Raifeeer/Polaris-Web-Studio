@@ -207,7 +207,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "desktop" ? "auto" : "none", willChange: "opacity, transform" }}
+            style={{ pointerEvents: view === "desktop" ? "auto" : "none" }}
           >
             {interactive ? (
               <div className="w-full px-2">
@@ -236,7 +236,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "mobile" ? "auto" : "none", willChange: "opacity, transform" }}
+            style={{ pointerEvents: view === "mobile" ? "auto" : "none" }}
           >
             {interactive ? (
               (() => {
@@ -1084,7 +1084,6 @@ export default function Portfolio() {
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       layout={false}
                       className="relative w-full"
-                      style={{ willChange: "opacity, transform" }}
                     >
                       <div className="relative w-full">
                         {/* Mockup (laptop/imagen) va aquí, nada más */}
