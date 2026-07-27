@@ -358,6 +358,10 @@ export default function Portfolio() {
   const [storyPaused, setStoryPaused] = useState(false);
   const storyTouchStartX = useRef<number | null>(null);
   const storyTouchStartY = useRef<number | null>(null);
+  // Sentido del último avance (1 = siguiente, -1 = anterior) -- controla de
+  // qué lado entra/sale el slide en la animación tipo carrusel (como si
+  // fuese girando un cubo), tanto al cambiar de slide como de proyecto.
+  const [storyDirection, setStoryDirection] = useState(1);
 
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
@@ -417,16 +421,19 @@ export default function Portfolio() {
   // Ir a un proyecto puntual (dots/salto directo) -- siempre arranca en el
   // primer slide de su historia.
   const goToCinemaProject = (idx: number) => {
+    setStoryDirection(idx > activeCinemaIndex ? 1 : -1);
     setActiveCinemaIndex(idx);
     setStorySlide(0);
   };
 
   const handleNextCinema = () => {
+    setStoryDirection(1);
     setActiveCinemaIndex(prev => (prev + 1) % cinemaProjects.length);
     setStorySlide(0);
   };
 
   const handlePrevCinema = () => {
+    setStoryDirection(-1);
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
     setStorySlide(0);
   };
@@ -435,6 +442,7 @@ export default function Portfolio() {
   // último slide, salta al primer slide del SIGUIENTE proyecto (mismo
   // comportamiento que Instagram al llegar al final de una historia).
   const handleStoryNext = () => {
+    setStoryDirection(1);
     if (storySlide < STORY_SLIDE_COUNT - 1) {
       setStorySlide(s => s + 1);
     } else {
@@ -448,6 +456,7 @@ export default function Portfolio() {
   // handler -- sin un useEffect de por medio que lo pudiera pisar de
   // vuelta a 0 en el siguiente render.
   const handleStoryPrev = () => {
+    setStoryDirection(-1);
     if (storySlide > 0) {
       setStorySlide(s => s - 1);
     } else {
@@ -1063,21 +1072,33 @@ export default function Portfolio() {
                   </span>
                 </div>
 
-                {/* Contenido del slide actual + zonas de navegación en los
-                    bordes (angostas, para no chocar con los botones reales
-                    del slide de CTA). */}
+                {/* Contenido del slide actual. Sin zonas de navegación
+                    superpuestas -- las flechas ahora viven debajo del
+                    mockup (ver más abajo) para no taparle nada al slide.
+                    Transición tipo "cara de cubo": el slide saliente y el
+                    entrante se animan a la vez (sin mode="wait"), cada uno
+                    corriéndose horizontalmente según storyDirection -- así
+                    ya se alcanza a ver el siguiente proyecto entrando
+                    mientras el actual todavía está saliendo, como en
+                    Instagram. */}
                 <div
-                  className="relative flex-1 min-h-0"
+                  className="relative flex-1 min-h-0 overflow-hidden"
                   onTouchStart={handleStoryTouchStart}
                   onTouchEnd={handleStoryTouchEnd}
                 >
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence custom={storyDirection} initial={false}>
                     <motion.div
                       key={`${currentCinemaProject.slug}-${storySlide}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      custom={storyDirection}
+                      variants={{
+                        enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%" }),
+                        center: { x: 0 },
+                        exit: (dir: number) => ({ x: dir > 0 ? "-100%" : "100%" }),
+                      }}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
                       className="absolute inset-0 overflow-y-auto"
                     >
                       {storySlide === 0 && (
@@ -1217,30 +1238,27 @@ export default function Portfolio() {
                       )}
                     </motion.div>
                   </AnimatePresence>
+                </div>
 
-                  {/* Zonas de navegación: franjas angostas en los bordes
-                      (no todo el ancho) para no taparle los botones reales
-                      al slide de CTA -- el botón visible (círculo) queda
-                      centrado verticalmente y más grande para que se note
-                      y sea fácil de tocar, la franja clickeable sigue
-                      cubriendo todo el alto. */}
+                {/* Flechas de navegación -- pedido explícito del usuario:
+                    antes vivían superpuestas a los bordes del contenido y
+                    tapaban el mockup; ahora van en su propia franja debajo
+                    del contenido, sin superponerse a nada. El swipe sigue
+                    funcionando igual desde el área de contenido. */}
+                <div className="shrink-0 flex items-center justify-center gap-6 py-3">
                   <button
                     onClick={handleStoryPrev}
-                    className="absolute left-0 top-0 bottom-0 w-14 flex items-center justify-start pl-2 cursor-pointer group"
+                    className="p-2.5 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:scale-110 transition-all cursor-pointer"
                     aria-label={translate("Anterior", "Previous")}
                   >
-                    <span className="p-2.5 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] group-hover:scale-110 transition-all">
-                      <ChevronLeft size={26} strokeWidth={2} />
-                    </span>
+                    <ChevronLeft size={22} strokeWidth={2} />
                   </button>
                   <button
                     onClick={handleStoryNext}
-                    className="absolute right-0 top-0 bottom-0 w-14 flex items-center justify-end pr-2 cursor-pointer group"
+                    className="p-2.5 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:scale-110 transition-all cursor-pointer"
                     aria-label={translate("Siguiente", "Next")}
                   >
-                    <span className="p-2.5 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] group-hover:scale-110 transition-all">
-                      <ChevronRight size={26} strokeWidth={2} />
-                    </span>
+                    <ChevronRight size={22} strokeWidth={2} />
                   </button>
                 </div>
 
