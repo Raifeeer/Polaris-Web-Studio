@@ -383,9 +383,38 @@ export const projects: Project[] = [
     // agresivo a 560x1212 -- ese mismo tamaño se mantuvo, pero con menor
     // pérdida por cuadro) tras notar que se veía menos nítido que el de
     // Lúmina.
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v12.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v12.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v12.jpg",
+    // v13/v14: dos pedidos del usuario en la misma ronda.
+    // (1) "que solo llegue hasta después de las propiedades, tal como en
+    // el de pc" -- el tope de 11000px (v12) todavía dejaba el mobile
+    // bastante más allá del listado de propiedades. Medido en vivo con
+    // Playwright el `bottom` real del <main> (filtros + listado +
+    // mapa) en cada viewport: desktop termina su video dentro de esa
+    // misma sección (con su tope ya fijo de 2450px, sin tocar), mobile
+    // recalculado a 6059px (bottom real del <main> a 390px de ancho,
+    // menos innerHeight) -- mismo punto lógico de la página, no el mismo
+    // número de píxeles (los viewports miden distinto). Pasos
+    // recalculados a 261 (de 261≈6059/23.2) para conservar el mismo
+    // ritmo de scroll ya aprobado como "lento". Video final: 523
+    // frames/~17.4s.
+    // (2) "sigo sin notar buena calidad... en Lúmina se ve espectacular"
+    // -- causa raíz real, no de crf/preset: el mobile de Nexus capturaba
+    // cada cuadro con `cdp.send('Page.captureScreenshot')`, que devuelve
+    // el frame a tamaño CSS del viewport (390x844) e IGNORA
+    // `deviceScaleFactor` -- el video entero se venía escalando desde una
+    // fuente de baja resolución sin que ningún ajuste de crf pudiera
+    // arreglarlo. El script real de Lúmina
+    // (`record_lumina_mobile_slow2.mjs`) usa `page.screenshot()` de
+    // Playwright en su lugar, que sí respeta `deviceScaleFactor:2` y
+    // captura a la resolución física real (780x1688) -- confirmado
+    // comparando el tamaño real de los PNG de ambos scripts antes de
+    // tocar nada más. Cambiado el mobile de Nexus a `page.screenshot()`
+    // también (el desktop no tiene este bug -- `deviceScaleFactor:1`, CSS
+    // px y físicos coinciden). Con la fuente ya nítida, encoding final a
+    // 560x1212 (mismo tamaño de salida que Lúmina) con
+    // `scale=...:flags=lanczos`, crf 20/preset slower.
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v14.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v14.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v14.jpg",
   },
   {
     slug: "chroma-store",
