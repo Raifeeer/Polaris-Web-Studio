@@ -90,6 +90,10 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   // mecanismo que ProjectDetail.tsx).
   const desktopVideoRef = React.useRef<AutoResumeVideoHandle>(null);
   const mobileVideoRef = React.useRef<AutoResumeVideoHandle>(null);
+  // Grados acumulados del ícono de reinicio -- incrementa 360 en cada click
+  // (nunca vuelve a 0) para que framer-motion siempre anime un giro
+  // completo hacia adelante, en vez de saltar de vuelta a 0deg de golpe.
+  const [restartIconRotation, setRestartIconRotation] = React.useState(0);
 
   React.useEffect(() => {
     if (fixedHeights) return;
@@ -184,12 +188,21 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               interactivo de Lúmina ni una captura estática). */}
           {!interactive && ((view === "desktop" && project.previewVideo) || (view === "mobile" && project.mobileVideo)) && (
             <button
-              onClick={() => (view === "desktop" ? desktopVideoRef : mobileVideoRef).current?.restart()}
+              onClick={() => {
+                (view === "desktop" ? desktopVideoRef : mobileVideoRef).current?.restart();
+                setRestartIconRotation((r) => r - 360);
+              }}
               className="p-2.5 rounded-full bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--cinema-color,_#6366f1)] hover:border-[var(--cinema-color,_#6366f1)]/40 transition-all cursor-pointer shadow-sm"
               aria-label={translate("Reiniciar video", "Restart video")}
               title={translate("Reiniciar video", "Restart video")}
             >
-              <RotateCcw size={13} />
+              <motion.span
+                className="flex"
+                animate={{ rotate: restartIconRotation }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                <RotateCcw size={13} />
+              </motion.span>
             </button>
           )}
 
@@ -394,6 +407,10 @@ export default function Portfolio() {
   // que ProjectScreenshot/ProjectDetail.tsx).
   const storyDesktopVideoRef = useRef<AutoResumeVideoHandle>(null);
   const storyMobileVideoRef = useRef<AutoResumeVideoHandle>(null);
+  // Grados acumulados del ícono de reinicio del modo Story -- mismo
+  // mecanismo que en ProjectScreenshot/ProjectDetail.tsx, estado propio
+  // porque este vive en un componente distinto (Portfolio, no ProjectScreenshot).
+  const [storyRestartIconRotation, setStoryRestartIconRotation] = useState(0);
   // Sentido del último avance (1 = siguiente, -1 = anterior) -- controla de
   // qué lado entra/sale el slide en la animación tipo carrusel (como si
   // fuese girando un cubo), tanto al cambiar de slide como de proyecto.
@@ -1445,14 +1462,21 @@ export default function Portfolio() {
                     ((storyView === "desktop" && currentCinemaProject.previewVideo) ||
                       (storyView === "mobile" && currentCinemaProject.mobileVideo)) && (
                       <button
-                        onClick={() =>
-                          (storyView === "desktop" ? storyDesktopVideoRef : storyMobileVideoRef).current?.restart()
-                        }
+                        onClick={() => {
+                          (storyView === "desktop" ? storyDesktopVideoRef : storyMobileVideoRef).current?.restart();
+                          setStoryRestartIconRotation((r) => r - 360);
+                        }}
                         className="p-2.5 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:scale-110 transition-all cursor-pointer"
                         aria-label={translate("Reiniciar video", "Restart video")}
                         title={translate("Reiniciar video", "Restart video")}
                       >
-                        <RotateCcw size={22} strokeWidth={2} />
+                        <motion.span
+                          className="flex"
+                          animate={{ rotate: storyRestartIconRotation }}
+                          transition={{ duration: 0.5, ease: "easeInOut" }}
+                        >
+                          <RotateCcw size={22} strokeWidth={2} />
+                        </motion.span>
                       </button>
                     )}
                   <button

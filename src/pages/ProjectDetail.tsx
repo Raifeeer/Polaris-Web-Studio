@@ -55,6 +55,10 @@ function ProjectImageCarousel({
   // pausado/fuera de pantalla, AutoResumeVideo ya se encarga de eso solo).
   const desktopVideoRef = useRef<AutoResumeVideoHandle>(null);
   const mobileVideoRef = useRef<AutoResumeVideoHandle>(null);
+  // Grados acumulados del ícono de reinicio -- incrementa 360 en cada click
+  // (nunca vuelve a 0) para que framer-motion siempre anime un giro
+  // completo hacia adelante, en vez de saltar de vuelta a 0deg de golpe.
+  const [restartIconRotation, setRestartIconRotation] = useState(0);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -111,12 +115,21 @@ function ProjectImageCarousel({
           {!interactive && ((active === "desktop" && previewVideo) || (active === "mobile" && mobileVideo)) && (
             <button
               type="button"
-              onClick={() => (active === "desktop" ? desktopVideoRef : mobileVideoRef).current?.restart()}
+              onClick={() => {
+                (active === "desktop" ? desktopVideoRef : mobileVideoRef).current?.restart();
+                setRestartIconRotation((r) => r - 360);
+              }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
               aria-label="Reiniciar video"
               title="Reiniciar video"
             >
-              <RotateCcw size={12} />
+              <motion.span
+                className="flex"
+                animate={{ rotate: restartIconRotation }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+              >
+                <RotateCcw size={12} />
+              </motion.span>
             </button>
           )}
         </div>
