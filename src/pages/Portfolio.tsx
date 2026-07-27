@@ -75,6 +75,20 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   const [mobileAspect, setMobileAspect] = React.useState<number | null>(
     interactive ? MOCKUP_MOBILE_ASPECT : null
   );
+  // Color de fondo real detrás del mockup, para los parches de esquina de
+  // AutoResumeVideo. En el bento grid (fillParent) el fondo es liso
+  // (bg-[var(--color-surface-elevated)] de la tarjeta) -- coincide exacto.
+  // En modo cine (!fillParent) el panel tiene un glow decorativo del color
+  // del proyecto (bg-gradient-to-br ${project.color}, opacity-10,
+  // blur-[130px]) que tiñe el fondo con un tono cálido -- un cornerBg
+  // liso quedaba como un parche blanco/gris obvio ahí (bug real
+  // reportado por el usuario: "esquinas blancas" en modo cine).
+  // color-mix() mezcla un poco del color de acento del proyecto (mismo
+  // que usa el glow) para acercarse al tono real sin tener que adivinar
+  // un valor fijo por proyecto.
+  const cornerBg = fillParent
+    ? "var(--color-surface-elevated)"
+    : "color-mix(in srgb, var(--color-surface-elevated) 85%, var(--cinema-color, transparent) 15%)";
 
   React.useEffect(() => {
     if (fixedHeights) return;
@@ -233,7 +247,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               <AutoResumeVideo
                 src={project.previewVideo}
                 poster={project.previewPoster}
-                cornerBg="var(--color-surface-elevated)"
+                cornerBg={cornerBg}
                 aspectRatio="1200/750"
                 ariaLabel={`${project.title} Desktop`}
               />
@@ -286,7 +300,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               <AutoResumeVideo
                 src={project.mobileVideo}
                 poster={project.mobilePoster}
-                cornerBg="var(--color-surface-elevated)"
+                cornerBg={cornerBg}
                 aspectRatio="560/1212"
                 maxWidthPx={260}
                 ariaLabel={`${project.title} Mobile`}
