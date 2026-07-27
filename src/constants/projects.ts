@@ -301,12 +301,28 @@ export const projects: Project[] = [
     // bar), así ninguno de los dos vuelve a cambiar de estado en ningún
     // momento de la captura. La posición real de scroll (lo que se ve en
     // el video) no se toca.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v7.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v7.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v7.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v7.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v7.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v7.jpg",
+    // v8: el pestañeo persistía igual, siempre al terminar de subir --
+    // causa real, distinta de las tres anteriores: `index.css` tiene
+    // `scroll-behavior: smooth` global, así que cada `window.scrollTo()`
+    // heredaba esa animación en vez de saltar instantáneo. El "reset a
+    // scroll=0" tras el pre-calentamiento en realidad deslizaba con una
+    // animación real de ~1.2s -- con solo 600ms de espera, el primer
+    // frame capturado del video quedaba a mitad de ese deslizamiento
+    // (~187px reales, no 0), mientras que el ÚLTIMO frame del video (que
+    // acumulaba más tiempo de espera por los pasos previos) sí llegaba a
+    // 0 real. Como el `<video loop>` salta del último frame de vuelta al
+    // primero en cada ciclo, esa diferencia real de posición entre
+    // ambos se veía como un parpadeo cada vez que el video reiniciaba --
+    // justo "al terminar de subir", el único momento donde el loop se
+    // nota. Fix: `scroll-behavior: auto !important` durante toda la
+    // captura. Verificado con un diff de píxeles exacto entre el primer
+    // y el último frame capturado: 0 (idénticos).
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v8.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v8.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v8.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v8.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v8.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v8.jpg",
   },
   {
     slug: "chroma-store",
