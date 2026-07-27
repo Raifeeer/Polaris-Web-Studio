@@ -63,14 +63,6 @@ function CornerPatches({ bg }: { bg: string }) {
     pointerEvents: "none",
     zIndex: 2,
   };
-  // Tope duro (transparent RADIUS, bg RADIUS) hacía cualquier mismatch de
-  // color muy obvio, sobre todo en modo cine donde cornerBg es una
-  // aproximación (color-mix), no el color real exacto de fondo -- pedido
-  // del usuario ("las esquinas siguen notándose un poco"). Una zona de
-  // transición suave (6px) en vez de un borde de golpe disimula ese
-  // desajuste igual que un vignette real, sin necesitar que el color
-  // coincida al pixel.
-  const soft = `calc(${RADIUS} - 6px)`;
   return (
     <>
       <div
@@ -78,7 +70,7 @@ function CornerPatches({ bg }: { bg: string }) {
           ...base,
           top: 0,
           left: 0,
-          background: `radial-gradient(circle at bottom right, transparent ${soft}, ${bg} ${RADIUS})`,
+          background: `radial-gradient(circle at bottom right, transparent ${RADIUS}, ${bg} ${RADIUS})`,
         }}
       />
       <div
@@ -86,7 +78,7 @@ function CornerPatches({ bg }: { bg: string }) {
           ...base,
           top: 0,
           right: 0,
-          background: `radial-gradient(circle at bottom left, transparent ${soft}, ${bg} ${RADIUS})`,
+          background: `radial-gradient(circle at bottom left, transparent ${RADIUS}, ${bg} ${RADIUS})`,
         }}
       />
       <div
@@ -94,7 +86,7 @@ function CornerPatches({ bg }: { bg: string }) {
           ...base,
           bottom: 0,
           left: 0,
-          background: `radial-gradient(circle at top right, transparent ${soft}, ${bg} ${RADIUS})`,
+          background: `radial-gradient(circle at top right, transparent ${RADIUS}, ${bg} ${RADIUS})`,
         }}
       />
       <div
@@ -102,7 +94,7 @@ function CornerPatches({ bg }: { bg: string }) {
           ...base,
           bottom: 0,
           right: 0,
-          background: `radial-gradient(circle at top left, transparent ${soft}, ${bg} ${RADIUS})`,
+          background: `radial-gradient(circle at top left, transparent ${RADIUS}, ${bg} ${RADIUS})`,
         }}
       />
     </>
