@@ -8,7 +8,6 @@ import {
   Code,
   Search,
   Grid,
-  Film,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -23,7 +22,8 @@ import {
   Layers,
   Star,
   Monitor,
-  Smartphone
+  Smartphone,
+  Sparkles
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -344,7 +344,11 @@ export default function Portfolio() {
 
   // Cinema Showcase Slider State
   const [activeCinemaIndex, setActiveCinemaIndex] = useState(() => readRestoredCinemaIndex() ?? 0);
-  const [direction, setDirection] = useState<1 | -1>(1);
+  // Modo Historia: 3 "slides" por proyecto (mockup / resultados / stack+CTA),
+  // formato tipo Instagram Stories -- reemplaza el viejo panel estático de
+  // dos columnas. Se resetea a 0 cada vez que cambia el proyecto activo.
+  const [storySlide, setStorySlide] = useState(0);
+  const STORY_SLIDE_COUNT = 3;
 
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
@@ -401,14 +405,46 @@ export default function Portfolio() {
     setActiveCinemaIndex((prev) => (prev >= cinemaProjects.length ? 0 : prev));
   }, [cinemaProjects.length]);
 
+  // Ir a un proyecto puntual (dots/salto directo) -- siempre arranca en el
+  // primer slide de su historia.
+  const goToCinemaProject = (idx: number) => {
+    setActiveCinemaIndex(idx);
+    setStorySlide(0);
+  };
+
   const handleNextCinema = () => {
-    setDirection(1);
     setActiveCinemaIndex(prev => (prev + 1) % cinemaProjects.length);
+    setStorySlide(0);
   };
 
   const handlePrevCinema = () => {
-    setDirection(-1);
     setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
+    setStorySlide(0);
+  };
+
+  // Avanzar dentro de la historia del proyecto actual -- al pasar el
+  // último slide, salta al primer slide del SIGUIENTE proyecto (mismo
+  // comportamiento que Instagram al llegar al final de una historia).
+  const handleStoryNext = () => {
+    if (storySlide < STORY_SLIDE_COUNT - 1) {
+      setStorySlide(s => s + 1);
+    } else {
+      handleNextCinema();
+    }
+  };
+
+  // Retroceder -- en el primer slide, salta al ÚLTIMO slide del proyecto
+  // anterior (no al primero, para no tener que volver a avanzar 3 veces).
+  // Setea storySlide explícito DESPUÉS de activeCinemaIndex, en el mismo
+  // handler -- sin un useEffect de por medio que lo pudiera pisar de
+  // vuelta a 0 en el siguiente render.
+  const handleStoryPrev = () => {
+    if (storySlide > 0) {
+      setStorySlide(s => s - 1);
+    } else {
+      setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
+      setStorySlide(STORY_SLIDE_COUNT - 1);
+    }
   };
 
   // Precarga en segundo plano (idle) la captura del proyecto que se mostrará
@@ -441,78 +477,6 @@ export default function Portfolio() {
     const id = window.setTimeout(preload, 200);
     return () => window.clearTimeout(id);
   }, [currentCinemaProject?.desktopImg, currentCinemaProject?.mobileImg, currentCinemaProject?.previewVideo]);
-
-  // Altura del mockup en modo cine: se calcula una sola vez para TODO el
-  // portafolio (promedio real de proporción de cada captura) y se mide el
-  // ancho del panel en este componente padre, que nunca se desmonta al
-  // cambiar de proyecto. Así el alto queda fijo entre un proyecto y otro
-  // (solo cambia si el usuario alterna vista PC/móvil o cambia el tamaño de
-  // ventana), y el slide/fade al cambiar de proyecto no arrastra un resize.
-  const cinemaPanelRef = React.useRef<HTMLDivElement>(null);
-  const [cinemaPanelWidth, setCinemaPanelWidth] = React.useState(0);
-  const [cinemaAspect, setCinemaAspect] = React.useState<{ desktop: number | null; mobile: number | null }>({
-    desktop: null,
-    mobile: null
-  });
-
-  useEffect(() => {
-    const el = cinemaPanelRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver(entries => {
-      const width = entries[0]?.contentRect.width;
-      if (width) setCinemaPanelWidth(width);
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    let desktopSum = 0, desktopCount = 0, mobileSum = 0, mobileCount = 0;
-    const loaders = projects.flatMap(p => {
-      const tasks: Promise<void>[] = [];
-      if (p.desktopImg) {
-        tasks.push(
-          new Promise<void>(resolve => {
-            const img = new Image();
-            img.onload = () => { desktopSum += img.naturalWidth / img.naturalHeight; desktopCount++; resolve(); };
-            img.onerror = () => resolve();
-            img.src = p.desktopImg!;
-          })
-        );
-      }
-      if (p.mobileImg) {
-        tasks.push(
-          new Promise<void>(resolve => {
-            const img = new Image();
-            img.onload = () => { mobileSum += img.naturalWidth / img.naturalHeight; mobileCount++; resolve(); };
-            img.onerror = () => resolve();
-            img.src = p.mobileImg!;
-          })
-        );
-      }
-      return tasks;
-    });
-    Promise.all(loaders).then(() => {
-      if (cancelled) return;
-      setCinemaAspect({
-        desktop: desktopCount > 0 ? desktopSum / desktopCount : null,
-        mobile: mobileCount > 0 ? mobileSum / mobileCount : null
-      });
-    });
-    return () => { cancelled = true; };
-  }, []);
-
-  const cinemaFixedHeights = useMemo(() => {
-    const desktopRenderWidth = cinemaPanelWidth || 760;
-    const mobileRenderWidth = Math.min(MOCKUP_MOBILE_MAX_WIDTH, cinemaPanelWidth || MOCKUP_MOBILE_MAX_WIDTH);
-    const desktop = cinemaAspect.desktop ? desktopRenderWidth / cinemaAspect.desktop : 460;
-    const mobile = cinemaAspect.mobile ? mobileRenderWidth / cinemaAspect.mobile : 480;
-    return {
-      desktop: Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, desktop)),
-      mobile: Math.min(MOCKUP_MAX_HEIGHT, Math.max(MOCKUP_MIN_HEIGHT, mobile))
-    };
-  }, [cinemaPanelWidth, cinemaAspect]);
 
   // Guarda el proyecto/modo actual para poder restaurarlo si el usuario
   // navega a "ver caso de estudio" y luego regresa al portafolio.
@@ -674,8 +638,8 @@ export default function Portfolio() {
                     : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                 }`}
               >
-                <Film size={14} />
-                <T en="Cinema Mode">Sala Cinema</T>
+                <Sparkles size={14} />
+                <T en="Story Mode">Modo Historia</T>
               </button>
             </div>
           </div>
@@ -775,15 +739,6 @@ export default function Portfolio() {
                 <motion.div
                   key={project.slug}
                   layout
-                  // layoutId compartido con el panel de modo cine (más
-                  // abajo) -- reemplaza el viejo "modo cine" (oscurecer
-                  // toda la pantalla + esperar a que el usuario scrollee)
-                  // por una transición de expansión real: esta misma
-                  // tarjeta se estira y se transforma en el panel
-                  // completo, Framer Motion anima el cambio de tamaño/
-                  // posición solo -- sin overlay negro, sin tener que
-                  // adivinar colores de fondo para las esquinas del video.
-                  layoutId={`project-panel-${project.slug}`}
                   // Sin "scale" en initial/animate/exit a propósito -- esta
                   // tarjeta es ancestro (varios niveles arriba) del <video>
                   // del mockup, que recorta sus propias esquinas con
@@ -959,248 +914,250 @@ export default function Portfolio() {
           </motion.div>
         )}
 
-        {/* 2. VIEW MODE: CINEMA SHOWCASE */}
-        {/* Rediseño real (pedido explícito del usuario, "reemplazá el modo
-            cine por algo más interesante"): el overlay negro de pantalla
-            completa + el glow decorativo detrás del mockup fueron la causa
-            de toda la ronda de bugs de esquinas del video (el fondo real
-            detrás del mockup nunca era un color plano, así que los parches
-            de esquina de AutoResumeVideo nunca podían matchear exacto). En
-            vez de un "apagón" de pantalla completa, la tarjeta del bento
-            grid se transforma directamente en este panel (layoutId
-            compartido, ver la tarjeta más arriba) -- Framer Motion anima
-            el cambio de tamaño/posición solo, sin overlay ni ninguna
-            dependencia de scroll. El panel queda con el mismo fondo plano
-            de superficie que el resto del sitio (sin glow ni vignette), así
-            que cornerBg vuelve a ser un color exacto, no una aproximación. */}
-        <AnimatePresence>
-          {viewMode === "cinema" && filteredProjects.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="relative scroll-mt-20"
-            >
-            <div className="relative z-20">
+        {/* 2. VIEW MODE: STORY (antes "Modo Cine") */}
+        {/* Segundo rediseño real, pedido explícito del usuario ("reemplazá
+            el modo cine por algo más interesante"): el panel estático de
+            dos columnas (aunque ya sin el overlay negro del primer
+            rediseño) seguía sin sentirse distinto a cualquier otra sección
+            del sitio. Formato nuevo tipo Instagram/TikTok Stories --
+            pantalla completa, 3 "slides" por proyecto (mockup /
+            resultados / stack+CTA) con barra de progreso segmentada y
+            navegación por toques en los bordes, en vez de un layout fijo
+            de texto+mockup lado a lado. Renderizado vía portal a
+            document.body (mismo patrón que el modal de Vista Rápida más
+            abajo) para no depender del stacking context de <main>. */}
+        {ReactDOM.createPortal(
+          <AnimatePresence>
+            {viewMode === "cinema" && filteredProjects.length > 0 && (
               <motion.div
-                animate={{
-                  paddingTop: viewMode === "cinema" ? "0" : "2rem",
-                }}
-                transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="fixed inset-0 z-[90] bg-[var(--color-surface-base)] flex flex-col"
               >
-                <motion.div
-                  layoutId={`project-panel-${currentCinemaProject.slug}`}
-                  className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden shadow-2xl pb-16 z-20"
-                >
-            {/* Acento sutil del color del proyecto, solo en el borde
-                superior -- reemplaza el glow+vignette de antes, que
-                bañaba TODO el panel (incluido el mockup) de un tono que
-                nunca calzaba exacto con los parches de esquina del video. */}
-            <div
-              className="absolute top-0 left-0 right-0 h-1"
-              style={{ background: `linear-gradient(to right, transparent, var(--cinema-color, transparent), transparent)` }}
-            />
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              
-              {/* Left Column: Details */}
-              <div className="lg:col-span-5 space-y-6 relative z-10 order-last lg:order-first">
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={currentCinemaProject.slug + "-info"}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="space-y-6"
-                  >
-                    {/* Upper Badge Line */}
-                    <div className="flex flex-wrap gap-2 items-center">
-                      <span
-                        className={`px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
-                          currentCinemaProject.plan === "Nova"
-                            ? "bg-violet-500/10 border-violet-500/30 text-violet-400"
-                            : currentCinemaProject.plan === "Constelación"
-                            ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400"
-                            : "bg-amber-500/10 border-amber-500/30 text-amber-400"
-                        }`}
+                {/* Barra de progreso segmentada (una franja por slide) +
+                    cerrar. idx < storySlide: completado (lleno). idx ===
+                    storySlide: slide actual (también lleno -- sin
+                    animación de cuenta regresiva a propósito, para no
+                    sumar timers/limpieza extra; el avance es manual). */}
+                <div className="shrink-0 px-4 pt-4 flex items-center gap-3">
+                  <div className="flex-1 flex gap-1.5">
+                    {Array.from({ length: STORY_SLIDE_COUNT }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="flex-1 h-1 rounded-full bg-[var(--color-border-subtle)] overflow-hidden"
                       >
-                        <T en={currentCinemaProject.planEN ? `Package ${currentCinemaProject.planEN}` : (currentCinemaProject.plan ? `Package ${currentCinemaProject.plan}` : "")}>
-                          {currentCinemaProject.plan ? `Paquete ${currentCinemaProject.plan}` : ""}
-                        </T>
-                      </span>
-                      <span className="text-[var(--color-text-tertiary)] text-[9px] font-black uppercase tracking-widest">
-                        <T en={currentCinemaProject.typeEN || currentCinemaProject.type}>
-                          {currentCinemaProject.type}
-                        </T>
-                      </span>
-                    </div>
-
-                    {/* Title */}
-                    <h2 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-[var(--color-text-primary)] leading-none">
-                      {currentCinemaProject.title}
-                    </h2>
-
-                    {/* Quick Pitch Description */}
-                    <p className="text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed">
-                      <T en={currentCinemaProject.shortDescEN || currentCinemaProject.shortDesc}>
-                        {currentCinemaProject.shortDesc}
-                      </T>
-                    </p>
-
-                    {/* Performance progress metrics in Cinema layout */}
-                    <div className="rounded-2xl p-4 border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] space-y-3 relative z-20">
-                      <h4
-                        className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] pb-2 border-b border-[var(--color-border-subtle)]"
-                      >
-                        <T en="Key Results">Resultados Clave</T>
-                      </h4>
-                      
-                      {currentCinemaProject.results.map((res, idx) => (
                         <div
-                          key={idx}
-                          className="flex justify-between items-center text-xs py-1 border-b border-[var(--color-border-subtle)] last:border-0 last:pb-0"
-                        >
-                          <span className="font-bold text-[var(--color-text-secondary)]">
-                            <T en={res.labelEN || res.label}>{res.label}</T>
-                          </span>
-                          <span
-                            className="font-black text-sm"
-                            style={{ color: "var(--cinema-color)" }}
-                          >
-                            <T en={res.valueEN || res.value}>{res.value}</T>
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Tech Stack List */}
-                    <div className="space-y-2">
-                      <p className="text-[9px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
-                        <T en="Engine Technologies">Tecnologías Principales:</T>
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {currentCinemaProject.techStack.map((tech) => (
-                          <span
-                            key={tech}
-                            className="px-2 py-1 rounded border text-[10px] font-bold bg-[var(--color-surface-elevated)] border-[var(--color-border-strong)]"
-                            style={{ color: `var(--cinema-color)` }}
-                          >
-                            {tech}
-                          </span>
-                        ))}
+                          className="h-full rounded-full transition-all duration-300"
+                          style={{
+                            width: i <= storySlide ? "100%" : "0%",
+                            backgroundColor: "var(--cinema-color, #6366f1)",
+                          }}
+                        />
                       </div>
-                    </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setViewMode("bento")}
+                    className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    aria-label={translate("Cerrar historia", "Close story")}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
 
-                    {/* Actions Panel */}
-                    <div className="flex flex-wrap gap-3 pt-4 items-center">
-                      <button
-                        onClick={() => navigate(`/portafolio/${currentCinemaProject.slug}`)}
-                        className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <T en="See Case Study">Ver Caso de Estudio</T>
-                        <ArrowRight size={14} />
-                      </button>
+                {/* Título + posición dentro de la lista de proyectos */}
+                <div className="shrink-0 px-4 pt-3 flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-widest text-[var(--color-text-secondary)]">
+                    {currentCinemaProject.title}
+                  </span>
+                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)]">
+                    {activeCinemaIndex + 1} / {cinemaProjects.length}
+                  </span>
+                </div>
 
-                      <button
-                        onClick={() => setSelectedProjectForQuickView(currentCinemaProject)}
-                        className="px-5 py-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
-                      >
-                        <T en="Quick Specs">Vista Rápida</T>
-                      </button>
-
-                      {currentCinemaProject.liveUrl && (
-                        <button
-                          onClick={() => window.open(currentCinemaProject.liveUrl, "_blank")}
-                          className="p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-indigo-400 cursor-pointer"
-                        >
-                          <ExternalLink size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </motion.div>
-                </AnimatePresence>
-              </div>
-
-              {/* Right Column: Large Dynamic Interactive Mockup */}
-              <div className="lg:col-span-7 flex justify-center items-center relative z-10">
-                <div className="w-full max-w-[550px] relative" ref={cinemaPanelRef}>
-                  
-                  {/* Mockup Frame presentation with custom responsive scale */}
-                  <AnimatePresence mode="wait" custom={direction}>
+                {/* Contenido del slide actual + zonas de navegación en los
+                    bordes (angostas, para no chocar con los botones reales
+                    del slide de CTA). */}
+                <div className="relative flex-1 min-h-0">
+                  <AnimatePresence mode="wait">
                     <motion.div
-                      key={currentCinemaProject.slug}
-                      custom={direction}
-                      // Sin "x" acá tampoco -- este wrapper es ancestro
-                      // directo del <video> del mockup (mismo bug real ya
-                      // documentado y corregido en el resto del archivo).
-                      // El slide direccional se pierde, pero el fade sigue
-                      // marcando el cambio de proyecto igual.
+                      key={`${currentCinemaProject.slug}-${storySlide}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      layout={false}
-                      className="relative w-full"
+                      transition={{ duration: 0.25, ease: "easeOut" }}
+                      className="absolute inset-0 overflow-y-auto"
                     >
-                      <div className="relative w-full">
-                        {/* Mockup (laptop/imagen) va aquí, nada más */}
-                        <ProjectScreenshot
-                          project={currentCinemaProject}
-                          onExit={() => setViewMode("bento")}
-                          fixedHeights={cinemaFixedHeights}
-                          onSwipeProject={(dir) => (dir === 1 ? handleNextCinema() : handlePrevCinema())}
-                        />
-                      </div>
+                      {storySlide === 0 && (
+                        <div className="min-h-full flex flex-col items-center justify-center gap-6 p-6 md:p-10">
+                          <div
+                            className="relative w-full max-w-3xl rounded-2xl overflow-hidden bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]"
+                            style={{ aspectRatio: "1200/750" }}
+                          >
+                            {currentCinemaProject.previewVideo ? (
+                              <AutoResumeVideo
+                                src={currentCinemaProject.previewVideo}
+                                poster={currentCinemaProject.previewPoster}
+                                cornerBg="var(--color-surface-elevated)"
+                                aspectRatio="1200/750"
+                                ariaLabel={`${currentCinemaProject.title} preview`}
+                              />
+                            ) : currentCinemaProject.desktopImg ? (
+                              <img
+                                src={currentCinemaProject.desktopImg}
+                                alt={`${currentCinemaProject.title} preview`}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
+                                <Monitor size={28} />
+                              </div>
+                            )}
+                          </div>
+                          <div className="text-center space-y-2 max-w-xl">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${
+                                currentCinemaProject.plan === "Nova"
+                                  ? "bg-violet-500/10 border-violet-500/30 text-violet-400"
+                                  : currentCinemaProject.plan === "Constelación"
+                                  ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400"
+                                  : "bg-amber-500/10 border-amber-500/30 text-amber-400"
+                              }`}
+                            >
+                              <T en={currentCinemaProject.planEN ? `Package ${currentCinemaProject.planEN}` : (currentCinemaProject.plan ? `Package ${currentCinemaProject.plan}` : "")}>
+                                {currentCinemaProject.plan ? `Paquete ${currentCinemaProject.plan}` : ""}
+                              </T>
+                            </span>
+                            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tighter text-[var(--color-text-primary)] leading-none">
+                              {currentCinemaProject.title}
+                            </h2>
+                            <p className="text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed">
+                              <T en={currentCinemaProject.shortDescEN || currentCinemaProject.shortDesc}>
+                                {currentCinemaProject.shortDesc}
+                              </T>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {storySlide === 1 && (
+                        <div className="min-h-full flex flex-col items-center justify-center gap-6 p-6 md:p-10">
+                          <div className="w-full max-w-md rounded-2xl p-6 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] space-y-3">
+                            <h4 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] pb-2 border-b border-[var(--color-border-subtle)]">
+                              <T en="Key Results">Resultados Clave</T>
+                            </h4>
+                            {currentCinemaProject.results.map((res, idx) => (
+                              <div
+                                key={idx}
+                                className="flex justify-between items-center text-sm py-1.5 border-b border-[var(--color-border-subtle)] last:border-0 last:pb-0"
+                              >
+                                <span className="font-bold text-[var(--color-text-secondary)]">
+                                  <T en={res.labelEN || res.label}>{res.label}</T>
+                                </span>
+                                <span className="font-black text-base" style={{ color: "var(--cinema-color)" }}>
+                                  <T en={res.valueEN || res.value}>{res.value}</T>
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <p className="text-[var(--color-text-secondary)] text-sm text-center max-w-md">
+                            <T en={currentCinemaProject.shortDescEN || currentCinemaProject.shortDesc}>
+                              {currentCinemaProject.shortDesc}
+                            </T>
+                          </p>
+                        </div>
+                      )}
+
+                      {storySlide === 2 && (
+                        <div className="min-h-full flex flex-col items-center justify-center gap-8 p-6 md:p-10">
+                          <div className="space-y-3 text-center">
+                            <p className="text-[9px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                              <T en="Engine Technologies">Tecnologías Principales:</T>
+                            </p>
+                            <div className="flex flex-wrap gap-1.5 justify-center max-w-md">
+                              {currentCinemaProject.techStack.map((tech) => (
+                                <span
+                                  key={tech}
+                                  className="px-2.5 py-1 rounded border text-[10px] font-bold bg-[var(--color-surface-elevated)] border-[var(--color-border-strong)]"
+                                  style={{ color: `var(--cinema-color)` }}
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-3 w-full max-w-xs">
+                            <button
+                              onClick={() => navigate(`/portafolio/${currentCinemaProject.slug}`)}
+                              className="px-5 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            >
+                              <T en="See Case Study">Ver Caso de Estudio</T>
+                              <ArrowRight size={14} />
+                            </button>
+                            <button
+                              onClick={() => setSelectedProjectForQuickView(currentCinemaProject)}
+                              className="px-5 py-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-black text-xs uppercase tracking-wider transition-all cursor-pointer"
+                            >
+                              <T en="Quick Specs">Vista Rápida</T>
+                            </button>
+                            {currentCinemaProject.liveUrl && (
+                              <button
+                                onClick={() => window.open(currentCinemaProject.liveUrl, "_blank")}
+                                className="px-5 py-3 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-indigo-400 cursor-pointer flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wider"
+                              >
+                                <T en="View Live Site">Ver Sitio en Vivo</T>
+                                <ExternalLink size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </motion.div>
                   </AnimatePresence>
-                  
-                  {/* Step dots slider controls + Navigation chevrons on both sides */}
-                  <div className="flex items-center justify-center gap-4 mt-6">
-                    <button
-                      onClick={handlePrevCinema}
-                      className="p-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer active:scale-90"
-                      aria-label={translate("Proyecto anterior", "Previous project")}
-                    >
-                      <ChevronLeft size={20} strokeWidth={1.5} />
-                    </button>
 
-                    <div className="flex gap-1.5 justify-center">
-                      {cinemaProjects.map((proj, idx) => (
-                        <button
-                          key={proj.slug}
-                          onClick={() => setActiveCinemaIndex(idx)}
-                          className={`w-2 h-2 rounded-full transition-all cursor-pointer ${
-                            idx === activeCinemaIndex ? "w-6" : "bg-gray-700 hover:bg-gray-500"
-                          }`}
-                          style={{
-                            backgroundColor: idx === activeCinemaIndex ? "var(--cinema-color)" : undefined
-                          }}
-                          title={proj.title}
-                        />
-                      ))}
-                    </div>
-
-                    <button
-                      onClick={handleNextCinema}
-                      className="p-3 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer active:scale-90"
-                      aria-label={translate("Siguiente proyecto", "Next project")}
-                    >
-                      <ChevronRight size={20} strokeWidth={1.5} />
-                    </button>
-                  </div>
-
+                  {/* Zonas de navegación: franjas angostas en los bordes
+                      (no todo el ancho) para no taparle los botones reales
+                      al slide de CTA. */}
+                  <button
+                    onClick={handleStoryPrev}
+                    className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-start pl-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    aria-label={translate("Anterior", "Previous")}
+                  >
+                    <ChevronLeft size={22} strokeWidth={1.5} />
+                  </button>
+                  <button
+                    onClick={handleStoryNext}
+                    className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-end pr-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    aria-label={translate("Siguiente", "Next")}
+                  >
+                    <ChevronRight size={22} strokeWidth={1.5} />
+                  </button>
                 </div>
-              </div>
 
-            </div>
-
-            </motion.div>
-          </motion.div>
-            </div>
-          </motion.div>
-          )}
-        </AnimatePresence>
+                {/* Dots de proyecto (salto directo entre historias) */}
+                <div className="shrink-0 flex gap-1.5 justify-center py-4">
+                  {cinemaProjects.map((proj, idx) => (
+                    <button
+                      key={proj.slug}
+                      onClick={() => goToCinemaProject(idx)}
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
+                        idx === activeCinemaIndex ? "w-6" : "w-2 bg-gray-700 hover:bg-gray-500"
+                      }`}
+                      style={{
+                        backgroundColor: idx === activeCinemaIndex ? "var(--cinema-color)" : undefined,
+                      }}
+                      title={proj.title}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
 
         {/* Case Study Detail Quick view Modal */}
         {/* Renderizado vía portal a document.body: <main> es z-10 y crea su propio
