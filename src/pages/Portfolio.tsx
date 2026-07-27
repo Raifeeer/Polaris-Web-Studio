@@ -88,7 +88,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   // un valor fijo por proyecto.
   const cornerBg = fillParent
     ? "var(--color-surface-elevated)"
-    : "color-mix(in srgb, var(--color-surface-elevated) 85%, var(--cinema-color, transparent) 15%)";
+    : "color-mix(in srgb, var(--color-surface-elevated) 72%, var(--cinema-color, transparent) 28%)";
 
   React.useEffect(() => {
     if (fixedHeights) return;
