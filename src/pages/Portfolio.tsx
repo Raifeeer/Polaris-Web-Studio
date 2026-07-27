@@ -1138,24 +1138,20 @@ export default function Portfolio() {
                       </button>
                     </div>
                   )}
-                  {/* Reinicia con fade el <video> del slide 0 -- solo si la
-                      vista activa es un video real, mismo criterio que en
-                      ProjectScreenshot/ProjectDetail.tsx. */}
-                  {storySlide === 0 &&
-                    !hasMockupContent(currentCinemaProject.slug) &&
-                    ((storyView === "desktop" && currentCinemaProject.previewVideo) ||
-                      (storyView === "mobile" && currentCinemaProject.mobileVideo)) && (
-                      <button
-                        onClick={() =>
-                          (storyView === "desktop" ? storyDesktopVideoRef : storyMobileVideoRef).current?.restart()
-                        }
-                        className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
-                        aria-label={translate("Reiniciar video", "Restart video")}
-                        title={translate("Reiniciar video", "Restart video")}
-                      >
-                        <RotateCcw size={16} />
-                      </button>
-                    )}
+                  {/* Abre el sitio en vivo del proyecto en una pestaña nueva --
+                      pedido explícito del usuario para que viva en la barra
+                      superior, donde antes estaba el botón de reinicio (ese
+                      se movió junto a las flechas de navegación, abajo). */}
+                  {currentCinemaProject.liveUrl && (
+                    <button
+                      onClick={() => window.open(currentCinemaProject.liveUrl, "_blank")}
+                      className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                      aria-label={translate("Ver proyecto en vivo", "View live project")}
+                      title={translate("Ver proyecto en vivo", "View live project")}
+                    >
+                      <ExternalLink size={16} />
+                    </button>
+                  )}
                   <button
                     onClick={handleNextCinema}
                     className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
@@ -1415,6 +1411,26 @@ export default function Portfolio() {
                   >
                     <ChevronLeft size={22} strokeWidth={2} />
                   </button>
+                  {/* Reinicia con fade el <video> del slide 0 -- solo si la
+                      vista activa es un video real, mismo criterio que en
+                      ProjectScreenshot/ProjectDetail.tsx. Pedido explícito
+                      del usuario: vive acá, entre las dos flechas, en vez
+                      de en la barra superior. */}
+                  {storySlide === 0 &&
+                    !hasMockupContent(currentCinemaProject.slug) &&
+                    ((storyView === "desktop" && currentCinemaProject.previewVideo) ||
+                      (storyView === "mobile" && currentCinemaProject.mobileVideo)) && (
+                      <button
+                        onClick={() =>
+                          (storyView === "desktop" ? storyDesktopVideoRef : storyMobileVideoRef).current?.restart()
+                        }
+                        className="p-2.5 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:scale-110 transition-all cursor-pointer"
+                        aria-label={translate("Reiniciar video", "Restart video")}
+                        title={translate("Reiniciar video", "Restart video")}
+                      >
+                        <RotateCcw size={22} strokeWidth={2} />
+                      </button>
+                    )}
                   <button
                     onClick={handleStoryNext}
                     className="p-2.5 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:scale-110 transition-all cursor-pointer"
