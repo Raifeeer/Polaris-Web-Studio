@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,7 +23,8 @@ import {
   Star,
   Monitor,
   Smartphone,
-  Sparkles
+  Sparkles,
+  SkipForward
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -349,6 +350,14 @@ export default function Portfolio() {
   // dos columnas. Se resetea a 0 cada vez que cambia el proyecto activo.
   const [storySlide, setStorySlide] = useState(0);
   const STORY_SLIDE_COUNT = 3;
+  const STORY_SLIDE_DURATION_MS = 25000;
+  // Progreso 0-1 dentro del slide actual, para animar el relleno de la
+  // franja como en Instagram (en vez de saltar directo a lleno). Se
+  // resetea a 0 en cada cambio de slide/proyecto y avanza vía rAF.
+  const [storyProgress, setStoryProgress] = useState(0);
+  const [storyPaused, setStoryPaused] = useState(false);
+  const storyTouchStartX = useRef<number | null>(null);
+  const storyTouchStartY = useRef<number | null>(null);
 
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
@@ -444,6 +453,70 @@ export default function Portfolio() {
     } else {
       setActiveCinemaIndex(prev => (prev - 1 + cinemaProjects.length) % cinemaProjects.length);
       setStorySlide(STORY_SLIDE_COUNT - 1);
+    }
+  };
+
+  // Avance automático estilo Instagram: cada slide corre un timer de
+  // STORY_SLIDE_DURATION_MS, animando storyProgress de 0 a 1 vía rAF (no
+  // setInterval, para que la franja de progreso se rellene fluida en vez
+  // de a saltos). Se reinicia en cada cambio de slide/proyecto y se
+  // pausa mientras el usuario mantiene presionado el contenido (storyPaused).
+  useEffect(() => {
+    if (viewMode !== "cinema" || storyPaused) return;
+    setStoryProgress(0);
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const pct = Math.min(1, elapsed / STORY_SLIDE_DURATION_MS);
+      setStoryProgress(pct);
+      if (pct >= 1) {
+        handleStoryNext();
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode, storySlide, activeCinemaIndex, storyPaused]);
+
+  // Bloquea el scroll vertical de la página de fondo mientras el modo
+  // historia está activo -- de otro modo, un swipe/scroll dentro del
+  // overlay (que ocupa toda la pantalla) también desplazaba el portafolio
+  // detrás de él.
+  useEffect(() => {
+    if (viewMode !== "cinema") return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [viewMode]);
+
+  // Swipe horizontal para cambiar de slide (izq = siguiente, der =
+  // anterior, mismo sentido que Instagram) -- umbral de 40px para no
+  // interferir con taps normales. Pausa el timer mientras el dedo está
+  // apoyado, para que un swipe lento no compita con el avance automático.
+  const handleStoryTouchStart = (e: React.TouchEvent) => {
+    storyTouchStartX.current = e.touches[0].clientX;
+    storyTouchStartY.current = e.touches[0].clientY;
+    setStoryPaused(true);
+  };
+  const handleStoryTouchEnd = (e: React.TouchEvent) => {
+    setStoryPaused(false);
+    const startX = storyTouchStartX.current;
+    const startY = storyTouchStartY.current;
+    storyTouchStartX.current = null;
+    storyTouchStartY.current = null;
+    if (startX === null || startY === null) return;
+    const dx = e.changedTouches[0].clientX - startX;
+    const dy = e.changedTouches[0].clientY - startY;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) {
+      handleStoryNext();
+    } else {
+      handleStoryPrev();
     }
   };
 
@@ -938,9 +1011,9 @@ export default function Portfolio() {
               >
                 {/* Barra de progreso segmentada (una franja por slide) +
                     cerrar. idx < storySlide: completado (lleno). idx ===
-                    storySlide: slide actual (también lleno -- sin
-                    animación de cuenta regresiva a propósito, para no
-                    sumar timers/limpieza extra; el avance es manual). */}
+                    storySlide: se rellena en vivo con storyProgress (0-1),
+                    animado vía rAF -- mismo efecto visual que Instagram.
+                    idx > storySlide: vacío. */}
                 <div className="shrink-0 px-4 pt-4 flex items-center gap-3">
                   <div className="flex-1 flex gap-1.5">
                     {Array.from({ length: STORY_SLIDE_COUNT }).map((_, i) => (
@@ -949,15 +1022,28 @@ export default function Portfolio() {
                         className="flex-1 h-1 rounded-full bg-[var(--color-border-subtle)] overflow-hidden"
                       >
                         <div
-                          className="h-full rounded-full transition-all duration-300"
+                          className="h-full rounded-full"
                           style={{
-                            width: i <= storySlide ? "100%" : "0%",
+                            width:
+                              i < storySlide
+                                ? "100%"
+                                : i === storySlide
+                                ? `${storyProgress * 100}%`
+                                : "0%",
                             backgroundColor: "var(--cinema-color, #6366f1)",
                           }}
                         />
                       </div>
                     ))}
                   </div>
+                  <button
+                    onClick={handleNextCinema}
+                    className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    aria-label={translate("Siguiente proyecto", "Next project")}
+                    title={translate("Siguiente proyecto", "Next project")}
+                  >
+                    <SkipForward size={18} />
+                  </button>
                   <button
                     onClick={() => setViewMode("bento")}
                     className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
@@ -980,7 +1066,11 @@ export default function Portfolio() {
                 {/* Contenido del slide actual + zonas de navegación en los
                     bordes (angostas, para no chocar con los botones reales
                     del slide de CTA). */}
-                <div className="relative flex-1 min-h-0">
+                <div
+                  className="relative flex-1 min-h-0"
+                  onTouchStart={handleStoryTouchStart}
+                  onTouchEnd={handleStoryTouchEnd}
+                >
                   <AnimatePresence mode="wait">
                     <motion.div
                       key={`${currentCinemaProject.slug}-${storySlide}`}
@@ -1130,20 +1220,27 @@ export default function Portfolio() {
 
                   {/* Zonas de navegación: franjas angostas en los bordes
                       (no todo el ancho) para no taparle los botones reales
-                      al slide de CTA. */}
+                      al slide de CTA -- el botón visible (círculo) queda
+                      centrado verticalmente y más grande para que se note
+                      y sea fácil de tocar, la franja clickeable sigue
+                      cubriendo todo el alto. */}
                   <button
                     onClick={handleStoryPrev}
-                    className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-start pl-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    className="absolute left-0 top-0 bottom-0 w-14 flex items-center justify-start pl-2 cursor-pointer group"
                     aria-label={translate("Anterior", "Previous")}
                   >
-                    <ChevronLeft size={22} strokeWidth={1.5} />
+                    <span className="p-2.5 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] group-hover:scale-110 transition-all">
+                      <ChevronLeft size={26} strokeWidth={2} />
+                    </span>
                   </button>
                   <button
                     onClick={handleStoryNext}
-                    className="absolute right-0 top-0 bottom-0 w-12 flex items-center justify-end pr-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    className="absolute right-0 top-0 bottom-0 w-14 flex items-center justify-end pr-2 cursor-pointer group"
                     aria-label={translate("Siguiente", "Next")}
                   >
-                    <ChevronRight size={22} strokeWidth={1.5} />
+                    <span className="p-2.5 rounded-full bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)] group-hover:scale-110 transition-all">
+                      <ChevronRight size={26} strokeWidth={2} />
+                    </span>
                   </button>
                 </div>
 
