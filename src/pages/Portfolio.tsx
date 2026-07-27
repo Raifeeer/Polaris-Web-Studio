@@ -568,16 +568,20 @@ export default function Portfolio() {
   // opaco/blanco (eso ya se probó y no le gustó), solo que el logo tome la
   // variante clara (blanca) y el ícono de menú/el botón de tema tengan
   // menos contraste contra el negro, sin que el navbar en sí se note.
-  // Bug real reportado por el usuario: esta clase quedaba pegada mientras
-  // durara TODO el modo cine, aunque el overlay negro ya se hubiera
-  // desvanecido por completo al scrollear (el mismo cálculo que usa el
-  // overlay: opacity = max(0, 1 - cinemaScrollY/200)) -- el navbar volvía
-  // a su fondo opaco normal al hacer scroll, y el logo blanco quedaba
-  // invisible contra ESE blanco. Ahora la clase sigue el mismo desvanecido
-  // real del overlay (umbral en 0.15 de opacidad, no todo el modo cine).
+  // Bug real reportado por el usuario, dos rondas:
+  // 1) esta clase quedaba pegada mientras durara TODO el modo cine, aunque
+  //    el overlay negro ya se hubiera desvanecido por completo -- el
+  //    navbar volvía a su fondo opaco normal al hacer scroll, y el logo
+  //    blanco quedaba invisible contra ESE blanco.
+  // 2) el primer fix la ató al desvanecido del OVERLAY (200px, lento),
+  //    pero el Navbar (Navbar.tsx) se vuelve opaco mucho antes (scrollY >
+  //    20, su propio umbral de "scrolled") -- quedaba una ventana real
+  //    donde el navbar ya está opaco/blanco pero el logo seguía blanco
+  //    (invisible), justo lo que el usuario reportó ("el navbar se pone
+  //    claro antes que el logo cambie de color"). Ahora usa el MISMO
+  //    umbral que Navbar.tsx (scrollY > 20), no el fade del overlay.
   useEffect(() => {
-    const overlayOpacity = viewMode === "cinema" ? Math.max(0, 1 - cinemaScrollY / 200) : 0;
-    document.documentElement.classList.toggle("cinema-mode", overlayOpacity > 0.15);
+    document.documentElement.classList.toggle("cinema-mode", viewMode === "cinema" && cinemaScrollY <= 20);
     return () => document.documentElement.classList.remove("cinema-mode");
   }, [viewMode, cinemaScrollY]);
 
