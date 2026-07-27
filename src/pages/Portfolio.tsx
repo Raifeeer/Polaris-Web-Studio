@@ -494,12 +494,19 @@ export default function Portfolio() {
   // historia está activo -- de otro modo, un swipe/scroll dentro del
   // overlay (que ocupa toda la pantalla) también desplazaba el portafolio
   // detrás de él.
+  // Además marca <body> con una clase (mismo patrón que .light en <html>)
+  // para poder ocultar por CSS el botón flotante de Atlas Terminal (QuoteBot),
+  // que vive en un div propio con z-[100] -- por encima del overlay de
+  // historia (z-[90]) -- así que sin esto quedaba flotando sobre el modo
+  // historia en vez de escondido detrás.
   useEffect(() => {
     if (viewMode !== "cinema") return;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    document.body.classList.add("story-mode-active");
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.body.classList.remove("story-mode-active");
     };
   }, [viewMode]);
 

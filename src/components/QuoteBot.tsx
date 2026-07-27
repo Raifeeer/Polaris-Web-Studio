@@ -262,7 +262,7 @@ export default function QuoteBot() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 z-[100]">
+    <div className="fixed bottom-6 right-6 z-[100] [.story-mode-active_&]:hidden">
       <AnimatePresence>
         {isOpen && (
           <motion.div
