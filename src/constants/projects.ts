@@ -357,17 +357,35 @@ export const projects: Project[] = [
     // esos avatares salían vacíos/rotos en el video. Fix: grep de TODAS
     // las URLs images.unsplash.com de todo `src/` (no solo
     // properties.ts) antes de armar la caché -- 4 IDs faltantes
-    // descargados. De paso, confirmado que el mobile (target =
-    // scrollHeight completo, sin el tope de 2450px que sí tiene desktop)
-    // ya llega hasta el footer real -- el desktop, igual que Lúmina, se
-    // queda en el primer tramo de la página (hero + un par de secciones)
-    // a propósito, no es un bug.
+    // descargados.
+    // Corrección real sobre el comentario anterior: se había asumido que
+    // el desktop de Lúmina tampoco llega a su footer (para justificar
+    // que el de Nexus tampoco) -- falso, comprobado revisando el video
+    // real de Lúmina cuadro a cuadro: sí llega, porque el tope de 2450px
+    // (heredado tal cual del script de Lúmina) cubre por casualidad la
+    // página COMPLETA de Lúmina, que es más corta. La de Nexus mide
+    // ~7497px real, casi el triple, así que el mismo tope numérico deja
+    // el desktop de Nexus a un tercio del camino. Pedido explícito del
+    // usuario: dejar el desktop tal cual está (con ese tope, sin
+    // alcanzar el footer) en vez de extenderlo -- en su lugar, se acortó
+    // el mobile (ver v12 más abajo) para no depender de un video más
+    // largo.
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v11.jpg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v11.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v11.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v11.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v11.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v11.jpg",
+    // Mobile v12: recortado a 11000px de scroll real (de ~13929px
+    // totales) para no llegar hasta el footer -- acorta la duración
+    // final (949 frames/~31.6s en vez de 1201/~40s), con los pasos
+    // recalculados (474 en vez de 600) para conservar el mismo ritmo de
+    // scroll por frame que ya se había ajustado, no solo menos
+    // distancia con el mismo número de pasos. De paso, calidad de
+    // encoding subida (crf 24→20, preset slow→slower, sin el downscale
+    // agresivo a 560x1212 -- ese mismo tamaño se mantuvo, pero con menor
+    // pérdida por cuadro) tras notar que se veía menos nítido que el de
+    // Lúmina.
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v12.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v12.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v12.jpg",
   },
   {
     slug: "chroma-store",
