@@ -11,12 +11,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      // .cinema-mode (Portfolio.tsx): la caja casi blanca de este botón
-      // quedaba con demasiado contraste sobre el overlay negro del modo
-      // cine (pedido explícito del usuario) -- ahí pasa a un fondo
-      // translúcido oscuro con blur en vez del surface-highlight sólido,
-      // y el ícono a un blanco atenuado en vez del texto secundario.
-      className="p-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] [.cinema-mode_&]:bg-white/10 [.cinema-mode_&]:backdrop-blur-md [.cinema-mode_&]:text-white/75 hover:text-[var(--color-primary-base)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+      className="p-2 rounded-lg bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
       aria-label={
         theme === "dark"
           ? translate("Cambiar a modo claro", "Switch to light mode")

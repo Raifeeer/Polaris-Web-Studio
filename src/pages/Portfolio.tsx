@@ -76,19 +76,12 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
     interactive ? MOCKUP_MOBILE_ASPECT : null
   );
   // Color de fondo real detrás del mockup, para los parches de esquina de
-  // AutoResumeVideo. En el bento grid (fillParent) el fondo es liso
-  // (bg-[var(--color-surface-elevated)] de la tarjeta) -- coincide exacto.
-  // En modo cine (!fillParent) el panel tiene un glow decorativo del color
-  // del proyecto (bg-gradient-to-br ${project.color}, opacity-10,
-  // blur-[130px]) que tiñe el fondo con un tono cálido -- un cornerBg
-  // liso quedaba como un parche blanco/gris obvio ahí (bug real
-  // reportado por el usuario: "esquinas blancas" en modo cine).
-  // color-mix() mezcla un poco del color de acento del proyecto (mismo
-  // que usa el glow) para acercarse al tono real sin tener que adivinar
-  // un valor fijo por proyecto.
-  const cornerBg = fillParent
-    ? "var(--color-surface-elevated)"
-    : "color-mix(in srgb, var(--color-surface-elevated) 85%, var(--cinema-color, transparent) 15%)";
+  // AutoResumeVideo -- tanto la tarjeta del bento grid como el panel de
+  // modo cine usan el mismo fondo liso (bg-[var(--color-surface-elevated)]),
+  // así que un solo valor exacto alcanza en los dos casos (el modo cine
+  // ya no tiene el glow/vignette decorativo que antes lo desviaba, ver
+  // el rediseño del panel más abajo).
+  const cornerBg = "var(--color-surface-elevated)";
 
   React.useEffect(() => {
     if (fixedHeights) return;
@@ -356,10 +349,6 @@ export default function Portfolio() {
   // Quick View Overlay State
   const [selectedProjectForQuickView, setSelectedProjectForQuickView] = useState<Project | null>(null);
 
-  // Posición de scroll mientras está en modo cine, para que el overlay oscuro
-  // se desvanezca gradualmente a medida que el usuario baja.
-  const [cinemaScrollY, setCinemaScrollY] = useState(0);
-
   // Type definitions/categories for filter pills
   const availableTypes = useMemo(() => {
     const types = new Set<string>();
@@ -551,39 +540,6 @@ export default function Portfolio() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Rastrea el scroll mientras está en modo cine para desvanecer el overlay
-  // oscuro a medida que el usuario avanza hacia la siguiente sección.
-  useEffect(() => {
-    if (viewMode !== "cinema") return;
-    const handleScroll = () => setCinemaScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [viewMode]);
-
-  // Clase en <html> para que el Navbar (montado en App.tsx, sin acceso al
-  // estado de esta página) sepa que está sobre el overlay oscuro del modo
-  // cine y pueda usar el logo/íconos de tema oscuro aunque el sitio esté
-  // en tema claro -- pedido explícito del usuario: NO quiere el navbar
-  // opaco/blanco (eso ya se probó y no le gustó), solo que el logo tome la
-  // variante clara (blanca) y el ícono de menú/el botón de tema tengan
-  // menos contraste contra el negro, sin que el navbar en sí se note.
-  // Bug real reportado por el usuario, dos rondas:
-  // 1) esta clase quedaba pegada mientras durara TODO el modo cine, aunque
-  //    el overlay negro ya se hubiera desvanecido por completo -- el
-  //    navbar volvía a su fondo opaco normal al hacer scroll, y el logo
-  //    blanco quedaba invisible contra ESE blanco.
-  // 2) el primer fix la ató al desvanecido del OVERLAY (200px, lento),
-  //    pero el Navbar (Navbar.tsx) se vuelve opaco mucho antes (scrollY >
-  //    20, su propio umbral de "scrolled") -- quedaba una ventana real
-  //    donde el navbar ya está opaco/blanco pero el logo seguía blanco
-  //    (invisible), justo lo que el usuario reportó ("el navbar se pone
-  //    claro antes que el logo cambie de color"). Ahora usa el MISMO
-  //    umbral que Navbar.tsx (scrollY > 20), no el fade del overlay.
-  useEffect(() => {
-    document.documentElement.classList.toggle("cinema-mode", viewMode === "cinema" && cinemaScrollY <= 20);
-    return () => document.documentElement.classList.remove("cinema-mode");
-  }, [viewMode, cinemaScrollY]);
 
   useEffect(() => {
     if (viewMode !== "cinema") {
@@ -819,6 +775,15 @@ export default function Portfolio() {
                 <motion.div
                   key={project.slug}
                   layout
+                  // layoutId compartido con el panel de modo cine (más
+                  // abajo) -- reemplaza el viejo "modo cine" (oscurecer
+                  // toda la pantalla + esperar a que el usuario scrollee)
+                  // por una transición de expansión real: esta misma
+                  // tarjeta se estira y se transforma en el panel
+                  // completo, Framer Motion anima el cambio de tamaño/
+                  // posición solo -- sin overlay negro, sin tener que
+                  // adivinar colores de fondo para las esquinas del video.
+                  layoutId={`project-panel-${project.slug}`}
                   // Sin "scale" en initial/animate/exit a propósito -- esta
                   // tarjeta es ancestro (varios niveles arriba) del <video>
                   // del mockup, que recorta sus propias esquinas con
@@ -994,34 +959,20 @@ export default function Portfolio() {
           </motion.div>
         )}
 
-        {/* 2. VIEW MODE: CINEMA SHOWCASE (The spectacular full scale theater) */}
-        {/* Oscurece toda la pantalla (efecto "sala de cine"). El contenedor
-            externo solo anima la entrada/salida al activar/desactivar el modo
-            cine; el div interno fija su opacidad directamente desde el scroll
-            (sin pasar por el motor de animación de Framer) para que siga el
-            scroll 1:1 y no se vea con retraso/inercia mientras se hace scroll. */}
-        <AnimatePresence>
-          {viewMode === "cinema" && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              // Vuelve a cubrir toda la pantalla (inset-0) -- el intento
-              // anterior de cortar el overlay en top-16 sí arreglaba el
-              // contraste, pero el usuario NO quería un navbar opaco/
-              // blanco tan notorio: prefiere el look transparente
-              // original, con el logo/íconos usando la variante clara
-              // (clase .cinema-mode en <html>, ver arriba) para tener
-              // contraste sin que el navbar en sí se note.
-              className="fixed inset-0 z-10 pointer-events-none"
-            >
-              <div
-                className="absolute inset-0 bg-black"
-                style={{ opacity: Math.max(0, 1 - cinemaScrollY / 200) }}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* 2. VIEW MODE: CINEMA SHOWCASE */}
+        {/* Rediseño real (pedido explícito del usuario, "reemplazá el modo
+            cine por algo más interesante"): el overlay negro de pantalla
+            completa + el glow decorativo detrás del mockup fueron la causa
+            de toda la ronda de bugs de esquinas del video (el fondo real
+            detrás del mockup nunca era un color plano, así que los parches
+            de esquina de AutoResumeVideo nunca podían matchear exacto). En
+            vez de un "apagón" de pantalla completa, la tarjeta del bento
+            grid se transforma directamente en este panel (layoutId
+            compartido, ver la tarjeta más arriba) -- Framer Motion anima
+            el cambio de tamaño/posición solo, sin overlay ni ninguna
+            dependencia de scroll. El panel queda con el mismo fondo plano
+            de superficie que el resto del sitio (sin glow ni vignette), así
+            que cornerBg vuelve a ser un color exacto, no una aproximación. */}
         <AnimatePresence>
           {viewMode === "cinema" && filteredProjects.length > 0 && (
             <motion.div
@@ -1039,29 +990,17 @@ export default function Portfolio() {
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
                 <motion.div
-                  // Sin "scale" acá tampoco -- este panel es ancestro del
-                  // mockup en video del modo cine (mismo bug real ya
-                  // documentado y corregido en la tarjeta del bento grid y
-                  // en el carrusel de ProjectDetail.tsx).
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  layoutId={`project-panel-${currentCinemaProject.slug}`}
                   className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden shadow-2xl pb-16 z-20"
                 >
-            {/* Background glowing ball matched to project accent */}
-            <div className={`absolute top-0 right-0 w-80 h-80 bg-gradient-to-br ${currentCinemaProject.color} opacity-10 blur-[130px] rounded-full pointer-events-none`} />
-
-            {/* Vignette izquierda */}
+            {/* Acento sutil del color del proyecto, solo en el borde
+                superior -- reemplaza el glow+vignette de antes, que
+                bañaba TODO el panel (incluido el mockup) de un tono que
+                nunca calzaba exacto con los parches de esquina del video. */}
             <div
-              className="absolute left-0 top-0 h-full w-40 z-10 pointer-events-none"
-              style={{ background: `linear-gradient(to right, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
+              className="absolute top-0 left-0 right-0 h-1"
+              style={{ background: `linear-gradient(to right, transparent, var(--cinema-color, transparent), transparent)` }}
             />
-
-            {/* Vignette derecha */}
-            <div
-              className="absolute right-0 top-0 h-full w-40 z-10 pointer-events-none"
-              style={{ background: `linear-gradient(to left, rgba(var(--cinema-color-rgb), 0.35), transparent)` }}
-            />
-
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
               
               {/* Left Column: Details */}
