@@ -982,7 +982,17 @@ export default function Portfolio() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-10 pointer-events-none"
+              // top-16 (no inset-0/top-0) -- este overlay negro fijo antes
+              // cubría TODA la pantalla, incluida el área del Navbar. El
+              // Navbar es transparente arriba del todo de la página (deja
+              // ver lo que sea que haya detrás hasta que el usuario hace
+              // scroll), así que este negro se colaba detrás y el logo
+              // oscuro (variante de tema claro) quedaba invisible contra
+              // él -- bug real reportado por el usuario ("el logo no se
+              // ve"). Arrancar el overlay justo debajo de la altura real
+              // del Navbar (h-16 en Navbar.tsx) evita el problema de raíz
+              // sin tocar el Navbar -- el negro nunca llega a esa franja.
+              className="fixed left-0 right-0 top-16 bottom-0 z-10 pointer-events-none"
             >
               <div
                 className="absolute inset-0 bg-black"
