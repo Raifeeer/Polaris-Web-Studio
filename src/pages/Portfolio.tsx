@@ -778,9 +778,23 @@ export default function Portfolio() {
                 <motion.div
                   key={project.slug}
                   layout
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
+                  // Sin "scale" en initial/animate/exit a propósito -- esta
+                  // tarjeta es ancestro (varios niveles arriba) del <video>
+                  // del mockup, que recorta sus propias esquinas con
+                  // overflow-hidden + border-radius. Framer Motion deja un
+                  // transform inline permanente (incluso en scale:1 de
+                  // reposo, tras terminar la animación de entrada) que,
+                  // como ancestro de CUALQUIER descendiente con
+                  // overflow-hidden + border-radius, rompe el redondeo de
+                  // esquinas en WebKit/iOS real -- confirmado en vivo:
+                  // ningún fix aplicado directo sobre el <video> (mask,
+                  // clip-path) funcionó mientras esta tarjeta seguía
+                  // animando scale. Mismo bug ya documentado más abajo para
+                  // el wrapper de hover -- acá la causa real estaba en este
+                  // nivel, no en el <video> mismo.
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4 }}
                   className={`rounded-[var(--radius-bento)] p-6 lg:p-8 border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col group overflow-hidden relative bento-glow-hover transition-colors duration-500 ${
@@ -969,8 +983,12 @@ export default function Portfolio() {
                 transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
                 <motion.div
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  // Sin "scale" acá tampoco -- este panel es ancestro del
+                  // mockup en video del modo cine (mismo bug real ya
+                  // documentado y corregido en la tarjeta del bento grid y
+                  // en el carrusel de ProjectDetail.tsx).
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   className="bg-[var(--color-surface-elevated)] p-6 md:p-10 rounded-[2.5rem] border border-[var(--color-border-subtle)] relative overflow-hidden shadow-2xl pb-16 z-20"
                 >
             {/* Background glowing ball matched to project accent */}
@@ -1118,9 +1136,14 @@ export default function Portfolio() {
                     <motion.div
                       key={currentCinemaProject.slug}
                       custom={direction}
-                      initial={{ opacity: 0, x: direction * 40 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: direction * -40 }}
+                      // Sin "x" acá tampoco -- este wrapper es ancestro
+                      // directo del <video> del mockup (mismo bug real ya
+                      // documentado y corregido en el resto del archivo).
+                      // El slide direccional se pierde, pero el fade sigue
+                      // marcando el cambio de proyecto igual.
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                       transition={{ duration: 0.3, ease: "easeInOut" }}
                       layout={false}
                       className="relative w-full"

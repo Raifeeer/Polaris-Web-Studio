@@ -336,9 +336,17 @@ export default function ProjectDetail() {
             </div>
           </div>
 
+          {/* Sin "x" en initial/animate a propósito -- este wrapper es
+              ancestro del carrusel, cuyo <video> recorta sus propias
+              esquinas con overflow-hidden + border-radius. Framer Motion
+              deja un transform inline permanente (incluso en x:0 de
+              reposo) que, como ancestro de un descendiente con
+              overflow-hidden + border-radius, rompe el redondeo en
+              WebKit/iOS real -- mismo bug real encontrado y corregido en
+              Portfolio.tsx (ahí era "scale" en la tarjeta del bento). */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             className="relative"
           >
             <ProjectImageCarousel
