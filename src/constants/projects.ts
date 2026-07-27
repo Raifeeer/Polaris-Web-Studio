@@ -224,8 +224,24 @@ export const projects: Project[] = [
     ],
     techStack: ["React", "TypeScript", "Tailwind CSS"],
     liveUrl: "https://nexus-realty-demo.vercel.app/",
-    desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FNexusPC.PNG?alt=media&token=5550e8eb-4f3a-4cbd-b468-971651cc033d",
-    mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FNexusMovil.PNG?alt=media&token=a5b0944c-5d8f-4cb6-b4d8-c7652f5e6e45",
+    // Mismo pipeline de video real que Lúmina Sky (v3): recorrido de
+    // pre-calentamiento sin grabar (para que las animaciones
+    // whileInView/once:true ya queden asentadas) seguido de la grabación
+    // real con scroll suavizado (easeInOutSine). Desktop grabado con
+    // Playwright (context.recordVideo, 1600x1000@2x, recortado a
+    // 1200x750/25fps). Mobile grabado cuadro a cuadro vía CDP
+    // (Page.captureScreenshot) en vez de page.screenshot() -- en este
+    // entorno sandboxeado sin red externa, page.screenshot() se queda
+    // colgado esperando "fonts to load" indefinidamente. Las fotos reales
+    // de las propiedades (Firebase Storage) se sirvieron desde una caché
+    // local descargada por curl -- Playwright no puede alcanzar dominios
+    // externos en este entorno, a diferencia de curl/fetch de Node.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v1.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v1.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v1.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v1.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v1.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v1.jpg",
   },
   {
     slug: "chroma-store",
