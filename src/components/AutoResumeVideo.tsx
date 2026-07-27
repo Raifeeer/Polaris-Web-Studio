@@ -106,9 +106,8 @@ export default function AutoResumeVideo({
   poster,
   ariaLabel,
   cornerBg,
-  narrow,
   aspectRatio,
-  maxWidthPx = 260,
+  maxWidthPx,
 }: {
   src: string;
   poster?: string;
@@ -117,18 +116,49 @@ export default function AutoResumeVideo({
   // -- los parches de esquina se pintan con este color para que se
   // mimeticen con lo que hay alrededor.
   cornerBg: string;
-  // true para el mockup angosto centrado (vista móvil) -- false/omitido
-  // para el mockup a ancho completo (vista desktop).
-  narrow?: boolean;
-  // Requerido cuando narrow=true (ej. "560/1212") -- reemplaza el
-  // "w-auto" que antes se apoyaba en el tamaño intrínseco del propio
-  // <video>, ahora que el tamaño lo define este div contenedor.
-  aspectRatio?: string;
-  // Solo aplica cuando narrow=true.
+  // Proporción REAL del archivo de video (ej. "1200/750", "560/1212") --
+  // obligatorio. Bug real encontrado: antes el mockup de escritorio usaba
+  // "w-full h-full" confiando en que el alto ya calculado por el padre
+  // (ProjectScreenshot, vía JS + un clamp de min/max altura) coincidiera
+  // exacto con la proporción real del video -- casi nunca coincidía del
+  // todo (el clamp lo desalinea en tarjetas angostas), así que
+  // object-contain dejaba franjas vacías (letterbox) entre el video real
+  // y el borde de la caja, y los parches de esquina (alineados a la caja,
+  // no al video) quedaban tapando el aire en vez del video. El mockup
+  // móvil nunca tuvo este problema porque ya pasaba su aspectRatio real a
+  // mano. Ahora los dos casos usan el mismo mecanismo: aspect-ratio +
+  // max-width/max-height:100% hace que ESTE div calcule su propio tamaño
+  // exacto (el más grande que entra en el espacio disponible
+  // manteniendo la proporción real), igual que un <img> con
+  // max-width:100% -- así la caja SIEMPRE coincide exacto con el video
+  // real, sin importar qué tan preciso sea el cálculo de alto del padre.
+  aspectRatio: string;
+  // Tope adicional de ancho, además del 100% del contenedor (ej. 260 para
+  // el mockup angosto centrado de la vista móvil). Omitido para el
+  // mockup de escritorio, que puede usar todo el ancho disponible.
   maxWidthPx?: number;
 }) {
+  const [ratioW, ratioH] = React.useMemo(() => {
+    const [w, h] = aspectRatio.split("/").map(Number);
+    return [w || 1, h || 1];
+  }, [aspectRatio]);
+
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
+  // Tamaño del frame calculado a mano en JS (no vía CSS aspect-ratio +
+  // max-width/max-height) -- bug real encontrado probando esto: cuando
+  // max-width Y max-height terminan activándose a la vez (el mockup
+  // angosto de móvil, más alto de lo que cabe en algunos contenedores),
+  // Chromium no resuelve ambos límites en conjunto para mantener la
+  // proporción -- cada uno se aplica por separado, dejando una caja que
+  // NO respeta la proporción real del video (ej. 260x460 en vez de
+  // 213x460), rompiendo la alineación de los parches de esquina otra
+  // vez. Un ResizeObserver + la misma cuenta que hace object-fit:contain
+  // a mano (comparar el ancho candidato contra el alto disponible y
+  // usar el que corresponda) es la única forma de garantizar que la caja
+  // SIEMPRE calce exacto con el video real, sin depender de que el
+  // navegador resuelva bien un caso límite de CSS.
+  const [frameSize, setFrameSize] = React.useState<{ width: number; height: number } | null>(null);
   const [showResume, setShowResume] = React.useState(false);
   // Solo se muestra/desvanece una vez, al primer arranque real -- en
   // reanudaciones posteriores (volver de segundo plano, reentrar en
@@ -152,6 +182,28 @@ export default function AutoResumeVideo({
     if (video.readyState === 0) video.load();
     video.play().then(() => setShowResume(false)).catch(() => setShowResume(true));
   }, []);
+
+  React.useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    const compute = (availWidth: number, availHeight: number) => {
+      let width = maxWidthPx ? Math.min(availWidth, maxWidthPx) : availWidth;
+      let height = (width * ratioH) / ratioW;
+      if (height > availHeight) {
+        height = availHeight;
+        width = (height * ratioW) / ratioH;
+      }
+      if (width > 0 && height > 0) setFrameSize({ width, height });
+    };
+    compute(wrapper.clientWidth, wrapper.clientHeight);
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      compute(entry.contentRect.width, entry.contentRect.height);
+    });
+    resizeObserver.observe(wrapper);
+    return () => resizeObserver.disconnect();
+  }, [ratioW, ratioH, maxWidthPx]);
 
   React.useEffect(() => {
     const wrapper = wrapperRef.current;
@@ -192,8 +244,12 @@ export default function AutoResumeVideo({
     };
   }, [attemptResume]);
 
-  const frameStyle: React.CSSProperties = narrow ? { aspectRatio, maxWidth: maxWidthPx } : {};
-  const frameClassName = narrow ? "relative h-full mx-auto" : "relative w-full h-full";
+  const frameStyle: React.CSSProperties = {
+    position: "relative",
+    width: frameSize ? frameSize.width : 0,
+    height: frameSize ? frameSize.height : 0,
+    isolation: "isolate",
+  };
 
   return (
     <div ref={wrapperRef} className="relative w-full h-full flex items-center justify-center">
@@ -205,8 +261,11 @@ export default function AutoResumeVideo({
           DOM, quedaban tapados). transform: translateZ(0) en el <video>
           fuerza a que se componga como una capa normal dentro de este
           contexto en vez de ese plano especial, y z-index explícito en los
-          3 hijos deja sin ambigüedad qué va arriba de qué. */}
-      <div className={frameClassName} style={{ ...frameStyle, isolation: "isolate" }}>
+          3 hijos deja sin ambigüedad qué va arriba de qué.
+          El ancho/alto ya vienen calculados a mano arriba (ResizeObserver
+          + la misma cuenta de object-fit:contain) en vez de dejarlo en
+          manos de aspect-ratio + max-width/max-height de CSS. */}
+      <div style={frameStyle}>
         <video
           ref={videoRef}
           src={src}

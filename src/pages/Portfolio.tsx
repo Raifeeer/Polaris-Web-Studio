@@ -234,6 +234,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                 src={project.previewVideo}
                 poster={project.previewPoster}
                 cornerBg="var(--color-surface-elevated)"
+                aspectRatio="1200/750"
                 ariaLabel={`${project.title} Desktop`}
               />
             ) : project.desktopImg ? (
@@ -286,8 +287,8 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                 src={project.mobileVideo}
                 poster={project.mobilePoster}
                 cornerBg="var(--color-surface-elevated)"
-                narrow
                 aspectRatio="560/1212"
+                maxWidthPx={260}
                 ariaLabel={`${project.title} Mobile`}
               />
             ) : project.mobileImg ? (
