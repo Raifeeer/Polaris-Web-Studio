@@ -929,7 +929,15 @@ export default function Portfolio() {
                       (p-2, rounded-2xl, overflow-hidden) nunca se mueve, solo
                       recorta -- así el clip y el transform quedan separados. */}
                   <div className="relative z-10 w-full mt-6 transition-transform duration-500 group-hover:-translate-y-2 flex-grow flex flex-col">
-                    <div className="w-full h-full p-2 rounded-2xl overflow-hidden flex-grow flex flex-col opacity-90 group-hover:opacity-100 transition-opacity duration-500 border border-[var(--color-border-subtle)] bg-transparent">
+                    {/* Sin opacity-90 en reposo -- ese "se aclara" de la
+                        tarjeta antes de pasar el mouse era intencional para
+                        mouse/hover real, pero en touch (donde no existe un
+                        :hover real) se quedaba SIEMPRE atenuado -- el
+                        usuario lo notó comparando este mockup (más claro)
+                        contra el mismo mockup en ProjectDetail.tsx (sin
+                        este atenuado, se ve más oscuro/nítido). Sacado del
+                        todo para que ambas vistas se vean iguales. */}
+                    <div className="w-full h-full p-2 rounded-2xl overflow-hidden flex-grow flex flex-col transition-opacity duration-500 border border-[var(--color-border-subtle)] bg-transparent">
                       <ProjectScreenshot project={project} fillParent />
                     </div>
                   </div>
