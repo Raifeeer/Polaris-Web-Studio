@@ -23,7 +23,7 @@ import {
   Star,
   Monitor,
   Smartphone,
-  Sparkles,
+  CirclePlay,
   SkipForward
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -754,7 +754,7 @@ export default function Portfolio() {
                     : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
                 }`}
               >
-                <Sparkles size={14} />
+                <CirclePlay size={14} />
                 <T en="Story Mode">Modo Historia</T>
               </button>
             </div>
