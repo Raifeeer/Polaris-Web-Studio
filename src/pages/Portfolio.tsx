@@ -233,7 +233,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               <AutoResumeVideo
                 src={project.previewVideo}
                 poster={project.previewPoster}
-                className="w-full h-full object-contain object-center bg-transparent"
+                cornerBg="var(--color-surface-elevated)"
                 ariaLabel={`${project.title} Desktop`}
               />
             ) : project.desktopImg ? (
@@ -285,7 +285,9 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               <AutoResumeVideo
                 src={project.mobileVideo}
                 poster={project.mobilePoster}
-                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent rounded-2xl"
+                cornerBg="var(--color-surface-elevated)"
+                narrow
+                aspectRatio="560/1212"
                 ariaLabel={`${project.title} Mobile`}
               />
             ) : project.mobileImg ? (

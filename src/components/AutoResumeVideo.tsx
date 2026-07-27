@@ -39,16 +39,92 @@ import { Play } from "lucide-react";
 //    real (300ms) recién cuando el evento 'playing' confirma que el video
 //    ya está decodificando cuadros de verdad, en vez de dejar que el
 //    navegador decida el momento del corte.
+// 4. Esquinas redondeadas: CINCO técnicas distintas de recorte CSS
+//    (overflow-hidden+border-radius simple, con y sin wrapper extra,
+//    -webkit-mask-image con degradé real, con topes duros, y clip-path)
+//    fueron probadas y confirmadas SIN EFECTO en el dispositivo real --
+//    Safari/iOS, para este <video> en particular, simplemente no recorta
+//    sus propias esquinas sin importar el mecanismo CSS usado. En vez de
+//    seguir peleando con el recorte, se abandona del todo: las 4 esquinas
+//    se "esconden" pintando por encima 4 parches sólidos con el mismo
+//    color de fondo real que rodea al mockup (cornerBg), cada uno con un
+//    radial-gradient de bordes duros que deja un cuarto de círculo
+//    transparente hacia adentro -- el resultado visual es idéntico a un
+//    recorte redondeado real, pero no depende de que el navegador sepa
+//    recortar la capa de video compuesta por hardware, así que no puede
+//    fallar por este bug.
+const RADIUS = "1rem"; // debe coincidir con rounded-2xl (Tailwind)
+
+function CornerPatches({ bg }: { bg: string }) {
+  const base: React.CSSProperties = {
+    position: "absolute",
+    width: RADIUS,
+    height: RADIUS,
+    pointerEvents: "none",
+  };
+  return (
+    <>
+      <div
+        style={{
+          ...base,
+          top: 0,
+          left: 0,
+          background: `radial-gradient(circle at bottom right, transparent ${RADIUS}, ${bg} ${RADIUS})`,
+        }}
+      />
+      <div
+        style={{
+          ...base,
+          top: 0,
+          right: 0,
+          background: `radial-gradient(circle at bottom left, transparent ${RADIUS}, ${bg} ${RADIUS})`,
+        }}
+      />
+      <div
+        style={{
+          ...base,
+          bottom: 0,
+          left: 0,
+          background: `radial-gradient(circle at top right, transparent ${RADIUS}, ${bg} ${RADIUS})`,
+        }}
+      />
+      <div
+        style={{
+          ...base,
+          bottom: 0,
+          right: 0,
+          background: `radial-gradient(circle at top left, transparent ${RADIUS}, ${bg} ${RADIUS})`,
+        }}
+      />
+    </>
+  );
+}
+
 export default function AutoResumeVideo({
   src,
   poster,
-  className,
   ariaLabel,
+  cornerBg,
+  narrow,
+  aspectRatio,
+  maxWidthPx = 260,
 }: {
   src: string;
   poster?: string;
-  className?: string;
   ariaLabel?: string;
+  // Color de fondo real que rodea al mockup (ej. "var(--color-surface-elevated)")
+  // -- los parches de esquina se pintan con este color para que se
+  // mimeticen con lo que hay alrededor.
+  cornerBg: string;
+  // true para el mockup angosto centrado (vista móvil) -- false/omitido
+  // para el mockup a ancho completo (vista desktop).
+  narrow?: boolean;
+  // Requerido cuando narrow=true (ej. "560/1212") -- reemplaza el
+  // "w-auto" que antes se apoyaba en el tamaño intrínseco del propio
+  // <video>, ahora que el tamaño lo define este div contenedor.
+  aspectRatio?: string;
+  // Solo aplica cuando narrow=true.
+  maxWidthPx?: number;
 }) {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
@@ -115,60 +191,44 @@ export default function AutoResumeVideo({
     };
   }, [attemptResume]);
 
+  const frameStyle: React.CSSProperties = narrow ? { aspectRatio, maxWidth: maxWidthPx } : {};
+  const frameClassName = narrow ? "relative h-full mx-auto" : "relative w-full h-full";
+
   return (
-    // overflow-hidden + rounded-2xl acá también (no solo en el className del
-    // <video>, ya redundante con esto) -- bug real de Safari/iOS: el
-    // <video> se decodifica en su propia capa de compositing, que a veces
-    // ignora por completo el clip de border-radius/overflow-hidden de un
-    // contenedor (el mismo tipo de bug de WebKit ya peleado toda la sesión
-    // con el mockup interactivo, ahora con el <video> real).
-    <div ref={wrapperRef} className="relative w-full h-full overflow-hidden rounded-2xl">
-      <video
-        ref={videoRef}
-        src={src}
-        loop
-        muted
-        playsInline
-        preload="auto"
-        className={className}
-        // Bug real, corregido acá: los dos intentos anteriores (mask-image
-        // con degradé real, y después con topes duros) no funcionaron en el
-        // dispositivo real -- confirmado en vivo, seguía sin redondear.
-        // clip-path es un mecanismo de recorte distinto al de
-        // border-radius/overflow-hidden (no depende de que el navegador
-        // "sepa" clipear la capa de video compuesta por hardware -- corta
-        // directamente la forma final ya renderizada), y es la técnica que
-        // en la práctica sí resuelve el recorte de <video> en Safari/iOS
-        // real cuando el border-radius solo no alcanza. Aplicado
-        // directamente en el <video> (no en un wrapper) para que funcione
-        // también con el mockup móvil, donde el video es más angosto que
-        // su wrapper.
-        style={{
-          WebkitClipPath: "inset(0 round 1rem)",
-          clipPath: "inset(0 round 1rem)",
-        }}
-        aria-label={ariaLabel}
-        onPause={attemptResume}
-        onPlay={() => setShowResume(false)}
-        onPlaying={() => {
-          if (hasStartedRef.current) return;
-          hasStartedRef.current = true;
-          // Pequeño margen (120ms) para que ya haya un par de cuadros
-          // reales decodificándose antes de desvanecer el poster -- si se
-          // desvanece en el instante exacto de 'playing', a veces todavía
-          // se alcanza a ver un cuadro negro/a medio decodificar debajo.
-          window.setTimeout(() => setPosterVisible(false), 120);
-        }}
-      />
-      {poster && (
-        <img
-          src={poster}
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain object-center rounded-2xl pointer-events-none transition-opacity duration-300 ease-out"
-          style={{ opacity: posterVisible ? 1 : 0 }}
+    <div ref={wrapperRef} className="relative w-full h-full flex items-center justify-center">
+      <div className={frameClassName} style={frameStyle}>
+        <video
+          ref={videoRef}
+          src={src}
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-contain object-center"
+          aria-label={ariaLabel}
+          onPause={attemptResume}
+          onPlay={() => setShowResume(false)}
+          onPlaying={() => {
+            if (hasStartedRef.current) return;
+            hasStartedRef.current = true;
+            // Pequeño margen (120ms) para que ya haya un par de cuadros
+            // reales decodificándose antes de desvanecer el poster -- si se
+            // desvanece en el instante exacto de 'playing', a veces todavía
+            // se alcanza a ver un cuadro negro/a medio decodificar debajo.
+            window.setTimeout(() => setPosterVisible(false), 120);
+          }}
         />
-      )}
+        {poster && (
+          <img
+            src={poster}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none transition-opacity duration-300 ease-out"
+            style={{ opacity: posterVisible ? 1 : 0 }}
+          />
+        )}
+        <CornerPatches bg={cornerBg} />
+      </div>
       {showResume && (
         <button
           type="button"

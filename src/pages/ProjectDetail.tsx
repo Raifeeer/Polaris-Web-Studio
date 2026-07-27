@@ -171,14 +171,17 @@ function ProjectImageCarousel({
               <AutoResumeVideo
                 src={previewVideo}
                 poster={previewPoster}
-                className="w-full h-full object-contain rounded-2xl"
+                cornerBg="var(--color-surface-base)"
                 ariaLabel={`${projectName} — desktop`}
               />
             ) : img.type === "mobile" && mobileVideo ? (
               <AutoResumeVideo
                 src={mobileVideo}
                 poster={mobilePoster}
-                className="h-full w-auto max-w-[240px] object-contain mx-auto rounded-2xl"
+                cornerBg="var(--color-surface-base)"
+                narrow
+                aspectRatio="560/1212"
+                maxWidthPx={240}
                 ariaLabel={`${projectName} — mobile`}
               />
             ) : (
