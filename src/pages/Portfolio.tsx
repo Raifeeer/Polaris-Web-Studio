@@ -24,7 +24,8 @@ import {
   Monitor,
   Smartphone,
   CirclePlay,
-  SkipForward
+  SkipForward,
+  RotateCcw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -33,7 +34,7 @@ import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import { projects, Project } from "../constants/projects";
 import { T, useLanguage } from "../context/LanguageContext";
 import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
-import AutoResumeVideo from "../components/AutoResumeVideo";
+import AutoResumeVideo, { type AutoResumeVideoHandle } from "../components/AutoResumeVideo";
 
 // El frame de celular de MockupFrame es de tamaño fijo (280x580) -- misma
 // relación de aspecto que usa la ventana de escritorio (aspect-video, 16/9)
@@ -83,6 +84,11 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
   // ya no tiene el glow/vignette decorativo que antes lo desviaba, ver
   // el rediseño del panel más abajo).
   const cornerBg = "var(--color-surface-elevated)";
+  // Refs a los <video> real de cada vista -- el botón de reinicio de al
+  // lado del toggle solo necesita reiniciar el que está activo (mismo
+  // mecanismo que ProjectDetail.tsx).
+  const desktopVideoRef = React.useRef<AutoResumeVideoHandle>(null);
+  const mobileVideoRef = React.useRef<AutoResumeVideoHandle>(null);
 
   React.useEffect(() => {
     if (fixedHeights) return;
@@ -172,6 +178,20 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             </button>
           </div>
 
+          {/* Reinicia con fade el <video> de la vista activa -- solo tiene
+              sentido si esa vista es un video real (no el mockup
+              interactivo de Lúmina ni una captura estática). */}
+          {!interactive && ((view === "desktop" && project.previewVideo) || (view === "mobile" && project.mobileVideo)) && (
+            <button
+              onClick={() => (view === "desktop" ? desktopVideoRef : mobileVideoRef).current?.restart()}
+              className="p-2.5 rounded-full bg-[var(--color-surface-base)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--cinema-color,_#6366f1)] hover:border-[var(--cinema-color,_#6366f1)]/40 transition-all cursor-pointer shadow-sm"
+              aria-label={translate("Reiniciar video", "Restart video")}
+              title={translate("Reiniciar video", "Restart video")}
+            >
+              <RotateCcw size={13} />
+            </button>
+          )}
+
           {/* Abre el sitio en vivo del proyecto en una pestaña nueva — solo en
               modo cine: en mosaico bento ya existe este botón afuera de la tarjeta. */}
           {!fillParent && project.liveUrl && (
@@ -239,6 +259,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               </div>
             ) : project.previewVideo ? (
               <AutoResumeVideo
+                ref={desktopVideoRef}
                 src={project.previewVideo}
                 poster={project.previewPoster}
                 cornerBg={cornerBg}
@@ -292,6 +313,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               })()
             ) : project.mobileVideo ? (
               <AutoResumeVideo
+                ref={mobileVideoRef}
                 src={project.mobileVideo}
                 poster={project.mobilePoster}
                 cornerBg={cornerBg}
@@ -366,6 +388,11 @@ export default function Portfolio() {
   const [storyView, setStoryView] = useState<"desktop" | "mobile">("desktop");
   const storyBoxRef = useRef<HTMLDivElement>(null);
   const [storyBoxHeight, setStoryBoxHeight] = useState(0);
+  // Refs a los <video> del slide 0 del modo Story -- el botón de reinicio
+  // de la barra superior solo reinicia el que está activo (mismo mecanismo
+  // que ProjectScreenshot/ProjectDetail.tsx).
+  const storyDesktopVideoRef = useRef<AutoResumeVideoHandle>(null);
+  const storyMobileVideoRef = useRef<AutoResumeVideoHandle>(null);
   // Sentido del último avance (1 = siguiente, -1 = anterior) -- controla de
   // qué lado entra/sale el slide en la animación tipo carrusel (como si
   // fuese girando un cubo), tanto al cambiar de slide como de proyecto.
@@ -1111,6 +1138,24 @@ export default function Portfolio() {
                       </button>
                     </div>
                   )}
+                  {/* Reinicia con fade el <video> del slide 0 -- solo si la
+                      vista activa es un video real, mismo criterio que en
+                      ProjectScreenshot/ProjectDetail.tsx. */}
+                  {storySlide === 0 &&
+                    !hasMockupContent(currentCinemaProject.slug) &&
+                    ((storyView === "desktop" && currentCinemaProject.previewVideo) ||
+                      (storyView === "mobile" && currentCinemaProject.mobileVideo)) && (
+                      <button
+                        onClick={() =>
+                          (storyView === "desktop" ? storyDesktopVideoRef : storyMobileVideoRef).current?.restart()
+                        }
+                        className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                        aria-label={translate("Reiniciar video", "Restart video")}
+                        title={translate("Reiniciar video", "Restart video")}
+                      >
+                        <RotateCcw size={16} />
+                      </button>
+                    )}
                   <button
                     onClick={handleNextCinema}
                     className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
@@ -1194,6 +1239,7 @@ export default function Portfolio() {
                                 </div>
                               ) : currentCinemaProject.previewVideo ? (
                                 <AutoResumeVideo
+                                  ref={storyDesktopVideoRef}
                                   src={currentCinemaProject.previewVideo}
                                   poster={currentCinemaProject.previewPoster}
                                   cornerBg="var(--color-surface-base)"
@@ -1233,6 +1279,7 @@ export default function Portfolio() {
                               })()
                             ) : currentCinemaProject.mobileVideo ? (
                               <AutoResumeVideo
+                                ref={storyMobileVideoRef}
                                 src={currentCinemaProject.mobileVideo}
                                 poster={currentCinemaProject.mobilePoster}
                                 cornerBg="var(--color-surface-base)"
