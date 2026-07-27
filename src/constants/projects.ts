@@ -417,9 +417,41 @@ export const projects: Project[] = [
     // mismo factor ya usado la vez anterior que se pidió más lento) para
     // repartir la misma distancia en más frames. Video final: 901
     // frames/30.0s (antes 523/~17.4s).
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v15.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v15.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v15.jpg",
+    // v16/v18: dos pedidos más del usuario, solo sobre mobile (el
+    // desktop no se tocó en ninguno de los dos).
+    // (1) "sigue siendo muy rápido" -- comparado el ritmo real contra
+    // Lúmina (medido en vivo con Playwright): Lúmina mueve ~10.1px por
+    // frame (scrollHeight real 3538px / 350 pasos), Nexus en v15 se
+    // movía a ~13.46px por frame (6059px / 450 pasos) -- de ahí la
+    // sensación de más rápido pese a la ronda anterior. Pasos subidos a
+    // 600 para igualar exactamente el ritmo por frame de Lúmina
+    // (6059/600 ≈ 10.1px/frame). Video final: 1201 frames/40.0s.
+    // (2) bug real encontrado de paso, reportado por el usuario: el botón
+    // "HABLAR CON UN ESPECIALISTA" de la CTA bar salía partido en 3
+    // líneas en el video, contra 2 líneas en su teléfono real. Causa
+    // real, dos capas: primero se intentó servir la fuente real
+    // (Plus Jakarta Sans) vía route.fulfill() -- no tuvo efecto, porque
+    // el propio pipeline de dev de Vite/Tailwind de Nexus-Realty-Demo
+    // DESCARTA por completo el `@import url(fonts.googleapis.com...)` de
+    // `index.css` en este entorno sandboxeado (sin red en build-time
+    // para resolverlo) -- confirmado con un diagnóstico aparte
+    // (`document.fonts.size` daba 0, y ninguna petición a
+    // fonts.googleapis.com llegaba a salir del navegador headless), así
+    // que el CSS que la página recibe ni siquiera menciona la fuente y
+    // ningún interceptor de red podía llegar a activarse. Sin la fuente
+    // real, el navegador caía a una de reemplazo más ancha, partiendo el
+    // botón en 3 líneas en vez de 2. Fix real: los 16 archivos woff2
+    // reales (descargados de antemano vía curl, que sí tiene red -- el
+    // navegador headless de Playwright no) se embeben como `data:` URI
+    // dentro de un bloque de `@font-face` inyectado directo con
+    // `page.addStyleTag()` justo después de `goto()`, evitando el
+    // pipeline de Vite por completo. Verificado en vivo con un
+    // diagnóstico dedicado (`document.fonts.size` pasó de 0 a 69) y una
+    // captura de pantalla puntual antes de recapturar el video completo:
+    // el botón ya queda en 2 líneas, igual que en un teléfono real.
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v18.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v18.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v18.jpg",
   },
   {
     slug: "chroma-store",
