@@ -131,19 +131,21 @@ export default function AutoResumeVideo({
         playsInline
         preload="auto"
         className={className}
-        // Bug real, corregido acá: el primer intento usaba
-        // -webkit-mask-image: -webkit-radial-gradient(white, black) --
-        // eso es un degradé real de blanco (opaco) a negro (transparente),
-        // así que en vez de solo forzar a Safari a respetar el clip,
-        // desvanecía el video hacia los bordes -- ni rondeaba ni se veía
-        // bien. El fix real usa el mismo truco pero con topes duros
-        // (100%/100%) para que la máscara sea 100% blanca/opaca en toda el
-        // área -- no cambia nada visualmente por sí sola, pero fuerza a
-        // Safari a recomponer el <video> respetando el border-radius de
-        // esta misma etiqueta, que es la capa que WebKit a veces pinta por
-        // fuera del contenedor con overflow-hidden.
+        // Bug real, corregido acá: los dos intentos anteriores (mask-image
+        // con degradé real, y después con topes duros) no funcionaron en el
+        // dispositivo real -- confirmado en vivo, seguía sin redondear.
+        // clip-path es un mecanismo de recorte distinto al de
+        // border-radius/overflow-hidden (no depende de que el navegador
+        // "sepa" clipear la capa de video compuesta por hardware -- corta
+        // directamente la forma final ya renderizada), y es la técnica que
+        // en la práctica sí resuelve el recorte de <video> en Safari/iOS
+        // real cuando el border-radius solo no alcanza. Aplicado
+        // directamente en el <video> (no en un wrapper) para que funcione
+        // también con el mockup móvil, donde el video es más angosto que
+        // su wrapper.
         style={{
-          WebkitMaskImage: "-webkit-radial-gradient(circle, white 100%, black 100%)",
+          WebkitClipPath: "inset(0 round 1rem)",
+          clipPath: "inset(0 round 1rem)",
         }}
         aria-label={ariaLabel}
         onPause={attemptResume}
