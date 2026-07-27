@@ -327,12 +327,36 @@ export const projects: Project[] = [
     // (Playwright screenshot() se cuelga esperando fuentes en este
     // entorno sandboxeado). Duración final idéntica a la de Lúmina:
     // 23.37s.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v8.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v8.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v8.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v9.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v9.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v9.jpg",
+    // v10: el mobile a 350 pasos/23.37s seguía sintiéndose rápido -- la
+    // página real de Nexus (scrollHeight ~13929px) es bastante más alta
+    // que la de Lúmina, así que igualar solo el número de pasos no
+    // igualaba la velocidad percibida real. Subido a 600 pasos por
+    // pasada (1201 frames, ~40s a 30fps) -- pedido explícito del usuario
+    // ("hazlo más lento aunque dure más").
+    // De paso, en la misma ronda: la barra flotante de CTA (App.tsx,
+    // scrollY>800) se veía "sobresaliendo mucho" en el video comparado
+    // con el sitio real -- causa real, el fix de v7/v8 forzaba
+    // `window.scrollY` siempre por encima de ese umbral para eliminar el
+    // parpadeo, así que el CTA terminaba visible en TODO el video
+    // (incluso en el hero, donde nunca se ve en el sitio real) en vez de
+    // aparecer solo al bajar. Revertido: `window.scrollY` vuelve a
+    // reportar la posición real, y `#nexus-navbar`/la barra de CTA se
+    // excluyen de la neutralización de transiciones (duración cercana a
+    // la real, 400ms, en vez de 0.01s) -- con `scroll-behavior:auto` ya
+    // arreglado (v8), esto no reintroduce el parpadeo del loop (mismo
+    // diff de píxeles exacto 0 entre primer/último frame, verificado de
+    // nuevo) y el CTA vuelve a aparecer solo cuando corresponde, como en
+    // el sitio real -- con un único salto suave (no repetido) al cruzar
+    // el umbral, en vez de una transición perfecta cuadro a cuadro (este
+    // método de captura por pasos discretos no interpola transiciones
+    // CSS en tiempo real con total fidelidad, pero un salto único ya no
+    // se percibe como parpadeo).
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v10.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v10.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v10.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v10.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v10.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v10.jpg",
   },
   {
     slug: "chroma-store",
