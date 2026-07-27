@@ -1142,17 +1142,19 @@ export default function Portfolio() {
                       pedido explícito del usuario para que viva en la barra
                       superior, donde antes estaba el botón de reinicio (ese
                       se movió junto a las flechas de navegación, abajo).
-                      Color propio (no solo en hover) con el --cinema-color
-                      real del proyecto activo -- mismo valor que ya tiñe el
-                      toggle desktop/mobile y los dots de abajo, así que este
-                      botón no rompe la paleta cuando se cambia de proyecto. */}
+                      Relleno completo (no solo ícono/borde) con el
+                      --cinema-color real del proyecto activo -- mismo valor
+                      que ya tiñe el toggle desktop/mobile en su estado
+                      activo (mismo patrón: fondo sólido + texto blanco +
+                      sombra a juego), así que este botón no rompe la
+                      paleta cuando se cambia de proyecto. */}
                   {currentCinemaProject.liveUrl && (
                     <button
                       onClick={() => window.open(currentCinemaProject.liveUrl, "_blank")}
-                      className="p-2 rounded-full bg-[var(--color-surface-elevated)] border cursor-pointer transition-colors"
+                      className="p-2 rounded-full text-white cursor-pointer transition-colors"
                       style={{
-                        color: "var(--cinema-color, #6366f1)",
-                        borderColor: `rgba(var(--cinema-color-rgb, 99, 102, 241), 0.4)`,
+                        backgroundColor: "var(--cinema-color, #6366f1)",
+                        boxShadow: `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)`,
                       }}
                       aria-label={translate("Ver proyecto en vivo", "View live project")}
                       title={translate("Ver proyecto en vivo", "View live project")}
