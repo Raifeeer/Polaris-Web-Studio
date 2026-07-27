@@ -285,14 +285,14 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
               <AutoResumeVideo
                 src={project.mobileVideo}
                 poster={project.mobilePoster}
-                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent"
+                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent rounded-2xl"
                 ariaLabel={`${project.title} Mobile`}
               />
             ) : project.mobileImg ? (
               <img
                 src={project.mobileImg}
                 alt={`${project.title} Mobile`}
-                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent"
+                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent rounded-2xl"
               />
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">

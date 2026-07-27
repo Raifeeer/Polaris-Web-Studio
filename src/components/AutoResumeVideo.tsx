@@ -143,7 +143,7 @@ export default function AutoResumeVideo({
           src={poster}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none transition-opacity duration-300 ease-out"
+          className="absolute inset-0 w-full h-full object-contain object-center rounded-2xl pointer-events-none transition-opacity duration-300 ease-out"
           style={{ opacity: posterVisible ? 1 : 0 }}
         />
       )}
