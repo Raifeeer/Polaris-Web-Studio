@@ -286,12 +286,27 @@ export const projects: Project[] = [
     // de `goto`) para que reporte "100% visible" de inmediato en cuanto
     // algo lo observa -- sin esperar ninguna posición de scroll real,
     // todo el contenido queda asentado desde el primer frame.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v6.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v6.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v6.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v6.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v6.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v6.jpg",
+    // v7: el fix de v5 (matar transition-duration global) resolvió
+    // LazyImage/CTA-bar pero rompió el propio fundido de 300ms del
+    // navbar (id="nexus-navbar", Navbar.tsx, scrollY>30) -- un intento
+    // de excluirlo con una regla más específica no cambió nada en la
+    // práctica (verificado con un diff de píxeles frame a frame: mismo
+    // resultado exacto con duration 0.01s o 300ms -- en este método de
+    // captura, sin un loop de render real corriendo mientras Node espera
+    // entre pasos, el navegador headless no interpola una transición CSS
+    // de forma confiable entre los cuadros discretos que efectivamente
+    // capturamos). Fix real: eliminar el cruce de umbral del todo --
+    // `window.scrollY` sobrescrito (antes de `goto`) para que siempre
+    // reporte muy por encima de scrollY>30 (navbar) y scrollY>800 (CTA
+    // bar), así ninguno de los dos vuelve a cambiar de estado en ningún
+    // momento de la captura. La posición real de scroll (lo que se ve en
+    // el video) no se toca.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v7.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v7.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v7.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v7.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v7.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v7.jpg",
   },
   {
     slug: "chroma-store",
