@@ -61,6 +61,7 @@ function CornerPatches({ bg }: { bg: string }) {
     width: RADIUS,
     height: RADIUS,
     pointerEvents: "none",
+    zIndex: 2,
   };
   return (
     <>
@@ -196,7 +197,16 @@ export default function AutoResumeVideo({
 
   return (
     <div ref={wrapperRef} className="relative w-full h-full flex items-center justify-center">
-      <div className={frameClassName} style={frameStyle}>
+      {/* isolation:isolate crea un contexto de apilamiento propio para este
+          frame -- necesario porque en Safari/iOS real un <video>
+          reproduciéndose a veces se compone en su propio plano de hardware
+          por ENCIMA de hermanos normales del DOM, sin importar el orden en
+          el documento (los parches de esquina, aunque van después en el
+          DOM, quedaban tapados). transform: translateZ(0) en el <video>
+          fuerza a que se componga como una capa normal dentro de este
+          contexto en vez de ese plano especial, y z-index explícito en los
+          3 hijos deja sin ambigüedad qué va arriba de qué. */}
+      <div className={frameClassName} style={{ ...frameStyle, isolation: "isolate" }}>
         <video
           ref={videoRef}
           src={src}
@@ -205,6 +215,7 @@ export default function AutoResumeVideo({
           playsInline
           preload="auto"
           className="absolute inset-0 w-full h-full object-contain object-center"
+          style={{ zIndex: 0, transform: "translateZ(0)", WebkitTransform: "translateZ(0)" }}
           aria-label={ariaLabel}
           onPause={attemptResume}
           onPlay={() => setShowResume(false)}
@@ -224,7 +235,7 @@ export default function AutoResumeVideo({
             alt=""
             aria-hidden="true"
             className="absolute inset-0 w-full h-full object-contain object-center pointer-events-none transition-opacity duration-300 ease-out"
-            style={{ opacity: posterVisible ? 1 : 0 }}
+            style={{ opacity: posterVisible ? 1 : 0, zIndex: 1 }}
           />
         )}
         <CornerPatches bg={cornerBg} />
