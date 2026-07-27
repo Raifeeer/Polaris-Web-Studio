@@ -261,12 +261,25 @@ export const projects: Project[] = [
     // antes de goto) para que quede fija la primera imagen del hero
     // durante toda la grabación -- no toca el comportamiento real del
     // sitio, solo el navegador headless usado para grabar.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v4.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v4.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v4.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v4.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v4.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v4.jpg",
+    // v5: dos transiciones reales corren por CSS/clases de Tailwind, no
+    // por framer-motion, así que el detector de animaciones del script
+    // de captura (que solo vigila estilos inline opacity+transform) no
+    // las esperaba a que asentaran: (1) LazyImage.tsx hace un fundido
+    // con blur al "cargar" cada foto -- se veía como si la imagen
+    // apareciera de la nada en vez de estar ya ahí; (2) la barra
+    // flotante de CTA (scrollY>800) se desliza con
+    // translate-y-full/translate-y-0 -- causaba un parpadeo justo al
+    // terminar el scroll de vuelta hacia arriba. Fix: forzar
+    // `transition-duration`/`animation-duration` globales a ~0 durante
+    // la captura (`page.addStyleTag`) -- el movimiento ya se controla
+    // muestreando posiciones de scroll discretas, no hace falta que el
+    // navegador anime nada en tiempo real.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v5.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v5.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v5.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v5.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v5.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v5.jpg",
   },
   {
     slug: "chroma-store",
