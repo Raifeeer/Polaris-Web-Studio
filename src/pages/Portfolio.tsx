@@ -223,7 +223,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             animate={{ opacity: view === "desktop" ? 1 : 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "desktop" ? "auto" : "none" }}
+            style={{ pointerEvents: view === "desktop" ? "auto" : "none", willChange: "opacity" }}
           >
             {interactive ? (
               <div className="w-full px-2">
@@ -257,7 +257,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             animate={{ opacity: view === "mobile" ? 1 : 0 }}
             transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: view === "mobile" ? "auto" : "none" }}
+            style={{ pointerEvents: view === "mobile" ? "auto" : "none", willChange: "opacity" }}
           >
             {interactive ? (
               (() => {

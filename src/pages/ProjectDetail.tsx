@@ -117,9 +117,20 @@ function ProjectImageCarousel({
             key={img.type}
             initial={false}
             animate={{ opacity: active === img.type ? 1 : 0 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="absolute inset-0 flex items-center justify-center"
-            style={{ pointerEvents: active === img.type ? "auto" : "none" }}
+            style={{
+              pointerEvents: active === img.type ? "auto" : "none",
+              // Bug real de Safari/iOS: una transición de opacity sobre un
+              // ancestro de <video> a veces se "salta" (el video pasa de
+              // 0 a 1 de golpe, sin fade) porque el video se decodifica en
+              // su propia capa de compositing que no siempre respeta la
+              // opacidad animada del DOM por encima. willChange fuerza a
+              // Safari a crear la capa compuesta desde el principio (no
+              // recién al detectar la animación), lo que en la práctica
+              // hace que si respete el fade.
+              willChange: "opacity",
+            }}
           >
             {interactive ? (
               img.type === "mobile" ? (

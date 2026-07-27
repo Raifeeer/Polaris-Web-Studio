@@ -116,7 +116,20 @@ export default function AutoResumeVideo({
   }, [attemptResume]);
 
   return (
-    <div ref={wrapperRef} className="relative w-full h-full">
+    // overflow-hidden + rounded-2xl acá también (no solo en el className del
+    // <video>, ya redundante con esto) -- bug real de Safari/iOS: el
+    // <video> se decodifica en su propia capa de compositing, que a veces
+    // ignora por completo el clip de border-radius/overflow-hidden de un
+    // contenedor (el mismo tipo de bug de WebKit ya peleado toda la sesión
+    // con el mockup interactivo, ahora con el <video> real). El fix
+    // estándar documentado para esto es forzar a Safari a usar una capa de
+    // máscara real en vez de solo clip -- WebkitMaskImage con un
+    // radial-gradient blanco/negro logra eso.
+    <div
+      ref={wrapperRef}
+      className="relative w-full h-full overflow-hidden rounded-2xl"
+      style={{ WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}
+    >
       <video
         ref={videoRef}
         src={src}
