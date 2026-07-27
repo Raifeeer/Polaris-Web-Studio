@@ -992,9 +992,22 @@ export default function Portfolio() {
                     >
                       {storySlide === 0 && (
                         <div className="min-h-full flex flex-col items-center justify-center gap-6 p-6 md:p-10">
+                          {/* Alto explícito en vez de "aspectRatio" de CSS
+                              -- bug real encontrado en vivo (Safari/iOS):
+                              AutoResumeVideo mide su propio tamaño con un
+                              ResizeObserver contra el clientHeight/Width
+                              real de ESTE div, y cuando el alto de este div
+                              viene solo de aspect-ratio (no de un valor
+                              real como vh/px), esa medición sale mal en
+                              Safari -- el video quedaba corrido hacia un
+                              lado, con una franja vacía al otro. Un alto
+                              real (vh + tope en px) es exactamente el mismo
+                              patrón que ya funciona en el resto del sitio
+                              (Portfolio.tsx bento grid, ProjectDetail.tsx),
+                              donde el contenedor siempre tiene un alto
+                              real, nunca derivado de aspect-ratio. */}
                           <div
-                            className="relative w-full max-w-3xl rounded-2xl overflow-hidden bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]"
-                            style={{ aspectRatio: "1200/750" }}
+                            className="relative w-full max-w-3xl h-[42vh] max-h-[500px] rounded-2xl overflow-hidden bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)]"
                           >
                             {currentCinemaProject.previewVideo ? (
                               <AutoResumeVideo
