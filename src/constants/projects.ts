@@ -351,12 +351,23 @@ export const projects: Project[] = [
     // método de captura por pasos discretos no interpola transiciones
     // CSS en tiempo real con total fidelidad, pero un salto único ya no
     // se percibe como parpadeo).
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v10.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v10.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v10.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v10.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v10.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v10.jpg",
+    // v11: la caché de imágenes de la captura solo tenía las URLs de
+    // Unsplash de `src/data/properties.ts` -- TeamSection.tsx usa 4 fotos
+    // de agentes con IDs de Unsplash propios, nunca descargadas, así que
+    // esos avatares salían vacíos/rotos en el video. Fix: grep de TODAS
+    // las URLs images.unsplash.com de todo `src/` (no solo
+    // properties.ts) antes de armar la caché -- 4 IDs faltantes
+    // descargados. De paso, confirmado que el mobile (target =
+    // scrollHeight completo, sin el tope de 2450px que sí tiene desktop)
+    // ya llega hasta el footer real -- el desktop, igual que Lúmina, se
+    // queda en el primer tramo de la página (hero + un par de secciones)
+    // a propósito, no es un bug.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v11.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v11.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v11.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v11.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v11.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v11.jpg",
   },
   {
     slug: "chroma-store",
