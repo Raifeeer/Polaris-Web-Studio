@@ -224,24 +224,40 @@ export const projects: Project[] = [
     ],
     techStack: ["React", "TypeScript", "Tailwind CSS"],
     liveUrl: "https://nexus-realty-demo.vercel.app/",
-    // Mismo pipeline de video real que Lúmina Sky (v3): recorrido de
-    // pre-calentamiento sin grabar (para que las animaciones
-    // whileInView/once:true ya queden asentadas) seguido de la grabación
-    // real con scroll suavizado (easeInOutSine). Desktop grabado con
-    // Playwright (context.recordVideo, 1600x1000@2x, recortado a
-    // 1200x750/25fps). Mobile grabado cuadro a cuadro vía CDP
-    // (Page.captureScreenshot) en vez de page.screenshot() -- en este
-    // entorno sandboxeado sin red externa, page.screenshot() se queda
-    // colgado esperando "fonts to load" indefinidamente. Las fotos reales
-    // de las propiedades (Firebase Storage) se sirvieron desde una caché
-    // local descargada por curl -- Playwright no puede alcanzar dominios
-    // externos en este entorno, a diferencia de curl/fetch de Node.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v1.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v1.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v1.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v1.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v1.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v1.jpg",
+    // Mismo pipeline de video real que Lúmina Sky (v3, técnica exacta:
+    // captura cuadro a cuadro, no context.recordVideo -- el webm de
+    // recordVideo queda capado a ~25fps y con más artefactos de
+    // compresión, por eso la v1 de este video se sentía menos nítida y
+    // fluida que la de Lúmina). Recorrido de pre-calentamiento sin grabar
+    // (whileInView/once:true ya asentado) + grabación real con scroll
+    // suavizado (easeInOutSine), 150 pasos ida y 150 vuelta, con ráfaga
+    // de cuadros extra si sigue habiendo una transición en curso
+    // (shotWithAnimationBurst). Desktop y mobile, ambos capturados vía
+    // CDP (Page.captureScreenshot) en vez de page.screenshot() -- en
+    // este entorno sandboxeado sin red externa, page.screenshot() se
+    // queda colgado esperando "fonts to load" indefinidamente incluso en
+    // desktop (no solo mobile). Ensamblado a 30fps (desktop) para
+    // igualar el resultado real de Lúmina.
+    // Bug real de la v1 (imágenes rotas en el video): la caché de
+    // imágenes se armó apuntando a Firebase Storage
+    // (storage.googleapis.com), asumiendo que el catálogo en vivo
+    // (Firestore) cargaría ahí -- pero dentro del navegador headless de
+    // Playwright, el fetch a Firestore REST falla (mismo límite de red
+    // sandboxeado), así que `useProperties` cae al catálogo estático de
+    // respaldo (`src/data/properties.ts`), que usa fotos de
+    // images.unsplash.com. La caché apuntaba al dominio equivocado, y
+    // como la ruta interceptada no tenía nada cacheado, se abortaban
+    // todas las imágenes -> se veían rotas en el video final. Fix: caché
+    // nueva de las URLs reales de Unsplash, indexada por ID de foto
+    // (ignorando el query string de tamaño, ya que la misma foto se pide
+    // en varios anchos distintos según el componente) en vez de por hash
+    // de URL completa.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v3.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v3.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v3.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v3.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v3.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v3.jpg",
   },
   {
     slug: "chroma-store",
