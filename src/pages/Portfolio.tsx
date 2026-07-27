@@ -25,6 +25,7 @@ import {
   Smartphone,
   CirclePlay,
   SkipForward,
+  SkipBack,
   RotateCcw
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1162,6 +1163,19 @@ export default function Portfolio() {
                       <ExternalLink size={16} />
                     </button>
                   )}
+                  {/* Salta directo al proyecto anterior -- pedido explícito
+                      del usuario, mismo criterio que "Siguiente proyecto"
+                      (SkipForward) pero hacia atrás, no el slide anterior
+                      dentro del mismo proyecto (eso ya lo cubren las
+                      flechas de abajo). */}
+                  <button
+                    onClick={handlePrevCinema}
+                    className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                    aria-label={translate("Proyecto anterior", "Previous project")}
+                    title={translate("Proyecto anterior", "Previous project")}
+                  >
+                    <SkipBack size={18} />
+                  </button>
                   <button
                     onClick={handleNextCinema}
                     className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
