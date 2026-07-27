@@ -193,14 +193,26 @@ function AnimatedRoutes() {
           consumido entera sobre el loader. */}
       <motion.div
         key={location.pathname}
-        exit={{ opacity: 0, y: -8 }}
+        // Sin "y" en exit -- esta transición envuelve TODAS las páginas de
+        // la app, incluida cualquier mockup en video/imagen con
+        // overflow-hidden + border-radius muchos niveles más abajo en el
+        // árbol. Bug real encontrado el mismo día: Framer Motion deja un
+        // transform inline permanente (incluso en reposo) que, como
+        // ancestro de un descendiente con overflow-hidden + border-radius,
+        // rompe el redondeo de esquinas en WebKit/iOS real -- sin importar
+        // cuántos niveles de distancia haya. Ya se había corregido este
+        // mismo bug en varios wrappers locales (Portfolio.tsx,
+        // ProjectDetail.tsx) sin efecto porque la causa real estaba acá,
+        // en el wrapper global de transición de página que ningún fix
+        // local podía evitar.
+        exit={{ opacity: 0 }}
         transition={{ duration: 0.22, ease: "easeInOut" }}
       >
         <RouteErrorBoundary>
         <Suspense fallback={<RouteLoader />}>
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.35, ease: "easeOut" }}
           >
           <Routes location={location}>
