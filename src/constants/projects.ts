@@ -317,12 +317,22 @@ export const projects: Project[] = [
     // nota. Fix: `scroll-behavior: auto !important` durante toda la
     // captura. Verificado con un diff de píxeles exacto entre el primer
     // y el último frame capturado: 0 (idénticos).
+    // Mobile v9: la primera versión del mobile usaba 150 pasos por
+    // pasada (301 frames), la mitad de resolución temporal real del
+    // mobile de Lúmina (`record_lumina_mobile_slow2.mjs`, 350 pasos por
+    // pasada, 701 frames, 30fps reales, escalado final a 560x1212) -- se
+    // sentía "poca calidad, pocos fps, scroll muy rápido" en comparación.
+    // Corregido a los mismos 350 pasos/701 frames/30fps/560x1212, mismo
+    // criterio de captura vía CDP que ya usa el resto de este video
+    // (Playwright screenshot() se cuelga esperando fuentes en este
+    // entorno sandboxeado). Duración final idéntica a la de Lúmina:
+    // 23.37s.
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v8.jpg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v8.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v8.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v8.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v8.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v8.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v9.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v9.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v9.jpg",
   },
   {
     slug: "chroma-store",
