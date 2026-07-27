@@ -252,12 +252,21 @@ export const projects: Project[] = [
     // (ignorando el query string de tamaño, ya que la misma foto se pide
     // en varios anchos distintos según el componente) en vez de por hash
     // de URL completa.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v3.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v3.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v3.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v3.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v3.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v3.jpg",
+    // v4: el hero (HeroSection.tsx) rota 4 imágenes de fondo cada 5s vía
+    // setInterval, sin relación con el scroll -- en la v3 se veía como
+    // un salto abrupto de foto en medio del recorrido de la grabación.
+    // Único setInterval real de todo el repo (confirmado por grep), así
+    // que en el script de captura se anula por completo
+    // (`page.addInitScript(() => { window.setInterval = () => 0; })`
+    // antes de goto) para que quede fija la primera imagen del hero
+    // durante toda la grabación -- no toca el comportamiento real del
+    // sitio, solo el navegador headless usado para grabar.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v4.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v4.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v4.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v4.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v4.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v4.jpg",
   },
   {
     slug: "chroma-store",
