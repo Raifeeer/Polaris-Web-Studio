@@ -28,7 +28,17 @@ import { Play } from "lucide-react";
 //    que el usuario scrollea hasta ahí -- se sentía como que el mockup
 //    "aparecía de la nada" en vez de estar siempre ahí, ya animándose
 //    recién al llegar. Con poster, ese primer cuadro está desde que carga
-//    la página; el video retoma exactamente esa misma imagen al arrancar.
+//    la página.
+//    Bug real encontrado después: el swap NATIVO del navegador de poster a
+//    video (automático, apenas arranca la reproducción) se ve como un
+//    pestañeo breve -- el jpg del poster y el primer cuadro decodificado
+//    del video no son bit-a-bit idénticos (compresión distinta, jpg vs.
+//    espacio de color YUV420 del h264), y el navegador los intercambia de
+//    golpe. Fix: el poster ya no es el atributo nativo del <video> -- es
+//    una <img> propia superpuesta, que se desvanece con una transición
+//    real (300ms) recién cuando el evento 'playing' confirma que el video
+//    ya está decodificando cuadros de verdad, en vez de dejar que el
+//    navegador decida el momento del corte.
 export default function AutoResumeVideo({
   src,
   poster,
@@ -43,6 +53,12 @@ export default function AutoResumeVideo({
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
   const [showResume, setShowResume] = React.useState(false);
+  // Solo se muestra/desvanece una vez, al primer arranque real -- en
+  // reanudaciones posteriores (volver de segundo plano, reentrar en
+  // pantalla) el video ya no está en el cuadro 0, así que el poster ya no
+  // coincide y no debe volver a mostrarse.
+  const [posterVisible, setPosterVisible] = React.useState(!!poster);
+  const hasStartedRef = React.useRef(false);
   // "En pantalla" real (IntersectionObserver), distinto de "la pestaña
   // está visible" (document.visibilityState) -- necesitamos ambos: no
   // reproducir/reanudar una tarjeta que está scrolleada fuera de vista,
@@ -104,7 +120,6 @@ export default function AutoResumeVideo({
       <video
         ref={videoRef}
         src={src}
-        poster={poster}
         loop
         muted
         playsInline
@@ -113,7 +128,25 @@ export default function AutoResumeVideo({
         aria-label={ariaLabel}
         onPause={attemptResume}
         onPlay={() => setShowResume(false)}
+        onPlaying={() => {
+          if (hasStartedRef.current) return;
+          hasStartedRef.current = true;
+          // Pequeño margen (120ms) para que ya haya un par de cuadros
+          // reales decodificándose antes de desvanecer el poster -- si se
+          // desvanece en el instante exacto de 'playing', a veces todavía
+          // se alcanza a ver un cuadro negro/a medio decodificar debajo.
+          window.setTimeout(() => setPosterVisible(false), 120);
+        }}
       />
+      {poster && (
+        <img
+          src={poster}
+          alt=""
+          aria-hidden="true"
+          className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-300 ease-out ${className ?? ""}`}
+          style={{ opacity: posterVisible ? 1 : 0 }}
+        />
+      )}
       {showResume && (
         <button
           type="button"
