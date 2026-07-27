@@ -68,7 +68,7 @@ function ProjectImageCarousel({
   // Altura fija (no depende de `active`): así alternar desktop/mobile es un
   // crossfade puro de opacidad sin animar el alto del contenedor, que es lo
   // que causaba el delay/lag perceptible al cambiar de vista.
-  const containerHeight = windowWidth >= 1024 ? 480 : windowWidth >= 768 ? 440 : 340;
+  const containerHeight = windowWidth >= 1024 ? 480 : windowWidth >= 768 ? 440 : 420;
 
   return (
     <div className="w-full space-y-3">
