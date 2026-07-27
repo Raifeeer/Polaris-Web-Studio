@@ -274,12 +274,24 @@ export const projects: Project[] = [
     // la captura (`page.addStyleTag`) -- el movimiento ya se controla
     // muestreando posiciones de scroll discretas, no hace falta que el
     // navegador anime nada en tiempo real.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v5.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v5.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v5.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v5.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v5.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v5.jpg",
+    // v6: las últimas tarjetas del catálogo ("Venta de Legado") seguían
+    // apareciendo con una animación de entrada real, al revés que el
+    // resto ya asentado. Causa: ScrollReveal.tsx usa `useInView`
+    // (IntersectionObserver real, `once:true`) -- async de verdad, no
+    // sincronizado con los `scrollTo()` discretos del script. Esas
+    // tarjetas, más cerca del borde inferior del rango capturado, a
+    // veces no llegaban a disparar el observer durante el
+    // pre-calentamiento y terminaban disparándose recién durante la
+    // captura real. Fix: parchear `window.IntersectionObserver` (antes
+    // de `goto`) para que reporte "100% visible" de inmediato en cuanto
+    // algo lo observa -- sin esperar ninguna posición de scroll real,
+    // todo el contenido queda asentado desde el primer frame.
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v6.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v6.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v6.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v6.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v6.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v6.jpg",
   },
   {
     slug: "chroma-store",
