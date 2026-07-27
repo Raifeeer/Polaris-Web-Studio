@@ -561,6 +561,18 @@ export default function Portfolio() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [viewMode]);
 
+  // Clase en <html> para que el Navbar (montado en App.tsx, sin acceso al
+  // estado de esta página) sepa que está sobre el overlay oscuro del modo
+  // cine y pueda usar el logo/íconos de tema oscuro aunque el sitio esté
+  // en tema claro -- pedido explícito del usuario: NO quiere el navbar
+  // opaco/blanco (eso ya se probó y no le gustó), solo que el logo tome la
+  // variante clara (blanca) y el ícono de menú/el botón de tema tengan
+  // menos contraste contra el negro, sin que el navbar en sí se note.
+  useEffect(() => {
+    document.documentElement.classList.toggle("cinema-mode", viewMode === "cinema");
+    return () => document.documentElement.classList.remove("cinema-mode");
+  }, [viewMode]);
+
   useEffect(() => {
     if (viewMode !== "cinema") {
       document.documentElement.style.removeProperty("--cinema-color");
@@ -982,17 +994,14 @@ export default function Portfolio() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              // top-16 (no inset-0/top-0) -- este overlay negro fijo antes
-              // cubría TODA la pantalla, incluida el área del Navbar. El
-              // Navbar es transparente arriba del todo de la página (deja
-              // ver lo que sea que haya detrás hasta que el usuario hace
-              // scroll), así que este negro se colaba detrás y el logo
-              // oscuro (variante de tema claro) quedaba invisible contra
-              // él -- bug real reportado por el usuario ("el logo no se
-              // ve"). Arrancar el overlay justo debajo de la altura real
-              // del Navbar (h-16 en Navbar.tsx) evita el problema de raíz
-              // sin tocar el Navbar -- el negro nunca llega a esa franja.
-              className="fixed left-0 right-0 top-16 bottom-0 z-10 pointer-events-none"
+              // Vuelve a cubrir toda la pantalla (inset-0) -- el intento
+              // anterior de cortar el overlay en top-16 sí arreglaba el
+              // contraste, pero el usuario NO quería un navbar opaco/
+              // blanco tan notorio: prefiere el look transparente
+              // original, con el logo/íconos usando la variante clara
+              // (clase .cinema-mode en <html>, ver arriba) para tener
+              // contraste sin que el navbar en sí se note.
+              className="fixed inset-0 z-10 pointer-events-none"
             >
               <div
                 className="absolute inset-0 bg-black"

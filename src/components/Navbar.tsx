@@ -97,15 +97,22 @@ export default function Navbar() {
           className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
           aria-label={translate("Polaris Web Studio - Inicio", "Polaris Web Studio - Home")}
         >
+          {/* .cinema-mode (Portfolio.tsx, seteada en <html> mientras el
+              overlay negro del modo cine está activo) fuerza el logo claro
+              incluso en tema claro -- pedido explícito del usuario: no
+              quiere el navbar opaco/blanco, solo que el logo tome la
+              variante que usa el tema oscuro mientras haya ese fondo
+              negro detrás. [.light.cinema-mode_&] pesa más que
+              [.light_&] por especificidad (dos clases en el selector). */}
           <img
             src="/brand/lockup-horizontal-blanco.svg"
             alt="Polaris Web Studio"
-            className="h-12 w-auto shrink-0 [.light_&]:hidden"
+            className="h-12 w-auto shrink-0 [.light_&]:hidden [.light.cinema-mode_&]:block"
           />
           <img
             src="/brand/lockup-horizontal-color.svg"
             alt="Polaris Web Studio"
-            className="h-12 w-auto shrink-0 hidden [.light_&]:block"
+            className="h-12 w-auto shrink-0 hidden [.light_&]:block [.light.cinema-mode_&]:hidden"
           />
         </Link>
 
@@ -146,9 +153,12 @@ export default function Navbar() {
             <T en="Plan your Project">Planifica tu Proyecto</T>
           </button>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Toggle -- en modo cine, un poco más claro (no
+              blanco puro, pedido explícito del usuario: "demasiado
+              contraste") para que se distinga contra el overlay negro sin
+              llamar tanto la atención. */}
           <button
-            className="lg:hidden text-[var(--color-text-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg relative w-10 h-10 flex items-center justify-center overflow-hidden"
+            className="lg:hidden text-[var(--color-text-primary)] [.cinema-mode_&]:text-white/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg relative w-10 h-10 flex items-center justify-center overflow-hidden"
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
             aria-expanded={isOpen}
