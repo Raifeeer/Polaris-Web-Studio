@@ -412,9 +412,14 @@ export const projects: Project[] = [
     // px y físicos coinciden). Con la fuente ya nítida, encoding final a
     // 560x1212 (mismo tamaño de salida que Lúmina) con
     // `scale=...:flags=lanczos`, crf 20/preset slower.
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v14.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v14.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v14.jpg",
+    // v15: "bájale la velocidad al scroll" -- mismo tope de 6059px (fin
+    // real del <main>, sin cambios), pasos subidos de 261 a 450 (~1.7x,
+    // mismo factor ya usado la vez anterior que se pidió más lento) para
+    // repartir la misma distancia en más frames. Video final: 901
+    // frames/30.0s (antes 523/~17.4s).
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v15.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v15.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v15.jpg",
   },
   {
     slug: "chroma-store",
