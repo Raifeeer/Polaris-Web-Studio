@@ -189,9 +189,19 @@ const AutoResumeVideo = React.forwardRef<AutoResumeVideoHandle, {
   // el primer arranque, mientras que este fade se repite cada vez que se usa
   // el botón de reinicio.
   const [restarting, setRestarting] = React.useState(false);
+  // Bug real relacionado: `restart()` llama a `video.pause()` a propósito
+  // (ver más abajo) para garantizar que 'playing' vuelva a disparar -- pero
+  // ese pause() dispara el evento nativo 'pause', que a su vez llama a
+  // `attemptResume` (bindeado como onPause del <video>). Sin esta bandera,
+  // attemptResume reanudaba el video de inmediato (todavía en el cuadro
+  // viejo, antes del seek a 0), arrancando el fade-in prematuramente y
+  // rompiendo el reinicio controlado. Se activa justo antes del pause() y
+  // se desactiva recién cuando el play() real del reinicio ya se disparó.
+  const isRestartPauseRef = React.useRef(false);
 
   const attemptResume = React.useCallback(() => {
     const video = videoRef.current;
+    if (isRestartPauseRef.current) return;
     if (!video || document.visibilityState !== "visible" || !isIntersectingRef.current) return;
     if (!video.paused) {
       setShowResume(false);
@@ -267,17 +277,41 @@ const AutoResumeVideo = React.forwardRef<AutoResumeVideoHandle, {
       const video = videoRef.current;
       if (!video) return;
       setRestarting(true);
+      // Bug real encontrado: sin este pause(), si el video ya estaba
+      // reproduciéndose (buffer completo, sin necesidad de recargar datos)
+      // un simple seek a currentTime=0 + play() NO vuelve a disparar
+      // 'playing' -- el evento solo dispara cuando la reproducción
+      // arranca desde pausado/detenido, no en cada seek dentro de un
+      // video que nunca se detuvo. Sin 'playing', `restarting` se quedaba
+      // en true para siempre y el video desaparecía del todo (fade-out
+      // sin fade-in de vuelta). Pausar acá garantiza que el video SÍ está
+      // detenido antes del seek, así que el play() de abajo siempre
+      // dispara 'playing' de nuevo al reanudar.
+      // isRestartPauseRef evita que este mismo pause() dispare de rebote
+      // attemptResume() (bindeado a onPause) y reanude el video de
+      // inmediato, todavía en el cuadro viejo -- ver la nota junto a la
+      // ref, más arriba.
+      isRestartPauseRef.current = true;
+      video.pause();
       // 220ms para que el video termine de desvanecerse (mismo `duration`
       // que el CSS de abajo) antes de tocar currentTime -- si se hiciera el
       // seek con el video todavía visible, se vería el salto de cuadro en
       // pleno fade.
       window.setTimeout(() => {
         video.currentTime = 0;
+        isRestartPauseRef.current = false;
         video.play().catch(() => {});
         // onPlaying ya se encarga de bajar `restarting` (mismo mecanismo
         // que ya usa para el poster) apenas el primer cuadro real del
         // reinicio esté decodificando -- evita un fade-in prematuro sobre
         // un cuadro todavía negro/a medio decodificar.
+        // Red de seguridad: si por lo que sea 'playing' nunca dispara (un
+        // error de red/decodificación puntual, un navegador que no lo
+        // dispare en algún caso límite no contemplado), esto fuerza el
+        // fade-in de vuelta de todos modos -- nunca deja el video
+        // invisible para siempre, que es justo el bug real que este fix
+        // corrige. 900ms da margen de sobra a una reanudación real.
+        window.setTimeout(() => setRestarting(false), 900);
       }, 220);
     },
   }), []);
