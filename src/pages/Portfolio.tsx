@@ -358,6 +358,14 @@ export default function Portfolio() {
   const [storyPaused, setStoryPaused] = useState(false);
   const storyTouchStartX = useRef<number | null>(null);
   const storyTouchStartY = useRef<number | null>(null);
+  // Toggle Desktop/Mobile del mockup del slide 0, mismo patrón que
+  // ProjectScreenshot (bento/modo cine viejo) -- se resetea a "desktop" al
+  // cambiar de proyecto, no al cambiar de slide (así si el usuario ya
+  // había elegido "mobile" y avanza y vuelve al slide 0 del mismo
+  // proyecto, sigue en mobile).
+  const [storyView, setStoryView] = useState<"desktop" | "mobile">("desktop");
+  const storyBoxRef = useRef<HTMLDivElement>(null);
+  const [storyBoxHeight, setStoryBoxHeight] = useState(0);
   // Sentido del último avance (1 = siguiente, -1 = anterior) -- controla de
   // qué lado entra/sale el slide en la animación tipo carrusel (como si
   // fuese girando un cubo), tanto al cambiar de slide como de proyecto.
@@ -509,6 +517,25 @@ export default function Portfolio() {
       document.body.classList.remove("story-mode-active");
     };
   }, [viewMode]);
+
+  useEffect(() => {
+    setStoryView("desktop");
+  }, [activeCinemaIndex]);
+
+  // Mide el alto real del recuadro del mockup (slide 0) para poder escalar
+  // el frame de celular (280x580 fijo, mismo componente MockupFrame que usa
+  // ProjectScreenshot) a ese alto exacto -- se reconecta cada vez que el
+  // slide 0 se vuelve a montar (cambia de proyecto o se regresa a él).
+  useEffect(() => {
+    const el = storyBoxRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver((entries) => {
+      const h = entries[0]?.contentRect.height;
+      if (h) setStoryBoxHeight(h);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [storySlide, activeCinemaIndex]);
 
   // Swipe horizontal para cambiar de slide (izq = siguiente, der =
   // anterior, mismo sentido que Instagram) -- umbral de 40px para no
@@ -1109,7 +1136,38 @@ export default function Portfolio() {
                       className="absolute inset-0 overflow-y-auto"
                     >
                       {storySlide === 0 && (
-                        <div className="min-h-full flex flex-col items-center justify-center gap-6 p-6 md:p-10">
+                        <div className="min-h-full flex flex-col items-center justify-center gap-4 p-6 md:p-10">
+                          {/* Toggle Desktop/Mobile -- mismo patrón visual que
+                              ProjectScreenshot (bento grid), pedido explícito
+                              del usuario para que el modo historia también
+                              pueda mostrar la vista móvil del mockup. */}
+                          <div className="flex bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
+                            <button
+                              onClick={() => setStoryView("desktop")}
+                              className="p-1.5 rounded-full transition-all cursor-pointer"
+                              style={{
+                                color: storyView === "desktop" ? "white" : "var(--color-text-tertiary)",
+                                backgroundColor: storyView === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
+                                boxShadow: storyView === "desktop" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
+                              }}
+                              aria-label={translate("Ver vista de escritorio", "View desktop preview")}
+                            >
+                              <Monitor size={14} />
+                            </button>
+                            <button
+                              onClick={() => setStoryView("mobile")}
+                              className="p-1.5 rounded-full transition-all cursor-pointer"
+                              style={{
+                                color: storyView === "mobile" ? "white" : "var(--color-text-tertiary)",
+                                backgroundColor: storyView === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
+                                boxShadow: storyView === "mobile" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
+                              }}
+                              aria-label={translate("Ver vista móvil", "View mobile preview")}
+                            >
+                              <Smartphone size={14} />
+                            </button>
+                          </div>
+
                           {/* Sin caja visible alrededor (ni fondo ni
                               borde) -- pedido explícito del usuario: se
                               veía como un contenedor de más rodeando el
@@ -1123,24 +1181,69 @@ export default function Portfolio() {
                               pasa a coincidir con el fondo real de la
                               slide (--color-surface-base), no con
                               --color-surface-elevated. */}
-                          <div className="relative w-full max-w-3xl h-[42vh] max-h-[500px]">
-                            {currentCinemaProject.previewVideo ? (
+                          <div ref={storyBoxRef} className="relative w-full max-w-3xl h-[42vh] max-h-[500px]">
+                            {storyView === "desktop" ? (
+                              hasMockupContent(currentCinemaProject.slug) ? (
+                                <div className="w-full h-full px-2">
+                                  <MockupFrame type="browser" projectSlug={currentCinemaProject.slug} />
+                                </div>
+                              ) : currentCinemaProject.previewVideo ? (
+                                <AutoResumeVideo
+                                  src={currentCinemaProject.previewVideo}
+                                  poster={currentCinemaProject.previewPoster}
+                                  cornerBg="var(--color-surface-base)"
+                                  aspectRatio="1200/750"
+                                  ariaLabel={`${currentCinemaProject.title} Desktop`}
+                                />
+                              ) : currentCinemaProject.desktopImg ? (
+                                <img
+                                  src={currentCinemaProject.desktopImg}
+                                  alt={`${currentCinemaProject.title} Desktop`}
+                                  className="w-full h-full object-contain"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
+                                  <Monitor size={28} />
+                                </div>
+                              )
+                            ) : hasMockupContent(currentCinemaProject.slug) ? (
+                              (() => {
+                                const mobileScale = Math.min(1, Math.max(0, (storyBoxHeight - 16)) / 580);
+                                return (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <div style={{ width: 280 * mobileScale, height: 580 * mobileScale }}>
+                                      <div
+                                        style={{
+                                          width: 280,
+                                          height: 580,
+                                          transform: `scale(${mobileScale})`,
+                                          transformOrigin: "top left",
+                                        }}
+                                      >
+                                        <MockupFrame type="mobile" projectSlug={currentCinemaProject.slug} />
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })()
+                            ) : currentCinemaProject.mobileVideo ? (
                               <AutoResumeVideo
-                                src={currentCinemaProject.previewVideo}
-                                poster={currentCinemaProject.previewPoster}
+                                src={currentCinemaProject.mobileVideo}
+                                poster={currentCinemaProject.mobilePoster}
                                 cornerBg="var(--color-surface-base)"
-                                aspectRatio="1200/750"
-                                ariaLabel={`${currentCinemaProject.title} preview`}
+                                aspectRatio="560/1212"
+                                maxWidthPx={260}
+                                ariaLabel={`${currentCinemaProject.title} Mobile`}
                               />
-                            ) : currentCinemaProject.desktopImg ? (
+                            ) : currentCinemaProject.mobileImg ? (
                               <img
-                                src={currentCinemaProject.desktopImg}
-                                alt={`${currentCinemaProject.title} preview`}
-                                className="w-full h-full object-contain"
+                                src={currentCinemaProject.mobileImg}
+                                alt={`${currentCinemaProject.title} Mobile`}
+                                className="h-full w-auto max-w-[260px] object-contain mx-auto"
                               />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-[var(--color-text-tertiary)]">
-                                <Monitor size={28} />
+                                <Smartphone size={28} />
                               </div>
                             )}
                           </div>
