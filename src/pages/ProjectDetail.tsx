@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Monitor,
   Smartphone,
+  RotateCcw,
 } from "lucide-react";
 import { projects } from "../constants/projects";
 import Navbar from "../components/Navbar";
@@ -18,7 +19,7 @@ import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 import MockupFrame, { hasMockupContent } from "../components/MockupFrame";
-import AutoResumeVideo from "../components/AutoResumeVideo";
+import AutoResumeVideo, { type AutoResumeVideoHandle } from "../components/AutoResumeVideo";
 
 function ProjectImageCarousel({
   desktopImg,
@@ -49,6 +50,11 @@ function ProjectImageCarousel({
     desktopImg || previewVideo ? "desktop" : "mobile"
   );
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1024);
+  // Refs a los <video> real de cada vista -- el botón de reinicio solo
+  // necesita reiniciar el que está activo en este momento (el otro sigue
+  // pausado/fuera de pantalla, AutoResumeVideo ya se encarga de eso solo).
+  const desktopVideoRef = useRef<AutoResumeVideoHandle>(null);
+  const mobileVideoRef = useRef<AutoResumeVideoHandle>(null);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -72,7 +78,7 @@ function ProjectImageCarousel({
 
   return (
     <div className="w-full space-y-3">
-      {/* Toggle desktop/mobile */}
+      {/* Toggle desktop/mobile + reinicio del video activo */}
       {images.length > 1 && (
         <div className="flex items-center justify-center gap-2">
           <button
@@ -99,6 +105,20 @@ function ProjectImageCarousel({
             <Smartphone size={12} />
             <T en="Mobile">Mobile</T>
           </button>
+          {/* Solo tiene sentido reiniciar un <video> real -- el mockup
+              interactivo (Lúmina) y las capturas estáticas no tienen nada
+              que reiniciar. */}
+          {!interactive && ((active === "desktop" && previewVideo) || (active === "mobile" && mobileVideo)) && (
+            <button
+              type="button"
+              onClick={() => (active === "desktop" ? desktopVideoRef : mobileVideoRef).current?.restart()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--color-surface-elevated)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-all cursor-pointer"
+              aria-label="Reiniciar video"
+              title="Reiniciar video"
+            >
+              <RotateCcw size={12} />
+            </button>
+          )}
         </div>
       )}
 
@@ -169,6 +189,7 @@ function ProjectImageCarousel({
               )
             ) : img.type === "desktop" && previewVideo ? (
               <AutoResumeVideo
+                ref={desktopVideoRef}
                 src={previewVideo}
                 poster={previewPoster}
                 cornerBg="var(--color-surface-base)"
@@ -177,6 +198,7 @@ function ProjectImageCarousel({
               />
             ) : img.type === "mobile" && mobileVideo ? (
               <AutoResumeVideo
+                ref={mobileVideoRef}
                 src={mobileVideo}
                 poster={mobilePoster}
                 cornerBg="var(--color-surface-base)"

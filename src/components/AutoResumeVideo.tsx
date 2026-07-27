@@ -101,14 +101,20 @@ function CornerPatches({ bg }: { bg: string }) {
   );
 }
 
-export default function AutoResumeVideo({
-  src,
-  poster,
-  ariaLabel,
-  cornerBg,
-  aspectRatio,
-  maxWidthPx,
-}: {
+// Métodos imperativos expuestos vía ref -- hoy solo `restart()`, usado por el
+// botón de reinicio junto al toggle desktop/mobile en ProjectDetail.tsx. No
+// alcanza con solo hacer `video.currentTime = 0` a secas -- se ve como un
+// salto brusco (el cuadro cambia de golpe a mitad de lo que sea que el
+// visitante estaba mirando). En su lugar: fade a negro/transparente (misma
+// duración/easing que el crossfade del poster, 300ms), seek real a 0 recién
+// con el video ya invisible, y fade de vuelta una vez que 'playing' confirma
+// que el primer cuadro real ya se está decodificando -- mismo criterio ya
+// usado para el swap poster→video, reaplicado acá.
+export interface AutoResumeVideoHandle {
+  restart: () => void;
+}
+
+const AutoResumeVideo = React.forwardRef<AutoResumeVideoHandle, {
   src: string;
   poster?: string;
   ariaLabel?: string;
@@ -137,7 +143,14 @@ export default function AutoResumeVideo({
   // el mockup angosto centrado de la vista móvil). Omitido para el
   // mockup de escritorio, que puede usar todo el ancho disponible.
   maxWidthPx?: number;
-}) {
+}>(function AutoResumeVideo({
+  src,
+  poster,
+  ariaLabel,
+  cornerBg,
+  aspectRatio,
+  maxWidthPx,
+}, ref) {
   const [ratioW, ratioH] = React.useMemo(() => {
     const [w, h] = aspectRatio.split("/").map(Number);
     return [w || 1, h || 1];
@@ -171,6 +184,11 @@ export default function AutoResumeVideo({
   // reproducir/reanudar una tarjeta que está scrolleada fuera de vista,
   // aunque la pestaña esté al frente.
   const isIntersectingRef = React.useRef(false);
+  // true durante el fade de reinicio (video oculto mientras se hace el seek
+  // a 0) -- separado de `posterVisible` porque el poster solo se muestra en
+  // el primer arranque, mientras que este fade se repite cada vez que se usa
+  // el botón de reinicio.
+  const [restarting, setRestarting] = React.useState(false);
 
   const attemptResume = React.useCallback(() => {
     const video = videoRef.current;
@@ -244,6 +262,26 @@ export default function AutoResumeVideo({
     };
   }, [attemptResume]);
 
+  React.useImperativeHandle(ref, () => ({
+    restart: () => {
+      const video = videoRef.current;
+      if (!video) return;
+      setRestarting(true);
+      // 220ms para que el video termine de desvanecerse (mismo `duration`
+      // que el CSS de abajo) antes de tocar currentTime -- si se hiciera el
+      // seek con el video todavía visible, se vería el salto de cuadro en
+      // pleno fade.
+      window.setTimeout(() => {
+        video.currentTime = 0;
+        video.play().catch(() => {});
+        // onPlaying ya se encarga de bajar `restarting` (mismo mecanismo
+        // que ya usa para el poster) apenas el primer cuadro real del
+        // reinicio esté decodificando -- evita un fade-in prematuro sobre
+        // un cuadro todavía negro/a medio decodificar.
+      }, 220);
+    },
+  }), []);
+
   const frameStyle: React.CSSProperties = {
     position: "relative",
     width: frameSize ? frameSize.width : 0,
@@ -273,12 +311,24 @@ export default function AutoResumeVideo({
           muted
           playsInline
           preload="auto"
-          className="absolute inset-0 w-full h-full object-contain object-center"
-          style={{ zIndex: 0, transform: "translateZ(0)", WebkitTransform: "translateZ(0)" }}
+          className="absolute inset-0 w-full h-full object-contain object-center transition-opacity duration-[220ms] ease-out"
+          style={{
+            zIndex: 0,
+            transform: "translateZ(0)",
+            WebkitTransform: "translateZ(0)",
+            opacity: restarting ? 0 : 1,
+          }}
           aria-label={ariaLabel}
           onPause={attemptResume}
           onPlay={() => setShowResume(false)}
           onPlaying={() => {
+            if (restarting) {
+              // Mismo margen que el poster (ver más abajo) antes de
+              // desvanecer de vuelta -- deja un par de cuadros reales ya
+              // decodificándose para no revelar un cuadro negro/a medio
+              // decodificar en pleno fade-in.
+              window.setTimeout(() => setRestarting(false), 120);
+            }
             if (hasStartedRef.current) return;
             hasStartedRef.current = true;
             // Pequeño margen (120ms) para que ya haya un par de cuadros
@@ -318,4 +368,6 @@ export default function AutoResumeVideo({
       )}
     </div>
   );
-}
+});
+
+export default AutoResumeVideo;
