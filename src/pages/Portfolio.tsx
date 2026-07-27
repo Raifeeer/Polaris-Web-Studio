@@ -1079,6 +1079,38 @@ export default function Portfolio() {
                       </div>
                     ))}
                   </div>
+                  {/* Toggle Desktop/Mobile del mockup -- pedido explícito
+                      del usuario para que viva junto al botón de "siguiente
+                      proyecto" en la barra superior, en vez de arriba del
+                      mockup. Solo aplica al slide 0 (el del mockup). */}
+                  {storySlide === 0 && (
+                    <div className="flex bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-full p-1 gap-0.5">
+                      <button
+                        onClick={() => setStoryView("desktop")}
+                        className="p-1.5 rounded-full transition-all cursor-pointer"
+                        style={{
+                          color: storyView === "desktop" ? "white" : "var(--color-text-tertiary)",
+                          backgroundColor: storyView === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
+                        }}
+                        aria-label={translate("Ver vista de escritorio", "View desktop preview")}
+                        title={translate("Vista de escritorio", "Desktop view")}
+                      >
+                        <Monitor size={14} />
+                      </button>
+                      <button
+                        onClick={() => setStoryView("mobile")}
+                        className="p-1.5 rounded-full transition-all cursor-pointer"
+                        style={{
+                          color: storyView === "mobile" ? "white" : "var(--color-text-tertiary)",
+                          backgroundColor: storyView === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
+                        }}
+                        aria-label={translate("Ver vista móvil", "View mobile preview")}
+                        title={translate("Vista móvil", "Mobile view")}
+                      >
+                        <Smartphone size={14} />
+                      </button>
+                    </div>
+                  )}
                   <button
                     onClick={handleNextCinema}
                     className="p-2 rounded-full bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
@@ -1136,38 +1168,11 @@ export default function Portfolio() {
                       className="absolute inset-0 overflow-y-auto"
                     >
                       {storySlide === 0 && (
-                        <div className="min-h-full flex flex-col items-center justify-center gap-4 p-6 md:p-10">
-                          {/* Toggle Desktop/Mobile -- mismo patrón visual que
-                              ProjectScreenshot (bento grid), pedido explícito
-                              del usuario para que el modo historia también
-                              pueda mostrar la vista móvil del mockup. */}
-                          <div className="flex bg-[var(--color-surface-elevated)]/80 backdrop-blur-sm border border-[var(--color-border-subtle)] rounded-full p-1 shadow-sm gap-0.5">
-                            <button
-                              onClick={() => setStoryView("desktop")}
-                              className="p-1.5 rounded-full transition-all cursor-pointer"
-                              style={{
-                                color: storyView === "desktop" ? "white" : "var(--color-text-tertiary)",
-                                backgroundColor: storyView === "desktop" ? "var(--cinema-color, #6366f1)" : "transparent",
-                                boxShadow: storyView === "desktop" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
-                              }}
-                              aria-label={translate("Ver vista de escritorio", "View desktop preview")}
-                            >
-                              <Monitor size={14} />
-                            </button>
-                            <button
-                              onClick={() => setStoryView("mobile")}
-                              className="p-1.5 rounded-full transition-all cursor-pointer"
-                              style={{
-                                color: storyView === "mobile" ? "white" : "var(--color-text-tertiary)",
-                                backgroundColor: storyView === "mobile" ? "var(--cinema-color, #6366f1)" : "transparent",
-                                boxShadow: storyView === "mobile" ? `0 2px 8px rgba(var(--cinema-color-rgb, 99, 102, 241), 0.45)` : "none"
-                              }}
-                              aria-label={translate("Ver vista móvil", "View mobile preview")}
-                            >
-                              <Smartphone size={14} />
-                            </button>
-                          </div>
-
+                        <div className="min-h-full flex flex-col items-center justify-center gap-6 p-6 md:p-10">
+                          {/* El toggle Desktop/Mobile vive en la barra
+                              superior, junto al botón de "siguiente
+                              proyecto" (pedido explícito del usuario) --
+                              storyView se controla desde ahí. */}
                           {/* Sin caja visible alrededor (ni fondo ni
                               borde) -- pedido explícito del usuario: se
                               veía como un contenedor de más rodeando el
