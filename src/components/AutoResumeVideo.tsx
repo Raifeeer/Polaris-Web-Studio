@@ -121,15 +121,8 @@ export default function AutoResumeVideo({
     // <video> se decodifica en su propia capa de compositing, que a veces
     // ignora por completo el clip de border-radius/overflow-hidden de un
     // contenedor (el mismo tipo de bug de WebKit ya peleado toda la sesión
-    // con el mockup interactivo, ahora con el <video> real). El fix
-    // estándar documentado para esto es forzar a Safari a usar una capa de
-    // máscara real en vez de solo clip -- WebkitMaskImage con un
-    // radial-gradient blanco/negro logra eso.
-    <div
-      ref={wrapperRef}
-      className="relative w-full h-full overflow-hidden rounded-2xl"
-      style={{ WebkitMaskImage: "-webkit-radial-gradient(white, black)" }}
-    >
+    // con el mockup interactivo, ahora con el <video> real).
+    <div ref={wrapperRef} className="relative w-full h-full overflow-hidden rounded-2xl">
       <video
         ref={videoRef}
         src={src}
@@ -138,6 +131,20 @@ export default function AutoResumeVideo({
         playsInline
         preload="auto"
         className={className}
+        // Bug real, corregido acá: el primer intento usaba
+        // -webkit-mask-image: -webkit-radial-gradient(white, black) --
+        // eso es un degradé real de blanco (opaco) a negro (transparente),
+        // así que en vez de solo forzar a Safari a respetar el clip,
+        // desvanecía el video hacia los bordes -- ni rondeaba ni se veía
+        // bien. El fix real usa el mismo truco pero con topes duros
+        // (100%/100%) para que la máscara sea 100% blanca/opaca en toda el
+        // área -- no cambia nada visualmente por sí sola, pero fuerza a
+        // Safari a recomponer el <video> respetando el border-radius de
+        // esta misma etiqueta, que es la capa que WebKit a veces pinta por
+        // fuera del contenedor con overflow-hidden.
+        style={{
+          WebkitMaskImage: "-webkit-radial-gradient(circle, white 100%, black 100%)",
+        }}
         aria-label={ariaLabel}
         onPause={attemptResume}
         onPlay={() => setShowResume(false)}
