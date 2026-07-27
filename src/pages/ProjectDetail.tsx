@@ -25,6 +25,8 @@ function ProjectImageCarousel({
   mobileImg,
   previewVideo,
   previewPoster,
+  mobileVideo,
+  mobilePoster,
   projectName,
   projectSlug,
 }: {
@@ -32,6 +34,8 @@ function ProjectImageCarousel({
   mobileImg?: string;
   previewVideo?: string;
   previewPoster?: string;
+  mobileVideo?: string;
+  mobilePoster?: string;
   projectName: string;
   projectSlug?: string;
 }) {
@@ -56,7 +60,7 @@ function ProjectImageCarousel({
     ? [{ type: "desktop" as const, src: "" }, { type: "mobile" as const, src: "" }]
     : [
         ...(desktopImg || previewVideo ? [{ type: "desktop" as const, src: desktopImg || "" }] : []),
-        ...(mobileImg ? [{ type: "mobile" as const, src: mobileImg }] : []),
+        ...(mobileImg || mobileVideo ? [{ type: "mobile" as const, src: mobileImg || "" }] : []),
       ];
 
   if (images.length === 0) return null;
@@ -158,6 +162,13 @@ function ProjectImageCarousel({
                 poster={previewPoster}
                 className="w-full h-full object-contain rounded-2xl"
                 ariaLabel={`${projectName} — desktop`}
+              />
+            ) : img.type === "mobile" && mobileVideo ? (
+              <AutoResumeVideo
+                src={mobileVideo}
+                poster={mobilePoster}
+                className="h-full w-auto max-w-[240px] object-contain mx-auto rounded-2xl"
+                ariaLabel={`${projectName} — mobile`}
               />
             ) : (
               <img
@@ -324,6 +335,8 @@ export default function ProjectDetail() {
               mobileImg={project.mobileImg}
               previewVideo={project.previewVideo}
               previewPoster={project.previewPoster}
+              mobileVideo={project.mobileVideo}
+              mobilePoster={project.mobilePoster}
               projectName={project.title}
               projectSlug={project.slug}
             />

@@ -45,6 +45,12 @@ export interface Project {
   // ya está ahí desde que carga la página, y el video retoma
   // exactamente esa misma imagen al empezar a reproducirse.
   previewPoster?: string;
+  // Mismo patrón que previewVideo/previewPoster, para la vista Mobile del
+  // mockup (grabación aparte, viewport de teléfono real -- el sitio
+  // renderiza su propio layout responsive de mobile, no es el video de
+  // escritorio recortado). Tiene prioridad sobre mobileImg.
+  mobileVideo?: string;
+  mobilePoster?: string;
   cinemaColor?: string;
 
   // Case Study Details
@@ -115,6 +121,8 @@ export const projects: Project[] = [
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview-v3.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPoster.jpg",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaMobilePreview.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaMobilePoster.jpg",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
     shortDescEN:

@@ -105,12 +105,17 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
       img.onload = () => setDesktopAspect(img.naturalWidth / img.naturalHeight);
       img.src = project.desktopImg;
     }
-    if (project.mobileImg) {
+    if (project.mobileVideo) {
+      const video = document.createElement("video");
+      video.preload = "metadata";
+      video.onloadedmetadata = () => setMobileAspect(video.videoWidth / video.videoHeight);
+      video.src = project.mobileVideo;
+    } else if (project.mobileImg) {
       const img = new Image();
       img.onload = () => setMobileAspect(img.naturalWidth / img.naturalHeight);
       img.src = project.mobileImg;
     }
-  }, [project.previewVideo, project.desktopImg, project.mobileImg, fixedHeights]);
+  }, [project.previewVideo, project.desktopImg, project.mobileVideo, project.mobileImg, fixedHeights]);
 
   let targetHeight: number;
   if (fixedHeights) {
@@ -276,6 +281,13 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                   </div>
                 );
               })()
+            ) : project.mobileVideo ? (
+              <AutoResumeVideo
+                src={project.mobileVideo}
+                poster={project.mobilePoster}
+                className="h-full w-auto max-w-[260px] object-contain mx-auto bg-transparent"
+                ariaLabel={`${project.title} Mobile`}
+              />
             ) : project.mobileImg ? (
               <img
                 src={project.mobileImg}

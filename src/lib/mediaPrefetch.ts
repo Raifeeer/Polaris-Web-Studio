@@ -13,7 +13,9 @@ import { projects } from "../constants/projects";
 const MEDIA_URLS: string[] = Array.from(
   new Set(
     projects.flatMap((p) =>
-      [p.previewPoster, p.previewVideo || p.desktopImg, p.mobileImg].filter((u): u is string => !!u)
+      [p.previewPoster, p.previewVideo || p.desktopImg, p.mobilePoster, p.mobileVideo || p.mobileImg].filter(
+        (u): u is string => !!u
+      )
     )
   )
 );
