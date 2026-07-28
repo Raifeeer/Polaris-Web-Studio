@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Maximize2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
-
-type AiMessage = { role: "user" | "assistant"; content: string };
+import { useAtlasChat } from "../hooks/useAtlasChat";
+import AtlasMarkdown from "./AtlasMarkdown";
 
 type Question = {
   id: number;
@@ -112,11 +112,12 @@ export default function QuoteBot() {
 
   // Modo de texto libre con IA (DeepSeek, con Grok como respaldo) --
   // independiente del quiz guiado de arriba, disponible en cualquier
-  // momento vía el input fijo al pie del panel.
-  const [aiMessages, setAiMessages] = useState<AiMessage[]>([]);
+  // momento vía el input fijo al pie del panel. Comparte el mismo hook
+  // (y por lo tanto la misma conversación en localStorage) que la página
+  // completa "/asistente" -- abrir el chat de página completa continúa
+  // justo donde quedó el widget.
+  const { messages: aiMessages, loading: aiLoading, error: aiError, sendMessage: sendAiMessageText } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState(false);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -128,27 +129,9 @@ export default function QuoteBot() {
     const text = aiInput.trim();
     if (!text || aiLoading) return;
     setAiInput("");
-    setAiError(false);
-    const nextMessages: AiMessage[] = [...aiMessages, { role: "user", content: text }];
-    setAiMessages(nextMessages);
-    setAiLoading(true);
     scrollToBottom();
-    try {
-      const res = await fetch("/api/quotebot-chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history: nextMessages.slice(0, -1) }),
-      });
-      if (!res.ok) throw new Error("bad status");
-      const data = await res.json();
-      if (!data.reply) throw new Error("empty reply");
-      setAiMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
-    } catch {
-      setAiError(true);
-    } finally {
-      setAiLoading(false);
-      scrollToBottom();
-    }
+    await sendAiMessageText(text);
+    scrollToBottom();
   };
 
   useEffect(() => {
@@ -256,7 +239,8 @@ export default function QuoteBot() {
   // navegar entre rutas públicas y /dashboard|/login.
   if (
     location.pathname.startsWith("/dashboard") ||
-    location.pathname.startsWith("/login")
+    location.pathname.startsWith("/login") ||
+    location.pathname === "/asistente"
   ) {
     return null;
   }
@@ -286,6 +270,15 @@ export default function QuoteBot() {
                   <T en="Online">En línea</T>
                 </span>
               </div>
+              <Link
+                to="/asistente"
+                onClick={() => setIsOpen(false)}
+                className="p-2 hover:bg-[var(--color-surface-highlight)] rounded-full transition-colors"
+                aria-label={translate("Abrir chat en pantalla completa", "Open full-screen chat")}
+                title={translate("Abrir chat en pantalla completa", "Open full-screen chat")}
+              >
+                <Maximize2 size={16} />
+              </Link>
               <button
                 onClick={resetChat}
                 className="p-2 hover:bg-[var(--color-surface-highlight)] rounded-full transition-colors"
@@ -509,19 +502,39 @@ export default function QuoteBot() {
                   key={i}
                   initial={{ opacity: 0, x: m.role === "user" ? 10 : -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
                     className={
                       m.role === "user"
                         ? "max-w-[85%] p-3 rounded-2xl rounded-tr-none bg-[var(--color-primary-muted)] text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 shadow-sm"
-                        : "max-w-[85%] p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]"
+                        : "max-w-[85%] p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]"
                     }
                   >
-                    <p className={`text-sm leading-relaxed ${m.role === "user" ? "font-bold" : "text-[var(--color-text-primary)]"}`}>
-                      {m.content}
-                    </p>
+                    {m.role === "user" ? (
+                      <p className="text-sm font-bold leading-relaxed">{m.content}</p>
+                    ) : (
+                      <AtlasMarkdown content={m.content} />
+                    )}
                   </div>
+
+                  {m.role === "assistant" && m.suggestions && m.suggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[85%]">
+                      {m.suggestions.map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => {
+                            setAiInput("");
+                            sendAiMessageText(s);
+                            scrollToBottom();
+                          }}
+                          className="text-[11px] font-bold px-2.5 py-1.5 rounded-full border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors text-left"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               ))}
 

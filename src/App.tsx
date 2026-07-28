@@ -42,6 +42,7 @@ const Login = lazy(() => import("./pages/Login"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const Gracias = lazy(() => import("./pages/Gracias"));
 const Schedule = lazy(() => import("./pages/Schedule"));
+const AtlasChat = lazy(() => import("./pages/AtlasChat"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
@@ -168,7 +169,7 @@ function ScrollHandler() {
 
 function ConditionalQuoteBot({ showBot }: { showBot: boolean }) {
   const location = useLocation();
-  if (!showBot || location.pathname === "/cotizar" || location.pathname === "/servicios") return null;
+  if (!showBot || location.pathname === "/cotizar" || location.pathname === "/servicios" || location.pathname === "/asistente") return null;
   return (
     <Suspense fallback={null}>
       <QuoteBot />
@@ -228,6 +229,7 @@ function AnimatedRoutes() {
             <Route path="/cotizar" element={<WizardQuote />} />
             <Route path="/gracias" element={<Gracias />} />
             <Route path="/agendar" element={<Schedule />} />
+            <Route path="/asistente" element={<AtlasChat />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<ClientDashboard />} />
             <Route
