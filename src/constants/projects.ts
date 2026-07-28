@@ -517,56 +517,71 @@ export const projects: Project[] = [
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
-    plan: "Destello",
-    planEN: "Flash",
-    type: "Salud · Landing Page",
-    typeEN: "Health · Landing Page",
+    plan: "Constelación",
+    planEN: "Constellation",
+    type: "Salud · Portal de Citas",
+    typeEN: "Health · Appointment Portal",
     shortDesc:
-      "Página directa enfocada en conseguir más citas y prospectos para clínicas o consultorios.",
+      "Clínica multidisciplinaria con perfiles de médicos, blog de salud, agendado real de citas y panel administrativo propio.",
     shortDescEN:
-      "Direct page focused on getting more appointments and leads for clinics or medical offices.",
+      "Multi-specialty clinic with doctor profiles, health blog, real appointment booking, and its own admin panel.",
     keyResult: "Pacientes",
     keyResultEN: "Patients",
-    resultLabel: "Más Citas",
-    resultLabelEN: "More Appointments",
+    resultLabel: "Citas Automatizadas",
+    resultLabelEN: "Automated Bookings",
     color: "from-emerald-500/20 to-transparent",
     size: "wide",
     icon: ShieldCheck,
     context:
-      "Este diseño está pensado para médicos o clínicas que quieren una página que transmita confianza y permita a los pacientes agendar citas fácilmente.",
+      "Este diseño está pensado para clínicas y consultorios con varios médicos que necesitan transmitir confianza, mostrar la trayectoria de cada especialista y dejar de depender de llamadas para agendar citas.",
     contextEN:
-      "This design is intended for doctors or clinics that want a page that conveys trust and allows patients to easily book appointments.",
+      "This design is intended for clinics and medical offices with several doctors who need to convey trust, showcase each specialist's background, and stop relying on phone calls to book appointments.",
     challenge:
-      "Destacar los servicios médicos de forma profesional sin confundir al paciente con demasiada información innecesaria.",
+      "Dar de baja el agendado manual por teléfono y ofrecer contenido propio (perfiles de médicos, blog de salud) sin sumar la complejidad de un portal de pacientes completo.",
     challengeEN:
-      "Highlight medical services professionally without confusing the patient with too much unnecessary information.",
+      "Replace manual phone scheduling and offer real content (doctor profiles, health blog) without the complexity of a full patient portal.",
     solution:
-      "Una página clara y directa, con información precisa y botones llamativos para agendar citas o contactar por WhatsApp de inmediato.",
+      "Un selector de fecha/hora real basado en el horario de atención real de la clínica (con confirmación automática por correo), páginas de perfil por médico, un blog de salud con artículos reales, y un panel administrativo con login propio para que el staff gestione las citas entrantes en tiempo real.",
     solutionEN:
-      "A clear and direct page, with precise info and eye-catching buttons to book appointments or contact via WhatsApp immediately.",
+      "A real date/time picker based on the clinic's actual business hours (with automatic email confirmation), per-doctor profile pages, a health blog with real articles, and an admin panel with its own login for staff to manage incoming appointments in real time.",
     results: [
       {
-        label: "Estructura",
-        labelEN: "Structure",
-        value: "Directa",
-        valueEN: "Direct",
+        label: "Agendado",
+        labelEN: "Booking",
+        value: "Automatizado",
+        valueEN: "Automated",
       },
       {
-        label: "Enfoque en",
-        labelEN: "Focus on",
-        value: "Contactos",
-        valueEN: "Leads",
+        label: "Contenido",
+        labelEN: "Content",
+        value: "Blog + Perfiles",
+        valueEN: "Blog + Profiles",
       },
       {
-        label: "Diseño",
-        labelEN: "Design",
-        value: "Profesional",
-        valueEN: "Professional",
+        label: "Gestión",
+        labelEN: "Management",
+        value: "Panel Propio",
+        valueEN: "Own Panel",
       },
     ],
-    techStack: ["React", "TypeScript", "Tailwind CSS"],
+    techStack: [
+      "React",
+      "TypeScript",
+      "React Router",
+      "Tailwind CSS",
+      "Firebase",
+    ],
+    liveUrl: "https://vitality-med-five.vercel.app/",
     desktopImg: "/screenshots/vitality-clinic-desktop.png",
     mobileImg: "/screenshots/vitality-clinic-mobile.png",
+    previewVideo:
+      "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityPreview.mp4",
+    previewPoster:
+      "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityPoster.jpg",
+    mobileVideo:
+      "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityMobilePreview.mp4",
+    mobilePoster:
+      "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityMobilePoster.jpg",
   },
   {
     slug: "sabor-autentico",
