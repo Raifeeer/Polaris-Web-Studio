@@ -507,9 +507,9 @@ export const projects: Project[] = [
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPoster-v1.jpg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPreview-v1.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPoster-v1.jpg",
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v1.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePreview-v1.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v1.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v2.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePreview-v2.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v2.jpg",
   },
   {
     slug: "vitality-clinic",
