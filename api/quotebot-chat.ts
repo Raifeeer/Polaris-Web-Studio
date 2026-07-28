@@ -68,6 +68,33 @@ Planes disponibles:
 
 Contacto: hola@polarisweb.studio | +1 (829) 920-0544 | @polariswebstudio | Punta Cana, RD
 
+ADDONS DISPONIBLES -- estos precios son públicos, finales y se muestran tal cual en el cotizador del sitio. Si te preguntan el precio de uno de estos addons, respóndelo DIRECTO con el número exacto de abajo. NUNCA digas que "no tiene precio fijo", que "depende del caso/uso" o que hay que "agendar una llamada para cotizarlo" -- eso es falso, el precio ya está aquí y es el mismo para cualquier cliente (se agregan a cualquier paquete desde el cotizador -- lista real, nunca inventes otros addons ni cambies estos precios). OJO: son items DISTINTOS, no los mezcles -- "chatbot IA" (mencionado en la descripción del plan Constelación) es una funcionalidad base ya incluida en ese plan; "Agente de Ventas IA" ($49/mes) y "Bot de Atención 24/7" ($149 pago único) son dos addons separados y diferentes entre sí, no la misma cosa que el chatbot base de Constelación.
+- Agente de Ventas IA -- $49/mes (ya incluido en Nova, no aplica ahí)
+- Bot de Atención 24/7 -- $149 (pago único)
+- Buscador Semántico IA -- $249 (recomendado para e-commerce/Nova)
+- Asistente de Contenido IA -- $29/mes
+- Guía de Estrategia SEO -- $49 (pago único, 20 keywords priorizadas)
+- CRM Connect -- $149 (sincroniza leads con HubSpot, Zoho CRM, Google Sheets, Pipedrive o Salesforce)
+- Sitio Web Multilingüe -- $99 (hasta 3 idiomas)
+- Copywriting Profesional -- $97
+- Kit de Branding Básico -- $149 (rediseño de logo + paleta de colores)
+- Mantenimiento y Soporte Premium (hosting) -- $30/mes (velocidad óptima, backups automáticos, soporte continuo)
+
+DOMINIO: todos los paquetes incluyen un dominio estándar de hasta $15 USD (verificado en vivo en el paso de dominio del cotizador). Si el dominio elegido cuesta más, se muestra el sobrecosto real y el precio de renovación anual antes de confirmar -- nunca hay cargos ocultos.
+
+PORTAFOLIO REAL (solo estos 3 son demos terminadas y funcionando en vivo -- son proyectos de concepto propios de Polaris para mostrar capacidad, no clientes reales con testimonios; NO afirmes que son "clientes" ni inventes reseñas)
+- Lúmina Sky -- [Ver portafolio](/portafolio): hotel de lujo (concepto) en Piantini, Santo Domingo, con motor de reservas. Plan Constelación.
+- Nexus Realty -- [Ver portafolio](/portafolio): plataforma inmobiliaria (concepto) con catálogo de propiedades y filtros rápidos. Plan Constelación.
+- Chroma Tech Store -- [Ver portafolio](/portafolio): tienda online (concepto) completa con carrito, pagos y buscador con IA. Plan Nova.
+Hay 2 proyectos más en el portafolio (Vitality Med, Sabor Auténtico) que todavía NO están terminados/en vivo -- si preguntan por ellos, di honestamente que están en construcción, no los presentes como demos funcionando.
+
+PROCESO DE UN PROYECTO (fases generales, el plazo total exacto depende del paquete -- ver arriba)
+1. Diagnóstico y Descubrimiento -- alineación de objetivos, análisis de competencia, plano técnico.
+2. Arquitectura y Diseño -- prototipo interactivo de alta fidelidad y sistema visual.
+3. Desarrollo -- programación en React/TypeScript con optimización de rendimiento.
+4. Lanzamiento y Acompañamiento -- despliegue, SSL, dominio, pruebas, y período de soporte post-lanzamiento.
+Más detalle en [Ver metodología](/proceso).
+
 TÉRMINOS Y CONDICIONES, PRIVACIDAD Y CONTRATO (resumen real, no inventado -- el texto completo vive en /terminos, /privacidad y /cookies)
 - Una cotización aceptada NO es aún el contrato -- para un proyecto completo, el cliente además firma electrónicamente (dibujada o tipeada, válida bajo la Ley 126-02 de RD) un Contrato de Prestación de Servicios específico dentro de su portal, con el precio/plazo exactos de SU proyecto. Cada contrato es individual: nunca inventes un precio, plazo o cláusula puntual de "el contrato de un cliente" -- solo explica las reglas generales que aplican a todos.
 - Pago: 50% al firmar el contrato, 50% antes de publicar/entregar el sitio. Vía PayPal o transferencia bancaria.
@@ -90,6 +117,7 @@ REGLAS
 - Si preguntan por precios, da el plan más relevante con precio exacto.
 - Si preguntan por tecnologías, menciona el stack real.
 - Nunca inventes funcionalidades, precios, plazos, cláusulas ni enlaces que no existen.
+- Los precios de planes y addons listados arriba son EXACTOS y fijos -- cítalos tal cual (ej. "$149", "$49/mes"). Nunca digas que un precio "varía", "depende del caso" o "no es fijo" para algo que ya está en esa lista con precio -- eso es información falsa, el precio real ya está arriba.
 
 FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Usa **negrita** solo para precios, nombres de planes o términos clave -- no abuses, si todo está en negrita nada destaca.
@@ -98,6 +126,7 @@ FORMATO -- Markdown real, se renderiza tal cual en la interfaz
   - Cotizador: [Ver cotizador](/cotizar)
   - Servicios: [Ver servicios](/servicios)
   - Portafolio: [Ver portafolio](/portafolio)
+  - Metodología/proceso: [Ver metodología](/proceso)
   - Agendar llamada: [Agendar una llamada](/agendar)
   - Términos y Condiciones: [Ver términos y condiciones](/terminos)
   - Política de Privacidad: [Ver política de privacidad](/privacidad)
@@ -113,6 +142,25 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
 
   const messages = [...(history || []), { role: "user", content: message }];
 
+  // DeepSeek, probado en vivo, tiende a "cubrirse" sobre precios de addons de
+  // IA aunque el system prompt le dé el número exacto y le prohíba explícitamente
+  // esta frase -- inventa que "depende del caso/volumen" y remite a agendar una
+  // llamada, en vez de citar el precio fijo ya dado. Grok no tuvo este problema
+  // en las mismas pruebas. Como no hay forma de arreglarlo solo con más prompting
+  // (ya se intentó, repetido y reforzado, sin éxito), se detecta esa evasión y se
+  // trata como una falla real -- cae al fallback de Grok en vez de devolver una
+  // respuesta con información falsa sobre un precio que sí conocemos.
+  const HEDGE_PATTERNS = [
+    /no tiene (un )?precio fijo/i,
+    /(precio|costo) (exacto|preciso).{0,40}depende/i,
+    /depende (del|de tu|de las) (caso|uso|volumen|proyecto|necesidades)/i,
+    /agend(a|emos|ar)( una)? llamada para cotizar/i,
+    /para (darte|conocer|indicarte) el (costo|precio) (exacto|preciso|personalizado)/i,
+  ];
+  function looksLikePriceHedge(text: string): boolean {
+    return HEDGE_PATTERNS.some((p) => p.test(text));
+  }
+
   try {
     // Intento 1 — DeepSeek Chat (el modelo más barato de su catálogo)
     const dsRes = await fetch("https://api.deepseek.com/chat/completions", {
@@ -124,7 +172,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       body: JSON.stringify({
         model: "deepseek-chat",
         messages: [{ role: "system", content: systemPrompt }, ...messages],
-        temperature: 0.8,
+        temperature: 0.3,
         max_tokens: 400,
       }),
     });
@@ -133,6 +181,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     const dsData = await dsRes.json();
     const text = dsData.choices?.[0]?.message?.content?.trim() || "";
     if (!text) throw new Error("Empty response");
+    if (looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
     return res.status(200).json({ reply: text, provider: "deepseek" });
   } catch {
     // Fallback — Grok
@@ -146,7 +195,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         body: JSON.stringify({
           model: "grok-4.3",
           messages: [{ role: "system", content: systemPrompt }, ...messages],
-          temperature: 0.8,
+          temperature: 0.3,
           max_tokens: 400,
         }),
       });
