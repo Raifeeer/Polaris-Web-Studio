@@ -118,6 +118,20 @@ export default function AtlasChat() {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, loading]);
 
+  // Bloquea el scroll de <body> mientras esta página está montada -- sin
+  // esto, en mobile Safari/Chrome real (no reproducible en este entorno de
+  // desarrollo) el navegador termina scrolleando la página completa en vez
+  // de solo el panel de mensajes, arrastrando el header y la caja de texto
+  // con él aunque estén dentro de un contenedor `h-dvh` con `overflow-hidden`.
+  // Mismo patrón que el modo cine de Portfolio.tsx.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
   const handleSend = (override?: string) => {
     const text = override ?? input;
     if (!text.trim() || loading) return;
@@ -134,7 +148,7 @@ export default function AtlasChat() {
   };
 
   return (
-    <div className="h-screen w-full flex bg-[var(--color-surface-base)] overflow-hidden pt-[env(safe-area-inset-top)]">
+    <div className="h-dvh w-full flex bg-[var(--color-surface-base)] overflow-hidden pt-[env(safe-area-inset-top)]">
       {/* Sidebar de historial */}
       <AnimatePresence initial={false}>
         {sidebarOpen && (
