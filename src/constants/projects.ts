@@ -222,7 +222,7 @@ export const projects: Project[] = [
         valueEN: "Mobiles",
       },
     ],
-    techStack: ["React", "TypeScript", "Tailwind CSS"],
+    techStack: ["React", "TypeScript", "Tailwind CSS", "Firebase"],
     liveUrl: "https://nexus-realty-demo.vercel.app/",
     // Mismo pipeline de video real que Lúmina Sky (v3, técnica exacta:
     // captura cuadro a cuadro, no context.recordVideo -- el webm de
@@ -502,7 +502,7 @@ export const projects: Project[] = [
         valueEN: "Easy and Secure",
       },
     ],
-    techStack: ["Next.js", "Zustand", "Stripe (UI)", "Tailwind"],
+    techStack: ["React", "TypeScript", "Vite", "Firebase", "Stripe", "PayPal"],
     liveUrl: "https://chroma-tech-store-azure.vercel.app/",
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPoster-v4.jpg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPreview-v4.mp4",
