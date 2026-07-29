@@ -341,7 +341,7 @@ export default function LandingPage() {
           ultra-rápido de propiedades de lujo.
         </T>
       ),
-      stack: ["React", "TypeScript", "Tailwind CSS"],
+      stack: ["React", "TypeScript", "Tailwind CSS", "Firebase"],
       colorClass: "from-amber-500/20 to-orange-500/5 hover:border-amber-500/40",
       perfScore: 88,
     },
@@ -356,7 +356,7 @@ export default function LandingPage() {
           con IA y carrito persistente.
         </T>
       ),
-      stack: ["Next.js", "Zustand", "Stripe (UI)", "Tailwind CSS"],
+      stack: ["React", "Firebase", "Stripe", "PayPal"],
       colorClass:
         "from-violet-500/20 to-fuchsia-500/5 hover:border-violet-500/40",
     },
