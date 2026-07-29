@@ -514,6 +514,7 @@ export const projects: Project[] = [
   {
     slug: "vitality-clinic",
     title: "Vitality Med",
+    cinemaColor: "#1A6B4A",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
