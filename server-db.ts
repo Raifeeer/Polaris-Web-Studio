@@ -238,7 +238,7 @@ export interface DatabaseSchema {
 // cambio se pierde en el próximo cold start. Bug real encontrado en vivo el
 // 17 de julio: portalDb.json nunca persistía en producción, aunque el código
 // reportaba éxito (el error se registraba pero no se propagaba al caller).
-const firebaseApp = getApps().length
+export const firebaseApp = getApps().length
   ? getApps()[0]
   : initializeApp({
       credential: cert({

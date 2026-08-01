@@ -16,6 +16,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
+import { getOfferConfig } from "./remote-config.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 import suggestDomainsHandler from "./api/suggest-domains.js";
 import quoteBotChatHandler from "./api/quotebot-chat.js";
@@ -725,13 +726,17 @@ const ADDON_INFO: Record<string, { name: string; price: number; isMonthly?: bool
   branding: { name: "Kit de Branding Básico", price: 149 },
   hosting: { name: "Mantenimiento y Soporte Premium", price: 30, isMonthly: true },
 };
-const OFFER_DISCOUNT = 0.25;
+// Descuento leído de Firebase Remote Config (offer_active/
+// offer_discount_percent, ver remote-config.ts) -- antes era un
+// OFFER_DISCOUNT=0.25 fijo acá, editable solo con un redeploy de código.
 
-// Resuelve el precio real (paquete + addons + oferta -25% + depósito 50/50)
-// para un proyecto ya provisionado -- usado por contract-data y por el
-// endpoint que arma el payload para contract-pdf/contract-sign-notify
-// (Meridian), así el cálculo vive en un solo lugar.
+// Resuelve el precio real (paquete + addons + oferta de lanzamiento +
+// depósito 50/50) para un proyecto ya provisionado -- usado por
+// contract-data y por el endpoint que arma el payload para
+// contract-pdf/contract-sign-notify (Meridian), así el cálculo vive en un
+// solo lugar.
 function resolveContractPricing(project: import("./server-db.js").DbProject) {
+  const { offerActive, offerDiscountPercent } = getOfferConfig();
   const pkg = PACKAGE_INFO[project.packageId || ""] || PACKAGE_INFO.corporate;
   const selectedAddons = (project.addonIds || [])
     .map((id) => ({ id, ...ADDON_INFO[id] }))
@@ -739,10 +744,10 @@ function resolveContractPricing(project: import("./server-db.js").DbProject) {
   const oneTimeAddonsPrice = selectedAddons.filter((a) => !a.isMonthly).reduce((s, a) => s + a.price, 0);
   const monthlyAddonsPrice = selectedAddons.filter((a) => a.isMonthly).reduce((s, a) => s + a.price, 0);
   const subtotal = pkg.price + oneTimeAddonsPrice;
-  const discountedTotal = subtotal - Math.round(subtotal * OFFER_DISCOUNT);
+  const discountedTotal = offerActive ? subtotal - Math.round(subtotal * (offerDiscountPercent / 100)) : subtotal;
   const depositAmount = Math.round(discountedTotal * 0.5 * 100) / 100;
   const finalAmount = Math.round((discountedTotal - depositAmount) * 100) / 100;
-  return { pkg, selectedAddons, oneTimeAddonsPrice, monthlyAddonsPrice, subtotal, discountedTotal, depositAmount, finalAmount };
+  return { pkg, selectedAddons, oneTimeAddonsPrice, monthlyAddonsPrice, subtotal, discountedTotal, depositAmount, finalAmount, offerActive, offerDiscountPercent };
 }
 
 // Código corto de contrato (ej. "C-P001A" / "C-P001B") -- reemplaza el
@@ -1410,7 +1415,8 @@ const PORT = 3000;
       .filter(Boolean);
     const oneTimeAddonsPrice = selectedAddons.filter((a) => !a.isMonthly).reduce((s, a) => s + a.price, 0);
     const subtotal = pkg.price + oneTimeAddonsPrice;
-    const discountedTotal = subtotal - Math.round(subtotal * OFFER_DISCOUNT);
+    const { offerActive: provisionOfferActive, offerDiscountPercent: provisionOfferDiscountPercent } = getOfferConfig();
+    const discountedTotal = provisionOfferActive ? subtotal - Math.round(subtotal * (provisionOfferDiscountPercent / 100)) : subtotal;
     const depositAmount = Math.round(discountedTotal * 0.5 * 100) / 100;
 
     const tempPassword = crypto.randomBytes(6).toString("hex");
@@ -3052,7 +3058,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
 
-    const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice } = resolveContractPricing(project);
+    const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice, offerActive, offerDiscountPercent } = resolveContractPricing(project);
     await ensureContractCode(project);
 
     res.json({
@@ -3060,7 +3066,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
       project: { id: project.id, name: project.name },
       package: { id: project.packageId || "", name: pkg.name },
       addons: selectedAddons.map((a) => ({ id: a.id, name: a.name, price: a.price, isMonthly: a.isMonthly || false })),
-      pricing: { discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice, offerDiscount: OFFER_DISCOUNT },
+      pricing: { discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice, offerActive, offerDiscount: offerActive ? offerDiscountPercent / 100 : 0 },
       contract: {
         status: project.contractStatus || "pending",
         signedAt: project.contractSignedAt || null,
