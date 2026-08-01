@@ -218,6 +218,17 @@ export default function LandingPage() {
       document.head.appendChild(metaDesc);
     }
     metaDesc.setAttribute("content", currentDesc);
+
+    // La home ya no tiene un canonical estático en index.html (ver el
+    // comentario en ese archivo) -- lo pone acá para que quede explícito,
+    // igual que useDocumentTitle.ts hace en el resto de las páginas.
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", "https://polarisweb.studio");
   }, [activeSection, language]);
 
   useEffect(() => {

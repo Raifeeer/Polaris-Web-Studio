@@ -69,9 +69,17 @@
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" />
     </noscript>
 
-    <!-- Canonical -->
-    <link rel="canonical" href="https://polarisweb.studio" />
-    
+    <!-- Canonical: sin valor estático acá a propósito. Como vercel.json
+         reescribe TODA ruta al mismo index.html (SPA sin SSR), un valor fijo
+         acá le decía a Google que /servicios, /portafolio, /blog, etc. eran
+         todos duplicados de la home -- causa real confirmada por la API de
+         Search Console (URL Inspection: solo "/" indexada, el resto "unknown
+         to Google" 12 días después de enviado el sitemap). Cada página real
+         ya pone su propio canonical correcto en cuanto monta
+         (useDocumentTitle.ts / LandingPage.tsx para la home) -- se deja sin
+         default acá para no contradecirlas en el primer pase de rastreo.
+    -->
+
     <!-- Favicon -->
     <!-- El favicon no salía en resultados de Google (solo el ícono
          genérico de globo) con SVG-only -- el rastreador de favicons de
