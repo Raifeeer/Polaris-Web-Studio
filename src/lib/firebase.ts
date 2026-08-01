@@ -2,11 +2,18 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppCheck } from "firebase/app-check";
+import { getPerformance } from "firebase/performance";
 import firebaseConfig from "../../firebase-applet-config.json";
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
+
+// Performance Monitoring: mide tiempos de carga reales de usuarios reales
+// (RUM), sin costo ni configuración server-side.
+if (typeof window !== "undefined") {
+  getPerformance(app);
+}
 
 // Protege el endpoint de suscripción al newsletter (newsletter-subscribe)
 // contra bots/scripts: reCAPTCHA Enterprise invisible, sin fricción para
