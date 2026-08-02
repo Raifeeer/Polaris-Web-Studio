@@ -370,9 +370,9 @@ export const projects: Project[] = [
     // alcanzar el footer) en vez de extenderlo -- en su lugar, se acortó
     // el mobile (ver v12 más abajo) para no depender de un video más
     // largo.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v11.jpg",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v11.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v11.jpg",
+    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v12.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v12.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v12.jpg",
     // Mobile v12: recortado a 11000px de scroll real (de ~13929px
     // totales) para no llegar hasta el footer -- acorta la duración
     // final (949 frames/~31.6s en vez de 1201/~40s), con los pasos
@@ -449,9 +449,9 @@ export const projects: Project[] = [
     // diagnóstico dedicado (`document.fonts.size` pasó de 0 a 69) y una
     // captura de pantalla puntual antes de recapturar el video completo:
     // el botón ya queda en 2 líneas, igual que en un teléfono real.
-    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v18.jpg",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v18.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v18.jpg",
+    mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v19.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePreview-v19.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusMobilePoster-v19.jpg",
   },
   {
     slug: "chroma-store",
