@@ -118,11 +118,11 @@ export const projects: Project[] = [
     // El sitio real (Home.tsx) sigue con sus animaciones intactas para
     // cualquier visitante -- este truco es solo para la grabación.
     desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD-v2.webp",
-    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview-v3.mp4",
-    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPoster.jpg",
+    previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview-v4.mp4",
+    previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPoster-v4.jpg",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
-    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaMobilePreview-v3.mp4",
-    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaMobilePoster-v3.jpg",
+    mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaMobilePreview-v4.mp4",
+    mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaMobilePoster-v4.jpg",
     shortDesc:
       "Prototipo de web para Lúmina Sky, un hotel de ciudad de lujo en Piantini, Santo Domingo, con motor de reservas y experiencia inmersiva.",
     shortDescEN:
