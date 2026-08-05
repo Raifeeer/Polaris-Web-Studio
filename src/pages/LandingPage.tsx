@@ -31,6 +31,7 @@ import WhyPolaris from "../components/WhyPolaris";
 import Testimonials from "../components/Testimonials";
 import { T, useLanguage } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
+import { useBorderGlow } from "../hooks/useBorderGlow";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
 
@@ -112,6 +113,7 @@ export default function LandingPage() {
   // Misma fecha límite de la oferta de lanzamiento usada en Services.tsx (25% de descuento)
   const [targetDate] = useState(() => new Date("2026-08-17T23:59:59Z").getTime());
   const [isOfferActive, setIsOfferActive] = useState(() => Date.now() < targetDate);
+  const { wrapRef: heroGlowRef, handlePointerMove: handleHeroGlowMove } = useBorderGlow();
 
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
@@ -489,12 +491,18 @@ export default function LandingPage() {
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-10 py-4 md:py-20 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-min">
           {/* Main Hero Card */}
+          <div
+            ref={heroGlowRef}
+            onPointerMove={handleHeroGlowMove}
+            className="hero-glow-wrap md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)]"
+          >
+            <span className="edge-light" />
           <motion.div
             id="inicio"
             initial={{ opacity: 0, y: 35, scale: 0.96, filter: "blur(6px)" }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             transition={{ type: "spring", stiffness: 45, damping: 14 }}
-            className="md:col-span-2 lg:col-span-3 rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 glass-panel flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px] bg-gradient-to-br from-indigo-50/40 via-transparent to-violet-50/30 dark:from-transparent dark:to-transparent"
+            className="rounded-[var(--radius-bento)] p-5 pb-6 md:p-16 glass-panel flex flex-col justify-end relative overflow-hidden group bento-glow min-h-[400px] sm:min-h-[500px] bg-gradient-to-br from-indigo-50/40 via-transparent to-violet-50/30 dark:from-transparent dark:to-transparent"
           >
             <div className="absolute top-1/2 -translate-y-1/2 right-[-150px] sm:right-[-250px] md:right-[-200px] opacity-[0.07] dark:opacity-[0.15] group-hover:opacity-[0.18] dark:group-hover:opacity-[0.28] group-hover:-translate-x-4 transition-all duration-500 pointer-events-none">
               <Logo
@@ -614,6 +622,7 @@ export default function LandingPage() {
               </motion.div>
             </div>
           </motion.div>
+          </div>
 
           {/* Landing Pages Card */}
           <motion.div

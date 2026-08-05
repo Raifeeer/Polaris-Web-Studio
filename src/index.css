@@ -161,6 +161,72 @@
   }
 }
 
+/* Brillo de borde que sigue al cursor en la card principal del hero (basado
+   en React Bits BorderGlow, ver src/hooks/useBorderGlow.ts). Adaptado a un
+   wrapper exterior separado con overflow:visible en vez de reemplazar el
+   fondo/overflow-hidden de la card real -- así el brillo puede desbordar el
+   borde redondeado sin recortar el canvas 3D ni el logo decorativo que la
+   card ya recorta con overflow-hidden. Solo la capa de anillo exterior
+   (glow ring), sin la malla de gradiente interna del componente original,
+   para no pelear con el fondo real (glass-panel + gradiente) de la card. */
+.hero-glow-wrap {
+  --edge-proximity: 0;
+  --cursor-angle: 45deg;
+  --edge-sensitivity: 30;
+  --glow-padding: 3px;
+  --cone-spread: 25;
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-glow-wrap .edge-light {
+  content: "";
+  position: absolute;
+  inset: calc(var(--glow-padding) * -1);
+  pointer-events: none;
+  z-index: 2;
+  border-radius: inherit;
+  mask-image: conic-gradient(
+    from var(--cursor-angle) at center,
+    black 2.5%,
+    transparent 10%,
+    transparent 90%,
+    black 97.5%
+  );
+  opacity: calc(
+    (var(--edge-proximity) - var(--edge-sensitivity)) /
+      (100 - var(--edge-sensitivity))
+  );
+  mix-blend-mode: plus-lighter;
+  transition: opacity 0.25s ease-out;
+}
+
+.hero-glow-wrap:not(:hover) .edge-light {
+  opacity: 0;
+  transition: opacity 0.75s ease-in-out;
+}
+
+.hero-glow-wrap .edge-light::before {
+  content: "";
+  position: absolute;
+  inset: var(--glow-padding);
+  border-radius: inherit;
+  /* Índigo de marca real (--color-primary-base: #6366f1) en vez de los
+     colores de ejemplo del componente original. */
+  box-shadow:
+    inset 0 0 0 1px hsl(239deg 84% 67% / 100%),
+    inset 0 0 1px 0 hsl(239deg 84% 67% / 60%),
+    inset 0 0 3px 0 hsl(239deg 84% 67% / 50%),
+    inset 0 0 6px 0 hsl(239deg 84% 67% / 40%),
+    inset 0 0 15px 0 hsl(239deg 84% 67% / 30%),
+    inset 0 0 25px 2px hsl(239deg 84% 67% / 20%),
+    0 0 1px 0 hsl(239deg 84% 67% / 60%),
+    0 0 3px 0 hsl(239deg 84% 67% / 50%),
+    0 0 6px 0 hsl(239deg 84% 67% / 40%),
+    0 0 15px 0 hsl(239deg 84% 67% / 30%),
+    0 0 25px 2px hsl(239deg 84% 67% / 20%);
+}
+
 @keyframes marquee {
   0% {
     transform: translate3d(0%, 0, 0);
