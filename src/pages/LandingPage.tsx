@@ -534,22 +534,9 @@ export default function LandingPage() {
               </motion.span>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
-                animate={{
-                  opacity: 1,
-                  y: 0,
-                  letterSpacing: ["-0.04em", "-0.025em", "-0.04em"],
-                }}
-                transition={{
-                  opacity: { duration: 0.55, delay: 0.2 },
-                  y: { duration: 0.55, delay: 0.2 },
-                  letterSpacing: {
-                    duration: 6,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    delay: 1,
-                  },
-                }}
-                className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[1]"
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.2 }}
+                className="text-[2.5rem] sm:text-5xl md:text-6xl lg:text-8xl font-display font-black leading-[1.1] md:leading-[1] tracking-[-0.04em]"
               >
                 <T en="We digitize the future of your business today">
                   Digitalizamos el futuro de tu negocio hoy
