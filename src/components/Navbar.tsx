@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
+import TextSizeToggle from "./TextSizeToggle";
 import { useLanguage, T } from "../context/LanguageContext";
 import { prefetchRoute } from "../lib/routePrefetch";
 
@@ -135,6 +136,9 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
+          <div className="hidden sm:block">
+            <TextSizeToggle />
+          </div>
           <div className="block">
             <ThemeToggle />
           </div>
@@ -202,6 +206,12 @@ export default function Navbar() {
                 </Link>
               ))}
               <div className="flex items-center justify-between mt-4">
+                <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  <T en="Text size">Tamaño de texto</T>
+                </span>
+                <TextSizeToggle />
+              </div>
+              <div className="flex items-center justify-between mt-2">
                 <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                   <T en="Theme">Tema</T>
                 </span>

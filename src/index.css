@@ -384,3 +384,14 @@ input[type="time"]::-webkit-datetime-edit {
     animation: none !important;
   }
 }
+
+/* Ajuste de tamaño de texto (control real en Navbar/TextSizeToggle.tsx),
+   distinto del pinch-zoom del navegador -- escala el font-size raíz, y como
+   Tailwind usa unidades rem en casi todo el sitio, todo el texto y el
+   espaciado basado en rem escalan en conjunto sin tocar cada componente. */
+html.text-size-large {
+  font-size: 18px;
+}
+html.text-size-xlarge {
+  font-size: 20px;
+}
