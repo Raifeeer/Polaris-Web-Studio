@@ -19,7 +19,6 @@ import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import { getOfferConfig } from "./remote-config.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 import suggestDomainsHandler from "./api/suggest-domains.js";
-import quoteBotChatHandler from "./api/quotebot-chat.js";
 
 // --- Session token signing (HMAC) ---
 // Secreto para firmar los tokens de sesión locales. En producción DEBE definirse
@@ -1566,6 +1565,16 @@ const PORT = 3000;
 
   app.post("/api/quotebot-chat", async (req, res) => {
     try {
+      // Import dinámico, no estático -- quotebot-chat.ts (y su tools) usa el
+      // AI SDK de Vercel ("ai", "@ai-sdk/*"), que son paquetes ESM puros. El
+      // bundle de producción de este archivo se genera con esbuild en
+      // formato CJS (--packages=external), y un require() estático de un
+      // paquete ESM revienta con ERR_REQUIRE_ESM al cargar el módulo -- eso
+      // tumbaba TODO server.cjs (no solo esta ruta) apenas Vercel invocaba
+      // cualquier endpoint del portal. import() dinámico sí puede cargar
+      // ESM desde un módulo CJS (Node lo soporta nativo), así que el costo
+      // se paga solo acá, en la primera vez que se llama esta ruta puntual.
+      const { default: quoteBotChatHandler } = await import("./api/quotebot-chat.js");
       await quoteBotChatHandler(req as any, res as any);
     } catch (error: any) {
       console.error("Error in quotebot chat:", error);
