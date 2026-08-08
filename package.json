@@ -12,6 +12,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "ai": "^7.0.0",
+    "@ai-sdk/deepseek": "^3.0.0",
+    "@ai-sdk/xai": "^4.0.0",
     "@google/genai": "^1.29.0",
     "@tailwindcss/vite": "^4.1.14",
     "@types/nodemailer": "^8.0.1",
@@ -33,7 +36,8 @@
     "remark-gfm": "^4.0.1",
     "svg2pdf.js": "^2.7.0",
     "tailwind-merge": "^3.6.0",
-    "vite": "^6.4.3"
+    "vite": "^6.4.3",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@firebase/eslint-plugin-security-rules": "^0.0.2",

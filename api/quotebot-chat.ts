@@ -1,12 +1,20 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { generateText, stepCountIs } from "ai";
+import { createDeepSeek } from "@ai-sdk/deepseek";
+import { createXai } from "@ai-sdk/xai";
+import { atlasTools } from "./_atlasTools.js";
 
 // Backend de texto libre para el chatbot flotante (Atlas Terminal) --
 // reemplaza el modo puramente guiado (quiz de opciones fijas) con una
-// opción de pregunta abierta. DeepSeek (deepseek-chat, el modelo más barato
-// de su catálogo) como primario, xAI Grok como respaldo si DeepSeek falla.
-// Reusa casi entero el handler que se había armado para el viejo Atlas
-// Terminal de página completa (api/terminal-ai.ts, nunca llegó a
-// conectarse) -- esa página se eliminó, este archivo la reemplaza.
+// opción de pregunta abierta. Migrado al AI SDK de Vercel (8 de agosto):
+// antes cada hecho (precio de dominio, total de una cotización, horarios
+// disponibles) vivía como texto fijo en el system prompt, que el modelo
+// podía citar mal o quedar desactualizado. Ahora son 4 "tools" reales
+// (ver _atlasTools.ts) que el modelo llama en vivo cuando hacen falta --
+// el system prompt solo describe el negocio, ya no carga los datos que
+// cambian. DeepSeek (deepseek-chat) como primario, xAI Grok como respaldo
+// si DeepSeek falla -- el AI SDK no tiene fallback entre proveedores
+// integrado, se mantiene el mismo patrón manual de siempre.
 
 const MAX_MESSAGE_CHARS = 2000;
 const MAX_HISTORY_TURNS = 20;
@@ -34,9 +42,9 @@ function clientIp(req: VercelRequest): string {
 // Solo se aceptan turnos user/assistant del historial. Descartar cualquier otro
 // rol (p. ej. "system") evita que un cliente inyecte instrucciones de sistema
 // a través del historial en el fallback de Grok.
-function sanitizeHistory(history: unknown): { role: string; content: string }[] {
+function sanitizeHistory(history: unknown): { role: "user" | "assistant"; content: string }[] {
   if (!Array.isArray(history)) return [];
-  const out: { role: string; content: string }[] = [];
+  const out: { role: "user" | "assistant"; content: string }[] = [];
   for (const h of history.slice(-MAX_HISTORY_TURNS)) {
     if (!h || typeof h !== "object") continue;
     const role = (h as any).role;
@@ -62,25 +70,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const systemPrompt = `Eres Atlas Terminal, el asistente de IA de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA. Respondes tanto en el widget flotante del sitio como en la página completa de chat ("/asistente").
 
 Planes disponibles:
-- Destello: $299 USD — Landing page 1 página, entrega 1-2 semanas
-- Constelación: $699 USD — Web corporativa hasta 5 páginas, chatbot IA, entrega 2-4 semanas
-- Nova: $1,299 USD — E-commerce + panel admin + herramienta IA, entrega 4-6 semanas
+- Destello (id: landing): $299 USD — Landing page 1 página, entrega 1-2 semanas
+- Constelación (id: corporate): $699 USD — Web corporativa hasta 5 páginas, chatbot IA, entrega 2-4 semanas
+- Nova (id: ecommerce): $1,299 USD — E-commerce + panel admin + herramienta IA, entrega 4-6 semanas
 
 Contacto: hola@polarisweb.studio | +1 (829) 920-0544 | @polariswebstudio | Punta Cana, RD
 
-ADDONS DISPONIBLES -- estos precios son públicos, finales y se muestran tal cual en el cotizador del sitio. Si te preguntan el precio de uno de estos addons, respóndelo DIRECTO con el número exacto de abajo. NUNCA digas que "no tiene precio fijo", que "depende del caso/uso" o que hay que "agendar una llamada para cotizarlo" -- eso es falso, el precio ya está aquí y es el mismo para cualquier cliente (se agregan a cualquier paquete desde el cotizador -- lista real, nunca inventes otros addons ni cambies estos precios). OJO: son items DISTINTOS, no los mezcles -- "chatbot IA" (mencionado en la descripción del plan Constelación) es una funcionalidad base ya incluida en ese plan; "Agente de Ventas IA" ($49/mes) y "Bot de Atención 24/7" ($149 pago único) son dos addons separados y diferentes entre sí, no la misma cosa que el chatbot base de Constelación.
-- Agente de Ventas IA -- $49/mes (ya incluido en Nova, no aplica ahí)
-- Bot de Atención 24/7 -- $149 (pago único)
-- Buscador Semántico IA -- $249 (recomendado para e-commerce/Nova)
-- Asistente de Contenido IA -- $29/mes
-- Guía de Estrategia SEO -- $49 (pago único, 20 keywords priorizadas)
-- CRM Connect -- $149 (sincroniza leads con HubSpot, Zoho CRM, Google Sheets, Pipedrive o Salesforce)
-- Sitio Web Multilingüe -- $99 (hasta 3 idiomas)
-- Copywriting Profesional -- $97
-- Kit de Branding Básico -- $149 (rediseño de logo + paleta de colores)
+TOOLS REALES DISPONIBLES -- úsalas siempre que apliquen, en vez de inventar o recordar un número:
+- check_domain_price: si preguntan por el precio/disponibilidad de un dominio específico.
+- calculate_quote: si preguntan cuánto costaría un paquete con o sin addons -- nunca sumes los números vos mismo, esta tool ya aplica la oferta de lanzamiento vigente y da el total exacto.
+- check_available_slots: si quieren agendar o preguntan por horarios disponibles.
+- book_call: SOLO cuando ya tengas nombre completo, email y el horario exacto (de check_available_slots) confirmados explícitamente por el usuario -- nunca la llames con datos inventados o asumidos, y nunca confirmes una reserva antes de llamarla de verdad.
+
+ADDONS DISPONIBLES (ids reales para calculate_quote entre paréntesis) -- son items DISTINTOS entre sí, no los mezcles -- "chatbot IA" (mencionado en la descripción del plan Constelación) es una funcionalidad base ya incluida en ese plan; "Agente de Ventas IA" (ai_agent) y "Bot de Atención 24/7" (bot_fast) son dos addons separados y diferentes entre sí, no la misma cosa que el chatbot base de Constelación.
+- Agente de Ventas IA (ai_agent) -- $49/mes (ya incluido en Nova, no aplica ahí)
+- Bot de Atención 24/7 (bot_fast) -- $149 (pago único)
+- Buscador Semántico IA (semantic_search) -- $249 (recomendado para e-commerce/Nova)
+- Asistente de Contenido IA (content_assistant) -- $29/mes
+- Guía de Estrategia SEO (content_seo) -- $49 (pago único, 20 keywords priorizadas)
+- CRM Connect (crm_connect) -- $149 (sincroniza leads con HubSpot, Zoho CRM, Google Sheets, Pipedrive o Salesforce)
+- Sitio Web Multilingüe (multilingual) -- $99 (hasta 3 idiomas)
+- Copywriting Profesional (copy) -- $97
+- Kit de Branding Básico (branding) -- $149 (rediseño de logo + paleta de colores)
 - Mantenimiento y Soporte Premium (hosting) -- $30/mes (velocidad óptima, backups automáticos, soporte continuo)
 
-DOMINIO: todos los paquetes incluyen un dominio estándar de hasta $15 USD (verificado en vivo en el paso de dominio del cotizador). Si el dominio elegido cuesta más, se muestra el sobrecosto real y el precio de renovación anual antes de confirmar -- nunca hay cargos ocultos.
+DOMINIO: todos los paquetes incluyen un dominio estándar de hasta $15 USD. Si el dominio elegido cuesta más (usa check_domain_price para saberlo), se muestra el sobrecosto real y el precio de renovación anual antes de confirmar -- nunca hay cargos ocultos.
 
 PORTAFOLIO REAL (solo estos 3 son demos terminadas y funcionando en vivo -- son proyectos de concepto propios de Polaris para mostrar capacidad, no clientes reales con testimonios; NO afirmes que son "clientes" ni inventes reseñas)
 - Lúmina Sky -- [Ver portafolio](/portafolio): hotel de lujo (concepto) en Piantini, Santo Domingo, con motor de reservas. Plan Constelación.
@@ -99,7 +113,7 @@ PORTAL DE CLIENTES -- una vez que el cliente firma, tiene acceso a su propio pan
 
 PAGOS -- precios siempre en USD. Se paga por PayPal (en línea, tarjeta o saldo PayPal) o transferencia bancaria (confirmada manualmente). Nunca vemos ni guardamos números de tarjeta o cuenta -- eso lo procesa PayPal directamente.
 
-AGENDAR UNA LLAMADA (/agendar) -- es un agendador propio de Polaris integrado en el sitio: el usuario ve los horarios disponibles reales y elige el que le acomode para una llamada corta (consultoría inicial, alineación de proyecto, etc.), sin formularios que "alguien revisa después" -- la reserva queda confirmada al instante. NUNCA menciones herramientas de terceros de por medio (nombres de proveedores internos de agenda/calendario) -- para el usuario es simplemente el agendador de Polaris.
+AGENDAR UNA LLAMADA (/agendar) -- es un agendador propio de Polaris integrado en el sitio; ahora también puedes agendarla vos mismo dentro de esta conversación con check_available_slots + book_call. El usuario ve los horarios disponibles reales y elige el que le acomode para una llamada corta (consultoría inicial, alineación de proyecto, etc.), sin formularios que "alguien revisa después" -- la reserva queda confirmada al instante. NUNCA menciones herramientas de terceros de por medio (nombres de proveedores internos de agenda/calendario) -- para el usuario es simplemente el agendador de Polaris.
 
 POR QUÉ ELEGIR POLARIS (datos reales mostrados en la página principal, úsalos si preguntan por qué contratarnos o cómo nos comparamos con otras agencias)
 - Tiempo de respuesta: menos de 24h, contra un promedio de 72h en otras agencias.
@@ -129,10 +143,9 @@ REGLAS
 - Responde SIEMPRE en el idioma del usuario (español o inglés).
 - Máximo 80 palabras en el cuerpo de la respuesta (sin contar el bloque de sugerencias).
 - Tono directo y cercano, sin relleno corporativo.
-- Si preguntan por precios, da el plan más relevante con precio exacto.
+- Si preguntan por precios, usa las tools reales -- nunca inventes ni "redondees" un número.
 - Si preguntan por tecnologías, menciona el stack real.
 - Nunca inventes funcionalidades, precios, plazos, cláusulas ni enlaces que no existen.
-- Los precios de planes y addons listados arriba son EXACTOS y fijos -- cítalos tal cual (ej. "$149", "$49/mes"). Nunca digas que un precio "varía", "depende del caso" o "no es fijo" para algo que ya está en esa lista con precio -- eso es información falsa, el precio real ya está arriba.
 
 FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Usa **negrita** solo para precios, nombres de planes o términos clave -- no abuses, si todo está en negrita nada destaca.
@@ -155,7 +168,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
 - ¿Cuál de estos planes me conviene si mi negocio es un restaurante?
 - ¿Cuánto tiempo toma exactamente el plan Constelación?`;
 
-  const messages = [...(history || []), { role: "user", content: message }];
+  const messages = [...(history || []), { role: "user" as const, content: message }];
 
   // DeepSeek, probado en vivo, tiende a "cubrirse" sobre precios de addons de
   // IA aunque el system prompt le dé el número exacto y le prohíba explícitamente
@@ -177,47 +190,33 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   }
 
   try {
-    // Intento 1 — DeepSeek Chat (el modelo más barato de su catálogo)
-    const dsRes = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
-        temperature: 0.3,
-        max_tokens: 400,
-      }),
+    // Intento 1 — DeepSeek Chat (el modelo más barato de su catálogo), con tools reales.
+    const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
+    const result = await generateText({
+      model: deepseek("deepseek-chat"),
+      system: systemPrompt,
+      messages,
+      tools: atlasTools,
+      stopWhen: stepCountIs(4), // hasta 4 idas-y-vueltas de tool calls antes de forzar una respuesta final
+      temperature: 0.3,
     });
-
-    if (!dsRes.ok) throw new Error("DeepSeek failed");
-    const dsData = await dsRes.json();
-    const text = dsData.choices?.[0]?.message?.content?.trim() || "";
+    const text = result.text.trim();
     if (!text) throw new Error("Empty response");
     if (looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
     return res.status(200).json({ reply: text, provider: "deepseek" });
   } catch {
-    // Fallback — Grok
+    // Fallback — Grok, mismas tools reales.
     try {
-      const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.GROK_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "grok-4.3",
-          messages: [{ role: "system", content: systemPrompt }, ...messages],
-          temperature: 0.3,
-          max_tokens: 400,
-        }),
+      const xai = createXai({ apiKey: process.env.GROK_API_KEY });
+      const result = await generateText({
+        model: xai("grok-4.3"),
+        system: systemPrompt,
+        messages,
+        tools: atlasTools,
+        stopWhen: stepCountIs(4),
+        temperature: 0.3,
       });
-
-      if (!grokRes.ok) throw new Error("Grok failed");
-      const grokData = await grokRes.json();
-      const text = grokData.choices?.[0]?.message?.content?.trim() || "";
+      const text = result.text.trim();
       if (!text) throw new Error("Empty response");
       return res.status(200).json({ reply: text, provider: "grok" });
     } catch {
