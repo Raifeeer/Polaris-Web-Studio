@@ -151,9 +151,87 @@ export const bookCall = tool({
   },
 });
 
+// ---- 5. Portafolio real (mismos proyectos reales que /portafolio) ----
+// Duplicado liviano de src/constants/projects.ts (mismo patrón ya aceptado
+// para PACKAGES/ADDONS) -- sin los campos de imagen/video/case-study, solo
+// lo que hace falta para responder con un ejemplo real y su link.
+const PORTFOLIO: {
+  slug: string;
+  title: string;
+  type: string;
+  plan: string;
+  shortDesc: string;
+  liveUrl?: string;
+}[] = [
+  { slug: "lumina-sky-concept", title: "Lúmina Sky", type: "Turismo · Web Corporativa", plan: "Constelación", shortDesc: "Web para un hotel de lujo en Santo Domingo, con motor de reservas y experiencia inmersiva.", liveUrl: "https://lumina-sky-demo.vercel.app/" },
+  { slug: "nexus-real-estate", title: "Nexus Realty", type: "Inmobiliario · Plataforma", plan: "Constelación", shortDesc: "Plataforma de bienes raíces con catálogo de propiedades y filtros rápidos.", liveUrl: "https://nexus-realty-demo.vercel.app/" },
+  { slug: "chroma-store", title: "Chroma Tech Store", type: "E-commerce · Tecnología", plan: "Nova", shortDesc: "Tienda online completa con carrito, pagos seguros y buscador inteligente con IA.", liveUrl: "https://chroma-tech-store-azure.vercel.app/" },
+  { slug: "vitality-clinic", title: "Vitality Med", type: "Salud · Portal de Citas", plan: "Constelación", shortDesc: "Clínica con perfiles de médicos, blog de salud, agendado real de citas y panel administrativo.", liveUrl: "https://vitality-med-five.vercel.app/" },
+  { slug: "sabor-autentico", title: "Sabor Auténtico", type: "Gastronomía · Landing Page", plan: "Destello", shortDesc: "Menú digital interactivo y gestor de reservas para restaurantes.", liveUrl: undefined },
+];
+
+export const searchPortfolio = tool({
+  description:
+    "Busca proyectos reales del portafolio de Polaris por rubro/tipo de negocio (ej. 'restaurante', 'inmobiliaria', 'clínica', 'tienda online'). Úsala cuando el usuario pregunte si ya han hecho algo parecido a su negocio, para responder con un ejemplo real y su link en vez de una afirmación genérica.",
+  inputSchema: z.object({
+    query: z.string().describe("Palabra clave del rubro/tipo de negocio a buscar, ej. 'restaurante', 'inmobiliaria'."),
+  }),
+  execute: async ({ query }) => {
+    const q = query.toLowerCase();
+    const matches = PORTFOLIO.filter(
+      (p) => p.type.toLowerCase().includes(q) || p.title.toLowerCase().includes(q) || p.shortDesc.toLowerCase().includes(q)
+    );
+    return { results: (matches.length ? matches : PORTFOLIO).slice(0, 3) };
+  },
+});
+
+// ---- 6. Captura real de lead (mismo pipeline que el paso final del cotizador) ----
+// Reusa quote-confirmation-send (Meridian) tal cual -- el mismo endpoint que
+// usa WizardQuote.tsx en su paso final: manda la confirmación real al
+// cliente (con su cotización y quoteRef) Y la alerta interna real a
+// Cristian. No inventa un pipeline nuevo -- mismo camino ya probado en
+// producción, solo con otro punto de entrada (el chat en vez del wizard).
+const QUOTE_CONFIRMATION_URL = "https://quote-confirmation-send-wdvfac6mgq-ue.a.run.app";
+
+export const captureLead = tool({
+  description:
+    "Guarda a la persona como lead real y le manda por correo su cotización (con número de referencia real) -- Cristian también recibe una alerta real. SOLO llámala cuando el usuario ya dio explícitamente su nombre Y su email Y pidió que le envíes/guardes la cotización (ej. 'mándamela por correo', 'apúntame'). Nunca la llames solo porque el usuario mencionó su email de pasada, y nunca antes de haber calculado la cotización con calculate_quote si se trata de un paquete específico -- primero cotiza, después ofrece capturar el lead, nunca al revés.",
+  inputSchema: z.object({
+    name: z.string().min(2),
+    email: z.string().email(),
+    phone: z.string().optional(),
+    packageId: z.enum(["landing", "corporate", "ecommerce"]).optional().describe("Paquete de interés, si ya se definió."),
+    addonIds: z.array(z.string()).optional(),
+    domain: z.string().optional().describe("Dominio que mencionó, si aplica."),
+  }),
+  execute: async ({ name, email, phone, packageId, addonIds, domain }) => {
+    try {
+      const res = await fetch(QUOTE_CONFIRMATION_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          phone: phone || "",
+          domain: domain || "",
+          packageId: packageId || "corporate",
+          addonIds: addonIds || [],
+          language: "es",
+        }),
+      });
+      if (!res.ok) return { error: "No se pudo guardar el lead en este momento." };
+      return { ok: true };
+    } catch {
+      return { error: "No se pudo guardar el lead en este momento." };
+    }
+  },
+});
+
 export const atlasTools = {
   check_domain_price: checkDomainPrice,
   calculate_quote: calculateQuote,
   check_available_slots: checkAvailableSlots,
   book_call: bookCall,
+  search_portfolio: searchPortfolio,
+  capture_lead: captureLead,
 };
