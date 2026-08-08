@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { generateText, stepCountIs } from "ai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createXai } from "@ai-sdk/xai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { atlasTools } from "./_atlasTools.js";
 
 // Backend de texto libre para el chatbot flotante (Atlas Terminal) --
@@ -17,6 +18,26 @@ import { atlasTools } from "./_atlasTools.js";
 // integrado, se mantiene el mismo patrón manual de siempre.
 
 const MAX_MESSAGE_CHARS = 2000;
+
+// Modelo por defecto de este chat, leído de la config central de Meridian
+// (editable desde /configuracion, sin deploy) -- pública, no requiere
+// secreto (el nombre de un modelo no es dato sensible). Cacheado 2 min en
+// memoria por instancia para no pegarle a Firestore en cada mensaje.
+let defaultModelCache: "deepseek" | "grok" | "gemini" | null = null;
+let defaultModelCacheAt = 0;
+async function getDefaultModel(): Promise<"deepseek" | "grok" | "gemini"> {
+  if (defaultModelCache && Date.now() - defaultModelCacheAt < 2 * 60 * 1000) return defaultModelCache;
+  try {
+    const res = await fetch("https://ai-model-config-wdvfac6mgq-ue.a.run.app", { signal: AbortSignal.timeout(5000) });
+    const data = await res.json();
+    const key = ["deepseek", "grok", "gemini"].includes(data.polarisChat) ? data.polarisChat : "deepseek";
+    defaultModelCache = key;
+    defaultModelCacheAt = Date.now();
+    return key;
+  } catch {
+    return "deepseek";
+  }
+}
 const MAX_HISTORY_TURNS = 20;
 
 // Rate limit best-effort por instancia (serverless): en cold start se reinicia,
@@ -193,26 +214,29 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     return HEDGE_PATTERNS.some((p) => p.test(text));
   }
 
-  try {
-    // Intento 1 — DeepSeek Chat (el modelo más barato de su catálogo), con tools reales.
-    const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
-    const result = await generateText({
-      model: deepseek("deepseek-chat"),
-      system: systemPrompt,
-      messages,
-      tools: atlasTools,
-      stopWhen: stepCountIs(6), // hasta 6 idas-y-vueltas -- alcanza para combinar 2 tools en un mismo turno (ej. cotizar + guardar lead)
-      temperature: 0.3,
-    });
-    const text = result.text.trim();
-    if (!text) throw new Error("Empty response");
-    if (looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
-    return res.status(200).json({ reply: text, provider: "deepseek" });
-  } catch {
-    // Fallback — Grok, mismas tools reales.
-    try {
+  // Modelo por defecto: configurable desde /configuracion en Meridian (ver
+  // ai-model-config), no fijo en código -- así cambiarlo no requiere un
+  // deploy. Se prueba primero el default configurado y, si falla, cae al
+  // resto en un orden fijo (deepseek -> grok), nunca deja al visitante sin
+  // respuesta solo porque el modelo preferido tuvo un problema puntual.
+  const defaultModel = await getDefaultModel();
+  const tryOrder = [...new Set([defaultModel, "deepseek", "grok"])] as ("deepseek" | "grok" | "gemini")[];
+
+  async function tryProvider(key: "deepseek" | "grok" | "gemini") {
+    if (key === "gemini") {
+      const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+      return generateText({
+        model: google("gemini-3.5-flash"),
+        system: systemPrompt,
+        messages,
+        tools: atlasTools,
+        stopWhen: stepCountIs(6),
+        temperature: 0.3,
+      });
+    }
+    if (key === "grok") {
       const xai = createXai({ apiKey: process.env.GROK_API_KEY });
-      const result = await generateText({
+      return generateText({
         model: xai("grok-4.3"),
         system: systemPrompt,
         messages,
@@ -220,11 +244,34 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         stopWhen: stepCountIs(6),
         temperature: 0.3,
       });
+    }
+    const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
+    return generateText({
+      model: deepseek("deepseek-chat"),
+      system: systemPrompt,
+      messages,
+      tools: atlasTools,
+      stopWhen: stepCountIs(6), // hasta 6 idas-y-vueltas -- alcanza para combinar 2 tools en un mismo turno (ej. cotizar + guardar lead)
+      temperature: 0.3,
+    });
+  }
+
+  for (const key of tryOrder) {
+    try {
+      const result = await tryProvider(key);
       const text = result.text.trim();
       if (!text) throw new Error("Empty response");
-      return res.status(200).json({ reply: text, provider: "grok" });
+      // DeepSeek, probado en vivo, tiende a "cubrirse" sobre precios de addons de
+      // IA aunque el system prompt le dé el número exacto -- se detecta esa
+      // evasión puntual y se trata como una falla real, cae al siguiente modelo
+      // en vez de devolver una respuesta con información falsa sobre un precio
+      // que sí conocemos. Los demás proveedores no mostraron este problema en
+      // pruebas, pero el chequeo no hace daño aplicado a cualquiera.
+      if (key === "deepseek" && looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
+      return res.status(200).json({ reply: text, provider: key });
     } catch {
-      return res.status(500).json({ error: "all_providers_failed" });
+      continue;
     }
   }
+  return res.status(500).json({ error: "all_providers_failed" });
 }
