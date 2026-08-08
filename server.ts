@@ -2305,7 +2305,7 @@ const PORT = 3000;
     res.json({ success: true });
   });
 
-  app.post("/api/portal/meetings", authenticateToken, requireAdmin, (req, res) => {
+  app.post("/api/portal/meetings", authenticateToken, requireAdmin, async (req, res) => {
     const { projectId, title, date, time, meetLink } = req.body;
     if (!projectId || !title || !date || !time) {
       return res.status(400).json({ error: "Faltan datos de la reunión." });
@@ -2320,6 +2320,7 @@ const PORT = 3000;
       meetLink: meetLink || "https://meet.google.com/abc-defg-hij",
       status: "upcoming",
     });
+    await dbInstance.flush();
     res.json({ success: true });
   });
 
@@ -2331,7 +2332,7 @@ const PORT = 3000;
 
   // --- Client-only actions (Respond to active deliverables) ---
 
-  app.post("/api/portal/tasks/:id/respond", authenticateToken, (req: any, res) => {
+  app.post("/api/portal/tasks/:id/respond", authenticateToken, async (req: any, res) => {
     const { status, feedback } = req.body;
     if (status !== "approved" && status !== "rejected") {
       return res.status(400).json({ error: "Estado de respuesta inválido." });
@@ -2352,6 +2353,7 @@ const PORT = 3000;
       feedback: feedback || "",
       respondedAt: new Date().toISOString(),
     });
+    await dbInstance.flush();
 
     res.json({ success: true });
   });
