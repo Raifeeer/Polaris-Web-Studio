@@ -56,11 +56,14 @@ function extractSuggestions(raw: string): { content: string; suggestions: string
   return { content: content || raw.trim(), suggestions };
 }
 
-// Fire-and-forget a propósito: nunca debe bloquear ni demorar la respuesta
-// real al usuario -- si falla (sin red, reglas, base caída), el respaldo se
-// pierde para ESTE mensaje puntual, pero el chat en sí sigue funcionando
-// igual. Mismo criterio "best-effort" ya usado en pushToCloud del cliente.
-export function backupConversation(
+// Async y pensado para hacerle `await` antes de terminar la respuesta HTTP
+// (ver quotebot-chat.ts) -- así la función de Vercel se mantiene viva hasta
+// que la escritura a Firestore termina de verdad, en vez de confiar en que
+// un fire-and-forget alcance a resolver antes de que la plataforma corte el
+// proceso. Igual nunca lanza -- si falla (sin red, reglas, base caída), el
+// respaldo se pierde para ESTE mensaje puntual, pero nunca debe tumbar la
+// respuesta real al usuario por eso.
+export async function backupConversation(
   visitorId: string | undefined,
   conversationId: string | undefined,
   history: { role: "user" | "assistant"; content: string }[],
@@ -68,7 +71,7 @@ export function backupConversation(
   rawAssistantText: string,
   widget: unknown,
   usedWebSearch: boolean
-): void {
+): Promise<void> {
   if (!visitorId || !conversationId) return;
   if (typeof visitorId !== "string" || typeof conversationId !== "string") return;
 
@@ -81,8 +84,8 @@ export function backupConversation(
 
   const docRef = firestore.collection("atlas_conversations").doc(visitorId);
 
-  firestore
-    .runTransaction(async (tx) => {
+  try {
+    await firestore.runTransaction(async (tx) => {
       const snap = await tx.get(docRef);
       const data = snap.data();
       const existing: BackupConversation[] = Array.isArray(data?.conversations) ? data!.conversations : [];
@@ -93,8 +96,8 @@ export function backupConversation(
       const next = idx >= 0 ? existing.map((c, i) => (i === idx ? entry : c)) : [entry, ...existing];
       next.sort((a, b) => b.updatedAt - a.updatedAt);
       tx.set(docRef, { conversations: next.slice(0, MAX_CONVERSATIONS), updatedAt: Date.now() });
-    })
-    .catch((err) => {
-      console.warn("atlas backup falló (best-effort, no bloquea el chat):", (err as Error)?.message);
     });
+  } catch (err) {
+    console.warn("atlas backup falló (best-effort, no bloquea el chat):", (err as Error)?.message);
+  }
 }

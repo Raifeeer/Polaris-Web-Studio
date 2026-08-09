@@ -378,11 +378,14 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       if (widget) send({ type: "widget", widget });
       if (usedWebSearch(toolResults)) send({ type: "web_search" });
       send({ type: "done" });
-      // Respaldo server-side, fire-and-forget -- ver api/_atlasBackup.ts.
-      // Corre DESPUÉS de mandar "done" (no demora la respuesta al cliente que
-      // sigue conectado) pero sin esperar a que el cliente confirme nada, así
-      // que también corre si ya se desconectó.
-      if (!isTemporary) backupConversation(visitorId, conversationId, history, message, finalRaw, widget, usedWebSearch(toolResults));
+      // Respaldo server-side (ver api/_atlasBackup.ts), con `await` a
+      // propósito -- ver Meridian/CLAUDE.md: esto mantiene viva la función
+      // de Vercel hasta que la escritura a Firestore termina de verdad, en
+      // vez de un fire-and-forget que puede quedar a mitad de camino si la
+      // plataforma corta el proceso apenas el cliente se desconecta. Corre
+      // DESPUÉS de "done" -- no demora la respuesta al cliente que sigue
+      // conectado, y también corre igual si ya se desconectó.
+      if (!isTemporary) await backupConversation(visitorId, conversationId, history, message, finalRaw, widget, usedWebSearch(toolResults));
     } catch (err) {
       send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
     }
@@ -406,8 +409,12 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       const toolResults = result.toolResults as unknown as ToolResultLike[];
       const widget = buildWidget(toolResults);
       const wasWebSearch = usedWebSearch(toolResults);
-      if (!isTemporary) backupConversation(visitorId, conversationId, history, message, text, widget, wasWebSearch);
-      return res.status(200).json({ reply: text, provider: key, widget, usedWebSearch: wasWebSearch });
+      // Responde primero (no demora lo que ve el usuario) y recién después
+      // le hace `await` al respaldo -- mantiene la función viva hasta que
+      // termine de escribir, sin agregar latencia percibida.
+      res.status(200).json({ reply: text, provider: key, widget, usedWebSearch: wasWebSearch });
+      if (!isTemporary) await backupConversation(visitorId, conversationId, history, message, text, widget, wasWebSearch);
+      return;
     } catch {
       continue;
     }
