@@ -73,11 +73,19 @@ function highlightMatches(text: string, words: string[]): React.ReactNode {
 export default function ConversationSearch({
   open,
   onClose,
+  onBack,
   items,
   onSelect,
 }: {
   open: boolean;
   onClose: () => void;
+  // Botón de "volver" (flecha, solo mobile) -- a diferencia de `onClose`
+  // (usado también al elegir un resultado o al cerrar con Escape/backdrop),
+  // este SIEMPRE debe dejar visible el sidebar de conversaciones detrás,
+  // igual que el botón de arriba a la izquierda en Gemini -- nunca la
+  // pantalla del chat que estuviera activa antes de abrir la búsqueda.
+  // Si no se pasa, cae a `onClose`.
+  onBack?: () => void;
   items: SearchableConversation[];
   onSelect: (id: string) => void;
 }) {
@@ -162,7 +170,7 @@ export default function ConversationSearch({
     <div className="fixed inset-0 z-[70] flex flex-col sm:items-center sm:justify-center sm:p-6 bg-black/50 backdrop-blur-sm">
       <div className="flex flex-col w-full h-full sm:h-auto sm:max-h-[80vh] sm:max-w-lg bg-[var(--color-surface-elevated)] sm:rounded-2xl sm:border sm:border-[var(--color-border-subtle)] sm:shadow-2xl overflow-hidden">
         <div className="shrink-0 flex items-center gap-2 p-3 border-b border-[var(--color-border-subtle)]">
-          <button onClick={onClose} className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors sm:hidden">
+          <button onClick={onBack || onClose} className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors sm:hidden">
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 relative">

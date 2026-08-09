@@ -645,7 +645,16 @@ export default function AtlasChat() {
           </p>
         </div>
       </div>
-      <ConversationSearch open={searchOpen} onClose={() => setSearchOpen(false)} items={searchItems} onSelect={loadConversation} />
+      <ConversationSearch
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        onBack={() => {
+          setSearchOpen(false);
+          setSidebarOpen(true);
+        }}
+        items={searchItems}
+        onSelect={loadConversation}
+      />
     </div>
   );
 }
