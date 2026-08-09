@@ -622,8 +622,17 @@ export default function AtlasChat() {
               alternar el modo forzaba al navegador a recargar/redecodificar
               el isotipo cada vez, con un parpadeo real de unos ms al volver
               rápido al chat normal. Con display:none en vez de unmount, el
-              elemento ya decodificado queda listo de inmediato. */}
-          <AtlasMark variant="isotipo" className={`w-6 h-6 shrink-0 ${isTemporary ? "hidden" : ""}`} />
+              elemento ya decodificado queda listo de inmediato.
+              El "hidden" va en un <span> envolvente, NUNCA metido dentro del
+              className que recibe AtlasMark -- ahí adentro compite en
+              especificidad con la propia lógica interna del componente
+              (que decide variante negra/blanca según el tema) y puede
+              perder, dejando el isotipo negro visible sobre la barra oscura
+              invertida del modo temporal (bug real reportado en vivo: el
+              logo quedaba invisible/negro sobre fondo oscuro en tema claro). */}
+          <span className={isTemporary ? "hidden" : "contents"}>
+            <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
+          </span>
           {isTemporary && <VenetianMask size={18} className="text-[var(--color-surface-base)] shrink-0" />}
           <p className={`flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest ${isTemporary ? "text-[var(--color-surface-base)]" : "text-[var(--color-text-primary)]"}`}>
             {isTemporary ? <T en="Temporary chat">Chat temporal</T> : activeTitle}
