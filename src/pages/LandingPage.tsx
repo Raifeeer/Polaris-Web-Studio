@@ -403,10 +403,10 @@ export default function LandingPage() {
         </T>
       ),
       a: (
-        <T en="Every package includes a post-launch warranty (30 to 90 days depending on the plan) to fix anything that doesn't match what we agreed on — at no extra cost.">
+        <T en="Every package includes a post-launch warranty (30 to 90 days depending on the plan) to fix anything that doesn't match what we agreed on -- at no extra cost.">
           Todos los paquetes incluyen una garantía post-lanzamiento (de 30 a 90
           días según el plan) para corregir cualquier cosa que no coincida con
-          lo acordado — sin costo adicional.
+          lo acordado -- sin costo adicional.
         </T>
       ),
     },
@@ -1451,7 +1451,7 @@ export default function LandingPage() {
                   onMouseLeave={() => setCursorVisible(false)}
                   className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 md:cursor-none cursor-pointer bento-glow-hover will-change-transform opacity-0"
                 >
-                  {/* CONTENIDO ORIGINAL DE CADA CARD — no cambiar nada adentro */}
+                  {/* CONTENIDO ORIGINAL DE CADA CARD -- no cambiar nada adentro */}
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
                       <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">{p.type}</span>
@@ -1964,10 +1964,10 @@ export default function LandingPage() {
         </div>
       </main>
 
-      {/* Why Polaris — comparativa real vs. otras agencias (movida a la home, antes solo en /servicios) */}
+      {/* Why Polaris -- comparativa real vs. otras agencias (movida a la home, antes solo en /servicios) */}
       <WhyPolaris />
 
-      {/* Caso real — reemplaza los testimonios inventados */}
+      {/* Caso real -- reemplaza los testimonios inventados */}
       <Testimonials />
 
       {/* Pricing Preview Section */}
@@ -2080,7 +2080,7 @@ export default function LandingPage() {
               </button>
             </motion.div>
 
-            {/* Constelación — destacado */}
+            {/* Constelación -- destacado */}
             <motion.div
               initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)" }}
               whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)" }}

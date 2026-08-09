@@ -96,7 +96,7 @@ Ejemplo de respuesta esperada:
   let rawAiResponse = "";
 
   try {
-    // Intento 1 — Gemini 3.1 Flash Lite
+    // Intento 1 -- Gemini 3.1 Flash Lite
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -122,7 +122,7 @@ Ejemplo de respuesta esperada:
     }
 
   } catch {
-    // Fallback — Grok 4.3 (or grok-2-latest as configured elsewhere)
+    // Fallback -- Grok 4.3 (or grok-2-latest as configured elsewhere)
     try {
       const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
         method: "POST",

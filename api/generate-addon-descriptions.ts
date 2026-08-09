@@ -51,7 +51,7 @@ ESTO ES LO QUE HACE CADA ADD-ON (no inventes funciones que no existen):
 - hosting: Mantenimiento mensual, backups, actualizaciones y soporte técnico
 
 REGLAS:
-- Personaliza SOLO el contexto del negocio — no cambies lo que hace el add-on
+- Personaliza SOLO el contexto del negocio -- no cambies lo que hace el add-on
 - 15-20 palabras por descripción
 - Habla al dueño: "tus clientes", "tu negocio"
 - Menciona una situación concreta y real de ese tipo de negocio
@@ -62,7 +62,7 @@ REGLAS:
 - Sin markdown, sin backticks, solo JSON válido`;
 
   try {
-    // Intento 1 — Gemini 3.1 Flash Lite
+    // Intento 1 -- Gemini 3.1 Flash Lite
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
@@ -87,7 +87,7 @@ REGLAS:
     return res.status(200).json(JSON.parse(clean));
 
   } catch {
-    // Fallback — Grok 4.3
+    // Fallback -- Grok 4.3
     try {
       const grokRes = await fetch("https://api.x.ai/v1/chat/completions", {
         method: "POST",

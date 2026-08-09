@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { T, useLanguage } from "../context/LanguageContext";
 
-// Agendador propio vía la Cloud Function calcom-booking (repo Meridian) —
+// Agendador propio vía la Cloud Function calcom-booking (repo Meridian)  -- 
 // reemplaza el formulario embebido de Cal.com en todo el sitio. Motivo real
 // (18 de julio): con el embed, quien agendaba recibía siempre dos correos
 // ajenos (la confirmación de hello@cal.com y la invitación de Google Calendar
@@ -118,7 +118,7 @@ export default function BookingScheduler({
         return;
       }
       if (res.status === 409) {
-        // Alguien tomó ese horario primero — recargar horarios y pedir otro.
+        // Alguien tomó ese horario primero -- recargar horarios y pedir otro.
         setBookingError("slot");
         setSlotsByDay(null);
         setSelectedSlot(null);
@@ -257,7 +257,7 @@ export default function BookingScheduler({
 
           {bookingError === "slot" && (
             <p className="text-xs text-amber-500">
-              <T en="That time was just taken — pick another one, the times were refreshed.">Ese horario acaba de ocuparse — elige otro, los horarios se actualizaron.</T>
+              <T en="That time was just taken -- pick another one, the times were refreshed.">Ese horario acaba de ocuparse -- elige otro, los horarios se actualizaron.</T>
             </p>
           )}
           {bookingError === "generic" && (

@@ -17,7 +17,7 @@ export default function NewsletterForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const clean = email.trim().toLowerCase();
-    // Validación básica de formato en el cliente — el servidor la repite
+    // Validación básica de formato en el cliente -- el servidor la repite
     // igual, esto es solo para no gastar una llamada de red en algo obvio.
     // El campo ya se valida en línea al salir (onBlur); esto es el
     // resguardo final por si se envía el form sin pasar por ahí (ej. Enter).

@@ -232,7 +232,7 @@ export interface DatabaseSchema {
 }
 
 // La persistencia real vive en Firestore (colección "portal_state", un solo
-// documento "main" con todo el blob) — no en un archivo local. Vercel corre
+// documento "main" con todo el blob) -- no en un archivo local. Vercel corre
 // las funciones serverless sobre un filesystem de solo lectura (/var/task),
 // así que escribir a un archivo ahí falla silenciosamente (EROFS) y cualquier
 // cambio se pierde en el próximo cold start. Bug real encontrado en vivo el
@@ -360,7 +360,7 @@ class PortalDatabase {
 
   /**
    * Todas las rutas de server.ts que usan dbInstance deben esperar esto antes
-   * de llamar a cualquier método (ver el middleware en server.ts) — los
+   * de llamar a cualquier método (ver el middleware en server.ts) -- los
    * métodos de abajo siguen siendo síncronos porque asumen que `cache` ya
    * está poblado en memoria para no tener que tocar decenas de call sites.
    */

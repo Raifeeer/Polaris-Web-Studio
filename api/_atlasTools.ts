@@ -72,7 +72,7 @@ const OFFER_DISCOUNT_PERCENT = 25;
 
 export const calculateQuote = tool({
   description:
-    "Calcula el precio real de un proyecto combinando un paquete (landing/corporate/ecommerce) con addons opcionales, aplicando la oferta de lanzamiento vigente. Úsala en vez de sumar los números vos mismo -- así el total siempre coincide exacto con lo que el cotizador real del sitio mostraría.",
+    "Calcula el precio real de un proyecto combinando un paquete (landing/corporate/ecommerce) con addons opcionales, aplicando la oferta de lanzamiento vigente. Úsala en vez de sumar los números tú mismo -- así el total siempre coincide exacto con lo que el cotizador real del sitio mostraría.",
   inputSchema: z.object({
     packageId: z.enum(["landing", "corporate", "ecommerce"]).describe("landing=Destello $299, corporate=Constelación $699, ecommerce=Nova $1299"),
     addonIds: z.array(z.enum(Object.keys(ADDONS) as [string, ...string[]])).optional().describe("IDs de addons a incluir, opcional."),

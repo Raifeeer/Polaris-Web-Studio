@@ -101,7 +101,7 @@ export default function Blog() {
   const [showFilters, setShowFilters] = useState(false);
 
   // Sync state FROM URL only on real back/forward navigation (POP), never on our own
-  // pushes below — otherwise the round-trip races with fast typing and drops keystrokes,
+  // pushes below -- otherwise the round-trip races with fast typing and drops keystrokes,
   // since setSearchParams resolves a render behind the locally-typed value.
   useEffect(() => {
     if (navigationType === "POP") {
@@ -118,13 +118,13 @@ export default function Blog() {
     if (postSlug) {
       navigate(`/blog/${postSlug}`, { replace: true });
     }
-    // Intentionally excludes `searchQuery` — this effect must only react to actual
+    // Intentionally excludes `searchQuery` -- this effect must only react to actual
     // navigation events (URL/history changes), not to local keystroke-driven state
     // changes, or it re-fires on every keystroke and can stomp on fast typing.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, navigationType, navigate]);
 
-  // Push the query into the URL on a short debounce instead of on every keystroke — a
+  // Push the query into the URL on a short debounce instead of on every keystroke -- a
   // router-triggered re-render is heavier than a local setState, so doing it per keystroke
   // can lag behind fast typing and drop characters from the controlled input.
   useEffect(() => {

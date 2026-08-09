@@ -279,7 +279,7 @@ export default function EasterEgg() {
                     />
                   ))}
 
-                  {/* Player — Polaris star */}
+                  {/* Player -- Polaris star */}
                   <motion.div
                     animate={{ top: `${playerY}%` }}
                     transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -300,7 +300,7 @@ export default function EasterEgg() {
                     </svg>
                   </motion.div>
 
-                  {/* Obstacles — WordPress logos */}
+                  {/* Obstacles -- WordPress logos */}
                   {obstacles.map((o) => (
                     <div
                       key={o.id}

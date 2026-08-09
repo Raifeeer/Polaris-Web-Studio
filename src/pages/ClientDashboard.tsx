@@ -1158,7 +1158,7 @@ export default function ClientDashboard() {
   const [showConfirmPasswordValue, setShowConfirmPasswordValue] = useState(false);
 
   // Cambio de contraseña obligatorio tras un alta automática (mustChangePassword,
-  // ver auto-provision-client) — distinto del modal de arriba, que solo sirve
+  // ver auto-provision-client) -- distinto del modal de arriba, que solo sirve
   // para cuentas de Firebase Auth. Esta cuenta vive en portalDb.json (JWT local).
   const [forceCurrentPassword, setForceCurrentPassword] = useState("");
   const [forceNewPassword, setForceNewPassword] = useState("");
@@ -2405,7 +2405,7 @@ export default function ClientDashboard() {
       const clientUser = isAdmin
         ? data?.clients?.find((c: any) => c.id === project?.clientUserId)
         : null;
-      const clientName = isAdmin ? (clientUser?.name || "—") : (user?.name || "—");
+      const clientName = isAdmin ? (clientUser?.name || " -- ") : (user?.name || " -- ");
       const clientEmail = isAdmin ? clientUser?.email : user?.email;
       const clientPhone = isAdmin ? (clientUser as any)?.phone : (user as any)?.phone;
 
@@ -2422,7 +2422,7 @@ export default function ClientDashboard() {
             label: tr("Factura invalidada", "Invoice voided"),
             detail: inv.paypalRefundId ? `${tr("Reembolsada vía PayPal", "Refunded via PayPal")} (Ref: ${inv.paypalRefundId})` : tr("Sin cobro asociado", "No charge associated"),
           }
-        : { label: "PayPal", detail: tr("Pendiente — disponible para pagar en el portal del cliente", "Pending — available to pay in the client portal") };
+        : { label: "PayPal", detail: tr("Pendiente -- disponible para pagar en el portal del cliente", "Pending -- available to pay in the client portal") };
 
       const statusLabel = (inv.status === "paid" ? tr("Pagada", "Paid") : inv.status === "void" ? tr("Invalidada", "Voided") : tr("Pendiente", "Pending")).toUpperCase();
       const statusColors = inv.status === "paid"
@@ -2531,7 +2531,7 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(11));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      pdf.text(project?.name || "—", col1X, c1y);
+      pdf.text(project?.name || " -- ", col1X, c1y);
 
       let c2y = infoY;
       label(tr("Fecha de emisión", "Issue Date"), col2X, c2y);
@@ -3320,7 +3320,7 @@ export default function ClientDashboard() {
                                                          : "pending"
                                                 }));
                                                 // Usa el nombre real de la fase marcada como activa, no el texto libre
-                                                // que redacta la IA en "suggestedPhase" — si difieren aunque sea en un
+                                                // que redacta la IA en "suggestedPhase" -- si difieren aunque sea en un
                                                 // detalle, la insignia de arriba y la tarjeta "En Curso" quedan
                                                 // mostrando nombres distintos para la misma fase.
                                                 const activePhaseName =
@@ -3739,7 +3739,7 @@ export default function ClientDashboard() {
                               <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato de servicio</div>
                               <div className="text-xs text-[var(--color-text-secondary)]">
                                 {(clientProject as any).contractStatus === "signed"
-                                  ? "Firmado — puedes descargar tu copia cuando quieras."
+                                  ? "Firmado -- puedes descargar tu copia cuando quieras."
                                   : "Revisa y firma el contrato antes de que tu proyecto avance."}
                               </div>
                             </div>
@@ -4562,7 +4562,7 @@ export default function ClientDashboard() {
                                   POL-{new Date().getFullYear()}-###
                                 </span>
                                 <span className="text-[10px] text-[var(--color-text-tertiary)] truncate">
-                                  — generado automáticamente
+ -- generado automáticamente
                                 </span>
                               </div>
                             </div>
@@ -5676,7 +5676,7 @@ export default function ClientDashboard() {
                       GitHub Webhook Secret
                     </p>
                     <p className="text-[11px] text-[var(--color-text-tertiary)] mb-3">
-                      Genera un secret seguro. Es el mismo para todos los repos de clientes — solo necesitas generarlo una vez.
+                      Genera un secret seguro. Es el mismo para todos los repos de clientes -- solo necesitas generarlo una vez.
                     </p>
                   </div>
 
@@ -5833,7 +5833,7 @@ export default function ClientDashboard() {
 
       </main>
 
-      {/* Chat lateral — solo para clientes */}
+      {/* Chat lateral -- solo para clientes */}
       {!isAdmin && (
         <>
           {/* Fondo oscuro en móvil */}
@@ -6093,7 +6093,7 @@ export default function ClientDashboard() {
                   {contractStep === "legal-info" && (
                     <div className="space-y-4 overflow-y-auto">
                       <p className="text-xs text-[var(--color-text-secondary)]">
-                        Antes de firmar necesitamos tu cédula o pasaporte y tu domicilio — se usan solo para identificarte en el contrato.
+                        Antes de firmar necesitamos tu cédula o pasaporte y tu domicilio -- se usan solo para identificarte en el contrato.
                       </p>
                       <div className="space-y-2">
                         <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula o pasaporte <span className="text-red-500">*</span></label>
@@ -6303,7 +6303,7 @@ export default function ClientDashboard() {
 
                   {contractStep === "done" && (
                     <div className="text-center py-8 space-y-3">
-                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado — te llegará una copia por correo.</div>
+                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado -- te llegará una copia por correo.</div>
                       <button
                         type="button"
                         onClick={() => setShowContractModal(false)}

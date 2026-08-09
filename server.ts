@@ -528,7 +528,7 @@ async function notifyInvoice(params: {
   paidDate?: string;
   // Facturación recurrente (ver /api/portal/billing/run-cycle): marca el
   // correo como cargo por mora (copy distinto, no confundir con un addon
-  // nuevo) y/o le agrega un bloque de "addons que todavía no tenés" al
+  // nuevo) y/o le agrega un bloque de "addons que todavía no tienes" al
   // final -- reusa la misma plantilla de invoice-notify-send en vez de
   // crear un correo aparte.
   isLateFee?: boolean;
@@ -1091,7 +1091,7 @@ app.use((req, res, next) => {
 app.use(express.urlencoded({ extended: true, limit: MAX_BODY_BYTES }));
 
 // dbInstance (portalDb, ver server-db.ts) carga su estado desde Firestore de
-// forma asíncrona al arrancar — cualquier ruta que la use debe esperar a que
+// forma asíncrona al arrancar -- cualquier ruta que la use debe esperar a que
 // esté lista antes de leer/escribir, o correría contra un caché vacío en un
 // cold start. En la práctica resuelve casi instantáneo salvo la primerísima
 // invocación tras un deploy.
@@ -1167,7 +1167,7 @@ const PORT = 3000;
   /**
    * Consultado por la Cloud Function lead-drip-send (Meridian) para excluir
    * de la secuencia de nutrición a los leads que ya son clientes reales del
-   * portal. Protegido por un secreto compartido, no por sesión — quien lo
+   * portal. Protegido por un secreto compartido, no por sesión -- quien lo
    * llama es un cron server-to-server, no un navegador.
    * Format: GET /api/is-client?email=...
    */
@@ -1268,7 +1268,7 @@ const PORT = 3000;
     const { pkg } = resolveContractPricing(project);
     const amount = Math.round(pkg.price * 0.08 * 100) / 100;
     const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    const description = `Cargo de traspaso (Cláusula Décima Novena) — ${project.name}`;
+    const description = `Cargo de traspaso (Cláusula Décima Novena) -- ${project.name}`;
 
     const invoiceId = `inv-${Date.now()}-transfer-${project.id}`;
     dbInstance.addInvoice({
@@ -1314,7 +1314,7 @@ const PORT = 3000;
     const { pkg } = resolveContractPricing(project);
     const amount = Math.round(pkg.price * 0.05 * 100) / 100;
     const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    const description = `Cargo de conexión de base de datos propia (Cláusula Novena) — ${project.name}`;
+    const description = `Cargo de conexión de base de datos propia (Cláusula Novena) -- ${project.name}`;
 
     const invoiceId = `inv-${Date.now()}-dbconn-${project.id}`;
     dbInstance.addInvoice({
@@ -1387,7 +1387,7 @@ const PORT = 3000;
    * Disparado por la Cloud Function proposal-send (Meridian) cuando un
    * cliente aprueba una propuesta comercial en línea: crea su cuenta real en
    * el portal (rol "client"), un proyecto inicial, la primera tarea, y la
-   * factura del depósito (50% del paquete) — mismo patrón de datos que crea
+   * factura del depósito (50% del paquete) -- mismo patrón de datos que crea
    * el alta manual de POST /api/portal/clients, pero server-to-server, sin
    * sesión de admin. Protegido por el mismo CRON_SECRET que /api/is-client.
    * Format: POST /api/portal/auto-provision-client
@@ -1443,7 +1443,7 @@ const PORT = 3000;
     // ese campo), se cae al mismo fallback genérico de siempre.
     const businessTypeClean = String(businessType || "").trim();
     const projectNameClean = String(projectNameInput || "").trim();
-    const projectName = projectNameClean || (businessTypeClean ? `Sitio Web — ${businessTypeClean}` : `Sitio Web — Paquete ${pkg.name}`);
+    const projectName = projectNameClean || (businessTypeClean ? `Sitio Web -- ${businessTypeClean}` : `Sitio Web -- Paquete ${pkg.name}`);
     const projectDescription = businessTypeClean
       ? `Desarrollo del sitio web (paquete ${pkg.name}) para ${businessTypeClean}.`
       : `Proyecto generado automáticamente al aprobar la propuesta comercial (paquete ${pkg.name}).`;
@@ -1490,7 +1490,7 @@ const PORT = 3000;
 
     const invoiceId = `inv-${Date.now()}`;
     const depositDueDate = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
-    const depositDescription = `Pago inicial (50%, con oferta de lanzamiento -25% aplicada) — Paquete ${pkg.name}`;
+    const depositDescription = `Pago inicial (50%, con oferta de lanzamiento -25% aplicada) -- Paquete ${pkg.name}`;
     dbInstance.addInvoice({
       id: invoiceId,
       projectId,
@@ -1638,7 +1638,7 @@ const PORT = 3000;
       });
 
       await transporter.sendMail({
-        from: '"Formulario de contacto — Polaris Web Studio" <hola@polarisweb.studio>',
+        from: '"Formulario de contacto -- Polaris Web Studio" <hola@polarisweb.studio>',
         to: "hola@polarisweb.studio",
         replyTo: email,
         subject: `Nuevo mensaje de contacto de ${name}`,
@@ -1684,7 +1684,7 @@ const PORT = 3000;
       return next();
     }
 
-    // 2. ID token de Firebase (JWT) — verificado criptográficamente contra las
+    // 2. ID token de Firebase (JWT) -- verificado criptográficamente contra las
     //    claves públicas de Google (firma RS256 + audiencia + issuer + expiración).
     if (token.split(".").length === 3) {
       const payload = await verifyFirebaseToken(token);
@@ -2728,7 +2728,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     }
   });
 
-  // Webhook de GitHub — no requiere autenticación JWT, usa secret propio
+  // Webhook de GitHub -- no requiere autenticación JWT, usa secret propio
   app.post("/api/webhooks/github", async (req, res) => {
     const secret = process.env.GITHUB_WEBHOOK_SECRET;
 
@@ -2820,11 +2820,11 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     res.status(200).json({ ok: true });
   });
 
-  // Webhook de PayPal — reconcilia el estado real del pago aunque el navegador
+  // Webhook de PayPal -- reconcilia el estado real del pago aunque el navegador
   // del cliente se cierre justo después de aprobar (el servidor ya captura y
   // guarda antes de responder, pero esto cubre el caso en que esa escritura
   // nunca llegó a completarse). Fail-closed: sin PAYPAL_WEBHOOK_ID configurado
-  // o con firma inválida, se rechaza — de lo contrario cualquiera podría
+  // o con firma inválida, se rechaza -- de lo contrario cualquiera podría
   // marcar facturas como pagadas enviando eventos falsos.
   app.post("/api/webhooks/paypal", async (req, res) => {
     if (!process.env.PAYPAL_WEBHOOK_ID) {
@@ -3317,7 +3317,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
               status: "pending",
               date: todayStr,
               dueDate: dueDateStr,
-              description: `Facturación mensual de addons recurrentes — ${items.map((it) => it.description).join(", ")}`,
+              description: `Facturación mensual de addons recurrentes -- ${items.map((it) => it.description).join(", ")}`,
               items,
               kind: "recurring",
               suspendAddonIds: monthlyAddons.map((a) => a.id),
@@ -3327,7 +3327,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
               type: "pending",
               clientEmail: client.email,
               clientName: client.name,
-              concept: `Facturación mensual — ${project.name}`,
+              concept: `Facturación mensual -- ${project.name}`,
               amount,
               dueDate: dueDateStr,
               upsellSuggestions: upsellSuggestions.length > 0 ? upsellSuggestions : undefined,
@@ -3372,7 +3372,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
             status: "pending",
             date: todayStr,
             dueDate: feeDueDateStr,
-            description: `Cargo por mora (5.6%, Cláusula Décima Primera) — Factura #${inv.invoiceNumber} declarada vencida el ${todayStr}`,
+            description: `Cargo por mora (5.6%, Cláusula Décima Primera) -- Factura #${inv.invoiceNumber} declarada vencida el ${todayStr}`,
             kind: "late_fee",
             relatedInvoiceId: inv.id,
           });
@@ -3381,7 +3381,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
             type: "pending",
             clientEmail: client.email,
             clientName: client.name,
-            concept: `Cargo por mora — Factura #${inv.invoiceNumber}`,
+            concept: `Cargo por mora -- Factura #${inv.invoiceNumber}`,
             amount: feeAmount,
             dueDate: feeDueDateStr,
             isLateFee: true,
@@ -3476,7 +3476,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
                 type: "pending",
                 clientEmail: client.email,
                 clientName: client.name,
-                concept: `Renovación de dominio — ${project.customDomain}`,
+                concept: `Renovación de dominio -- ${project.customDomain}`,
                 amount: realPrice,
                 dueDate: domainDueDateStr,
                 isDomainRenewal: true,

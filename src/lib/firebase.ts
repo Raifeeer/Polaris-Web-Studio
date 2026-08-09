@@ -47,7 +47,7 @@ export async function getAppCheckToken(): Promise<string | undefined> {
     return result.token;
   } catch {
     // Si App Check falla (ej. dominio no autorizado en dev local), no
-    // bloquear la suscripción — el backend igual aplica límite de tasa.
+    // bloquear la suscripción -- el backend igual aplica límite de tasa.
     return undefined;
   }
 }

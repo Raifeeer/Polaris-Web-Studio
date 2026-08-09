@@ -206,7 +206,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
             </button>
           )}
 
-          {/* Abre el sitio en vivo del proyecto en una pestaña nueva — solo en
+          {/* Abre el sitio en vivo del proyecto en una pestaña nueva -- solo en
               modo cine: en mosaico bento ya existe este botón afuera de la tarjeta. */}
           {!fillParent && project.liveUrl && (
             <button
@@ -610,7 +610,7 @@ export default function Portfolio() {
 
   // Precarga en segundo plano (idle) la captura del proyecto que se mostrará
   // en modo cine. Antes esta precarga solo ocurría dentro de ProjectScreenshot,
-  // es decir, justo cuando se monta el panel — por eso la primera vez que se
+  // es decir, justo cuando se monta el panel -- por eso la primera vez que se
   // entra a modo cine se nota un pequeño tirón mientras la imagen se descarga
   // y decodifica al mismo tiempo que corren las animaciones de entrada.
   useEffect(() => {
@@ -652,7 +652,7 @@ export default function Portfolio() {
         )
       );
     } catch {
-      // sessionStorage no disponible (modo privado, etc.) — no es crítico
+      // sessionStorage no disponible (modo privado, etc.) -- no es crítico
     }
   }, [viewMode, currentCinemaProject]);
 
@@ -748,8 +748,8 @@ export default function Portfolio() {
             </T>
           </p>
           <p className="text-[var(--color-text-tertiary)] text-xs font-medium max-w-xl mx-auto">
-            <T en="Demonstration projects — client portfolio coming soon">
-              Proyectos de demostración — portafolio de clientes próximamente
+            <T en="Demonstration projects -- client portfolio coming soon">
+              Proyectos de demostración -- portafolio de clientes próximamente
             </T>
           </p>
         </section>
@@ -1513,7 +1513,7 @@ export default function Portfolio() {
         {/* Case Study Detail Quick view Modal */}
         {/* Renderizado vía portal a document.body: <main> es z-10 y crea su propio
             stacking context, así que un z-index alto puesto adentro (incluso z-50)
-            nunca podía superar al Navbar (z-50 pero fuera de <main>) — el modal
+            nunca podía superar al Navbar (z-50 pero fuera de <main>) -- el modal
             quedaba atrapado detrás y su botón de cerrar no recibía los clicks.
             El portal va POR FUERA de AnimatePresence: si se devuelve un portal
             como hijo directo de AnimatePresence, framer-motion lo descarta al
