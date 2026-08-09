@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Search, X, ArrowLeft } from "lucide-react";
+import { Search, X, PanelLeftOpen } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { getConversationIcon } from "../lib/conversationIcon";
 import { formatRelativeShort } from "../lib/utils";
@@ -166,7 +166,7 @@ export default function ConversationSearch({
       <div className="flex flex-col w-full h-full sm:h-auto sm:max-h-[80vh] sm:max-w-lg bg-[var(--color-surface-elevated)] sm:rounded-2xl sm:border sm:border-[var(--color-border-subtle)] sm:shadow-2xl overflow-hidden">
         <div className="shrink-0 flex items-center gap-2 p-3 border-b border-[var(--color-border-subtle)]">
           <button onClick={onBack || onClose} className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors sm:hidden">
-            <ArrowLeft size={18} />
+            <PanelLeftOpen size={18} />
           </button>
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)] pointer-events-none" />
