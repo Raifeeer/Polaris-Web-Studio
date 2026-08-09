@@ -131,6 +131,27 @@ export const listPackages = tool({
   }),
 });
 
+// ---- 2.c. Comparación enfocada de 2-3 planes puntuales ----
+// Distinta de list_packages: esa siempre trae los 3 planes reales para una
+// vista general; esta se usa cuando el usuario ya redujo la duda a 2 (o 3)
+// planes concretos ("¿Destello o Constelación?") -- la tarjeta resultante
+// solo muestra esos, lado a lado, sin el resto como ruido visual.
+export const comparePackages = tool({
+  description:
+    "Compara 2 o 3 planes específicos que el usuario ya nombró, lado a lado (ej. '¿Destello o Constelación?', '¿cuál me conviene entre Constelación y Nova?'). Úsala en vez de list_packages cuando el usuario está decidiendo entre planes puntuales, no pidiendo la lista completa.",
+  inputSchema: z.object({
+    packageIds: z
+      .array(z.enum(["landing", "corporate", "ecommerce"]))
+      .min(2)
+      .max(3)
+      .describe("IDs de los planes a comparar: 'landing' (Destello), 'corporate' (Constelación), 'ecommerce' (Nova)."),
+  }),
+  execute: async ({ packageIds }) => ({
+    offerDiscountPercent: OFFER_DISCOUNT_PERCENT,
+    packages: packageIds.map((id) => ({ id, ...PACKAGES[id] })),
+  }),
+});
+
 // ---- 3/4. Disponibilidad real y reserva real de llamada (Cal.com) ----
 const BOOKING_URL = "https://calcom-booking-wdvfac6mgq-ue.a.run.app";
 
@@ -193,12 +214,53 @@ const PORTFOLIO: {
   plan: string;
   shortDesc: string;
   liveUrl?: string;
+  image?: string;
 }[] = [
-  { slug: "lumina-sky-concept", title: "Lúmina Sky", type: "Turismo · Web Corporativa", plan: "Constelación", shortDesc: "Web para un hotel de lujo en Santo Domingo, con motor de reservas y experiencia inmersiva.", liveUrl: "https://lumina-sky-demo.vercel.app/" },
-  { slug: "nexus-real-estate", title: "Nexus Realty", type: "Inmobiliario · Plataforma", plan: "Constelación", shortDesc: "Plataforma de bienes raíces con catálogo de propiedades y filtros rápidos.", liveUrl: "https://nexus-realty-demo.vercel.app/" },
-  { slug: "chroma-store", title: "Chroma Tech Store", type: "E-commerce · Tecnología", plan: "Nova", shortDesc: "Tienda online completa con carrito, pagos seguros y buscador inteligente con IA.", liveUrl: "https://chroma-tech-store-azure.vercel.app/" },
-  { slug: "vitality-clinic", title: "Vitality Med", type: "Salud · Portal de Citas", plan: "Constelación", shortDesc: "Clínica con perfiles de médicos, blog de salud, agendado real de citas y panel administrativo.", liveUrl: "https://vitality-med-five.vercel.app/" },
-  { slug: "sabor-autentico", title: "Sabor Auténtico", type: "Gastronomía · Landing Page", plan: "Destello", shortDesc: "Menú digital interactivo y gestor de reservas para restaurantes.", liveUrl: undefined },
+  {
+    slug: "lumina-sky-concept",
+    title: "Lúmina Sky",
+    type: "Turismo · Web Corporativa",
+    plan: "Constelación",
+    shortDesc: "Web para un hotel de lujo en Santo Domingo, con motor de reservas y experiencia inmersiva.",
+    liveUrl: "https://lumina-sky-demo.vercel.app/",
+    image: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD-v2.webp",
+  },
+  {
+    slug: "nexus-real-estate",
+    title: "Nexus Realty",
+    type: "Inmobiliario · Plataforma",
+    plan: "Constelación",
+    shortDesc: "Plataforma de bienes raíces con catálogo de propiedades y filtros rápidos.",
+    liveUrl: "https://nexus-realty-demo.vercel.app/",
+    image: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v12.jpg",
+  },
+  {
+    slug: "chroma-store",
+    title: "Chroma Tech Store",
+    type: "E-commerce · Tecnología",
+    plan: "Nova",
+    shortDesc: "Tienda online completa con carrito, pagos seguros y buscador inteligente con IA.",
+    liveUrl: "https://chroma-tech-store-azure.vercel.app/",
+    image: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPoster-v4.jpg",
+  },
+  {
+    slug: "vitality-clinic",
+    title: "Vitality Med",
+    type: "Salud · Portal de Citas",
+    plan: "Constelación",
+    shortDesc: "Clínica con perfiles de médicos, blog de salud, agendado real de citas y panel administrativo.",
+    liveUrl: "https://vitality-med-five.vercel.app/",
+    image: "https://polarisweb.studio/screenshots/vitality-clinic-desktop.png",
+  },
+  {
+    slug: "sabor-autentico",
+    title: "Sabor Auténtico",
+    type: "Gastronomía · Landing Page",
+    plan: "Destello",
+    shortDesc: "Menú digital interactivo y gestor de reservas para restaurantes.",
+    liveUrl: undefined,
+    image: "https://polarisweb.studio/screenshots/sabor-autentico-desktop.png",
+  },
 ];
 
 export const searchPortfolio = tool({
@@ -305,6 +367,7 @@ export const atlasTools = {
   check_domain_price: checkDomainPrice,
   calculate_quote: calculateQuote,
   list_packages: listPackages,
+  compare_packages: comparePackages,
   check_available_slots: checkAvailableSlots,
   book_call: bookCall,
   search_portfolio: searchPortfolio,

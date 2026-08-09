@@ -23,12 +23,12 @@ function Card({ children, className = "" }: { children: React.ReactNode; classNa
   );
 }
 
-function PricingTable({ data, onAction }: { data: any; onAction?: (text: string) => void }) {
+function PricingTable({ data, onAction, gridClass }: { data: any; onAction?: (text: string) => void; gridClass?: string }) {
   const { translate } = useLanguage();
   const discount: number = data?.offerDiscountPercent || 0;
   const packages: { id: string; name: string; price: number; timeline: string; highlights: string[] }[] = data?.packages || [];
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-1">
+    <div className={gridClass || "grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-1"}>
       {packages.map((p) => {
         const discounted = Math.round(p.price * (1 - discount / 100));
         const featured = p.id === "corporate";
@@ -173,34 +173,50 @@ function ScheduleSlots({ data, onAction }: { data: any; onAction?: (text: string
   );
 }
 
+// Un solo resultado: tarjeta vertical con la miniatura arriba (mismo lugar
+// donde antes no había imagen). 2+ resultados: galería horizontal con
+// scroll-snap -- cada tarjeta a ancho fijo, para hojear varios ejemplos sin
+// que la lista crezca verticalmente sin límite.
 function PortfolioCards({ data }: { data: any }) {
-  const results: { slug: string; title: string; type: string; plan: string; shortDesc: string; liveUrl?: string }[] = data?.results || [];
+  const results: { slug: string; title: string; type: string; plan: string; shortDesc: string; liveUrl?: string; image?: string }[] = data?.results || [];
   if (!results.length) return null;
+
+  const renderCard = (p: (typeof results)[number], fixedWidth: boolean) => (
+    <Card key={p.slug} className={fixedWidth ? "w-64 shrink-0 snap-start" : ""}>
+      {p.image && (
+        <div className="aspect-video w-full overflow-hidden bg-[var(--color-surface-highlight)]">
+          <img src={p.image} alt={p.title} loading="lazy" className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="p-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-black text-[var(--color-text-primary)]">{p.title}</p>
+          <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-primary-muted)] text-[var(--color-primary-base)]">{p.plan}</span>
+        </div>
+        <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">{p.type}</p>
+        <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">{p.shortDesc}</p>
+        {p.liveUrl && (
+          <a
+            href={p.liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
+          >
+            <T en="View site">Ver sitio</T>
+            <ExternalLink size={11} />
+          </a>
+        )}
+      </div>
+    </Card>
+  );
+
+  if (results.length === 1) {
+    return <div className="mt-1 max-w-sm">{renderCard(results[0], false)}</div>;
+  }
+
   return (
-    <div className="space-y-2 mt-1 max-w-sm">
-      {results.map((p) => (
-        <Card key={p.slug}>
-          <div className="p-3.5">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-black text-[var(--color-text-primary)]">{p.title}</p>
-              <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--color-primary-muted)] text-[var(--color-primary-base)]">{p.plan}</span>
-            </div>
-            <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">{p.type}</p>
-            <p className="text-xs text-[var(--color-text-secondary)] mt-1.5">{p.shortDesc}</p>
-            {p.liveUrl && (
-              <a
-                href={p.liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 mt-2 text-[11px] font-bold text-[var(--color-primary-base)] hover:underline"
-              >
-                <T en="View site">Ver sitio</T>
-                <ExternalLink size={11} />
-              </a>
-            )}
-          </div>
-        </Card>
-      ))}
+    <div className="flex gap-2.5 mt-1 -mx-1 px-1 overflow-x-auto snap-x snap-mandatory pb-1">
+      {results.map((p) => renderCard(p, true))}
     </div>
   );
 }
@@ -231,6 +247,11 @@ export default function AtlasWidget({ widget, onAction }: { widget?: AtlasWidget
   switch (widget.type) {
     case "pricing_table":
       return <PricingTable data={widget.data} onAction={onAction} />;
+    case "plan_comparison": {
+      const count = ((widget.data as any)?.packages || []).length;
+      const gridClass = count >= 3 ? "grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-1 max-w-lg" : "grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-1 max-w-sm";
+      return <PricingTable data={widget.data} onAction={onAction} gridClass={gridClass} />;
+    }
     case "quote_summary":
       return <QuoteSummary data={widget.data} />;
     case "domain_check":
