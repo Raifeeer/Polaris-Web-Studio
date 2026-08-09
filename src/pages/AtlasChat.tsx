@@ -364,6 +364,11 @@ export default function AtlasChat() {
                   <T en="Your conversations will appear here.">Tus conversaciones aparecerán aquí.</T>
                 </p>
               )}
+              {conversations.length > 0 && (
+                <p className="px-3 pt-1 pb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                  <T en="Recent">Recientes</T>
+                </p>
+              )}
               {conversations.map((c) => {
                 const ConvIcon = getConversationIcon(c.icon, c.title, c.messages.map((m) => m.content).join(" "));
                 return (
