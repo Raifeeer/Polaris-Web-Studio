@@ -307,12 +307,7 @@ export default function AtlasChat() {
             transition={{ duration: 0.2 }}
             className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden`}
           >
-            <div className="px-3 pt-3 pb-1 flex items-center gap-2">
-              <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
-              <span className="text-sm font-black uppercase tracking-widest text-[var(--color-text-primary)]">Atlas Assistant</span>
-            </div>
-
-            <div className="p-3 pt-2 flex items-center gap-2">
+            <div className="p-3 flex items-center gap-2">
               <Link
                 to="/"
                 className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
@@ -322,7 +317,10 @@ export default function AtlasChat() {
                 <Home size={16} />
                 <T en="Home">Inicio</T>
               </Link>
-              <div className="flex-1" />
+              <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
+                <AtlasMark variant="isotipo" className="w-5 h-5 shrink-0" />
+                <AtlasMark variant="wordmark" className="h-4 w-auto" />
+              </div>
               {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
                   ES/EN normal) -- sin esto, alguien con el navegador en inglés y
                   sin preferencia guardada queda atascado en inglés acá. */}
