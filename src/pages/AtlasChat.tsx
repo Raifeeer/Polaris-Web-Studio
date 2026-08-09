@@ -706,8 +706,10 @@ export default function AtlasChat() {
               <VoiceInputBar
                 levels={speech.levels}
                 interimText={speech.interimText}
+                voiceLang={speech.voiceLang}
                 onCancel={speech.cancel}
                 onConfirm={speech.stop}
+                onSwitchLang={speech.switchVoiceLang}
               />
             ) : (
               <>

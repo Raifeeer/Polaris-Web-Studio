@@ -9,13 +9,17 @@ import { useLanguage } from "../context/LanguageContext";
 export default function VoiceInputBar({
   levels,
   interimText,
+  voiceLang,
   onCancel,
   onConfirm,
+  onSwitchLang,
 }: {
   levels: number[];
   interimText: string;
+  voiceLang: "es" | "en";
   onCancel: () => void;
   onConfirm: () => void;
+  onSwitchLang: () => void;
 }) {
   const { translate } = useLanguage();
   return (
@@ -26,6 +30,19 @@ export default function VoiceInputBar({
         className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-base)] hover:text-[var(--color-text-primary)] transition-colors"
       >
         <X size={16} />
+      </button>
+      {/* Idioma del DICTADO -- aparte del toggle ES/EN de la interfaz, nunca
+          lo toca. El navegador no soporta cambiar de idioma a mitad de una
+          grabación, así que tocar esto reinicia el reconocimiento (se
+          conserva lo ya dictado) -- el usuario debe volver a hablar
+          después de tocarlo. */}
+      <button
+        onClick={onSwitchLang}
+        aria-label={translate("Cambiar idioma del dictado", "Switch dictation language")}
+        title={translate("Cambiar idioma del dictado", "Switch dictation language")}
+        className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black uppercase tracking-wider border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)] hover:text-[var(--color-primary-base)] transition-colors"
+      >
+        {voiceLang}
       </button>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-[var(--color-text-primary)] truncate min-h-[1.25rem]">

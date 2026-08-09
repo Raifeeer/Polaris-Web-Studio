@@ -637,7 +637,14 @@ export default function QuoteBot() {
             {/* Input de texto libre -- siempre disponible, independiente del quiz */}
             <div className="p-3 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] flex items-center gap-2">
               {speech.listening ? (
-                <VoiceInputBar levels={speech.levels} interimText={speech.interimText} onCancel={speech.cancel} onConfirm={speech.stop} />
+                <VoiceInputBar
+                  levels={speech.levels}
+                  interimText={speech.interimText}
+                  voiceLang={speech.voiceLang}
+                  onCancel={speech.cancel}
+                  onConfirm={speech.stop}
+                  onSwitchLang={speech.switchVoiceLang}
+                />
               ) : (
                 <>
                   <input

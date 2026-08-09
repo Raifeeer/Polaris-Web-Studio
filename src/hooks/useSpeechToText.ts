@@ -11,17 +11,15 @@ import { detectLang } from "../lib/utils";
 // el texto aparece mientras se habla (no recién al soltar), igual que la
 // app de Claude.
 //
-// Idioma: el Web Speech API NO soporta detección automática de idioma en
-// tiempo real dentro de una misma grabación -- hay que fijar `lang` de
-// antemano. Mitigación real (no una solución perfecta, documentada acá
-// para que quede claro el límite): en vez de heredar el toggle ES/EN de la
-// interfaz (que puede no reflejar en qué idioma va a hablar el usuario),
-// arranca con el idioma real del dispositivo (`navigator.language`) y,
-// después de cada grabación, detecta el idioma real de lo transcrito
-// (`detectLang`) y lo guarda -- la próxima vez que se abra el micrófono
-// arranca directo en ese idioma. Si el usuario cambia de idioma A MITAD de
-// una misma grabación, esa grabación puntual sigue sesgada al idioma con el
-// que arrancó (limitación real del navegador, no de esta implementación).
+// Idioma del DICTADO: deliberadamente separado del idioma de la interfaz
+// del sitio (ver `voiceLang`, nunca toca el toggle ES/EN global). El Web
+// Speech API no soporta cambiar el idioma A MITAD de una grabación en
+// curso -- `switchVoiceLang()` por eso hace pausa+reinicio real: detiene el
+// reconocimiento actual (conservando lo ya transcrito) y arranca uno nuevo
+// con el idioma nuevo -- el usuario solo necesita volver a hablar después
+// de tocar el botón, sin perder lo ya dicho. Arranca con el idioma real
+// del dispositivo (`navigator.language`) o el último usado (recordado en
+// localStorage), nunca con el toggle de la interfaz.
 const VOICE_LANG_KEY = "atlas_voice_lang";
 const BAR_COUNT = 24;
 
@@ -40,6 +38,7 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
   const [supported, setSupported] = useState(false);
   const [interimText, setInterimText] = useState("");
   const [levels, setLevels] = useState<number[]>(() => new Array(BAR_COUNT).fill(0.08));
+  const [voiceLang, setVoiceLangState] = useState<"es" | "en">(() => getStartLang(fallbackLang));
 
   const recognitionRef = useRef<any>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -47,13 +46,31 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
   const rafRef = useRef<number | null>(null);
   const transcriptRef = useRef("");
   const cancelledRef = useRef(false);
+  // true mientras un stop() fue disparado por switchVoiceLang (reinicio real
+  // con otro idioma), no por el usuario confirmando/cancelando -- así
+  // `onend` sabe si debe reiniciar en vez de cerrar el dictado.
+  const restartingRef = useRef(false);
+  const voiceLangRef = useRef(voiceLang);
+
+  useEffect(() => {
+    voiceLangRef.current = voiceLang;
+  }, [voiceLang]);
 
   useEffect(() => {
     const SR = typeof window !== "undefined" && ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
     setSupported(!!SR);
   }, []);
 
-  const stopAudioViz = useCallback(() => {
+  const setVoiceLang = (lang: "es" | "en") => {
+    setVoiceLangState(lang);
+    try {
+      localStorage.setItem(VOICE_LANG_KEY, lang);
+    } catch {
+      // sin localStorage -- no crítico
+    }
+  };
+
+  const stopAudioViz = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -61,13 +78,14 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
     setLevels(new Array(BAR_COUNT).fill(0.08));
-  }, []);
+  };
 
   // Visualización real del volumen del micrófono (onda tipo Claude) --
   // aparte de SpeechRecognition, que no expone niveles de audio. Si el
   // usuario niega el permiso o falla, el dictado real sigue funcionando
-  // igual, solo sin la onda animada.
-  const startAudioViz = useCallback(async () => {
+  // igual, solo sin la onda animada. Sigue corriendo durante un cambio de
+  // idioma (no se corta/reinicia solo por eso).
+  const startAudioViz = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -91,33 +109,18 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     } catch {
       // sin permiso/soporte para la onda visual -- no bloquea el dictado real.
     }
-  }, []);
+  };
 
-  const finish = useCallback(() => {
-    setListening(false);
-    stopAudioViz();
-    const text = transcriptRef.current.trim();
-    if (text && !cancelledRef.current) {
-      onResult(text);
-      const detected = detectLang(text);
-      try {
-        localStorage.setItem(VOICE_LANG_KEY, detected);
-      } catch {
-        // sin localStorage -- no crítico, solo no recuerda el idioma para la próxima
-      }
-    }
-    setInterimText("");
-    transcriptRef.current = "";
-  }, [onResult, stopAudioViz]);
-
-  const start = useCallback(() => {
+  // `createAndStartRecognition` y `handleEnd` se referencian entre sí (el
+  // reinicio por cambio de idioma vuelve a llamar a la primera desde la
+  // segunda) -- por eso van como funciones planas, no useCallback: se
+  // recrean en cada render y cierran siempre sobre las últimas variables,
+  // sin el problema de dependencias circulares que tendría memoizarlas.
+  const createAndStartRecognition = (lang: "es" | "en") => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
-    cancelledRef.current = false;
-    transcriptRef.current = "";
-    setInterimText("");
     const recognition = new SR();
-    recognition.lang = getStartLang(fallbackLang) === "en" ? "en-US" : "es-ES";
+    recognition.lang = lang === "en" ? "en-US" : "es-ES";
     recognition.interimResults = true;
     recognition.continuous = true;
     recognition.maxAlternatives = 1;
@@ -132,13 +135,40 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
       if (finalChunk) transcriptRef.current += finalChunk;
       setInterimText(`${transcriptRef.current}${interimChunk}`.trim());
     };
-    recognition.onend = finish;
-    recognition.onerror = finish;
+    recognition.onend = handleEnd;
+    recognition.onerror = handleEnd;
     recognitionRef.current = recognition;
-    startAudioViz();
     recognition.start();
+  };
+
+  function handleEnd() {
+    if (restartingRef.current) {
+      restartingRef.current = false;
+      createAndStartRecognition(voiceLangRef.current);
+      return;
+    }
+    setListening(false);
+    stopAudioViz();
+    const text = transcriptRef.current.trim();
+    if (text && !cancelledRef.current) {
+      onResult(text);
+      setVoiceLang(detectLang(text));
+    }
+    setInterimText("");
+    transcriptRef.current = "";
+  }
+
+  const start = useCallback(() => {
+    if (!supported) return;
+    cancelledRef.current = false;
+    restartingRef.current = false;
+    transcriptRef.current = "";
+    setInterimText("");
+    startAudioViz();
+    createAndStartRecognition(voiceLangRef.current);
     setListening(true);
-  }, [fallbackLang, finish, startAudioViz]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supported]);
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop();
@@ -156,7 +186,20 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     else start();
   }, [listening, start, stop]);
 
+  // Pausa el reconocimiento actual y lo reinicia con el otro idioma --
+  // conserva lo ya dictado, pero el usuario tiene que volver a hablar
+  // después de tocar el botón (el navegador no soporta cambiar de idioma
+  // sin reiniciar la sesión de reconocimiento en curso).
+  const switchVoiceLang = useCallback(() => {
+    const next = voiceLangRef.current === "es" ? "en" : "es";
+    setVoiceLang(next);
+    if (listening && recognitionRef.current) {
+      restartingRef.current = true;
+      recognitionRef.current.stop();
+    }
+  }, [listening]);
+
   useEffect(() => stop, [stop]);
 
-  return { listening, supported, interimText, levels, toggle, stop, cancel };
+  return { listening, supported, interimText, levels, voiceLang, toggle, stop, cancel, switchVoiceLang };
 }
