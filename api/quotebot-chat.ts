@@ -91,14 +91,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Modo liviano: solo genera un título corto para la conversación (usado
   // por useAtlasChat.ts tras el primer intercambio), sin tools ni el resto
   // del system prompt -- mismo patrón que titleOnly en meridian-assistant.
+  // Usa el modelo por defecto configurado (no DeepSeek fijo) + timeout
+  // explícito de 8s -- sin esto, un proveedor colgado deja la respuesta sin
+  // terminar nunca (bug real encontrado en vivo: DeepSeek sin `signal` se
+  // quedó esperando indefinidamente, sin cortar ni caer a otro modelo).
   if (titleOnly) {
     try {
+      const key = await getDefaultModel();
+      const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+      const xai = createXai({ apiKey: process.env.GROK_API_KEY });
       const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
+      const model = key === "gemini" ? google("gemini-3.5-flash") : key === "grok" ? xai("grok-4.3") : deepseek("deepseek-chat");
       const result = await generateText({
-        model: deepseek("deepseek-chat"),
+        model,
         system: "Generas títulos cortos (máximo 6 palabras, sin comillas ni punto final) que resumen de qué trata una conversación, en el mismo idioma del mensaje. Responde solo con el título, nada más.",
         prompt: `Primer mensaje del usuario: "${message.slice(0, 500)}"\n\nTítulo corto:`,
         temperature: 0.3,
+        abortSignal: AbortSignal.timeout(8000),
       });
       const title = result.text.trim().replace(/^["']|["']$/g, "").slice(0, 60);
       return res.status(200).json({ title: title || null });
