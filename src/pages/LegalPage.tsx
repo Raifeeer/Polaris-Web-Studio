@@ -247,8 +247,8 @@ function PrivacyContent() {
         </ul>
         <p>
           <T en="To exercise any of these rights, write to us at">Para ejercer cualquiera de estos derechos, escríbenos a</T>{" "}
-          <a href="mailto:privacidad@polarisweb.studio" className="text-[var(--color-primary-base)] underline">
-            privacidad@polarisweb.studio
+          <a href="mailto:hola@polarisweb.studio" className="text-[var(--color-primary-base)] underline">
+            hola@polarisweb.studio
           </a>
           . <T en="We'll respond within a reasonable timeframe, generally no more than 30 days.">Te respondemos en un plazo razonable, generalmente no mayor a 30 días.</T>
         </p>
@@ -288,8 +288,8 @@ function PrivacyContent() {
       <Section heading={<T en="10. Contact">10. Contacto</T>}>
         <p>
           <T en="For anything related to this policy or your data:">Para cualquier tema relacionado a esta política o tus datos:</T>{" "}
-          <a href="mailto:privacidad@polarisweb.studio" className="text-[var(--color-primary-base)] underline">
-            privacidad@polarisweb.studio
+          <a href="mailto:hola@polarisweb.studio" className="text-[var(--color-primary-base)] underline">
+            hola@polarisweb.studio
           </a>
         </p>
       </Section>
