@@ -318,8 +318,8 @@ export default function AtlasChat() {
                 <T en="Home">Inicio</T>
               </Link>
               <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-                <AtlasMark variant="isotipo" className="w-5 h-5 shrink-0" />
-                <AtlasMark variant="wordmark" className="h-4 w-auto" />
+                <AtlasMark variant="isotipo" className="w-7 h-7 shrink-0" />
+                <AtlasMark variant="wordmark" className="h-6 w-auto" />
               </div>
               {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
                   ES/EN normal) -- sin esto, alguien con el navegador en inglés y
