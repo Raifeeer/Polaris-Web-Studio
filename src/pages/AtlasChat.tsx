@@ -302,7 +302,7 @@ export default function AtlasChat() {
             <div className="p-3 flex items-center gap-2">
               <Link
                 to="/"
-                className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
                 aria-label={translate("Ir al inicio", "Go to home")}
                 title={translate("Ir al inicio", "Go to home")}
               >
@@ -315,7 +315,7 @@ export default function AtlasChat() {
                   sin preferencia guardada queda atascado en inglés acá. */}
               <button
                 onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                className="px-2.5 py-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                className="px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
                 aria-label={translate("Cambiar idioma", "Change language")}
                 title={translate("Cambiar idioma", "Change language")}
               >
@@ -323,7 +323,7 @@ export default function AtlasChat() {
               </button>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2.5 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
+                className="p-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
                 aria-label={translate("Cerrar menú", "Close menu")}
               >
                 <X size={20} />
