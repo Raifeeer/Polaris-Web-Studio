@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { X, Check } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
@@ -22,6 +23,14 @@ export default function VoiceInputBar({
   onSwitchLang: () => void;
 }) {
   const { translate } = useLanguage();
+  // El texto crece a la derecha mientras se habla -- sin esto, `truncate`
+  // corta con "..." y deja siempre visible el INICIO de la frase, no lo que
+  // se está diciendo ahora mismo (el final). Se autoscrollea al extremo
+  // derecho cada vez que llega texto nuevo, mismo criterio que una consola.
+  const textScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (textScrollRef.current) textScrollRef.current.scrollLeft = textScrollRef.current.scrollWidth;
+  }, [interimText]);
   return (
     <div className="flex-1 flex items-center gap-2 min-w-0 px-1">
       <button
@@ -45,9 +54,11 @@ export default function VoiceInputBar({
         {voiceLang}
       </button>
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-[var(--color-text-primary)] truncate min-h-[1.25rem]">
-          {interimText || <span className="text-[var(--color-text-tertiary)]">{translate("Escuchando…", "Listening…")}</span>}
-        </p>
+        <div ref={textScrollRef} className="overflow-x-auto whitespace-nowrap min-h-[1.25rem] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <p className="text-sm text-[var(--color-text-primary)] inline-block">
+            {interimText || <span className="text-[var(--color-text-tertiary)]">{translate("Escuchando…", "Listening…")}</span>}
+          </p>
+        </div>
         <div className="flex items-center gap-[3px] h-4 mt-1" aria-hidden="true">
           {levels.map((v, i) => (
             <motion.span

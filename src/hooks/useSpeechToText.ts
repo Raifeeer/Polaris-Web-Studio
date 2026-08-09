@@ -51,6 +51,13 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
   // `onend` sabe si debe reiniciar en vez de cerrar el dictado.
   const restartingRef = useRef(false);
   const voiceLangRef = useRef(voiceLang);
+  // Respaldo real contra un bug conocido de WebKit/iOS Safari: llamar
+  // recognition.stop() mientras hay una grabación `continuous` en curso a
+  // veces nunca dispara onend/onerror -- sin este timeout, los botones de
+  // cancelar/cambiar idioma se quedan "sin hacer nada" porque el evento que
+  // dispara handleEnd() simplemente nunca llega, no porque el click no se
+  // haya registrado.
+  const forceStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     voiceLangRef.current = voiceLang;
@@ -152,6 +159,10 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
   };
 
   function handleEnd() {
+    if (forceStopTimerRef.current) {
+      clearTimeout(forceStopTimerRef.current);
+      forceStopTimerRef.current = null;
+    }
     if (restartingRef.current) {
       restartingRef.current = false;
       createAndStartRecognition(voiceLangRef.current);
@@ -180,15 +191,36 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supported]);
 
+  // Llama recognition.stop() y arma un respaldo: si onend/onerror no llega
+  // en STOP_TIMEOUT_MS (bug real de WebKit/iOS Safari con `continuous:true`,
+  // ver comentario junto a forceStopTimerRef), fuerza el cierre a mano
+  // (abort() + handleEnd() directo) para que el botón nunca quede "sin
+  // hacer nada" del lado del usuario.
+  const STOP_TIMEOUT_MS = 900;
+  const stopWithFallback = (recognition: any) => {
+    if (forceStopTimerRef.current) clearTimeout(forceStopTimerRef.current);
+    recognition.stop();
+    forceStopTimerRef.current = setTimeout(() => {
+      forceStopTimerRef.current = null;
+      if (recognitionRef.current !== recognition) return; // ya se cerró por el evento real
+      try {
+        recognition.abort();
+      } catch {
+        // sin soporte para abort() -- igual se fuerza el cierre abajo
+      }
+      handleEnd();
+    }, STOP_TIMEOUT_MS);
+  };
+
   const stop = useCallback(() => {
-    recognitionRef.current?.stop();
+    if (recognitionRef.current) stopWithFallback(recognitionRef.current);
   }, []);
 
   // Descarta la grabación en curso sin llenar el input -- distinto de
   // `stop()`, que confirma lo transcrito hasta ahí.
   const cancel = useCallback(() => {
     cancelledRef.current = true;
-    recognitionRef.current?.stop();
+    if (recognitionRef.current) stopWithFallback(recognitionRef.current);
   }, []);
 
   const toggle = useCallback(() => {
@@ -205,7 +237,7 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     setVoiceLang(next);
     if (listening && recognitionRef.current) {
       restartingRef.current = true;
-      recognitionRef.current.stop();
+      stopWithFallback(recognitionRef.current);
     }
   }, [listening]);
 
