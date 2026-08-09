@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
-  ArrowLeft,
+  Home,
+  X,
   Send,
   Square,
   SquarePen,
@@ -245,12 +246,9 @@ export default function AtlasChat() {
     requestAnimationFrame(() => textareaRef.current?.focus());
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  // Enter siempre agrega una línea nueva -- el mensaje solo se manda con el
+  // botón de enviar (pedido explícito del usuario: en mobile, Enter mandaba
+  // el mensaje y el teclado tapaba la caja de texto justo después).
 
   const shareConversation = async (title: string, msgs: AiMessage[], id: string) => {
     const transcript = msgs.map((m) => `${m.role === "user" ? translate("Me", "Yo") : "Atlas"}: ${m.content}`).join("\n\n");
@@ -298,19 +296,14 @@ export default function AtlasChat() {
             className="fixed inset-y-0 left-0 z-50 w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden"
           >
             <div className="p-3 flex items-center gap-2">
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
-                aria-label={translate("Cerrar menú", "Close menu")}
-              >
-                <PanelLeftClose size={18} />
-              </button>
               <Link
                 to="/"
-                className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
-                aria-label={translate("Volver al sitio", "Back to site")}
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                aria-label={translate("Ir al inicio", "Go to home")}
+                title={translate("Ir al inicio", "Go to home")}
               >
-                <ArrowLeft size={18} />
+                <Home size={16} />
+                <T en="Home">Inicio</T>
               </Link>
               <div className="flex-1" />
               {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
@@ -323,6 +316,13 @@ export default function AtlasChat() {
                 title={translate("Cambiar idioma", "Change language")}
               >
                 {language === "es" ? "EN" : "ES"}
+              </button>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2.5 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
+                aria-label={translate("Cerrar menú", "Close menu")}
+              >
+                <X size={20} />
               </button>
             </div>
 
@@ -593,7 +593,6 @@ export default function AtlasChat() {
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
               rows={1}
               maxLength={2000}
               placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
