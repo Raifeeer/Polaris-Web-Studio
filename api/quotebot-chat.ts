@@ -5,6 +5,7 @@ import { createXai } from "@ai-sdk/xai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { atlasTools } from "./_atlasTools.js";
+import { backupConversation } from "./_atlasBackup.js";
 
 // Mismas claves que ICON_MAP en src/lib/conversationIcon.tsx -- duplicado a
 // propósito (mismo patrón ya aceptado en esta cuenta para PACKAGES/ADDONS
@@ -99,7 +100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
   }
 
-  const { message, stream: wantsStream, titleOnly } = req.body || {};
+  const { message, stream: wantsStream, titleOnly, visitorId, conversationId, isTemporary } = req.body || {};
   if (!message || typeof message !== "string") return res.status(400).json({ error: "Missing message" });
   if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
   const history = sanitizeHistory((req.body || {}).history);
@@ -350,10 +351,14 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     const send = (obj: Record<string, unknown>) => res.write(`${JSON.stringify(obj)}\n`);
     try {
       let toolResults: ToolResultLike[] = [];
+      let finalRaw = "";
       try {
         const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
-        for await (const delta of result.textStream) send({ type: "delta", text: delta });
-        const finalText = (await result.text).trim();
+        for await (const delta of result.textStream) {
+          finalRaw += delta;
+          send({ type: "delta", text: delta });
+        }
+        const finalText = finalRaw.trim();
         if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
         if (omitsDomainCap(finalText)) throw new Error("Reply mentions included domain without the real $15 cap");
         toolResults = (await result.toolResults) as unknown as ToolResultLike[];
@@ -361,14 +366,23 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         if (defaultModel === "deepseek") throw err;
         console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
         send({ type: "restart" });
+        finalRaw = "";
         const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
-        for await (const delta of result.textStream) send({ type: "delta", text: delta });
+        for await (const delta of result.textStream) {
+          finalRaw += delta;
+          send({ type: "delta", text: delta });
+        }
         toolResults = (await result.toolResults) as unknown as ToolResultLike[];
       }
       const widget = buildWidget(toolResults);
       if (widget) send({ type: "widget", widget });
       if (usedWebSearch(toolResults)) send({ type: "web_search" });
       send({ type: "done" });
+      // Respaldo server-side, fire-and-forget -- ver api/_atlasBackup.ts.
+      // Corre DESPUÉS de mandar "done" (no demora la respuesta al cliente que
+      // sigue conectado) pero sin esperar a que el cliente confirme nada, así
+      // que también corre si ya se desconectó.
+      if (!isTemporary) backupConversation(visitorId, conversationId, history, message, finalRaw, widget, usedWebSearch(toolResults));
     } catch (err) {
       send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
     }
@@ -391,7 +405,9 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       if (omitsDomainCap(text)) throw new Error("Reply mentions included domain without the real $15 cap");
       const toolResults = result.toolResults as unknown as ToolResultLike[];
       const widget = buildWidget(toolResults);
-      return res.status(200).json({ reply: text, provider: key, widget, usedWebSearch: usedWebSearch(toolResults) });
+      const wasWebSearch = usedWebSearch(toolResults);
+      if (!isTemporary) backupConversation(visitorId, conversationId, history, message, text, widget, wasWebSearch);
+      return res.status(200).json({ reply: text, provider: key, widget, usedWebSearch: wasWebSearch });
     } catch {
       continue;
     }

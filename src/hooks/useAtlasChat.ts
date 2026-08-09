@@ -317,6 +317,14 @@ export function useAtlasChat() {
       setThinkingMsg(THINKING_MESSAGES[Math.floor(Math.random() * THINKING_MESSAGES.length)]);
       setLoading(true);
 
+      // Guarda el mensaje del usuario de inmediato, ANTES de esperar la
+      // respuesta -- si el navegador se cierra a mitad de la generación, esto
+      // sobrevive igual (localStorage + Firestore en cola). La respuesta del
+      // asistente en sí queda cubierta aparte por el respaldo server-side
+      // (ver api/_atlasBackup.ts) que corre del lado del backend apenas
+      // termina de generarse, sin depender de que el cliente siga conectado.
+      if (!isTemporaryRef.current) persist(activeId, withUser);
+
       const controller = new AbortController();
       abortRef.current = controller;
       let raw = "";
@@ -328,7 +336,14 @@ export function useAtlasChat() {
         const res = await fetch("/api/quotebot-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: trimmed, history, stream: true }),
+          body: JSON.stringify({
+            message: trimmed,
+            history,
+            stream: true,
+            visitorId: isTemporaryRef.current ? undefined : getVisitorId(),
+            conversationId: isTemporaryRef.current ? undefined : activeId,
+            isTemporary: isTemporaryRef.current,
+          }),
           signal: controller.signal,
         });
         if (!res.ok || !res.body) throw new Error("bad status");
