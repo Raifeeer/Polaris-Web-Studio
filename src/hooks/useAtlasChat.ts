@@ -12,6 +12,17 @@ const CONVERSATIONS_KEY = "atlas_conversations";
 const ACTIVE_ID_KEY = "atlas_active_conversation_id";
 const MAX_CONVERSATIONS = 30;
 
+const THINKING_MESSAGES = [
+  "Revisando tu proyecto…",
+  "Calculando el precio…",
+  "Buscando en el portafolio…",
+  "Consultando la agenda…",
+  "Trazando la mejor ruta…",
+  "Un momento, casi listo…",
+  "Ordenando la respuesta…",
+  "Afinando los detalles…",
+];
+
 function newId(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -76,6 +87,7 @@ export function useAtlasChat() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [thinkingMsg, setThinkingMsg] = useState(THINKING_MESSAGES[0]);
 
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(ACTIVE_ID_KEY, activeId);
@@ -103,6 +115,7 @@ export function useAtlasChat() {
       const history = messages.map(({ role, content }) => ({ role, content }));
       const next: AiMessage[] = [...messages, { role: "user", content: trimmed }];
       setMessages(next);
+      setThinkingMsg(THINKING_MESSAGES[Math.floor(Math.random() * THINKING_MESSAGES.length)]);
       setLoading(true);
       try {
         const res = await fetch("/api/quotebot-chat", {
@@ -158,5 +171,5 @@ export function useAtlasChat() {
     [activeId],
   );
 
-  return { messages, loading, error, activeId, conversations, sendMessage, newChat, loadConversation, deleteConversation };
+  return { messages, loading, thinkingMsg, error, activeId, conversations, sendMessage, newChat, loadConversation, deleteConversation };
 }

@@ -107,7 +107,7 @@ export default function AtlasChat() {
     );
   }, [translate]);
 
-  const { messages, loading, error, activeId, conversations, sendMessage, newChat, loadConversation, deleteConversation } =
+  const { messages, loading, thinkingMsg, error, activeId, conversations, sendMessage, newChat, loadConversation, deleteConversation } =
     useAtlasChat();
   const [input, setInput] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1024);
@@ -279,8 +279,9 @@ export default function AtlasChat() {
                     <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0">
                       <img src="/brand/isotipo-color-badge-circular.svg" alt="" className="w-6 h-6 rounded-full" />
                     </div>
-                    <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)]">
+                    <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2">
                       <TypingDots />
+                      <span className="text-xs text-[var(--color-text-tertiary)]">{thinkingMsg}</span>
                     </div>
                   </div>
                 </motion.div>

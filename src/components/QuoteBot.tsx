@@ -116,7 +116,7 @@ export default function QuoteBot() {
   // (y por lo tanto la misma conversación en localStorage) que la página
   // completa "/asistente" -- abrir el chat de página completa continúa
   // justo donde quedó el widget.
-  const { messages: aiMessages, loading: aiLoading, error: aiError, sendMessage: sendAiMessageText } = useAtlasChat();
+  const { messages: aiMessages, loading: aiLoading, thinkingMsg: aiThinkingMsg, error: aiError, sendMessage: sendAiMessageText } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
 
   const scrollToBottom = () => {
@@ -540,10 +540,13 @@ export default function QuoteBot() {
 
               {aiLoading && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-1.5 h-[42px] px-4">
-                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
-                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
-                    <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2 h-[42px] px-4">
+                    <div className="flex items-center gap-1.5">
+                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
+                    </div>
+                    <span className="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">{aiThinkingMsg}</span>
                   </div>
                 </motion.div>
               )}
