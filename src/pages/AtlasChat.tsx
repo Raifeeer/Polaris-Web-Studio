@@ -15,11 +15,13 @@ import {
   MoreVertical,
   Pencil,
   Share2,
+  Search,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
+import ConversationSearch from "../components/ConversationSearch";
 
 const SUGGESTIONS = [
   { es: "¿Cuáles son los planes y precios?", en: "What are the plans and prices?" },
@@ -135,12 +137,19 @@ export default function AtlasChat() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
   const [shareFeedbackId, setShareFeedbackId] = useState<string | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeId);
   const activeTitle = messages.length === 0 ? translate("New chat", "Nuevo chat") : activeConversation?.title || translate("New chat", "Nuevo chat");
+  const searchItems = conversations.map((c) => ({
+    id: c.id,
+    title: c.title,
+    text: c.messages.map((m) => m.content).join(" "),
+    updatedAt: c.updatedAt,
+  }));
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -231,6 +240,15 @@ export default function AtlasChat() {
                 <SquarePen size={14} />
                 <T en="New chat">Nuevo chat</T>
               </button>
+              {conversations.length > 0 && (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  aria-label={translate("Search conversations", "Buscar conversaciones")}
+                  className="p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                >
+                  <Search size={14} />
+                </button>
+              )}
             </div>
 
             <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1">
@@ -355,6 +373,14 @@ export default function AtlasChat() {
           )}
           <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
           <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
+          <button
+            onClick={newChat}
+            className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
+            aria-label={translate("New chat", "Nuevo chat")}
+            title={translate("New chat", "Nuevo chat")}
+          >
+            <SquarePen size={18} />
+          </button>
         </header>
 
         <div className="flex-1 overflow-y-auto">
@@ -446,13 +472,14 @@ export default function AtlasChat() {
               </button>
             )}
           </div>
-          <p className="text-center text-[10px] text-[var(--color-text-tertiary)] mt-2">
+          <p className="text-center text-[10px] text-[var(--color-text-tertiary)] mt-1">
             <T en="Atlas can make mistakes. Verify important information.">
               Atlas puede cometer errores. Verifica la información importante.
             </T>
           </p>
         </div>
       </div>
+      <ConversationSearch open={searchOpen} onClose={() => setSearchOpen(false)} items={searchItems} onSelect={loadConversation} />
     </div>
   );
 }
