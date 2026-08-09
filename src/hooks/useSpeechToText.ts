@@ -61,6 +61,14 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
   const streamRef = useRef<MediaStream | null>(null);
   const rafRef = useRef<number | null>(null);
   const transcriptRef = useRef("");
+  // Espejo del texto combinado (finalizado + provisional) que ya se venía
+  // mostrando en pantalla -- se usa para confirmar en vez de transcriptRef
+  // (que solo junta los fragmentos que el navegador marcó "final"). Con
+  // abort() (ver stopWithFallback) el navegador descarta cualquier
+  // resultado todavía provisional -- sin este espejo, tocar el check justo
+  // mientras la última palabra seguía sin finalizar borraba todo el texto y
+  // no llenaba el input (bug real reportado en vivo).
+  const latestTextRef = useRef("");
   const cancelledRef = useRef(false);
   // true mientras un stop() fue disparado por switchVoiceLang (reinicio real
   // con otro idioma), no por el usuario confirmando/cancelando -- así
@@ -168,7 +176,9 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
         else interimChunk += transcript;
       }
       if (finalChunk) transcriptRef.current += finalChunk;
-      setInterimText(`${transcriptRef.current}${interimChunk}`.trim());
+      const combined = `${transcriptRef.current}${interimChunk}`.trim();
+      latestTextRef.current = combined;
+      setInterimText(combined);
     };
     // El navegador puede disparar tanto `onerror` como `onend` para la
     // MISMA sesión al llamar stop() a mitad de una frase -- sin este
@@ -210,13 +220,14 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     }
     setListening(false);
     stopAudioViz();
-    const text = transcriptRef.current.trim();
+    const text = latestTextRef.current.trim();
     if (text && !cancelledRef.current) {
       onResult(text);
       setVoiceLang(detectLang(text));
     }
     setInterimText("");
     transcriptRef.current = "";
+    latestTextRef.current = "";
   }
 
   const start = useCallback(() => {
@@ -224,6 +235,7 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     cancelledRef.current = false;
     restartingRef.current = false;
     transcriptRef.current = "";
+    latestTextRef.current = "";
     setInterimText("");
     startAudioViz();
     createAndStartRecognition(voiceLangRef.current);
