@@ -138,6 +138,7 @@ export default function AtlasChat() {
   const [renameValue, setRenameValue] = useState("");
   const [shareFeedbackId, setShareFeedbackId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -239,6 +240,13 @@ export default function AtlasChat() {
             className="fixed inset-y-0 left-0 z-50 w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden"
           >
             <div className="p-3 flex items-center gap-2">
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
+                aria-label={translate("Cerrar menú", "Close menu")}
+              >
+                <PanelLeftClose size={18} />
+              </button>
               <Link
                 to="/"
                 className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
@@ -246,6 +254,21 @@ export default function AtlasChat() {
               >
                 <ArrowLeft size={18} />
               </Link>
+              <div className="flex-1" />
+              {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
+                  ES/EN normal) -- sin esto, alguien con el navegador en inglés y
+                  sin preferencia guardada queda atascado en inglés acá. */}
+              <button
+                onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                className="px-2.5 py-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                aria-label={translate("Cambiar idioma", "Change language")}
+                title={translate("Cambiar idioma", "Change language")}
+              >
+                {language === "es" ? "EN" : "ES"}
+              </button>
+            </div>
+
+            <div className="px-3 pb-3 flex items-center gap-2">
               <button
                 onClick={newChat}
                 className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-xs font-black uppercase tracking-wider transition-colors"
@@ -266,7 +289,7 @@ export default function AtlasChat() {
 
             <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-1">
               {conversations.length === 0 && (
-                <p className="text-xs text-[var(--color-text-tertiary)] px-3 py-4 text-center">
+                <p className="text-sm text-[var(--color-text-tertiary)] px-3 py-4 text-center">
                   <T en="Your conversations will appear here.">Tus conversaciones aparecerán aquí.</T>
                 </p>
               )}
@@ -278,9 +301,19 @@ export default function AtlasChat() {
                       ? "bg-[var(--color-primary-muted)] text-[var(--color-primary-base)]"
                       : "hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"
                   }`}
-                  onClick={() => renamingId !== c.id && loadConversation(c.id)}
+                  onClick={() => {
+                    if (renamingId === c.id) return;
+                    loadConversation(c.id);
+                    // En mobile el sidebar es un overlay a pantalla completa --
+                    // se cierra al elegir un chat. En desktop (md+) queda inline
+                    // y no debe desaparecer, así que solo se cierra bajo el
+                    // breakpoint real, no incondicionalmente.
+                    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+                      setSidebarOpen(false);
+                    }
+                  }}
                 >
-                  <MessageSquare size={14} className="shrink-0 opacity-60" />
+                  <MessageSquare size={16} className="shrink-0 opacity-60" />
                   {renamingId === c.id ? (
                     <input
                       autoFocus
@@ -300,10 +333,10 @@ export default function AtlasChat() {
                         renameConversation(c.id, renameValue);
                         setRenamingId(null);
                       }}
-                      className="flex-1 min-w-0 text-xs font-semibold bg-transparent outline-none border-b border-[var(--color-primary-base)]"
+                      className="flex-1 min-w-0 text-sm font-semibold bg-transparent outline-none border-b border-[var(--color-primary-base)]"
                     />
                   ) : (
-                    <span className="flex-1 min-w-0 text-xs font-semibold truncate">
+                    <span className="flex-1 min-w-0 text-sm font-semibold truncate">
                       {shareFeedbackId === c.id ? <T en="Copied to clipboard">Copiado al portapapeles</T> : c.title}
                     </span>
                   )}
@@ -316,7 +349,7 @@ export default function AtlasChat() {
                       className="shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                       aria-label={translate("Más opciones", "More options")}
                     >
-                      <MoreVertical size={12} />
+                      <MoreVertical size={14} />
                     </button>
                   )}
                   {openMenuId === c.id && (
@@ -331,9 +364,9 @@ export default function AtlasChat() {
                           setRenameValue(c.title);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
                       >
-                        <Pencil size={12} />
+                        <Pencil size={14} />
                         <T en="Rename">Renombrar</T>
                       </button>
                       <button
@@ -341,19 +374,19 @@ export default function AtlasChat() {
                           shareConversation(c.title, c.messages, c.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
                       >
-                        <Share2 size={12} />
+                        <Share2 size={14} />
                         <T en="Share">Compartir</T>
                       </button>
                       <button
                         onClick={() => {
-                          deleteConversation(c.id);
+                          setConfirmDeleteId(c.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={14} />
                         <T en="Delete">Eliminar</T>
                       </button>
                     </div>
@@ -362,6 +395,53 @@ export default function AtlasChat() {
               ))}
             </div>
           </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Confirmación antes de borrar -- una conversación borrada no se
+          puede recuperar (no hay soft-delete), a diferencia de renombrar
+          o compartir. */}
+      <AnimatePresence>
+        {confirmDeleteId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setConfirmDeleteId(null)}
+            className="fixed inset-0 z-[80] flex items-center justify-center p-6 bg-black/60"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 shadow-2xl"
+            >
+              <h3 className="text-sm font-black text-[var(--color-text-primary)] mb-1.5">
+                <T en="Delete this conversation?">¿Eliminar esta conversación?</T>
+              </h3>
+              <p className="text-xs text-[var(--color-text-secondary)] mb-4">
+                <T en="This can't be undone.">Esta acción no se puede deshacer.</T>
+              </p>
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="px-3.5 py-2 rounded-lg text-xs font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors"
+                >
+                  <T en="Cancel">Cancelar</T>
+                </button>
+                <button
+                  onClick={() => {
+                    deleteConversation(confirmDeleteId);
+                    setConfirmDeleteId(null);
+                  }}
+                  className="px-3.5 py-2 rounded-lg text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                >
+                  <T en="Delete">Eliminar</T>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -377,17 +457,6 @@ export default function AtlasChat() {
           </button>
           <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
           <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
-          {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
-              ES/EN normal) -- sin esto, alguien con el navegador en inglés y
-              sin preferencia guardada queda atascado en inglés acá. */}
-          <button
-            onClick={() => setLanguage(language === "es" ? "en" : "es")}
-            className="px-2 py-1.5 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[10px] font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
-            aria-label={translate("Cambiar idioma", "Change language")}
-            title={translate("Cambiar idioma", "Change language")}
-          >
-            {language === "es" ? "EN" : "ES"}
-          </button>
           <button
             onClick={newChat}
             className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
