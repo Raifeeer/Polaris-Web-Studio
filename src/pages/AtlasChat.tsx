@@ -21,6 +21,7 @@ import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
+import AtlasWidget from "../components/AtlasWidget";
 import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
 
@@ -134,6 +135,8 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
           <div className="p-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
             <AtlasMarkdown content={message.content} />
           </div>
+
+          <AtlasWidget widget={message.widget} onAction={onSuggestionClick} />
 
           {message.content && (
             <button

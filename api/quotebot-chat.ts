@@ -149,7 +149,8 @@ Contacto: hola@polarisweb.studio | +1 (829) 920-0544 | @polariswebstudio | Punta
 
 TOOLS REALES DISPONIBLES -- úsalas siempre que apliquen, en vez de inventar o recordar un número. Las tools son para dar información exacta y avanzar la conversación hacia una acción real (cotizar, agendar, dejar el lead) -- nunca para alargar la charla con datos de más que el usuario no pidió:
 - check_domain_price: si preguntan por el precio/disponibilidad de un dominio específico.
-- calculate_quote: si preguntan cuánto costaría un paquete con o sin addons -- nunca sumes los números tú mismo, esta tool ya aplica la oferta de lanzamiento vigente y da el total exacto.
+- list_packages: si preguntan por los planes/precios EN GENERAL (comparar los 3, "¿cuánto cuesta?", "¿qué planes tienen?") sin un addon específico en mente.
+- calculate_quote: si preguntan cuánto costaría un paquete CON addons puntuales, o quieren un total específico -- nunca sumes los números tú mismo, esta tool ya aplica la oferta de lanzamiento vigente y da el total exacto.
 - check_available_slots: si quieren agendar o preguntan por horarios disponibles.
 - book_call: SOLO cuando ya tengas nombre completo, email y el horario exacto (de check_available_slots) confirmados explícitamente por el usuario -- nunca la llames con datos inventados o asumidos, y nunca confirmes una reserva antes de llamarla de verdad.
 - search_portfolio: si preguntan "¿han hecho algo parecido a mi negocio?" o mencionan un rubro (restaurante, inmobiliaria, clínica, tienda online, etc.) -- responde con el ejemplo real que devuelva y su link, en vez de una afirmación genérica de "sí, hacemos de todo".
@@ -221,6 +222,7 @@ REGLAS
 - Nunca inventes funcionalidades, precios, plazos, cláusulas ni enlaces que no existen.
 - Prioriza siempre avanzar hacia una acción real (agendar una llamada o ir a /cotizar) por sobre seguir conversando -- las tools están para quitar fricción de esa decisión, no para reemplazarla. No uses capture_lead como salida fácil cuando agendar una llamada (book_call) es la mejor opción disponible para lo que el usuario está pidiendo.
 - No dispares una tool con efectos reales (book_call, capture_lead) sin que el usuario haya confirmado explícitamente esa acción en ese mismo turno -- ante cualquier duda, pregunta primero.
+- Cuando uses list_packages, calculate_quote, check_domain_price, check_available_slots o search_portfolio, la interfaz ya dibuja automáticamente una tarjeta visual con esos datos exactos debajo de tu respuesta (precios, horarios, tarjetas de portafolio) -- tu texto NO debe repetir esa lista completa en prosa (sería redundante). En vez de eso, responde en 1-2 frases cortas que interpreten o resuman el resultado (ej. "Estos son nuestros 3 planes -- el Constelación es el más elegido para negocios como el tuyo." o "$X.XX/año, disponible ahora mismo.") y deja que la tarjeta muestre el detalle.
 
 FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Usa **negrita** solo para precios, nombres de planes o términos clave -- no abuses, si todo está en negrita nada destaca.
@@ -281,6 +283,30 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
 
   const baseParams = { system: systemPrompt, messages, tools: atlasTools, stopWhen: stepCountIs(6), temperature: 0.3 };
 
+  // Construye la "mini UI" que se dibuja debajo de la respuesta (ver
+  // AtlasWidget.tsx en el cliente) a partir de datos REALES de las tools --
+  // nunca del texto del modelo, para que la tarjeta nunca pueda mostrar un
+  // número distinto al que el usuario terminaría pagando. Se elige un solo
+  // widget por respuesta (el más específico primero) si el modelo llamó a
+  // más de una tool relevante en el mismo turno.
+  type ToolResultLike = { toolName: string; output: unknown };
+  function buildWidget(toolResults: ToolResultLike[]): { type: string; data: unknown } | null {
+    const byName = (name: string) => toolResults.find((t) => t.toolName === name && t.output && !(t.output as any).error);
+    const booking = byName("book_call");
+    if (booking) return { type: "booking_confirmed", data: booking.output };
+    const quote = byName("calculate_quote");
+    if (quote) return { type: "quote_summary", data: quote.output };
+    const domain = byName("check_domain_price");
+    if (domain) return { type: "domain_check", data: domain.output };
+    const slots = byName("check_available_slots");
+    if (slots && (slots.output as any).availableSlots?.length) return { type: "schedule_slots", data: slots.output };
+    const portfolio = byName("search_portfolio");
+    if (portfolio && (portfolio.output as any).results?.length) return { type: "portfolio_card", data: portfolio.output };
+    const packages = byName("list_packages");
+    if (packages) return { type: "pricing_table", data: packages.output };
+    return null;
+  }
+
   // Streaming real vía NDJSON (mismo patrón que meridian-assistant): el
   // frontend pide stream:true para ver el texto aparecer en vivo. Acá se
   // simplifica el fallback a solo 2 niveles (default configurado -> DeepSeek)
@@ -295,18 +321,23 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     res.setHeader("X-Accel-Buffering", "no");
     const send = (obj: Record<string, unknown>) => res.write(`${JSON.stringify(obj)}\n`);
     try {
+      let toolResults: ToolResultLike[] = [];
       try {
         const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
         for await (const delta of result.textStream) send({ type: "delta", text: delta });
         const finalText = (await result.text).trim();
         if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
+        toolResults = (await result.toolResults) as unknown as ToolResultLike[];
       } catch (err) {
         if (defaultModel === "deepseek") throw err;
         console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
         send({ type: "restart" });
         const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
         for await (const delta of result.textStream) send({ type: "delta", text: delta });
+        toolResults = (await result.toolResults) as unknown as ToolResultLike[];
       }
+      const widget = buildWidget(toolResults);
+      if (widget) send({ type: "widget", widget });
       send({ type: "done" });
     } catch (err) {
       send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
@@ -327,7 +358,8 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       // que sí conocemos. Los demás proveedores no mostraron este problema en
       // pruebas, pero el chequeo no hace daño aplicado a cualquiera.
       if (key === "deepseek" && looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
-      return res.status(200).json({ reply: text, provider: key });
+      const widget = buildWidget(result.toolResults as unknown as ToolResultLike[]);
+      return res.status(200).json({ reply: text, provider: key, widget });
     } catch {
       continue;
     }

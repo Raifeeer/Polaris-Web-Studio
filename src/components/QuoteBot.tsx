@@ -5,6 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "./AtlasMarkdown";
+import AtlasWidget from "./AtlasWidget";
 import AtlasMark from "./AtlasMark";
 
 type Question = {
@@ -555,6 +556,17 @@ export default function QuoteBot() {
                       <AtlasMarkdown content={m.content} />
                     )}
                   </div>
+
+                  {m.role === "assistant" && (
+                    <AtlasWidget
+                      widget={m.widget}
+                      onAction={(text) => {
+                        setAiInput("");
+                        sendAiMessageText(text);
+                        scrollToBottom();
+                      }}
+                    />
+                  )}
 
                   {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} />}
 

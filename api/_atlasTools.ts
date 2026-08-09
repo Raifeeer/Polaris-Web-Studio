@@ -49,10 +49,25 @@ export const checkDomainPrice = tool({
 // leerlo en vivo (a diferencia de server.ts, que sí es un proceso de larga
 // vida con eso ya resuelto), así que usa el valor conocido como fallback
 // razonable, no como dato inventado.
-const PACKAGES: Record<string, { name: string; price: number }> = {
-  landing: { name: "Destello", price: 299 },
-  corporate: { name: "Constelación", price: 699 },
-  ecommerce: { name: "Nova", price: 1299 },
+const PACKAGES: Record<string, { name: string; price: number; timeline: string; highlights: string[] }> = {
+  landing: {
+    name: "Destello",
+    price: 299,
+    timeline: "1-2 semanas",
+    highlights: ["Landing page de 1 página", "Diseño a medida, responsive", "SEO básico incluido"],
+  },
+  corporate: {
+    name: "Constelación",
+    price: 699,
+    timeline: "2-4 semanas",
+    highlights: ["Web corporativa hasta 5 páginas", "Chatbot IA incluido", "El más elegido"],
+  },
+  ecommerce: {
+    name: "Nova",
+    price: 1299,
+    timeline: "4-6 semanas",
+    highlights: ["E-commerce + panel admin", "1 herramienta IA incluida", "Catálogo ilimitado"],
+  },
 };
 
 const ADDONS: Record<string, { label: string; price: number; isMonthly?: boolean }> = {
@@ -98,6 +113,21 @@ export const calculateQuote = tool({
       monthlyTotal,
     };
   },
+});
+
+// ---- 2.b. Los 3 planes reales, para una vista comparativa general ----
+// Distinta de calculate_quote: esta no calcula un total con addons, solo
+// devuelve los 3 planes reales tal cual -- el frontend la usa para dibujar
+// una mini tabla/tarjetas comparativas dentro del chat (ver AtlasWidget.tsx)
+// en vez de que el usuario tenga que leer los 3 precios en un párrafo.
+export const listPackages = tool({
+  description:
+    "Devuelve los 3 planes reales de Polaris (Destello/Constelación/Nova) con precio, plazo real y highlights, para mostrar una comparación general. Úsala cuando el usuario pregunte por los planes/precios en general -- para un cálculo específico con addons, usa calculate_quote en su lugar.",
+  inputSchema: z.object({}),
+  execute: async () => ({
+    offerDiscountPercent: OFFER_DISCOUNT_PERCENT,
+    packages: Object.entries(PACKAGES).map(([id, p]) => ({ id, ...p })),
+  }),
 });
 
 // ---- 3/4. Disponibilidad real y reserva real de llamada (Cal.com) ----
@@ -230,6 +260,7 @@ export const captureLead = tool({
 export const atlasTools = {
   check_domain_price: checkDomainPrice,
   calculate_quote: calculateQuote,
+  list_packages: listPackages,
   check_available_slots: checkAvailableSlots,
   book_call: bookCall,
   search_portfolio: searchPortfolio,
