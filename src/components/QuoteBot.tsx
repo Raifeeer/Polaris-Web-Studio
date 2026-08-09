@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Maximize2 } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "./AtlasMarkdown";
+import AtlasMark from "./AtlasMark";
 
 type Question = {
   id: number;
@@ -116,7 +117,14 @@ export default function QuoteBot() {
   // (y por lo tanto la misma conversación en localStorage) que la página
   // completa "/asistente" -- abrir el chat de página completa continúa
   // justo donde quedó el widget.
-  const { messages: aiMessages, loading: aiLoading, thinkingMsg: aiThinkingMsg, error: aiError, sendMessage: sendAiMessageText } = useAtlasChat();
+  const {
+    messages: aiMessages,
+    loading: aiLoading,
+    thinkingMsg: aiThinkingMsg,
+    error: aiError,
+    sendMessage: sendAiMessageText,
+    stopGenerating,
+  } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
 
   const scrollToBottom = () => {
@@ -257,11 +265,7 @@ export default function QuoteBot() {
           >
             {/* Header */}
             <div className="p-4 bg-[var(--color-surface-base)] border-b border-[var(--color-border-subtle)] flex items-center justify-between">
-              <img
-                src="/brand/atlas-isotipo.svg"
-                alt=""
-                className="w-6 h-6 rounded-full"
-              />
+              <AtlasMark variant="isotipo" className="w-6 h-6" />
               <div className="text-left flex-1 ml-3">
                 <span className="block text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)] leading-none">
                   Atlas Assistant
@@ -496,8 +500,12 @@ export default function QuoteBot() {
                 </motion.div>
               )}
 
-              {/* Mensajes del modo de texto libre (IA) */}
-              {aiMessages.map((m, i) => (
+              {/* Mensajes del modo de texto libre (IA) -- se omite la burbuja del
+                  assistant mientras está vacía (streaming aún sin el primer
+                  delta), ya lo cubre el indicador de "escribiendo" de abajo. */}
+              {aiMessages.map((m, i) => {
+                if (m.role === "assistant" && !m.content && i === aiMessages.length - 1) return null;
+                return (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: m.role === "user" ? 10 : -10 }}
@@ -536,9 +544,10 @@ export default function QuoteBot() {
                     </div>
                   )}
                 </motion.div>
-              ))}
+                );
+              })}
 
-              {aiLoading && (
+              {aiLoading && !aiMessages[aiMessages.length - 1]?.content && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2 h-[42px] px-4">
                     <div className="flex items-center gap-1.5">
@@ -575,14 +584,24 @@ export default function QuoteBot() {
                 maxLength={2000}
                 className="flex-1 text-sm bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-full px-4 py-2 outline-none focus:border-[var(--color-primary-base)] transition-colors placeholder:text-[var(--color-text-tertiary)]"
               />
-              <button
-                onClick={sendAiMessage}
-                disabled={!aiInput.trim() || aiLoading}
-                aria-label={translate("Enviar mensaje", "Send message")}
-                className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-              >
-                <Send size={14} />
-              </button>
+              {aiLoading ? (
+                <button
+                  onClick={stopGenerating}
+                  aria-label={translate("Detener", "Stop")}
+                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:brightness-110 transition-all"
+                >
+                  <Square size={12} className="fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={sendAiMessage}
+                  disabled={!aiInput.trim()}
+                  aria-label={translate("Enviar mensaje", "Send message")}
+                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                >
+                  <Send size={14} />
+                </button>
+              )}
             </div>
           </motion.div>
         )}
@@ -604,11 +623,7 @@ export default function QuoteBot() {
         {isOpen ? (
           <X size={30} />
         ) : (
-          <img
-            src="/brand/isotipo-color-badge-circular.svg"
-            alt=""
-            className="w-11 h-11 rounded-full"
-          />
+          <img src="/brand/atlas-isotipo-black.svg" alt="" className="w-11 h-11" />
         )}
 
         {!isOpen && (

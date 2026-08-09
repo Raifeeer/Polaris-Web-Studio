@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowLeft,
   Send,
+  Square,
   SquarePen,
   Trash2,
   Copy,
@@ -11,11 +12,14 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   MessageSquare,
-  Sparkles,
+  MoreVertical,
+  Pencil,
+  Share2,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
+import AtlasMark from "../components/AtlasMark";
 
 const SUGGESTIONS = [
   { es: "¿Cuáles son los planes y precios?", en: "What are the plans and prices?" },
@@ -64,7 +68,7 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
       <div className="flex gap-3 max-w-[95%] sm:max-w-[75%]">
         <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0 overflow-hidden">
-          <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
+          <AtlasMark variant="isotipo" className="w-6 h-6" />
         </div>
         <div className="group flex-1 min-w-0">
           <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
@@ -85,13 +89,17 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
             </div>
           )}
 
-          <button
-            onClick={handleCopy}
-            className="mt-1.5 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
-          >
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
-          </button>
+          {message.content && (
+            <button
+              onClick={handleCopy}
+              // Siempre visible en mobile (no hay hover real); en desktop se
+              // revela solo al pasar el mouse sobre el mensaje, como antes.
+              className="mt-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
+            </button>
+          )}
         </div>
       </div>
     </motion.div>
@@ -107,16 +115,45 @@ export default function AtlasChat() {
     );
   }, [translate]);
 
-  const { messages, loading, thinkingMsg, error, activeId, conversations, sendMessage, newChat, loadConversation, deleteConversation } =
-    useAtlasChat();
+  const {
+    messages,
+    loading,
+    thinkingMsg,
+    error,
+    activeId,
+    conversations,
+    sendMessage,
+    stopGenerating,
+    newChat,
+    loadConversation,
+    deleteConversation,
+    renameConversation,
+  } = useAtlasChat();
   const [input, setInput] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1024);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [shareFeedbackId, setShareFeedbackId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const activeConversation = conversations.find((c) => c.id === activeId);
+  const activeTitle = messages.length === 0 ? translate("New chat", "Nuevo chat") : activeConversation?.title || translate("New chat", "Nuevo chat");
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages.length, loading]);
+
+  useEffect(() => {
+    if (!openMenuId) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpenMenuId(null);
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [openMenuId]);
 
   // Bloquea el scroll de <body> mientras esta página está montada -- sin
   // esto, en mobile Safari/Chrome real (no reproducible en este entorno de
@@ -144,6 +181,26 @@ export default function AtlasChat() {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const shareConversation = async (title: string, msgs: AiMessage[], id: string) => {
+    const transcript = msgs.map((m) => `${m.role === "user" ? translate("Me", "Yo") : "Atlas"}: ${m.content}`).join("\n\n");
+    const payload = { title, text: transcript || title };
+    try {
+      if (navigator.share) {
+        await navigator.share(payload);
+        return;
+      }
+    } catch {
+      return; // el usuario canceló el share nativo
+    }
+    try {
+      await navigator.clipboard?.writeText(transcript || title);
+      setShareFeedbackId(id);
+      setTimeout(() => setShareFeedbackId(null), 1500);
+    } catch {
+      // sin clipboard disponible, no hay más alternativa razonable acá
     }
   };
 
@@ -185,25 +242,91 @@ export default function AtlasChat() {
               {conversations.map((c) => (
                 <div
                   key={c.id}
-                  className={`group flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                  className={`group relative flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
                     c.id === activeId
                       ? "bg-[var(--color-primary-muted)] text-[var(--color-primary-base)]"
                       : "hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"
                   }`}
-                  onClick={() => loadConversation(c.id)}
+                  onClick={() => renamingId !== c.id && loadConversation(c.id)}
                 >
                   <MessageSquare size={14} className="shrink-0 opacity-60" />
-                  <span className="flex-1 min-w-0 text-xs font-semibold truncate">{c.title}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteConversation(c.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-opacity"
-                    aria-label={translate("Eliminar conversación", "Delete conversation")}
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  {renamingId === c.id ? (
+                    <input
+                      autoFocus
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.currentTarget.select()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          renameConversation(c.id, renameValue);
+                          setRenamingId(null);
+                        } else if (e.key === "Escape") {
+                          setRenamingId(null);
+                        }
+                      }}
+                      onBlur={() => {
+                        renameConversation(c.id, renameValue);
+                        setRenamingId(null);
+                      }}
+                      className="flex-1 min-w-0 text-xs font-semibold bg-transparent outline-none border-b border-[var(--color-primary-base)]"
+                    />
+                  ) : (
+                    <span className="flex-1 min-w-0 text-xs font-semibold truncate">
+                      {shareFeedbackId === c.id ? <T en="Copied to clipboard">Copiado al portapapeles</T> : c.title}
+                    </span>
+                  )}
+                  {renamingId !== c.id && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === c.id ? null : c.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-opacity"
+                      aria-label={translate("Más opciones", "More options")}
+                    >
+                      <MoreVertical size={12} />
+                    </button>
+                  )}
+                  {openMenuId === c.id && (
+                    <div
+                      ref={menuRef}
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute right-2 top-9 z-20 w-40 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg overflow-hidden text-[var(--color-text-primary)]"
+                    >
+                      <button
+                        onClick={() => {
+                          setRenamingId(c.id);
+                          setRenameValue(c.title);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                      >
+                        <Pencil size={12} />
+                        <T en="Rename">Renombrar</T>
+                      </button>
+                      <button
+                        onClick={() => {
+                          shareConversation(c.title, c.messages, c.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                      >
+                        <Share2 size={12} />
+                        <T en="Share">Compartir</T>
+                      </button>
+                      <button
+                        onClick={() => {
+                          deleteConversation(c.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                      >
+                        <Trash2 size={12} />
+                        <T en="Delete">Eliminar</T>
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -213,7 +336,7 @@ export default function AtlasChat() {
 
       {/* Panel principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="shrink-0 flex items-center gap-3 px-4 py-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/80 backdrop-blur-md">
+        <header className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/80 backdrop-blur-md">
           <button
             onClick={() => setSidebarOpen((v) => !v)}
             className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors"
@@ -230,25 +353,18 @@ export default function AtlasChat() {
               <ArrowLeft size={18} />
             </Link>
           )}
-          <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
-          <div className="leading-none">
-            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">Atlas Assistant</p>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)]">
-              <T en="Online">En línea</T>
-            </p>
-          </div>
+          <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
+          <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
         </header>
 
         <div className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center px-6 text-center">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full">
-                <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-[var(--color-primary-muted)] flex items-center justify-center">
-                  <Sparkles size={28} className="text-[var(--color-primary-base)]" />
+                <div className="flex flex-col items-center gap-2 mb-6">
+                  <AtlasMark variant="isotipo" className="w-32 h-32" />
+                  <AtlasMark variant="wordmark" label="Atlas Assistant" className="h-9 w-auto -mt-2" />
                 </div>
-                <h1 className="text-2xl font-black text-[var(--color-text-primary)] mb-2">
-                  <T en="Hi, I'm Atlas">Hola, soy Atlas</T>
-                </h1>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-8">
                   <T en="Ask me about plans, timelines, or anything about your next project.">
                     Pregúntame sobre planes, plazos o lo que necesites de tu próximo proyecto.
@@ -273,11 +389,11 @@ export default function AtlasChat() {
                 <MessageBubble key={i} message={m} onSuggestionClick={handleSend} />
               ))}
 
-              {loading && (
+              {loading && !messages[messages.length - 1]?.content && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0">
-                      <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
+                      <AtlasMark variant="isotipo" className="w-6 h-6" />
                     </div>
                     <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2">
                       <TypingDots />
@@ -311,14 +427,24 @@ export default function AtlasChat() {
               placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
               className="flex-1 resize-none bg-transparent outline-none text-sm px-2 py-2 max-h-32 placeholder:text-[var(--color-text-tertiary)]"
             />
-            <button
-              onClick={() => handleSend()}
-              disabled={!input.trim() || loading}
-              aria-label={translate("Enviar mensaje", "Send message")}
-              className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-            >
-              <Send size={14} />
-            </button>
+            {loading ? (
+              <button
+                onClick={stopGenerating}
+                aria-label={translate("Detener", "Stop")}
+                className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:brightness-110 transition-all"
+              >
+                <Square size={12} className="fill-current" />
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSend()}
+                disabled={!input.trim()}
+                aria-label={translate("Enviar mensaje", "Send message")}
+                className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+              >
+                <Send size={14} />
+              </button>
+            )}
           </div>
           <p className="text-center text-[10px] text-[var(--color-text-tertiary)] mt-2">
             <T en="Atlas can make mistakes. Verify important information.">

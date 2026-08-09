@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { generateText, stepCountIs } from "ai";
+import { generateText, streamText, stepCountIs } from "ai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createXai } from "@ai-sdk/xai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
@@ -83,7 +83,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
   }
 
-  const { message } = req.body || {};
+  const { message, stream: wantsStream } = req.body || {};
   if (!message || typeof message !== "string") return res.status(400).json({ error: "Missing message" });
   if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
   const history = sanitizeHistory((req.body || {}).history);
@@ -175,7 +175,8 @@ REGLAS
 FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Usa **negrita** solo para precios, nombres de planes o términos clave -- no abuses, si todo está en negrita nada destaca.
 - Usa listas con "-" cuando compares planes, características o pasos.
-- Incluye enlaces en Markdown solo de esta lista, nunca inventes otros:
+- Al insertar un link DENTRO de una oración (no como línea/ítem aparte), redáctalo con gramática natural -- ej. "personalízalo en el [cotizador](/cotizar)" o "puedes ver más en [nuestro portafolio](/portafolio)". Nunca insertes la etiqueta larga tal cual ("...en el Ver cotizador.") en medio de una frase, eso lee mal en español.
+- Incluye enlaces en Markdown solo de esta lista, nunca inventes otros (el texto del link entre corchetes es solo una sugerencia de etiqueta cuando va aislado -- ajusta las palabras si el link va dentro de una oración, el href nunca cambia):
   - Cotizador: [Ver cotizador](/cotizar)
   - Servicios: [Ver servicios](/servicios)
   - Portafolio: [Ver portafolio](/portafolio)
@@ -222,43 +223,51 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   const defaultModel = await getDefaultModel();
   const tryOrder = [...new Set([defaultModel, "deepseek", "grok"])] as ("deepseek" | "grok" | "gemini")[];
 
-  async function tryProvider(key: "deepseek" | "grok" | "gemini") {
-    if (key === "gemini") {
-      const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
-      return generateText({
-        model: google("gemini-3.5-flash"),
-        system: systemPrompt,
-        messages,
-        tools: atlasTools,
-        stopWhen: stepCountIs(6),
-        temperature: 0.3,
-      });
+  function resolveModel(key: "deepseek" | "grok" | "gemini") {
+    if (key === "gemini") return createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })("gemini-3.5-flash");
+    if (key === "grok") return createXai({ apiKey: process.env.GROK_API_KEY })("grok-4.3");
+    return createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-chat");
+  }
+
+  const baseParams = { system: systemPrompt, messages, tools: atlasTools, stopWhen: stepCountIs(6), temperature: 0.3 };
+
+  // Streaming real vía NDJSON (mismo patrón que meridian-assistant): el
+  // frontend pide stream:true para ver el texto aparecer en vivo. Acá se
+  // simplifica el fallback a solo 2 niveles (default configurado -> DeepSeek)
+  // en vez del tryOrder completo de 3 proveedores + detección de "hedge" del
+  // modo no-streaming -- una vez que ya se mandaron deltas al usuario no se
+  // puede "retractar" el texto mostrado, así que no tiene sentido detectar
+  // evasión de precio a mitad de stream; el modo no-streaming (abajo) sigue
+  // con la lógica completa para quien no pida streaming.
+  if (wantsStream) {
+    res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("X-Accel-Buffering", "no");
+    const send = (obj: Record<string, unknown>) => res.write(`${JSON.stringify(obj)}\n`);
+    try {
+      try {
+        const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
+        for await (const delta of result.textStream) send({ type: "delta", text: delta });
+        const finalText = (await result.text).trim();
+        if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
+      } catch (err) {
+        if (defaultModel === "deepseek") throw err;
+        console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
+        send({ type: "restart" });
+        const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
+        for await (const delta of result.textStream) send({ type: "delta", text: delta });
+      }
+      send({ type: "done" });
+    } catch (err) {
+      send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
     }
-    if (key === "grok") {
-      const xai = createXai({ apiKey: process.env.GROK_API_KEY });
-      return generateText({
-        model: xai("grok-4.3"),
-        system: systemPrompt,
-        messages,
-        tools: atlasTools,
-        stopWhen: stepCountIs(6),
-        temperature: 0.3,
-      });
-    }
-    const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
-    return generateText({
-      model: deepseek("deepseek-chat"),
-      system: systemPrompt,
-      messages,
-      tools: atlasTools,
-      stopWhen: stepCountIs(6), // hasta 6 idas-y-vueltas -- alcanza para combinar 2 tools en un mismo turno (ej. cotizar + guardar lead)
-      temperature: 0.3,
-    });
+    res.end();
+    return;
   }
 
   for (const key of tryOrder) {
     try {
-      const result = await tryProvider(key);
+      const result = await generateText({ model: resolveModel(key), ...baseParams });
       const text = result.text.trim();
       if (!text) throw new Error("Empty response");
       // DeepSeek, probado en vivo, tiende a "cubrirse" sobre precios de addons de

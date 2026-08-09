@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 // Estado compartido del chat libre de Atlas (widget flotante + página
 // completa /asistente) -- viven en el mismo localStorage para que abrir
@@ -40,7 +40,7 @@ function newId(): string {
 
 function makeTitle(text: string): string {
   const clean = text.trim().replace(/\s+/g, " ");
-  return clean.length > 48 ? `${clean.slice(0, 48)}…` : clean;
+  return clean.length > 48 ? `${clean.slice(0, 48)}…` : clean || "Nueva conversación";
 }
 
 function loadConversations(): AiConversation[] {
@@ -98,6 +98,7 @@ export function useAtlasChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [thinkingMsg, setThinkingMsg] = useState(THINKING_MESSAGES[0]);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(ACTIVE_ID_KEY, activeId);
@@ -105,10 +106,13 @@ export function useAtlasChat() {
 
   const persist = useCallback((id: string, msgs: AiMessage[]) => {
     setConversations((prev) => {
-      const firstUser = msgs.find((m) => m.role === "user");
-      const title = firstUser ? makeTitle(firstUser.content) : "Nueva conversación";
-      const entry: AiConversation = { id, title, messages: msgs, updatedAt: Date.now() };
       const existingIdx = prev.findIndex((c) => c.id === id);
+      // Si ya hay un título guardado (derivado antes, o renombrado a mano
+      // por el usuario), se conserva -- así un rename manual no se pisa en
+      // el siguiente mensaje de la misma conversación.
+      const firstUser = msgs.find((m) => m.role === "user");
+      const title = existingIdx >= 0 ? prev[existingIdx].title : firstUser ? makeTitle(firstUser.content) : "Nueva conversación";
+      const entry: AiConversation = { id, title, messages: msgs, updatedAt: Date.now() };
       const next = existingIdx >= 0 ? prev.map((c, i) => (i === existingIdx ? entry : c)) : [entry, ...prev];
       next.sort((a, b) => b.updatedAt - a.updatedAt);
       const trimmed = next.slice(0, MAX_CONVERSATIONS);
@@ -117,37 +121,106 @@ export function useAtlasChat() {
     });
   }, []);
 
+  // Streaming real vía NDJSON (mismo patrón que meridian-assistant/Assistant.tsx):
+  // el backend manda una línea JSON por delta de texto en vez de esperar la
+  // respuesta completa. Si el modelo por defecto falla a mitad de camino, el
+  // backend manda un evento "restart" y reintenta con DeepSeek -- el texto
+  // parcial ya mostrado se descarta y se vuelve a empezar desde cero.
   const sendMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
       setError(false);
       const history = messages.map(({ role, content }) => ({ role, content }));
-      const next: AiMessage[] = [...messages, { role: "user", content: trimmed }];
-      setMessages(next);
+      const withUser: AiMessage[] = [...messages, { role: "user", content: trimmed }];
+      const assistantIdx = withUser.length;
+      setMessages([...withUser, { role: "assistant", content: "" }]);
       setThinkingMsg(THINKING_MESSAGES[Math.floor(Math.random() * THINKING_MESSAGES.length)]);
       setLoading(true);
+
+      const controller = new AbortController();
+      abortRef.current = controller;
+      let raw = "";
+      let gotAnyDelta = false;
+
       try {
         const res = await fetch("/api/quotebot-chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: trimmed, history }),
+          body: JSON.stringify({ message: trimmed, history, stream: true }),
+          signal: controller.signal,
         });
-        if (!res.ok) throw new Error("bad status");
-        const data = await res.json();
-        if (!data.reply) throw new Error("empty reply");
-        const { content, suggestions } = extractSuggestions(data.reply as string);
-        const finalMsgs: AiMessage[] = [...next, { role: "assistant", content, suggestions }];
+        if (!res.ok || !res.body) throw new Error("bad status");
+
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() || "";
+          for (const line of lines) {
+            if (!line.trim()) continue;
+            let evt: any;
+            try {
+              evt = JSON.parse(line);
+            } catch {
+              continue;
+            }
+            if (evt.type === "delta") {
+              gotAnyDelta = true;
+              raw += evt.text;
+              setMessages((prev) => {
+                const next = [...prev];
+                next[assistantIdx] = { role: "assistant", content: raw };
+                return next;
+              });
+            } else if (evt.type === "restart") {
+              raw = "";
+              gotAnyDelta = false;
+              setMessages((prev) => {
+                const next = [...prev];
+                next[assistantIdx] = { role: "assistant", content: "" };
+                return next;
+              });
+            } else if (evt.type === "error") {
+              throw new Error(evt.message || "stream error");
+            }
+          }
+        }
+        if (!gotAnyDelta) throw new Error("empty reply");
+
+        const { content, suggestions } = extractSuggestions(raw);
+        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions }];
         setMessages(finalMsgs);
         persist(activeId, finalMsgs);
-      } catch {
-        setError(true);
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          // Detenido a propósito por el usuario -- se conserva el texto
+          // parcial ya mostrado como respuesta final, en vez de descartarlo.
+          const { content, suggestions } = extractSuggestions(raw);
+          const finalMsgs: AiMessage[] = gotAnyDelta
+            ? [...withUser, { role: "assistant", content, suggestions }]
+            : withUser;
+          setMessages(finalMsgs);
+          if (gotAnyDelta) persist(activeId, finalMsgs);
+        } else {
+          setError(true);
+          setMessages(withUser);
+        }
       } finally {
         setLoading(false);
+        abortRef.current = null;
       }
     },
     [messages, loading, activeId, persist],
   );
+
+  const stopGenerating = useCallback(() => {
+    abortRef.current?.abort();
+  }, []);
 
   const newChat = useCallback(() => {
     setMessages([]);
@@ -181,5 +254,28 @@ export function useAtlasChat() {
     [activeId],
   );
 
-  return { messages, loading, thinkingMsg, error, activeId, conversations, sendMessage, newChat, loadConversation, deleteConversation };
+  const renameConversation = useCallback((id: string, title: string) => {
+    const clean = title.trim();
+    if (!clean) return;
+    setConversations((prev) => {
+      const next = prev.map((c) => (c.id === id ? { ...c, title: clean.slice(0, 80) } : c));
+      saveConversations(next);
+      return next;
+    });
+  }, []);
+
+  return {
+    messages,
+    loading,
+    thinkingMsg,
+    error,
+    activeId,
+    conversations,
+    sendMessage,
+    stopGenerating,
+    newChat,
+    loadConversation,
+    deleteConversation,
+    renameConversation,
+  };
 }
