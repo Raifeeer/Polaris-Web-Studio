@@ -6,6 +6,7 @@ import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "./AtlasMarkdown";
 import AtlasWidget from "./AtlasWidget";
+import ThinkingText from "./ThinkingText";
 import AtlasMark from "./AtlasMark";
 
 type Question = {
@@ -109,7 +110,7 @@ function WidgetCopyButton({ text, usedWebSearch }: { text: string; usedWebSearch
 }
 
 export default function QuoteBot() {
-  const { translate } = useLanguage();
+  const { translate, language } = useLanguage();
   const location = useLocation();
 
   const [isOpen, setIsOpen] = useState(() => {
@@ -601,13 +602,8 @@ export default function QuoteBot() {
 
               {aiLoading && !aiMessages[aiMessages.length - 1]?.content && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2 h-[42px] px-4">
-                    <div className="flex items-center gap-1.5">
-                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
-                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
-                      <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
-                    </div>
-                    <span className="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">{translate(aiThinkingMsg.es, aiThinkingMsg.en)}</span>
+                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center h-[42px] px-4">
+                    <ThinkingText message={aiThinkingMsg} lang={language} />
                   </div>
                 </motion.div>
               )}

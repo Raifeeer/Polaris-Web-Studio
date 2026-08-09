@@ -23,6 +23,7 @@ import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
 import AtlasWidget from "../components/AtlasWidget";
+import ThinkingText from "../components/ThinkingText";
 import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
 
@@ -88,21 +89,6 @@ function pickRandomSuggestions(count: number): { es: string; en: string }[] {
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
   return pool.slice(0, count);
-}
-
-function TypingDots() {
-  return (
-    <div className="flex items-center gap-1.5 h-[20px]">
-      {[0, 0.2, 0.4].map((delay) => (
-        <motion.div
-          key={delay}
-          animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
-          transition={{ duration: 1.2, repeat: Infinity, delay }}
-          className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]"
-        />
-      ))}
-    </div>
-  );
 }
 
 function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMessage; onSuggestionClick: (q: string) => void; isLast: boolean }) {
@@ -628,9 +614,8 @@ export default function AtlasChat() {
                     <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0">
                       <AtlasMark variant="isotipo" className="w-6 h-6" />
                     </div>
-                    <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2">
-                      <TypingDots />
-                      <span className="text-xs text-[var(--color-text-tertiary)]">{translate(thinkingMsg.es, thinkingMsg.en)}</span>
+                    <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center">
+                      <ThinkingText message={thinkingMsg} lang={language} />
                     </div>
                   </div>
                 </motion.div>

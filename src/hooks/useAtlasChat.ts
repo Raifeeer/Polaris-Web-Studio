@@ -26,23 +26,26 @@ const MAX_CONVERSATIONS = 30;
 // el precio") porque no sabemos qué pidió el cliente hasta que la IA responde.
 // {es,en} en vez de string plano -- el componente que las muestra elige el
 // idioma según el contexto actual, en vez de quedar fijas en español.
+// Una palabra de cada frase va envuelta en `**...**` -- ThinkingText.tsx la
+// resalta en negrita con el color de marca, el resto queda con el efecto de
+// reflejo (shimmer) que barre el texto en loop.
 export type ThinkingMessage = { es: string; en: string };
 const THINKING_MESSAGES: ThinkingMessage[] = [
-  { es: "Compilando la respuesta…", en: "Compiling the answer…" },
-  { es: "Renderizando ideas…", en: "Rendering ideas…" },
-  { es: "Un commit más y listo…", en: "One more commit and done…" },
-  { es: "Optimizando cada palabra…", en: "Optimizing every word…" },
-  { es: "Desplegando la respuesta…", en: "Deploying the answer…" },
-  { es: "Conectando los puntos…", en: "Connecting the dots…" },
-  { es: "Puliendo los detalles…", en: "Polishing the details…" },
-  { es: "Ya casi…", en: "Almost there…" },
-  { es: "Cargando…", en: "Loading…" },
-  { es: "Ejecutando el build…", en: "Running the build…" },
-  { es: "Sincronizando ideas…", en: "Syncing ideas…" },
-  { es: "Armando el layout…", en: "Assembling the layout…" },
-  { es: "Empaquetando la respuesta…", en: "Bundling the answer…" },
-  { es: "Instalando dependencias…", en: "Installing dependencies…" },
-  { es: "Depurando la respuesta…", en: "Debugging the answer…" },
+  { es: "Compilando la **respuesta**…", en: "Compiling the **answer**…" },
+  { es: "Renderizando **ideas**…", en: "Rendering **ideas**…" },
+  { es: "Un **commit** más y listo…", en: "One more **commit** and done…" },
+  { es: "Optimizando cada **palabra**…", en: "Optimizing every **word**…" },
+  { es: "Desplegando la **respuesta**…", en: "Deploying the **answer**…" },
+  { es: "Conectando los **puntos**…", en: "Connecting the **dots**…" },
+  { es: "Puliendo los **detalles**…", en: "Polishing the **details**…" },
+  { es: "**Ya** casi…", en: "**Almost** there…" },
+  { es: "**Cargando**…", en: "**Loading**…" },
+  { es: "Ejecutando el **build**…", en: "Running the **build**…" },
+  { es: "Sincronizando **ideas**…", en: "Syncing **ideas**…" },
+  { es: "Armando el **layout**…", en: "Assembling the **layout**…" },
+  { es: "Empaquetando la **respuesta**…", en: "Bundling the **answer**…" },
+  { es: "Instalando **dependencias**…", en: "Installing **dependencies**…" },
+  { es: "Depurando la **respuesta**…", en: "Debugging the **answer**…" },
 ];
 
 function newId(): string {
@@ -179,6 +182,17 @@ export function useAtlasChat() {
   const [error, setError] = useState(false);
   const [thinkingMsg, setThinkingMsg] = useState(THINKING_MESSAGES[0]);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Mientras se espera la respuesta, la frase va rotando sola cada 1.5s (en
+  // vez de quedar fija en una sola durante todo el request) -- refuerza la
+  // sensación de progreso real, mismo criterio que el shimmer visual.
+  useEffect(() => {
+    if (!loading) return;
+    const interval = setInterval(() => {
+      setThinkingMsg(THINKING_MESSAGES[Math.floor(Math.random() * THINKING_MESSAGES.length)]);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(ACTIVE_ID_KEY, activeId);
