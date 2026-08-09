@@ -183,6 +183,18 @@ export function useAtlasChat() {
   const [thinkingMsg, setThinkingMsg] = useState(THINKING_MESSAGES[0]);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Chat temporal (estilo Gemini/ChatGPT/Grok): mientras está activo, ningún
+  // mensaje se guarda en localStorage/Firestore ni genera título/ícono por
+  // IA -- ver los guards `!isTemporaryRef.current` dentro de sendMessage. Se
+  // usa un ref además del state porque sendMessage es un useCallback que no
+  // depende de `isTemporary` (evita recrear el callback en cada toggle);
+  // el ref siempre refleja el valor más reciente sin ese costo.
+  const [isTemporary, setIsTemporary] = useState(false);
+  const isTemporaryRef = useRef(false);
+  useEffect(() => {
+    isTemporaryRef.current = isTemporary;
+  }, [isTemporary]);
+
   // Mientras se espera la respuesta, la frase va rotando sola cada 1.5s (en
   // vez de quedar fija en una sola durante todo el request) -- refuerza la
   // sensación de progreso real, mismo criterio que el shimmer visual.
@@ -358,8 +370,10 @@ export function useAtlasChat() {
         const { content, suggestions } = extractSuggestions(raw);
         const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch }];
         setMessages(finalMsgs);
-        persist(activeId, finalMsgs);
-        if (isNewConversation) generateSmartTitle(activeId, trimmed);
+        if (!isTemporaryRef.current) {
+          persist(activeId, finalMsgs);
+          if (isNewConversation) generateSmartTitle(activeId, trimmed);
+        }
       } catch (err: any) {
         if (err?.name === "AbortError") {
           // Detenido a propósito por el usuario -- se conserva el texto
@@ -369,7 +383,7 @@ export function useAtlasChat() {
             ? [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch }]
             : withUser;
           setMessages(finalMsgs);
-          if (gotAnyDelta) {
+          if (gotAnyDelta && !isTemporaryRef.current) {
             persist(activeId, finalMsgs);
             if (isNewConversation) generateSmartTitle(activeId, trimmed);
           }
@@ -393,6 +407,18 @@ export function useAtlasChat() {
     setMessages([]);
     setError(false);
     setActiveId(newId());
+    setIsTemporary(false);
+  }, []);
+
+  // Alterna el chat temporal -- siempre arranca una conversación en blanco
+  // al entrar o salir (mismo criterio que Gemini/ChatGPT/Grok: cambiar de
+  // modo a mitad de una conversación normal no tendría sentido, ya se
+  // guardó lo que se guardó hasta ahí).
+  const toggleTemporary = useCallback(() => {
+    setIsTemporary((prev) => !prev);
+    setMessages([]);
+    setError(false);
+    setActiveId(newId());
   }, []);
 
   const loadConversation = useCallback(
@@ -402,6 +428,7 @@ export function useAtlasChat() {
       setActiveId(id);
       setMessages(found.messages);
       setError(false);
+      setIsTemporary(false);
     },
     [conversations],
   );
@@ -438,6 +465,8 @@ export function useAtlasChat() {
     error,
     activeId,
     conversations,
+    isTemporary,
+    toggleTemporary,
     sendMessage,
     stopGenerating,
     newChat,

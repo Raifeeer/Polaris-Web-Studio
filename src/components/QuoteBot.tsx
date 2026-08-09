@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -154,6 +154,8 @@ export default function QuoteBot() {
     sendMessage: sendAiMessageText,
     stopGenerating,
     newChat: newAiChat,
+    isTemporary: aiIsTemporary,
+    toggleTemporary: toggleAiTemporary,
   } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
 
@@ -304,6 +306,14 @@ export default function QuoteBot() {
                   <T en="Online">En línea</T>
                 </span>
               </div>
+              <button
+                onClick={toggleAiTemporary}
+                className={`p-2 rounded-full transition-colors ${aiIsTemporary ? "bg-[var(--color-text-primary)] text-[var(--color-surface-base)]" : "hover:bg-[var(--color-surface-highlight)]"}`}
+                aria-label={translate("Chat temporal", "Temporary chat")}
+                title={translate("Chat temporal", "Temporary chat")}
+              >
+                <VenetianMask size={16} />
+              </button>
               {aiMessages.length > 0 && (
                 <button
                   onClick={newAiChat}

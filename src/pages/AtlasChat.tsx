@@ -17,6 +17,7 @@ import {
   Share2,
   Search,
   Globe,
+  VenetianMask,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -183,6 +184,8 @@ export default function AtlasChat() {
     error,
     activeId,
     conversations,
+    isTemporary,
+    toggleTemporary,
     sendMessage,
     stopGenerating,
     newChat,
@@ -363,6 +366,25 @@ export default function AtlasChat() {
               >
                 <SquarePen size={14} />
                 <T en="New chat">Nuevo chat</T>
+              </button>
+              <button
+                onClick={() => {
+                  toggleTemporary();
+                  setSearchOpen(false);
+                  setSidebarAboveSearch(false);
+                  if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+                    setSidebarOpen(false);
+                  }
+                }}
+                aria-label={translate("Chat temporal", "Temporary chat")}
+                title={translate("Chat temporal", "Temporary chat")}
+                className={`p-2 rounded-lg border transition-colors shrink-0 ${
+                  isTemporary
+                    ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
+                    : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
+                }`}
+              >
+                <VenetianMask size={14} />
               </button>
               {conversations.length > 0 && (
                 <button
@@ -550,19 +572,46 @@ export default function AtlasChat() {
 
       {/* Panel principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="shrink-0 flex items-center gap-3 px-4 py-1.5 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/80 backdrop-blur-md">
+        <header
+          className={`shrink-0 flex items-center gap-3 px-4 py-1.5 border-b backdrop-blur-md transition-colors ${
+            isTemporary ? "bg-[var(--color-text-primary)] border-[var(--color-text-primary)]" : "bg-[var(--color-surface-base)]/80 border-[var(--color-border-subtle)]"
+          }`}
+        >
           <button
             onClick={() => setSidebarOpen((v) => !v)}
-            className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors"
+            className={`p-2 rounded-lg transition-colors ${isTemporary ? "text-[var(--color-surface-base)] hover:bg-white/10" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"}`}
             aria-label={translate("Mostrar/ocultar historial", "Toggle history")}
           >
             {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
-          <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
-          <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
+          {isTemporary ? (
+            <>
+              <VenetianMask size={18} className="text-[var(--color-surface-base)] shrink-0" />
+              <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-surface-base)]">
+                <T en="Temporary chat">Chat temporal</T>
+              </p>
+            </>
+          ) : (
+            <>
+              <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
+              <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
+            </>
+          )}
+          <button
+            onClick={toggleTemporary}
+            className={`p-2 rounded-lg transition-colors shrink-0 ${
+              isTemporary ? "text-[var(--color-surface-base)] hover:bg-white/10" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"
+            }`}
+            aria-label={translate("Chat temporal", "Temporary chat")}
+            title={translate("Chat temporal", "Temporary chat")}
+          >
+            <VenetianMask size={18} />
+          </button>
           <button
             onClick={newChat}
-            className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
+            className={`p-2 rounded-lg transition-colors shrink-0 ${
+              isTemporary ? "text-[var(--color-surface-base)] hover:bg-white/10" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"
+            }`}
             aria-label={translate("Nuevo chat", "New chat")}
             title={translate("Nuevo chat", "New chat")}
           >
@@ -571,7 +620,21 @@ export default function AtlasChat() {
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          {messages.length === 0 ? (
+          {messages.length === 0 && isTemporary ? (
+            <div className="h-full flex flex-col items-center justify-center px-6 text-center">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full flex flex-col items-center gap-3">
+                <VenetianMask size={40} className="text-[var(--color-text-tertiary)]" />
+                <p className="text-lg font-black text-[var(--color-text-primary)]">
+                  <T en="Temporary chat">Chat temporal</T>
+                </p>
+                <p className="text-sm text-[var(--color-text-tertiary)] leading-relaxed">
+                  <T en="This conversation won't be saved to your chat history, and won't appear in the sidebar or search. It's gone once you close it or start a new chat.">
+                    Esta conversación no se guardará en tu historial, ni aparecerá en el sidebar o la búsqueda. Se pierde apenas la cierres o empieces un chat nuevo.
+                  </T>
+                </p>
+              </motion.div>
+            </div>
+          ) : messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center px-6 text-center">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-lg w-full">
                 <div className="flex flex-col items-center gap-2 mb-6">
