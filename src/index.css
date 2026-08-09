@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* Los navegadores NO le dan cursor:pointer a <button> por defecto (a
+   diferencia de <a>) -- sin esto, botones reales (nuevo chat, chat
+   temporal, cambiar idioma, buscar, etc.) se sentían "muertos" al pasar el
+   mouse, con el cursor de flecha normal en vez de mano, sin ninguna señal
+   de que hacen algo. Regla global en vez de agregar cursor-pointer a cada
+   botón uno por uno -- cubre todo el sitio, incluidos los que se agreguen
+   después. `:disabled` se excluye a propósito (cursor:not-allowed ya es lo
+   esperado ahí, no pointer).
+*/
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 :root {
   color-scheme: dark;
   --color-surface-base: #020617;

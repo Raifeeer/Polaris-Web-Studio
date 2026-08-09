@@ -35,6 +35,7 @@ import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "../components/VoiceInputBar";
 import AnimatedCheckIcon from "../components/AnimatedCheckIcon";
+import Tooltip from "../components/Tooltip";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
@@ -344,15 +345,16 @@ export default function AtlasChat() {
             className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden`}
           >
             <div className="p-3 flex items-center gap-2">
-              <Link
-                to="/"
-                className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
-                aria-label={translate("Ir al inicio", "Go to home")}
-                title={translate("Ir al inicio", "Go to home")}
-              >
-                <Home size={16} />
-                <T en="Home">Inicio</T>
-              </Link>
+              <Tooltip label={translate("Ir al inicio", "Go to home")}>
+                <Link
+                  to="/"
+                  className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  aria-label={translate("Ir al inicio", "Go to home")}
+                >
+                  <Home size={16} />
+                  <T en="Home">Inicio</T>
+                </Link>
+              </Tooltip>
               <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
                 <AtlasMark variant="isotipo" className="w-7 h-7 shrink-0" />
                 <AtlasMark variant="wordmark" className="h-6 w-auto" />
@@ -360,14 +362,15 @@ export default function AtlasChat() {
               {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
                   ES/EN normal) -- sin esto, alguien con el navegador en inglés y
                   sin preferencia guardada queda atascado en inglés acá. */}
-              <button
-                onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                className="px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
-                aria-label={translate("Cambiar idioma", "Change language")}
-                title={translate("Cambiar idioma", "Change language")}
-              >
-                {language === "es" ? "EN" : "ES"}
-              </button>
+              <Tooltip label={translate("Cambiar idioma", "Change language")}>
+                <button
+                  onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                  className="px-2.5 py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  aria-label={translate("Cambiar idioma", "Change language")}
+                >
+                  {language === "es" ? "EN" : "ES"}
+                </button>
+              </Tooltip>
               <button
                 onClick={() => {
                   setSidebarOpen(false);
@@ -381,55 +384,60 @@ export default function AtlasChat() {
             </div>
 
             <div className="px-3 pb-3 flex items-center gap-2">
-              <button
-                onClick={() => {
-                  newChat();
-                  // Nuevo chat siempre sale de la búsqueda, esté o no
-                  // "de fondo" -- no tendría sentido dejarla abierta detrás
-                  // de un chat nuevo. En mobile el sidebar también se
-                  // cierra (es un overlay a pantalla completa); en desktop
-                  // queda inline y no debe desaparecer.
-                  setSearchOpen(false);
-                  setSidebarAboveSearch(false);
-                  if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
-                    setSidebarOpen(false);
-                  }
-                }}
-                className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-xs font-black uppercase tracking-wider transition-colors"
-              >
-                <SquarePen size={14} />
-                <T en="New chat">Nuevo chat</T>
-              </button>
-              <button
-                onClick={() => {
-                  toggleTemporary();
-                  setSearchOpen(false);
-                  setSidebarAboveSearch(false);
-                  if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
-                    setSidebarOpen(false);
-                  }
-                }}
-                aria-label={translate("Chat temporal", "Temporary chat")}
-                title={translate("Chat temporal", "Temporary chat")}
-                className={`p-2 rounded-lg border transition-colors shrink-0 ${
-                  isTemporary
-                    ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
-                    : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
-                }`}
-              >
-                <VenetianMask size={14} />
-              </button>
-              {conversations.length > 0 && (
+              <Tooltip label={translate("Nuevo chat", "New chat")} className="flex-1">
                 <button
                   onClick={() => {
-                    setSearchOpen(true);
+                    newChat();
+                    // Nuevo chat siempre sale de la búsqueda, esté o no
+                    // "de fondo" -- no tendría sentido dejarla abierta detrás
+                    // de un chat nuevo. En mobile el sidebar también se
+                    // cierra (es un overlay a pantalla completa); en desktop
+                    // queda inline y no debe desaparecer.
+                    setSearchOpen(false);
                     setSidebarAboveSearch(false);
+                    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+                      setSidebarOpen(false);
+                    }
                   }}
-                  aria-label={translate("Buscar conversaciones", "Search conversations")}
-                  className="p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-xs font-black uppercase tracking-wider transition-colors"
                 >
-                  <Search size={14} />
+                  <SquarePen size={14} />
+                  <T en="New chat">Nuevo chat</T>
                 </button>
+              </Tooltip>
+              <Tooltip label={translate("Chat temporal", "Temporary chat")}>
+                <button
+                  onClick={() => {
+                    toggleTemporary();
+                    setSearchOpen(false);
+                    setSidebarAboveSearch(false);
+                    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  aria-label={translate("Chat temporal", "Temporary chat")}
+                  className={`p-2 rounded-lg border transition-colors shrink-0 ${
+                    isTemporary
+                      ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
+                      : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
+                  }`}
+                >
+                  <VenetianMask size={14} />
+                </button>
+              </Tooltip>
+              {conversations.length > 0 && (
+                <Tooltip label={translate("Buscar conversaciones", "Search conversations")}>
+                  <button
+                    onClick={() => {
+                      setSearchOpen(true);
+                      setSidebarAboveSearch(false);
+                    }}
+                    aria-label={translate("Buscar conversaciones", "Search conversations")}
+                    className="p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                  >
+                    <Search size={14} />
+                  </button>
+                </Tooltip>
               )}
             </div>
 
