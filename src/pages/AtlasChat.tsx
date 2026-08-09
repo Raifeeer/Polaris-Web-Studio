@@ -109,7 +109,7 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
 }
 
 export default function AtlasChat() {
-  const { translate } = useLanguage();
+  const { translate, language, setLanguage } = useLanguage();
   useEffect(() => {
     document.title = translate(
       "Asistente IA -- Atlas Assistant | Polaris Web Studio",
@@ -386,6 +386,17 @@ export default function AtlasChat() {
           )}
           <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
           <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
+          {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
+              ES/EN normal) -- sin esto, alguien con el navegador en inglés y
+              sin preferencia guardada queda atascado en inglés acá. */}
+          <button
+            onClick={() => setLanguage(language === "es" ? "en" : "es")}
+            className="px-2 py-1.5 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[10px] font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+            aria-label={translate("Cambiar idioma", "Change language")}
+            title={translate("Cambiar idioma", "Change language")}
+          >
+            {language === "es" ? "EN" : "ES"}
+          </button>
           <button
             onClick={newChat}
             className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
