@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { Readable } from "node:stream";
 
 // Lectura en voz alta de las respuestas de Atlas con voces neuronales reales
 // (server-side), en vez de las voces nativas del navegador -- pedido
@@ -64,18 +65,37 @@ async function synthesizeGemini(text: string): Promise<Buffer> {
   return pcmToWav(inlineData.data);
 }
 
-async function synthesizeGrok(text: string, lang: "es" | "en"): Promise<Buffer> {
+// A diferencia de Gemini (que hay que bufferear completo para poder armar
+// el header WAV con el tamaño real de los datos), el MP3 de Grok se puede
+// reenviar en streaming real -- ni bien llega el primer chunk de la API de
+// Grok, ya se lo mandamos al navegador, en vez de esperar el archivo
+// completo acá y RECIÉN AHÍ empezar a mandarlo (el doble buffer -- Grok a
+// nuestro servidor completo, después nuestro servidor al navegador completo
+// -- era buena parte de los ~5-6s de espera reportados en vivo).
+// `optimize_streaming_latency: 2` (máximo real que documenta la API de
+// Grok) le pide al proveedor priorizar el primer byte por sobre la
+// eficiencia de compresión.
+async function streamGrok(text: string, lang: "es" | "en", res: VercelResponse): Promise<void> {
   const apiKey = process.env.GROK_API_KEY;
   if (!apiKey) throw new Error("GROK_API_KEY no configurada");
 
   const r = await fetch("https://api.x.ai/v1/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ text, language: lang, voice_id: GROK_VOICE }),
+    body: JSON.stringify({ text, language: lang, voice_id: GROK_VOICE, optimize_streaming_latency: 2 }),
   });
   if (!r.ok) throw new Error(`Grok TTS ${r.status}: ${await r.text()}`);
-  const arrayBuffer = await r.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  if (!r.body) throw new Error("Grok TTS: respuesta sin body");
+
+  res.setHeader("Content-Type", r.headers.get("content-type") || "audio/mpeg");
+  res.setHeader("Cache-Control", "no-store");
+  res.status(200);
+  await new Promise<void>((resolve, reject) => {
+    const nodeStream = Readable.fromWeb(r.body as any);
+    nodeStream.pipe(res);
+    nodeStream.on("end", resolve);
+    nodeStream.on("error", reject);
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -90,10 +110,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (provider === "grok") {
-      const audio = await synthesizeGrok(clean, voiceLang);
-      res.setHeader("Content-Type", "audio/mpeg");
-      res.setHeader("Cache-Control", "no-store");
-      return res.status(200).send(audio);
+      await streamGrok(clean, voiceLang, res);
+      return res.end();
     }
     const audio = await synthesizeGemini(clean);
     res.setHeader("Content-Type", "audio/wav");
@@ -101,6 +119,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).send(audio);
   } catch (err: any) {
     console.error("tts handler error:", err?.message || err);
+    if (res.headersSent) return res.end();
     return res.status(502).json({ error: "No se pudo generar el audio" });
   }
 }
