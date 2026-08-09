@@ -1,7 +1,24 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Search, X, ArrowLeft, Stars } from "lucide-react";
+import { Search, X, ArrowLeft, Star } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { getConversationIcon } from "../lib/conversationIcon";
+import { formatDate } from "../lib/utils";
+
+// `Stars` de lucide-react es, en esta versión de la librería, un alias
+// literal de `Sparkles` (mismo ícono, mismo SVG) -- no un ícono real
+// distinto. Por eso el cambio pedido antes ("reemplaza el de chispas por
+// uno de dos estrellas") no se veía en producción aunque el código ya
+// importara `Stars`. Acá se arma un ícono real de dos estrellas superpuestas
+// con dos `Star` (5 puntas, forma bien distinta a Sparkles) en vez de
+// depender de ese alias.
+function TwoStarsIcon({ className }: { className?: string }) {
+  return (
+    <span className={`relative inline-flex shrink-0 ${className || ""}`}>
+      <Star size={12} className="fill-current" />
+      <Star size={7} className="fill-current absolute -bottom-0.5 -right-1" />
+    </span>
+  );
+}
 
 export interface SearchableConversation {
   id: string;
@@ -64,7 +81,7 @@ export default function ConversationSearch({
   items: SearchableConversation[];
   onSelect: (id: string) => void;
 }) {
-  const { translate } = useLanguage();
+  const { translate, language } = useLanguage();
   const [query, setQuery] = useState("");
   const [semanticIds, setSemanticIds] = useState<string[] | null>(null);
   const [semanticLoading, setSemanticLoading] = useState(false);
@@ -98,6 +115,14 @@ export default function ConversationSearch({
       setSemanticLoading(false);
       return;
     }
+    // Limpiar el resultado semántico de la búsqueda ANTERIOR de inmediato,
+    // no solo al terminar de tipear una nueva -- si no, mientras esta
+    // búsqueda está "cargando" se sigue usando el `semanticIds` de la
+    // consulta previa (de un texto totalmente distinto), y al resolver la
+    // nueva de golpe puede aparecer/desaparecer un montón de resultados que
+    // no tenían nada que ver -- bug real reportado ("primero no hay
+    // resultados, luego salta con todo el listado").
+    setSemanticIds(null);
     setSemanticLoading(true);
     debounceRef.current = setTimeout(async () => {
       const controller = new AbortController();
@@ -166,7 +191,7 @@ export default function ConversationSearch({
 
         {semanticLoading && (
           <div className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)] border-b border-[var(--color-border-subtle)]">
-            <Stars size={12} className="animate-pulse" />
+            <TwoStarsIcon className="animate-pulse" />
             <T en="Searching by meaning…">Buscando por significado…</T>
           </div>
         )}
@@ -179,6 +204,14 @@ export default function ConversationSearch({
               ) : (
                 <T en="Your conversations will appear here.">Tus conversaciones aparecerán aquí.</T>
               )}
+            </p>
+          )}
+          {/* Sin búsqueda activa, la lista es simplemente el historial --
+              "Recientes" deja claro que no son resultados de nada, solo el
+              orden por fecha ya provisto en `items` (más nuevo primero). */}
+          {!query && results.length > 0 && (
+            <p className="px-3 pt-1 pb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+              <T en="Recent">Recientes</T>
             </p>
           )}
           {results.map((c) => {
@@ -194,9 +227,16 @@ export default function ConversationSearch({
             >
               <ConvIcon size={14} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
               <div className="flex-1 min-w-0">
-                <span className="block text-sm font-bold text-[var(--color-text-primary)] truncate">
-                  {highlightWords.length > 0 ? highlightMatches(c.title, highlightWords) : c.title}
-                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="flex-1 min-w-0 text-sm font-bold text-[var(--color-text-primary)] truncate">
+                    {highlightWords.length > 0 ? highlightMatches(c.title, highlightWords) : c.title}
+                  </span>
+                  {!query && (
+                    <span className="shrink-0 text-[10px] text-[var(--color-text-tertiary)]">
+                      {formatDate(new Date(c.updatedAt), language, { day: "2-digit", month: "2-digit" })}
+                    </span>
+                  )}
+                </div>
                 {q && (
                   <p className="text-[11px] text-[var(--color-text-tertiary)] truncate mt-0.5">
                     {highlightWords.length > 0 ? highlightMatches(snippetAround(c.text, q), highlightWords) : snippetAround(c.text, q)}
