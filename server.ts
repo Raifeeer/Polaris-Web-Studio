@@ -1592,6 +1592,15 @@ const PORT = 3000;
     }
   });
 
+  app.post("/api/client-log", async (req, res) => {
+    try {
+      const { default: clientLogHandler } = await import("./api/client-log.js");
+      await clientLogHandler(req as any, res as any);
+    } catch {
+      res.status(204).end();
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);

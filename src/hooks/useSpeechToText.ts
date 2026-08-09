@@ -23,6 +23,22 @@ import { detectLang } from "../lib/utils";
 const VOICE_LANG_KEY = "atlas_voice_lang";
 const BAR_COUNT = 24;
 
+// Mismo canal de diagnóstico que useTextToSpeech.ts -- pedido explícito del
+// usuario tras bugs de voz reportados en vivo que no se podían reproducir
+// por curl (dependen del dispositivo/navegador real).
+function logClientEvent(event: Record<string, unknown>) {
+  try {
+    const body = JSON.stringify({ scope: "speech-to-text", ...event, ua: navigator.userAgent, t: Date.now() });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon("/api/client-log", new Blob([body], { type: "application/json" }));
+    } else {
+      fetch("/api/client-log", { method: "POST", headers: { "Content-Type": "application/json" }, body, keepalive: true }).catch(() => {});
+    }
+  } catch {
+    // nunca romper el dictado por un log
+  }
+}
+
 function getStartLang(fallback: "es" | "en"): "es" | "en" {
   if (typeof window === "undefined") return fallback;
   const stored = localStorage.getItem(VOICE_LANG_KEY);
@@ -160,14 +176,26 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     // vieja ya reemplazada por el reinicio del primero) cerraba el
     // dictado recién reiniciado con el idioma nuevo, dando la sensación
     // de que cambiar de idioma "salía del modo voz".
-    const onEndOrError = () => {
+    const onEndOrError = (e?: any) => {
       if (recognitionRef.current !== recognition) return;
+      if (e?.error) logClientEvent({ event: "recognition_error", errorCode: e.error, lang });
       handleEnd();
     };
     recognition.onend = onEndOrError;
     recognition.onerror = onEndOrError;
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (err: any) {
+      // recognition.start() puede lanzar de forma síncrona (ej. "already
+      // started", permiso denegado) -- sin este catch quedaba como excepción
+      // no capturada y la UI se quedaba en "escuchando" para siempre, sin
+      // ninguna pista de qué pasó.
+      logClientEvent({ event: "start_threw", message: err?.message || String(err), lang });
+      recognitionRef.current = null;
+      setListening(false);
+      stopAudioViz();
+    }
   };
 
   function handleEnd() {
@@ -215,6 +243,7 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     forceStopTimerRef.current = setTimeout(() => {
       forceStopTimerRef.current = null;
       if (recognitionRef.current !== recognition) return; // ya se cerró por el evento real
+      logClientEvent({ event: "webkit_stop_fallback_triggered", stopTimeoutMs: STOP_TIMEOUT_MS });
       try {
         recognition.abort();
       } catch {
