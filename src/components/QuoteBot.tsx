@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic, Volume2, VolumeX } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -9,7 +9,6 @@ import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
-import VoicePicker from "./VoicePicker";
 import VoiceInputBar from "./VoiceInputBar";
 import AnimatedCheckIcon from "./AnimatedCheckIcon";
 import AtlasMark from "./AtlasMark";
@@ -106,19 +105,17 @@ function WidgetCopyButton({ text, usedWebSearch, lang }: { text: string; usedWeb
       >
         {copied ? <AnimatedCheckIcon size={11} /> : <Copy size={11} />}
       </button>
-      {tts.supported && (
-        <button
-          onClick={tts.toggle}
-          aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
-          title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
-          className={`p-1 transition-colors ${
-            tts.speaking ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
-          }`}
-        >
-          {tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
-        </button>
-      )}
-      {tts.supported && <VoicePicker lang={lang} />}
+      <button
+        onClick={tts.toggle}
+        disabled={tts.loading}
+        aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+        title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+        className={`p-1 transition-colors ${
+          tts.speaking || tts.loading ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+        }`}
+      >
+        {tts.loading ? <Loader2 size={11} className="animate-spin" /> : tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
+      </button>
       {usedWebSearch && (
         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]" title={translate("Búsqueda web usada para esta respuesta", "Web search used for this reply")}>
           <Globe size={11} />

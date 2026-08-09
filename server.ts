@@ -1582,6 +1582,16 @@ const PORT = 3000;
     }
   });
 
+  app.post("/api/tts", async (req, res) => {
+    try {
+      const { default: ttsHandler } = await import("./api/tts.js");
+      await ttsHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in tts:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);

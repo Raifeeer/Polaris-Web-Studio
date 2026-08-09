@@ -21,6 +21,7 @@ import {
   Mic,
   Volume2,
   VolumeX,
+  Loader2,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -32,7 +33,6 @@ import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
-import VoicePicker from "../components/VoicePicker";
 import VoiceInputBar from "../components/VoiceInputBar";
 import AnimatedCheckIcon from "../components/AnimatedCheckIcon";
 
@@ -148,19 +148,23 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
               >
                 {copied ? <AnimatedCheckIcon size={12} /> : <Copy size={12} />}
               </button>
-              {tts.supported && (
-                <button
-                  onClick={tts.toggle}
-                  aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
-                  title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
-                  className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 ${
-                    tts.speaking ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
-                  }`}
-                >
-                  {tts.speaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
-                </button>
-              )}
-              {tts.supported && <VoicePicker lang={message.lang || "es"} />}
+              <button
+                onClick={tts.toggle}
+                disabled={tts.loading}
+                aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+                title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+                className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 ${
+                  tts.speaking || tts.loading ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                {tts.loading ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : tts.speaking ? (
+                  <VolumeX size={12} />
+                ) : (
+                  <Volume2 size={12} />
+                )}
+              </button>
               {message.usedWebSearch && (
                 <span
                   className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]"
