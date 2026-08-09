@@ -6,6 +6,12 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 // pobres). Dos proveedores intercambiables para comparar en vivo:
 // Gemini TTS (default) y Grok TTS -- ambos reusan keys que la cuenta ya
 // paga y administra en otros endpoints (GEMINI_API_KEY/GROK_API_KEY).
+// Generar audio real (no solo texto) tarda de verdad -- probado en vivo,
+// una respuesta de ~60 palabras tomó ~19s con Gemini TTS. El default de
+// Vercel Hobby (10s) cortaría eso a mitad de camino; se sube el límite real
+// de la función a lo máximo permitido en Hobby para no depender del default.
+export const config = { maxDuration: 60 };
+
 const GEMINI_TTS_MODEL = "gemini-3.1-flash-tts-preview";
 const GEMINI_VOICE = "Kore";
 const GROK_VOICE = "eve";

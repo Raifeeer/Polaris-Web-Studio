@@ -105,14 +105,26 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
       source.connect(analyser);
       const data = new Uint8Array(analyser.frequencyBinCount);
       const step = Math.max(1, Math.floor(data.length / BAR_COUNT));
-      const tick = () => {
+      // Throttle real a ~12 actualizaciones/seg -- leer el nivel de audio
+      // sigue corriendo cada frame (barato, no toca React), pero setLevels()
+      // (un render de React + reanimar 24 <motion.span>) antes corría a los
+      // 60fps completos del rAF. En un dispositivo real eso satura tanto el
+      // hilo principal que los toques en los botones de al lado (cancelar/
+      // confirmar/cambiar idioma) dejaban de registrar a tiempo -- bug real
+      // encontrado en vivo (botones "sin hacer nada" en iPhone).
+      const LEVELS_INTERVAL_MS = 80;
+      let lastUpdate = 0;
+      const tick = (now: number) => {
         analyser.getByteFrequencyData(data);
-        const next: number[] = [];
-        for (let i = 0; i < BAR_COUNT; i++) next.push(Math.max(0.08, data[i * step] / 255));
-        setLevels(next);
+        if (now - lastUpdate >= LEVELS_INTERVAL_MS) {
+          lastUpdate = now;
+          const next: number[] = [];
+          for (let i = 0; i < BAR_COUNT; i++) next.push(Math.max(0.08, data[i * step] / 255));
+          setLevels(next);
+        }
         rafRef.current = requestAnimationFrame(tick);
       };
-      tick();
+      rafRef.current = requestAnimationFrame(tick);
     } catch {
       // sin permiso/soporte para la onda visual -- no bloquea el dictado real.
     }
