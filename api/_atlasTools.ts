@@ -1,6 +1,6 @@
 import { tool, generateText } from "ai";
 import { z } from "zod";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createXai } from "@ai-sdk/xai";
 
 // Tools reales para Atlas Assistant (AI SDK, function calling real) --
 // reemplazan hechos estáticos incrustados en el system prompt por consultas
@@ -258,15 +258,19 @@ export const captureLead = tool({
   },
 });
 
-// ---- 8. Búsqueda web real (grounding de Gemini) ----
+// ---- 8. Búsqueda web real (Grok / xAI Live Search) ----
 // El chat principal puede correr sobre DeepSeek/Grok/Gemini indistintamente,
-// pero la búsqueda real en vivo (`google.tools.googleSearch`) es un tool
-// propio del provider de Google -- no se le puede pasar tal cual a
-// DeepSeek/Grok. Esta tool envuelve un llamado interno y aislado a Gemini
-// (siempre, sin importar qué modelo esté respondiendo el turno principal) y
-// devuelve texto + fuentes reales como salida de tool normal, así cualquiera
-// de los 3 providers puede usarla igual.
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// pero la búsqueda real en vivo es un tool propio de cada provider -- no se
+// le puede pasar tal cual a cualquiera de los 3. Se eligió el `webSearch` de
+// xAI (no el de Google) porque sale más barato -- Grok cobra la búsqueda como
+// parte del mismo request de chat (sin cargo aparte por fuente), mientras que
+// el grounding de Gemini se factura por separado y por cada consulta. Esta
+// tool envuelve un llamado interno y aislado a Grok (siempre, sin importar
+// qué modelo esté respondiendo el turno principal) y devuelve texto + fuentes
+// reales como salida de tool normal, así cualquiera de los 3 providers puede
+// usarla igual. El tool nativo de xAI ya devuelve `sources` estructuradas
+// (sin parsear metadata de grounding a mano, como sí hacía falta con Google).
+const GROK_API_KEY = process.env.GROK_API_KEY;
 
 export const webSearch = tool({
   description:
@@ -275,25 +279,21 @@ export const webSearch = tool({
     query: z.string().describe("La pregunta o términos de búsqueda, en el idioma que sea más efectivo para buscar (usualmente inglés para temas globales)."),
   }),
   execute: async ({ query }) => {
-    if (!GEMINI_API_KEY) {
+    if (!GROK_API_KEY) {
       return { error: "La búsqueda web no está disponible en este momento." };
     }
     try {
-      const google = createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY });
+      const xai = createXai({ apiKey: GROK_API_KEY });
       const result = await generateText({
-        model: google("gemini-3.5-flash"),
-        // El tool de búsqueda de Google es un "provider-defined tool" con su
-        // propio esquema interno -- distinto del genérico `tool()` que usa
-        // el resto de este archivo, de ahí el `as any` puntual.
-        tools: { google_search: google.tools.googleSearch({}) } as any,
+        model: xai("grok-4.3"),
+        // El tool de búsqueda de xAI es "provider-executed" (corre server-side
+        // en la API de Grok, no vía `execute()` local) -- de ahí el `as any`
+        // puntual, mismo motivo que el de Google antes.
+        tools: { web_search: xai.tools.webSearch({}) } as any,
         prompt: query,
       });
-      const grounding = (result.providerMetadata?.google as { groundingMetadata?: { groundingChunks?: { web?: { uri?: string; title?: string } }[] } } | undefined)?.groundingMetadata;
-      const sources = (grounding?.groundingChunks || [])
-        .map((c) => c.web)
-        .filter((w): w is { uri: string; title?: string } => Boolean(w?.uri))
-        .slice(0, 5)
-        .map((w) => ({ url: w.uri, title: w.title || w.uri }));
+      const searchResult = result.toolResults?.find((t) => t.toolName === "web_search")?.output as { sources?: { url: string; title: string; snippet?: string }[] } | undefined;
+      const sources = (searchResult?.sources || []).slice(0, 5).map((s) => ({ url: s.url, title: s.title || s.url }));
       return { answer: result.text, sources };
     } catch {
       return { error: "No se pudo completar la búsqueda web en este momento." };

@@ -105,7 +105,7 @@ function TypingDots() {
   );
 }
 
-function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onSuggestionClick: (q: string) => void }) {
+function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMessage; onSuggestionClick: (q: string) => void; isLast: boolean }) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
 
@@ -162,7 +162,7 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
             </div>
           )}
 
-          {message.suggestions && message.suggestions.length > 0 && (
+          {isLast && message.suggestions && message.suggestions.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
               {message.suggestions.map((s) => (
                 <button
@@ -614,7 +614,7 @@ export default function AtlasChat() {
                 // (streaming aún sin el primer delta) -- ya la cubre el
                 // indicador de "escribiendo" de abajo.
                 if (m.role === "assistant" && !m.content && i === messages.length - 1) return null;
-                return <MessageBubble key={i} message={m} onSuggestionClick={handleSend} />;
+                return <MessageBubble key={i} message={m} onSuggestionClick={handleSend} isLast={i === messages.length - 1} />;
               })}
 
               {loading && !messages[messages.length - 1]?.content && (

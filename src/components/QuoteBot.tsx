@@ -578,7 +578,7 @@ export default function QuoteBot() {
 
                   {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} />}
 
-                  {m.role === "assistant" && m.suggestions && m.suggestions.length > 0 && (
+                  {m.role === "assistant" && i === aiMessages.length - 1 && m.suggestions && m.suggestions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[85%]">
                       {m.suggestions.map((s) => (
                         <button
