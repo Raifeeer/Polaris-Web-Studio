@@ -5,7 +5,7 @@ import { createXai } from "@ai-sdk/xai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { atlasTools } from "./_atlasTools.js";
 
-// Backend de texto libre para el chatbot flotante (Atlas Terminal) --
+// Backend de texto libre para el chatbot flotante (Atlas Assistant) --
 // reemplaza el modo puramente guiado (quiz de opciones fijas) con una
 // opción de pregunta abierta. Migrado al AI SDK de Vercel (8 de agosto):
 // antes cada hecho (precio de dominio, total de una cotización, horarios
@@ -88,7 +88,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
   const history = sanitizeHistory((req.body || {}).history);
 
-  const systemPrompt = `Eres Atlas Terminal, el asistente de IA de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA. Respondes tanto en el widget flotante del sitio como en la página completa de chat ("/asistente").
+  const systemPrompt = `Eres Atlas Assistant, el asistente de IA de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA. Respondes tanto en el widget flotante del sitio como en la página completa de chat ("/asistente").
 
 Planes disponibles:
 - Destello (id: landing): $299 USD -- Landing page 1 página, entrega 1-2 semanas

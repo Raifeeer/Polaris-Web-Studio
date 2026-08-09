@@ -548,7 +548,7 @@ export default function Portfolio() {
   // overlay (que ocupa toda la pantalla) también desplazaba el portafolio
   // detrás de él.
   // Además marca <body> con una clase (mismo patrón que .light en <html>)
-  // para poder ocultar por CSS el botón flotante de Atlas Terminal (QuoteBot),
+  // para poder ocultar por CSS el botón flotante de Atlas Assistant (QuoteBot),
   // que vive en un div propio con z-[100] -- por encima del overlay de
   // historia (z-[90]) -- así que sin esto quedaba flotando sobre el modo
   // historia en vez de escondido detrás.

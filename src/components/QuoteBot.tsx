@@ -264,7 +264,7 @@ export default function QuoteBot() {
               />
               <div className="text-left flex-1 ml-3">
                 <span className="block text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)] leading-none">
-                  Atlas Terminal
+                  Atlas Assistant
                 </span>
                 <span className="text-[10px] text-[var(--color-primary-base)] font-bold uppercase tracking-wider">
                   <T en="Online">En línea</T>
@@ -482,8 +482,8 @@ export default function QuoteBot() {
                     <a
                       href={`https://wa.me/18299200544?text=${encodeURIComponent(
                         translate(
-                          `Hola, Atlas Terminal me recomendó el ${rec.name} y me gustaría más información.`,
-                          `Hi, Atlas Terminal recommended the ${rec.name} and I would like more information.`,
+                          `Hola, Atlas Assistant me recomendó el ${rec.name} y me gustaría más información.`,
+                          `Hi, Atlas Assistant recommended the ${rec.name} and I would like more information.`,
                         ),
                       )}`}
                       target="_blank"

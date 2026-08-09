@@ -102,8 +102,8 @@ export default function AtlasChat() {
   const { translate } = useLanguage();
   useEffect(() => {
     document.title = translate(
-      "Asistente IA -- Atlas Terminal | Polaris Web Studio",
-      "AI Assistant -- Atlas Terminal | Polaris Web Studio",
+      "Asistente IA -- Atlas Assistant | Polaris Web Studio",
+      "AI Assistant -- Atlas Assistant | Polaris Web Studio",
     );
   }, [translate]);
 
@@ -232,7 +232,7 @@ export default function AtlasChat() {
           )}
           <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
           <div className="leading-none">
-            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">Atlas Terminal</p>
+            <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">Atlas Assistant</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)]">
               <T en="Online">En línea</T>
             </p>

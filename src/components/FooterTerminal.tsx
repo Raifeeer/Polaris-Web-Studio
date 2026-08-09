@@ -19,7 +19,7 @@ const BANNER = String.raw`
 
 // Mini terminal del footer -- un guiño, no un producto. Comandos fijos y
 // respuestas de texto plano, sin IA ni backend (a diferencia del viejo
-// Atlas Terminal de página completa, retirado). Colapsada por defecto como
+// Atlas Assistant de página completa, retirado). Colapsada por defecto como
 // un dropdown -- se abre al hacer click en la barra, para no ocupar
 // espacio del footer hasta que alguien la quiera usar. El easter egg
 // "grande" del sitio (mini-juego al escribir "polaris" en cualquier lado)

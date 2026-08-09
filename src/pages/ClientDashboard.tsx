@@ -640,7 +640,7 @@ function LanguageSwitchLoader() {
   );
 }
 
-// Tarjetas visuales que Atlas Terminal adjunta a sus respuestas cuando el
+// Tarjetas visuales que Atlas Assistant adjunta a sus respuestas cuando el
 // backend elige un widget (ver PORTAL_WIDGET_TYPES en server.ts) -- el texto
 // de la burbuja puede ser breve porque la tarjeta completa el detalle con
 // datos reales ya resueltos del lado del servidor (nunca inventados por el
@@ -1089,7 +1089,7 @@ export default function ClientDashboard() {
         setChatMessages([
           {
             role: "assistant",
-            text: `¡Hola, ${user?.name || "cliente"}! Soy Atlas Terminal, tu asistente de IA en Polaris Web Studio. ¿En qué puedo ayudarte hoy con tu proyecto "${clientProject.name}"?`
+            text: `¡Hola, ${user?.name || "cliente"}! Soy Atlas Assistant, tu asistente de IA en Polaris Web Studio. ¿En qué puedo ayudarte hoy con tu proyecto "${clientProject.name}"?`
           }
         ]);
       }
@@ -1502,7 +1502,7 @@ export default function ClientDashboard() {
     return data.text;
   };
 
-  // Variante del chat que además envía el historial (para que Atlas Terminal
+  // Variante del chat que además envía el historial (para que Atlas Assistant
   // recuerde la conversación) y devuelve el widget visual que el backend haya
   // elegido, si aplica -- separado de askAIFrontend porque ese helper lo usa
   // también generateClientSummary, que no necesita nada de esto.
@@ -5855,7 +5855,7 @@ export default function ClientDashboard() {
             className={`fixed top-1/2 -translate-y-1/2 right-0 z-40 bg-white shadow-[-4px_0_15px_rgba(0,0,0,0.15)] rounded-l-xl py-4 px-2 flex flex-col items-center gap-2 transition-transform duration-300 hover:pr-3 group ${chatOpen ? "translate-x-full" : "translate-x-0"}`}
           >
             <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)] opacity-70 group-hover:opacity-100 transition-opacity" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-              Atlas Terminal
+              Atlas Assistant
             </span>
           </button>
       
@@ -5890,7 +5890,7 @@ export default function ClientDashboard() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-white font-black text-sm tracking-tight">Atlas Terminal</p>
+                    <p className="text-white font-black text-sm tracking-tight">Atlas Assistant</p>
                     <p className="text-white/60 text-[10px]">by Polaris Web Studio</p>
                   </div>
                 </div>

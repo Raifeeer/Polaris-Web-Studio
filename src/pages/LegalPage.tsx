@@ -126,7 +126,7 @@ function PrivacyContent() {
             terceros que también va a recibir tu nombre y correo para confirmar la cita.
           </T>
         </p>
-        <SubHeading><T en="AI assistant (Atlas Terminal)">Asistente de IA (Atlas Terminal)</T></SubHeading>
+        <SubHeading><T en="AI assistant (Atlas Assistant)">Asistente de IA (Atlas Assistant)</T></SubHeading>
         <p>
           <T en="Messages you send to our chat assistant are processed by Google Gemini, with xAI Grok as a fallback if Gemini is unavailable. We don't ask you for sensitive personal data through the chat, and you shouldn't share any either.">
             Los mensajes que le escribes a nuestro asistente de chat se procesan con Google

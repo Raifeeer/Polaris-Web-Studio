@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-// Tools reales para Atlas Terminal (AI SDK, function calling real) --
+// Tools reales para Atlas Assistant (AI SDK, function calling real) --
 // reemplazan hechos estáticos incrustados en el system prompt por consultas
 // en vivo, mismo criterio ya usado en Meridian (domains-status, etc.).
 
@@ -140,7 +140,7 @@ export const bookCall = tool({
       const res = await fetch(BOOKING_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, start, timeZone: "America/Santo_Domingo", language: "es", notes: notes || "Agendado vía Atlas Terminal (chat con IA).", phone, type }),
+        body: JSON.stringify({ name, email, start, timeZone: "America/Santo_Domingo", language: "es", notes: notes || "Agendado vía Atlas Assistant (chat con IA).", phone, type }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) return { error: data.error || "No se pudo confirmar la reserva -- ese horario puede haberse ocupado, prueba con otro." };

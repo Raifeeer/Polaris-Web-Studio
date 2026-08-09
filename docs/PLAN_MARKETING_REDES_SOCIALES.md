@@ -150,7 +150,7 @@ Publicar todos los días desde el día 1 sin sistema lleva al burnout en 2 seman
 8. Carrusel: recorrido del portafolio — Nexus Realty, foco en el filtrado rápido de propiedades.
 9. Reel educativo: "SEO no es un plugin que se instala después" (reusar el ángulo real del blog ya escrito sobre SEO Core).
 10. Post: anuncio de la oferta de lanzamiento con countdown real hacia el 17 de agosto.
-11. Reel: "Así integro IA real (no un chatbot genérico) en las webs que hago" — mostrar Atlas Terminal o el chatbot con IA.
+11. Reel: "Así integro IA real (no un chatbot genérico) en las webs que hago" — mostrar Atlas Assistant o el chatbot con IA.
 12. Carrusel dirigido a hoteles/tour operadores: "Antes de que llegue diciembre, ¿tu web está lista para recibir reservas?".
 13. Reel: recorrido del proceso completo en 60 segundos — planificas, diseñamos, lanzamos (los 3 pasos reales ya descritos en la web).
 14. Post educativo: "WhatsApp Business no reemplaza tener una web — esto es lo que sí hace tu web por ti".
