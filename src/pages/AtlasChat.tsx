@@ -375,15 +375,6 @@ export default function AtlasChat() {
           >
             {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
-          {!sidebarOpen && (
-            <Link
-              to="/"
-              className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors"
-              aria-label={translate("Volver al sitio", "Back to site")}
-            >
-              <ArrowLeft size={18} />
-            </Link>
-          )}
           <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
           <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
           {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
