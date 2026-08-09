@@ -18,6 +18,8 @@ import {
   Search,
   Globe,
   VenetianMask,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -27,6 +29,7 @@ import AtlasWidget from "../components/AtlasWidget";
 import ThinkingText from "../components/ThinkingText";
 import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
+import { useSpeechToText } from "../hooks/useSpeechToText";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
@@ -195,6 +198,10 @@ export default function AtlasChat() {
     renameConversation,
   } = useAtlasChat();
   const [input, setInput] = useState("");
+  const speech = useSpeechToText(
+    (transcript) => setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript)),
+    language,
+  );
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1024);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -704,6 +711,20 @@ export default function AtlasChat() {
               placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
               className="flex-1 resize-none bg-transparent outline-none text-sm px-2 py-2 max-h-32 placeholder:text-[var(--color-text-tertiary)]"
             />
+            {speech.supported && (
+              <button
+                onClick={speech.toggle}
+                aria-label={translate("Dictar por voz", "Dictate by voice")}
+                title={translate("Dictar por voz", "Dictate by voice")}
+                className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-all ${
+                  speech.listening
+                    ? "bg-red-500 text-white animate-pulse"
+                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-base)] hover:text-[var(--color-primary-base)]"
+                }`}
+              >
+                {speech.listening ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            )}
             {loading ? (
               <button
                 onClick={stopGenerating}

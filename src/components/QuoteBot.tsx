@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic, MicOff } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "./AtlasMarkdown";
 import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
+import { useSpeechToText } from "../hooks/useSpeechToText";
 import AtlasMark from "./AtlasMark";
 
 type Question = {
@@ -159,6 +160,7 @@ export default function QuoteBot() {
     toggleTemporary: toggleAiTemporary,
   } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
+  const speech = useSpeechToText((transcript) => setAiInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript)), language);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -644,6 +646,18 @@ export default function QuoteBot() {
                 maxLength={2000}
                 className="flex-1 text-sm bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-full px-4 py-2 outline-none focus:border-[var(--color-primary-base)] transition-colors placeholder:text-[var(--color-text-tertiary)]"
               />
+              {speech.supported && (
+                <button
+                  onClick={speech.toggle}
+                  aria-label={translate("Dictar por voz", "Dictate by voice")}
+                  title={translate("Dictar por voz", "Dictate by voice")}
+                  className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-all ${
+                    speech.listening ? "bg-red-500 text-white animate-pulse" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)]"
+                  }`}
+                >
+                  {speech.listening ? <MicOff size={16} /> : <Mic size={16} />}
+                </button>
+              )}
               {aiLoading ? (
                 <button
                   onClick={stopGenerating}
