@@ -23,12 +23,69 @@ import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
 import ConversationSearch from "../components/ConversationSearch";
 
-const SUGGESTIONS = [
+// Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
+// a la pantalla vacía, en vez de mostrar siempre las mismas 4.
+const SUGGESTIONS_POOL: { es: string; en: string }[] = [
   { es: "¿Cuáles son los planes y precios?", en: "What are the plans and prices?" },
   { es: "¿Qué incluye el paquete Constelación?", en: "What's included in the Constelación package?" },
   { es: "¿Cuánto tarda un proyecto tipo e-commerce?", en: "How long does an e-commerce project take?" },
   { es: "¿Qué tecnologías usan?", en: "What tech stack do you use?" },
+  { es: "¿Cómo funciona el pago?", en: "How does payment work?" },
+  { es: "¿El dominio está incluido?", en: "Is the domain included?" },
+  { es: "¿Puedo agendar una llamada ahora mismo?", en: "Can I book a call right now?" },
+  { es: "¿Qué es el Bot de Atención 24/7?", en: "What is the 24/7 support bot?" },
+  { es: "¿Tienen ejemplos de tiendas online que hayan hecho?", en: "Do you have examples of online stores you've built?" },
+  { es: "¿Cuál es el proceso desde que contrato hasta que lanza el sitio?", en: "What's the process from hiring to launch?" },
+  { es: "¿Qué pasa si necesito cambios después de la entrega?", en: "What happens if I need changes after delivery?" },
+  { es: "¿Cómo es la garantía?", en: "How does the warranty work?" },
+  { es: "¿Puedo pagar con transferencia bancaria?", en: "Can I pay by bank transfer?" },
+  { es: "¿Qué addons de IA ofrecen?", en: "What AI addons do you offer?" },
+  { es: "¿Cuánto cuesta un sitio multilingüe?", en: "How much does a multilingual site cost?" },
+  { es: "¿Qué es el portal de clientes?", en: "What is the client portal?" },
+  { es: "¿Cómo puedo ver el estado de mi proyecto?", en: "How can I check my project status?" },
+  { es: "¿Ofrecen mantenimiento mensual?", en: "Do you offer monthly maintenance?" },
+  { es: "¿Puedo cancelar si ya empezaron a trabajar?", en: "Can I cancel once work has started?" },
+  { es: "¿Cuál es la política de reembolsos?", en: "What's the refund policy?" },
+  { es: "¿El código queda a mi nombre?", en: "Is the code owned by me?" },
+  { es: "¿Cómo protegen mis datos?", en: "How do you protect my data?" },
+  { es: "¿Hacen sitios para restaurantes?", en: "Do you build sites for restaurants?" },
+  { es: "¿Hacen sitios para clínicas o consultorios?", en: "Do you build sites for clinics?" },
+  { es: "¿Puedo agregar una tienda en línea más adelante?", en: "Can I add an online store later?" },
+  { es: "¿Qué diferencia hay entre Destello y Constelación?", en: "What's the difference between Destello and Constelación?" },
+  { es: "¿El paquete Nova incluye panel de administración?", en: "Does the Nova package include an admin panel?" },
+  { es: "¿Cuánto cuesta el Agente de Ventas IA?", en: "How much is the AI Sales Agent?" },
+  { es: "¿Puedo conectar mi propia base de datos?", en: "Can I connect my own database?" },
+  { es: "¿Qué pasa si dejo de pagar un addon mensual?", en: "What happens if I stop paying a monthly addon?" },
+  { es: "¿Ofrecen SEO?", en: "Do you offer SEO?" },
+  { es: "¿Cuánto tarda una landing page?", en: "How long does a landing page take?" },
+  { es: "¿Puedo ver el precio real de un dominio antes de decidir?", en: "Can I check a domain's real price before deciding?" },
+  { es: "¿Trabajan con clientes fuera de República Dominicana?", en: "Do you work with clients outside the Dominican Republic?" },
+  { es: "¿Qué incluye el Kit de Branding Básico?", en: "What's included in the Basic Branding Kit?" },
+  { es: "¿Cómo contacto a Polaris directamente?", en: "How do I contact Polaris directly?" },
+  { es: "¿Cuál es el tiempo de respuesta promedio?", en: "What's the average response time?" },
+  { es: "¿Puedo pedir revisiones durante el desarrollo?", en: "Can I request revisions during development?" },
+  { es: "¿Qué es el Buscador Semántico IA?", en: "What is the AI Semantic Search addon?" },
+  { es: "¿El sitio queda optimizado para buscadores?", en: "Is the site optimized for search engines?" },
+  { es: "¿Cómo funciona la firma electrónica del contrato?", en: "How does the electronic contract signature work?" },
+  { es: "¿Puedo empezar con un paquete chico y crecer después?", en: "Can I start small and grow later?" },
+  { es: "¿Qué pasa si mi dominio elegido cuesta más de lo incluido?", en: "What if my chosen domain costs more than what's included?" },
+  { es: "¿Ofrecen copywriting profesional?", en: "Do you offer professional copywriting?" },
+  { es: "¿Cómo se ve un ejemplo de sitio inmobiliario?", en: "What does a real estate site example look like?" },
+  { es: "¿Puedo integrar mi CRM?", en: "Can I integrate my CRM?" },
+  { es: "¿Qué pasa si no me gusta el diseño inicial?", en: "What if I don't like the initial design?" },
+  { es: "¿Cuánto tiempo de soporte incluye el lanzamiento?", en: "How much post-launch support is included?" },
+  { es: "¿Puedo pagar en cuotas?", en: "Can I pay in installments?" },
+  { es: "¿Qué necesito para empezar hoy mismo?", en: "What do I need to get started today?" },
 ];
+
+function pickRandomSuggestions(count: number): { es: string; en: string }[] {
+  const pool = [...SUGGESTIONS_POOL];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, count);
+}
 
 function TypingDots() {
   return (
@@ -139,6 +196,7 @@ export default function AtlasChat() {
   const [shareFeedbackId, setShareFeedbackId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [suggestions] = useState(() => pickRandomSuggestions(4));
   const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -447,7 +505,7 @@ export default function AtlasChat() {
 
       {/* Panel principal */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="shrink-0 flex items-center gap-3 px-4 py-2 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/80 backdrop-blur-md">
+        <header className="shrink-0 flex items-center gap-3 px-4 py-1.5 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/80 backdrop-blur-md">
           <button
             onClick={() => setSidebarOpen((v) => !v)}
             className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors"
@@ -481,7 +539,7 @@ export default function AtlasChat() {
                   </T>
                 </p>
                 <div className="grid sm:grid-cols-2 gap-2.5">
-                  {SUGGESTIONS.map((s) => (
+                  {suggestions.map((s) => (
                     <button
                       key={s.es}
                       onClick={() => handleSend(translate(s.es, s.en))}
@@ -511,7 +569,7 @@ export default function AtlasChat() {
                     </div>
                     <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2">
                       <TypingDots />
-                      <span className="text-xs text-[var(--color-text-tertiary)]">{thinkingMsg}</span>
+                      <span className="text-xs text-[var(--color-text-tertiary)]">{translate(thinkingMsg.es, thinkingMsg.en)}</span>
                     </div>
                   </div>
                 </motion.div>
@@ -529,7 +587,7 @@ export default function AtlasChat() {
           )}
         </div>
 
-        <div className="shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
+        <div className="shrink-0 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
           <div className="max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] focus-within:border-[var(--color-primary-base)] transition-colors">
             <textarea
               ref={textareaRef}

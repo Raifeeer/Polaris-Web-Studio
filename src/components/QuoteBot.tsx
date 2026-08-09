@@ -587,7 +587,7 @@ export default function QuoteBot() {
                       <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
                       <motion.div animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }} transition={{ duration: 1.2, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-[var(--color-text-tertiary)]" />
                     </div>
-                    <span className="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">{aiThinkingMsg}</span>
+                    <span className="text-xs text-[var(--color-text-tertiary)] whitespace-nowrap">{translate(aiThinkingMsg.es, aiThinkingMsg.en)}</span>
                   </div>
                 </motion.div>
               )}

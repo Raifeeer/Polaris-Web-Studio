@@ -15,22 +15,25 @@ const MAX_CONVERSATIONS = 30;
 // Con tema de desarrollo web (Polaris es una agencia web), pero siguen siendo
 // genéricas a propósito -- ninguna promete una acción puntual (ej. "calculando
 // el precio") porque no sabemos qué pidió el cliente hasta que la IA responde.
-const THINKING_MESSAGES = [
-  "Compilando la respuesta…",
-  "Renderizando ideas…",
-  "Un commit más y listo…",
-  "Optimizando cada palabra…",
-  "Desplegando la respuesta…",
-  "Conectando los puntos…",
-  "Puliendo los detalles…",
-  "Ya casi…",
-  "Cargando…",
-  "Ejecutando el build…",
-  "Sincronizando ideas…",
-  "Armando el layout…",
-  "Empaquetando la respuesta…",
-  "Instalando dependencias…",
-  "Depurando la respuesta…",
+// {es,en} en vez de string plano -- el componente que las muestra elige el
+// idioma según el contexto actual, en vez de quedar fijas en español.
+export type ThinkingMessage = { es: string; en: string };
+const THINKING_MESSAGES: ThinkingMessage[] = [
+  { es: "Compilando la respuesta…", en: "Compiling the answer…" },
+  { es: "Renderizando ideas…", en: "Rendering ideas…" },
+  { es: "Un commit más y listo…", en: "One more commit and done…" },
+  { es: "Optimizando cada palabra…", en: "Optimizing every word…" },
+  { es: "Desplegando la respuesta…", en: "Deploying the answer…" },
+  { es: "Conectando los puntos…", en: "Connecting the dots…" },
+  { es: "Puliendo los detalles…", en: "Polishing the details…" },
+  { es: "Ya casi…", en: "Almost there…" },
+  { es: "Cargando…", en: "Loading…" },
+  { es: "Ejecutando el build…", en: "Running the build…" },
+  { es: "Sincronizando ideas…", en: "Syncing ideas…" },
+  { es: "Armando el layout…", en: "Assembling the layout…" },
+  { es: "Empaquetando la respuesta…", en: "Bundling the answer…" },
+  { es: "Instalando dependencias…", en: "Installing dependencies…" },
+  { es: "Depurando la respuesta…", en: "Debugging the answer…" },
 ];
 
 function newId(): string {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Search, X, ArrowLeft, MessageSquare, Sparkles } from "lucide-react";
+import { Search, X, ArrowLeft, MessageSquare, Stars } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 
 export interface SearchableConversation {
@@ -139,7 +139,7 @@ export default function ConversationSearch({
 
         {semanticLoading && (
           <div className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)] border-b border-[var(--color-border-subtle)]">
-            <Sparkles size={12} className="animate-pulse" />
+            <Stars size={12} className="animate-pulse" />
             <T en="Searching by meaning…">Buscando por significado…</T>
           </div>
         )}
