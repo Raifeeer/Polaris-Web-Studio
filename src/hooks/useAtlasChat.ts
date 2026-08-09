@@ -12,15 +12,18 @@ const CONVERSATIONS_KEY = "atlas_conversations";
 const ACTIVE_ID_KEY = "atlas_active_conversation_id";
 const MAX_CONVERSATIONS = 30;
 
-// Frases genéricas a propósito -- no describen una acción puntual (ej. "calculando
-// el precio") porque no sabemos qué pidió el cliente hasta que la IA responde, y
-// una frase específica sonaría rara si el mensaje era solo un saludo.
+// Con tema de desarrollo web (Polaris es una agencia web), pero siguen siendo
+// genéricas a propósito -- ninguna promete una acción puntual (ej. "calculando
+// el precio") porque no sabemos qué pidió el cliente hasta que la IA responde.
 const THINKING_MESSAGES = [
-  "Pensando…",
-  "Un momento…",
-  "Preparando la respuesta…",
+  "Compilando la respuesta…",
+  "Renderizando ideas…",
+  "Un commit más y listo…",
+  "Optimizando cada palabra…",
+  "Desplegando la respuesta…",
+  "Conectando los puntos…",
+  "Puliendo los detalles…",
   "Ya casi…",
-  "Leyendo tu mensaje…",
 ];
 
 function newId(): string {
