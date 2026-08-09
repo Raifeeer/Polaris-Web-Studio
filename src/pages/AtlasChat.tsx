@@ -199,6 +199,13 @@ export default function AtlasChat() {
   const [renameValue, setRenameValue] = useState("");
   const [shareFeedbackId, setShareFeedbackId] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
+  // Solo importa mientras searchOpen Y sidebarOpen son true a la vez --
+  // distingue "abrí la búsqueda desde el sidebar" (la búsqueda debe quedar
+  // arriba, tapando el sidebar) de "estoy en la búsqueda y me asomé al
+  // sidebar" (el sidebar debe quedar arriba, tapando la búsqueda -- al
+  // cerrarlo con el X/backdrop, la búsqueda sigue exactamente como estaba,
+  // mismo comportamiento que el botón de arriba a la izquierda en Gemini).
+  const [sidebarAboveSearch, setSidebarAboveSearch] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [suggestions] = useState(() => pickRandomSuggestions(4));
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -282,11 +289,14 @@ export default function AtlasChat() {
       <AnimatePresence initial={false}>
         {sidebarOpen && (
           <motion.div
-            onClick={() => setSidebarOpen(false)}
+            onClick={() => {
+              setSidebarOpen(false);
+              setSidebarAboveSearch(false);
+            }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+            className={`fixed inset-0 ${sidebarAboveSearch ? "z-[79]" : "z-40"} bg-black/50 md:hidden`}
           />
         )}
       </AnimatePresence>
@@ -297,7 +307,7 @@ export default function AtlasChat() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-y-0 left-0 z-50 w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden"
+            className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden`}
           >
             <div className="p-3 flex items-center gap-2">
               <Link
@@ -322,7 +332,10 @@ export default function AtlasChat() {
                 {language === "es" ? "EN" : "ES"}
               </button>
               <button
-                onClick={() => setSidebarOpen(false)}
+                onClick={() => {
+                  setSidebarOpen(false);
+                  setSidebarAboveSearch(false);
+                }}
                 className="p-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
                 aria-label={translate("Cerrar menú", "Close menu")}
               >
@@ -334,10 +347,13 @@ export default function AtlasChat() {
               <button
                 onClick={() => {
                   newChat();
-                  // Mismo criterio que al elegir una conversación (ver más
-                  // abajo): en mobile el sidebar es un overlay a pantalla
-                  // completa, se cierra al pasar a un chat nuevo; en
-                  // desktop queda inline y no debe desaparecer.
+                  // Nuevo chat siempre sale de la búsqueda, esté o no
+                  // "de fondo" -- no tendría sentido dejarla abierta detrás
+                  // de un chat nuevo. En mobile el sidebar también se
+                  // cierra (es un overlay a pantalla completa); en desktop
+                  // queda inline y no debe desaparecer.
+                  setSearchOpen(false);
+                  setSidebarAboveSearch(false);
                   if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
                     setSidebarOpen(false);
                   }
@@ -349,7 +365,10 @@ export default function AtlasChat() {
               </button>
               {conversations.length > 0 && (
                 <button
-                  onClick={() => setSearchOpen(true)}
+                  onClick={() => {
+                    setSearchOpen(true);
+                    setSidebarAboveSearch(false);
+                  }}
                   aria-label={translate("Buscar conversaciones", "Search conversations")}
                   className="p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
                 >
@@ -382,6 +401,10 @@ export default function AtlasChat() {
                   onClick={() => {
                     if (renamingId === c.id) return;
                     loadConversation(c.id);
+                    // Elegir un chat también sale de la búsqueda de fondo,
+                    // igual que "Nuevo chat" -- mismo criterio.
+                    setSearchOpen(false);
+                    setSidebarAboveSearch(false);
                     // En mobile el sidebar es un overlay a pantalla completa --
                     // se cierra al elegir un chat. En desktop (md+) queda inline
                     // y no debe desaparecer, así que solo se cierra bajo el
@@ -649,8 +672,14 @@ export default function AtlasChat() {
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
         onBack={() => {
-          setSearchOpen(false);
+          // A diferencia de onClose, esto NO cierra la búsqueda -- solo
+          // muestra el sidebar por encima. Si el usuario cierra el sidebar
+          // (X/backdrop) sin elegir nada, vuelve a la búsqueda tal cual la
+          // dejó (mismo comportamiento del botón de arriba a la izquierda
+          // en Gemini). Elegir "Nuevo chat" o un chat del sidebar sí cierra
+          // la búsqueda -- ver esos handlers más arriba.
           setSidebarOpen(true);
+          setSidebarAboveSearch(true);
         }}
         items={searchItems}
         onSelect={loadConversation}
