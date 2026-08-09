@@ -6,7 +6,10 @@ import { useState, useCallback, useRef, useEffect } from "react";
 // el historial tipo ChatGPT sobreviva a un refresh.
 
 export type AiMessage = { role: "user" | "assistant"; content: string; suggestions?: string[] };
-export type AiConversation = { id: string; title: string; messages: AiMessage[]; updatedAt: number };
+// `icon` es una clave de ICON_MAP (src/lib/conversationIcon.tsx), elegida por
+// la IA junto con el título -- undefined hasta que ese llamado responde (o si
+// falló), momento en el que el sidebar/búsqueda caen al ícono heurístico.
+export type AiConversation = { id: string; title: string; icon?: string; messages: AiMessage[]; updatedAt: number };
 
 const CONVERSATIONS_KEY = "atlas_conversations";
 const ACTIVE_ID_KEY = "atlas_active_conversation_id";
@@ -115,7 +118,10 @@ export function useAtlasChat() {
       // el siguiente mensaje de la misma conversación.
       const firstUser = msgs.find((m) => m.role === "user");
       const title = existingIdx >= 0 ? prev[existingIdx].title : firstUser ? makeTitle(firstUser.content) : "Nueva conversación";
-      const entry: AiConversation = { id, title, messages: msgs, updatedAt: Date.now() };
+      // El ícono (si ya se resolvió por IA) se conserva igual que el título --
+      // persist() se llama en cada mensaje, no solo en el primero.
+      const icon = existingIdx >= 0 ? prev[existingIdx].icon : undefined;
+      const entry: AiConversation = { id, title, icon, messages: msgs, updatedAt: Date.now() };
       const next = existingIdx >= 0 ? prev.map((c, i) => (i === existingIdx ? entry : c)) : [entry, ...prev];
       next.sort((a, b) => b.updatedAt - a.updatedAt);
       const trimmed = next.slice(0, MAX_CONVERSATIONS);
@@ -124,10 +130,13 @@ export function useAtlasChat() {
     });
   }, []);
 
-  // Título inteligente vía IA (llamado liviano, sin tools) tras el primer
-  // intercambio de una conversación nueva -- reemplaza el título derivado a
-  // mano (que solo copiaba el primer mensaje) por un resumen corto real.
-  // Mismo patrón que generateSmartTitle en Meridian/Assistant.tsx.
+  // Título inteligente + ícono por tema vía IA (llamado liviano, sin tools)
+  // tras el primer intercambio de una conversación nueva -- reemplaza el
+  // título derivado a mano (que solo copiaba el primer mensaje) por un
+  // resumen corto real, y elige un ícono real de un pool grande (ver
+  // ICON_MAP en conversationIcon.tsx) en vez de un match de palabras clave
+  // siempre determinista -- mismo patrón que generateSmartTitle en
+  // Meridian/Assistant.tsx, con el ícono agregado.
   const generateSmartTitle = useCallback(async (id: string, firstMessage: string) => {
     try {
       const res = await fetch("/api/quotebot-chat", {
@@ -137,9 +146,10 @@ export function useAtlasChat() {
       });
       const data = await res.json();
       const title: string | null = data?.title || null;
-      if (!title) return;
+      const icon: string | null = data?.icon || null;
+      if (!title && !icon) return;
       setConversations((prev) => {
-        const next = prev.map((c) => (c.id === id ? { ...c, title } : c));
+        const next = prev.map((c) => (c.id === id ? { ...c, ...(title ? { title } : {}), ...(icon ? { icon } : {}) } : c));
         saveConversations(next);
         return next;
       });

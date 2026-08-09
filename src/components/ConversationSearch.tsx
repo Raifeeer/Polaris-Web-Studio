@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Search, X, ArrowLeft, Stars } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
-import { pickConversationIcon } from "../lib/conversationIcon";
+import { getConversationIcon } from "../lib/conversationIcon";
 
 export interface SearchableConversation {
   id: string;
   title: string;
+  icon?: string;
   text: string; // título + contenido de mensajes, para embeber/buscar
   updatedAt: number;
 }
@@ -181,7 +182,7 @@ export default function ConversationSearch({
             </p>
           )}
           {results.map((c) => {
-            const ConvIcon = pickConversationIcon(c.title, c.text);
+            const ConvIcon = getConversationIcon(c.icon, c.title, c.text);
             return (
             <button
               key={c.id}

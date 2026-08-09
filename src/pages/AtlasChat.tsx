@@ -22,7 +22,7 @@ import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
 import ConversationSearch from "../components/ConversationSearch";
-import { pickConversationIcon } from "../lib/conversationIcon";
+import { getConversationIcon } from "../lib/conversationIcon";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
@@ -207,6 +207,7 @@ export default function AtlasChat() {
   const searchItems = conversations.map((c) => ({
     id: c.id,
     title: c.title,
+    icon: c.icon,
     text: c.messages.map((m) => m.content).join(" "),
     updatedAt: c.updatedAt,
   }));
@@ -352,7 +353,7 @@ export default function AtlasChat() {
                 </p>
               )}
               {conversations.map((c) => {
-                const ConvIcon = pickConversationIcon(c.title, c.messages.map((m) => m.content).join(" "));
+                const ConvIcon = getConversationIcon(c.icon, c.title, c.messages.map((m) => m.content).join(" "));
                 return (
                 <div
                   key={c.id}

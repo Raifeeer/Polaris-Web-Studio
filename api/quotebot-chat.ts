@@ -1,9 +1,25 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { generateText, streamText, stepCountIs } from "ai";
+import { generateText, generateObject, streamText, stepCountIs } from "ai";
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createXai } from "@ai-sdk/xai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { z } from "zod";
 import { atlasTools } from "./_atlasTools.js";
+
+// Mismas claves que ICON_MAP en src/lib/conversationIcon.tsx -- duplicado a
+// propósito (mismo patrón ya aceptado en esta cuenta para PACKAGES/ADDONS
+// entre repos/funciones distintas), porque el cliente no puede importar
+// código de `api/` y viceversa. Si se agrega/saca un ícono del pool, hay que
+// actualizar ambas listas.
+const ICON_KEYS = [
+  "dollar", "cart", "code", "globe", "grid", "calendar", "card", "bot", "palette", "file",
+  "shield", "handshake", "rocket", "server", "mail", "phone", "chat", "help", "star", "heart",
+  "briefcase", "database", "cloud", "lock", "key", "settings", "wrench", "image", "video", "mic",
+  "camera", "pin", "flag", "trophy", "idea", "puzzle", "book", "graduation", "target", "chart",
+  "users", "building", "home", "plane", "food", "health", "car", "search", "wand", "layers",
+  "phone2", "monitor", "brush", "gift", "clock", "trend", "zap", "package", "truck", "checklist",
+  "filecode",
+] as const;
 
 // Backend de texto libre para el chatbot flotante (Atlas Assistant) --
 // reemplaza el modo puramente guiado (quiz de opciones fijas) con una
@@ -88,13 +104,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
   const history = sanitizeHistory((req.body || {}).history);
 
-  // Modo liviano: solo genera un título corto para la conversación (usado
-  // por useAtlasChat.ts tras el primer intercambio), sin tools ni el resto
-  // del system prompt -- mismo patrón que titleOnly en meridian-assistant.
-  // Usa el modelo por defecto configurado (no DeepSeek fijo) + timeout
-  // explícito de 8s -- sin esto, un proveedor colgado deja la respuesta sin
-  // terminar nunca (bug real encontrado en vivo: DeepSeek sin `signal` se
-  // quedó esperando indefinidamente, sin cortar ni caer a otro modelo).
+  // Modo liviano: genera un título corto + elige un ícono real (de un pool
+  // de ~60, no un match de palabras clave siempre determinista) para la
+  // conversación, en un solo llamado estructurado (usado por
+  // useAtlasChat.ts tras el primer intercambio), sin tools ni el resto del
+  // system prompt -- mismo patrón que titleOnly en meridian-assistant, con
+  // el ícono agregado como campo del objeto. Usa el modelo por defecto
+  // configurado (no DeepSeek fijo) + timeout explícito de 8s -- sin esto, un
+  // proveedor colgado deja la respuesta sin terminar nunca (bug real
+  // encontrado en vivo: DeepSeek sin `signal` se quedó esperando
+  // indefinidamente, sin cortar ni caer a otro modelo).
   if (titleOnly) {
     try {
       const key = await getDefaultModel();
@@ -102,17 +121,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const xai = createXai({ apiKey: process.env.GROK_API_KEY });
       const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
       const model = key === "gemini" ? google("gemini-3.5-flash") : key === "grok" ? xai("grok-4.3") : deepseek("deepseek-chat");
-      const result = await generateText({
+      const result = await generateObject({
         model,
-        system: "Generas títulos cortos (máximo 6 palabras, sin comillas ni punto final) que resumen de qué trata una conversación, en el mismo idioma del mensaje. Responde solo con el título, nada más.",
-        prompt: `Primer mensaje del usuario: "${message.slice(0, 500)}"\n\nTítulo corto:`,
-        temperature: 0.3,
+        schema: z.object({
+          title: z.string().describe("Título corto (máximo 6 palabras, sin comillas ni punto final) que resume de qué trata la conversación, en el mismo idioma del mensaje."),
+          icon: z.enum(ICON_KEYS).describe("El ícono que mejor representa el tema del mensaje -- variedad real, no siempre el mismo para temas similares."),
+        }),
+        prompt: `Primer mensaje del usuario: "${message.slice(0, 500)}"\n\nElige un título corto y el ícono más representativo del tema.`,
+        temperature: 0.4,
         abortSignal: AbortSignal.timeout(8000),
       });
-      const title = result.text.trim().replace(/^["']|["']$/g, "").slice(0, 60);
-      return res.status(200).json({ title: title || null });
+      const title = result.object.title.trim().replace(/^["']|["']$/g, "").slice(0, 60);
+      return res.status(200).json({ title: title || null, icon: result.object.icon || null });
     } catch {
-      return res.status(200).json({ title: null });
+      return res.status(200).json({ title: null, icon: null });
     }
   }
 
