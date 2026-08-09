@@ -119,14 +119,14 @@ export default function ConversationSearch({
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={translate("Search your conversations…", "Buscar en tus conversaciones…")}
+              placeholder={translate("Buscar en tus conversaciones…", "Search your conversations…")}
               className="w-full pl-9 pr-8 py-2.5 rounded-full bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-primary-base)] transition-colors"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                aria-label={translate("Clear search", "Limpiar búsqueda")}
+                aria-label={translate("Limpiar búsqueda", "Clear search")}
               >
                 <X size={14} />
               </button>

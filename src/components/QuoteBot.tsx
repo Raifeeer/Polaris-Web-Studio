@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2 } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -80,6 +80,25 @@ const QUESTIONS: Question[] = [
   },
 ];
 
+function WidgetCopyButton({ text }: { text: string }) {
+  const { translate } = useLanguage();
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard?.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+      className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+    >
+      {copied ? <Check size={11} /> : <Copy size={11} />}
+      {copied ? translate("Copiado", "Copied") : translate("Copiar", "Copy")}
+    </button>
+  );
+}
+
 export default function QuoteBot() {
   const { translate } = useLanguage();
   const location = useLocation();
@@ -124,6 +143,7 @@ export default function QuoteBot() {
     error: aiError,
     sendMessage: sendAiMessageText,
     stopGenerating,
+    newChat: newAiChat,
   } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
 
@@ -274,6 +294,16 @@ export default function QuoteBot() {
                   <T en="Online">En línea</T>
                 </span>
               </div>
+              {aiMessages.length > 0 && (
+                <button
+                  onClick={newAiChat}
+                  className="p-2 hover:bg-[var(--color-surface-highlight)] rounded-full transition-colors"
+                  aria-label={translate("Nuevo chat", "New chat")}
+                  title={translate("Nuevo chat", "New chat")}
+                >
+                  <SquarePen size={16} />
+                </button>
+              )}
               <Link
                 to="/asistente"
                 onClick={() => setIsOpen(false)}
@@ -526,6 +556,8 @@ export default function QuoteBot() {
                     )}
                   </div>
 
+                  {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} />}
+
                   {m.role === "assistant" && m.suggestions && m.suggestions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[85%]">
                       {m.suggestions.map((s) => (
@@ -623,7 +655,7 @@ export default function QuoteBot() {
         {isOpen ? (
           <X size={30} />
         ) : (
-          <img src="/brand/atlas-isotipo-black.svg" alt="" className="w-11 h-11" />
+          <img src="/brand/atlas-isotipo-black.svg" alt="" className="w-14 h-14" />
         )}
 
         {!isOpen && (

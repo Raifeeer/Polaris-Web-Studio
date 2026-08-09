@@ -121,6 +121,30 @@ export function useAtlasChat() {
     });
   }, []);
 
+  // Título inteligente vía IA (llamado liviano, sin tools) tras el primer
+  // intercambio de una conversación nueva -- reemplaza el título derivado a
+  // mano (que solo copiaba el primer mensaje) por un resumen corto real.
+  // Mismo patrón que generateSmartTitle en Meridian/Assistant.tsx.
+  const generateSmartTitle = useCallback(async (id: string, firstMessage: string) => {
+    try {
+      const res = await fetch("/api/quotebot-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: firstMessage, titleOnly: true }),
+      });
+      const data = await res.json();
+      const title: string | null = data?.title || null;
+      if (!title) return;
+      setConversations((prev) => {
+        const next = prev.map((c) => (c.id === id ? { ...c, title } : c));
+        saveConversations(next);
+        return next;
+      });
+    } catch {
+      // Si falla, se queda con el título derivado del primer mensaje -- no crítico.
+    }
+  }, []);
+
   // Streaming real vía NDJSON (mismo patrón que meridian-assistant/Assistant.tsx):
   // el backend manda una línea JSON por delta de texto en vez de esperar la
   // respuesta completa. Si el modelo por defecto falla a mitad de camino, el
@@ -131,6 +155,7 @@ export function useAtlasChat() {
       const trimmed = text.trim();
       if (!trimmed || loading) return;
       setError(false);
+      const isNewConversation = messages.length === 0;
       const history = messages.map(({ role, content }) => ({ role, content }));
       const withUser: AiMessage[] = [...messages, { role: "user", content: trimmed }];
       const assistantIdx = withUser.length;
@@ -196,6 +221,7 @@ export function useAtlasChat() {
         const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions }];
         setMessages(finalMsgs);
         persist(activeId, finalMsgs);
+        if (isNewConversation) generateSmartTitle(activeId, trimmed);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           // Detenido a propósito por el usuario -- se conserva el texto
@@ -205,7 +231,10 @@ export function useAtlasChat() {
             ? [...withUser, { role: "assistant", content, suggestions }]
             : withUser;
           setMessages(finalMsgs);
-          if (gotAnyDelta) persist(activeId, finalMsgs);
+          if (gotAnyDelta) {
+            persist(activeId, finalMsgs);
+            if (isNewConversation) generateSmartTitle(activeId, trimmed);
+          }
         } else {
           setError(true);
           setMessages(withUser);
@@ -215,7 +244,7 @@ export function useAtlasChat() {
         abortRef.current = null;
       }
     },
-    [messages, loading, activeId, persist],
+    [messages, loading, activeId, persist, generateSmartTitle],
   );
 
   const stopGenerating = useCallback(() => {

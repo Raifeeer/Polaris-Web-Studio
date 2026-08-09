@@ -59,7 +59,7 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
   if (isUser) {
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
-        <div className="max-w-[85%] sm:max-w-[70%] px-4 py-3 rounded-2xl rounded-tr-md bg-[var(--color-primary-base)] text-white shadow-sm">
+        <div className="max-w-[85%] sm:max-w-[70%] p-3 rounded-2xl rounded-tr-md bg-[var(--color-primary-base)] text-white shadow-sm">
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
         </div>
       </motion.div>
@@ -73,9 +73,21 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
           <AtlasMark variant="isotipo" className="w-6 h-6" />
         </div>
         <div className="group flex-1 min-w-0">
-          <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
+          <div className="p-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
             <AtlasMarkdown content={message.content} />
           </div>
+
+          {message.content && (
+            <button
+              onClick={handleCopy}
+              // Siempre visible en mobile (no hay hover real); en desktop se
+              // revela solo al pasar el mouse sobre el mensaje, como antes.
+              className="mt-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+              {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
+            </button>
+          )}
 
           {message.suggestions && message.suggestions.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
@@ -89,18 +101,6 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
                 </button>
               ))}
             </div>
-          )}
-
-          {message.content && (
-            <button
-              onClick={handleCopy}
-              // Siempre visible en mobile (no hay hover real); en desktop se
-              // revela solo al pasar el mouse sobre el mensaje, como antes.
-              className="mt-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
-            </button>
           )}
         </div>
       </div>
@@ -143,7 +143,7 @@ export default function AtlasChat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const activeConversation = conversations.find((c) => c.id === activeId);
-  const activeTitle = messages.length === 0 ? translate("New chat", "Nuevo chat") : activeConversation?.title || translate("New chat", "Nuevo chat");
+  const activeTitle = messages.length === 0 ? translate("Nuevo chat", "New chat") : activeConversation?.title || translate("Nuevo chat", "New chat");
   const searchItems = conversations.map((c) => ({
     id: c.id,
     title: c.title,
@@ -215,15 +215,28 @@ export default function AtlasChat() {
 
   return (
     <div className="h-dvh w-full flex bg-[var(--color-surface-base)] overflow-hidden pt-[env(safe-area-inset-top)]">
-      {/* Sidebar de historial */}
+      {/* Sidebar de historial -- en mobile es un overlay a pantalla completa
+          (no empuja el layout, mismo patrón que el drawer de Meridian y el
+          menú de Gemini); en desktop (md+) queda inline como panel fijo. */}
+      <AnimatePresence initial={false}>
+        {sidebarOpen && (
+          <motion.div
+            onClick={() => setSidebarOpen(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence initial={false}>
         {sidebarOpen && (
           <motion.aside
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: 280, opacity: 1 }}
-            exit={{ width: 0, opacity: 0 }}
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
             transition={{ duration: 0.2 }}
-            className="shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden"
+            className="fixed inset-y-0 left-0 z-50 w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden"
           >
             <div className="p-3 flex items-center gap-2">
               <Link
@@ -243,7 +256,7 @@ export default function AtlasChat() {
               {conversations.length > 0 && (
                 <button
                   onClick={() => setSearchOpen(true)}
-                  aria-label={translate("Search conversations", "Buscar conversaciones")}
+                  aria-label={translate("Buscar conversaciones", "Search conversations")}
                   className="p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
                 >
                   <Search size={14} />
@@ -376,8 +389,8 @@ export default function AtlasChat() {
           <button
             onClick={newChat}
             className="p-2 rounded-lg hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)] transition-colors shrink-0"
-            aria-label={translate("New chat", "Nuevo chat")}
-            title={translate("New chat", "Nuevo chat")}
+            aria-label={translate("Nuevo chat", "New chat")}
+            title={translate("Nuevo chat", "New chat")}
           >
             <SquarePen size={18} />
           </button>
@@ -411,9 +424,13 @@ export default function AtlasChat() {
             </div>
           ) : (
             <div className="max-w-3xl mx-auto px-4 py-6 space-y-5">
-              {messages.map((m, i) => (
-                <MessageBubble key={i} message={m} onSuggestionClick={handleSend} />
-              ))}
+              {messages.map((m, i) => {
+                // Se omite la burbuja del assistant mientras está vacía
+                // (streaming aún sin el primer delta) -- ya la cubre el
+                // indicador de "escribiendo" de abajo.
+                if (m.role === "assistant" && !m.content && i === messages.length - 1) return null;
+                return <MessageBubble key={i} message={m} onSuggestionClick={handleSend} />;
+              })}
 
               {loading && !messages[messages.length - 1]?.content && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">

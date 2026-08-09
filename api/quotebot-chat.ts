@@ -83,10 +83,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
   }
 
-  const { message, stream: wantsStream } = req.body || {};
+  const { message, stream: wantsStream, titleOnly } = req.body || {};
   if (!message || typeof message !== "string") return res.status(400).json({ error: "Missing message" });
   if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
   const history = sanitizeHistory((req.body || {}).history);
+
+  // Modo liviano: solo genera un título corto para la conversación (usado
+  // por useAtlasChat.ts tras el primer intercambio), sin tools ni el resto
+  // del system prompt -- mismo patrón que titleOnly en meridian-assistant.
+  if (titleOnly) {
+    try {
+      const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
+      const result = await generateText({
+        model: deepseek("deepseek-chat"),
+        system: "Generas títulos cortos (máximo 6 palabras, sin comillas ni punto final) que resumen de qué trata una conversación, en el mismo idioma del mensaje. Responde solo con el título, nada más.",
+        prompt: `Primer mensaje del usuario: "${message.slice(0, 500)}"\n\nTítulo corto:`,
+        temperature: 0.3,
+      });
+      const title = result.text.trim().replace(/^["']|["']$/g, "").slice(0, 60);
+      return res.status(200).json({ title: title || null });
+    } catch {
+      return res.status(200).json({ title: null });
+    }
+  }
 
   const systemPrompt = `Eres Atlas Assistant, el asistente de IA de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA. Respondes tanto en el widget flotante del sitio como en la página completa de chat ("/asistente").
 
