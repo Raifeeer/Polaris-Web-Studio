@@ -135,8 +135,18 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
       if (finalChunk) transcriptRef.current += finalChunk;
       setInterimText(`${transcriptRef.current}${interimChunk}`.trim());
     };
-    recognition.onend = handleEnd;
-    recognition.onerror = handleEnd;
+    // El navegador puede disparar tanto `onerror` como `onend` para la
+    // MISMA sesión al llamar stop() a mitad de una frase -- sin este
+    // chequeo de identidad, el segundo evento (tardío, de la instancia
+    // vieja ya reemplazada por el reinicio del primero) cerraba el
+    // dictado recién reiniciado con el idioma nuevo, dando la sensación
+    // de que cambiar de idioma "salía del modo voz".
+    const onEndOrError = () => {
+      if (recognitionRef.current !== recognition) return;
+      handleEnd();
+    };
+    recognition.onend = onEndOrError;
+    recognition.onerror = onEndOrError;
     recognitionRef.current = recognition;
     recognition.start();
   };
