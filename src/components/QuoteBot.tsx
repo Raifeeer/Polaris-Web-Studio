@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic, MicOff } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -8,6 +8,7 @@ import AtlasMarkdown from "./AtlasMarkdown";
 import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
 import { useSpeechToText } from "../hooks/useSpeechToText";
+import VoiceInputBar from "./VoiceInputBar";
 import AtlasMark from "./AtlasMark";
 
 type Question = {
@@ -635,47 +636,52 @@ export default function QuoteBot() {
 
             {/* Input de texto libre -- siempre disponible, independiente del quiz */}
             <div className="p-3 border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] flex items-center gap-2">
-              <input
-                type="text"
-                value={aiInput}
-                onChange={(e) => setAiInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendAiMessage();
-                }}
-                placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
-                maxLength={2000}
-                className="flex-1 text-sm bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-full px-4 py-2 outline-none focus:border-[var(--color-primary-base)] transition-colors placeholder:text-[var(--color-text-tertiary)]"
-              />
-              {speech.supported && (
-                <button
-                  onClick={speech.toggle}
-                  aria-label={translate("Dictar por voz", "Dictate by voice")}
-                  title={translate("Dictar por voz", "Dictate by voice")}
-                  className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-all ${
-                    speech.listening ? "bg-red-500 text-white animate-pulse" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)]"
-                  }`}
-                >
-                  {speech.listening ? <MicOff size={16} /> : <Mic size={16} />}
-                </button>
-              )}
-              {aiLoading ? (
-                <button
-                  onClick={stopGenerating}
-                  aria-label={translate("Detener", "Stop")}
-                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:brightness-110 transition-all"
-                >
-                  <Square size={12} className="fill-current" />
-                </button>
+              {speech.listening ? (
+                <VoiceInputBar levels={speech.levels} interimText={speech.interimText} onCancel={speech.cancel} onConfirm={speech.stop} />
               ) : (
-                <button
-                  onClick={sendAiMessage}
-                  disabled={!aiInput.trim()}
-                  aria-label={translate("Enviar mensaje", "Send message")}
-                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-                >
-                  <Send size={14} />
-                </button>
+                <>
+                  <input
+                    type="text"
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") sendAiMessage();
+                    }}
+                    placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
+                    maxLength={2000}
+                    className="flex-1 text-sm bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] rounded-full px-4 py-2 outline-none focus:border-[var(--color-primary-base)] transition-colors placeholder:text-[var(--color-text-tertiary)]"
+                  />
+                  {speech.supported && (
+                    <button
+                      onClick={speech.toggle}
+                      aria-label={translate("Dictar por voz", "Dictate by voice")}
+                      title={translate("Dictar por voz", "Dictate by voice")}
+                      className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-all"
+                    >
+                      <Mic size={16} />
+                    </button>
+                  )}
+                </>
               )}
+              {!speech.listening &&
+                (aiLoading ? (
+                  <button
+                    onClick={stopGenerating}
+                    aria-label={translate("Detener", "Stop")}
+                    className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:brightness-110 transition-all"
+                  >
+                    <Square size={12} className="fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={sendAiMessage}
+                    disabled={!aiInput.trim()}
+                    aria-label={translate("Enviar mensaje", "Send message")}
+                    className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                  >
+                    <Send size={14} />
+                  </button>
+                ))}
             </div>
           </motion.div>
         )}

@@ -19,7 +19,6 @@ import {
   Globe,
   VenetianMask,
   Mic,
-  MicOff,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -30,6 +29,7 @@ import ThinkingText from "../components/ThinkingText";
 import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
 import { useSpeechToText } from "../hooks/useSpeechToText";
+import VoiceInputBar from "../components/VoiceInputBar";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
@@ -702,47 +702,55 @@ export default function AtlasChat() {
 
         <div className="shrink-0 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
           <div className="max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] focus-within:border-[var(--color-primary-base)] transition-colors">
-            <textarea
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              rows={1}
-              maxLength={2000}
-              placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
-              className="flex-1 resize-none bg-transparent outline-none text-sm px-2 py-2 max-h-32 placeholder:text-[var(--color-text-tertiary)]"
-            />
-            {speech.supported && (
-              <button
-                onClick={speech.toggle}
-                aria-label={translate("Dictar por voz", "Dictate by voice")}
-                title={translate("Dictar por voz", "Dictate by voice")}
-                className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center transition-all ${
-                  speech.listening
-                    ? "bg-red-500 text-white animate-pulse"
-                    : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-base)] hover:text-[var(--color-primary-base)]"
-                }`}
-              >
-                {speech.listening ? <MicOff size={16} /> : <Mic size={16} />}
-              </button>
-            )}
-            {loading ? (
-              <button
-                onClick={stopGenerating}
-                aria-label={translate("Detener", "Stop")}
-                className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:brightness-110 transition-all"
-              >
-                <Square size={12} className="fill-current" />
-              </button>
+            {speech.listening ? (
+              <VoiceInputBar
+                levels={speech.levels}
+                interimText={speech.interimText}
+                onCancel={speech.cancel}
+                onConfirm={speech.stop}
+              />
             ) : (
-              <button
-                onClick={() => handleSend()}
-                disabled={!input.trim()}
-                aria-label={translate("Enviar mensaje", "Send message")}
-                className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
-              >
-                <Send size={14} />
-              </button>
+              <>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  rows={1}
+                  maxLength={2000}
+                  placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
+                  className="flex-1 resize-none bg-transparent outline-none text-sm px-2 py-2 max-h-32 placeholder:text-[var(--color-text-tertiary)]"
+                />
+                {speech.supported && (
+                  <button
+                    onClick={speech.toggle}
+                    aria-label={translate("Dictar por voz", "Dictate by voice")}
+                    title={translate("Dictar por voz", "Dictate by voice")}
+                    className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-base)] hover:text-[var(--color-primary-base)] transition-all"
+                  >
+                    <Mic size={16} />
+                  </button>
+                )}
+              </>
             )}
+            {!speech.listening &&
+              (loading ? (
+                <button
+                  onClick={stopGenerating}
+                  aria-label={translate("Detener", "Stop")}
+                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:brightness-110 transition-all"
+                >
+                  <Square size={12} className="fill-current" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSend()}
+                  disabled={!input.trim()}
+                  aria-label={translate("Enviar mensaje", "Send message")}
+                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                >
+                  <Send size={14} />
+                </button>
+              ))}
           </div>
           <p className="text-center text-[10px] text-[var(--color-text-tertiary)] mt-1">
             <T en="Atlas can make mistakes. Verify important information.">
