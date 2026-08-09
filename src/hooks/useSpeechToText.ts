@@ -231,24 +231,27 @@ export function useSpeechToText(onResult: (text: string) => void, fallbackLang: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supported]);
 
-  // Llama recognition.stop() y arma un respaldo: si onend/onerror no llega
-  // en STOP_TIMEOUT_MS (bug real de WebKit/iOS Safari con `continuous:true`,
-  // ver comentario junto a forceStopTimerRef), fuerza el cierre a mano
-  // (abort() + handleEnd() directo) para que el botón nunca quede "sin
-  // hacer nada" del lado del usuario.
-  const STOP_TIMEOUT_MS = 900;
+  // Datos reales de los logs de producción (Chrome iOS / WebKit) confirman
+  // que recognition.stop() prácticamente NUNCA dispara onend/onerror en ese
+  // navegador -- cada cierre real venía del respaldo forzado a los 900ms,
+  // nunca del evento nativo. recognition.abort(), en cambio, SÍ dispara
+  // onerror (code "aborted") de forma confiable. Por eso ahora se llama
+  // abort() directo -- ya no hay que esperar en vano esos ~900ms muertos en
+  // cada cambio de idioma o cancelación, que es justo lo que se sentía como
+  // "queda trabado". Queda solo un respaldo corto (STOP_TIMEOUT_MS) por si
+  // algún navegador tampoco reacciona a abort().
+  const STOP_TIMEOUT_MS = 400;
   const stopWithFallback = (recognition: any) => {
     if (forceStopTimerRef.current) clearTimeout(forceStopTimerRef.current);
-    recognition.stop();
+    try {
+      recognition.abort();
+    } catch {
+      recognition.stop();
+    }
     forceStopTimerRef.current = setTimeout(() => {
       forceStopTimerRef.current = null;
       if (recognitionRef.current !== recognition) return; // ya se cerró por el evento real
-      logClientEvent({ event: "webkit_stop_fallback_triggered", stopTimeoutMs: STOP_TIMEOUT_MS });
-      try {
-        recognition.abort();
-      } catch {
-        // sin soporte para abort() -- igual se fuerza el cierre abajo
-      }
+      logClientEvent({ event: "abort_fallback_triggered", stopTimeoutMs: STOP_TIMEOUT_MS });
       handleEnd();
     }, STOP_TIMEOUT_MS);
   };
