@@ -258,7 +258,7 @@ export default function QuoteBot() {
             {/* Header */}
             <div className="p-4 bg-[var(--color-surface-base)] border-b border-[var(--color-border-subtle)] flex items-center justify-between">
               <img
-                src="/brand/isotipo-color-badge-circular.svg"
+                src="/brand/atlas-isotipo.svg"
                 alt=""
                 className="w-6 h-6 rounded-full"
               />

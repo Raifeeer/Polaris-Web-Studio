@@ -64,7 +64,7 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start">
       <div className="flex gap-3 max-w-[95%] sm:max-w-[75%]">
         <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0 overflow-hidden">
-          <img src="/brand/isotipo-color-badge-circular.svg" alt="" className="w-6 h-6 rounded-full" />
+          <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
         </div>
         <div className="group flex-1 min-w-0">
           <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
@@ -230,7 +230,7 @@ export default function AtlasChat() {
               <ArrowLeft size={18} />
             </Link>
           )}
-          <img src="/brand/isotipo-color-badge-circular.svg" alt="" className="w-6 h-6 rounded-full" />
+          <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
           <div className="leading-none">
             <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">Atlas Terminal</p>
             <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)]">
@@ -277,7 +277,7 @@ export default function AtlasChat() {
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="flex gap-3">
                     <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0">
-                      <img src="/brand/isotipo-color-badge-circular.svg" alt="" className="w-6 h-6 rounded-full" />
+                      <img src="/brand/atlas-isotipo.svg" alt="" className="w-6 h-6 rounded-full" />
                     </div>
                     <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2">
                       <TypingDots />
