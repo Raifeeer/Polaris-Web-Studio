@@ -18,6 +18,14 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement>(null);
   const { language, setLanguage, translate } = useLanguage();
 
+  // Le avisa al widget flotante de Atlas Assistant (QuoteBot.tsx) que se
+  // esconda mientras el menú hamburguesa mobile está abierto -- mismo patrón
+  // de clase en <body> ya usado para el "story mode" del portafolio.
+  useEffect(() => {
+    document.body.classList.toggle("mobile-menu-open", isOpen);
+    return () => document.body.classList.remove("mobile-menu-open");
+  }, [isOpen]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (navRef.current && !navRef.current.contains(event.target as Node)) {
