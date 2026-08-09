@@ -32,6 +32,7 @@ import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
+import VoicePicker from "../components/VoicePicker";
 import VoiceInputBar from "../components/VoiceInputBar";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
@@ -155,6 +156,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                   {tts.speaking ? <T en="Stop">Detener</T> : <T en="Listen">Escuchar</T>}
                 </button>
               )}
+              {tts.supported && <VoicePicker lang={message.lang || "es"} />}
               {message.usedWebSearch && (
                 <span
                   className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]"

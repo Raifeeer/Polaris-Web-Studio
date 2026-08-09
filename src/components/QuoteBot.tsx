@@ -9,6 +9,7 @@ import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
+import VoicePicker from "./VoicePicker";
 import VoiceInputBar from "./VoiceInputBar";
 import AtlasMark from "./AtlasMark";
 
@@ -114,6 +115,7 @@ function WidgetCopyButton({ text, usedWebSearch, lang }: { text: string; usedWeb
           {tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
         </button>
       )}
+      {tts.supported && <VoicePicker lang={lang} />}
       {usedWebSearch && (
         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]" title={translate("Búsqueda web usada para esta respuesta", "Web search used for this reply")}>
           <Globe size={11} />
