@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, Globe, CalendarCheck, CalendarClock, ExternalLink } from "lucide-react";
+import { Check, Globe, CalendarCheck, CalendarClock, ExternalLink, BookOpen, MessageCircle } from "lucide-react";
 import { formatDate } from "../lib/utils";
 import type { AtlasWidgetData } from "../hooks/useAtlasChat";
 
@@ -239,6 +239,47 @@ function BookingConfirmed({ data, lang }: { data: any; lang: "es" | "en" }) {
   );
 }
 
+function BlogArticles({ data, lang }: { data: any; lang: "es" | "en" }) {
+  const results: { title: string; summary: string; category: string; url: string }[] = data?.results || [];
+  if (!results.length) return null;
+  return (
+    <div className="flex flex-col gap-2 mt-1 max-w-sm">
+      {results.map((a) => (
+        <Card key={a.url}>
+          <a href={a.url} target="_blank" rel="noopener noreferrer" className="p-3.5 flex items-start gap-2.5 hover:bg-[var(--color-surface-base)] transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-[var(--color-primary-muted)] text-[var(--color-primary-base)] flex items-center justify-center shrink-0">
+              <BookOpen size={15} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-black text-[var(--color-text-primary)] leading-snug">{a.title}</p>
+              <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">{a.category}</p>
+              <p className="text-xs text-[var(--color-text-secondary)] mt-1 line-clamp-2">{a.summary}</p>
+            </div>
+            <ExternalLink size={13} className="shrink-0 text-[var(--color-text-tertiary)] mt-0.5" />
+          </a>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function WhatsappHandoff({ data, lang }: { data: any; lang: "es" | "en" }) {
+  if (!data?.whatsappUrl) return null;
+  return (
+    <Card className="mt-1 max-w-xs border-emerald-500/40">
+      <a href={data.whatsappUrl} target="_blank" rel="noopener noreferrer" className="p-3.5 flex items-center gap-2.5 hover:bg-[var(--color-surface-base)] transition-colors">
+        <div className="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
+          <MessageCircle size={16} />
+        </div>
+        <div>
+          <p className="text-sm font-black text-emerald-500">{tt("Hablar con Cristian", "Talk to Cristian", lang)}</p>
+          <p className="text-xs text-[var(--color-text-secondary)] mt-0.5">{tt("Abre WhatsApp con el contexto ya cargado", "Opens WhatsApp with context pre-filled", lang)}</p>
+        </div>
+      </a>
+    </Card>
+  );
+}
+
 export default function AtlasWidget({ widget, onAction, lang = "es" }: { widget?: AtlasWidgetData; onAction?: (text: string) => void; lang?: "es" | "en" }) {
   if (!widget) return null;
   switch (widget.type) {
@@ -259,6 +300,10 @@ export default function AtlasWidget({ widget, onAction, lang = "es" }: { widget?
       return <PortfolioCards data={widget.data} lang={lang} />;
     case "booking_confirmed":
       return <BookingConfirmed data={widget.data} lang={lang} />;
+    case "blog_articles":
+      return <BlogArticles data={widget.data} lang={lang} />;
+    case "whatsapp_handoff":
+      return <WhatsappHandoff data={widget.data} lang={lang} />;
     default:
       return null;
   }

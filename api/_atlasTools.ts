@@ -1,6 +1,7 @@
 import { tool, generateText } from "ai";
 import { z } from "zod";
 import { createXai } from "@ai-sdk/xai";
+import { BLOG_POSTS } from "../src/data/blogData.js";
 
 // Tools reales para Atlas Assistant (AI SDK, function calling real) --
 // reemplazan hechos estáticos incrustados en el system prompt por consultas
@@ -363,6 +364,97 @@ export const webSearch = tool({
   },
 });
 
+// ---- 9. Búsqueda real en el blog de Polaris (contenido real ya publicado) ----
+export const searchBlog = tool({
+  description:
+    "Busca un artículo real del blog de Polaris relacionado con la pregunta del usuario (SEO, performance, e-commerce, IA, desarrollo). Úsala para preguntas educativas/técnicas ('¿qué es X?', '¿por qué importa X?') para responder con un artículo real y su link en vez de explicarlo solo de memoria -- no reemplaza la explicación, la complementa.",
+  inputSchema: z.object({
+    query: z.string().describe("Tema o palabras clave a buscar, ej. 'seo', 'core web vitals', 'inteligencia artificial'."),
+  }),
+  execute: async ({ query }) => {
+    const q = query.toLowerCase();
+    const scored = BLOG_POSTS.map((p) => {
+      let score = 0;
+      if (p.title.toLowerCase().includes(q)) score += 3;
+      if (p.summary.toLowerCase().includes(q)) score += 2;
+      if (p.tags.some((t) => t.toLowerCase().includes(q))) score += 2;
+      if (p.concepts.some((c) => c.toLowerCase().includes(q))) score += 1;
+      if (p.category.toLowerCase().includes(q)) score += 1;
+      return { p, score };
+    })
+      .filter((x) => x.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 2)
+      .map(({ p }) => ({
+        title: p.title,
+        summary: p.summary,
+        category: p.category,
+        url: `https://polarisweb.studio/blog/${p.slug}`,
+      }));
+    return { results: scored };
+  },
+});
+
+// ---- 10. Respuesta grounded a preguntas de política (reembolso, cancelación, etc.) ----
+// El texto es un resumen fiel de las cláusulas reales de /terminos (LegalPage.tsx)
+// -- nunca inventado -- para que el modelo no responda de memoria sobre temas
+// legales/de dinero, donde una alucinación pesa mucho más que en otras preguntas.
+const POLICY_TOPICS: Record<string, { es: string; en: string }> = {
+  refund: {
+    es: "El anticipo no es reembolsable una vez que el trabajo ya empezó (kickoff, primer borrador, o cualquier entregable producido), salvo que Polaris no entregue por razones propias -- ahí sí aplica reembolso total o proporcional según el avance. Antes de empezar el trabajo, cancelar da derecho a 100% de reembolso (menos comisiones de PayPal/banco, que no son reembolsables). El primer paso ante un resultado no satisfactorio siempre son ajustes razonables dentro del alcance acordado, no un reembolso directo.",
+    en: "The deposit is non-refundable once work has started (kickoff, first draft, or any deliverable produced), unless Polaris fails to deliver for reasons of its own -- then a full or proportional refund applies based on progress. Cancelling before work starts gives you a 100% refund (minus PayPal/bank fees, which aren't refundable). The first step for an unsatisfactory result is always reasonable adjustments within scope, not a direct refund.",
+  },
+  cancellation: {
+    es: "Cancelar antes de empezar el trabajo: reembolso completo del anticipo (menos comisiones de pago ya cobradas por PayPal/banco). Cancelar después de empezar: se factura el valor del trabajo ya completado -- si pagaste de más, se reembolsa la diferencia; si pagaste de menos, el saldo restante queda pendiente. Costos de terceros ya gastados (dominios, licencias) nunca son reembolsables. El mantenimiento mensual se puede cancelar cuando quieras, efectivo al fin del ciclo ya pagado.",
+    en: "Cancelling before work starts: full deposit refund (minus payment fees already charged by PayPal/bank). Cancelling after work has started: we invoice the value of work already completed -- if you overpaid, we refund the difference; if you underpaid, the remaining balance is due. Third-party costs already spent (domains, licenses) are never refundable. Monthly maintenance can be cancelled anytime, effective at the end of the already-paid cycle.",
+  },
+  revisions: {
+    es: "Si no estás conforme con un resultado entregado, el primer paso siempre es trabajar de buena fe en ajustes razonables dentro del alcance acordado en tu cotización -- no un reembolso. Un reembolso solo se considera si, después de un intento genuino de revisiones, no logramos entregar un resultado razonablemente alineado con lo acordado.",
+    en: "If you're not satisfied with a delivered result, the first step is always good-faith reasonable adjustments within the scope agreed in your quote -- not a refund. A refund is only considered if, after a genuine attempt at revisions, we're unable to deliver a result reasonably aligned with what was agreed.",
+  },
+  payment_methods: {
+    es: "Aceptamos PayPal (en línea, confirmación automática) y transferencia bancaria o efectivo (confirmado manualmente en tu portal una vez verificamos la recepción de los fondos). Los precios son los indicados en tu cotización aceptada, en la moneda ahí señalada.",
+    en: "We accept PayPal (online, automatic confirmation) and bank transfer or cash (manually confirmed in your portal once we verify receipt of funds). Prices are those stated in your accepted quote, in the currency indicated there.",
+  },
+  delivery_timeline: {
+    es: "El plazo de entrega indicado en tu cotización asume que nos das a tiempo el contenido, accesos y retroalimentación necesarios. Cualquier demora de tu parte extiende el plazo en la misma medida y no cuenta como una demora atribuible a Polaris.",
+    en: "The timeline stated in your quote assumes timely delivery of content, access, and feedback from you. Delays on your part extend the timeline accordingly and don't count as a delay attributable to Polaris.",
+  },
+  intellectual_property: {
+    es: "Una vez que tu proyecto está pagado en su totalidad, eres dueño del código, diseño y contenido a medida creado específicamente para ti. Esto no incluye librerías, frameworks, plugins o recursos de terceros usados para construirlo, que se mantienen bajo sus propias licencias. Hasta recibir el pago completo, los entregables siguen siendo propiedad de Polaris Web Studio.",
+    en: "Once your project is fully paid for, you own the custom code, design, and content created specifically for you. This doesn't include third-party libraries, frameworks, plugins, or assets, which remain under their own licenses. Until full payment, deliverables remain the property of Polaris Web Studio.",
+  },
+};
+
+export const getPolicyAnswer = tool({
+  description:
+    "Devuelve el texto real y exacto de la política de Polaris sobre reembolsos, cancelación, revisiones, formas de pago, plazos de entrega, o propiedad intelectual -- basado en los Términos de Servicio reales (/terminos), nunca inventado. Úsala SIEMPRE que el usuario pregunte por reembolsos, cancelación, garantías, o de quién es el código/diseño después de pagar -- nunca respondas estas preguntas solo de memoria.",
+  inputSchema: z.object({
+    topic: z
+      .enum(["refund", "cancellation", "revisions", "payment_methods", "delivery_timeline", "intellectual_property"])
+      .describe("Tema de la política que se está consultando."),
+    lang: z.enum(["es", "en"]).default("es"),
+  }),
+  execute: async ({ topic, lang }) => {
+    const entry = POLICY_TOPICS[topic];
+    if (!entry) return { error: "Tema no encontrado." };
+    return { answer: entry[lang] || entry.es, sourceUrl: "https://polarisweb.studio/terminos" };
+  },
+});
+
+// ---- 11. Escalar a un humano real por WhatsApp, con contexto ----
+export const requestHumanHandoff = tool({
+  description:
+    "Genera un link real de WhatsApp para que el usuario hable directo con Cristian (fundador), con un resumen breve de la conversación pre-cargado en el mensaje. Úsala SOLO cuando el usuario pida explícitamente hablar con una persona/humano, o diga que el chat no le está resolviendo lo que necesita -- nunca la ofrezcas como primera opción antes de intentar ayudar tú mismo.",
+  inputSchema: z.object({
+    summary: z.string().describe("Resumen breve (1-2 frases, en el idioma del usuario) de qué necesita/preguntó, para pre-cargar el mensaje de WhatsApp."),
+  }),
+  execute: async ({ summary }) => {
+    const message = `Hola, estuve hablando con Atlas (el chat de Polaris) y quisiera continuar con alguien del equipo. Resumen: ${summary}`;
+    return { whatsappUrl: `https://wa.me/18299200544?text=${encodeURIComponent(message)}` };
+  },
+});
+
 export const atlasTools = {
   check_domain_price: checkDomainPrice,
   calculate_quote: calculateQuote,
@@ -373,4 +465,7 @@ export const atlasTools = {
   search_portfolio: searchPortfolio,
   capture_lead: captureLead,
   web_search: webSearch,
+  search_blog: searchBlog,
+  get_policy_answer: getPolicyAnswer,
+  request_human_handoff: requestHumanHandoff,
 };

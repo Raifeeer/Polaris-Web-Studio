@@ -157,6 +157,9 @@ TOOLS REALES DISPONIBLES -- úsalas siempre que apliquen, en vez de inventar o r
 - search_portfolio: si preguntan "¿han hecho algo parecido a mi negocio?" o mencionan un rubro (restaurante, inmobiliaria, clínica, tienda online, etc.) -- responde con el ejemplo real que devuelva y su link, en vez de una afirmación genérica de "sí, hacemos de todo".
 - capture_lead: SOLO cuando el usuario ya dio su nombre Y su email Y pidió explícitamente que le guardes/envíes la cotización (ej. "mándamela por correo", "apúntame", "quiero que me contacten") -- nunca la ofrezcas de forma insistente ni la dispares solo porque el usuario mencionó su email de pasada. Es una alternativa de baja fricción para quien no quiere agendar una llamada ni pasar por el cotizador del sitio, NO un reemplazo de esos dos caminos: si el usuario está listo para más, sigue ofreciendo agendar una llamada o ir al cotizador (/cotizar) primero.
 - web_search: para preguntas generales o del momento que no tienen que ver con Polaris/precios/servicios propios (noticias, hechos actuales, información pública sobre terceros, etc.) y que no sabrías responder con certeza de memoria. No la uses para nada de Polaris (precios, paquetes, dominios, portafolio) -- para eso ya existen las tools dedicadas de arriba.
+- search_blog: para preguntas educativas/técnicas ("¿qué es X?", "¿por qué importa X para mi negocio?") sobre temas que Polaris ya cubrió en su blog real (SEO, performance, e-commerce, IA, desarrollo) -- complementa tu explicación con un artículo real y su link, no la uses como reemplazo de explicar tú mismo.
+- get_policy_answer: SIEMPRE que pregunten por reembolsos, cancelación, garantías/revisiones, formas de pago, plazos de entrega, o de quién es el código/diseño después de pagar -- nunca respondas estas preguntas solo de memoria, son temas de dinero/contrato donde una respuesta inventada pesa mucho.
+- request_human_handoff: SOLO cuando el usuario pida explícitamente hablar con una persona/humano, o diga que el chat no le está resolviendo lo que necesita -- nunca la ofrezcas como primera opción ni la sugieras solo porque una pregunta es difícil; intenta ayudar tú mismo primero.
 
 ADDONS DISPONIBLES (ids reales para calculate_quote entre paréntesis) -- son items DISTINTOS entre sí, no los mezcles -- "chatbot IA" (mencionado en la descripción del plan Constelación) es una funcionalidad base ya incluida en ese plan; "Agente de Ventas IA" (ai_agent) y "Bot de Atención 24/7" (bot_fast) son dos addons separados y diferentes entre sí, no la misma cosa que el chatbot base de Constelación.
 - Agente de Ventas IA (ai_agent) -- $49/mes (ya incluido en Nova, no aplica ahí)
@@ -311,6 +314,8 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     const byName = (name: string) => toolResults.find((t) => t.toolName === name && t.output && !(t.output as any).error);
     const booking = byName("book_call");
     if (booking) return { type: "booking_confirmed", data: booking.output };
+    const handoff = byName("request_human_handoff");
+    if (handoff) return { type: "whatsapp_handoff", data: handoff.output };
     const quote = byName("calculate_quote");
     if (quote) return { type: "quote_summary", data: quote.output };
     const domain = byName("check_domain_price");
@@ -323,6 +328,8 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     if (comparison) return { type: "plan_comparison", data: comparison.output };
     const packages = byName("list_packages");
     if (packages) return { type: "pricing_table", data: packages.output };
+    const blog = byName("search_blog");
+    if (blog && (blog.output as any).results?.length) return { type: "blog_articles", data: blog.output };
     return null;
   }
 
