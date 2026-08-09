@@ -34,6 +34,7 @@ import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoicePicker from "../components/VoicePicker";
 import VoiceInputBar from "../components/VoiceInputBar";
+import AnimatedCheckIcon from "../components/AnimatedCheckIcon";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
@@ -103,6 +104,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
   const tts = useTextToSpeech(message.content, message.lang || "es");
+  const { translate } = useLanguage();
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(message.content).then(() => {
@@ -138,22 +140,24 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
             <div className="mt-1.5 flex items-center gap-3">
               <button
                 onClick={handleCopy}
+                aria-label={translate("Copiar", "Copy")}
+                title={translate("Copiar", "Copy")}
                 // Siempre visible en mobile (no hay hover real); en desktop se
                 // revela solo al pasar el mouse sobre el mensaje, como antes.
-                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
               >
-                {copied ? <Check size={12} /> : <Copy size={12} />}
-                {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
+                {copied ? <AnimatedCheckIcon size={12} /> : <Copy size={12} />}
               </button>
               {tts.supported && (
                 <button
                   onClick={tts.toggle}
-                  className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${
+                  aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+                  title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+                  className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 ${
                     tts.speaking ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
                   }`}
                 >
                   {tts.speaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
-                  {tts.speaking ? <T en="Stop">Detener</T> : <T en="Listen">Escuchar</T>}
                 </button>
               )}
               {tts.supported && <VoicePicker lang={message.lang || "es"} />}

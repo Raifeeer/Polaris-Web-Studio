@@ -11,6 +11,7 @@ import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoicePicker from "./VoicePicker";
 import VoiceInputBar from "./VoiceInputBar";
+import AnimatedCheckIcon from "./AnimatedCheckIcon";
 import AtlasMark from "./AtlasMark";
 
 type Question = {
@@ -99,20 +100,22 @@ function WidgetCopyButton({ text, usedWebSearch, lang }: { text: string; usedWeb
             setTimeout(() => setCopied(false), 1500);
           });
         }}
-        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+        aria-label={translate("Copiar", "Copy")}
+        title={translate("Copiar", "Copy")}
+        className="p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
       >
-        {copied ? <Check size={11} /> : <Copy size={11} />}
-        {copied ? translate("Copiado", "Copied") : translate("Copiar", "Copy")}
+        {copied ? <AnimatedCheckIcon size={11} /> : <Copy size={11} />}
       </button>
       {tts.supported && (
         <button
           onClick={tts.toggle}
-          className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+          aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+          title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+          className={`p-1 transition-colors ${
             tts.speaking ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
           }`}
         >
           {tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
-          {tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
         </button>
       )}
       {tts.supported && <VoicePicker lang={lang} />}
