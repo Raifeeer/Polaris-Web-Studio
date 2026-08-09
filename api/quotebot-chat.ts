@@ -223,6 +223,7 @@ REGLAS
 - Prioriza siempre avanzar hacia una acción real (agendar una llamada o ir a /cotizar) por sobre seguir conversando -- las tools están para quitar fricción de esa decisión, no para reemplazarla. No uses capture_lead como salida fácil cuando agendar una llamada (book_call) es la mejor opción disponible para lo que el usuario está pidiendo.
 - No dispares una tool con efectos reales (book_call, capture_lead) sin que el usuario haya confirmado explícitamente esa acción en ese mismo turno -- ante cualquier duda, pregunta primero.
 - Cuando uses list_packages, calculate_quote, check_domain_price, check_available_slots o search_portfolio, la interfaz ya dibuja automáticamente una tarjeta visual con esos datos exactos debajo de tu respuesta (precios, horarios, tarjetas de portafolio) -- tu texto NO debe repetir esa lista completa en prosa (sería redundante). En vez de eso, responde en 1-2 frases cortas que interpreten o resuman el resultado (ej. "Estos son nuestros 3 planes -- el Constelación es el más elegido para negocios como el tuyo." o "$X.XX/año, disponible ahora mismo.") y deja que la tarjeta muestre el detalle.
+- Si tu respuesta breve (por la regla de arriba) menciona que el dominio "está incluido"/"incluye dominio"/"dominio estándar", SIEMPRE aclara el límite real de $15 USD (primer año) en esa misma frase corta -- nunca lo describas como "incluido" a secas ni delegues esa aclaración solo a la sección DOMINIO de más arriba; esa sección es tu fuente del dato, no un reemplazo de decirlo. Ej. correcto: "Todos los planes incluyen dominio hasta $15 USD el primer año." Ej. incorrecto (no hacer): "Todos los planes incluyen un dominio estándar." (sin el monto, da a entender que no hay límite).
 
 FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Usa **negrita** solo para precios, nombres de planes o términos clave -- no abuses, si todo está en negrita nada destaca.
@@ -265,6 +266,18 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   ];
   function looksLikePriceHedge(text: string): boolean {
     return HEDGE_PATTERNS.some((p) => p.test(text));
+  }
+
+  // Mismo tipo de falla real que looksLikePriceHedge, encontrada en vivo
+  // (captura del usuario): el modelo puede decir "el dominio está incluido"
+  // sin el límite real de $15 USD -- da a entender que Polaris cubre CUALQUIER
+  // dominio sin costo. Se detecta y se trata como falla real (cae al
+  // siguiente proveedor), en vez de dejar pasar una afirmación engañosa
+  // sobre un límite de gasto real de la empresa.
+  function omitsDomainCap(text: string): boolean {
+    const mentionsIncludedDomain = /dominio[^.]{0,40}(incluid|estándar|standard)|(incluye|includes)[^.]{0,25}domain/i.test(text);
+    if (!mentionsIncludedDomain) return false;
+    return !/\$?\s?15\b/.test(text);
   }
 
   // Modelo por defecto: configurable desde /configuracion en Meridian (ver
@@ -327,6 +340,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         for await (const delta of result.textStream) send({ type: "delta", text: delta });
         const finalText = (await result.text).trim();
         if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
+        if (omitsDomainCap(finalText)) throw new Error("Reply mentions included domain without the real $15 cap");
         toolResults = (await result.toolResults) as unknown as ToolResultLike[];
       } catch (err) {
         if (defaultModel === "deepseek") throw err;
@@ -358,6 +372,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       // que sí conocemos. Los demás proveedores no mostraron este problema en
       // pruebas, pero el chequeo no hace daño aplicado a cualquiera.
       if (key === "deepseek" && looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
+      if (omitsDomainCap(text)) throw new Error("Reply mentions included domain without the real $15 cap");
       const widget = buildWidget(result.toolResults as unknown as ToolResultLike[]);
       return res.status(200).json({ reply: text, provider: key, widget });
     } catch {
