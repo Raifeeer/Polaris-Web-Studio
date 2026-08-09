@@ -332,7 +332,16 @@ export default function AtlasChat() {
 
             <div className="px-3 pb-3 flex items-center gap-2">
               <button
-                onClick={newChat}
+                onClick={() => {
+                  newChat();
+                  // Mismo criterio que al elegir una conversación (ver más
+                  // abajo): en mobile el sidebar es un overlay a pantalla
+                  // completa, se cierra al pasar a un chat nuevo; en
+                  // desktop queda inline y no debe desaparecer.
+                  if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+                    setSidebarOpen(false);
+                  }
+                }}
                 className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-xs font-black uppercase tracking-wider transition-colors"
               >
                 <SquarePen size={14} />
