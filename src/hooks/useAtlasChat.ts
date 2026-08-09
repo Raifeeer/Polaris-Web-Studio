@@ -24,6 +24,13 @@ const THINKING_MESSAGES = [
   "Conectando los puntos…",
   "Puliendo los detalles…",
   "Ya casi…",
+  "Cargando…",
+  "Ejecutando el build…",
+  "Sincronizando ideas…",
+  "Armando el layout…",
+  "Empaquetando la respuesta…",
+  "Instalando dependencias…",
+  "Depurando la respuesta…",
 ];
 
 function newId(): string {
