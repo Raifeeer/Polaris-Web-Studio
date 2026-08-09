@@ -313,7 +313,7 @@ export default function AtlasChat() {
                         e.stopPropagation();
                         setOpenMenuId(openMenuId === c.id ? null : c.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-opacity"
+                      className="shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                       aria-label={translate("Más opciones", "More options")}
                     >
                       <MoreVertical size={12} />
