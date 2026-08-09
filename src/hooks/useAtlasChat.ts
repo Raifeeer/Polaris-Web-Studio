@@ -206,9 +206,15 @@ export function useAtlasChat() {
       const existingIdx = prev.findIndex((c) => c.id === id);
       // Si ya hay un título guardado (derivado antes, o renombrado a mano
       // por el usuario), se conserva -- así un rename manual no se pisa en
-      // el siguiente mensaje de la misma conversación.
-      const firstUser = msgs.find((m) => m.role === "user");
-      const title = existingIdx >= 0 ? prev[existingIdx].title : firstUser ? makeTitle(firstUser.content) : "Nueva conversación";
+      // el siguiente mensaje de la misma conversación. Una conversación
+      // NUEVA arranca siempre con el placeholder genérico, nunca con el
+      // primer mensaje truncado (makeTitle) -- mostrarlo de entrada y
+      // reemplazarlo segundos después por el título real de la IA se veía
+      // como que el título "cambiaba dos veces" (bug real reportado por el
+      // usuario). Con un único placeholder fijo, solo hay UNA transición
+      // real: placeholder -> título de la IA. `makeTitle` queda como
+      // respaldo dentro de generateSmartTitle si ese llamado falla.
+      const title = existingIdx >= 0 ? prev[existingIdx].title : "Nueva conversación";
       // El ícono (si ya se resolvió por IA) se conserva igual que el título --
       // persist() se llama en cada mensaje, no solo en el primero.
       const icon = existingIdx >= 0 ? prev[existingIdx].icon : undefined;
@@ -236,16 +242,22 @@ export function useAtlasChat() {
         body: JSON.stringify({ message: firstMessage, titleOnly: true }),
       });
       const data = await res.json();
-      const title: string | null = data?.title || null;
+      const title: string = data?.title || makeTitle(firstMessage);
       const icon: string | null = data?.icon || null;
-      if (!title && !icon) return;
       setConversations((prev) => {
-        const next = prev.map((c) => (c.id === id ? { ...c, ...(title ? { title } : {}), ...(icon ? { icon } : {}) } : c));
+        const next = prev.map((c) => (c.id === id ? { ...c, title, ...(icon ? { icon } : {}) } : c));
         saveConversations(next);
         return next;
       });
     } catch {
-      // Si falla, se queda con el título derivado del primer mensaje -- no crítico.
+      // Si falla la llamada por completo (sin red, etc.), igual se reemplaza
+      // el placeholder por el título derivado del primer mensaje -- nunca se
+      // queda pegado en "Nueva conversación".
+      setConversations((prev) => {
+        const next = prev.map((c) => (c.id === id ? { ...c, title: makeTitle(firstMessage) } : c));
+        saveConversations(next);
+        return next;
+      });
     }
   }, []);
 
