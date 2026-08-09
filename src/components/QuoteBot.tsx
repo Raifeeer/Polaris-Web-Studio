@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic, Volume2, VolumeX } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -8,6 +8,7 @@ import AtlasMarkdown from "./AtlasMarkdown";
 import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
 import { useSpeechToText } from "../hooks/useSpeechToText";
+import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "./VoiceInputBar";
 import AtlasMark from "./AtlasMark";
 
@@ -84,9 +85,10 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-function WidgetCopyButton({ text, usedWebSearch }: { text: string; usedWebSearch?: boolean }) {
+function WidgetCopyButton({ text, usedWebSearch, lang }: { text: string; usedWebSearch?: boolean; lang: "es" | "en" }) {
   const { translate } = useLanguage();
   const [copied, setCopied] = useState(false);
+  const tts = useTextToSpeech(text, lang);
   return (
     <div className="mt-1 flex items-center gap-3">
       <button
@@ -101,6 +103,17 @@ function WidgetCopyButton({ text, usedWebSearch }: { text: string; usedWebSearch
         {copied ? <Check size={11} /> : <Copy size={11} />}
         {copied ? translate("Copiado", "Copied") : translate("Copiar", "Copy")}
       </button>
+      {tts.supported && (
+        <button
+          onClick={tts.toggle}
+          className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors ${
+            tts.speaking ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+          }`}
+        >
+          {tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
+          {tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
+        </button>
+      )}
       {usedWebSearch && (
         <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]" title={translate("Búsqueda web usada para esta respuesta", "Web search used for this reply")}>
           <Globe size={11} />
@@ -592,7 +605,7 @@ export default function QuoteBot() {
                     />
                   )}
 
-                  {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} />}
+                  {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} lang={m.lang || "es"} />}
 
                   {m.role === "assistant" && i === aiMessages.length - 1 && m.suggestions && m.suggestions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[85%]">

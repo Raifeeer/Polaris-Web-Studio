@@ -67,3 +67,19 @@ export function detectLang(text: string): "es" | "en" {
   if (enWords.length > esWords.length) return "en";
   return "es";
 }
+
+/**
+ * Limpia el Markdown real de una respuesta de Atlas (negrita, links,
+ * viñetas) antes de mandarla a SpeechSynthesis -- si no, el lector lee los
+ * símbolos literales ("asterisco asterisco", "corchete") en vez de sonar
+ * como una frase normal.
+ */
+export function stripMarkdownForSpeech(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [texto](url) -> texto
+    .replace(/\*\*(.+?)\*\*/g, "$1") // **negrita** -> negrita
+    .replace(/^[-*]\s+/gm, "") // viñetas al inicio de línea
+    .replace(/#{1,6}\s+/g, "") // encabezados
+    .replace(/`{1,3}([^`]*)`{1,3}/g, "$1") // `código`
+    .trim();
+}

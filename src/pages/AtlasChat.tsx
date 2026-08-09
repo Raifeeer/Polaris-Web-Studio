@@ -19,6 +19,8 @@ import {
   Globe,
   VenetianMask,
   Mic,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -29,6 +31,7 @@ import ThinkingText from "../components/ThinkingText";
 import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
 import { useSpeechToText } from "../hooks/useSpeechToText";
+import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "../components/VoiceInputBar";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
@@ -98,6 +101,7 @@ function pickRandomSuggestions(count: number): { es: string; en: string }[] {
 function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMessage; onSuggestionClick: (q: string) => void; isLast: boolean }) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
+  const tts = useTextToSpeech(message.content, message.lang || "es");
 
   const handleCopy = () => {
     navigator.clipboard?.writeText(message.content).then(() => {
@@ -140,6 +144,17 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                 {copied ? <Check size={12} /> : <Copy size={12} />}
                 {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
               </button>
+              {tts.supported && (
+                <button
+                  onClick={tts.toggle}
+                  className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${
+                    tts.speaking ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                  }`}
+                >
+                  {tts.speaking ? <VolumeX size={12} /> : <Volume2 size={12} />}
+                  {tts.speaking ? <T en="Stop">Detener</T> : <T en="Listen">Escuchar</T>}
+                </button>
+              )}
               {message.usedWebSearch && (
                 <span
                   className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]"
