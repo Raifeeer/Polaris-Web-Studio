@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Search, X, ArrowLeft, MessageSquare, Stars } from "lucide-react";
+import { Search, X, ArrowLeft, Stars } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
+import { pickConversationIcon } from "../lib/conversationIcon";
 
 export interface SearchableConversation {
   id: string;
@@ -179,7 +180,9 @@ export default function ConversationSearch({
               )}
             </p>
           )}
-          {results.map((c) => (
+          {results.map((c) => {
+            const ConvIcon = pickConversationIcon(c.title, c.text);
+            return (
             <button
               key={c.id}
               onClick={() => {
@@ -188,7 +191,7 @@ export default function ConversationSearch({
               }}
               className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
             >
-              <MessageSquare size={14} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
+              <ConvIcon size={14} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
               <div className="flex-1 min-w-0">
                 <span className="block text-sm font-bold text-[var(--color-text-primary)] truncate">
                   {highlightWords.length > 0 ? highlightMatches(c.title, highlightWords) : c.title}
@@ -200,7 +203,8 @@ export default function ConversationSearch({
                 )}
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -12,7 +12,6 @@ import {
   Check,
   PanelLeftClose,
   PanelLeftOpen,
-  MessageSquare,
   MoreVertical,
   Pencil,
   Share2,
@@ -23,6 +22,7 @@ import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
 import ConversationSearch from "../components/ConversationSearch";
+import { pickConversationIcon } from "../lib/conversationIcon";
 
 // Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
@@ -351,7 +351,9 @@ export default function AtlasChat() {
                   <T en="Your conversations will appear here.">Tus conversaciones aparecerán aquí.</T>
                 </p>
               )}
-              {conversations.map((c) => (
+              {conversations.map((c) => {
+                const ConvIcon = pickConversationIcon(c.title, c.messages.map((m) => m.content).join(" "));
+                return (
                 <div
                   key={c.id}
                   className={`group relative flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
@@ -371,7 +373,7 @@ export default function AtlasChat() {
                     }
                   }}
                 >
-                  <MessageSquare size={16} className="shrink-0 opacity-60" />
+                  <ConvIcon size={16} className="shrink-0 opacity-60" />
                   {renamingId === c.id ? (
                     <input
                       autoFocus
@@ -450,7 +452,8 @@ export default function AtlasChat() {
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </motion.aside>
         )}
