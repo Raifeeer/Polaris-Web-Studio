@@ -585,19 +585,17 @@ export default function AtlasChat() {
           >
             {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
-          {isTemporary ? (
-            <>
-              <VenetianMask size={18} className="text-[var(--color-surface-base)] shrink-0" />
-              <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-surface-base)]">
-                <T en="Temporary chat">Chat temporal</T>
-              </p>
-            </>
-          ) : (
-            <>
-              <AtlasMark variant="isotipo" className="w-6 h-6 shrink-0" />
-              <p className="flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest text-[var(--color-text-primary)]">{activeTitle}</p>
-            </>
-          )}
+          {/* AtlasMark queda SIEMPRE montado (nunca condicionado a
+              !isTemporary) -- desmontar y volver a montar el <img> al
+              alternar el modo forzaba al navegador a recargar/redecodificar
+              el isotipo cada vez, con un parpadeo real de unos ms al volver
+              rápido al chat normal. Con display:none en vez de unmount, el
+              elemento ya decodificado queda listo de inmediato. */}
+          <AtlasMark variant="isotipo" className={`w-6 h-6 shrink-0 ${isTemporary ? "hidden" : ""}`} />
+          {isTemporary && <VenetianMask size={18} className="text-[var(--color-surface-base)] shrink-0" />}
+          <p className={`flex-1 min-w-0 truncate text-xs font-black uppercase tracking-widest ${isTemporary ? "text-[var(--color-surface-base)]" : "text-[var(--color-text-primary)]"}`}>
+            {isTemporary ? <T en="Temporary chat">Chat temporal</T> : activeTitle}
+          </p>
           <button
             onClick={toggleTemporary}
             className={`p-2 rounded-lg transition-colors shrink-0 ${
