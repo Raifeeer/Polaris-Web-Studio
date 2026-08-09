@@ -39,6 +39,14 @@ service cloud.firestore {
              (!data.keys().hasAny(['updatedAt']) || data.updatedAt == request.time);
     }
 
+    function isValidAtlasSync(data) {
+      return data.keys().hasAll(['conversations', 'updatedAt']) &&
+             data.keys().size() == 2 &&
+             data.conversations is list &&
+             data.conversations.size() <= 30 &&
+             data.updatedAt == request.time;
+    }
+
     function isValidCookieConsent(data) {
       return data.keys().hasAll(['decision', 'version', 'timestamp', 'ip']) &&
              data.keys().size() == 4 &&
@@ -89,6 +97,19 @@ service cloud.firestore {
                     isValidQuoteSession(request.resource.data);
       allow update: if isValidId(sessionId) &&
                     isValidQuoteSession(request.resource.data);
+    }
+
+    // Respaldo en la nube de las conversaciones del chat de Atlas
+    // (useAtlasChat.ts) -- anónimo, sin login, mismo criterio de confianza
+    // que quoteSessions/cookie_consents: el "id" del documento (un UUID
+    // generado client-side, guardado en localStorage) hace de credencial
+    // implícita. No valida el contenido interno de cada conversación (title/
+    // messages/icon) más allá del límite de 30 en la lista -- el límite real
+    // de 1MB por documento de Firestore ya acota el abuso, y este dato no es
+    // sensible (mismo texto que ya vive en localStorage del propio cliente).
+    match /atlas_conversations/{visitorId} {
+      allow get: if isValidId(visitorId);
+      allow write: if isValidId(visitorId) && isValidAtlasSync(request.resource.data);
     }
 
     match /cookie_consents/{consentId} {

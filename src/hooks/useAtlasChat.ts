@@ -1,4 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 // Estado compartido del chat libre de Atlas (widget flotante + página
 // completa /asistente) -- viven en el mismo localStorage para que abrir
@@ -62,11 +64,79 @@ function loadConversations(): AiConversation[] {
 
 function saveConversations(list: AiConversation[]) {
   if (typeof window === "undefined") return;
+  const trimmed = list.slice(0, MAX_CONVERSATIONS);
   try {
-    localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(list.slice(0, MAX_CONVERSATIONS)));
+    localStorage.setItem(CONVERSATIONS_KEY, JSON.stringify(trimmed));
   } catch {
-    // localStorage lleno o deshabilitado -- el chat sigue funcionando en memoria, solo no persiste.
+    // localStorage lleno o deshabilitado -- el chat sigue funcionando en memoria, solo no persiste local.
   }
+  pushToCloud(trimmed);
+}
+
+// Respaldo en la nube -- localStorage sigue siendo la fuente rápida de
+// siempre (lee/escribe sin red), Firestore es solo un espejo de respaldo
+// contra el caso real de perder el historial (Safari borra localStorage de
+// sitios inactivos tras ~7 días, "borrar datos de navegación", etc.).
+// `visitorId` es anónimo (sin login, mismo criterio que `quoteSessions`/
+// `cookie_consents` en firestore.rules) -- vive en localStorage junto al
+// resto del estado, así que si se borra localStorage completo también se
+// pierde el identificador de recuperación; lo que sí sobrevive es un
+// vaciado *parcial* (p. ej. el navegador expirando solo esta clave) y le da
+// a Cristian visibilidad real de las conversaciones desde el backend.
+const VISITOR_ID_KEY = "atlas_visitor_id";
+function getVisitorId(): string {
+  if (typeof window === "undefined") return newId();
+  let id = localStorage.getItem(VISITOR_ID_KEY);
+  if (!id) {
+    id = newId();
+    try {
+      localStorage.setItem(VISITOR_ID_KEY, id);
+    } catch {
+      // sin localStorage -- sigue funcionando, solo no persiste entre sesiones
+    }
+  }
+  return id;
+}
+
+let pushDebounce: ReturnType<typeof setTimeout> | null = null;
+function pushToCloud(list: AiConversation[]) {
+  if (typeof window === "undefined") return;
+  if (pushDebounce) clearTimeout(pushDebounce);
+  pushDebounce = setTimeout(() => {
+    setDoc(doc(db, "atlas_conversations", getVisitorId()), {
+      conversations: list,
+      updatedAt: serverTimestamp(),
+    }).catch(() => {
+      // Best-effort -- si falla (sin red, reglas, etc.) el chat sigue
+      // funcionando normal desde localStorage, no hay nada que reintentar
+      // acá que valga la pena bloquear la UI por eso.
+    });
+  }, 1200);
+}
+
+async function pullFromCloud(): Promise<AiConversation[] | null> {
+  try {
+    const snap = await getDoc(doc(db, "atlas_conversations", getVisitorId()));
+    const data = snap.data();
+    return Array.isArray(data?.conversations) ? (data!.conversations as AiConversation[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Combina lo que ya había en localStorage con lo que devolvió Firestore --
+// por id, se queda con la versión más reciente (`updatedAt` mayor) de cada
+// conversación. Cubre el caso real de abrir el chat en un dispositivo nuevo
+// (local vacío, cloud con historial) sin pisar una conversación local más
+// nueva que todavía no llegó a sincronizarse.
+function mergeConversations(local: AiConversation[], cloud: AiConversation[]): AiConversation[] {
+  const byId = new Map<string, AiConversation>();
+  for (const c of local) byId.set(c.id, c);
+  for (const c of cloud) {
+    const existing = byId.get(c.id);
+    if (!existing || c.updatedAt > existing.updatedAt) byId.set(c.id, c);
+  }
+  return [...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, MAX_CONVERSATIONS);
 }
 
 // Extrae el bloque ---SUGERENCIAS--- del texto del modelo (mismo contrato
@@ -109,6 +179,23 @@ export function useAtlasChat() {
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(ACTIVE_ID_KEY, activeId);
   }, [activeId]);
+
+  // Reconciliación con el respaldo en la nube, una sola vez al montar --
+  // solo actualiza la lista de conversaciones (sidebar/búsqueda), nunca
+  // toca `messages`/`activeId` de la conversación que ya está abierta, para
+  // no pisar un chat en curso mientras llega la respuesta de Firestore.
+  useEffect(() => {
+    let cancelled = false;
+    pullFromCloud().then((cloud) => {
+      if (cancelled || !cloud || cloud.length === 0) return;
+      const merged = mergeConversations(loadConversations(), cloud);
+      setConversations(merged);
+      saveConversations(merged);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const persist = useCallback((id: string, msgs: AiMessage[]) => {
     setConversations((prev) => {
