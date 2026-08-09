@@ -30,3 +30,22 @@ export function formatDate(
   if (isNaN(date.getTime())) return typeof dateInput === "string" ? dateInput : "";
   return date.toLocaleDateString(language === "en" ? "en-US" : "es-ES", opts);
 }
+
+/**
+ * Fecha corta relativa, estilo Gemini: "Ayer"/"Anteayer" (ES) o "Yesterday"
+ * (EN) para los últimos 2 días, y "{mes abreviado} {día}" el resto (ej.
+ * "ago 9", "jul 16" en ES; "Aug 9" en EN) -- nunca año, pensado para listas
+ * de historial donde el año casi siempre es el actual. Compara por fecha de
+ * calendario local (medianoche a medianoche), no por horas transcurridas,
+ * para que algo de las 23:50 de ayer siga diciendo "Ayer" y no "hace 1 día".
+ */
+export function formatRelativeShort(dateInput: string | number | Date, language: "es" | "en"): string {
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+  const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const diffDays = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86400000);
+  if (diffDays === 0) return language === "en" ? "Today" : "Hoy";
+  if (diffDays === 1) return language === "en" ? "Yesterday" : "Ayer";
+  if (diffDays === 2 && language === "es") return "Anteayer";
+  return date.toLocaleDateString(language === "en" ? "en-US" : "es-ES", { month: "short", day: "numeric" }).replace(/\.$/, "");
+}

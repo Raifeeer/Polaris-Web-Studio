@@ -2,23 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Search, X, ArrowLeft, Star } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { getConversationIcon } from "../lib/conversationIcon";
-import { formatDate } from "../lib/utils";
-
-// `Stars` de lucide-react es, en esta versión de la librería, un alias
-// literal de `Sparkles` (mismo ícono, mismo SVG) -- no un ícono real
-// distinto. Por eso el cambio pedido antes ("reemplaza el de chispas por
-// uno de dos estrellas") no se veía en producción aunque el código ya
-// importara `Stars`. Acá se arma un ícono real de dos estrellas superpuestas
-// con dos `Star` (5 puntas, forma bien distinta a Sparkles) en vez de
-// depender de ese alias.
-function TwoStarsIcon({ className }: { className?: string }) {
-  return (
-    <span className={`relative inline-flex shrink-0 ${className || ""}`}>
-      <Star size={12} className="fill-current" />
-      <Star size={7} className="fill-current absolute -bottom-0.5 -right-1" />
-    </span>
-  );
-}
+import { formatRelativeShort } from "../lib/utils";
 
 export interface SearchableConversation {
   id: string;
@@ -144,7 +128,17 @@ export default function ConversationSearch({
         });
         const data = await res.json();
         const ranked: { id: string; score: number }[] = data.ranked || [];
-        setSemanticIds(ranked.filter((r) => r.score > 0.45).map((r) => r.id));
+        // Este corpus (títulos/mensajes cortos, mucho texto genérico
+        // compartido -- "Hola, soy Atlas...") hace que el modelo de
+        // embeddings devuelva scores altos (>0.7) para CASI todas las
+        // conversaciones sin importar el tema real -- confirmado en vivo
+        // (probado "precio" contra 9 conversaciones de ejemplo: rango real
+        // 0.73-0.82, sin ningún corte natural). Un umbral absoluto por eso
+        // dejaba pasar prácticamente todo el historial ("salta a todo el
+        // listado", bug real reportado). En vez de un umbral, se toman solo
+        // los 3 mejores por score -- acotado siempre, sin importar el valor
+        // absoluto.
+        setSemanticIds(ranked.slice(0, 3).map((r) => r.id));
       } catch {
         setSemanticIds(null); // sin red o función caída -- se queda con el filtro por substring
       } finally {
@@ -199,7 +193,7 @@ export default function ConversationSearch({
 
         {semanticLoading && (
           <div className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)] border-b border-[var(--color-border-subtle)]">
-            <TwoStarsIcon className="animate-pulse" />
+            <Star size={12} className="animate-pulse" />
             <T en="Searching by meaning…">Buscando por significado…</T>
           </div>
         )}
@@ -216,10 +210,19 @@ export default function ConversationSearch({
           )}
           {/* Sin búsqueda activa, la lista es simplemente el historial --
               "Recientes" deja claro que no son resultados de nada, solo el
-              orden por fecha ya provisto en `items` (más nuevo primero). */}
+              orden por fecha ya provisto en `items` (más nuevo primero).
+              Con búsqueda activa, el conteo real de resultados (estilo
+              Gemini: "24 resultados coinciden con 'hola'"). */}
           {!query && results.length > 0 && (
             <p className="px-3 pt-1 pb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
               <T en="Recent">Recientes</T>
+            </p>
+          )}
+          {query && results.length > 0 && (
+            <p className="px-3 pt-1 pb-2 text-xs text-[var(--color-text-tertiary)]">
+              <T
+                en={`${results.length} result${results.length === 1 ? "" : "s"} match "${query}"`}
+              >{`${results.length} resultado${results.length === 1 ? "" : "s"} coinciden con "${query}"`}</T>
             </p>
           )}
           {results.map((c) => {
@@ -239,11 +242,9 @@ export default function ConversationSearch({
                   <span className="flex-1 min-w-0 text-sm font-bold text-[var(--color-text-primary)] truncate">
                     {highlightWords.length > 0 ? highlightMatches(c.title, highlightWords) : c.title}
                   </span>
-                  {!query && (
-                    <span className="shrink-0 text-[10px] text-[var(--color-text-tertiary)]">
-                      {formatDate(new Date(c.updatedAt), language, { day: "2-digit", month: "2-digit" })}
-                    </span>
-                  )}
+                  <span className="shrink-0 text-[10px] text-[var(--color-text-tertiary)]">
+                    {formatRelativeShort(c.updatedAt, language)}
+                  </span>
                 </div>
                 {q && (
                   <p className="text-[11px] text-[var(--color-text-tertiary)] truncate mt-0.5">
