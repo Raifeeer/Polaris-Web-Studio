@@ -12,15 +12,15 @@ const CONVERSATIONS_KEY = "atlas_conversations";
 const ACTIVE_ID_KEY = "atlas_active_conversation_id";
 const MAX_CONVERSATIONS = 30;
 
+// Frases genéricas a propósito -- no describen una acción puntual (ej. "calculando
+// el precio") porque no sabemos qué pidió el cliente hasta que la IA responde, y
+// una frase específica sonaría rara si el mensaje era solo un saludo.
 const THINKING_MESSAGES = [
-  "Revisando tu proyecto…",
-  "Calculando el precio…",
-  "Buscando en el portafolio…",
-  "Consultando la agenda…",
-  "Trazando la mejor ruta…",
-  "Un momento, casi listo…",
-  "Ordenando la respuesta…",
-  "Afinando los detalles…",
+  "Pensando…",
+  "Un momento…",
+  "Preparando la respuesta…",
+  "Ya casi…",
+  "Leyendo tu mensaje…",
 ];
 
 function newId(): string {
