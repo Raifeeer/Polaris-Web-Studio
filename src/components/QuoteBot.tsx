@@ -150,6 +150,7 @@ export default function QuoteBot() {
     messages: aiMessages,
     loading: aiLoading,
     thinkingMsg: aiThinkingMsg,
+    lastMsgLang: aiLastMsgLang,
     error: aiError,
     sendMessage: sendAiMessageText,
     stopGenerating,
@@ -584,6 +585,7 @@ export default function QuoteBot() {
                         sendAiMessageText(text);
                         scrollToBottom();
                       }}
+                      lang={m.lang || "es"}
                     />
                   )}
 
@@ -613,7 +615,7 @@ export default function QuoteBot() {
               {aiLoading && !aiMessages[aiMessages.length - 1]?.content && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                   <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center h-[42px] px-4">
-                    <ThinkingText message={aiThinkingMsg} lang={language} />
+                    <ThinkingText message={aiThinkingMsg} lang={aiLastMsgLang} />
                   </div>
                 </motion.div>
               )}

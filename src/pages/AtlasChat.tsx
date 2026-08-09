@@ -124,7 +124,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
             <AtlasMarkdown content={message.content} />
           </div>
 
-          <AtlasWidget widget={message.widget} onAction={onSuggestionClick} />
+          <AtlasWidget widget={message.widget} onAction={onSuggestionClick} lang={message.lang || "es"} />
 
           {message.content && (
             <div className="mt-1.5 flex items-center gap-3">
@@ -181,6 +181,7 @@ export default function AtlasChat() {
     messages,
     loading,
     thinkingMsg,
+    lastMsgLang,
     error,
     activeId,
     conversations,
@@ -676,7 +677,7 @@ export default function AtlasChat() {
                       <AtlasMark variant="isotipo" className="w-6 h-6" />
                     </div>
                     <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center">
-                      <ThinkingText message={thinkingMsg} lang={language} />
+                      <ThinkingText message={thinkingMsg} lang={lastMsgLang} />
                     </div>
                   </div>
                 </motion.div>

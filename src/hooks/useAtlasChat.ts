@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { detectLang } from "../lib/utils";
 
 // Estado compartido del chat libre de Atlas (widget flotante + página
 // completa /asistente) -- viven en el mismo localStorage para que abrir
@@ -11,7 +12,12 @@ import { db } from "../lib/firebase";
 // api/quotebot-chat.ts) a partir de datos de tools -- nunca texto libre del
 // modelo -- que AtlasWidget.tsx renderiza debajo del mensaje.
 export type AtlasWidgetData = { type: string; data: unknown };
-export type AiMessage = { role: "user" | "assistant"; content: string; suggestions?: string[]; widget?: AtlasWidgetData; usedWebSearch?: boolean };
+// `lang` es el idioma detectado del mensaje del USUARIO que originó esta
+// respuesta (ver detectLang en utils.ts) -- independiente del toggle ES/EN
+// de la interfaz, así el indicador de "pensando" y las mini UIs de esa
+// respuesta puntual quedan en el idioma real en el que escribió el usuario,
+// aunque no haya tocado el selector manual.
+export type AiMessage = { role: "user" | "assistant"; content: string; suggestions?: string[]; widget?: AtlasWidgetData; usedWebSearch?: boolean; lang?: "es" | "en" };
 // `icon` es una clave de ICON_MAP (src/lib/conversationIcon.tsx), elegida por
 // la IA junto con el título -- undefined hasta que ese llamado responde (o si
 // falló), momento en el que el sidebar/búsqueda caen al ícono heurístico.
@@ -181,6 +187,10 @@ export function useAtlasChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [thinkingMsg, setThinkingMsg] = useState(THINKING_MESSAGES[0]);
+  // Idioma detectado del último mensaje del usuario enviado (ver detectLang)
+  // -- lo usa el indicador de "pensando" mientras se espera esa respuesta,
+  // ver comentario junto a AiMessage.lang para el resto del criterio.
+  const [lastMsgLang, setLastMsgLang] = useState<"es" | "en">("es");
   const abortRef = useRef<AbortController | null>(null);
 
   // Chat temporal (estilo Gemini/ChatGPT/Grok): mientras está activo, ningún
@@ -299,6 +309,8 @@ export function useAtlasChat() {
       setError(false);
       const isNewConversation = messages.length === 0;
       const history = messages.map(({ role, content }) => ({ role, content }));
+      const msgLang = detectLang(trimmed);
+      setLastMsgLang(msgLang);
       const withUser: AiMessage[] = [...messages, { role: "user", content: trimmed }];
       const assistantIdx = withUser.length;
       setMessages([...withUser, { role: "assistant", content: "" }]);
@@ -368,7 +380,7 @@ export function useAtlasChat() {
         if (!gotAnyDelta) throw new Error("empty reply");
 
         const { content, suggestions } = extractSuggestions(raw);
-        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch }];
+        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch, lang: msgLang }];
         setMessages(finalMsgs);
         if (!isTemporaryRef.current) {
           persist(activeId, finalMsgs);
@@ -380,7 +392,7 @@ export function useAtlasChat() {
           // parcial ya mostrado como respuesta final, en vez de descartarlo.
           const { content, suggestions } = extractSuggestions(raw);
           const finalMsgs: AiMessage[] = gotAnyDelta
-            ? [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch }]
+            ? [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch, lang: msgLang }]
             : withUser;
           setMessages(finalMsgs);
           if (gotAnyDelta && !isTemporaryRef.current) {
@@ -462,6 +474,7 @@ export function useAtlasChat() {
     messages,
     loading,
     thinkingMsg,
+    lastMsgLang,
     error,
     activeId,
     conversations,

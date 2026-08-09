@@ -49,3 +49,21 @@ export function formatRelativeShort(dateInput: string | number | Date, language:
   if (diffDays === 2 && language === "es") return "Anteayer";
   return date.toLocaleDateString(language === "en" ? "en-US" : "es-ES", { month: "short", day: "numeric" }).replace(/\.$/, "");
 }
+
+/**
+ * Heurística liviana para detectar en qué idioma escribió el usuario un
+ * mensaje puntual del chat de Atlas -- el modelo ya responde en el idioma
+ * del usuario mensaje a mensaje (system prompt), pero el toggle ES/EN de la
+ * interfaz es un ajuste manual aparte, que puede quedar desincronizado si
+ * alguien escribe en inglés sin tocarlo. Se usa solo para elegir el idioma
+ * del indicador de "pensando" y de las mini UIs de esa respuesta puntual --
+ * nunca cambia el idioma real de la interfaz (Navbar, sidebar, etc.).
+ */
+export function detectLang(text: string): "es" | "en" {
+  const t = text.toLowerCase();
+  if (/[ñ¿¡áéíóúü]/.test(t)) return "es";
+  const esWords = t.match(/\b(el|la|los|las|de|que|y|en|un|una|es|para|con|por|como|cual|cuales|hola|gracias|precio|precios|planes?|cuanto|cuesta|quiero|puedes|tienen|hacen)\b/g) || [];
+  const enWords = t.match(/\b(the|is|are|and|for|with|what|how|which|hello|hi|thanks|price|prices|plans?|much|does|do|you|offer|want|can|have|cost)\b/g) || [];
+  if (enWords.length > esWords.length) return "en";
+  return "es";
+}
