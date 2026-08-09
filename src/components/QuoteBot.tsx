@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -81,22 +81,30 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-function WidgetCopyButton({ text }: { text: string }) {
+function WidgetCopyButton({ text, usedWebSearch }: { text: string; usedWebSearch?: boolean }) {
   const { translate } = useLanguage();
   const [copied, setCopied] = useState(false);
   return (
-    <button
-      onClick={() => {
-        navigator.clipboard?.writeText(text).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        });
-      }}
-      className="mt-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-    >
-      {copied ? <Check size={11} /> : <Copy size={11} />}
-      {copied ? translate("Copiado", "Copied") : translate("Copiar", "Copy")}
-    </button>
+    <div className="mt-1 flex items-center gap-3">
+      <button
+        onClick={() => {
+          navigator.clipboard?.writeText(text).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          });
+        }}
+        className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+      >
+        {copied ? <Check size={11} /> : <Copy size={11} />}
+        {copied ? translate("Copiado", "Copied") : translate("Copiar", "Copy")}
+      </button>
+      {usedWebSearch && (
+        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]" title={translate("Búsqueda web usada para esta respuesta", "Web search used for this reply")}>
+          <Globe size={11} />
+          {translate("Búsqueda web", "Web search")}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -568,7 +576,7 @@ export default function QuoteBot() {
                     />
                   )}
 
-                  {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} />}
+                  {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} />}
 
                   {m.role === "assistant" && m.suggestions && m.suggestions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[85%]">

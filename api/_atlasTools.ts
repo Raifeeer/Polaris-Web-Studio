@@ -1,5 +1,6 @@
-import { tool } from "ai";
+import { tool, generateText } from "ai";
 import { z } from "zod";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 // Tools reales para Atlas Assistant (AI SDK, function calling real) --
 // reemplazan hechos estáticos incrustados en el system prompt por consultas
@@ -257,6 +258,49 @@ export const captureLead = tool({
   },
 });
 
+// ---- 8. Búsqueda web real (grounding de Gemini) ----
+// El chat principal puede correr sobre DeepSeek/Grok/Gemini indistintamente,
+// pero la búsqueda real en vivo (`google.tools.googleSearch`) es un tool
+// propio del provider de Google -- no se le puede pasar tal cual a
+// DeepSeek/Grok. Esta tool envuelve un llamado interno y aislado a Gemini
+// (siempre, sin importar qué modelo esté respondiendo el turno principal) y
+// devuelve texto + fuentes reales como salida de tool normal, así cualquiera
+// de los 3 providers puede usarla igual.
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+export const webSearch = tool({
+  description:
+    "Busca en la web información general o actual (noticias, hechos, datos que cambian con el tiempo, temas fuera del negocio de Polaris) que el modelo no sabría de memoria con certeza. Úsala para preguntas generales o del momento -- no para precios/servicios propios de Polaris, que ya tienen sus tools dedicadas.",
+  inputSchema: z.object({
+    query: z.string().describe("La pregunta o términos de búsqueda, en el idioma que sea más efectivo para buscar (usualmente inglés para temas globales)."),
+  }),
+  execute: async ({ query }) => {
+    if (!GEMINI_API_KEY) {
+      return { error: "La búsqueda web no está disponible en este momento." };
+    }
+    try {
+      const google = createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY });
+      const result = await generateText({
+        model: google("gemini-3.5-flash"),
+        // El tool de búsqueda de Google es un "provider-defined tool" con su
+        // propio esquema interno -- distinto del genérico `tool()` que usa
+        // el resto de este archivo, de ahí el `as any` puntual.
+        tools: { google_search: google.tools.googleSearch({}) } as any,
+        prompt: query,
+      });
+      const grounding = (result.providerMetadata?.google as { groundingMetadata?: { groundingChunks?: { web?: { uri?: string; title?: string } }[] } } | undefined)?.groundingMetadata;
+      const sources = (grounding?.groundingChunks || [])
+        .map((c) => c.web)
+        .filter((w): w is { uri: string; title?: string } => Boolean(w?.uri))
+        .slice(0, 5)
+        .map((w) => ({ url: w.uri, title: w.title || w.uri }));
+      return { answer: result.text, sources };
+    } catch {
+      return { error: "No se pudo completar la búsqueda web en este momento." };
+    }
+  },
+});
+
 export const atlasTools = {
   check_domain_price: checkDomainPrice,
   calculate_quote: calculateQuote,
@@ -265,4 +309,5 @@ export const atlasTools = {
   book_call: bookCall,
   search_portfolio: searchPortfolio,
   capture_lead: captureLead,
+  web_search: webSearch,
 };

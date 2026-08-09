@@ -11,7 +11,7 @@ import { db } from "../lib/firebase";
 // api/quotebot-chat.ts) a partir de datos de tools -- nunca texto libre del
 // modelo -- que AtlasWidget.tsx renderiza debajo del mensaje.
 export type AtlasWidgetData = { type: string; data: unknown };
-export type AiMessage = { role: "user" | "assistant"; content: string; suggestions?: string[]; widget?: AtlasWidgetData };
+export type AiMessage = { role: "user" | "assistant"; content: string; suggestions?: string[]; widget?: AtlasWidgetData; usedWebSearch?: boolean };
 // `icon` es una clave de ICON_MAP (src/lib/conversationIcon.tsx), elegida por
 // la IA junto con el título -- undefined hasta que ese llamado responde (o si
 // falló), momento en el que el sidebar/búsqueda caen al ícono heurístico.
@@ -284,6 +284,7 @@ export function useAtlasChat() {
       let raw = "";
       let gotAnyDelta = false;
       let widget: AtlasWidgetData | undefined;
+      let usedWebSearch = false;
 
       try {
         const res = await fetch("/api/quotebot-chat", {
@@ -323,6 +324,7 @@ export function useAtlasChat() {
               raw = "";
               gotAnyDelta = false;
               widget = undefined;
+              usedWebSearch = false;
               setMessages((prev) => {
                 const next = [...prev];
                 next[assistantIdx] = { role: "assistant", content: "" };
@@ -330,6 +332,8 @@ export function useAtlasChat() {
               });
             } else if (evt.type === "widget") {
               widget = evt.widget;
+            } else if (evt.type === "web_search") {
+              usedWebSearch = true;
             } else if (evt.type === "error") {
               throw new Error(evt.message || "stream error");
             }
@@ -338,7 +342,7 @@ export function useAtlasChat() {
         if (!gotAnyDelta) throw new Error("empty reply");
 
         const { content, suggestions } = extractSuggestions(raw);
-        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget }];
+        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch }];
         setMessages(finalMsgs);
         persist(activeId, finalMsgs);
         if (isNewConversation) generateSmartTitle(activeId, trimmed);
@@ -348,7 +352,7 @@ export function useAtlasChat() {
           // parcial ya mostrado como respuesta final, en vez de descartarlo.
           const { content, suggestions } = extractSuggestions(raw);
           const finalMsgs: AiMessage[] = gotAnyDelta
-            ? [...withUser, { role: "assistant", content, suggestions, widget }]
+            ? [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch }]
             : withUser;
           setMessages(finalMsgs);
           if (gotAnyDelta) {

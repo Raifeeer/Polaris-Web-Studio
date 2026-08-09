@@ -16,6 +16,7 @@ import {
   Pencil,
   Share2,
   Search,
+  Globe,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -139,15 +140,26 @@ function MessageBubble({ message, onSuggestionClick }: { message: AiMessage; onS
           <AtlasWidget widget={message.widget} onAction={onSuggestionClick} />
 
           {message.content && (
-            <button
-              onClick={handleCopy}
-              // Siempre visible en mobile (no hay hover real); en desktop se
-              // revela solo al pasar el mouse sobre el mensaje, como antes.
-              className="mt-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
-            >
-              {copied ? <Check size={12} /> : <Copy size={12} />}
-              {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
-            </button>
+            <div className="mt-1.5 flex items-center gap-3">
+              <button
+                onClick={handleCopy}
+                // Siempre visible en mobile (no hay hover real); en desktop se
+                // revela solo al pasar el mouse sobre el mensaje, como antes.
+                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              >
+                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? <T en="Copied">Copiado</T> : <T en="Copy">Copiar</T>}
+              </button>
+              {message.usedWebSearch && (
+                <span
+                  className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]"
+                  title={"Búsqueda web usada para esta respuesta"}
+                >
+                  <Globe size={12} />
+                  <T en="Web search">Búsqueda web</T>
+                </span>
+              )}
+            </div>
           )}
 
           {message.suggestions && message.suggestions.length > 0 && (

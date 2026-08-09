@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 import TextSizeToggle from "./TextSizeToggle";
+import AtlasMark from "./AtlasMark";
 import { useLanguage, T } from "../context/LanguageContext";
 import { prefetchRoute } from "../lib/routePrefetch";
 
@@ -139,9 +140,16 @@ export default function Navbar() {
           <div className="hidden sm:block">
             <TextSizeToggle />
           </div>
-          <div className="block">
-            <ThemeToggle />
-          </div>
+          <Link
+            to="/asistente"
+            onMouseEnter={() => prefetchRoute("/asistente")}
+            onFocus={() => prefetchRoute("/asistente")}
+            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+            aria-label={translate("Atlas Assistant", "Atlas Assistant")}
+            title="Atlas Assistant"
+          >
+            <AtlasMark variant="isotipo" className="w-6 h-6" />
+          </Link>
           <button
             onClick={() => navigate("/cotizar")}
             onMouseEnter={() => prefetchRoute("/cotizar")}
@@ -205,6 +213,15 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+              <Link
+                to="/asistente"
+                onClick={() => setIsOpen(false)}
+                onTouchStart={() => prefetchRoute("/asistente")}
+                className="flex items-center gap-2 text-lg font-bold uppercase tracking-widest hover:text-[var(--color-primary-base)] transition-colors"
+              >
+                <AtlasMark variant="isotipo" className="w-5 h-5" />
+                Atlas Assistant
+              </Link>
               <div className="flex items-center justify-between mt-4">
                 <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                   <T en="Text size">Tamaño de texto</T>

@@ -155,6 +155,7 @@ TOOLS REALES DISPONIBLES -- úsalas siempre que apliquen, en vez de inventar o r
 - book_call: SOLO cuando ya tengas nombre completo, email y el horario exacto (de check_available_slots) confirmados explícitamente por el usuario -- nunca la llames con datos inventados o asumidos, y nunca confirmes una reserva antes de llamarla de verdad.
 - search_portfolio: si preguntan "¿han hecho algo parecido a mi negocio?" o mencionan un rubro (restaurante, inmobiliaria, clínica, tienda online, etc.) -- responde con el ejemplo real que devuelva y su link, en vez de una afirmación genérica de "sí, hacemos de todo".
 - capture_lead: SOLO cuando el usuario ya dio su nombre Y su email Y pidió explícitamente que le guardes/envíes la cotización (ej. "mándamela por correo", "apúntame", "quiero que me contacten") -- nunca la ofrezcas de forma insistente ni la dispares solo porque el usuario mencionó su email de pasada. Es una alternativa de baja fricción para quien no quiere agendar una llamada ni pasar por el cotizador del sitio, NO un reemplazo de esos dos caminos: si el usuario está listo para más, sigue ofreciendo agendar una llamada o ir al cotizador (/cotizar) primero.
+- web_search: para preguntas generales o del momento que no tienen que ver con Polaris/precios/servicios propios (noticias, hechos actuales, información pública sobre terceros, etc.) y que no sabrías responder con certeza de memoria. No la uses para nada de Polaris (precios, paquetes, dominios, portafolio) -- para eso ya existen las tools dedicadas de arriba.
 
 ADDONS DISPONIBLES (ids reales para calculate_quote entre paréntesis) -- son items DISTINTOS entre sí, no los mezcles -- "chatbot IA" (mencionado en la descripción del plan Constelación) es una funcionalidad base ya incluida en ese plan; "Agente de Ventas IA" (ai_agent) y "Bot de Atención 24/7" (bot_fast) son dos addons separados y diferentes entre sí, no la misma cosa que el chatbot base de Constelación.
 - Agente de Ventas IA (ai_agent) -- $49/mes (ya incluido en Nova, no aplica ahí)
@@ -320,6 +321,8 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     return null;
   }
 
+  const usedWebSearch = (toolResults: ToolResultLike[]) => toolResults.some((t) => t.toolName === "web_search" && t.output && !(t.output as any).error);
+
   // Streaming real vía NDJSON (mismo patrón que meridian-assistant): el
   // frontend pide stream:true para ver el texto aparecer en vivo. Acá se
   // simplifica el fallback a solo 2 niveles (default configurado -> DeepSeek)
@@ -352,6 +355,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       }
       const widget = buildWidget(toolResults);
       if (widget) send({ type: "widget", widget });
+      if (usedWebSearch(toolResults)) send({ type: "web_search" });
       send({ type: "done" });
     } catch (err) {
       send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
@@ -373,8 +377,9 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       // pruebas, pero el chequeo no hace daño aplicado a cualquiera.
       if (key === "deepseek" && looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
       if (omitsDomainCap(text)) throw new Error("Reply mentions included domain without the real $15 cap");
-      const widget = buildWidget(result.toolResults as unknown as ToolResultLike[]);
-      return res.status(200).json({ reply: text, provider: key, widget });
+      const toolResults = result.toolResults as unknown as ToolResultLike[];
+      const widget = buildWidget(toolResults);
+      return res.status(200).json({ reply: text, provider: key, widget, usedWebSearch: usedWebSearch(toolResults) });
     } catch {
       continue;
     }
