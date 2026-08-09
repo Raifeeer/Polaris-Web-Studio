@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Search, X, ArrowLeft, MessageSquare, Stars } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 
@@ -26,6 +26,29 @@ function snippetAround(text: string, query: string): string {
   if (idx === -1) return text.slice(0, 90);
   const start = Math.max(0, idx - 30);
   return `${start > 0 ? "…" : ""}${text.slice(start, start + 100)}…`;
+}
+
+// Mismo patrón que highlightMatches en Blog.tsx -- resalta cada palabra de la
+// búsqueda (2+ letras) dondequiera que aparezca en el título/snippet, con el
+// mismo color de marca que ya usa el resaltado del blog.
+function getHighlightWords(query: string): string[] {
+  return Array.from(new Set(query.trim().split(/\s+/).filter((w) => w.length >= 2)));
+}
+
+function highlightMatches(text: string, words: string[]): React.ReactNode {
+  if (words.length === 0) return text;
+  const escaped = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  const regex = new RegExp(`(${escaped.join("|")})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, idx) =>
+    words.some((w) => w.toLowerCase() === part.toLowerCase()) ? (
+      <mark key={idx} className="bg-indigo-500 text-white rounded px-0.5 not-italic">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  );
 }
 
 export default function ConversationSearch({
@@ -106,6 +129,8 @@ export default function ConversationSearch({
         .filter((c): c is SearchableConversation => Boolean(c))
     : substringMatches;
 
+  const highlightWords = query.trim() ? getHighlightWords(query) : [];
+
   return (
     <div className="fixed inset-0 z-[70] flex flex-col sm:items-center sm:justify-center sm:p-6 bg-black/50 backdrop-blur-sm">
       <div className="flex flex-col w-full h-full sm:h-auto sm:max-h-[80vh] sm:max-w-lg bg-[var(--color-surface-elevated)] sm:rounded-2xl sm:border sm:border-[var(--color-border-subtle)] sm:shadow-2xl overflow-hidden">
@@ -165,8 +190,14 @@ export default function ConversationSearch({
             >
               <MessageSquare size={14} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
               <div className="flex-1 min-w-0">
-                <span className="block text-sm font-bold text-[var(--color-text-primary)] truncate">{c.title}</span>
-                {q && <p className="text-[11px] text-[var(--color-text-tertiary)] truncate mt-0.5">{snippetAround(c.text, q)}</p>}
+                <span className="block text-sm font-bold text-[var(--color-text-primary)] truncate">
+                  {highlightWords.length > 0 ? highlightMatches(c.title, highlightWords) : c.title}
+                </span>
+                {q && (
+                  <p className="text-[11px] text-[var(--color-text-tertiary)] truncate mt-0.5">
+                    {highlightWords.length > 0 ? highlightMatches(snippetAround(c.text, q), highlightWords) : snippetAround(c.text, q)}
+                  </p>
+                )}
               </div>
             </button>
           ))}
