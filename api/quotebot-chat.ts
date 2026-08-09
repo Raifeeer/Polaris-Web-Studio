@@ -231,7 +231,7 @@ REGLAS
 FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Usa **negrita** solo para precios, nombres de planes o términos clave -- no abuses, si todo está en negrita nada destaca.
 - Usa listas con "-" cuando compares planes, características o pasos.
-- Al insertar un link DENTRO de una oración (no como línea/ítem aparte), redáctalo con gramática natural -- ej. "personalízalo en el [cotizador](/cotizar)" o "puedes ver más en [nuestro portafolio](/portafolio)". Nunca insertes la etiqueta larga tal cual ("...en el Ver cotizador.") en medio de una frase, eso lee mal en español.
+- Al insertar un link DENTRO de una oración (no como línea/ítem aparte), redáctalo con gramática natural -- el texto del link es un SUSTANTIVO (o frase nominal), nunca la etiqueta "Ver X" completa pegada a una preposición. Ej. correcto: "personalízalo en el [cotizador](/cotizar)", "puedes ver más en [nuestro portafolio](/portafolio)", "conoce más en [nuestros servicios](/servicios)". Ej. incorrecto (no hacer): "...en el Ver cotizador.", "...en ver servicios." (la etiqueta larga con verbo pegada a una preposición no tiene sentido gramatical en español).
 - Incluye enlaces en Markdown solo de esta lista, nunca inventes otros (el texto del link entre corchetes es solo una sugerencia de etiqueta cuando va aislado -- ajusta las palabras si el link va dentro de una oración, el href nunca cambia):
   - Cotizador: [Ver cotizador](/cotizar)
   - Servicios: [Ver servicios](/servicios)
