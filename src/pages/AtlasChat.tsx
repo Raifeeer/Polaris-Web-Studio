@@ -200,8 +200,8 @@ export default function AtlasChat() {
   const { translate, language, setLanguage } = useLanguage();
   useEffect(() => {
     document.title = translate(
-      "Asistente IA -- Atlas Assistant | Polaris Web Studio",
-      "AI Assistant -- Atlas Assistant | Polaris Web Studio",
+      "Asistente IA — Atlas Assistant | Polaris Web Studio",
+      "AI Assistant — Atlas Assistant | Polaris Web Studio",
     );
   }, [translate]);
 
