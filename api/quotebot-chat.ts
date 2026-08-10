@@ -30,7 +30,7 @@ const ICON_KEYS = [
 // podía citar mal o quedar desactualizado. Ahora son 4 "tools" reales
 // (ver _atlasTools.ts) que el modelo llama en vivo cuando hacen falta --
 // el system prompt solo describe el negocio, ya no carga los datos que
-// cambian. DeepSeek (deepseek-chat) como primario, xAI Grok como respaldo
+// cambian. DeepSeek (deepseek-v4-flash) como primario, xAI Grok como respaldo
 // si DeepSeek falla -- el AI SDK no tiene fallback entre proveedores
 // integrado, se mantiene el mismo patrón manual de siempre.
 
@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
       const xai = createXai({ apiKey: process.env.GROK_API_KEY });
       const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
-      const model = key === "gemini" ? google("gemini-3.5-flash") : key === "grok" ? xai("grok-4.20-non-reasoning") : deepseek("deepseek-chat");
+      const model = key === "gemini" ? google("gemini-3.5-flash") : key === "grok" ? xai("grok-4.20-non-reasoning") : deepseek("deepseek-v4-flash");
       const result = await generateObject({
         model,
         schema: z.object({
@@ -304,7 +304,12 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     // vez de quedar separado. grok-4.20-non-reasoning responde directo, sin
     // ese problema -- no hace falta el razonamiento visible para este chat.
     if (key === "grok") return createXai({ apiKey: process.env.GROK_API_KEY })("grok-4.20-non-reasoning");
-    return createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-chat");
+    // "deepseek-chat" es el alias legado -- DeepSeek ya no lo lista en su
+    // documentación oficial de modelos (confirmado 10 de agosto), solo lo
+    // mantiene por compatibilidad hacia atrás. El nombre real y explícito
+    // hoy es "deepseek-v4-flash" ($0.14/$0.0028/$0.28 por 1M tokens
+    // input-miss/input-hit/output) -- se usa ese, sin ambigüedad.
+    return createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-v4-flash");
   }
 
   const baseParams = { system: systemPrompt, messages, tools: atlasTools, stopWhen: stepCountIs(6), temperature: 0.3 };
