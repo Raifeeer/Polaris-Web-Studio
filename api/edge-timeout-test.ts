@@ -12,7 +12,7 @@ export default function handler() {
       const interval = setInterval(() => {
         seconds++;
         controller.enqueue(encoder.encode(`tick ${seconds}\n`));
-        if (seconds >= 180) {
+        if (seconds >= 600) {
           clearInterval(interval);
           controller.close();
         }
