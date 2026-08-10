@@ -83,7 +83,7 @@ export default function Contacto() {
     <div className="min-h-screen bg-[var(--color-surface-base)]">
       <Navbar />
 
-      <main className="max-w-3xl mx-auto px-6 md:px-12 pt-32 pb-24">
+      <main className="max-w-3xl mx-auto px-6 md:px-12 pt-12 md:pt-32 pb-24">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
