@@ -241,27 +241,10 @@ button:not(:disabled),
     0 0 25px 2px hsl(239deg 84% 67% / 20%);
 }
 
-/* Texto "pensando" de Atlas Assistant (ThinkingText.tsx) -- reflejo tipo
-   Gemini/ChatGPT: un brillo que recorre el texto de izquierda a derecha en
-   loop, en vez de los 3 puntos genéricos que reemplaza. */
-@keyframes atlas-thinking-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-.atlas-thinking-shimmer {
-  background-image: linear-gradient(
-    90deg,
-    var(--color-text-tertiary) 30%,
-    var(--color-text-primary) 50%,
-    var(--color-text-tertiary) 70%
-  );
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: atlas-thinking-shimmer 2.2s linear infinite;
-}
+/* El shimmer del texto "pensando" de Atlas Assistant (ThinkingText.tsx) vive
+   ahora inline en el propio componente (técnica de máscara con
+   framer-motion, dos capas de texto superpuestas) -- ya no depende de una
+   clase CSS aparte como esta. */
 
 @keyframes marquee {
   0% {
