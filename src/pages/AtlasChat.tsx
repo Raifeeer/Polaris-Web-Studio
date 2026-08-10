@@ -195,18 +195,14 @@ function MessageBubble({
                   <Volume2 size={12} />
                 )}
               </button>
-              {message.usedWebSearch && (
-                <div className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus-within:opacity-100 transition-opacity`}>
-                  <WebSourcesPanel sources={message.webSearchSources || []} />
-                </div>
-              )}
               {/* Pedido explícito del usuario: la longitud de la respuesta
                   ahora la decide el modelo según lo que amerite la pregunta
                   (ver REGLAS en quotebot-chat.ts) -- no siempre corta. Este
                   botón cubre el caso contrario: pedir una versión más breve
                   de una respuesta puntual sin tener que escribirlo a mano.
                   Solo tiene sentido en la última respuesta y si el texto ya
-                  es largo -- no tiene caso ofrecerlo sobre una de 1 línea. */}
+                  es largo -- no tiene caso ofrecerlo sobre una de 1 línea.
+                  Va ANTES que "Búsqueda web" (pedido explícito del usuario). */}
               {isLast && message.content.length > 220 && (
                 <motion.button
                   onClick={() => onSuggestionClick(message.lang === "en" ? "Make that shorter." : "Hazlo más corto.")}
@@ -218,6 +214,11 @@ function MessageBubble({
                 >
                   <FoldVertical size={12} />
                 </motion.button>
+              )}
+              {message.usedWebSearch && (
+                <div className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus-within:opacity-100 transition-opacity`}>
+                  <WebSourcesPanel sources={message.webSearchSources || []} />
+                </div>
               )}
             </div>
           )}
@@ -476,7 +477,12 @@ export default function AtlasChat() {
             {/* ---- Contenido completo: siempre visible en mobile (el sidebar
                 ahí es un overlay a pantalla completa, "colapsar a rail" no
                 aplica), y en desktop cuando NO está colapsado. ---- */}
-            <div className={`flex-1 flex flex-col overflow-hidden ${desktopCollapsed ? "md:hidden" : ""}`}>
+            {/* Sin overflow-hidden -- mismo bug que el <aside> (ver arriba):
+                cortaba el tooltip del botón de buscar, pegado cerca del
+                borde derecho del panel expandido. La lista de conversaciones
+                más abajo ya tiene su propio overflow-y-auto, no depende de
+                que este contenedor recorte nada. */}
+            <div className={`flex-1 flex flex-col ${desktopCollapsed ? "md:hidden" : ""}`}>
             <div className="p-3 flex items-center gap-2">
               {/* Ícono solo (sin la palabra "Inicio") -- deja más espacio real
                   para que el logo de Atlas quede centrado de verdad en el
@@ -982,18 +988,29 @@ export default function AtlasChat() {
                               key={size}
                               onClick={() => setFontSize(size)}
                               aria-label={size === "sm" ? translate("Chico", "Small") : size === "md" ? translate("Mediano", "Medium") : translate("Grande", "Large")}
-                              className={`relative w-9 py-1.5 rounded-lg font-black transition-colors ${size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"} ${
+                              className={`relative z-0 w-9 py-1.5 rounded-lg font-black transition-colors ${size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"} ${
                                 fontSize === size ? "text-white" : "text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
                               }`}
                             >
+                              {/* Bug real corregido: un z-index NEGATIVO sin un
+                                  ancestro que abra su propio stacking context
+                                  (position:relative solo, sin z-index propio,
+                                  NO alcanza) puede terminar pintándose detrás
+                                  de TODA la página, no solo detrás de la letra
+                                  -- por eso la "A" activa se veía invisible en
+                                  modo claro. Fix: el botón gana z-0 (ahora sí
+                                  abre su propio contexto) y el indicador se
+                                  queda en z-index normal (auto), mientras la
+                                  letra pide z-10 explícito -- ya no depende de
+                                  jerarquías negativas frágiles. */}
                               {fontSize === size && (
                                 <motion.span
                                   layoutId="fontSizeIndicator"
                                   transition={{ type: "spring", stiffness: 500, damping: 32 }}
-                                  className="absolute inset-0 -z-10 rounded-lg bg-[var(--color-primary-base)]"
+                                  className="absolute inset-0 rounded-lg bg-[var(--color-primary-base)]"
                                 />
                               )}
-                              A
+                              <span className="relative z-10">A</span>
                             </button>
                           ))}
                         </div>

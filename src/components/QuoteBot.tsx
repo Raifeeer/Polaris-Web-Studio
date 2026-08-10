@@ -137,9 +137,9 @@ function WidgetCopyButton({
       >
         {tts.loading ? <Loader2 size={11} className="animate-spin" /> : tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
       </button>
-      {usedWebSearch && <WebSourcesPanel sources={webSearchSources || []} iconSize={11} />}
       {/* Mismo criterio que AtlasChat.tsx (página completa) -- solo tiene
-          sentido en la última respuesta y si el texto ya es largo. */}
+          sentido en la última respuesta y si el texto ya es largo. Va ANTES
+          que "Búsqueda web" (pedido explícito del usuario). */}
       {isLast && text.length > 220 && onShorten && (
         <motion.button
           onClick={onShorten}
@@ -152,6 +152,7 @@ function WidgetCopyButton({
           <FoldVertical size={11} />
         </motion.button>
       )}
+      {usedWebSearch && <WebSourcesPanel sources={webSearchSources || []} iconSize={11} />}
     </div>
   );
 }
