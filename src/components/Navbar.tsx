@@ -122,28 +122,33 @@ export default function Navbar() {
   return (
     <>
       <div className="h-16 w-full shrink-0" aria-hidden="true" />
-      {/* Bug real reportado en vivo: la barra quedaba angosta y centrada con
-          mucho margen a los lados en desktop (max-w-6xl + mx-auto) -- el
-          navbar clásico ocupaba todo el ancho real de la página. Fix: la
-          barra superior vuelve a ser de ancho completo (mismo padding
-          horizontal responsive que usaba el navbar clásico), sin la
-          "tarjeta" flotante angosta -- el panel de tarjetas que se expande
-          abajo sí mantiene su propio ancho máximo centrado, solo para que
-          las tarjetas de categorías no queden absurdamente estiradas en
-          pantallas muy anchas. */}
+      {/* Pedido explícito del usuario, tres rondas de ajuste: primero ancho
+          completo real (edge-to-edge, como el navbar clásico) -- no era lo
+          que quería. Después el mismo max-w-7xl/px que el <main> del Hero,
+          pero puesto directo en el elemento con borde/fondo -- terminaba
+          40px más ancho a cada lado que la tarjeta real del Hero, porque en
+          LandingPage.tsx el padding (px-4 md:px-10) vive en el <main>
+          EXTERIOR, mientras el borde/fondo visible de la tarjeta está en un
+          div hijo, más adentro. Fix real: replicar esa misma estructura acá
+          -- un wrapper exterior con max-w-7xl/mx-auto/px (invisible, solo
+          define el ancho) y un div interior con el borde/fondo real, medido
+          y confirmado con Playwright que coincide en x/width exactos con
+          `#inicio` (la tarjeta real del Hero) en 1600px de ancho. */}
       <nav
         ref={navRef}
         className={`fixed left-0 right-0 top-0 z-50 w-full transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
-        {/* Barra superior -- ancho completo real (logo + botón + CTA), el
-            menú de tarjetas se expande DEBAJO de esta, no dentro. */}
-        <div
-          className={`flex items-center justify-between h-16 px-4 md:px-6 lg:px-8 xl:px-12 border-b transition-colors duration-300 ${
-            scrolled || isOpen
-              ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] backdrop-blur-xl"
-              : "bg-[var(--color-surface-elevated)]/80 border-transparent backdrop-blur-md"
-          }`}
-        >
+        <div className="max-w-7xl mx-auto px-4 md:px-10 pt-3">
+          {/* Barra superior -- el borde/fondo real vive acá, adentro del
+              wrapper de arriba (mismo patrón que la tarjeta del Hero). El
+              menú de tarjetas se expande DEBAJO de este mismo wrapper. */}
+          <div
+            className={`flex items-center justify-between h-16 px-4 rounded-2xl border transition-colors duration-300 ${
+              scrolled || isOpen
+                ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] shadow-lg backdrop-blur-xl"
+                : "bg-[var(--color-surface-elevated)]/80 border-transparent backdrop-blur-md"
+            }`}
+          >
           <Link
             to="/"
             className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
@@ -191,6 +196,7 @@ export default function Navbar() {
             </motion.button>
           </div>
         </div>
+        </div>
 
         {/* Panel de tarjetas -- se expande debajo de la barra, una tarjeta
             por categoría (grid en desktop, apiladas en mobile), cada una con
@@ -202,22 +208,17 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden bg-[var(--color-surface-elevated)]/98 backdrop-blur-xl border-b border-[var(--color-border-subtle)] shadow-lg"
+              className="overflow-hidden"
             >
-              {/* Bug real reportado en vivo (mobile, pantalla chica): con
+              {/* Mismo max-w-7xl/mx-auto/px que la barra de arriba y que el
+                  Hero de la landing -- el panel queda alineado con ambos.
+                  Bug real corregido acá también (mobile, pantalla chica): con
                   las 3 tarjetas + la de ajustes apiladas, el panel entero
                   podía superar el alto de la pantalla -- como el <nav> es
-                  `fixed`, eso obligaba a scrollear TODA la página (arrastrando
-                  la barra fija con el contenido de atrás) en vez de solo el
-                  menú, y el final quedaba tapado/inalcanzable sin ese scroll
-                  raro. Fix: el propio panel de tarjetas tiene su tope real de
-                  alto (lo que sobra de viewport debajo de la barra superior)
-                  y scroll interno -- el menú queda 100% navegable sin
-                  necesidad de tocar el scroll de la página de atrás.
-                  max-w-6xl mx-auto acá adentro (no en la barra) -- centra las
-                  tarjetas en pantallas muy anchas sin angostar la barra de
-                  arriba, que ahora sí ocupa el ancho real completo. */}
-              <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 xl:px-12 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain">
+                  `fixed`, eso obligaba a scrollear TODA la página en vez de
+                  solo el menú. Fix: tope real de alto (lo que sobra de
+                  viewport debajo de la barra) + scroll interno. */}
+              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain pb-2">
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
