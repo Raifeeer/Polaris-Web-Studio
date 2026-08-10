@@ -1,6 +1,6 @@
 import { tool, generateText } from "ai";
 import { z } from "zod";
-import { createXai } from "@ai-sdk/xai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { BLOG_POSTS } from "../src/data/blogData.js";
 
 // Tools reales para Atlas Assistant (AI SDK, function calling real) --
@@ -321,19 +321,19 @@ export const captureLead = tool({
   },
 });
 
-// ---- 8. Búsqueda web real (Grok / xAI Live Search) ----
-// El chat principal puede correr sobre DeepSeek/Grok/Gemini indistintamente,
-// pero la búsqueda real en vivo es un tool propio de cada provider -- no se
-// le puede pasar tal cual a cualquiera de los 3. Se eligió el `webSearch` de
-// xAI (no el de Google) porque sale más barato -- Grok cobra la búsqueda como
-// parte del mismo request de chat (sin cargo aparte por fuente), mientras que
-// el grounding de Gemini se factura por separado y por cada consulta. Esta
-// tool envuelve un llamado interno y aislado a Grok (siempre, sin importar
-// qué modelo esté respondiendo el turno principal) y devuelve texto + fuentes
-// reales como salida de tool normal, así cualquiera de los 3 providers puede
-// usarla igual. El tool nativo de xAI ya devuelve `sources` estructuradas
-// (sin parsear metadata de grounding a mano, como sí hacía falta con Google).
-const GROK_API_KEY = process.env.GROK_API_KEY;
+// ---- 8. Búsqueda web real (grounding nativo de Gemini) ----
+// Usada por cualquier modelo sin buscador propio utilizable acá (hoy,
+// DeepSeek) y como tool de respaldo en el set completo -- Grok y Gemini, al
+// responder ellos mismos el turno, usan su propio buscador nativo directo
+// (ver toolsFor() en quotebot-chat.ts), sin pasar por este wrapper.
+// Migrado de un llamado anidado a Grok (xai.tools.webSearch) a uno a Gemini
+// (google.tools.googleSearch) el 10 de agosto: medido en vivo que el
+// grounding de Gemini resuelve bastante más rápido que el salto completo a
+// Grok (~2-13s vs ~30-60s+ en las pruebas reales de esa sesión) -- ver
+// Meridian/CLAUDE.md. Mismo mecanismo "provider-executed" que el de xAI, con
+// la ventaja de que Gemini sí devuelve un título real de la fuente (no solo
+// el número de cita que devolvía xAI).
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export const webSearch = tool({
   description:
@@ -342,40 +342,40 @@ export const webSearch = tool({
     query: z.string().describe("La pregunta o términos de búsqueda, en el idioma que sea más efectivo para buscar (usualmente inglés para temas globales)."),
   }),
   execute: async ({ query }) => {
-    if (!GROK_API_KEY) {
+    if (!GEMINI_API_KEY) {
       return { error: "La búsqueda web no está disponible en este momento." };
     }
     try {
-      const xai = createXai({ apiKey: GROK_API_KEY });
+      const google = createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY });
       const result = await generateText({
-        model: xai("grok-4.20-non-reasoning"),
-        // El tool de búsqueda de xAI es "provider-executed" (corre server-side
-        // en la API de Grok, no vía `execute()` local) -- de ahí el `as any`
-        // puntual, mismo motivo que el de Google antes.
-        tools: { web_search: xai.tools.webSearch({}) } as any,
+        model: google("gemini-3.5-flash"),
+        // Provider-executed (corre server-side en la API de Gemini, no vía
+        // execute() local) -- de ahí el `as any` puntual, mismo motivo que
+        // el resto de los tools nativos de esta cuenta.
+        tools: { google_search: google.tools.googleSearch({}) } as any,
         prompt: query,
       });
-      // Bug real encontrado en vivo (10 de agosto): `result.toolResults` viene
-      // SIEMPRE vacío para este tool -- xAI no lo expone como un tool-result
-      // normal pese a estar tipado como uno (`ProviderExecutedTool`). Las
-      // fuentes reales están en `result.sources` (content parts sueltos,
-      // `{type:"source", sourceType:"url", url, title}`), confirmado con una
-      // llamada real de prueba. Ojo: `title` ahí no es un título real, es solo
-      // el número de cita ("1", "2"...) -- se usa el propio dominio como
-      // título mostrable. La misma URL puede repetirse varias veces (una cita
-      // por uso dentro de la respuesta), así que se deduplica por URL antes
-      // de recortar a 5.
-      const rawSources = (result.sources || []).filter((s: any) => s.sourceType === "url" && s.url) as { url: string }[];
+      // Mismo patrón que xAI: las fuentes reales viven en `result.sources`
+      // (content parts sueltos, `{type:"source", sourceType:"url", url,
+      // title}`), no en `toolResults`. A diferencia de xAI, acá `title` SÍ
+      // suele traer un título real de la página (metadata de grounding de
+      // Google), no solo el número de cita -- se usa igual el hostname como
+      // respaldo si faltara. La misma URL puede repetirse varias veces (una
+      // cita por uso dentro de la respuesta), así que se deduplica por URL
+      // antes de recortar a 5.
+      const rawSources = (result.sources || []).filter((s: any) => s.sourceType === "url" && s.url) as { url: string; title?: string }[];
       const seen = new Set<string>();
       const sources: { url: string; title: string }[] = [];
       for (const s of rawSources) {
         if (seen.has(s.url)) continue;
         seen.add(s.url);
-        let title = s.url;
-        try {
-          title = new URL(s.url).hostname.replace(/^www\./, "");
-        } catch {
-          // URL inválida -- se deja el string crudo como título
+        let title = s.title || s.url;
+        if (!s.title) {
+          try {
+            title = new URL(s.url).hostname.replace(/^www\./, "");
+          } catch {
+            // URL inválida -- se deja el string crudo como título
+          }
         }
         sources.push({ url: s.url, title });
         if (sources.length >= 5) break;
