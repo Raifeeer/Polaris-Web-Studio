@@ -230,21 +230,26 @@ export default function Navbar() {
                   podía superar el alto de la pantalla -- como el <nav> es
                   `fixed`, eso obligaba a scrollear TODA la página en vez de
                   solo el menú. Fix: tope real de alto (lo que sobra de
-                  viewport debajo de la barra) + scroll interno. */}
-              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-7rem)] md:max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain pb-2">
+                  viewport debajo de la barra) + scroll interno.
+                  Segunda ronda (pedido explícito del usuario, "debería verse
+                  completo sin scroll"): en mobile las tarjetas pasan de 1
+                  columna (cada una a todo el ancho) a 2 columnas -- reduce a
+                  la mitad el alto total apilado. Padding/gaps también más
+                  ajustados en mobile (md: los agranda de vuelta). */}
+              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-1.5 md:mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1.5 md:gap-2 max-h-[calc(100dvh-6.5rem)] md:max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain pb-2">
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
-                    className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-4 pt-3"
+                    className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 pt-2 md:p-4 md:pt-3"
                     style={{ borderTopColor: card.accent, borderTopWidth: 3 }}
                   >
-                    <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: card.accent }}>
+                    <p className="text-[10px] md:text-xs font-black uppercase tracking-widest mb-1.5 md:mb-3" style={{ color: card.accent }}>
                       {card.label}
                     </p>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5 md:gap-1">
                       {card.links.map((link) => (
                         <Link
                           key={link.path}
@@ -252,7 +257,7 @@ export default function Navbar() {
                           onClick={() => setIsOpen(false)}
                           onTouchStart={() => prefetchRoute(link.path)}
                           onMouseEnter={() => prefetchRoute(link.path)}
-                          className={`px-2 py-2 rounded-lg text-base font-bold transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] ${
+                          className={`px-1.5 py-1.5 md:px-2 md:py-2 rounded-lg text-sm md:text-base font-bold transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] ${
                             location.pathname === link.path ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-primary)]"
                           }`}
                         >
@@ -265,26 +270,40 @@ export default function Navbar() {
 
                 {/* Cuarta tarjeta -- ajustes reales (tema/idioma/tamaño de
                     texto) que antes vivían al fondo del menú mobile en lista;
-                    acá quedan agrupados en su propia tarjeta. */}
+                    acá quedan agrupados en su propia tarjeta. El botón "Planifica
+                    tu Proyecto" (el más importante, pedido explícito del
+                    usuario) va primero en mobile para que quede visible sin
+                    depender de scroll -- el resto de los ajustes (idioma,
+                    tema, tamaño de texto) quedan debajo, en una fila que
+                    envuelve si hace falta. */}
                 <motion.div
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: cards.length * 0.06, ease: "easeOut" }}
-                  className="sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-4 flex flex-wrap items-center gap-x-8 gap-y-3"
+                  className="col-span-2 sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 md:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-8 sm:gap-y-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate("/cotizar");
+                    }}
+                    className="sm:hidden order-first w-full px-5 py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-sm whitespace-nowrap"
+                  >
+                    <T en="Plan your Project">Planifica tu Proyecto</T>
+                  </button>
+                  <div className="flex items-center justify-between sm:justify-start gap-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                       <T en="Theme">Tema</T>
                     </span>
                     <ThemeToggle />
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-start gap-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                       <T en="Text size">Tamaño de texto</T>
                     </span>
                     <TextSizeToggle />
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-start gap-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                       <T en="Language">Idioma</T>
                     </span>
@@ -310,15 +329,6 @@ export default function Navbar() {
                       ))}
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      setIsOpen(false);
-                      navigate("/cotizar");
-                    }}
-                    className="sm:hidden ml-auto px-5 py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-sm whitespace-nowrap"
-                  >
-                    <T en="Plan your Project">Planifica tu Proyecto</T>
-                  </button>
                 </motion.div>
               </div>
             </motion.div>
