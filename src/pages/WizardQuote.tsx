@@ -2739,10 +2739,13 @@ export default function WizardQuote() {
               />
             </svg>
 
-            {/* Step dots on the thread */}
+            {/* Step dots on the thread -- diseño tipo "Stepper" pedido por el
+                usuario (círculo con número/check, color sólido al completar) */}
             <div className="absolute inset-0 flex items-center justify-between px-[2px]">
               {steps.map((_, idx) => {
                 const isClickable = idx < currentStep;
+                const status =
+                  idx === currentStep ? "active" : idx < currentStep ? "complete" : "inactive";
                 return (
                   <motion.button
                     key={idx}
@@ -2754,13 +2757,10 @@ export default function WizardQuote() {
                       }
                     }}
                     disabled={!isClickable}
-                    className={`relative z-10 p-2 -m-2 bg-transparent border-none rounded-full outline-none transition-transform duration-300 focus:scale-110 flex items-center justify-center ${
-                      isClickable ? "cursor-pointer hover:scale-125" : "cursor-default"
+                    className={`relative z-10 bg-transparent border-none outline-none flex items-center justify-center ${
+                      isClickable ? "cursor-pointer" : "cursor-default"
                     }`}
-                    animate={{
-                      scale: idx === currentStep ? 1.3 : 1,
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    whileHover={isClickable ? { scale: 1.1 } : undefined}
                     title={
                       isClickable
                         ? language === "es"
@@ -2769,20 +2769,44 @@ export default function WizardQuote() {
                         : undefined
                     }
                   >
-                    <div
-                      className={`w-3 h-3 rounded-full border-2 transition-all duration-300 ${
-                        idx <= currentStep
-                          ? "bg-[var(--color-primary-base)] border-[var(--color-primary-base)] shadow-md shadow-[var(--color-primary-base)]/30"
-                          : "bg-[var(--color-surface-base)] border-[var(--color-border-strong)]"
-                      }`}
-                    />
-                    {idx === currentStep && (
-                      <motion.div
-                        className="absolute inset-0 rounded-full border-2 border-[var(--color-primary-base)]/40 pointer-events-none"
-                        animate={{ scale: [1, 1.8, 1], opacity: [0.6, 0, 0.6] }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                      />
-                    )}
+                    <motion.div
+                      className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center font-bold text-xs"
+                      animate={status}
+                      initial={false}
+                      variants={{
+                        inactive: {
+                          scale: 1,
+                          backgroundColor: "var(--color-surface-base)",
+                        },
+                        active: {
+                          scale: 1.15,
+                          backgroundColor: "var(--color-primary-base)",
+                        },
+                        complete: {
+                          scale: 1,
+                          backgroundColor: "var(--color-primary-base)",
+                        },
+                      }}
+                      style={{
+                        border:
+                          status === "inactive"
+                            ? "2px solid var(--color-border-strong)"
+                            : "2px solid var(--color-primary-base)",
+                      }}
+                      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+                    >
+                      {status === "complete" ? (
+                        <Check
+                          size={14}
+                          strokeWidth={3}
+                          className="text-[var(--color-on-primary)]"
+                        />
+                      ) : status === "active" ? (
+                        <div className="w-2 h-2 rounded-full bg-[var(--color-on-primary)]" />
+                      ) : (
+                        <span className="text-[var(--color-text-secondary)]">{idx + 1}</span>
+                      )}
+                    </motion.div>
                   </motion.button>
                 );
               })}
