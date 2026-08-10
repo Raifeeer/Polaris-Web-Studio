@@ -355,8 +355,31 @@ export const webSearch = tool({
         tools: { web_search: xai.tools.webSearch({}) } as any,
         prompt: query,
       });
-      const searchResult = result.toolResults?.find((t) => t.toolName === "web_search")?.output as { sources?: { url: string; title: string; snippet?: string }[] } | undefined;
-      const sources = (searchResult?.sources || []).slice(0, 5).map((s) => ({ url: s.url, title: s.title || s.url }));
+      // Bug real encontrado en vivo (10 de agosto): `result.toolResults` viene
+      // SIEMPRE vacío para este tool -- xAI no lo expone como un tool-result
+      // normal pese a estar tipado como uno (`ProviderExecutedTool`). Las
+      // fuentes reales están en `result.sources` (content parts sueltos,
+      // `{type:"source", sourceType:"url", url, title}`), confirmado con una
+      // llamada real de prueba. Ojo: `title` ahí no es un título real, es solo
+      // el número de cita ("1", "2"...) -- se usa el propio dominio como
+      // título mostrable. La misma URL puede repetirse varias veces (una cita
+      // por uso dentro de la respuesta), así que se deduplica por URL antes
+      // de recortar a 5.
+      const rawSources = (result.sources || []).filter((s: any) => s.sourceType === "url" && s.url) as { url: string }[];
+      const seen = new Set<string>();
+      const sources: { url: string; title: string }[] = [];
+      for (const s of rawSources) {
+        if (seen.has(s.url)) continue;
+        seen.add(s.url);
+        let title = s.url;
+        try {
+          title = new URL(s.url).hostname.replace(/^www\./, "");
+        } catch {
+          // URL inválida -- se deja el string crudo como título
+        }
+        sources.push({ url: s.url, title });
+        if (sources.length >= 5) break;
+      }
       return { answer: result.text, sources };
     } catch {
       return { error: "No se pudo completar la búsqueda web en este momento." };

@@ -81,8 +81,12 @@ export default function WebSourcesPanel({ sources, iconSize = 12 }: { sources: W
                 >
                   <ExternalLink size={12} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
                   <span className="min-w-0">
-                    <span className="block text-xs font-semibold text-[var(--color-text-primary)] truncate">{s.title}</span>
-                    <span className="block text-[10px] text-[var(--color-text-tertiary)] truncate">{hostnameOf(s.url)}</span>
+                    {/* `title` viene del dominio (xAI no devuelve título real de
+                        página para este tool, ver comentario en _atlasTools.ts)
+                        -- se muestra la URL completa debajo para dar contexto
+                        real en vez de repetir el mismo dominio dos veces. */}
+                    <span className="block text-xs font-semibold text-[var(--color-text-primary)] truncate">{s.title || hostnameOf(s.url)}</span>
+                    <span className="block text-[10px] text-[var(--color-text-tertiary)] truncate">{s.url}</span>
                   </span>
                 </a>
               ))}
