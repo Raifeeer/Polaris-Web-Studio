@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
  * string "YYYY-MM-DD" (se interpreta como fecha local, sin desfasar por
  * timezone), un ISO datetime completo, o un objeto Date ya construido.
  * `opts` permite pedir un formato distinto (ej. "16 de julio de 2026") sin
- * perder el idioma correcto -- por defecto es el numérico dd/mm vs mm/dd.
+ * perder el idioma correcto — por defecto es el numérico dd/mm vs mm/dd.
  */
 export function formatDate(
   dateInput: string | Date,
@@ -34,7 +34,7 @@ export function formatDate(
 /**
  * Fecha corta relativa, estilo Gemini: "Ayer"/"Anteayer" (ES) o "Yesterday"
  * (EN) para los últimos 2 días, y "{mes abreviado} {día}" el resto (ej.
- * "ago 9", "jul 16" en ES; "Aug 9" en EN) -- nunca año, pensado para listas
+ * "ago 9", "jul 16" en ES; "Aug 9" en EN) — nunca año, pensado para listas
  * de historial donde el año casi siempre es el actual. Compara por fecha de
  * calendario local (medianoche a medianoche), no por horas transcurridas,
  * para que algo de las 23:50 de ayer siga diciendo "Ayer" y no "hace 1 día".
@@ -52,7 +52,7 @@ export function formatRelativeShort(dateInput: string | number | Date, language:
 
 /**
  * Heurística liviana para detectar en qué idioma escribió el usuario un
- * mensaje puntual del chat de Atlas -- el modelo ya responde en el idioma
+ * mensaje puntual del chat de Atlas — el modelo ya responde en el idioma
  * del usuario mensaje a mensaje (system prompt), pero el toggle ES/EN de la
  * interfaz es un ajuste manual aparte, que puede quedar desincronizado si
  * alguien escribe en inglés sin tocarlo. Se usa solo para elegir el idioma
@@ -70,7 +70,7 @@ export function detectLang(text: string): "es" | "en" {
 
 /**
  * Limpia el Markdown real de una respuesta de Atlas (negrita, links,
- * viñetas) antes de mandarla a SpeechSynthesis -- si no, el lector lee los
+ * viñetas) antes de mandarla a SpeechSynthesis — si no, el lector lee los
  * símbolos literales ("asterisco asterisco", "corchete") en vez de sonar
  * como una frase normal.
  */

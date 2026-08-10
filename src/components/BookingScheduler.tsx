@@ -257,7 +257,7 @@ export default function BookingScheduler({
 
           {bookingError === "slot" && (
             <p className="text-xs text-amber-500">
-              <T en="That time was just taken -- pick another one, the times were refreshed.">Ese horario acaba de ocuparse -- elige otro, los horarios se actualizaron.</T>
+              <T en="That time was just taken — pick another one, the times were refreshed.">Ese horario acaba de ocuparse — elige otro, los horarios se actualizaron.</T>
             </p>
           )}
           {bookingError === "generic" && (

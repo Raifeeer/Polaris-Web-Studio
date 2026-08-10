@@ -63,12 +63,12 @@ function truncateIp(ip: string): string {
 }
 
 /** Registra la decisión de consentimiento en Firestore como evidencia por si
- * hace falta demostrarla más adelante -- decision, version, timestamp del
+ * hace falta demostrarla más adelante — decision, version, timestamp del
  * servidor e IP truncada. Escribe en dos lugares:
  * - `cookie_consents/{consentId}`: snapshot de la decisión ACTUAL (se
  *   sobreescribe en cada cambio), para consultar rápido el estado vigente.
  * - `cookie_consents/{consentId}/history`: un documento NUEVO por cada
- *   decisión, nunca se sobreescribe -- así queda registro de que alguien
+ *   decisión, nunca se sobreescribe — así queda registro de que alguien
  *   cambió de opinión (por ejemplo, aceptó todo y después revocó), no solo
  *   cuál es su elección de hoy.
  * No bloquea la UI: si falla (red, IP no disponible), solo lo loguea. */
@@ -123,7 +123,7 @@ const PANEL_OPEN_EVENT = "polaris-cookie-panel-open-changed";
 
 /** El panel "Configurar mis cookies" (en /cookies) avisa acá cuando se abre
  * o se cierra. El banner global (CookieConsent.tsx) lo escucha para
- * ocultarse mientras el panel está abierto -- si no, quedaban los dos
+ * ocultarse mientras el panel está abierto — si no, quedaban los dos
  * visibles a la vez y competían por la misma decisión (tocar un botón del
  * banner no actualizaba el toggle del panel, y viceversa). */
 export function setCookieSettingsPanelOpen(open: boolean) {

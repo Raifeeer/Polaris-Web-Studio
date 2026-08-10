@@ -85,7 +85,7 @@ function LuminaLogo({ size = "lg" }: { size?: "lg" | "sm" }) {
 function LuminaSkyPage({ desktop, lang }: { desktop: boolean; lang: "EN" | "ESP" }) {
   const es = lang === "ESP";
   const [adults, setAdults] = useState(2);
-  const [dateRange, setDateRange] = useState(es ? "17 jun. -- 20 jun., 2026" : "Jun 17 – Jun 20, 2026");
+  const [dateRange, setDateRange] = useState(es ? "17 jun. — 20 jun., 2026" : "Jun 17 – Jun 20, 2026");
   const [isProcessing, setIsProcessing] = useState(false);
   const [successCode, setSuccessCode] = useState<string | null>(null);
   const navLinks = es ? LUMINA_NAV_ES : LUMINA_NAV_EN;

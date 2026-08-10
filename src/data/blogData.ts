@@ -144,7 +144,7 @@ Y no es solo para WhatsApp; esta misma tecnología controla cómo te ves cuando 
 
 ### ¿Qué son esas etiquetas silenciosas en el código?
 
-Técnicamente hablando, Open Graph (OG) es un estándar creado hace años por Facebook. Consiste en unas etiquetas invisibles  -- o meta tags  -- que se colocan dentro del encabezado (el famoso \`<head>\`) de tu sitio web.
+Técnicamente hablando, Open Graph (OG) es un estándar creado hace años por Facebook. Consiste en unas etiquetas invisibles  — o meta tags  — que se colocan dentro del encabezado (el famoso \`<head>\`) de tu sitio web.
 
 Las redes sociales y aplicaciones de mensajería leen estas etiquetas antes de mostrar la burbuja de chat:
 
@@ -187,7 +187,7 @@ And it’s not just for WhatsApp; this exact same technology controls how you lo
 
 ### What are those silent tags in the code?
 
-Technically speaking, Open Graph (OG) is a standard created years ago by Facebook. It consists of invisible tags -- or meta tags -- placed inside the header (the famous \`<head>\`) of your website.
+Technically speaking, Open Graph (OG) is a standard created years ago by Facebook. It consists of invisible tags — or meta tags — placed inside the header (the famous \`<head>\`) of your website.
 
 Social networks and messaging applications read these tags right before displaying the chat bubble:
 
@@ -466,7 +466,7 @@ At Polaris, we don't sell you "magic templates"; **we sculpt the exact right arc
     id: "post-4",
     slug: "muerte-plantillas-genericas",
     title: "Tu plantilla de WordPress carga código que nunca vas a usar, y tus clientes lo pagan en segundos de espera",
-    titleEn: "Your WordPress template loads code you'll never use -- and your customers pay for it in seconds of waiting",
+    titleEn: "Your WordPress template loads code you'll never use — and your customers pay for it in seconds of waiting",
     summary: "Los constructores visuales como WordPress con Elementor arrastran megabytes de código basura que matan tu conversión. Conoce la alternativa artesanal.",
     summaryEn: "Visual builders like WordPress with Elementor drag megabytes of code slop that kills your conversions. Discover the crafted alternative.",
     category: "Desarrollo",
@@ -573,7 +573,7 @@ Un buscador semántico actúa como tu mejor vendedor de pasillo experto: **compr
 
 ### ¿Qué hace a un buscador realmente inteligente?
 
-Los sitios prediseñados tradicionales usan algo muy viejo llamado "búsqueda lexical" -- donde el servidor cruza los dedos para que la letra 'C' case con la 'C' exacta en tu base de datos. Hoy, una búsqueda moderna usa el grandioso modelo **RAG (Augmented Search)** que es la piedra angular del **Buscador Semántico impulsado por IA**.
+Los sitios prediseñados tradicionales usan algo muy viejo llamado "búsqueda lexical" — donde el servidor cruza los dedos para que la letra 'C' case con la 'C' exacta en tu base de datos. Hoy, una búsqueda moderna usa el grandioso modelo **RAG (Augmented Search)** que es la piedra angular del **Buscador Semántico impulsado por IA**.
 
 Esto permite maravillas operativas: 
 - **Tolerancia a graves faltas de ortografía:** "Pantalon jins asul" será entendido de inmediato como "Pantalón Denim Azul Colección".
@@ -603,7 +603,7 @@ A truly semantic search behaves exactly like your greatest veteran aisle salespe
 
 ### What truly makes a search engine brilliant?
 
-Legacy pre-made sites heavily rely on a dinosaur-age mechanism called "lexical search" -- where the web server violently crosses its fingers hoping that the letter 'C' specifically matches the letter 'C' stashed in your database table. Today, leading modern search strictly utilizes an incredible model heavily centered on AI vectorization that stands as the bedrock of the **AI-powered Semantic Search**.
+Legacy pre-made sites heavily rely on a dinosaur-age mechanism called "lexical search" — where the web server violently crosses its fingers hoping that the letter 'C' specifically matches the letter 'C' stashed in your database table. Today, leading modern search strictly utilizes an incredible model heavily centered on AI vectorization that stands as the bedrock of the **AI-powered Semantic Search**.
 
 This unlocks absolute operational wonders:
 - **Flawless typo tolerance:** Someone typing "Bleu denm jins pant" will brilliantly be understood and matched to your formal "Blue Denim Pants Collection".
@@ -649,7 +649,7 @@ Con estrategias hiperveloces, no estás perdiendo ventas valiosas. Retienes al u
 
 La analogía es tener almacenes físicos a nivel mundial distribuidos. Un CDN es literalmente **una red colaborativa mundial de servidores súper veloces estratégicamente posicionados.** 
 
-Cuando tu empresa despliega su web con arquitecturas de nube (como hacemos en Polaris), el sistema no guarda la página en un solo cuartito. Toma todo el código "pesado"  -- como las letras bonitas que compraste, las galerías de diseño en 4K, y los videos de las marcas  -- y las clona secretamente en cientos de cuartos alrededor del hemisferio. 
+Cuando tu empresa despliega su web con arquitecturas de nube (como hacemos en Polaris), el sistema no guarda la página en un solo cuartito. Toma todo el código "pesado"  — como las letras bonitas que compraste, las galerías de diseño en 4K, y los videos de las marcas  — y las clona secretamente en cientos de cuartos alrededor del hemisferio. 
 
 Cuando el turista o local quiere ver tu catálogo desde Bávaro, **ya no viaja el archivo directo desde Ámsterdam o Nueva York**; se lo descargas automáticamente desde el mini-servidor rápido de Miami o Puerto Rico que tiene la copia en la mano de inmediato, casi eliminando esa eterna demora técnica conocida como latencia de red.
 
@@ -680,7 +680,7 @@ With fast, distributed strategies, you stop losing valuable sales. You keep the 
 
 Think of it as having physical warehouses positioned around the world. A CDN is literally **a global, collaborative network of strategically placed, ultra-fast servers.**
 
-When your business deploys its site on cloud infrastructure (like we do at Polaris), the system doesn't store the page in just one room. It takes all the "heavy" code -- your custom fonts, your 4K design galleries, your brand videos -- and quietly clones it into hundreds of rooms around the hemisphere.
+When your business deploys its site on cloud infrastructure (like we do at Polaris), the system doesn't store the page in just one room. It takes all the "heavy" code — your custom fonts, your 4K design galleries, your brand videos — and quietly clones it into hundreds of rooms around the hemisphere.
 
 When a tourist or local wants to see your catalog from Bávaro, **the file no longer travels directly from Amsterdam or New York**; it's downloaded automatically from a fast mini-server in Miami or Puerto Rico that already has the copy ready, almost eliminating the delay known as network latency.
 
@@ -692,7 +692,7 @@ This matters if you're paying for traffic and planning to go viral. A basic $20 
 
 An architecture built on CDN networks absorbs that monumental spike.
 
-*Technical excellence should never stop -- invest in your success today.*`
+*Technical excellence should never stop — invest in your success today.*`
   },
   {
     id: "tech-nextjs",
@@ -723,9 +723,9 @@ Next.js nació para resolver exactamente eso, y lo hace de una manera que cambia
 
 Lo que hace especial a Next.js es que combina dos mundos que antes eran opuestos.
 
-Por un lado, puede **pre-generar páginas estáticas** -- ideales para secciones que no cambian mucho, como tu página de inicio, servicios o blog. Estas cargan a una velocidad que parece instantánea porque técnicamente lo son.
+Por un lado, puede **pre-generar páginas estáticas** — ideales para secciones que no cambian mucho, como tu página de inicio, servicios o blog. Estas cargan a una velocidad que parece instantánea porque técnicamente lo son.
 
-Por otro lado, puede **renderizar contenido dinámico desde el servidor** -- perfecto para tiendas con inventario en tiempo real, precios que fluctúan, o perfiles de usuario personalizados. Todo esto sin sacrificar velocidad.
+Por otro lado, puede **renderizar contenido dinámico desde el servidor** — perfecto para tiendas con inventario en tiempo real, precios que fluctúan, o perfiles de usuario personalizados. Todo esto sin sacrificar velocidad.
 
 Un sitio en Next.js puede tener ambas cosas al mismo tiempo, eligiendo la estrategia correcta para cada página.
 
@@ -737,7 +737,7 @@ En sitios construidos con Next.js en Polaris Web Studio, los clientes han visto 
 
 ### El estándar que usan Vercel, TikTok y la NASA
 
-No es casualidad que empresas de ese calibre confíen en Next.js. Cuando el tráfico explota -- por una mención viral, una campaña en redes o un artículo que se comparte masivamente -- la arquitectura aguanta le golpe sin caerse.
+No es casualidad que empresas de ese calibre confíen en Next.js. Cuando el tráfico explota — por una mención viral, una campaña en redes o un artículo que se comparte masivamente — la arquitectura aguanta le golpe sin caerse.
 
 Para un negocio en República Dominicana que aspira a crecer, esa estabilidad tiene un valor enorme. No hay peor momento para que tu web colapse que justo cuando todo el mundo quiere entrar.
 
@@ -752,21 +752,21 @@ Next.js was built to solve exactly that, and it does so in a way that changes th
 
 What makes Next.js special is that it combines two worlds that were previously opposites.
 
-On one hand, it can **pre-generate static pages** -- ideal for sections that don't change often, like your homepage, services, or blog. These load at a speed that feels instant because technically, they are.
+On one hand, it can **pre-generate static pages** — ideal for sections that don't change often, like your homepage, services, or blog. These load at a speed that feels instant because technically, they are.
 
-On the other hand, it can **render dynamic content from the server** -- perfect for stores with real-time inventory, fluctuating prices, or personalized user profiles. All without sacrificing speed.
+On the other hand, it can **render dynamic content from the server** — perfect for stores with real-time inventory, fluctuating prices, or personalized user profiles. All without sacrificing speed.
 
 A Next.js site can do both simultaneously, choosing the right strategy for each individual page.
 
 ### Google rewards you without spending a penny on ads
 
-Google's search engine has a direct relationship with speed: if your site responds quickly and content arrives pre-assembled from the server, the indexing robot can read it completely without waiting. That structurally improves your organic ranking -- not temporarily.
+Google's search engine has a direct relationship with speed: if your site responds quickly and content arrives pre-assembled from the server, the indexing robot can read it completely without waiting. That structurally improves your organic ranking — not temporarily.
 
 On sites built with Next.js at Polaris Web Studio, clients have seen Core Web Vitals improvements of up to 40% compared to their previous WordPress or Webflow versions.
 
 ### The standard used by Vercel, TikTok, and NASA
 
-It's no coincidence that companies of that caliber trust Next.js. When traffic explodes -- from a viral mention, a social media campaign, or a widely shared article -- the architecture absorbs the hit without going down.
+It's no coincidence that companies of that caliber trust Next.js. When traffic explodes — from a viral mention, a social media campaign, or a widely shared article — the architecture absorbs the hit without going down.
 
 For a business in the Dominican Republic aiming to grow, that stability has enormous value. There's no worse moment for your website to crash than exactly when everyone wants to visit it.
 
@@ -792,7 +792,7 @@ For a business in the Dominican Republic aiming to grow, that stability has enor
     concepts: ["react", "react.js", "componente", "declarativo", "virtual dom", "hooks", "libreria", "ui"],
     content: `¿Qué tienen en común Instagram, Airbnb y tu próxima tienda online?
 
-Cuando abres Instagram y el feed se actualiza sin que la página se recargue, cuando filtras vuelos en Airbnb y los resultados cambian en tiempo real sin pantallas de carga, cuando añades algo al carrito en Amazon y el contador del ícono sube al instante -- todo eso es React trabajando en silencio.
+Cuando abres Instagram y el feed se actualiza sin que la página se recargue, cuando filtras vuelos en Airbnb y los resultados cambian en tiempo real sin pantallas de carga, cuando añades algo al carrito en Amazon y el contador del ícono sube al instante — todo eso es React trabajando en silencio.
 
 **React** no es solo una herramienta de desarrollo. Es la forma en que las interfaces modernas respiran.
 
@@ -804,7 +804,7 @@ La idea central de React es sencilla pero poderosa: tu interfaz no es una págin
 
 Piénsalo como un restaurante bien organizado. El cajero no necesita saber qué está haciendo la cocina para cobrar una orden. El mesero no necesita reiniciar toda la operación para tomar un pedido nuevo. Cada parte tiene su función y puede actualizarse sin interrumpir a las demás.
 
-En una tienda online construida con React, cuando el cliente cambia la talla de una camisa, solo se actualiza el selector de tallas y el precio -- no la página completa. Eso elimina la espera y reduce enormemente la frustración.
+En una tienda online construida con React, cuando el cliente cambia la talla de una camisa, solo se actualiza el selector de tallas y el precio — no la página completa. Eso elimina la espera y reduce enormemente la frustración.
 
 ### El Virtual DOM: el secreto de la velocidad
 
@@ -812,16 +812,16 @@ Modificar el HTML directamente es lento. React lo sabe, y por eso nunca lo hace 
 
 En cambio, mantiene una copia virtual del DOM en memoria, compara qué cambió, y solo actualiza los elementos estrictamente necesarios. Este proceso, llamado **reconciliación**, es tan eficiente que el usuario percibe la interfaz como inmediata.
 
-En Polaris Web Studio construimos todas nuestras plataformas con **React** porque esa fluidez no es un detalle estético -- es lo que determina si un cliente completa una compra o cierra la pestaña frustrado.
+En Polaris Web Studio construimos todas nuestras plataformas con **React** porque esa fluidez no es un detalle estético — es lo que determina si un cliente completa una compra o cierra la pestaña frustrado.
 
 ### Componentes que se reutilizan, proyectos que escalan
 
-Uno de los beneficios menos mencionados pero más valiosos de React es que un componente bien construido se puede usar en cien lugares distintos. El botón de "Agregar al carrito", la tarjeta de producto, el formulario de contacto -- se diseñan una vez y se reutilizan en toda la aplicación.
+Uno de los beneficios menos mencionados pero más valiosos de React es que un componente bien construido se puede usar en cien lugares distintos. El botón de "Agregar al carrito", la tarjeta de producto, el formulario de contacto — se diseñan una vez y se reutilizan en toda la aplicación.
 
 Eso significa que cuando quieres cambiar el diseño de ese botón, lo cambias en un solo lugar y el cambio se refleja en todos lados automáticamente.
 
 *Una interfaz fluida no convence a los clientes con palabras; los convence con la experiencia de que todo simplemente funciona.*`,
-    contentEn: `When you open Instagram and the feed updates without the page reloading, when you filter flights on Airbnb and results change in real time without loading screens, when you add something to your Amazon cart and the icon counter jumps instantly -- that's all React working silently in the background.
+    contentEn: `When you open Instagram and the feed updates without the page reloading, when you filter flights on Airbnb and results change in real time without loading screens, when you add something to your Amazon cart and the icon counter jumps instantly — that's all React working silently in the background.
 
 **React** isn't just a development tool. It's the way modern interfaces breathe.
 
@@ -833,7 +833,7 @@ React's core idea is simple but powerful: your interface isn't a whole page, it'
 
 Think of it like a well-organized restaurant. The cashier doesn't need to know what the kitchen is doing to process a payment. The waiter doesn't need to restart the entire operation to take a new order. Each part has its function and can update without interrupting the others.
 
-In an online store built with React, when a customer changes a shirt size, only the size selector and price update -- not the entire page. That eliminates waiting and dramatically reduces frustration.
+In an online store built with React, when a customer changes a shirt size, only the size selector and price update — not the entire page. That eliminates waiting and dramatically reduces frustration.
 
 ### The Virtual DOM: the secret behind the speed
 
@@ -841,11 +841,11 @@ Modifying HTML directly is slow. React knows this, which is why it never does it
 
 Instead, it maintains a virtual copy of the DOM in memory, compares what changed, and only updates the strictly necessary elements. This process, called **reconciliation**, is so efficient that the user perceives the interface as immediate.
 
-At Polaris Web Studio we build all our platforms with **React** because that fluidity isn't an aesthetic detail -- it's what determines whether a customer completes a purchase or closes the tab in frustration.
+At Polaris Web Studio we build all our platforms with **React** because that fluidity isn't an aesthetic detail — it's what determines whether a customer completes a purchase or closes the tab in frustration.
 
 ### Components that reuse, projects that scale
 
-One of React's least mentioned but most valuable benefits is that a well-built component can be used in a hundred different places. The "Add to Cart" button, the product card, the contact form -- designed once and reused throughout the entire application.
+One of React's least mentioned but most valuable benefits is that a well-built component can be used in a hundred different places. The "Add to Cart" button, the product card, the contact form — designed once and reused throughout the entire application.
 
 That means when you want to redesign that button, you change it in one place and the change reflects everywhere automatically.
 
@@ -881,7 +881,7 @@ Los frameworks de CSS tradicionales como Bootstrap o los temas de WordPress func
 
 Tailwind funciona exactamente al revés. Solo genera el CSS de las clases que realmente estás usando en tu código. Si nunca usas un botón rojo con borde punteado, ese estilo simplemente no existe en el archivo final.
 
-El resultado es un archivo CSS que en proyectos bien construidos pesa entre **5KB y 20KB** -- diez o veinte veces menos que un tema de WordPress típico.
+El resultado es un archivo CSS que en proyectos bien construidos pesa entre **5KB y 20KB** — diez o veinte veces menos que un tema de WordPress típico.
 
 ### Diseñar directamente en el HTML
 
@@ -891,11 +891,11 @@ Lo que ves es lo que obtienes. Sin capas de abstracción, sin nombres de clases 
 
 ### Consistencia visual sin esfuerzo extra
 
-Tailwind viene con un **sistema de diseño integrado** -- espaciados, colores, tipografías y sombras que mantienen proporciones coherentes en toda la aplicación. Es prácticamente imposible que dos botones del mismo tipo se vean distintos por error.
+Tailwind viene con un **sistema de diseño integrado** — espaciados, colores, tipografías y sombras que mantienen proporciones coherentes en toda la aplicación. Es prácticamente imposible que dos botones del mismo tipo se vean distintos por error.
 
 En Polaris usamos Tailwind en todos nuestros proyectos precisamente por esa razón: la **velocidad de desarrollo** aumenta y la **consistencia visual** se mantiene sola, sin necesidad de una guía de estilos separada que nadie actualiza.
 
-*Un sitio rápido no solo depende del servidor -- empieza por cuánto código innecesario le pides al navegador que descargue antes de mostrar la primera pantalla.*`,
+*Un sitio rápido no solo depende del servidor — empieza por cuánto código innecesario le pides al navegador que descargue antes de mostrar la primera pantalla.*`,
     contentEn: `Open Chrome DevTools on any website built with WordPress and a popular theme. Go to the Network tab and filter by CSS. You'll very likely find one or several style files that together total between 500KB and 2MB of code.
 
 Now imagine that 90% of that code is never used on any page of your site. It's just there, downloading onto every visitor's phone, consuming their mobile data and blocking the screen while it finishes loading.
@@ -908,7 +908,7 @@ Traditional CSS frameworks like Bootstrap or WordPress themes work backwards: th
 
 Tailwind works exactly the opposite way. It only generates the CSS for the classes you're actually using in your code. If you never use a red button with a dotted border, that style simply doesn't exist in the final file.
 
-The result is a CSS file that in well-built projects weighs between **5KB and 20KB** -- ten or twenty times less than a typical WordPress theme.
+The result is a CSS file that in well-built projects weighs between **5KB and 20KB** — ten or twenty times less than a typical WordPress theme.
 
 ### Designing directly in the HTML
 
@@ -918,11 +918,11 @@ What you see is what you get. No abstraction layers, no invented class names, no
 
 ### Visual consistency without extra effort
 
-Tailwind comes with an **integrated design system** -- spacing, colors, typography, and shadows that maintain coherent proportions throughout the entire application. It's practically impossible for two buttons of the same type to accidentally look different.
+Tailwind comes with an **integrated design system** — spacing, colors, typography, and shadows that maintain coherent proportions throughout the entire application. It's practically impossible for two buttons of the same type to accidentally look different.
 
 At Polaris, we use Tailwind on all our projects precisely for that reason: **development speed** increases and **visual consistency** maintains itself, without needing a separate style guide that nobody ever updates.
 
-*A fast site doesn't only depend on the server -- it starts with how much unnecessary code you're asking the browser to download before it can show the first screen.*`},
+*A fast site doesn't only depend on the server — it starts with how much unnecessary code you're asking the browser to download before it can show the first screen.*`},
   {
     id: "tech-cloud",
     slug: "cloud-firebase-servidores",
@@ -944,13 +944,13 @@ At Polaris, we use Tailwind on all our projects precisely for that reason: **dev
     concepts: ["nube", "firebase", "firestore", "auth", "servidores", "registro", "seguro", "base de datos"],
     content: `Es el escenario que todo dueño de negocio sueña: alguien con millones de seguidores menciona tu marca, tu producto, tu servicio. En minutos, miles de personas intentan entrar a tu web al mismo tiempo.
 
-Si tu sitio está en un hosting compartido tradicional -- esos planes de $5 al mes -- la respuesta es simple y brutal: colapsa. El servidor no aguanta, la página deja de responder, y el momento de mayor visibilidad de tu empresa se convierte en una pantalla de error.
+Si tu sitio está en un hosting compartido tradicional — esos planes de $5 al mes — la respuesta es simple y brutal: colapsa. El servidor no aguanta, la página deja de responder, y el momento de mayor visibilidad de tu empresa se convierte en una pantalla de error.
 
 Firebase es parte de la respuesta a ese problema.
 
 ### Infraestructura que crece contigo sin que tengas que pedirlo
 
-**Firebase** es una plataforma de Google que ofrece base de datos, autenticación de usuarios, almacenamiento de archivos y hosting, todo bajo una **arquitectura serverless** -- sin servidores físicos que tú tengas que configurar, actualizar o monitorear.
+**Firebase** es una plataforma de Google que ofrece base de datos, autenticación de usuarios, almacenamiento de archivos y hosting, todo bajo una **arquitectura serverless** — sin servidores físicos que tú tengas que configurar, actualizar o monitorear.
 
 La clave está en cómo maneja la escala. Si hoy tienes 10 usuarios activos y mañana tienes 10,000, Firebase ajusta los recursos automáticamente. No hay que llamar al proveedor de hosting, no hay que cambiar de plan, no hay que migrar nada.
 
@@ -964,20 +964,20 @@ En Polaris usamos Firebase en plataformas donde la sincronización y la escalabi
 
 ### Autenticación lista en horas, no en semanas
 
-Construir un sistema de login seguro desde cero -- con manejo de sesiones, recuperación de contraseña, verificación de email y protección contra ataques de fuerza bruta -- puede tomar semanas de desarrollo.
+Construir un sistema de login seguro desde cero — con manejo de sesiones, recuperación de contraseña, verificación de email y protección contra ataques de fuerza bruta — puede tomar semanas de desarrollo.
 
 **Firebase Authentication** lo resuelve en horas. Incluye login con email y contraseña, Google, Facebook, Apple y número de teléfono, con toda la seguridad manejada por la infraestructura de Google.
 
 *La mejor infraestructura es la que nunca tienes que pensar en ella, porque simplemente funciona sin importar cuántos clientes lleguen a la vez.*`,
     contentEn: `It's the scenario every business owner dreams of: someone with millions of followers mentions your brand, your product, your service. Within minutes, thousands of people try to visit your website simultaneously.
 
-If your site is on traditional shared hosting -- those $5 per month plans -- the answer is simple and brutal: it collapses. The server can't handle it, the page stops responding, and the moment of greatest visibility for your business becomes an error screen.
+If your site is on traditional shared hosting — those $5 per month plans — the answer is simple and brutal: it collapses. The server can't handle it, the page stops responding, and the moment of greatest visibility for your business becomes an error screen.
 
 Firebase is part of the answer to that problem.
 
 ### Infrastructure that grows with you without being asked
 
-**Firebase** is a Google platform that offers database, user authentication, file storage, and hosting, all under a **serverless architecture** -- no physical servers for you to configure, update, or monitor.
+**Firebase** is a Google platform that offers database, user authentication, file storage, and hosting, all under a **serverless architecture** — no physical servers for you to configure, update, or monitor.
 
 The key is how it handles scale. If you have 10 active users today and 10,000 tomorrow, Firebase adjusts resources automatically. No need to call your hosting provider, no need to change plans, no need to migrate anything.
 
@@ -991,7 +991,7 @@ At Polaris we use Firebase on platforms where synchronization and scalability ar
 
 ### Authentication ready in hours, not weeks
 
-Building a secure login system from scratch -- with session management, password recovery, email verification, and brute-force attack protection -- can take weeks of development.
+Building a secure login system from scratch — with session management, password recovery, email verification, and brute-force attack protection — can take weeks of development.
 
 **Firebase Authentication** resolves it in hours. It includes login with email and password, Google, Facebook, Apple, and phone number, with all security managed by Google's infrastructure.
 
@@ -1035,15 +1035,15 @@ La característica más visible de Vite en el día a día es el **HMR (Hot Modul
 
 Si estás diseñando un formulario y cambias el color de un botón, el cambio aparece en el navegador al instante. El formulario sigue abierto, con los datos que tenías ingresados, sin reiniciarse.
 
-Para un equipo trabajando en una plataforma compleja -- como las que construimos en Polaris -- esa fluidez se traduce directamente en menos errores y entregas más rápidas al cliente.
+Para un equipo trabajando en una plataforma compleja — como las que construimos en Polaris — esa fluidez se traduce directamente en menos errores y entregas más rápidas al cliente.
 
 ### El build de producción sigue siendo óptimo
 
 Una preocupación válida es si esa velocidad en desarrollo sacrifica algo en producción. La respuesta es no.
 
-Para el build final, Vite usa **Rollup** -- uno de los empaquetadores más eficientes del ecosistema -- y aplica todas las optimizaciones necesarias: minificación, **tree-shaking** para eliminar código muerto, y separación inteligente de módulos para que el navegador solo cargue lo que necesita en cada momento.
+Para el build final, Vite usa **Rollup** — uno de los empaquetadores más eficientes del ecosistema — y aplica todas las optimizaciones necesarias: minificación, **tree-shaking** para eliminar código muerto, y separación inteligente de módulos para que el navegador solo cargue lo que necesita en cada momento.
 
-*La velocidad de desarrollo no es un lujo para los desarrolladores -- es una garantía de que tu producto llega al mercado antes que el de tu competencia.*`,
+*La velocidad de desarrollo no es un lujo para los desarrolladores — es una garantía de que tu producto llega al mercado antes que el de tu competencia.*`,
     contentEn: `There's a universal complaint among web developers who've been in the industry for years: dead time. You save a file, wait for the system to compile the changes, reload the browser, and only then can you see if what you did actually worked.
 
 In medium-sized projects with older tools like Webpack, that cycle could take between 15 and 60 seconds. Multiplied by the hundreds of times it happens in a workday, it becomes hours lost every week.
@@ -1064,15 +1064,15 @@ Vite's most visible day-to-day feature is **HMR (Hot Module Replacement)**: when
 
 If you're designing a form and change the color of a button, the change appears in the browser instantly. The form stays open, with whatever data you had entered, without resetting.
 
-For a team working on a complex platform -- like the ones we build at Polaris -- that fluidity translates directly into fewer errors and faster client deliveries.
+For a team working on a complex platform — like the ones we build at Polaris — that fluidity translates directly into fewer errors and faster client deliveries.
 
 ### The production build is still optimal
 
 A valid concern is whether that development speed sacrifices something in production. The answer is no.
 
-For the final build, Vite uses **Rollup** -- one of the most efficient bundlers in the ecosystem -- and applies all necessary optimizations: minification, **tree-shaking** to eliminate dead code, and intelligent module splitting so the browser only loads what it needs at each moment.
+For the final build, Vite uses **Rollup** — one of the most efficient bundlers in the ecosystem — and applies all necessary optimizations: minification, **tree-shaking** to eliminate dead code, and intelligent module splitting so the browser only loads what it needs at each moment.
 
-*Development speed isn't a luxury for developers -- it's a guarantee that your product reaches the market before your competitor's does.*`},
+*Development speed isn't a luxury for developers — it's a guarantee that your product reaches the market before your competitor's does.*`},
   {
     id: "tech-typescript",
     slug: "typescript-codigo-seguro",
@@ -1179,7 +1179,7 @@ Si un cliente pregunta cuál es la mejor opción para un regalo de menos de 2,00
 
 La integración de Gemini en plataformas web va mucho más allá del chat al cliente:
 
-- **Generación de contenido:** Descripciones de productos, artículos de blog, respuestas a reseñas -- todo con el tono de tu marca y en segundos.
+- **Generación de contenido:** Descripciones de productos, artículos de blog, respuestas a reseñas — todo con el tono de tu marca y en segundos.
 - **Análisis de documentos:** Subir un contrato, una factura o un informe y pedir un resumen o una extracción de datos específicos.
 - **Asistentes internos:** Un panel donde tu equipo puede hacer preguntas sobre políticas de la empresa, procedimientos o datos históricos de ventas.
 - **Traducción y adaptación cultural:** No solo traducir texto, sino adaptarlo al tono correcto para cada mercado.
@@ -1188,9 +1188,9 @@ En Polaris hemos integrado Gemini en plataformas de turismo, e-commerce y servic
 
 ### El modelo que razona, no solo responde
 
-Lo que distingue a Gemini de modelos más simples es su capacidad de razonamiento multimodal -- puede procesar texto, imágenes, audio y video en la misma conversación. Un cliente puede enviar una foto de un producto que vio en la calle y preguntar si tienes algo similar. El sistema lo analiza y responde con opciones del catálogo real.
+Lo que distingue a Gemini de modelos más simples es su capacidad de razonamiento multimodal — puede procesar texto, imágenes, audio y video en la misma conversación. Un cliente puede enviar una foto de un producto que vio en la calle y preguntar si tienes algo similar. El sistema lo analiza y responde con opciones del catálogo real.
 
-*La inteligencia artificial no reemplaza la relación humana con el cliente -- la amplifica, asegurando que nadie quede sin respuesta cuando más la necesita.*`,
+*La inteligencia artificial no reemplaza la relación humana con el cliente — la amplifica, asegurando que nadie quede sin respuesta cuando más la necesita.*`,
     contentEn: `Imagine having an employee who knows your entire product catalog by heart, all your pricing policies, all your schedules, and every frequently asked question customers ask you. They respond in seconds, at 3 in the morning if needed, in Spanish or English, with exactly the tone you specify. And they never get tired, never get upset, never ask for a raise.
 
 That, in essence, is what can be built by integrating Google Gemini into a web platform.
@@ -1205,7 +1205,7 @@ If a customer asks what's the best gift option for under 2,000 pesos that can ar
 
 Integrating Gemini into web platforms goes far beyond customer chat:
 
-- **Content generation:** Product descriptions, blog articles, review responses -- all in your brand's tone and in seconds.
+- **Content generation:** Product descriptions, blog articles, review responses — all in your brand's tone and in seconds.
 - **Document analysis:** Upload a contract, invoice, or report and request a summary or extraction of specific data.
 - **Internal assistants:** A panel where your team can ask questions about company policies, procedures, or historical sales data.
 - **Translation and cultural adaptation:** Not just translating text, but adapting it to the right tone for each market.
@@ -1214,9 +1214,9 @@ At Polaris we've integrated Gemini into tourism, e-commerce, and professional se
 
 ### The model that reasons, not just responds
 
-What distinguishes Gemini from simpler models is its multimodal reasoning capability -- it can process text, images, audio, and video in the same conversation. A customer can send a photo of a product they saw on the street and ask if you have something similar. The system analyzes it and responds with options from the real catalog.
+What distinguishes Gemini from simpler models is its multimodal reasoning capability — it can process text, images, audio, and video in the same conversation. A customer can send a photo of a product they saw on the street and ask if you have something similar. The system analyzes it and responds with options from the real catalog.
 
-*Artificial intelligence doesn't replace the human relationship with the customer -- it amplifies it, ensuring no one goes without an answer when they need it most.*`},
+*Artificial intelligence doesn't replace the human relationship with the customer — it amplifies it, ensuring no one goes without an answer when they need it most.*`},
   {
     id: "tech-grok",
     slug: "grok-modelo-ia",
@@ -1246,7 +1246,7 @@ Para ciertos casos de uso en marketing y negocios, esa diferencia es enorme.
 
 Las tendencias en redes sociales cambian en horas. Un meme que hoy es relevante mañana está muerto. Un tema que está generando conversación esta semana puede ser la oportunidad perfecta para que una marca se inserte de manera orgánica.
 
-Un sistema integrado con **Grok** puede monitorear en tiempo real qué se está diciendo sobre una industria, un producto o un competidor, y ayudar a generar contenido que sea relevante en ese momento específico -- no en el momento en que se entrenó el modelo.
+Un sistema integrado con **Grok** puede monitorear en tiempo real qué se está diciendo sobre una industria, un producto o un competidor, y ayudar a generar contenido que sea relevante en ese momento específico — no en el momento en que se entrenó el modelo.
 
 Para una tienda de ropa en República Dominicana, eso puede significar saber que hoy todo el mundo está hablando de un color o un estilo particular, y crear contenido alrededor de eso antes de que la tendencia pase.
 
@@ -1254,7 +1254,7 @@ Para una tienda de ropa en República Dominicana, eso puede significar saber que
 
 Grok fue diseñado con una personalidad más directa y menos corporativa que otros modelos. Responde con más franqueza, puede usar humor cuando el contexto lo permite, y está menos condicionado a dar respuestas genéricas y sin posición.
 
-Para copywriting de marcas que quieren sonar humanas y directas -- especialmente en mercados latinos donde la formalidad excesiva aleja al cliente -- ese tono puede ser una ventaja real.
+Para copywriting de marcas que quieren sonar humanas y directas — especialmente en mercados latinos donde la formalidad excesiva aleja al cliente — ese tono puede ser una ventaja real.
 
 ### Integración en plataformas web
 
@@ -1273,7 +1273,7 @@ For certain marketing and business use cases, that difference is enormous.
 
 Social media trends change in hours. A meme that's relevant today is dead tomorrow. A topic generating conversation this week might be the perfect opportunity for a brand to insert itself into the conversation organically.
 
-A system integrated with **Grok** can monitor in real time what's being said about an industry, a product, or a competitor, and help generate content that's relevant at that specific moment -- not at the moment the model was trained.
+A system integrated with **Grok** can monitor in real time what's being said about an industry, a product, or a competitor, and help generate content that's relevant at that specific moment — not at the moment the model was trained.
 
 For a clothing store in the Dominican Republic, that could mean knowing that today everyone is talking about a particular color or style, and creating content around it before the trend passes.
 
@@ -1281,7 +1281,7 @@ For a clothing store in the Dominican Republic, that could mean knowing that tod
 
 Grok was designed with a more direct and less corporate personality than other models. It responds more frankly, can use humor when context allows, and is less conditioned to give generic, positionless answers.
 
-For copywriting of brands that want to sound human and direct -- especially in Latin markets where excessive formality distances customers -- that tone can be a real advantage.
+For copywriting of brands that want to sound human and direct — especially in Latin markets where excessive formality distances customers — that tone can be a real advantage.
 
 ### Integration in web platforms
 
@@ -1332,7 +1332,7 @@ Un archivo \`robots.txt\` mal configurado puede bloquear, sin que el dueño lo s
 Una ferretería online que arregló su sitemap, corrigió los \`title\` duplicados en doce páginas de producto y eliminó un bloqueo accidental en su \`robots.txt\` empezó a aparecer en búsquedas como "tornillos para drywall" que antes ni siquiera indexaba. En seis semanas, el **tráfico orgánico** hacia esas páginas de producto creció de forma sostenida sin haber cambiado una sola palabra del contenido visible: solo se corrigió la base técnica que Google necesitaba para encontrarlas y confiar en ellas. Ese es el patrón que se repite una y otra vez: el problema casi nunca es la falta de contenido, sino una base técnica que nadie revisó.
 
 *Cuando tu sitio le habla claro a Google, dejas de rentar visibilidad y empiezas a ser dueño de ella.*`,
-    contentEn: `Have you been paying for ads for months, only to watch traffic drop to zero the moment you pause them? That's exactly the problem **Core SEO** solves -- building a technical foundation Google can actually read and index, so you stop renting every single visitor.
+    contentEn: `Have you been paying for ads for months, only to watch traffic drop to zero the moment you pause them? That's exactly the problem **Core SEO** solves — building a technical foundation Google can actually read and index, so you stop renting every single visitor.
 
 ### What "optimizing the core" really means
 
@@ -1352,7 +1352,7 @@ A misconfigured \`robots.txt\` file can silently block your most important pages
 
 ### A real case: from invisible to visible in weeks
 
-An online hardware store that fixed its sitemap, corrected duplicate \`title\` tags across a dozen product pages, and removed an accidental block in its \`robots.txt\` started showing up for searches like "drywall screws" that it previously wasn't even indexed for. Within six weeks, **organic traffic** to those product pages grew steadily without changing a single word of visible content -- only the technical foundation Google needed to find and trust them. That's the pattern that repeats over and over: the problem is almost never a lack of content, but a technical base nobody ever checked.
+An online hardware store that fixed its sitemap, corrected duplicate \`title\` tags across a dozen product pages, and removed an accidental block in its \`robots.txt\` started showing up for searches like "drywall screws" that it previously wasn't even indexed for. Within six weeks, **organic traffic** to those product pages grew steadily without changing a single word of visible content — only the technical foundation Google needed to find and trust them. That's the pattern that repeats over and over: the problem is almost never a lack of content, but a technical base nobody ever checked.
 
 *When your site speaks clearly to Google, you stop renting visibility and start owning it.*`
   },
@@ -1418,9 +1418,9 @@ Too much animation feels exhausting; too little feels flat. Our job is calibrati
 
 ### A concrete example: the cart that didn't feel finished
 
-On the furniture store from the opening example, the "add to cart" button gave no visual response at all -- users would click and, for a split second, have no idea whether it had worked. We added an **instant confirmation animation**: the cart icon briefly scales up and a small counter appears with a soft bounce. That detail, lasting less than half a second, eliminated repeated clicks out of doubt and, according to the store's own data, noticeably reduced cart abandonment caused by simple distrust in the interface.
+On the furniture store from the opening example, the "add to cart" button gave no visual response at all — users would click and, for a split second, have no idea whether it had worked. We added an **instant confirmation animation**: the cart icon briefly scales up and a small counter appears with a soft bounce. That detail, lasting less than half a second, eliminated repeated clicks out of doubt and, according to the store's own data, noticeably reduced cart abandonment caused by simple distrust in the interface.
 
-*An interface that moves with intention doesn't just look better -- it tells visitors someone cared about every detail behind the design.*`
+*An interface that moves with intention doesn't just look better — it tells visitors someone cared about every detail behind the design.*`
   },
   {
     id: "tech-ssl",
@@ -1464,7 +1464,7 @@ La mayoría de los certificados modernos se renuevan automáticamente cada 90 d�
 Es frecuente encontrar sitios con SSL activo en la página principal, pero que cargan imágenes o scripts desde direcciones \`http://\` antiguas. El navegador detecta ese **contenido mixto** y, aunque el certificado sea válido, igual muestra una advertencia o quita el candado verde justo en la página de pago. Para una tienda online, eso ocurre exactamente en el peor momento: cuando el cliente está sacando su tarjeta de crédito. Revisar que absolutamente todos los recursos de la página, sin excepción, viajen por HTTPS es un paso pequeño que evita perder ventas por una advertencia evitable.
 
 *La confianza de un cliente se construye en segundos y se destruye en uno: un candado roto en el navegador es suficiente para perderla.*`,
-    contentEn: `Picture a handmade jewelry store that gets a red "not secure" warning from Chrome right before a big sales weekend. The problem is simple -- its **SSL certificate** expired without anyone noticing.
+    contentEn: `Picture a handmade jewelry store that gets a red "not secure" warning from Chrome right before a big sales weekend. The problem is simple — its **SSL certificate** expired without anyone noticing.
 
 ### What an SSL certificate actually does
 
@@ -1472,7 +1472,7 @@ SSL is the protocol that encrypts information traveling between your customer's 
 
 ### The green padlock isn't optional anymore
 
-Today, Chrome and other browsers flag any site without SSL as "not secure," even if it only has a contact form. That warning scares visitors away within seconds, even though most don't know exactly what it means -- they just sense something's wrong and leave.
+Today, Chrome and other browsers flag any site without SSL as "not secure," even if it only has a contact form. That warning scares visitors away within seconds, even though most don't know exactly what it means — they just sense something's wrong and leave.
 
 ### SSL and Google rankings
 
@@ -1484,9 +1484,9 @@ Most modern certificates renew automatically every 90 days through services like
 
 ### A common mistake: the padlock that disappears halfway through
 
-It's common to find sites with active SSL on the homepage that still load images or scripts from old \`http://\` addresses. The browser detects that **mixed content** and, even with a valid certificate, still shows a warning or drops the green padlock right on the checkout page. For an online store, that happens at exactly the worst possible moment -- while the customer has their card out. Making sure absolutely every resource on the page, no exceptions, travels over HTTPS is a small fix that prevents losing sales over an avoidable warning.
+It's common to find sites with active SSL on the homepage that still load images or scripts from old \`http://\` addresses. The browser detects that **mixed content** and, even with a valid certificate, still shows a warning or drops the green padlock right on the checkout page. For an online store, that happens at exactly the worst possible moment — while the customer has their card out. Making sure absolutely every resource on the page, no exceptions, travels over HTTPS is a small fix that prevents losing sales over an avoidable warning.
 
-*Customer trust is built in seconds and destroyed in one -- a broken padlock in the browser is enough to lose it for good.*`
+*Customer trust is built in seconds and destroyed in one — a broken padlock in the browser is enough to lose it for good.*`
   },
   {
     id: "post-landing-pages",
@@ -1509,7 +1509,7 @@ It's common to find sites with active SSL on the homepage that still load images
     concepts: ["landing", "aterrizaje", "leads", "conversiones", "prospectos", "embudo", "whatsapp", "ventas"],
     content: `Hay una diferencia enorme entre un sitio web y una landing page, y esa diferencia se mide en pesos.
 
-Un sitio web es una casa con muchas habitaciones. El visitante entra, explora, se distrae, visita cinco páginas distintas y sale sin hacer nada. Una **landing page** es un pasillo con una sola puerta al final. Todo está diseñado para que el visitante tome una decisión específica -- llamar, escribir, comprar, agendar -- y nada más.
+Un sitio web es una casa con muchas habitaciones. El visitante entra, explora, se distrae, visita cinco páginas distintas y sale sin hacer nada. Una **landing page** es un pasillo con una sola puerta al final. Todo está diseñado para que el visitante tome una decisión específica — llamar, escribir, comprar, agendar — y nada más.
 
 Esa diferencia estructural es lo que separa a los negocios que generan leads en piloto automático de los que tienen tráfico pero no ventas.
 
@@ -1523,7 +1523,7 @@ Una landing page bien construida elimina esa fricción. No hay menú de navegaci
 
 Existe un mito en el mercado dominicano de que una web que convierte tiene que verse espectacular. La realidad es diferente: una landing page que convierte está construida sobre principios psicológicos específicos.
 
-La jerarquía visual guía el ojo del visitante desde el titular hasta el botón sin que él se dé cuenta. La **prueba social** -- testimonios reales, números concretos, logos de clientes -- reduce la desconfianza antes de que aparezca. La **urgencia contextual** -- "solo quedan 3 cupos esta semana", "respuesta en menos de 2 horas" -- acelera la decisión sin mentir.
+La jerarquía visual guía el ojo del visitante desde el titular hasta el botón sin que él se dé cuenta. La **prueba social** — testimonios reales, números concretos, logos de clientes — reduce la desconfianza antes de que aparezca. La **urgencia contextual** — "solo quedan 3 cupos esta semana", "respuesta en menos de 2 horas" — acelera la decisión sin mentir.
 
 En Polaris construimos landing pages donde cada elemento tiene una razón de estar y una función medible. Nada por estética, todo por conversión.
 
@@ -1533,10 +1533,10 @@ Una landing page que tarda cuatro segundos en cargar en un teléfono Android con
 
 Por eso todas nuestras landing pages pasan por optimización de **Core Web Vitals**, compresión de imágenes, lazy loading y entrega desde CDN global. El resultado es páginas que cargan en menos de 1.5 segundos en cualquier dispositivo.
 
-*Una landing page no es la versión barata de un sitio web -- es la versión más enfocada, y el enfoque es exactamente lo que convierte visitas en dinero.*`,
+*Una landing page no es la versión barata de un sitio web — es la versión más enfocada, y el enfoque es exactamente lo que convierte visitas en dinero.*`,
     contentEn: `There's an enormous difference between a website and a landing page, and that difference is measured in money.
 
-A website is a house with many rooms. The visitor enters, explores, gets distracted, visits five different pages, and leaves without doing anything. A **landing page** is a hallway with one door at the end. Everything is designed for the visitor to make one specific decision -- call, message, buy, schedule -- and nothing else.
+A website is a house with many rooms. The visitor enters, explores, gets distracted, visits five different pages, and leaves without doing anything. A **landing page** is a hallway with one door at the end. Everything is designed for the visitor to make one specific decision — call, message, buy, schedule — and nothing else.
 
 That structural difference is what separates businesses that generate leads on autopilot from those with traffic but no sales.
 
@@ -1550,7 +1550,7 @@ A well-built landing page eliminates that friction. No navigation menu to distra
 
 There's a myth in the Dominican market that a website that converts has to look spectacular. The reality is different: a landing page that converts is built on specific psychological principles.
 
-Visual hierarchy guides the visitor's eye from the headline to the button without them noticing. **Social proof** -- real testimonials, concrete numbers, client logos -- reduces distrust before it appears. **Contextual urgency** -- "only 3 spots left this week", "response in under 2 hours" -- accelerates the decision without lying.
+Visual hierarchy guides the visitor's eye from the headline to the button without them noticing. **Social proof** — real testimonials, concrete numbers, client logos — reduces distrust before it appears. **Contextual urgency** — "only 3 spots left this week", "response in under 2 hours" — accelerates the decision without lying.
 
 At Polaris we build landing pages where every element has a reason to exist and a measurable function. Nothing for aesthetics, everything for conversion.
 
@@ -1560,7 +1560,7 @@ A landing page that takes four seconds to load on an Android phone with 4G alrea
 
 That's why all our landing pages go through **Core Web Vitals** optimization, image compression, lazy loading, and delivery from a global CDN. The result is pages that load in under 1.5 seconds on any device.
 
-*A landing page isn't the cheap version of a website -- it's the most focused version, and focus is exactly what converts visits into money.*`
+*A landing page isn't the cheap version of a website — it's the most focused version, and focus is exactly what converts visits into money.*`
   },
   {
     id: "post-corporate-webs",
@@ -1589,7 +1589,7 @@ Una web corporativa bien construida no es un lujo para empresas grandes. Es la d
 
 ### Lo que comunica una web corporativa antes de que el cliente lea una palabra
 
-El primer impacto de una web no es el texto -- es la percepción de solidez. Un diseño limpio, una estructura organizada, fotografías reales del equipo y las instalaciones, testimonios con nombre y empresa real. Todo eso comunica una sola cosa: esta empresa existe, tiene historia, y hay gente real detrás.
+El primer impacto de una web no es el texto — es la percepción de solidez. Un diseño limpio, una estructura organizada, fotografías reales del equipo y las instalaciones, testimonios con nombre y empresa real. Todo eso comunica una sola cosa: esta empresa existe, tiene historia, y hay gente real detrás.
 
 Eso es especialmente crítico en República Dominicana, donde la desconfianza hacia proveedores desconocidos es alta y la decisión de trabajar con alguien depende mucho de la percepción de seriedad antes de la primera reunión.
 
@@ -1597,21 +1597,21 @@ Eso es especialmente crítico en República Dominicana, donde la desconfianza ha
 
 Una web corporativa efectiva no es simplemente una web grande. Tiene una estructura específica que guía al visitante desde el descubrimiento hasta la confianza:
 
-**Quiénes somos** -- No una lista de valores corporativos genéricos. Una historia real: cuándo empezaron, qué problema resuelven, quién está detrás. La humanidad vende más que los adjetivos.
+**Quiénes somos** — No una lista de valores corporativos genéricos. Una historia real: cuándo empezaron, qué problema resuelven, quién está detrás. La humanidad vende más que los adjetivos.
 
-**Servicios con profundidad** -- Cada servicio explicado con suficiente detalle para que el cliente entienda qué incluye, para quién es, y qué resultado puede esperar. No una lista de tres palabras.
+**Servicios con profundidad** — Cada servicio explicado con suficiente detalle para que el cliente entienda qué incluye, para quién es, y qué resultado puede esperar. No una lista de tres palabras.
 
-**Portafolio con resultados** -- Proyectos reales con contexto real. No solo fotos bonitas, sino qué se hizo, para quién, y qué resultado produjo cuando es posible medirlo.
+**Portafolio con resultados** — Proyectos reales con contexto real. No solo fotos bonitas, sino qué se hizo, para quién, y qué resultado produjo cuando es posible medirlo.
 
-**Blog o recursos** -- Contenido que demuestra conocimiento del sector. Un abogado que escribe sobre cambios en la legislación dominicana, un arquitecto que explica cómo funciona el proceso de permiso en el MOPC, un contador que habla de las últimas resoluciones de la DGII. Eso construye autoridad que ningún folleto puede lograr.
+**Blog o recursos** — Contenido que demuestra conocimiento del sector. Un abogado que escribe sobre cambios en la legislación dominicana, un arquitecto que explica cómo funciona el proceso de permiso en el MOPC, un contador que habla de las últimas resoluciones de la DGII. Eso construye autoridad que ningún folleto puede lograr.
 
 ### El SEO como consecuencia natural
 
 Una web corporativa bien estructurada con contenido real es la base del posicionamiento orgánico en Google. No como objetivo separado, sino como consecuencia directa de tener un sitio que explica claramente qué hace la empresa y para quién lo hace.
 
-En Polaris construimos todas las webs corporativas con arquitectura de información pensada para el SEO desde el primer día -- URLs limpias, estructura de headings correcta, Schema markup para que Google entienda el negocio, y velocidad de carga optimizada.
+En Polaris construimos todas las webs corporativas con arquitectura de información pensada para el SEO desde el primer día — URLs limpias, estructura de headings correcta, Schema markup para que Google entienda el negocio, y velocidad de carga optimizada.
 
-*Una web corporativa no es un gasto de imagen -- es el vendedor más paciente que tendrás, disponible las 24 horas para convencer al cliente que tú eres la opción correcta.*`,
+*Una web corporativa no es un gasto de imagen — es el vendedor más paciente que tendrás, disponible las 24 horas para convencer al cliente que tú eres la opción correcta.*`,
     contentEn: `Before a purchasing manager, potential partner, or institutional client replies to your WhatsApp, they do one thing: they search for your company on Google.
 
 What they find in those first 30 seconds determines whether you'll have that meeting or whether your message will be left on read forever.
@@ -1620,7 +1620,7 @@ A well-built corporate website isn't a luxury for large companies. It's the diff
 
 ### What a corporate website communicates before the client reads a word
 
-A website's first impact isn't the text -- it's the perception of solidity. A clean design, organized structure, real photos of the team and facilities, testimonials with real names and companies. All of that communicates one thing: this company exists, has history, and there are real people behind it.
+A website's first impact isn't the text — it's the perception of solidity. A clean design, organized structure, real photos of the team and facilities, testimonials with real names and companies. All of that communicates one thing: this company exists, has history, and there are real people behind it.
 
 That's especially critical in the Dominican Republic, where distrust toward unknown vendors is high and the decision to work with someone depends heavily on the perception of seriousness before the first meeting.
 
@@ -1628,21 +1628,21 @@ That's especially critical in the Dominican Republic, where distrust toward unkn
 
 An effective corporate website isn't simply a large website. It has a specific structure that guides the visitor from discovery to trust:
 
-**Who we are** -- Not a list of generic corporate values. A real story: when they started, what problem they solve, who's behind it. Humanity sells more than adjectives.
+**Who we are** — Not a list of generic corporate values. A real story: when they started, what problem they solve, who's behind it. Humanity sells more than adjectives.
 
-**Services with depth** -- Each service explained with enough detail for the client to understand what's included, who it's for, and what result they can expect. Not a three-word list.
+**Services with depth** — Each service explained with enough detail for the client to understand what's included, who it's for, and what result they can expect. Not a three-word list.
 
-**Portfolio with results** -- Real projects with real context. Not just pretty photos, but what was done, for whom, and what result it produced when measurable.
+**Portfolio with results** — Real projects with real context. Not just pretty photos, but what was done, for whom, and what result it produced when measurable.
 
-**Blog or resources** -- Content that demonstrates sector knowledge. A lawyer writing about changes in Dominican legislation, an architect explaining how the MOPC permit process works, an accountant discussing the latest DGII resolutions. That builds authority no brochure can achieve.
+**Blog or resources** — Content that demonstrates sector knowledge. A lawyer writing about changes in Dominican legislation, an architect explaining how the MOPC permit process works, an accountant discussing the latest DGII resolutions. That builds authority no brochure can achieve.
 
 ### SEO as a natural consequence
 
 A well-structured corporate website with real content is the foundation of organic Google positioning. Not as a separate objective, but as a direct consequence of having a site that clearly explains what the company does and for whom.
 
-At Polaris we build all corporate websites with information architecture designed for SEO from day one -- clean URLs, correct heading structure, Schema markup so Google understands the business, and optimized load speed.
+At Polaris we build all corporate websites with information architecture designed for SEO from day one — clean URLs, correct heading structure, Schema markup so Google understands the business, and optimized load speed.
 
-*A corporate website isn't an image expense -- it's the most patient salesperson you'll ever have, available 24 hours to convince the client that you're the right choice.*`
+*A corporate website isn't an image expense — it's the most patient salesperson you'll ever have, available 24 hours to convince the client that you're the right choice.*`
   },
   {
     id: "post-ecommerce-sales",
@@ -1673,19 +1673,19 @@ Existe una creencia extendida en el mercado dominicano de que montar una tienda 
 
 La realidad de 2026 es diferente. Un e-commerce bien construido puede estar operativo en semanas, integrado con PayPal y Stripe para pagos internacionales, con inventario en tiempo real, con carrito de compras optimizado para móvil y con entrega de confirmación automática por email y WhatsApp.
 
-El costo de no tenerlo -- en ventas que se van a la competencia, en clientes que buscan en Instagram y no encuentran dónde comprar -- es sistemáticamente mayor que el costo de construirlo.
+El costo de no tenerlo — en ventas que se van a la competencia, en clientes que buscan en Instagram y no encuentran dónde comprar — es sistemáticamente mayor que el costo de construirlo.
 
 ### Lo que separa una tienda que vende de una que solo existe
 
 No todas las tiendas online venden igual. La diferencia entre una tienda que genera ventas diarias y una que tiene productos cargados pero pocas transacciones está en detalles muy específicos.
 
-**Velocidad de carga** -- Una tienda que tarda más de 2 segundos en cargar en móvil pierde entre el 30% y el 50% de sus visitantes antes de que vean un solo producto. Las imágenes deben estar optimizadas, el código debe ser limpio, y la entrega debe hacerse desde servidores cercanos al usuario.
+**Velocidad de carga** — Una tienda que tarda más de 2 segundos en cargar en móvil pierde entre el 30% y el 50% de sus visitantes antes de que vean un solo producto. Las imágenes deben estar optimizadas, el código debe ser limpio, y la entrega debe hacerse desde servidores cercanos al usuario.
 
-**Checkout sin fricción** -- Cada campo adicional en el proceso de pago es una oportunidad para que el cliente abandone. El flujo ideal es: producto → carrito → pago → confirmación, en menos de cuatro clics. Sin registro obligatorio, sin formularios interminables.
+**Checkout sin fricción** — Cada campo adicional en el proceso de pago es una oportunidad para que el cliente abandone. El flujo ideal es: producto → carrito → pago → confirmación, en menos de cuatro clics. Sin registro obligatorio, sin formularios interminables.
 
-**Fotos y descripciones que venden** -- En una tienda física el cliente puede tocar el producto. En e-commerce, la foto y la descripción son todo lo que tiene para tomar la decisión. Una descripción que explica la textura, el tamaño real, los casos de uso y las preguntas frecuentes convierte significativamente más que "camisa azul talla M".
+**Fotos y descripciones que venden** — En una tienda física el cliente puede tocar el producto. En e-commerce, la foto y la descripción son todo lo que tiene para tomar la decisión. Una descripción que explica la textura, el tamaño real, los casos de uso y las preguntas frecuentes convierte significativamente más que "camisa azul talla M".
 
-**Recuperación de carritos abandonados** -- El 70% de los carritos de compras se abandonan antes del pago. Un sistema que envía un recordatorio automático por email o WhatsApp a las 2 horas recupera entre el 10% y el 15% de esas ventas que de otra forma se pierden para siempre.
+**Recuperación de carritos abandonados** — El 70% de los carritos de compras se abandonan antes del pago. Un sistema que envía un recordatorio automático por email o WhatsApp a las 2 horas recupera entre el 10% y el 15% de esas ventas que de otra forma se pierden para siempre.
 
 ### Pagos sin fricción en el mercado dominicano
 
@@ -1693,7 +1693,7 @@ El mayor obstáculo del e-commerce en República Dominicana históricamente ha s
 
 La solución que implementamos en Polaris combina múltiples métodos: tarjeta de crédito y débito vía Stripe, PayPal para quienes lo prefieren, y en algunos casos transferencia bancaria con confirmación manual. Esa combinación cubre al 95% de los compradores potenciales.
 
-*Una tienda online no compite con tu local físico -- lo multiplica. Mientras tú duermes, ella está abierta, atendiendo y cobrando.*`,
+*Una tienda online no compite con tu local físico — lo multiplica. Mientras tú duermes, ella está abierta, atendiendo y cobrando.*`,
     contentEn: `On Sunday at 10pm, while your mall store is closed with the security gate down, someone in Santiago is searching for exactly what you sell. If you have e-commerce, that sale is yours. If you don't, it goes to whoever does.
 
 That's the simplest and most powerful reality of e-commerce: it eliminates the time, geography, and capacity limits that any physical location has.
@@ -1704,19 +1704,19 @@ There's a widespread belief in the Dominican market that setting up an online st
 
 The reality of 2026 is different. A well-built e-commerce can be operational in weeks, integrated with PayPal and Stripe for international payments, with real-time inventory, a mobile-optimized shopping cart, and automatic confirmation delivery via email and WhatsApp.
 
-The cost of not having it -- in sales going to the competition, in customers who search on Instagram and can't find where to buy -- is systematically greater than the cost of building it.
+The cost of not having it — in sales going to the competition, in customers who search on Instagram and can't find where to buy — is systematically greater than the cost of building it.
 
 ### What separates a store that sells from one that just exists
 
 Not all online stores sell equally. The difference between a store that generates daily sales and one that has products loaded but few transactions lies in very specific details.
 
-**Load speed** -- A store that takes more than 2 seconds to load on mobile loses between 30% and 50% of visitors before they see a single product. Images must be optimized, code must be clean, and delivery must happen from servers close to the user.
+**Load speed** — A store that takes more than 2 seconds to load on mobile loses between 30% and 50% of visitors before they see a single product. Images must be optimized, code must be clean, and delivery must happen from servers close to the user.
 
-**Frictionless checkout** -- Every additional field in the payment process is an opportunity for the customer to abandon. The ideal flow is: product → cart → payment → confirmation, in less than four clicks. No mandatory registration, no endless forms.
+**Frictionless checkout** — Every additional field in the payment process is an opportunity for the customer to abandon. The ideal flow is: product → cart → payment → confirmation, in less than four clicks. No mandatory registration, no endless forms.
 
-**Photos and descriptions that sell** -- In a physical store the customer can touch the product. In e-commerce, the photo and description are everything they have to make a decision. A description that explains texture, real size, use cases, and frequently asked questions converts significantly more than "blue shirt size M".
+**Photos and descriptions that sell** — In a physical store the customer can touch the product. In e-commerce, the photo and description are everything they have to make a decision. A description that explains texture, real size, use cases, and frequently asked questions converts significantly more than "blue shirt size M".
 
-**Abandoned cart recovery** -- 70% of shopping carts are abandoned before payment. A system that sends an automatic reminder via email or WhatsApp at 2 hours recovers between 10% and 15% of those sales that would otherwise be lost forever.
+**Abandoned cart recovery** — 70% of shopping carts are abandoned before payment. A system that sends an automatic reminder via email or WhatsApp at 2 hours recovers between 10% and 15% of those sales that would otherwise be lost forever.
 
 ### Frictionless payments in the Dominican market
 
@@ -1724,7 +1724,7 @@ The biggest historical obstacle to e-commerce in the Dominican Republic has been
 
 The solution we implement at Polaris combines multiple methods: credit and debit card via Stripe, PayPal for those who prefer it, and in some cases bank transfer with manual confirmation. That combination covers 95% of potential buyers.
 
-*An online store doesn't compete with your physical location -- it multiplies it. While you sleep, it's open, attending to customers and collecting payments.*`
+*An online store doesn't compete with your physical location — it multiplies it. While you sleep, it's open, attending to customers and collecting payments.*`
   },
   {
     id: "post-addon-bot-fast",
@@ -1776,7 +1776,7 @@ A diferencia de un equipo humano, el bot trabaja **24 horas**, los fines de sema
 
 ### Responding in seconds, not hours
 
-A **lead capture bot** is an automated assistant that greets a visitor the instant they land on your site or message you, and immediately asks the right questions: what they need, when they need it, and how they prefer to be contacted. It doesn't replace your sales team -- it feeds them already-organized information.
+A **lead capture bot** is an automated assistant that greets a visitor the instant they land on your site or message you, and immediately asks the right questions: what they need, when they need it, and how they prefer to be contacted. It doesn't replace your sales team — it feeds them already-organized information.
 
 ### Structured capture, not just a generic chat
 
@@ -1788,7 +1788,7 @@ The bot doesn't force your team to learn a new platform: it lives on your websit
 
 ### An everyday example
 
-Picture a customer writing at 11 PM: "I need a quote to move a 2-bedroom apartment this Saturday." The bot replies instantly, confirms the date, asks for the pickup and drop-off address, and saves everything as a ready-to-call lead card -- so when your team opens up the next morning, all that's left to do is call and close.
+Picture a customer writing at 11 PM: "I need a quote to move a 2-bedroom apartment this Saturday." The bot replies instantly, confirms the date, asks for the pickup and drop-off address, and saves everything as a ready-to-call lead card — so when your team opens up the next morning, all that's left to do is call and close.
 
 ### The real cost of being slow
 
@@ -1848,7 +1848,7 @@ El objetivo no es eliminar a tu equipo de ventas, sino liberarlo de las pregunta
 *Un negocio que vende mientras su dueño duerme ya no depende solo de las horas del día para crecer.*`,
     contentEn: `Could your website "sell on its own" while you're busy helping customers at the shop? If you sell motorcycle parts, or anything else, the answer is yes, and it's called an **Autonomous Sales Agent**.
 
-### More than a chatbot -- a salesperson who knows your catalog
+### More than a chatbot — a salesperson who knows your catalog
 
 An **AI sales agent** doesn't just answer FAQs. It knows your inventory, pricing, and policies, and can hold a real conversation with a customer: recommending the right product based on what they describe, explaining differences between models, and guiding them to checkout without a human needing to step in.
 
@@ -1866,7 +1866,7 @@ Unlike a human salesperson, who can only help one person at a time, the autonomo
 
 ### Learns from your customers' real questions
 
-Over time, the agent identifies which questions repeat and which objections come up before a purchase -- information that usually gets lost in scattered WhatsApp chats. That data helps improve your catalog, pricing, and messaging.
+Over time, the agent identifies which questions repeat and which objections come up before a purchase — information that usually gets lost in scattered WhatsApp chats. That data helps improve your catalog, pricing, and messaging.
 
 ### Humans are still needed, just elsewhere
 
@@ -1924,7 +1924,7 @@ Cada búsqueda sin resultados es información valiosa: te dice qué espera tu cl
 
 ### The difference between searching words and searching intent
 
-A **semantic AI search** doesn't compare text letter by letter -- it understands the **meaning** behind what a customer types. If someone searches "something comfortable for working from home," the system understands they're likely after casual clothing or ergonomic furniture, depending on your catalog, even if none of those exact words appear in the product listing.
+A **semantic AI search** doesn't compare text letter by letter — it understands the **meaning** behind what a customer types. If someone searches "something comfortable for working from home," the system understands they're likely after casual clothing or ergonomic furniture, depending on your catalog, even if none of those exact words appear in the product listing.
 
 ### How it "understands," in plain terms
 
@@ -1932,7 +1932,7 @@ Behind this is a process called **embeddings**: every product and every search g
 
 ### A concrete example
 
-A customer searches for "something to give my mom who loves cooking." No product in your catalog has those exact words in its title, but semantic search understands the intent and surfaces aprons, knife sets, or cookbooks -- exactly what that shopper was hoping to find.
+A customer searches for "something to give my mom who loves cooking." No product in your catalog has those exact words in its title, but semantic search understands the intent and surfaces aprons, knife sets, or cookbooks — exactly what that shopper was hoping to find.
 
 ### Why this changes the shopping experience
 
@@ -1944,7 +1944,7 @@ In small stores, the difference is already noticeable. In catalogs with hundreds
 
 ### Data that helps you too
 
-Every search with no results is valuable information -- it tells you what your customer expects and what you don't have yet. Over time, that history becomes a real guide for deciding what to add to your inventory.
+Every search with no results is valuable information — it tells you what your customer expects and what you don't have yet. Over time, that history becomes a real guide for deciding what to add to your inventory.
 
 *A customer who finds what they're looking for quickly buys; one who gets frustrated searching goes to another store.*`
   },
@@ -1998,7 +1998,7 @@ La IA propone el primer borrador; la **decisión final** de publicarlo, ajustarl
 
 ### Writing shouldn't be the bottleneck
 
-An **AI content assistant** helps draft product descriptions, social posts, and review responses while keeping your **brand's tone** consistent across every piece. It's not about generating generic filler -- it starts from your real business information to produce text that actually sounds like you.
+An **AI content assistant** helps draft product descriptions, social posts, and review responses while keeping your **brand's tone** consistent across every piece. It's not about generating generic filler — it starts from your real business information to produce text that actually sounds like you.
 
 ### A before-and-after of a description
 
@@ -2020,7 +2020,7 @@ As a business grows, keeping the same tone across your website, social media, an
 
 The AI proposes the first draft; the **final call** to publish, tweak, or discard it is always yours. It's a speed tool, not a replacement for your judgment about your own business.
 
-*A review answered promptly doesn't just reassure the person who wrote it -- it shows everyone else that someone is actually listening.*`
+*A review answered promptly doesn't just reassure the person who wrote it — it shows everyone else that someone is actually listening.*`
   },
   {
     id: "tech-drizzle",
@@ -2069,7 +2069,7 @@ Cambiar la estructura de una base de datos en producción es uno de los momentos
 
 En Polaris usamos Drizzle en todos los proyectos nuevos que requieren base de datos relacional porque la claridad del código se traduce directamente en proyectos más fáciles de mantener, escalar y transferir entre equipos.
 
-*El mejor código no es el más inteligente -- es el que cualquier desarrollador puede entender a las 11 de la noche cuando algo falla en producción.*`,
+*El mejor código no es el más inteligente — es el que cualquier desarrollador puede entender a las 11 de la noche cuando algo falla en producción.*`,
     contentEn: `It's a story we hear frequently. A company invests in a web platform, everything works well for a while, and one day the developer who built it stops responding. Or leaves the country. Or simply charges too much for any small change.
 
 Someone new arrives to review the code and finds a database with no documentation, with column names nobody understands, with relationships between tables that only existed in the previous developer's head.
@@ -2098,7 +2098,7 @@ Changing the structure of a production database is one of the most tense moments
 
 At Polaris we use Drizzle on all new projects that require a relational database because the clarity of the code translates directly into projects that are easier to maintain, scale, and hand off between teams.
 
-*The best code isn't the most clever -- it's the one any developer can understand at 11 PM when something fails in production.*`
+*The best code isn't the most clever — it's the one any developer can understand at 11 PM when something fails in production.*`
   },
   {
     id: "tech-pwa",
@@ -2119,7 +2119,7 @@ At Polaris we use Drizzle on all new projects that require a relational database
     },
     tags: ["pwa", "movil", "ecommerce", "offline", "notificaciones", "ux"],
     concepts: ["pwa", "aplicacion", "móvil", "celular", "instalar", "descargar", "pantalla de inicio", "notificaciones push", "offline", "fuera de linea", "cache", "rapidez"],
-    content: `Publicar una aplicación en la App Store de Apple cuesta $99 al año solo por el acceso, requiere que tu app pase por un proceso de revisión que puede tomar semanas, y si Apple decide que viola alguna de sus políticas -- aunque sea por razones arbitrarias -- te la rechaza sin derecho a apelación efectiva.
+    content: `Publicar una aplicación en la App Store de Apple cuesta $99 al año solo por el acceso, requiere que tu app pase por un proceso de revisión que puede tomar semanas, y si Apple decide que viola alguna de sus políticas — aunque sea por razones arbitrarias — te la rechaza sin derecho a apelación efectiva.
 
 En Google Play el proceso es más flexible, pero sigue requiriendo desarrollo nativo en Kotlin o Java, o un framework cross-platform como Flutter o React Native, lo que multiplica el costo de desarrollo.
 
@@ -2127,7 +2127,7 @@ Las **PWA (Progressive Web Apps)** resuelven ese problema de una manera elegante
 
 ### Cómo funciona la instalación
 
-Cuando un usuario visita tu web desde Chrome en Android o Safari en iOS y la visita cumple ciertos criterios técnicos -- HTTPS, un archivo de configuración llamado Web App Manifest, y un **Service Worker** registrado -- el navegador muestra automáticamente un banner invitando al usuario a instalar la app.
+Cuando un usuario visita tu web desde Chrome en Android o Safari en iOS y la visita cumple ciertos criterios técnicos — HTTPS, un archivo de configuración llamado Web App Manifest, y un **Service Worker** registrado — el navegador muestra automáticamente un banner invitando al usuario a instalar la app.
 
 El usuario presiona "Instalar", el ícono aparece en su pantalla de inicio, y la próxima vez que lo abra, la experiencia es idéntica a una app nativa: sin barra de URL, con splash screen, con los colores de tu marca.
 
@@ -2148,7 +2148,7 @@ Todo eso sin que el usuario haya descargado nada de ninguna tienda.
 En Polaris implementamos PWA como una capa adicional sobre las plataformas web que construimos, especialmente en e-commerce, sistemas de reservas y plataformas con usuarios recurrentes que se benefician de tener acceso rápido desde la pantalla de inicio.
 
 *La mejor app es la que el usuario ya tiene en su celular sin haber tenido que descargar nada.*`,
-    contentEn: `Publishing an app on Apple's App Store costs $99 per year just for access, requires your app to go through a review process that can take weeks, and if Apple decides it violates any of their policies -- even for arbitrary reasons -- they reject it with no effective right of appeal.
+    contentEn: `Publishing an app on Apple's App Store costs $99 per year just for access, requires your app to go through a review process that can take weeks, and if Apple decides it violates any of their policies — even for arbitrary reasons — they reject it with no effective right of appeal.
 
 On Google Play the process is more flexible, but still requires native development in Kotlin or Java, or a cross-platform framework like Flutter or React Native, which multiplies development cost.
 
@@ -2156,7 +2156,7 @@ On Google Play the process is more flexible, but still requires native developme
 
 ### How installation works
 
-When a user visits your website from Chrome on Android or Safari on iOS and the visit meets certain technical criteria -- HTTPS, a configuration file called a Web App Manifest, and a registered **Service Worker** -- the browser automatically displays a banner inviting the user to install the app.
+When a user visits your website from Chrome on Android or Safari on iOS and the visit meets certain technical criteria — HTTPS, a configuration file called a Web App Manifest, and a registered **Service Worker** — the browser automatically displays a banner inviting the user to install the app.
 
 The user presses "Install", the icon appears on their home screen, and the next time they open it, the experience is identical to a native app: no URL bar, with a splash screen, in your brand's colors.
 
@@ -2207,7 +2207,7 @@ Ese proceso tiene un nombre en la industria: **despliegue manual**. Y tiene un c
 
 Imagina que el código de tu web vive en un repositorio en GitHub. Cada vez que el desarrollador guarda una mejora y la sube al repositorio, un sistema automatizado entra en acción.
 
-Primero ejecuta pruebas automáticas para verificar que el nuevo código no rompe nada que ya funcionaba. Si las pruebas pasan, construye una nueva versión de la aplicación. Si la construcción es exitosa, despliega esa versión en producción de forma gradual -- sin apagar el servidor, sin downtime, sin que el usuario note nada.
+Primero ejecuta pruebas automáticas para verificar que el nuevo código no rompe nada que ya funcionaba. Si las pruebas pasan, construye una nueva versión de la aplicación. Si la construcción es exitosa, despliega esa versión en producción de forma gradual — sin apagar el servidor, sin downtime, sin que el usuario note nada.
 
 Si algo sale mal en cualquiera de esos pasos, el sistema detiene el proceso y revierte automáticamente a la versión anterior. La web nunca llega a verse afectada.
 
@@ -2238,7 +2238,7 @@ That process has a name in the industry: **manual deployment**. And it has a rea
 
 Imagine your website's code lives in a repository on GitHub. Every time the developer saves an improvement and pushes it to the repository, an automated system kicks in.
 
-First it runs automated tests to verify the new code doesn't break anything that was already working. If the tests pass, it builds a new version of the application. If the build is successful, it deploys that version to production gradually -- without shutting down the server, without downtime, without the user noticing anything.
+First it runs automated tests to verify the new code doesn't break anything that was already working. If the tests pass, it builds a new version of the application. If the build is successful, it deploys that version to production gradually — without shutting down the server, without downtime, without the user noticing anything.
 
 If something goes wrong at any of those steps, the system stops the process and automatically reverts to the previous version. The website is never affected.
 
@@ -2306,11 +2306,11 @@ Volviendo a la panadería del inicio: su página de "pan de masa madre" tenía u
 
 ### On-Page SEO starts inside your own page
 
-**On-Page SEO** covers everything you control directly on each page: **titles, headings**, keyword usage, **optimized images**, and internal links. It's the easiest part of SEO to improve because it doesn't depend on anyone else -- just doing the work right at home.
+**On-Page SEO** covers everything you control directly on each page: **titles, headings**, keyword usage, **optimized images**, and internal links. It's the easiest part of SEO to improve because it doesn't depend on anyone else — just doing the work right at home.
 
 ### Headings that tell a clear story
 
-Using a single \`H1\` per page and organizing the rest into \`H2\` and \`H3\` tags isn't a technical formality -- it gives Google a **clear hierarchy** of what matters most. A page without this structure is, to a search engine, plain text with no map.
+Using a single \`H1\` per page and organizing the rest into \`H2\` and \`H3\` tags isn't a technical formality — it gives Google a **clear hierarchy** of what matters most. A page without this structure is, to a search engine, plain text with no map.
 
 ### Keywords that make sense, not stuffing
 
@@ -2322,9 +2322,9 @@ Every image needs alt text describing what it shows. Beyond accessibility, this 
 
 ### How it looks in practice: the bakery from the intro
 
-Back to the bakery from the opening: its "sourdough bread" page had a generic \`H1\` that just said "Products," the same \`title\` as every other page on the site, and no alt text on a single image. After changing the \`H1\` to "Artisan sourdough bread, baked locally," writing a unique \`title\` per product, and adding descriptive \`alt\` text to every photo, that specific page started showing up among the top results for local searches for that product. Nothing about the visual design changed -- only how the code talks to Google.
+Back to the bakery from the opening: its "sourdough bread" page had a generic \`H1\` that just said "Products," the same \`title\` as every other page on the site, and no alt text on a single image. After changing the \`H1\` to "Artisan sourdough bread, baked locally," writing a unique \`title\` per product, and adding descriptive \`alt\` text to every photo, that specific page started showing up among the top results for local searches for that product. Nothing about the visual design changed — only how the code talks to Google.
 
-*On-Page SEO isn't magic -- it's tidying your own house so the right visitor, and Google, know exactly where everything is.*`
+*On-Page SEO isn't magic — it's tidying your own house so the right visitor, and Google, know exactly where everything is.*`
   },
   {
     id: "seo-tecnico-guide",
@@ -2396,7 +2396,7 @@ The store from the opening example took nearly seven seconds to load its washing
     id: "seo-off-page-guide",
     slug: "seo-off-page-guia-completa",
     title: "Google no solo lee tu web, también escucha quién habla bien de ella: así funciona el SEO Off-Page",
-    titleEn: "Google doesn't just read your site -- it listens to who's talking about it: that's Off-Page SEO",
+    titleEn: "Google doesn't just read your site — it listens to who's talking about it: that's Off-Page SEO",
     summary: "Cómo mejorar la reputación de tu sitio web a través de enlaces externos, menciones de marca y crecimiento de autoridad a largo plazo.",
     summaryEn: "How to elevate the reputation of your website via external links, brand mentions, and long-term authoritative scaling.",
     category: "SEO",
@@ -2454,7 +2454,7 @@ Long-term strategies that actually work include partnering with other local busi
 
 ### What changed for the law firm from the example
 
-The law firm from the opening started partnering with two local professional associations and got featured in a digital newspaper piece about a legal change relevant to its clients. Those two links, plus three unlinked brand mentions in professional directories, were enough for its domain to start competing on equal footing with firms that had been online for years longer. It wasn't about chasing hundreds of links -- just a handful of **relevant mentions** from sources Google already considered trustworthy.
+The law firm from the opening started partnering with two local professional associations and got featured in a digital newspaper piece about a legal change relevant to its clients. Those two links, plus three unlinked brand mentions in professional directories, were enough for its domain to start competing on equal footing with firms that had been online for years longer. It wasn't about chasing hundreds of links — just a handful of **relevant mentions** from sources Google already considered trustworthy.
 
 *Your site can be perfect on the inside, but if nobody outside is vouching for it, Google has little reason to trust you more than anyone else.*`
   },
@@ -2522,7 +2522,7 @@ Linking your own related articles, say from "ficus care" to "recommended pot typ
 
 The nursery from the opening example wrote a single article answering "why is my ficus losing its leaves," with their own photos and concrete steps to fix it. That article, over a thousand words long with real examples, started getting steady visits from Google weeks after publishing, without a single paid ad. Three months in, that one article was generating more new-customer inquiries than all their daily social media posts combined, simply because it answered a question people were already typing into the search bar.
 
-*Content that truly works doesn't try to sell you something in the first line -- it tries to help first, and sell almost without you noticing.*`
+*Content that truly works doesn't try to sell you something in the first line — it tries to help first, and sell almost without you noticing.*`
   },
   {
     id: "schema-markup-guide",
@@ -2644,7 +2644,7 @@ Google values consistency: the **same name, address, and phone number** across y
 
 ### Reviews, the factor that weighs the most
 
-Reviews don't just influence the customer reading them -- they directly affect your ranking on the local search map. Businesses with **frequent, recent, well-answered reviews** tend to outrank competitors with abandoned listings.
+Reviews don't just influence the customer reading them — they directly affect your ranking on the local search map. Businesses with **frequent, recent, well-answered reviews** tend to outrank competitors with abandoned listings.
 
 ### Photos and posts, activity Google rewards
 
@@ -2698,7 +2698,7 @@ El verdadero valor de GA4 no es el panel en sí, sino las decisiones que permite
 Al configurar correctamente los **eventos** en GA4, la academia del ejemplo descubrió que el 70% de las personas que iniciaban el formulario de inscripción lo abandonaban justo en el campo donde se pedía el número de tarjeta antes de confirmar una clase de prueba gratuita. Quitar ese campo del primer paso, y pedirlo solo después de la clase gratuita, triplicó las inscripciones completadas en el mes siguiente. Sin GA4 configurado a nivel de eventos, ese problema habría sido invisible: el panel solo mostraba "muchas visitas", sin decir en qué momento exacto se perdían.
 
 *Sin medir lo correcto, es imposible saber si tu sitio está funcionando o solo está ocupado.*`,
-    contentEn: `Does your online English academy get "thousands of visits a month"? That sounds great, but checking the actual data usually reveals that almost nobody makes it to the enrollment form -- the visits exist, but they translate into nothing.
+    contentEn: `Does your online English academy get "thousands of visits a month"? That sounds great, but checking the actual data usually reveals that almost nobody makes it to the enrollment form — the visits exist, but they translate into nothing.
 
 ### Measuring visits isn't the same as measuring results
 
@@ -2718,7 +2718,7 @@ The real value of GA4 isn't the dashboard itself, but the decisions it enables w
 
 ### What the English academy discovered
 
-After properly configuring **events** in GA4, the academy from the example discovered that 70% of people who started the enrollment form abandoned it right at the field asking for a card number before confirming a free trial class. Removing that field from the first step, and only asking for it after the trial class, tripled completed enrollments the following month. Without GA4 configured at the event level, that problem would have stayed invisible -- the dashboard only showed "lots of visits," with no indication of exactly where people were dropping off.
+After properly configuring **events** in GA4, the academy from the example discovered that 70% of people who started the enrollment form abandoned it right at the field asking for a card number before confirming a free trial class. Removing that field from the first step, and only asking for it after the trial class, tripled completed enrollments the following month. Without GA4 configured at the event level, that problem would have stayed invisible — the dashboard only showed "lots of visits," with no indication of exactly where people were dropping off.
 
 *Without measuring the right things, it's impossible to know if your site is actually working, or just busy.*`
   },
@@ -2726,7 +2726,7 @@ After properly configuring **events** in GA4, the academy from the example disco
     id: "google-search-console-guide",
     slug: "google-search-console-guia-completa",
     title: "Google indexa mal una página y nadie te avisa, a menos que estés mirando Google Search Console",
-    titleEn: "Google mis-indexes a page and nobody tells you -- unless you're watching Google Search Console",
+    titleEn: "Google mis-indexes a page and nobody tells you — unless you're watching Google Search Console",
     summary: "Aprende a diagnosticar errores, medir clics y comunicarte directamente con los rastreadores de Google para disparar tu visibilidad orgánica.",
     summaryEn: "Learn to diagnose errors, measure clicks, and communicate directly with Google trackers to boost your organic visibility.",
     category: "SEO",
@@ -2823,7 +2823,7 @@ La guía no se queda en teoría: incluye un calendario con temas concretos para 
 
 ### Una checklist técnica que acompaña el plan
 
-También se incluye una revisión de aspectos técnicos básicos  -- títulos, meta descripciones, estructura de encabezados  -- para que el contenido nuevo no compita contra errores técnicos que ya existían en el sitio.
+También se incluye una revisión de aspectos técnicos básicos  — títulos, meta descripciones, estructura de encabezados  — para que el contenido nuevo no compita contra errores técnicos que ya existían en el sitio.
 
 ### El caso de la clínica dental del ejemplo
 
@@ -2846,7 +2846,7 @@ The guide doesn't stop at theory: it includes a calendar with concrete topics fo
 
 ### A technical checklist that comes with the plan
 
-It also includes a review of basic technical elements -- titles, meta descriptions, heading structure -- so new content isn't competing against technical errors that already existed on the site.
+It also includes a review of basic technical elements — titles, meta descriptions, heading structure — so new content isn't competing against technical errors that already existed on the site.
 
 ### The case of the dental clinic from the example
 
@@ -2877,7 +2877,7 @@ After receiving its strategy guide, the clinic from the example discovered that 
 
 ### Sincronización automática, sin copiar y pegar
 
-CRM Connect conecta los formularios y el chat de tu sitio directamente con tu CRM  -- HubSpot, Pipedrive o el sistema que ya uses  -- para que cada nuevo contacto aparezca automáticamente en tu pipeline de ventas, sin que nadie tenga que transcribirlo a mano.
+CRM Connect conecta los formularios y el chat de tu sitio directamente con tu CRM  — HubSpot, Pipedrive o el sistema que ya uses  — para que cada nuevo contacto aparezca automáticamente en tu pipeline de ventas, sin que nadie tenga que transcribirlo a mano.
 
 ### Información completa, no solo un nombre y un correo
 
@@ -2900,11 +2900,11 @@ Antes de instalar la integración, la inmobiliaria del ejemplo perdía en promed
 
 ### Automatic sync, no copy-pasting
 
-CRM Connect links your site's forms and chat directly to your CRM -- HubSpot, Pipedrive, or whatever system you already use -- so every new contact shows up automatically in your sales pipeline, with nobody having to transcribe it by hand.
+CRM Connect links your site's forms and chat directly to your CRM — HubSpot, Pipedrive, or whatever system you already use — so every new contact shows up automatically in your sales pipeline, with nobody having to transcribe it by hand.
 
 ### Full context, not just a name and an email
 
-Every lead arrives with context: which page they visited, which form they filled out, what they asked if they went through the chatbot. Your sales team doesn't start the conversation from zero -- they start with real data to personalize that first contact.
+Every lead arrives with context: which page they visited, which form they filled out, what they asked if they went through the chatbot. Your sales team doesn't start the conversation from zero — they start with real data to personalize that first contact.
 
 ### No lag between your website and closing the sale
 
@@ -2964,7 +2964,7 @@ Tras agregar la versión en inglés de su sitio, el hotel del ejemplo notó que 
 *Un cliente que no entiende tu sitio no es un cliente que "lo piensa": es un cliente que ya se fue a la competencia.*`,
     contentEn: `How many potential guests close your site in the first few seconds because they don't understand a word you're offering? If you run a boutique hotel in a tourist area, or any business with international customers, that silent bounce is exactly what a **Multilingual Website** prevents.
 
-### More than translation -- adapting the message
+### More than translation — adapting the message
 
 A multilingual site isn't just running your text through an automatic translator. Each language version keeps the same design and structure, but adapts tone, units (prices, dates, measurements), and even images to the audience it's speaking to.
 
@@ -2982,9 +2982,9 @@ Unlike running two completely separate websites, multilingual content lives on t
 
 ### What the boutique hotel from the example discovered
 
-After adding the English version of its site, the hotel from the example found that nearly forty percent of its new high-season bookings came from visitors who had browsed the English version directly -- a segment of guests that used to simply abandon the site without booking, because they couldn't understand the room descriptions.
+After adding the English version of its site, the hotel from the example found that nearly forty percent of its new high-season bookings came from visitors who had browsed the English version directly — a segment of guests that used to simply abandon the site without booking, because they couldn't understand the room descriptions.
 
-*A customer who can't understand your site isn't a customer who's "thinking it over" -- they're a customer who already left for a competitor.*`
+*A customer who can't understand your site isn't a customer who's "thinking it over" — they're a customer who already left for a competitor.*`
   },
   {
     id: "post-addon-copywriting",
@@ -3025,7 +3025,7 @@ El texto se ajusta a cómo realmente habla tu negocio: cercano y directo para un
 
 ### Lo que cambió para la tienda artesanal del ejemplo
 
-Al reemplazar frases como "productos hechos con calidad y tradición" por textos que explicaban el proceso real detrás de cada pieza  -- quién la hace, cuánto tiempo toma, por qué eso justifica el precio  -- la tienda del ejemplo vio que el tiempo promedio en su página de producto subió, y con él, su tasa de conversión, sin cambiar ni el diseño ni los precios.
+Al reemplazar frases como "productos hechos con calidad y tradición" por textos que explicaban el proceso real detrás de cada pieza  — quién la hace, cuánto tiempo toma, por qué eso justifica el precio  — la tienda del ejemplo vio que el tiempo promedio en su página de producto subió, y con él, su tasa de conversión, sin cambiar ni el diseño ni los precios.
 
 *Un visitante no compra lo que ve bonito, compra lo que entiende que necesita.*`,
     contentEn: `Your site looks incredible, but visitors browse the whole thing and leave without buying? If you run an online store selling handmade goods, or any business with great design and generic copy, that silent lack of sales is usually solved with **Professional Copywriting**.
@@ -3048,9 +3048,9 @@ The copy adapts to how your business actually talks: warm and direct for a young
 
 ### What changed for the handmade goods store from the example
 
-After replacing phrases like "products made with quality and tradition" with text explaining the real process behind each piece -- who makes it, how long it takes, why that justifies the price -- the store from the example saw its average time on the product page go up, and with it, its conversion rate, without changing the design or the prices at all.
+After replacing phrases like "products made with quality and tradition" with text explaining the real process behind each piece — who makes it, how long it takes, why that justifies the price — the store from the example saw its average time on the product page go up, and with it, its conversion rate, without changing the design or the prices at all.
 
-*A visitor doesn't buy what looks pretty -- they buy what they understand they need.*`
+*A visitor doesn't buy what looks pretty — they buy what they understand they need.*`
   },
   {
     id: "post-addon-branding",
@@ -3071,7 +3071,7 @@ After replacing phrases like "products made with quality and tradition" with tex
     },
     tags: ["branding", "identidad visual", "logo", "marca"],
     concepts: ["kit de branding", "identidad visual", "branding basico", "logo profesional", "paleta de colores"],
-    content: `¿Tu negocio se ve diferente en cada lugar donde aparece  -- un logo en el local, otro en redes, otro en el sitio web? Si tienes un gimnasio nuevo, o cualquier negocio que creció sin un diseño de marca definido, esa inconsistencia es justo lo que resuelve un **Kit de Branding Básico**.
+    content: `¿Tu negocio se ve diferente en cada lugar donde aparece  — un logo en el local, otro en redes, otro en el sitio web? Si tienes un gimnasio nuevo, o cualquier negocio que creció sin un diseño de marca definido, esa inconsistencia es justo lo que resuelve un **Kit de Branding Básico**.
 
 ### Una identidad, no un logo suelto
 
@@ -3094,11 +3094,11 @@ Antes de escribir una sola línea de copy o diseñar una sola página, tener def
 El gimnasio del ejemplo llegó con un logo distinto en cada red social y un nombre escrito de tres formas diferentes en su fachada, sus flyers y su sitio. Tras recibir su kit de branding, unificó los tres bajo la misma paleta y tipografía, y sus propios clientes comenzaron a reconocer sus publicaciones en redes sin necesidad de leer el nombre completo.
 
 *Una marca que se ve distinta en cada lugar no se recuerda como varias marcas: se recuerda como ninguna.*`,
-    contentEn: `Does your business look different everywhere it shows up -- one logo at the storefront, another on social media, a third on the website? If you run a new gym, or any business that grew without a defined brand design, that inconsistency is exactly what a **Basic Branding Kit** solves.
+    contentEn: `Does your business look different everywhere it shows up — one logo at the storefront, another on social media, a third on the website? If you run a new gym, or any business that grew without a defined brand design, that inconsistency is exactly what a **Basic Branding Kit** solves.
 
 ### An identity, not a standalone logo
 
-The kit doesn't just hand you a logo: it defines a color palette, a typography, and basic usage rules, so your brand looks like the same brand no matter where it shows up -- the website, social media, or a business card.
+The kit doesn't just hand you a logo: it defines a color palette, a typography, and basic usage rules, so your brand looks like the same brand no matter where it shows up — the website, social media, or a business card.
 
 ### Consistency that builds trust
 
@@ -3116,7 +3116,7 @@ Before writing a single line of copy or designing a single page, having brand co
 
 The gym from the example showed up with a different logo on every social network and its name written three different ways across its storefront, flyers, and website. After receiving its branding kit, it unified all three under the same palette and typography, and its own customers started recognizing its posts on social media without needing to read the full name.
 
-*A brand that looks different everywhere isn't remembered as several brands -- it's remembered as none.*`
+*A brand that looks different everywhere isn't remembered as several brands — it's remembered as none.*`
   },
   {
     id: "post-addon-hosting-support",
@@ -3145,7 +3145,7 @@ El servicio vigila tu sitio de forma constante, no solo en horario de oficina. S
 
 ### Actualizaciones que no esperan a que algo se rompa
 
-Las dependencias de un sitio web  -- desde librerías hasta certificados de seguridad  -- necesitan actualizarse con regularidad. Sin mantenimiento activo, esas actualizaciones se postergan indefinidamente hasta que una de ellas, finalmente, rompe algo en producción.
+Las dependencias de un sitio web  — desde librerías hasta certificados de seguridad  — necesitan actualizarse con regularidad. Sin mantenimiento activo, esas actualizaciones se postergan indefinidamente hasta que una de ellas, finalmente, rompe algo en producción.
 
 ### Soporte real cuando aparece un problema
 
@@ -3168,7 +3168,7 @@ The service watches your site continuously, not just during office hours. If the
 
 ### Updates that don't wait for something to break
 
-A website's dependencies -- from libraries to security certificates -- need regular updates. Without active maintenance, those updates get postponed indefinitely until one of them finally breaks something in production.
+A website's dependencies — from libraries to security certificates — need regular updates. Without active maintenance, those updates get postponed indefinitely until one of them finally breaks something in production.
 
 ### Real support when a problem actually shows up
 
@@ -3182,15 +3182,15 @@ Updating a price, fixing a typo, or uploading a new photo shouldn't require comm
 
 During a free vaccination campaign, the clinic's site from the example stopped responding on a Saturday afternoon, right when it was getting the most traffic. Thanks to active monitoring, the support team caught the outage within minutes and restored service that same afternoon, before the clinic lost a single appointment booked over that weekend.
 
-*A website doesn't only need maintenance once something has already broken -- it needs maintenance, most of all, on the days when nobody's watching.*`
+*A website doesn't only need maintenance once something has already broken — it needs maintenance, most of all, on the days when nobody's watching.*`
   },
   {
     id: "tech-react-vite",
     slug: "react-vite-arquitectura-spa-paneles",
     title: "No todas las páginas de tu sitio necesitan la misma arquitectura: por qué tu panel usa React + Vite",
     titleEn: "Not every page on your site needs the same architecture: why your dashboard runs on React + Vite",
-    summary: "Next.js brilla en páginas públicas que necesitan SEO. Pero un panel de administración privado tiene otras prioridades -- descubre por qué React + Vite es la arquitectura correcta para esa otra mitad de tu plataforma.",
-    summaryEn: "Next.js shines on public pages that need SEO. But a private admin dashboard has different priorities -- discover why React + Vite is the right architecture for that other half of your platform.",
+    summary: "Next.js brilla en páginas públicas que necesitan SEO. Pero un panel de administración privado tiene otras prioridades — descubre por qué React + Vite es la arquitectura correcta para esa otra mitad de tu plataforma.",
+    summaryEn: "Next.js shines on public pages that need SEO. But a private admin dashboard has different priorities — discover why React + Vite is the right architecture for that other half of your platform.",
     category: "Desarrollo",
     categoryEn: "Development",
     publishedAt: "2026-06-30",
@@ -3203,19 +3203,19 @@ During a free vaccination campaign, the clinic's site from the example stopped r
     },
     tags: ["react", "vite", "arquitectura", "spa", "desarrollo", "performance"],
     concepts: ["react", "vite", "spa", "single page application", "arquitectura", "panel de administracion", "dashboard", "next.js"],
-    content: `Cuando alguien visita la página de inicio de tu negocio, lo primero que importa es la velocidad de la primera pantalla y que Google pueda indexar cada palabra. Pero cuando ese mismo negocio entra a su panel de administración a revisar pedidos o actualizar precios, ya inició sesión, ya confía en la plataforma, y lo que necesita es que cada clic se sienta instantáneo -- no que Google lo indexe.
+    content: `Cuando alguien visita la página de inicio de tu negocio, lo primero que importa es la velocidad de la primera pantalla y que Google pueda indexar cada palabra. Pero cuando ese mismo negocio entra a su panel de administración a revisar pedidos o actualizar precios, ya inició sesión, ya confía en la plataforma, y lo que necesita es que cada clic se sienta instantáneo — no que Google lo indexe.
 
 Son dos trabajos distintos. Por eso en Polaris no usamos la misma arquitectura para ambos.
 
 ### Next.js donde el SEO manda
 
-Las páginas públicas -- inicio, servicios, portafolio, blog -- viven detrás de Next.js porque ahí el posicionamiento orgánico y el primer impacto visual determinan si un visitante se queda o se va. Cada palabra tiene que estar lista para el buscador desde el primer milisegundo.
+Las páginas públicas — inicio, servicios, portafolio, blog — viven detrás de Next.js porque ahí el posicionamiento orgánico y el primer impacto visual determinan si un visitante se queda o se va. Cada palabra tiene que estar lista para el buscador desde el primer milisegundo.
 
 ### React + Vite donde manda la velocidad de interacción
 
 El panel de administración es harina de otro costal. Nadie llega ahí desde Google, nadie necesita ver el contenido sin JavaScript, y cada usuario ya está autenticado. Lo que sí importa: que cambiar de pestaña, abrir un modal o actualizar una tabla se sienta inmediato.
 
-Ahí es donde entra **Vite**. Su servidor de desarrollo arranca en milisegundos y recarga cambios sin recompilar toda la aplicación, lo que acelera directamente cuánto tiempo le toma a nuestro equipo construir y pulir cada función del panel. En producción, genera un bundle optimizado que el navegador descarga una sola vez -- después de eso, navegar entre secciones del panel no recarga la página, solo actualiza componentes de **React**.
+Ahí es donde entra **Vite**. Su servidor de desarrollo arranca en milisegundos y recarga cambios sin recompilar toda la aplicación, lo que acelera directamente cuánto tiempo le toma a nuestro equipo construir y pulir cada función del panel. En producción, genera un bundle optimizado que el navegador descarga una sola vez — después de eso, navegar entre secciones del panel no recarga la página, solo actualiza componentes de **React**.
 
 ### Una sola aplicación, sin recargas
 
@@ -3225,20 +3225,20 @@ Esa es la idea central de una **SPA (Single Page Application)**: el navegador ca
 
 Un cliente de Polaris con un sitio de marketing en Next.js y un panel de administración en React + Vite no está usando dos productos distintos: está usando la herramienta correcta para cada mitad de su plataforma, en lugar de forzar una sola arquitectura a hacer dos trabajos que requieren prioridades opuestas.
 
-*La pregunta correcta nunca es qué tecnología es mejor -- es qué tecnología responde a lo que esa pantalla específica necesita hacer.*`,
-    contentEn: `When someone visits your business's homepage, what matters most is how fast the first screen loads and whether Google can index every word on it. But when that same business logs into its admin dashboard to check orders or update prices, they're already authenticated, they already trust the platform, and what they need is for every click to feel instant -- not for Google to crawl it.
+*La pregunta correcta nunca es qué tecnología es mejor — es qué tecnología responde a lo que esa pantalla específica necesita hacer.*`,
+    contentEn: `When someone visits your business's homepage, what matters most is how fast the first screen loads and whether Google can index every word on it. But when that same business logs into its admin dashboard to check orders or update prices, they're already authenticated, they already trust the platform, and what they need is for every click to feel instant — not for Google to crawl it.
 
 Those are two different jobs. That's why at Polaris we don't use the same architecture for both.
 
 ### Next.js where SEO calls the shots
 
-Public pages -- home, services, portfolio, blog -- run on Next.js because organic ranking and first visual impact determine whether a visitor stays or leaves. Every word needs to be ready for the search engine from the first millisecond.
+Public pages — home, services, portfolio, blog — run on Next.js because organic ranking and first visual impact determine whether a visitor stays or leaves. Every word needs to be ready for the search engine from the first millisecond.
 
 ### React + Vite where interaction speed calls the shots
 
 The admin dashboard is a different animal entirely. Nobody arrives there from Google, nobody needs to see the content without JavaScript, and every user is already logged in. What matters instead: switching tabs, opening a modal, or refreshing a table has to feel immediate.
 
-That's where **Vite** comes in. Its development server starts in milliseconds and reloads changes without recompiling the whole application, which directly speeds up how long it takes our team to build and polish every feature in the dashboard. In production, it generates an optimized bundle the browser downloads once -- after that, navigating between sections of the panel never reloads the page, it just updates **React** components.
+That's where **Vite** comes in. Its development server starts in milliseconds and reloads changes without recompiling the whole application, which directly speeds up how long it takes our team to build and polish every feature in the dashboard. In production, it generates an optimized bundle the browser downloads once — after that, navigating between sections of the panel never reloads the page, it just updates **React** components.
 
 ### One application, zero reloads
 
@@ -3246,9 +3246,9 @@ That's the core idea behind a **SPA (Single Page Application)**: the browser loa
 
 ### Two architectures, one business
 
-A Polaris client with a marketing site on Next.js and an admin dashboard on React + Vite isn't running two different products -- they're running the right tool for each half of their platform, instead of forcing a single architecture to do two jobs with opposite priorities.
+A Polaris client with a marketing site on Next.js and an admin dashboard on React + Vite isn't running two different products — they're running the right tool for each half of their platform, instead of forcing a single architecture to do two jobs with opposite priorities.
 
-*The right question is never which technology is better -- it's which technology answers what that specific screen actually needs to do.*`
+*The right question is never which technology is better — it's which technology answers what that specific screen actually needs to do.*`
   }
 ];
 

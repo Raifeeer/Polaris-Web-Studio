@@ -16,9 +16,9 @@ function setMeta(selector: string, attr: string, content: string) {
 }
 
 interface SeoOptions {
-  /** URL absoluta de la imagen para Open Graph/Twitter -- default: og-image.jpg genérico del sitio */
+  /** URL absoluta de la imagen para Open Graph/Twitter — default: og-image.jpg genérico del sitio */
   image?: string;
-  /** Ruta canónica real de la página (ej. "/portafolio/lumina-sky-concept") -- default: la ruta actual */
+  /** Ruta canónica real de la página (ej. "/portafolio/lumina-sky-concept") — default: la ruta actual */
   path?: string;
 }
 

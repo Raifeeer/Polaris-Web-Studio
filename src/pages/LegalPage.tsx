@@ -92,19 +92,19 @@ function PrivacyContent() {
         </p>
         <SubHeading><T en="Client portal">Portal de clientes</T></SubHeading>
         <p>
-          <T en="If you become a client, we store your name, email, company name, and an encrypted password (hashed, never stored in plain text) to give you access to your project dashboard -- deliverables, invoices, meetings, and updates.">
+          <T en="If you become a client, we store your name, email, company name, and an encrypted password (hashed, never stored in plain text) to give you access to your project dashboard — deliverables, invoices, meetings, and updates.">
             Si te conviertes en cliente, guardamos tu nombre, correo, nombre de empresa, y una
             contraseña cifrada (hasheada, nunca en texto plano) para darte acceso a tu panel de
-            proyecto -- entregables, facturas, reuniones y novedades.
+            proyecto — entregables, facturas, reuniones y novedades.
           </T>
         </p>
         <SubHeading><T en="Service Agreement (electronic signature)">Contrato de servicio (firma electrónica)</T></SubHeading>
         <p>
-          <T en="If your project requires a signed Service Agreement, we also collect your ID number (cédula) and address for the agreement itself, plus a record of the electronic signature process: the exact document content you accepted, the signature (drawn or typed), the IP address, and the date/time of acceptance -- required to make the signature legally valid under Law No. 126-02 on Electronic Commerce, Documents and Signatures of the Dominican Republic. A copy of the signed document is emailed to you and to us at the moment of signing.">
+          <T en="If your project requires a signed Service Agreement, we also collect your ID number (cédula) and address for the agreement itself, plus a record of the electronic signature process: the exact document content you accepted, the signature (drawn or typed), the IP address, and the date/time of acceptance — required to make the signature legally valid under Law No. 126-02 on Electronic Commerce, Documents and Signatures of the Dominican Republic. A copy of the signed document is emailed to you and to us at the moment of signing.">
             Si tu proyecto requiere un Contrato de servicio firmado, también recolectamos tu cédula
             y domicilio para el contrato en sí, además de un registro del proceso de firma
             electrónica: el contenido exacto del documento que aceptaste, la firma (dibujada o
-            tipeada), la dirección IP y la fecha/hora de aceptación -- necesario para que la firma
+            tipeada), la dirección IP y la fecha/hora de aceptación — necesario para que la firma
             sea legalmente válida bajo la Ley No. 126-02 sobre Comercio Electrónico, Documentos y
             Firmas Digitales de la República Dominicana. Una copia del documento firmado se envía
             por correo a ti y a nosotros en el momento de la firma.
@@ -112,10 +112,10 @@ function PrivacyContent() {
         </p>
         <SubHeading><T en="Payments">Pagos</T></SubHeading>
         <p>
-          <T en="Invoices in your portal can be paid via PayPal or manually confirmed (bank transfer / cash). We never see or store your card or bank account numbers -- PayPal processes online payments directly, and we only receive confirmation of payment status and amount.">
+          <T en="Invoices in your portal can be paid via PayPal or manually confirmed (bank transfer / cash). We never see or store your card or bank account numbers — PayPal processes online payments directly, and we only receive confirmation of payment status and amount.">
             Las facturas en tu portal se pueden pagar vía PayPal o confirmarse manualmente
             (transferencia bancaria / efectivo). Nunca vemos ni guardamos tu número de tarjeta o
-            cuenta bancaria -- PayPal procesa los pagos en línea directamente, y a nosotros solo
+            cuenta bancaria — PayPal procesa los pagos en línea directamente, y a nosotros solo
             nos llega la confirmación del estado y monto del pago.
           </T>
         </p>
@@ -136,9 +136,9 @@ function PrivacyContent() {
         </p>
         <SubHeading><T en="Site usage (analytics)">Uso del sitio (analítica)</T></SubHeading>
         <p>
-          <T en="Only if you accept analytics cookies in our cookie banner, we use third-party analytics tools to understand which pages are visited and how -- see our">
+          <T en="Only if you accept analytics cookies in our cookie banner, we use third-party analytics tools to understand which pages are visited and how — see our">
             Solo si aceptas las cookies analíticas en nuestro banner, usamos herramientas de
-            analítica de terceros para entender qué páginas se visitan y cómo -- ver nuestra
+            analítica de terceros para entender qué páginas se visitan y cómo — ver nuestra
           </T>{" "}
           <a href="/cookies" className="text-[var(--color-primary-base)] underline">
             <T en="Cookie Policy">Política de Cookies</T>
@@ -166,12 +166,12 @@ function PrivacyContent() {
           </T>
         </p>
         <ul className="list-disc pl-5 space-y-1.5">
-          <li><T en="Google (Firebase / Google Cloud) -- authentication, database, and hosting infrastructure.">Google (Firebase / Google Cloud) -- autenticación, base de datos, e infraestructura de hosting.</T></li>
-          <li><T en="Vercel -- hosting and deployment of the site itself.">Vercel -- hosting y despliegue del sitio en sí.</T></li>
-          <li><T en="PayPal -- online payment processing.">PayPal -- procesamiento de pagos en línea.</T></li>
-          <li><T en="Cal.com -- meeting scheduling.">Cal.com -- agenda de reuniones.</T></li>
-          <li><T en="Google Gemini / xAI (Grok) -- AI chat assistant.">Google Gemini / xAI (Grok) -- asistente de chat con IA.</T></li>
-          <li><T en="Third-party analytics providers -- site usage analytics, only with your consent.">Proveedores de analítica de terceros -- analítica de uso del sitio, solo con tu consentimiento.</T></li>
+          <li><T en="Google (Firebase / Google Cloud) — authentication, database, and hosting infrastructure.">Google (Firebase / Google Cloud) — autenticación, base de datos, e infraestructura de hosting.</T></li>
+          <li><T en="Vercel — hosting and deployment of the site itself.">Vercel — hosting y despliegue del sitio en sí.</T></li>
+          <li><T en="PayPal — online payment processing.">PayPal — procesamiento de pagos en línea.</T></li>
+          <li><T en="Cal.com — meeting scheduling.">Cal.com — agenda de reuniones.</T></li>
+          <li><T en="Google Gemini / xAI (Grok) — AI chat assistant.">Google Gemini / xAI (Grok) — asistente de chat con IA.</T></li>
+          <li><T en="Third-party analytics providers — site usage analytics, only with your consent.">Proveedores de analítica de terceros — analítica de uso del sitio, solo con tu consentimiento.</T></li>
         </ul>
         <p>
           <T en="Most of these providers process data on servers located outside the Dominican Republic (mainly in the United States). By using our services, you accept this international transfer, which is necessary to provide them.">
@@ -215,9 +215,9 @@ function PrivacyContent() {
             </T>
           </li>
           <li>
-            <T en="Invoices and billing records: kept for 10 years, as required by Dominican tax regulations, even after your account is deleted -- only the financial record (amounts, dates, service description) is kept for this purpose, not your portal login.">
+            <T en="Invoices and billing records: kept for 10 years, as required by Dominican tax regulations, even after your account is deleted — only the financial record (amounts, dates, service description) is kept for this purpose, not your portal login.">
               Facturas y registros de facturación: se conservan 10 años, según lo exige la
-              normativa fiscal dominicana, incluso después de eliminarse tu cuenta -- solo se
+              normativa fiscal dominicana, incluso después de eliminarse tu cuenta — solo se
               conserva el registro financiero (montos, fechas, descripción del servicio) para este
               fin, no tu acceso al portal.
             </T>
@@ -318,11 +318,11 @@ function TermsContent() {
 
       <Section heading={<T en="2. Our services">2. Nuestros servicios</T>}>
         <p>
-          <T en="We offer custom web development under three packages (Flash, Constellation, Nova), plus a client portal to track deliverables, invoices, and meetings for active projects. The exact scope, price, and timeline for your project are defined in the quote you accept, not in this document -- this document governs the general relationship, not the specifics of a particular project.">
+          <T en="We offer custom web development under three packages (Flash, Constellation, Nova), plus a client portal to track deliverables, invoices, and meetings for active projects. The exact scope, price, and timeline for your project are defined in the quote you accept, not in this document — this document governs the general relationship, not the specifics of a particular project.">
             Ofrecemos desarrollo web a medida bajo tres paquetes (Destello, Constelación, Nova), más
             un portal de clientes para seguir entregables, facturas y reuniones de proyectos
             activos. El alcance, precio y plazo exactos de tu proyecto quedan definidos en la
-            cotización que aceptas, no en este documento -- este documento rige la relación general,
+            cotización que aceptas, no en este documento — este documento rige la relación general,
             no los detalles de un proyecto en particular.
           </T>
         </p>
@@ -330,19 +330,19 @@ function TermsContent() {
 
       <Section heading={<T en="3. Quote and hiring process">3. Proceso de cotización y contratación</T>}>
         <p>
-          <T en="A quote request through our wizard is not a binding contract -- it's the first step. The relationship becomes binding once you explicitly accept a specific quote (in writing, by email or through the portal) and, where applicable, pay the agreed deposit.">
-            Una solicitud de cotización por el cotizador no es un contrato vinculante -- es el
+          <T en="A quote request through our wizard is not a binding contract — it's the first step. The relationship becomes binding once you explicitly accept a specific quote (in writing, by email or through the portal) and, where applicable, pay the agreed deposit.">
+            Una solicitud de cotización por el cotizador no es un contrato vinculante — es el
             primer paso. La relación se vuelve vinculante cuando aceptas explícitamente una
             cotización concreta (por escrito, por correo o desde el portal) y, cuando corresponda,
             pagas el anticipo acordado.
           </T>
         </p>
         <p>
-          <T en="For full projects, once your quote is approved you'll also sign a specific Service Agreement electronically within your portal, covering the exact price, timeline, and intellectual property terms for your project. That Agreement complements these Terms -- it governs the specific commercial terms of your project, and these Terms govern everything else (refund policy, portal account, liability, etc.) not repeated there.">
+          <T en="For full projects, once your quote is approved you'll also sign a specific Service Agreement electronically within your portal, covering the exact price, timeline, and intellectual property terms for your project. That Agreement complements these Terms — it governs the specific commercial terms of your project, and these Terms govern everything else (refund policy, portal account, liability, etc.) not repeated there.">
             Para proyectos completos, una vez aprobada tu cotización también firmas electrónicamente
             un Contrato de Prestación de Servicios específico dentro de tu portal, con el precio,
             plazo y términos de propiedad intelectual exactos de tu proyecto. Ese Contrato
-            complementa estos Términos -- regula las condiciones comerciales específicas de tu
+            complementa estos Términos — regula las condiciones comerciales específicas de tu
             proyecto, y estos Términos rigen todo lo demás (política de reembolso, cuenta del
             portal, responsabilidad, etc.) que no se repite ahí.
           </T>
@@ -365,8 +365,8 @@ function TermsContent() {
         heading={<T en="5. Refund policy">5. Política de reembolso</T>}
       >
         <p className="font-bold text-[var(--color-text-primary)]">
-          <T en="This is a custom professional service, not a retail product -- please read this section carefully before making a payment.">
-            Este es un servicio profesional a medida, no un producto de venta al detalle -- te
+          <T en="This is a custom professional service, not a retail product — please read this section carefully before making a payment.">
+            Este es un servicio profesional a medida, no un producto de venta al detalle — te
             pedimos leer esta sección con atención antes de hacer un pago.
           </T>
         </p>
@@ -414,10 +414,10 @@ function TermsContent() {
 
         <SubHeading><T en="5.5 Revisions vs. refunds">5.5 Revisiones vs. reembolsos</T></SubHeading>
         <p>
-          <T en="If you're not satisfied with a delivered result, our first step is always to work in good faith on reasonable adjustments within the scope agreed in your quote -- not to issue a refund. A refund is only considered if we're unable to deliver a result reasonably aligned with what was agreed, after a genuine attempt at revisions.">
+          <T en="If you're not satisfied with a delivered result, our first step is always to work in good faith on reasonable adjustments within the scope agreed in your quote — not to issue a refund. A refund is only considered if we're unable to deliver a result reasonably aligned with what was agreed, after a genuine attempt at revisions.">
             Si no estás conforme con un resultado entregado, nuestro primer paso siempre es
             trabajar de buena fe en ajustes razonables dentro del alcance acordado en tu
-            cotización -- no emitir un reembolso. Un reembolso se considera solo si no logramos
+            cotización — no emitir un reembolso. Un reembolso se considera solo si no logramos
             entregar un resultado razonablemente alineado con lo acordado, después de un intento
             genuino de revisiones.
           </T>
@@ -523,9 +523,9 @@ function TermsContent() {
 
       <Section heading={<T en="12. Individual dispute resolution; no class actions">12. Resolución individual de disputas; sin acciones colectivas</T>}>
         <p>
-          <T en="Any dispute arising from these Terms or your use of the site/portal will be resolved individually between you and Polaris Web Studio -- not as part of a class, consolidated, or representative action of any kind, to the extent permitted by applicable law. Either party may elect to submit the dispute to binding arbitration under Law No. 181-09 on Commercial Arbitration of the Dominican Republic instead of the ordinary courts referenced in Section 11. This clause doesn't prevent you from filing a complaint with an applicable consumer-protection authority.">
+          <T en="Any dispute arising from these Terms or your use of the site/portal will be resolved individually between you and Polaris Web Studio — not as part of a class, consolidated, or representative action of any kind, to the extent permitted by applicable law. Either party may elect to submit the dispute to binding arbitration under Law No. 181-09 on Commercial Arbitration of the Dominican Republic instead of the ordinary courts referenced in Section 11. This clause doesn't prevent you from filing a complaint with an applicable consumer-protection authority.">
             Cualquier disputa derivada de estos Términos o de tu uso del sitio/portal se resolverá
-            de forma individual entre tú y Polaris Web Studio -- no como parte de una demanda
+            de forma individual entre tú y Polaris Web Studio — no como parte de una demanda
             colectiva, consolidada o representativa de ningún tipo, en la medida permitida por la
             ley aplicable. Cualquiera de las partes puede optar por someter la disputa a arbitraje
             vinculante conforme a la Ley No. 181-09 sobre Arbitraje Comercial de la República
@@ -538,9 +538,9 @@ function TermsContent() {
 
       <Section heading={<T en="13. Changes to these terms">13. Cambios a estos términos</T>}>
         <p>
-          <T en="We may update these terms as our services evolve. Changes apply to new quotes accepted after the update -- an already-accepted quote is governed by the terms in effect when you accepted it.">
+          <T en="We may update these terms as our services evolve. Changes apply to new quotes accepted after the update — an already-accepted quote is governed by the terms in effect when you accepted it.">
             Podemos actualizar estos términos a medida que evolucionan nuestros servicios. Los
-            cambios aplican a cotizaciones nuevas aceptadas después de la actualización -- una
+            cambios aplican a cotizaciones nuevas aceptadas después de la actualización — una
             cotización ya aceptada se rige por los términos vigentes al momento en que la
             aceptaste.
           </T>
@@ -612,8 +612,8 @@ function CookieSettingsPanel({ onClose }: { onClose: () => void }) {
                   <T en="Essential">Esenciales</T>
                 </p>
                 <p className="text-[11px] text-[var(--color-text-tertiary)] mt-0.5">
-                  <T en="Always active -- the site can't work without them.">
-                    Siempre activas -- el sitio no puede funcionar sin ellas.
+                  <T en="Always active — the site can't work without them.">
+                    Siempre activas — el sitio no puede funcionar sin ellas.
                   </T>
                 </p>
               </div>
@@ -711,7 +711,7 @@ function CookiesContent() {
               </tr>
               <tr>
                 <td className="py-2 pr-4"><T en="Cookie preference record">Registro de preferencia de cookies</T></td>
-                <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice) and, together with our server, keeps a record of it as evidence in case we ever need to demonstrate it -- using a random identifier not tied to your name or account.">Recuerda tu preferencia de cookies (esta elección) y, junto con nuestro servidor, guarda un registro de ella como evidencia por si hace falta demostrarla -- mediante un identificador aleatorio no vinculado a tu nombre ni cuenta.</T></td>
+                <td className="py-2 pr-4"><T en="Remembers your cookie preference (this exact choice) and, together with our server, keeps a record of it as evidence in case we ever need to demonstrate it — using a random identifier not tied to your name or account.">Recuerda tu preferencia de cookies (esta elección) y, junto con nuestro servidor, guarda un registro de ella como evidencia por si hace falta demostrarla — mediante un identificador aleatorio no vinculado a tu nombre ni cuenta.</T></td>
                 <td className="py-2"><T en="Until you change it">Hasta que lo cambies</T></td>
               </tr>
             </tbody>
@@ -753,10 +753,10 @@ function CookiesContent() {
 
       <Section heading={<T en="4. Third-party cookies outside our control">4. Cookies de terceros fuera de nuestro control</T>}>
         <p>
-          <T en="If you use our meeting scheduler or pay an invoice through our online payment provider, those services may set their own cookies according to their own policies, independently of your choice on our banner -- we don't control this. We recommend checking those providers' own cookie/privacy policies if you have questions.">
+          <T en="If you use our meeting scheduler or pay an invoice through our online payment provider, those services may set their own cookies according to their own policies, independently of your choice on our banner — we don't control this. We recommend checking those providers' own cookie/privacy policies if you have questions.">
             Si usas nuestro agendador de reuniones o pagas una factura a través de nuestro
             proveedor de pagos en línea, esos servicios pueden poner sus propias cookies según sus
-            propias políticas, independientemente de tu elección en nuestro banner -- esto no lo
+            propias políticas, independientemente de tu elección en nuestro banner — esto no lo
             controlamos nosotros. Te recomendamos revisar las políticas de cookies/privacidad
             propias de esos proveedores si tienes dudas.
           </T>

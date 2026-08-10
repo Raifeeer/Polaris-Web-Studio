@@ -207,7 +207,7 @@ function ProjectImageCarousel({
                 poster={previewPoster}
                 cornerBg="var(--color-surface-base)"
                 aspectRatio="1200/750"
-                ariaLabel={`${projectName} -- desktop`}
+                ariaLabel={`${projectName} — desktop`}
               />
             ) : img.type === "mobile" && mobileVideo ? (
               <AutoResumeVideo
@@ -217,12 +217,12 @@ function ProjectImageCarousel({
                 cornerBg="var(--color-surface-base)"
                 aspectRatio="560/1212"
                 maxWidthPx={240}
-                ariaLabel={`${projectName} -- mobile`}
+                ariaLabel={`${projectName} — mobile`}
               />
             ) : (
               <img
                 src={img.src}
-                alt={`${projectName} -- ${img.type}`}
+                alt={`${projectName} — ${img.type}`}
                 loading="lazy"
                 className={
                   img.type === "mobile"

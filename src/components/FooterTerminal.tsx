@@ -71,8 +71,8 @@ export default function FooterTerminal() {
         break;
       case "whoami":
         output = es
-          ? "visitante@polarisweb.studio -- con buen criterio para elegir estudio."
-          : "visitor@polarisweb.studio -- with good taste in web studios.";
+          ? "visitante@polarisweb.studio — con buen criterio para elegir estudio."
+          : "visitor@polarisweb.studio — with good taste in web studios.";
         break;
       case "stack":
         output = "React 19 · TypeScript · Vite 6 · Tailwind CSS v4 · Firebase · Express";
@@ -80,8 +80,8 @@ export default function FooterTerminal() {
       case "services":
       case "servicios":
         output = es
-          ? "Destello $299 · Constelación $699 · Nova $1,299 -- ver /servicios"
-          : "Flash $299 · Constellation $699 · Nova $1,299 -- see /servicios";
+          ? "Destello $299 · Constelación $699 · Nova $1,299 — ver /servicios"
+          : "Flash $299 · Constellation $699 · Nova $1,299 — see /servicios";
         break;
       case "cotizar":
       case "quote":
@@ -122,8 +122,8 @@ export default function FooterTerminal() {
         break;
       case "uptime":
         output = es
-          ? "Este estudio no se cae -- 100% uptime, café ilimitado."
-          : "This studio doesn't go down -- 100% uptime, unlimited coffee.";
+          ? "Este estudio no se cae — 100% uptime, café ilimitado."
+          : "This studio doesn't go down — 100% uptime, unlimited coffee.";
         break;
       case "history":
         output = history.length
@@ -139,8 +139,8 @@ export default function FooterTerminal() {
       case "cd":
       case "cd ..":
         output = es
-          ? "No hay a dónde ir -- ya estás en el mejor directorio."
-          : "Nowhere to go -- you're already in the best directory.";
+          ? "No hay a dónde ir — ya estás en el mejor directorio."
+          : "Nowhere to go — you're already in the best directory.";
         break;
       case "coffee":
         output = [
@@ -191,7 +191,7 @@ export default function FooterTerminal() {
         break;
       case "banner":
       case "polaris --version":
-        output = `${BANNER.trim()}\n${es ? "v1.0 -- ingeniería digital de precisión" : "v1.0 -- precision digital engineering"}`;
+        output = `${BANNER.trim()}\n${es ? "v1.0 — ingeniería digital de precisión" : "v1.0 — precision digital engineering"}`;
         break;
       case "wordpress":
         output = es

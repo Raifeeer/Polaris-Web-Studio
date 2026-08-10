@@ -35,9 +35,9 @@ export default function Testimonials() {
             <ExternalLink size={18} className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] transition-colors shrink-0" />
           </div>
           <p className="text-[var(--color-text-secondary)] leading-relaxed text-sm">
-            <T en="A tour reservation platform with real-time capacity control, automatic references, and PayPal payments -- live and processing bookings today.">
+            <T en="A tour reservation platform with real-time capacity control, automatic references, and PayPal payments — live and processing bookings today.">
               Plataforma de reservas de excursiones con control de cupo en
-              tiempo real, referencias automáticas y pagos con PayPal -- en
+              tiempo real, referencias automáticas y pagos con PayPal — en
               producción, procesando reservas hoy.
             </T>
           </p>

@@ -2405,7 +2405,7 @@ export default function ClientDashboard() {
       const clientUser = isAdmin
         ? data?.clients?.find((c: any) => c.id === project?.clientUserId)
         : null;
-      const clientName = isAdmin ? (clientUser?.name || " -- ") : (user?.name || " -- ");
+      const clientName = isAdmin ? (clientUser?.name || " — ") : (user?.name || " — ");
       const clientEmail = isAdmin ? clientUser?.email : user?.email;
       const clientPhone = isAdmin ? (clientUser as any)?.phone : (user as any)?.phone;
 
@@ -2422,7 +2422,7 @@ export default function ClientDashboard() {
             label: tr("Factura invalidada", "Invoice voided"),
             detail: inv.paypalRefundId ? `${tr("Reembolsada vía PayPal", "Refunded via PayPal")} (Ref: ${inv.paypalRefundId})` : tr("Sin cobro asociado", "No charge associated"),
           }
-        : { label: "PayPal", detail: tr("Pendiente -- disponible para pagar en el portal del cliente", "Pending -- available to pay in the client portal") };
+        : { label: "PayPal", detail: tr("Pendiente — disponible para pagar en el portal del cliente", "Pending — available to pay in the client portal") };
 
       const statusLabel = (inv.status === "paid" ? tr("Pagada", "Paid") : inv.status === "void" ? tr("Invalidada", "Voided") : tr("Pendiente", "Pending")).toUpperCase();
       const statusColors = inv.status === "paid"
@@ -2449,7 +2449,7 @@ export default function ClientDashboard() {
       // página termina con dimensiones físicas totalmente distintas a las pedidas (bug
       // real encontrado en vivo: una factura corta salía "cuadrada" en vez de tamaño Carta).
       const PAGE_W = 816; // 8.5in a 96dpi
-      const PAGE_H = 1056; // 11in a 96dpi -- tamaño Carta fijo, como cualquier factura real
+      const PAGE_H = 1056; // 11in a 96dpi — tamaño Carta fijo, como cualquier factura real
       const MARGIN = 56;
       const RIGHT = PAGE_W - MARGIN;
       const FOOTER_H = 64;
@@ -2531,7 +2531,7 @@ export default function ClientDashboard() {
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(pt(11));
       pdf.setTextColor(INK[0], INK[1], INK[2]);
-      pdf.text(project?.name || " -- ", col1X, c1y);
+      pdf.text(project?.name || " — ", col1X, c1y);
 
       let c2y = infoY;
       label(tr("Fecha de emisión", "Issue Date"), col2X, c2y);
@@ -3739,7 +3739,7 @@ export default function ClientDashboard() {
                               <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato de servicio</div>
                               <div className="text-xs text-[var(--color-text-secondary)]">
                                 {(clientProject as any).contractStatus === "signed"
-                                  ? "Firmado -- puedes descargar tu copia cuando quieras."
+                                  ? "Firmado — puedes descargar tu copia cuando quieras."
                                   : "Revisa y firma el contrato antes de que tu proyecto avance."}
                               </div>
                             </div>
@@ -4562,7 +4562,7 @@ export default function ClientDashboard() {
                                   POL-{new Date().getFullYear()}-###
                                 </span>
                                 <span className="text-[10px] text-[var(--color-text-tertiary)] truncate">
- -- generado automáticamente
+ — generado automáticamente
                                 </span>
                               </div>
                             </div>
@@ -5676,7 +5676,7 @@ export default function ClientDashboard() {
                       GitHub Webhook Secret
                     </p>
                     <p className="text-[11px] text-[var(--color-text-tertiary)] mb-3">
-                      Genera un secret seguro. Es el mismo para todos los repos de clientes -- solo necesitas generarlo una vez.
+                      Genera un secret seguro. Es el mismo para todos los repos de clientes — solo necesitas generarlo una vez.
                     </p>
                   </div>
 
@@ -5922,7 +5922,7 @@ export default function ClientDashboard() {
                       </svg>
                     </div>
                     <p className="text-xs text-[var(--color-text-secondary)]">
-                      Hola {user?.name?.split(" ")[0]}! Conozco todo tu proyecto -- progreso, entregables, facturas, contrato, últimos cambios y reuniones. Pregúntame lo que necesites.
+                      Hola {user?.name?.split(" ")[0]}! Conozco todo tu proyecto — progreso, entregables, facturas, contrato, últimos cambios y reuniones. Pregúntame lo que necesites.
                     </p>
                     <div className="flex flex-wrap gap-1.5 justify-center pt-2 mt-4">
                       {[
@@ -6093,7 +6093,7 @@ export default function ClientDashboard() {
                   {contractStep === "legal-info" && (
                     <div className="space-y-4 overflow-y-auto">
                       <p className="text-xs text-[var(--color-text-secondary)]">
-                        Antes de firmar necesitamos tu cédula o pasaporte y tu domicilio -- se usan solo para identificarte en el contrato.
+                        Antes de firmar necesitamos tu cédula o pasaporte y tu domicilio — se usan solo para identificarte en el contrato.
                       </p>
                       <div className="space-y-2">
                         <label className="block text-xs font-bold text-[var(--color-text-secondary)]">Cédula o pasaporte <span className="text-red-500">*</span></label>
@@ -6303,7 +6303,7 @@ export default function ClientDashboard() {
 
                   {contractStep === "done" && (
                     <div className="text-center py-8 space-y-3">
-                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado -- te llegará una copia por correo.</div>
+                      <div className="text-sm font-bold text-[var(--color-text-primary)]">Firmado — te llegará una copia por correo.</div>
                       <button
                         type="button"
                         onClick={() => setShowContractModal(false)}

@@ -403,10 +403,10 @@ export default function LandingPage() {
         </T>
       ),
       a: (
-        <T en="Every package includes a post-launch warranty (30 to 90 days depending on the plan) to fix anything that doesn't match what we agreed on -- at no extra cost.">
+        <T en="Every package includes a post-launch warranty (30 to 90 days depending on the plan) to fix anything that doesn't match what we agreed on — at no extra cost.">
           Todos los paquetes incluyen una garantía post-lanzamiento (de 30 a 90
           días según el plan) para corregir cualquier cosa que no coincida con
-          lo acordado -- sin costo adicional.
+          lo acordado — sin costo adicional.
         </T>
       ),
     },

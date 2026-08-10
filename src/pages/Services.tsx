@@ -466,8 +466,8 @@ export default function Services() {
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
       desc: (
-        <T en="A focused, effective landing page -- up to 5 sections, designed to convert from the first scroll.">
-          Una landing page enfocada y efectiva -- hasta 5 secciones, diseñada para convertir desde el primer scroll.
+        <T en="A focused, effective landing page — up to 5 sections, designed to convert from the first scroll.">
+          Una landing page enfocada y efectiva — hasta 5 secciones, diseñada para convertir desde el primer scroll.
         </T>
       ),
       originalPrice: 299,
@@ -527,8 +527,8 @@ export default function Services() {
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
       desc: (
-        <T en="Your complete digital presence -- a professional corporate website of up to 5 pages, built to grow.">
-          Tu presencia digital completa -- un sitio corporativo profesional de hasta 5 páginas, construido para crecer.
+        <T en="Your complete digital presence — a professional corporate website of up to 5 pages, built to grow.">
+          Tu presencia digital completa — un sitio corporativo profesional de hasta 5 páginas, construido para crecer.
         </T>
       ),
       originalPrice: 699,
@@ -605,8 +605,8 @@ export default function Services() {
       name: <T en="Nova Package">Paquete Nova</T>,
       titleColor: "text-violet-500",
       desc: (
-        <T en="Your high-performance online store -- built to sell, scale and integrate AI.">
-          Tu tienda online de alto rendimiento -- construida para vender, escalar e integrar IA.
+        <T en="Your high-performance online store — built to sell, scale and integrate AI.">
+          Tu tienda online de alto rendimiento — construida para vender, escalar e integrar IA.
         </T>
       ),
       originalPrice: 1299,
@@ -713,7 +713,7 @@ export default function Services() {
 
   const Dash = () => (
     <div className="flex justify-center select-none">
-      <span className="text-[var(--color-text-tertiary)]"> -- </span>
+      <span className="text-[var(--color-text-tertiary)]"> — </span>
     </div>
   );
 
@@ -1506,8 +1506,8 @@ export default function Services() {
                     <T en="Monthly Performance Report">Informe mensual de rendimiento</T>
                   </div>
                   <p className="text-sm text-[var(--color-text-secondary)]">
-                    <T en="Every month you receive a personalized summary of how your website is performing -- visits, trends, and actionable recommendations. Nova clients also receive sales data.">
-                      Cada mes recibes un resumen personalizado del rendimiento de tu web -- visitas, tendencias y recomendaciones accionables. Los clientes Nova reciben además datos de ventas.
+                    <T en="Every month you receive a personalized summary of how your website is performing — visits, trends, and actionable recommendations. Nova clients also receive sales data.">
+                      Cada mes recibes un resumen personalizado del rendimiento de tu web — visitas, tendencias y recomendaciones accionables. Los clientes Nova reciben además datos de ventas.
                     </T>
                   </p>
                 </div>

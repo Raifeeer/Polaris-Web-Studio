@@ -141,7 +141,7 @@ export default function ConversationSearch({
         // absoluto.
         setSemanticIds(ranked.slice(0, 3).map((r) => r.id));
       } catch {
-        setSemanticIds(null); // sin red o función caída -- se queda con el filtro por substring
+        setSemanticIds(null); // sin red o función caída — se queda con el filtro por substring
       } finally {
         setSemanticLoading(false);
       }

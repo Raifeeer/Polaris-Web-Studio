@@ -748,8 +748,8 @@ export default function Portfolio() {
             </T>
           </p>
           <p className="text-[var(--color-text-tertiary)] text-xs font-medium max-w-xl mx-auto">
-            <T en="Demonstration projects -- client portfolio coming soon">
-              Proyectos de demostración -- portafolio de clientes próximamente
+            <T en="Demonstration projects — client portfolio coming soon">
+              Proyectos de demostración — portafolio de clientes próximamente
             </T>
           </p>
         </section>

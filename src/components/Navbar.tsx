@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
@@ -11,6 +11,7 @@ import { prefetchRoute } from "../lib/routePrefetch";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [companyOpen, setCompanyOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const location = useLocation();
@@ -71,6 +72,8 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isOpen]);
 
+  // Lista completa, usada tal cual solo en el menú mobile (ahí el espacio
+  // horizontal no es un problema, un dropdown solo agregaría un toque extra).
   const navLinks = [
     { name: <T en="Home">Inicio</T>, path: "/" },
     { name: <T en="About">Nosotros</T>, path: "/nosotros" },
@@ -81,6 +84,26 @@ export default function Navbar() {
     { name: <T en="Contact">Contacto</T>, path: "/contacto" },
     { name: <T en="Client Portal">Portal</T>, path: "/login" },
   ];
+
+  // En desktop, "Nosotros"/"Metodología"/"Blog" (descubrimiento/confianza,
+  // no de decisión inmediata) se agrupan bajo un dropdown "Compañía" -- deja
+  // más aire para el logo y mantiene visibles como links directos los que sí
+  // empujan conversión: Servicios, Portafolio, Contacto, Portal. Pedido
+  // explícito del usuario tras notar el logo apretado sin el botón de tema
+  // oscuro (ya retirado).
+  const desktopDirectLinks = [
+    { name: <T en="Home">Inicio</T>, path: "/" },
+    { name: <T en="Services">Servicios</T>, path: "/servicios" },
+    { name: <T en="Portfolio">Portafolio</T>, path: "/portafolio" },
+    { name: <T en="Contact">Contacto</T>, path: "/contacto" },
+    { name: <T en="Client Portal">Portal</T>, path: "/login" },
+  ];
+  const companyLinks = [
+    { name: <T en="About">Nosotros</T>, path: "/nosotros" },
+    { name: <T en="Process">Metodología</T>, path: "/proceso" },
+    { name: <T en="Blog">Blog</T>, path: "/blog" },
+  ];
+  const isCompanyActive = companyLinks.some((l) => l.path === location.pathname);
 
   return (
     <>
@@ -121,27 +144,85 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden lg:flex items-center gap-10 xl:gap-14 text-xs lg:text-xs xl:text-sm font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">
-          {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              onMouseEnter={() => prefetchRoute(link.path)}
-              onFocus={() => prefetchRoute(link.path)}
-              className={`hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
-                location.pathname === link.path
-                  ? "text-[var(--color-primary-base)]"
-                  : ""
+          <Link
+            to="/"
+            onMouseEnter={() => prefetchRoute("/")}
+            onFocus={() => prefetchRoute("/")}
+            className={`hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
+              location.pathname === "/" ? "text-[var(--color-primary-base)]" : ""
+            }`}
+          >
+            <T en="Home">Inicio</T>
+            {location.pathname === "/" && (
+              <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]" />
+            )}
+          </Link>
+
+          <div className="relative" onMouseEnter={() => setCompanyOpen(true)} onMouseLeave={() => setCompanyOpen(false)}>
+            <button
+              className={`flex items-center gap-1 hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
+                isCompanyActive ? "text-[var(--color-primary-base)]" : ""
               }`}
+              onFocus={() => setCompanyOpen(true)}
+              aria-expanded={companyOpen}
+              aria-haspopup="true"
             >
-              {link.name}
-              {location.pathname === link.path && (
-                <motion.div
-                  layoutId="nav-underline"
-                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]"
-                />
+              <T en="Company">Compañía</T>
+              <ChevronDown size={14} className={`transition-transform ${companyOpen ? "rotate-180" : ""}`} />
+              {isCompanyActive && (
+                <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]" />
               )}
-            </Link>
-          ))}
+            </button>
+            <AnimatePresence>
+              {companyOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                  transition={{ duration: 0.15, ease: "easeOut" }}
+                  className="absolute top-full left-1/2 -translate-x-1/2 mt-3 min-w-[180px] rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/98 backdrop-blur-xl shadow-lg p-1.5 origin-top"
+                >
+                  {companyLinks.map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onMouseEnter={() => prefetchRoute(link.path)}
+                      onClick={() => setCompanyOpen(false)}
+                      className={`block px-3 py-2 rounded-lg normal-case tracking-normal text-sm hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors ${
+                        location.pathname === link.path ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-secondary)]"
+                      }`}
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {desktopDirectLinks
+            .filter((link) => link.path !== "/")
+            .map((link) => (
+              <Link
+                key={link.path}
+                to={link.path}
+                onMouseEnter={() => prefetchRoute(link.path)}
+                onFocus={() => prefetchRoute(link.path)}
+                className={`hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
+                  location.pathname === link.path
+                    ? "text-[var(--color-primary-base)]"
+                    : ""
+                }`}
+              >
+                {link.name}
+                {location.pathname === link.path && (
+                  <motion.div
+                    layoutId="nav-underline"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]"
+                  />
+                )}
+              </Link>
+            ))}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">

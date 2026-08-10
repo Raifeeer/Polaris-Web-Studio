@@ -311,7 +311,7 @@ const addons = [
           <>
             Smart bot that converses and sells*
             <span className="block text-[10px] text-[var(--color-text-tertiary)] mt-1 font-normal">
-              *Not available for Nova -- already included
+              *Not available for Nova — already included
             </span>
           </>
         }
@@ -319,7 +319,7 @@ const addons = [
         <>
           Bot inteligente que conversa y vende*
           <span className="block text-[10px] text-[var(--color-text-tertiary)] mt-1 font-normal">
-            *No disponible para Nova -- ya incluido
+            *No disponible para Nova — ya incluido
           </span>
         </>
       </T>
@@ -358,8 +358,8 @@ const addons = [
     isMonthly: true,
     suffix: "/mes",
     desc: (
-      <T en="AI assistant integrated into your website, trained on your brand, products and tone -- generates descriptions, posts and replies just like your team would.">
-        Asistente IA integrado en tu web, entrenado con tu marca, productos y tono -- genera descripciones, posts y respuestas tal como lo haría tu equipo.
+      <T en="AI assistant integrated into your website, trained on your brand, products and tone — generates descriptions, posts and replies just like your team would.">
+        Asistente IA integrado en tu web, entrenado con tu marca, productos y tono — genera descripciones, posts y respuestas tal como lo haría tu equipo.
       </T>
     ),
     isAi: true,
@@ -439,7 +439,7 @@ const addons = [
 // Micro-copy de validación por addon
 const addonSocialProof: Record<string, { en: string; es: string }> = {
   ai_agent: {
-    en: "Intercom, Zendesk & HubSpot replaced their first-touch support with AI agents -- reducing response time by 80%.",
+    en: "Intercom, Zendesk & HubSpot replaced their first-touch support with AI agents — reducing response time by 80%.",
     es: "Intercom, Zendesk y HubSpot reemplazaron su soporte inicial con agentes IA, reduciendo el tiempo de respuesta un 80%.",
   },
   bot_fast: {
@@ -455,8 +455,8 @@ const addonSocialProof: Record<string, { en: string; es: string }> = {
     es: "Marcas que usan IA para sus descripciones publican contenido 5× más rápido.",
   },
   crm_connect: {
-    en: "Businesses that auto-capture leads into a CRM close 27% more deals -- HubSpot, Zoho, Sheets, Pipedrive and Salesforce supported.",
-    es: "Los negocios que capturan leads automáticamente en un CRM cierran un 27% más de ventas -- compatible con HubSpot, Zoho, Sheets, Pipedrive y Salesforce.",
+    en: "Businesses that auto-capture leads into a CRM close 27% more deals — HubSpot, Zoho, Sheets, Pipedrive and Salesforce supported.",
+    es: "Los negocios que capturan leads automáticamente en un CRM cierran un 27% más de ventas — compatible con HubSpot, Zoho, Sheets, Pipedrive y Salesforce.",
   },
   multilingual: {
     en: "Sites in 2+ languages reach 72% more buyers globally. Includes full architecture and translation for up to 3 languages (CSA Research).",
@@ -1199,18 +1199,18 @@ export default function WizardQuote() {
           en: "Showcase your menu, hours and location on a fast page that shows up on Google Maps when someone searches where to eat nearby."
         },
         corporate: {
-          es: "Presenta tu historia, menú completo, galería de platos y formulario de reservas -- todo lo que necesita un cliente antes de decidir dónde cenar.",
-          en: "Present your story, full menu, dish gallery and reservation form -- everything a client needs before deciding where to dine."
+          es: "Presenta tu historia, menú completo, galería de platos y formulario de reservas — todo lo que necesita un cliente antes de decidir dónde cenar.",
+          en: "Present your story, full menu, dish gallery and reservation form — everything a client needs before deciding where to dine."
         },
         ecommerce: {
-          es: "Vende combos, cajas de regalo o servicios de catering online con pago inmediato -- sin llamadas, sin intermediarios.",
-          en: "Sell combos, gift boxes or catering services online with instant payment -- no calls, no middlemen."
+          es: "Vende combos, cajas de regalo o servicios de catering online con pago inmediato — sin llamadas, sin intermediarios.",
+          en: "Sell combos, gift boxes or catering services online with instant payment — no calls, no middlemen."
         }
       },
       "Heladería": {
         landing: {
-          es: "Captura pedidos de temporada, lanza sabores nuevos y promociones especiales -- una página enfocada convierte mejor que un menú de navegación complejo.",
-          en: "Capture seasonal orders, launch new flavors and special promos -- a focused page converts better than complex navigation."
+          es: "Captura pedidos de temporada, lanza sabores nuevos y promociones especiales — una página enfocada convierte mejor que un menú de navegación complejo.",
+          en: "Capture seasonal orders, launch new flavors and special promos — a focused page converts better than complex navigation."
         },
         corporate: {
           es: "Muestra tus sabores, sucursales, historia de marca y eventos especiales. Ideal si tienes más de una ubicación o línea de productos.",
@@ -1223,12 +1223,12 @@ export default function WizardQuote() {
       },
       "Cafetería": {
         landing: {
-          es: "Una página limpia con tu menú, horarios y ubicación exacta -- perfecta para captar clientes que buscan 'cafetería cerca de mí' en Google.",
-          en: "A clean page with your menu, hours and exact location -- perfect for capturing clients searching 'coffee shop near me' on Google."
+          es: "Una página limpia con tu menú, horarios y ubicación exacta — perfecta para captar clientes que buscan 'cafetería cerca de mí' en Google.",
+          en: "A clean page with your menu, hours and exact location — perfect for capturing clients searching 'coffee shop near me' on Google."
         },
         corporate: {
-          es: "Presenta tu carta completa, galería de ambiente, opciones de trabajo remoto y eventos culturales -- construye comunidad alrededor de tu espacio.",
-          en: "Present your full menu, ambiance gallery, remote work options and cultural events -- build community around your space."
+          es: "Presenta tu carta completa, galería de ambiente, opciones de trabajo remoto y eventos culturales — construye comunidad alrededor de tu espacio.",
+          en: "Present your full menu, ambiance gallery, remote work options and cultural events — build community around your space."
         },
         ecommerce: {
           es: "Vende suscripciones de café, merchandise o paquetes de catering para oficinas directamente online.",
@@ -1237,22 +1237,22 @@ export default function WizardQuote() {
       },
       "Panadería": {
         landing: {
-          es: "Muestra tus productos estrella y recibe pedidos anticipados para fechas especiales -- sin perder ventas por no tener presencia online.",
-          en: "Showcase your star products and receive pre-orders for special dates -- without losing sales from having no online presence."
+          es: "Muestra tus productos estrella y recibe pedidos anticipados para fechas especiales — sin perder ventas por no tener presencia online.",
+          en: "Showcase your star products and receive pre-orders for special dates — without losing sales from having no online presence."
         },
         corporate: {
-          es: "Presenta tu historia artesanal, catálogo completo, opciones de entrega y pedidos para eventos -- genera confianza antes de la primera compra.",
-          en: "Present your artisan story, full catalog, delivery options and event orders -- build trust before the first purchase."
+          es: "Presenta tu historia artesanal, catálogo completo, opciones de entrega y pedidos para eventos — genera confianza antes de la primera compra.",
+          en: "Present your artisan story, full catalog, delivery options and event orders — build trust before the first purchase."
         },
         ecommerce: {
-          es: "Recibe pedidos con pago adelantado para bodas, cumpleaños y eventos corporativos -- automatiza tu proceso de ventas especiales.",
-          en: "Receive pre-paid orders for weddings, birthdays and corporate events -- automate your special sales process."
+          es: "Recibe pedidos con pago adelantado para bodas, cumpleaños y eventos corporativos — automatiza tu proceso de ventas especiales.",
+          en: "Receive pre-paid orders for weddings, birthdays and corporate events — automate your special sales process."
         }
       },
       "Bar / Lounge": {
         landing: {
-          es: "Captura reservas de mesas, promociona eventos nocturnos y muestra tu ambiente -- todo en una página que carga en segundos.",
-          en: "Capture table reservations, promote night events and show your vibe -- all on a page that loads in seconds."
+          es: "Captura reservas de mesas, promociona eventos nocturnos y muestra tu ambiente — todo en una página que carga en segundos.",
+          en: "Capture table reservations, promote night events and show your vibe — all on a page that loads in seconds."
         },
         corporate: {
           es: "Presenta tu carta de bebidas, galería de eventos pasados, política de reservas y calendario de actividades para fidelizar clientes.",
@@ -1265,16 +1265,16 @@ export default function WizardQuote() {
       },
       "Catering": {
         landing: {
-          es: "Una landing enfocada en captar leads de eventos -- formulario de cotización, galería de montajes y testimonios que cierran contratos.",
-          en: "A landing focused on capturing event leads -- quote form, setup gallery and testimonials that close contracts."
+          es: "Una landing enfocada en captar leads de eventos — formulario de cotización, galería de montajes y testimonios que cierran contratos.",
+          en: "A landing focused on capturing event leads — quote form, setup gallery and testimonials that close contracts."
         },
         corporate: {
           es: "Muestra tu portafolio de eventos, menús por tipo de servicio, equipo profesional y proceso de contratación paso a paso.",
           en: "Showcase your event portfolio, menus by service type, professional team and step-by-step hiring process."
         },
         ecommerce: {
-          es: "Ofrece paquetes de catering con precio fijo para empresas y eventos sociales -- el cliente paga y reserva sin necesidad de llamarte.",
-          en: "Offer fixed-price catering packages for companies and social events -- the client pays and books without needing to call you."
+          es: "Ofrece paquetes de catering con precio fijo para empresas y eventos sociales — el cliente paga y reserva sin necesidad de llamarte.",
+          en: "Offer fixed-price catering packages for companies and social events — the client pays and books without needing to call you."
         }
       },
       "Food Truck": {
@@ -1293,22 +1293,22 @@ export default function WizardQuote() {
       },
       "Repostería": {
         landing: {
-          es: "Muestra tus creaciones más llamativas y recibe pedidos personalizados -- una galería visual bien hecha vende sola.",
-          en: "Showcase your most eye-catching creations and receive custom orders -- a well-crafted visual gallery sells itself."
+          es: "Muestra tus creaciones más llamativas y recibe pedidos personalizados — una galería visual bien hecha vende sola.",
+          en: "Showcase your most eye-catching creations and receive custom orders — a well-crafted visual gallery sells itself."
         },
         corporate: {
           es: "Presenta tu portafolio completo, precios por categoría, proceso de pedido y testimonios de clientes satisfechos.",
           en: "Present your full portfolio, prices by category, ordering process and satisfied client testimonials."
         },
         ecommerce: {
-          es: "Recibe pedidos personalizados con pago adelantado para bodas, baby showers y eventos especiales -- sin mensajes de WhatsApp interminables.",
-          en: "Receive custom orders with advance payment for weddings, baby showers and special events -- without endless WhatsApp messages."
+          es: "Recibe pedidos personalizados con pago adelantado para bodas, baby showers y eventos especiales — sin mensajes de WhatsApp interminables.",
+          en: "Receive custom orders with advance payment for weddings, baby showers and special events — without endless WhatsApp messages."
         }
       },
       "Jugos & Smoothies": {
         landing: {
-          es: "Muestra tu menú, beneficios de cada ingrediente y ubicación -- capta clientes health-conscious que buscan opciones saludables cerca.",
-          en: "Show your menu, each ingredient's benefits and location -- capture health-conscious clients looking for healthy options nearby."
+          es: "Muestra tu menú, beneficios de cada ingrediente y ubicación — capta clientes health-conscious que buscan opciones saludables cerca.",
+          en: "Show your menu, each ingredient's benefits and location — capture health-conscious clients looking for healthy options nearby."
         },
         corporate: {
           es: "Presenta tu filosofía de alimentación saludable, menú completo, planes de detox y opciones de delivery para fidelizar clientes.",
@@ -1322,40 +1322,40 @@ export default function WizardQuote() {
       // SALUD, BELLEZA & BIENESTAR
       "Clínica": {
         landing: {
-          es: "Capta pacientes nuevos con una página clara que muestra tus especialidades, médicos y formulario de citas -- aparece en Google cuando buscan atención médica cerca.",
-          en: "Attract new patients with a clear page showing your specialties, doctors and appointment form -- appear on Google when they search for medical care nearby."
+          es: "Capta pacientes nuevos con una página clara que muestra tus especialidades, médicos y formulario de citas — aparece en Google cuando buscan atención médica cerca.",
+          en: "Attract new patients with a clear page showing your specialties, doctors and appointment form — appear on Google when they search for medical care nearby."
         },
         corporate: {
-          es: "Presenta tu equipo médico, especialidades, tecnología disponible y proceso de atención -- genera confianza antes de la primera consulta.",
-          en: "Present your medical team, specialties, available technology and care process -- build trust before the first consultation."
+          es: "Presenta tu equipo médico, especialidades, tecnología disponible y proceso de atención — genera confianza antes de la primera consulta.",
+          en: "Present your medical team, specialties, available technology and care process — build trust before the first consultation."
         },
         ecommerce: {
-          es: "Vende consultas online, chequeos preventivos y paquetes de salud con pago anticipado -- reduce las citas no atendidas.",
-          en: "Sell online consultations, preventive checkups and health packages with advance payment -- reduce no-show appointments."
+          es: "Vende consultas online, chequeos preventivos y paquetes de salud con pago anticipado — reduce las citas no atendidas.",
+          en: "Sell online consultations, preventive checkups and health packages with advance payment — reduce no-show appointments."
         }
       },
       "Farmacia": {
         landing: {
-          es: "Muestra tu ubicación, horario extendido y servicios especiales -- captura clientes que buscan farmacia de turno cerca de ellos.",
-          en: "Show your location, extended hours and special services -- capture clients searching for a nearby on-duty pharmacy."
+          es: "Muestra tu ubicación, horario extendido y servicios especiales — captura clientes que buscan farmacia de turno cerca de ellos.",
+          en: "Show your location, extended hours and special services — capture clients searching for a nearby on-duty pharmacy."
         },
         corporate: {
           es: "Presenta tu catálogo de servicios, equipo, especialidades farmacéuticas y convenios con aseguradoras para diferenciarte de las cadenas grandes.",
           en: "Present your service catalog, team, pharmaceutical specialties and insurance agreements to stand out from large chains."
         },
         ecommerce: {
-          es: "Permite pedidos online de medicamentos con entrega a domicilio -- reduce filas y capta clientes que prefieren comprar desde casa.",
-          en: "Allow online medication orders with home delivery -- reduce lines and capture clients who prefer buying from home."
+          es: "Permite pedidos online de medicamentos con entrega a domicilio — reduce filas y capta clientes que prefieren comprar desde casa.",
+          en: "Allow online medication orders with home delivery — reduce lines and capture clients who prefer buying from home."
         }
       },
       "Gimnasio": {
         landing: {
-          es: "Capta nuevos miembros con una landing que muestra instalaciones, precios y una oferta de prueba gratuita -- con formulario de registro inmediato.",
-          en: "Capture new members with a landing showing facilities, prices and a free trial offer -- with immediate registration form."
+          es: "Capta nuevos miembros con una landing que muestra instalaciones, precios y una oferta de prueba gratuita — con formulario de registro inmediato.",
+          en: "Capture new members with a landing showing facilities, prices and a free trial offer — with immediate registration form."
         },
         corporate: {
-          es: "Muestra clases, entrenadores, horarios, testimonios de transformación y planes de membresía -- todo lo que necesita un prospecto para inscribirse.",
-          en: "Show classes, trainers, schedules, transformation testimonials and membership plans -- everything a prospect needs to sign up."
+          es: "Muestra clases, entrenadores, horarios, testimonios de transformación y planes de membresía — todo lo que necesita un prospecto para inscribirse.",
+          en: "Show classes, trainers, schedules, transformation testimonials and membership plans — everything a prospect needs to sign up."
         },
         ecommerce: {
           es: "Vende membresías mensuales, clases individuales y programas de entrenamiento online con pago automático recurrente.",
@@ -1364,40 +1364,40 @@ export default function WizardQuote() {
       },
       "Spa / Estética": {
         landing: {
-          es: "Muestra tus tratamientos estrella y captura reservas directamente -- sin llamadas, sin WhatsApp, con disponibilidad en tiempo real.",
-          en: "Show your star treatments and capture reservations directly -- no calls, no WhatsApp, with real-time availability."
+          es: "Muestra tus tratamientos estrella y captura reservas directamente — sin llamadas, sin WhatsApp, con disponibilidad en tiempo real.",
+          en: "Show your star treatments and capture reservations directly — no calls, no WhatsApp, with real-time availability."
         },
         corporate: {
           es: "Presenta tu menú de servicios completo, galería de resultados, equipo de terapeutas y paquetes especiales para parejas o grupos.",
           en: "Present your full service menu, results gallery, therapist team and special packages for couples or groups."
         },
         ecommerce: {
-          es: "Vende gift cards, paquetes de tratamientos y membresías de bienestar online -- el regalo perfecto que se compra desde el sofá.",
-          en: "Sell gift cards, treatment packages and wellness memberships online -- the perfect gift bought from the couch."
+          es: "Vende gift cards, paquetes de tratamientos y membresías de bienestar online — el regalo perfecto que se compra desde el sofá.",
+          en: "Sell gift cards, treatment packages and wellness memberships online — the perfect gift bought from the couch."
         }
       },
       "Psicología": {
         landing: {
-          es: "Una página profesional y empática que presenta tu especialidad y permite agendar una primera sesión -- reduce la fricción del primer paso.",
-          en: "A professional and empathetic page presenting your specialty and allowing a first session booking -- reduces the friction of the first step."
+          es: "Una página profesional y empática que presenta tu especialidad y permite agendar una primera sesión — reduce la fricción del primer paso.",
+          en: "A professional and empathetic page presenting your specialty and allowing a first session booking — reduces the friction of the first step."
         },
         corporate: {
           es: "Presenta tu enfoque terapéutico, especialidades, formación, modalidades de consulta presencial y online, y preguntas frecuentes.",
           en: "Present your therapeutic approach, specialties, training, in-person and online consultation modalities, and FAQs."
         },
         ecommerce: {
-          es: "Vende sesiones individuales, paquetes de terapia y talleres grupales con pago anticipado -- reduce cancelaciones de último momento.",
-          en: "Sell individual sessions, therapy packages and group workshops with advance payment -- reduce last-minute cancellations."
+          es: "Vende sesiones individuales, paquetes de terapia y talleres grupales con pago anticipado — reduce cancelaciones de último momento.",
+          en: "Sell individual sessions, therapy packages and group workshops with advance payment — reduce last-minute cancellations."
         }
       },
       "Nutrición": {
         landing: {
-          es: "Capta clientes que buscan cambios reales -- muestra tu metodología, resultados y agenda tu primera consulta directamente.",
-          en: "Capture clients looking for real changes -- show your methodology, results and book your first consultation directly."
+          es: "Capta clientes que buscan cambios reales — muestra tu metodología, resultados y agenda tu primera consulta directamente.",
+          en: "Capture clients looking for real changes — show your methodology, results and book your first consultation directly."
         },
         corporate: {
-          es: "Presenta tus planes nutricionales, especialidades, blog de recetas y testimonios de clientes -- construye autoridad en tu área.",
-          en: "Present your plans, specialties, recipe blog and client testimonials -- build authority in your field."
+          es: "Presenta tus planes nutricionales, especialidades, blog de recetas y testimonios de clientes — construye autoridad en tu área.",
+          en: "Present your plans, specialties, recipe blog and client testimonials — build authority in your field."
         },
         ecommerce: {
           es: "Vende planes de alimentación personalizados, consultas online y guías descargables con pago directo en tu web.",
@@ -1406,54 +1406,54 @@ export default function WizardQuote() {
       },
       "Odontología": {
         landing: {
-          es: "Capta pacientes nuevos mostrando tus tratamientos principales, antes/después y un botón directo para agendar -- genera confianza desde el primer clic.",
-          en: "Capture new patients by showing your main treatments, before/after results and a direct booking button -- build trust from the first click."
+          es: "Capta pacientes nuevos mostrando tus tratamientos principales, antes/después y un botón directo para agendar — genera confianza desde el primer clic.",
+          en: "Capture new patients by showing your main treatments, before/after results and a direct booking button — build trust from the first click."
         },
         corporate: {
-          es: "Presenta tu equipo, tecnología dental, especialidades, financiamiento disponible y galería de casos -- diferénciate de otras clínicas.",
-          en: "Present your team, dental technology, specialties, available financing and case gallery -- stand out from other clinics."
+          es: "Presenta tu equipo, tecnología dental, especialidades, financiamiento disponible y galería de casos — diferénciate de otras clínicas.",
+          en: "Present your team, dental technology, specialties, available financing and case gallery — stand out from other clinics."
         },
         ecommerce: {
-          es: "Vende blanqueamientos, limpiezas y chequeos preventivos con pago anticipado -- llena tu agenda sin depender solo del boca a boca.",
-          en: "Sell whitening treatments, cleanings and preventive checkups with advance payment -- fill your schedule without relying only on word of mouth."
+          es: "Vende blanqueamientos, limpiezas y chequeos preventivos con pago anticipado — llena tu agenda sin depender solo del boca a boca.",
+          en: "Sell whitening treatments, cleanings and preventive checkups with advance payment — fill your schedule without relying only on word of mouth."
         }
       },
       "Veterinaria": {
         landing: {
-          es: "Una página clara con tus servicios, horarios y mapa -- perfecta para captar dueños de mascotas que buscan atención veterinaria cerca.",
-          en: "A clear page with your services, hours and map -- perfect for capturing pet owners searching for nearby veterinary care."
+          es: "Una página clara con tus servicios, horarios y mapa — perfecta para captar dueños de mascotas que buscan atención veterinaria cerca.",
+          en: "A clear page with your services, hours and map — perfect for capturing pet owners searching for nearby veterinary care."
         },
         corporate: {
           es: "Muestra tu equipo veterinario, especialidades, servicios de emergencia, tienda de productos y blog de cuidado animal.",
           en: "Show your veterinary team, specialties, emergency services, product store and animal care blog."
         },
         ecommerce: {
-          es: "Vende consultas, vacunas, productos veterinarios y planes de salud para mascotas con pago online -- expande tu negocio más allá de tu local.",
-          en: "Sell consultations, vaccines, veterinary products and pet health plans with online payment -- expand your business beyond your location."
+          es: "Vende consultas, vacunas, productos veterinarios y planes de salud para mascotas con pago online — expande tu negocio más allá de tu local.",
+          en: "Sell consultations, vaccines, veterinary products and pet health plans with online payment — expand your business beyond your location."
         }
       },
       "Óptica": {
         landing: {
-          es: "Muestra tus marcas de armazones, servicios de examen visual y ubicación -- capta clientes que buscan óptica cerca antes de ir a un centro comercial.",
-          en: "Show your frame brands, vision exam services and location -- capture clients searching for a nearby optician before going to a mall."
+          es: "Muestra tus marcas de armazones, servicios de examen visual y ubicación — capta clientes que buscan óptica cerca antes de ir a un centro comercial.",
+          en: "Show your frame brands, vision exam services and location — capture clients searching for a nearby optician before going to a mall."
         },
         corporate: {
-          es: "Presenta tu catálogo completo, servicios de optometría, marcas disponibles, convenios y precios -- genera confianza antes de la visita.",
-          en: "Present your full catalog, optometry services, available brands, agreements and prices -- build trust before the visit."
+          es: "Presenta tu catálogo completo, servicios de optometría, marcas disponibles, convenios y precios — genera confianza antes de la visita.",
+          en: "Present your full catalog, optometry services, available brands, agreements and prices — build trust before the visit."
         },
         ecommerce: {
-          es: "Vende armazones, lentes de contacto y soluciones de limpieza online con envío a domicilio -- amplía tus ventas más allá de tu local.",
-          en: "Sell frames, contact lenses and cleaning solutions online with home delivery -- expand your sales beyond your location."
+          es: "Vende armazones, lentes de contacto y soluciones de limpieza online con envío a domicilio — amplía tus ventas más allá de tu local.",
+          en: "Sell frames, contact lenses and cleaning solutions online with home delivery — expand your sales beyond your location."
         }
       },
       "Centro de Yoga": {
         landing: {
-          es: "Capta nuevos estudiantes con tu clase de prueba gratuita, horarios y filosofía -- una página enfocada convierte curiosos en clientes comprometidos.",
-          en: "Capture new students with your free trial class, schedules and philosophy -- a focused page converts curious visitors into committed clients."
+          es: "Capta nuevos estudiantes con tu clase de prueba gratuita, horarios y filosofía — una página enfocada convierte curiosos en clientes comprometidos.",
+          en: "Capture new students with your free trial class, schedules and philosophy — a focused page converts curious visitors into committed clients."
         },
         corporate: {
-          es: "Presenta tus instructores, estilos de yoga, horarios completos, retiros y talleres especiales -- construye una comunidad alrededor de tu espacio.",
-          en: "Present your instructors, yoga styles, full schedules, retreats and special workshops -- build a community around your space."
+          es: "Presenta tus instructores, estilos de yoga, horarios completos, retiros y talleres especiales — construye una comunidad alrededor de tu espacio.",
+          en: "Present your instructors, yoga styles, full schedules, retreats and special workshops — build a community around your space."
         },
         ecommerce: {
           es: "Vende membresías, clases sueltas, retiros y material digital como guías de meditación con pago automático recurrente.",
@@ -1462,26 +1462,26 @@ export default function WizardQuote() {
       },
       "Salón de belleza": {
         landing: {
-          es: "Muestra tus servicios estrella, galería de trabajos y agenda citas directamente -- sin llamadas, sin mensajes de WhatsApp que se pierden.",
-          en: "Show your star services, work gallery and book appointments directly -- no calls, no WhatsApp messages that get lost."
+          es: "Muestra tus servicios estrella, galería de trabajos y agenda citas directamente — sin llamadas, sin mensajes de WhatsApp que se pierden.",
+          en: "Show your star services, work gallery and book appointments directly — no calls, no WhatsApp messages that get lost."
         },
         corporate: {
           es: "Presenta tu equipo de estilistas, servicios completos, galería antes/después, precios y sistema de reservas online.",
           en: "Present your stylist team, full services, before/after gallery, prices and online booking system."
         },
         ecommerce: {
-          es: "Vende gift cards, paquetes de novia y productos de cuidado capilar online -- genera ingresos más allá de las citas del día.",
-          en: "Sell gift cards, bridal packages and hair care products online -- generate revenue beyond daily appointments."
+          es: "Vende gift cards, paquetes de novia y productos de cuidado capilar online — genera ingresos más allá de las citas del día.",
+          en: "Sell gift cards, bridal packages and hair care products online — generate revenue beyond daily appointments."
         }
       },
       "Barbería": {
         landing: {
-          es: "Una página con tus cortes, precios, equipo y botón de reserva -- capta clientes que buscan barbería cerca y deciden con lo que ven.",
-          en: "A page with your cuts, prices, team and booking button -- capture clients searching for a nearby barbershop who decide based on what they see."
+          es: "Una página con tus cortes, precios, equipo y botón de reserva — capta clientes que buscan barbería cerca y deciden con lo que ven.",
+          en: "A page with your cuts, prices, team and booking button — capture clients searching for a nearby barbershop who decide based on what they see."
         },
         corporate: {
-          es: "Presenta tu identidad de marca, barberos, servicios, galería de trabajos y sistema de citas online -- diferénciate de la competencia.",
-          en: "Present your brand identity, barbers, services, work gallery and online appointment system -- stand out from the competition."
+          es: "Presenta tu identidad de marca, barberos, servicios, galería de trabajos y sistema de citas online — diferénciate de la competencia.",
+          en: "Present your brand identity, barbers, services, work gallery and online appointment system — stand out from the competition."
         },
         ecommerce: {
           es: "Vende productos de cuidado de barba, gift cards y paquetes de membresía mensual con descuento online.",
@@ -1490,8 +1490,8 @@ export default function WizardQuote() {
       },
       "Uñas & Manicure": {
         landing: {
-          es: "Muestra tus diseños más llamativos, precios y disponibilidad -- las clientas deciden con los ojos, una galería bien hecha llena tu agenda.",
-          en: "Show your most eye-catching designs, prices and availability -- clients decide with their eyes, a well-crafted gallery fills your schedule."
+          es: "Muestra tus diseños más llamativos, precios y disponibilidad — las clientas deciden con los ojos, una galería bien hecha llena tu agenda.",
+          en: "Show your most eye-catching designs, prices and availability — clients decide with their eyes, a well-crafted gallery fills your schedule."
         },
         corporate: {
           es: "Presenta tu catálogo completo de servicios, galería de trabajos, precios, equipo y sistema de reservas para varios clientes simultáneos.",
@@ -1504,8 +1504,8 @@ export default function WizardQuote() {
       },
       "Maquillaje": {
         landing: {
-          es: "Una galería impactante de tus trabajos más recientes con botón de reserva directo -- las novias y clientas de eventos contratan lo que ven.",
-          en: "An impactful gallery of your most recent work with direct booking button -- brides and event clients hire what they see."
+          es: "Una galería impactante de tus trabajos más recientes con botón de reserva directo — las novias y clientas de eventos contratan lo que ven.",
+          en: "An impactful gallery of your most recent work with direct booking button — brides and event clients hire what they see."
         },
         corporate: {
           es: "Presenta tu portafolio por categorías (novias, editoriales, eventos), formación, servicios a domicilio y proceso de contratación.",
@@ -1519,16 +1519,16 @@ export default function WizardQuote() {
       // MODA & RETAIL
       "Tienda de ropa": {
         landing: {
-          es: "Una página de lanzamiento o temporada con tus piezas estrella y botón de compra inmediata -- ideal para campañas y colecciones nuevas.",
-          en: "A launch or seasonal page with your star pieces and immediate purchase button -- ideal for campaigns and new collections."
+          es: "Una página de lanzamiento o temporada con tus piezas estrella y botón de compra inmediata — ideal para campañas y colecciones nuevas.",
+          en: "A launch or seasonal page with your star pieces and immediate purchase button — ideal for campaigns and new collections."
         },
         corporate: {
-          es: "Presenta tu marca, historia, colecciones, lookbook y puntos de venta -- construye identidad antes de que el cliente entre a la tienda.",
-          en: "Present your brand, story, collections, lookbook and sales points -- build identity before the client enters the store."
+          es: "Presenta tu marca, historia, colecciones, lookbook y puntos de venta — construye identidad antes de que el cliente entre a la tienda.",
+          en: "Present your brand, story, collections, lookbook and sales points — build identity before the client enters the store."
         },
         ecommerce: {
-          es: "Vende tu colección completa online con tallas, colores, filtros y pasarela de pago -- tu tienda abierta las 24 horas.",
-          en: "Sell your full collection online with sizes, colors, filters and payment gateway -- your store open 24 hours."
+          es: "Vende tu colección completa online con tallas, colores, filtros y pasarela de pago — tu tienda abierta las 24 horas.",
+          en: "Sell your full collection online with sizes, colors, filters and payment gateway — your store open 24 hours."
         }
       },
       "Calzado": {
@@ -1537,22 +1537,22 @@ export default function WizardQuote() {
           en: "Launch a collection or season with your best-selling models and a direct purchase or store visit CTA."
         },
         corporate: {
-          es: "Presenta tu catálogo por categorías, historia de marca, puntos de venta y lookbook editorial -- diferénciate de las zapatillas del mall.",
-          en: "Present your catalog by categories, brand story, sales points and editorial lookbook -- stand out from mall sneakers."
+          es: "Presenta tu catálogo por categorías, historia de marca, puntos de venta y lookbook editorial — diferénciate de las zapatillas del mall.",
+          en: "Present your catalog by categories, brand story, sales points and editorial lookbook — stand out from mall sneakers."
         },
         ecommerce: {
-          es: "Vende tu catálogo completo con filtros por talla, estilo y precio -- elimina la fricción entre el cliente y su próximo par.",
-          en: "Sell your full catalog with filters by size, style and price -- remove the friction between the client and their next pair."
+          es: "Vende tu catálogo completo con filtros por talla, estilo y precio — elimina la fricción entre el cliente y su próximo par.",
+          en: "Sell your full catalog with filters by size, style and price — remove the friction between the client and their next pair."
         }
       },
       "Accesorios": {
         landing: {
-          es: "Muestra tu colección más reciente y captura ventas inmediatas -- los accesorios son compras impulsivas que una buena imagen cierra sola.",
-          en: "Show your latest collection and capture immediate sales -- accessories are impulse purchases that a good image closes alone."
+          es: "Muestra tu colección más reciente y captura ventas inmediatas — los accesorios son compras impulsivas que una buena imagen cierra sola.",
+          en: "Show your latest collection and capture immediate sales — accessories are impulse purchases that a good image closes alone."
         },
         corporate: {
-          es: "Presenta tu universo de marca, colecciones, materiales y proceso artesanal -- ideal si tus piezas tienen una historia que contar.",
-          en: "Present your brand universe, collections, materials and artisan process -- ideal if your pieces have a story to tell."
+          es: "Presenta tu universo de marca, colecciones, materiales y proceso artesanal — ideal si tus piezas tienen una historia que contar.",
+          en: "Present your brand universe, collections, materials and artisan process — ideal if your pieces have a story to tell."
         },
         ecommerce: {
           es: "Vende bolsos, jewelry, cinturones y más con fotografías de alta calidad, variantes de color y envío nacional.",
@@ -1561,26 +1561,26 @@ export default function WizardQuote() {
       },
       "Joyería": {
         landing: {
-          es: "Una página de lujo que presenta tu colección estrella y captura solicitudes de piezas personalizadas -- la joyería se vende con la emoción, no con el precio.",
-          en: "A luxury page presenting your star collection and capturing custom piece requests -- jewelry sells with emotion, not price."
+          es: "Una página de lujo que presenta tu colección estrella y captura solicitudes de piezas personalizadas — la joyería se vende con la emoción, no con el precio.",
+          en: "A luxury page presenting your star collection and capturing custom piece requests — jewelry sells with emotion, not price."
         },
         corporate: {
           es: "Presenta tu historia artesanal, colecciones por categoría, materiales premium, proceso de personalización y galería de piezas únicas.",
           en: "Present your artisan story, collections by category, premium materials, customization process and unique pieces gallery."
         },
         ecommerce: {
-          es: "Vende piezas individuales y colecciones completas online con certificaciones, variantes y envío seguro -- tu joyería abierta 24/7.",
-          en: "Sell individual pieces and full collections online with certifications, variants and secure shipping -- your jewelry store open 24/7."
+          es: "Vende piezas individuales y colecciones completas online con certificaciones, variantes y envío seguro — tu joyería abierta 24/7.",
+          en: "Sell individual pieces and full collections online with certifications, variants and secure shipping — your jewelry store open 24/7."
         }
       },
       "Cosmética": {
         landing: {
-          es: "Lanza un producto o línea nueva con una página de conversión enfocada -- ideal para campañas de marketing digital y colaboraciones con influencers.",
-          en: "Launch a new product or line with a focused conversion page -- ideal for digital marketing campaigns and influencer collaborations."
+          es: "Lanza un producto o línea nueva con una página de conversión enfocada — ideal para campañas de marketing digital y colaboraciones con influencers.",
+          en: "Launch a new product or line with a focused conversion page — ideal for digital marketing campaigns and influencer collaborations."
         },
         corporate: {
-          es: "Presenta tu filosofía de marca, líneas de productos, ingredientes, proceso y valores -- los consumidores de cosmética compran la historia.",
-          en: "Present your brand philosophy, product lines, ingredients, process and values -- cosmetics consumers buy the story."
+          es: "Presenta tu filosofía de marca, líneas de productos, ingredientes, proceso y valores — los consumidores de cosmética compran la historia.",
+          en: "Present your brand philosophy, product lines, ingredients, process and values — cosmetics consumers buy the story."
         },
         ecommerce: {
           es: "Vende tu catálogo completo con rutinas recomendadas, reseñas de clientes y suscripciones de reabastecimiento automático.",
@@ -1589,8 +1589,8 @@ export default function WizardQuote() {
       },
       "Perfumería": {
         landing: {
-          es: "Una página sensorial que presenta tu fragancia estrella con historia, notas olfativas y opción de muestra gratuita -- convierte curiosos en compradores.",
-          en: "A sensory page presenting your star fragrance with story, olfactory notes and free sample option -- converts curious visitors into buyers."
+          es: "Una página sensorial que presenta tu fragancia estrella con historia, notas olfativas y opción de muestra gratuita — convierte curiosos en compradores.",
+          en: "A sensory page presenting your star fragrance with story, olfactory notes and free sample option — converts curious visitors into buyers."
         },
         corporate: {
           es: "Presenta tu catálogo de fragancias, historia de la marca, colecciones por familia olfativa y proceso de selección personalizada.",
@@ -1603,45 +1603,45 @@ export default function WizardQuote() {
       },
       "Ropa infantil": {
         landing: {
-          es: "Presenta tu colección de temporada con fotos de niños reales usando tus prendas -- los padres compran lo que imaginan en sus hijos.",
-          en: "Present your seasonal collection with photos of real children wearing your garments -- parents buy what they imagine on their children."
+          es: "Presenta tu colección de temporada con fotos de niños reales usando tus prendas — los padres compran lo que imaginan en sus hijos.",
+          en: "Present your seasonal collection with photos of real children wearing your garments — parents buy what they imagine on their children."
         },
         corporate: {
-          es: "Muestra tus colecciones por edad, materiales seguros, proceso de confección y valores de marca -- los padres investigan antes de comprar para sus hijos.",
-          en: "Show your collections by age, safe materials, manufacturing process and brand values -- parents research before buying for their children."
+          es: "Muestra tus colecciones por edad, materiales seguros, proceso de confección y valores de marca — los padres investigan antes de comprar para sus hijos.",
+          en: "Show your collections by age, safe materials, manufacturing process and brand values — parents research before buying for their children."
         },
         ecommerce: {
-          es: "Vende tu catálogo completo con filtros por talla, edad y temporada -- con políticas de cambio claras que dan confianza a los padres.",
-          en: "Sell your full catalog with filters by size, age and season -- with clear exchange policies that give parents confidence."
+          es: "Vende tu catálogo completo con filtros por talla, edad y temporada — con políticas de cambio claras que dan confianza a los padres.",
+          en: "Sell your full catalog with filters by size, age and season — with clear exchange policies that give parents confidence."
         }
       },
       "Uniformes": {
         landing: {
-          es: "Capta empresas y colegios que necesitan uniformes con una página enfocada en solicitud de cotización -- tu formulario es tu vendedor.",
-          en: "Capture companies and schools that need uniforms with a page focused on quote requests -- your form is your salesperson."
+          es: "Capta empresas y colegios que necesitan uniformes con una página enfocada en solicitud de cotización — tu formulario es tu vendedor.",
+          en: "Capture companies and schools that need uniforms with a page focused on quote requests — your form is your salesperson."
         },
         corporate: {
           es: "Presenta tus capacidades de producción, tipos de uniformes, clientes anteriores, materiales y proceso de personalización para cerrar contratos corporativos.",
           en: "Present your production capabilities, uniform types, previous clients, materials and customization process to close corporate contracts."
         },
         ecommerce: {
-          es: "Permite que empresas hagan pedidos de uniformes en cantidad con personalización online -- reduce el proceso de ventas de semanas a minutos.",
-          en: "Allow companies to place bulk uniform orders with online customization -- reduce the sales process from weeks to minutes."
+          es: "Permite que empresas hagan pedidos de uniformes en cantidad con personalización online — reduce el proceso de ventas de semanas a minutos.",
+          en: "Allow companies to place bulk uniform orders with online customization — reduce the sales process from weeks to minutes."
         }
       },
       // SERVICIOS PROFESIONALES
       "Abogado": {
         landing: {
-          es: "Una página profesional con tu especialidad, casos de éxito y formulario de consulta gratuita -- los clientes contratan abogados en los que confían.",
-          en: "A professional page with your specialty, success cases and free consultation form -- clients hire lawyers they trust."
+          es: "Una página profesional con tu especialidad, casos de éxito y formulario de consulta gratuita — los clientes contratan abogados en los que confían.",
+          en: "A professional page with your specialty, success cases and free consultation form — clients hire lawyers they trust."
         },
         corporate: {
-          es: "Presenta tu bufete, áreas de práctica, equipo de abogados, casos destacados y proceso de contratación -- construye autoridad legal online.",
-          en: "Present your firm, practice areas, lawyer team, highlighted cases and hiring process -- build legal authority online."
+          es: "Presenta tu bufete, áreas de práctica, equipo de abogados, casos destacados y proceso de contratación — construye autoridad legal online.",
+          en: "Present your firm, practice areas, lawyer team, highlighted cases and hiring process — build legal authority online."
         },
         ecommerce: {
-          es: "Vende consultas iniciales, revisiones de contratos y servicios legales estandarizados con pago online -- monetiza tu expertise sin llamadas.",
-          en: "Sell initial consultations, contract reviews and standardized legal services with online payment -- monetize your expertise without calls."
+          es: "Vende consultas iniciales, revisiones de contratos y servicios legales estandarizados con pago online — monetiza tu expertise sin llamadas.",
+          en: "Sell initial consultations, contract reviews and standardized legal services with online payment — monetize your expertise without calls."
         }
       },
       "Contador": {
@@ -1664,64 +1664,64 @@ export default function WizardQuote() {
           en: "An authority landing with your methodology, measurable results and CTA to book a free strategy session."
         },
         corporate: {
-          es: "Presenta tu expertise, casos de éxito, metodología de trabajo, servicios y testimonios de clientes -- vende tu conocimiento antes de la reunión.",
-          en: "Present your expertise, success cases, work methodology, services and client testimonials -- sell your knowledge before the meeting."
+          es: "Presenta tu expertise, casos de éxito, metodología de trabajo, servicios y testimonios de clientes — vende tu conocimiento antes de la reunión.",
+          en: "Present your expertise, success cases, work methodology, services and client testimonials — sell your knowledge before the meeting."
         },
         ecommerce: {
-          es: "Vende talleres, cursos, sesiones de consultoría y documentos estratégicos descargables -- escala tu impacto más allá de tu tiempo disponible.",
-          en: "Sell workshops, courses, consulting sessions and downloadable strategic documents -- scale your impact beyond your available time."
+          es: "Vende talleres, cursos, sesiones de consultoría y documentos estratégicos descargables — escala tu impacto más allá de tu tiempo disponible.",
+          en: "Sell workshops, courses, consulting sessions and downloadable strategic documents — scale your impact beyond your available time."
         }
       },
       "Arquitecto": {
         landing: {
-          es: "Un portafolio visual de tus proyectos más impresionantes con formulario de consulta -- los clientes contratan arquitectos por lo que han hecho.",
-          en: "A visual portfolio of your most impressive projects with consultation form -- clients hire architects for what they've done."
+          es: "Un portafolio visual de tus proyectos más impresionantes con formulario de consulta — los clientes contratan arquitectos por lo que han hecho.",
+          en: "A visual portfolio of your most impressive projects with consultation form — clients hire architects for what they've done."
         },
         corporate: {
-          es: "Presenta tu filosofía de diseño, portafolio completo por categorías, equipo, premios y proceso de trabajo -- diferénciate en un mercado visual.",
-          en: "Present your design philosophy, full portfolio by categories, team, awards and work process -- stand out in a visual market."
+          es: "Presenta tu filosofía de diseño, portafolio completo por categorías, equipo, premios y proceso de trabajo — diferénciate en un mercado visual.",
+          en: "Present your design philosophy, full portfolio by categories, team, awards and work process — stand out in a visual market."
         },
         ecommerce: {
-          es: "Vende consultas iniciales, planos estandarizados y servicios de diseño de interiores con cotización online -- captura leads calificados.",
-          en: "Sell initial consultations, standardized floor plans and interior design services with online quotes -- capture qualified leads."
+          es: "Vende consultas iniciales, planos estandarizados y servicios de diseño de interiores con cotización online — captura leads calificados.",
+          en: "Sell initial consultations, standardized floor plans and interior design services with online quotes — capture qualified leads."
         }
       },
       "Coach": {
         landing: {
-          es: "Tu historia de transformación personal + metodología + sesión gratuita de descubrimiento -- la landing más poderosa para coaches es la que conecta emocionalmente.",
-          en: "Your personal transformation story + methodology + free discovery session -- the most powerful landing for coaches is the one that connects emotionally."
+          es: "Tu historia de transformación personal + metodología + sesión gratuita de descubrimiento — la landing más poderosa para coaches es la que conecta emocionalmente.",
+          en: "Your personal transformation story + methodology + free discovery session — the most powerful landing for coaches is the one that connects emotionally."
         },
         corporate: {
-          es: "Presenta tus programas, metodología, certificaciones, podcast o blog y testimonios de clientes transformados -- construye una marca personal sólida.",
-          en: "Present your programs, methodology, certifications, podcast or blog and transformed client testimonials -- build a solid personal brand."
+          es: "Presenta tus programas, metodología, certificaciones, podcast o blog y testimonios de clientes transformados — construye una marca personal sólida.",
+          en: "Present your programs, methodology, certifications, podcast or blog and transformed client testimonials — build a solid personal brand."
         },
         ecommerce: {
-          es: "Vende programas de coaching grupales, cursos online, masterminds y recursos descargables -- escala tus ingresos sin multiplicar tus horas.",
-          en: "Sell group coaching programs, online courses, masterminds and downloadable resources -- scale your income without multiplying your hours."
+          es: "Vende programas de coaching grupales, cursos online, masterminds y recursos descargables — escala tus ingresos sin multiplicar tus horas.",
+          en: "Sell group coaching programs, online courses, masterminds and downloadable resources — scale your income without multiplying your hours."
         }
       },
       "Agencia de marketing": {
         landing: {
-          es: "Muestra tus resultados más impresionantes y captura leads listos para invertir -- las agencias se venden con números reales.",
-          en: "Show your most impressive results and capture leads ready to invest -- agencies sell with real numbers."
+          es: "Muestra tus resultados más impresionantes y captura leads listos para invertir — las agencias se venden con números reales.",
+          en: "Show your most impressive results and capture leads ready to invest — agencies sell with real numbers."
         },
         corporate: {
-          es: "Presenta tus servicios, casos de éxito por industria, equipo, metodología y stack de herramientas -- diferénciate en un mercado saturado.",
-          en: "Present your services, success cases by industry, team, methodology and tool stack -- stand out in a saturated market."
+          es: "Presenta tus servicios, casos de éxito por industria, equipo, metodología y stack de herramientas — diferénciate en un mercado saturado.",
+          en: "Present your services, success cases by industry, team, methodology and tool stack — stand out in a saturated market."
         },
         ecommerce: {
-          es: "Vende paquetes de servicios de marketing con precio fijo, auditorías digitales y cursos -- genera ingresos predecibles más allá de los proyectos.",
-          en: "Sell fixed-price marketing service packages, digital audits and courses -- generate predictable revenue beyond projects."
+          es: "Vende paquetes de servicios de marketing con precio fijo, auditorías digitales y cursos — genera ingresos predecibles más allá de los proyectos.",
+          en: "Sell fixed-price marketing service packages, digital audits and courses — generate predictable revenue beyond projects."
         }
       },
       "Fotografía": {
         landing: {
-          es: "Tu mejor trabajo en una galería impactante con botón directo de reserva -- en fotografía, la imagen vende sola si la presentas bien.",
-          en: "Your best work in an impactful gallery with direct booking button -- in photography, the image sells itself if you present it well."
+          es: "Tu mejor trabajo en una galería impactante con botón directo de reserva — en fotografía, la imagen vende sola si la presentas bien.",
+          en: "Your best work in an impactful gallery with direct booking button — in photography, the image sells itself if you present it well."
         },
         corporate: {
-          es: "Presenta tu portafolio por categorías (bodas, corporativo, producto), paquetes, proceso y testimonios -- construye confianza antes del primer contacto.",
-          en: "Present your portfolio by categories (weddings, corporate, product), packages, process and testimonials -- build trust before first contact."
+          es: "Presenta tu portafolio por categorías (bodas, corporativo, producto), paquetes, proceso y testimonios — construye confianza antes del primer contacto.",
+          en: "Present your portfolio by categories (weddings, corporate, product), packages, process and testimonials — build trust before first contact."
         },
         ecommerce: {
           es: "Vende sesiones fotográficas, álbumes digitales, prints y paquetes especiales con reserva y pago online anticipado.",
@@ -1730,12 +1730,12 @@ export default function WizardQuote() {
       },
       "Diseño gráfico": {
         landing: {
-          es: "Un portafolio visual que habla por sí solo con formulario de proyecto -- los diseñadores que muestran bien su trabajo no necesitan convencer, solo mostrar.",
-          en: "A visual portfolio that speaks for itself with project form -- designers who showcase their work well don't need to convince, just show."
+          es: "Un portafolio visual que habla por sí solo con formulario de proyecto — los diseñadores que muestran bien su trabajo no necesitan convencer, solo mostrar.",
+          en: "A visual portfolio that speaks for itself with project form — designers who showcase their work well don't need to convince, just show."
         },
         corporate: {
-          es: "Presenta tus servicios, proceso creativo, clientes anteriores, portafolio por industria y paquetes de branding -- posiciónate como experto.",
-          en: "Present your services, creative process, previous clients, portfolio by industry and branding packages -- position yourself as an expert."
+          es: "Presenta tus servicios, proceso creativo, clientes anteriores, portafolio por industria y paquetes de branding — posiciónate como experto.",
+          en: "Present your services, creative process, previous clients, portfolio by industry and branding packages — position yourself as an expert."
         },
         ecommerce: {
           es: "Vende templates, recursos gráficos, paquetes de branding y sesiones de diseño con entrega digital inmediata.",
@@ -1762,8 +1762,8 @@ export default function WizardQuote() {
           en: "Capture companies and residences needing security with a page that conveys trust, track record and quick quote form."
         },
         corporate: {
-          es: "Presenta tus servicios de seguridad, tipos de clientes, certificaciones, equipo y tecnología de monitoreo -- genera confianza institucional.",
-          en: "Present your security services, client types, certifications, team and monitoring technology -- build institutional trust."
+          es: "Presenta tus servicios de seguridad, tipos de clientes, certificaciones, equipo y tecnología de monitoreo — genera confianza institucional.",
+          en: "Present your security services, client types, certifications, team and monitoring technology — build institutional trust."
         },
         ecommerce: {
           es: "Vende paquetes de monitoreo mensual, instalación de cámaras y servicios de consultoría de seguridad con contratación online.",
@@ -1773,44 +1773,44 @@ export default function WizardQuote() {
       // INMOBILIARIO
       "Broker / Agente": {
         landing: {
-          es: "Tu diferenciador personal, propiedades destacadas y formulario de contacto directo -- en inmobiliario, la confianza en el agente es la venta.",
-          en: "Your personal differentiator, featured properties and direct contact form -- in real estate, trust in the agent is the sale."
+          es: "Tu diferenciador personal, propiedades destacadas y formulario de contacto directo — en inmobiliario, la confianza en el agente es la venta.",
+          en: "Your personal differentiator, featured properties and direct contact form — in real estate, trust in the agent is the sale."
         },
         corporate: {
-          es: "Presenta tu portafolio de propiedades, historial de ventas, área de especialización, equipo y proceso de trabajo -- construye tu marca personal inmobiliaria.",
-          en: "Present your property portfolio, sales history, area of specialization, team and work process -- build your real estate personal brand."
+          es: "Presenta tu portafolio de propiedades, historial de ventas, área de especialización, equipo y proceso de trabajo — construye tu marca personal inmobiliaria.",
+          en: "Present your property portfolio, sales history, area of specialization, team and work process — build your real estate personal brand."
         },
         ecommerce: {
-          es: "Publica propiedades con filtros avanzados, tours virtuales y formulario de visita -- captura leads calificados directamente en tu web.",
-          en: "Publish properties with advanced filters, virtual tours and visit form -- capture qualified leads directly on your website."
+          es: "Publica propiedades con filtros avanzados, tours virtuales y formulario de visita — captura leads calificados directamente en tu web.",
+          en: "Publish properties with advanced filters, virtual tours and visit form — capture qualified leads directly on your website."
         }
       },
       "Constructora": {
         landing: {
-          es: "Muestra tu proyecto estrella actual y captura interesados antes de que se llene -- las preventas inmobiliarias se ganan online.",
-          en: "Show your current star project and capture interested buyers before it fills up -- real estate pre-sales are won online."
+          es: "Muestra tu proyecto estrella actual y captura interesados antes de que se llene — las preventas inmobiliarias se ganan online.",
+          en: "Show your current star project and capture interested buyers before it fills up — real estate pre-sales are won online."
         },
         corporate: {
           es: "Presenta tu portafolio de proyectos terminados, en construcción y planificados, con especificaciones, equipo y proceso de compra.",
           en: "Present your portfolio of completed, under construction and planned projects, with specifications, team and purchasing process."
         },
         ecommerce: {
-          es: "Publica apartamentos y unidades disponibles con precio, planos y formulario de reserva con depósito online -- digitaliza tu proceso de preventa.",
-          en: "Publish available apartments and units with price, floor plans and reservation form with online deposit -- digitize your pre-sale process."
+          es: "Publica apartamentos y unidades disponibles con precio, planos y formulario de reserva con depósito online — digitaliza tu proceso de preventa.",
+          en: "Publish available apartments and units with price, floor plans and reservation form with online deposit — digitize your pre-sale process."
         }
       },
       "Alquiler vacacional": {
         landing: {
-          es: "Una página por propiedad con galería, amenidades, disponibilidad en tiempo real y botón de reserva directa -- sin comisiones de Airbnb.",
-          en: "A page per property with gallery, amenities, real-time availability and direct booking button -- no Airbnb commissions."
+          es: "Una página por propiedad con galería, amenidades, disponibilidad en tiempo real y botón de reserva directa — sin comisiones de Airbnb.",
+          en: "A page per property with gallery, amenities, real-time availability and direct booking button — no Airbnb commissions."
         },
         corporate: {
-          es: "Presenta todas tus propiedades disponibles, reviews de huéspedes, políticas y experiencias locales -- construye una marca de hospitalidad propia.",
-          en: "Present all your available properties, guest reviews, policies and local experiences -- build your own hospitality brand."
+          es: "Presenta todas tus propiedades disponibles, reviews de huéspedes, políticas y experiencias locales — construye una marca de hospitalidad propia.",
+          en: "Present all your available properties, guest reviews, policies and local experiences — build your own hospitality brand."
         },
         ecommerce: {
-          es: "Sistema completo de reservas con calendario, pagos online, confirmación automática y gestión de huéspedes -- tu Airbnb propio sin comisiones.",
-          en: "Complete booking system with calendar, online payments, automatic confirmation and guest management -- your own Airbnb without commissions."
+          es: "Sistema completo de reservas con calendario, pagos online, confirmación automática y gestión de huéspedes — tu Airbnb propio sin comisiones.",
+          en: "Complete booking system with calendar, online payments, automatic confirmation and guest management — your own Airbnb without commissions."
         }
       },
       "Administración de propiedades": {
@@ -1823,8 +1823,8 @@ export default function WizardQuote() {
           en: "Present your management services, managed properties portfolio, team, technology and monthly reports you provide."
         },
         ecommerce: {
-          es: "Vende planes de administración de propiedades con precio mensual fijo y contratación online -- escala tu cartera sin escalar tu equipo.",
-          en: "Sell property management plans with fixed monthly price and online contracting -- scale your portfolio without scaling your team."
+          es: "Vende planes de administración de propiedades con precio mensual fijo y contratación online — escala tu cartera sin escalar tu equipo.",
+          en: "Sell property management plans with fixed monthly price and online contracting — scale your portfolio without scaling your team."
         }
       },
       "Tasación": {
@@ -1837,19 +1837,19 @@ export default function WizardQuote() {
           en: "Present your credentials, types of appraisals, methodology, clients you serve and report delivery process."
         },
         ecommerce: {
-          es: "Vende informes de tasación por tipo de propiedad con pago online y entrega digital -- elimina el proceso manual de cotización.",
-          en: "Sell appraisal reports by property type with online payment and digital delivery -- eliminate the manual quoting process."
+          es: "Vende informes de tasación por tipo de propiedad con pago online y entrega digital — elimina el proceso manual de cotización.",
+          en: "Sell appraisal reports by property type with online payment and digital delivery — eliminate the manual quoting process."
         }
       },
       // EDUCACIÓN & CAPACITACIÓN
       "Academia de idiomas": {
         landing: {
-          es: "Capta estudiantes con una clase de prueba gratuita y muestra tus niveles, horarios y metodología -- la decisión de aprender un idioma empieza online.",
-          en: "Capture students with a free trial class and show your levels, schedules and methodology -- the decision to learn a language starts online."
+          es: "Capta estudiantes con una clase de prueba gratuita y muestra tus niveles, horarios y metodología — la decisión de aprender un idioma empieza online.",
+          en: "Capture students with a free trial class and show your levels, schedules and methodology — the decision to learn a language starts online."
         },
         corporate: {
-          es: "Presenta tus idiomas disponibles, profesores nativos, metodología, horarios, precios y testimonios de alumnos -- construye confianza académica.",
-          en: "Present your available languages, native teachers, methodology, schedules, prices and student testimonials -- build academic trust."
+          es: "Presenta tus idiomas disponibles, profesores nativos, metodología, horarios, precios y testimonios de alumnos — construye confianza académica.",
+          en: "Present your available languages, native teachers, methodology, schedules, prices and student testimonials — build academic trust."
         },
         ecommerce: {
           es: "Vende cursos por nivel, suscripciones mensuales de clases y material didáctico descargable con matrícula online inmediata.",
@@ -1858,16 +1858,16 @@ export default function WizardQuote() {
       },
       "Tutor": {
         landing: {
-          es: "Tu especialidad, metodología y disponibilidad en una página que captura solicitudes de clases directamente -- sin intermediarios.",
-          en: "Your specialty, methodology and availability on a page that captures class requests directly -- no middlemen."
+          es: "Tu especialidad, metodología y disponibilidad en una página que captura solicitudes de clases directamente — sin intermediarios.",
+          en: "Your specialty, methodology and availability on a page that captures class requests directly — no middlemen."
         },
         corporate: {
           es: "Presenta tus áreas de tutoría, niveles que atiendes, metodología, historial académico y testimonios de estudiantes y padres.",
           en: "Present your tutoring areas, levels you serve, methodology, academic background and student and parent testimonials."
         },
         ecommerce: {
-          es: "Vende paquetes de clases, sesiones individuales y materiales de estudio con pago online -- llena tu agenda sin llamadas.",
-          en: "Sell class packages, individual sessions and study materials with online payment -- fill your schedule without calls."
+          es: "Vende paquetes de clases, sesiones individuales y materiales de estudio con pago online — llena tu agenda sin llamadas.",
+          en: "Sell class packages, individual sessions and study materials with online payment — fill your schedule without calls."
         }
       },
       "Escuela": {
@@ -1880,14 +1880,14 @@ export default function WizardQuote() {
           en: "Present your educational model, academic levels, extracurricular activities, teaching staff, facilities and admission process."
         },
         ecommerce: {
-          es: "Permite pagos de matrícula, mensualidades y actividades extracurriculares online -- reduce filas y simplifica la gestión de cobros.",
-          en: "Allow online tuition, monthly fee and extracurricular activity payments -- reduce lines and simplify collection management."
+          es: "Permite pagos de matrícula, mensualidades y actividades extracurriculares online — reduce filas y simplifica la gestión de cobros.",
+          en: "Allow online tuition, monthly fee and extracurricular activity payments — reduce lines and simplify collection management."
         }
       },
       "Curso online": {
         landing: {
-          es: "Una landing de lanzamiento con módulos, bonos, testimonios y precio con urgencia -- el 80% de la venta de cursos online ocurre en la landing.",
-          en: "A launch landing with modules, bonuses, testimonials and urgency pricing -- 80% of online course sales happen on the landing."
+          es: "Una landing de lanzamiento con módulos, bonos, testimonios y precio con urgencia — el 80% de la venta de cursos online ocurre en la landing.",
+          en: "A launch landing with modules, bonuses, testimonials and urgency pricing — 80% of online course sales happen on the landing."
         },
         corporate: {
           es: "Presenta tu catálogo completo de cursos, metodología de enseñanza, instructor, comunidad de alumnos y resultados obtenidos.",
@@ -1904,12 +1904,12 @@ export default function WizardQuote() {
           en: "Capture parents searching for a nearby daycare with a page that conveys safety, warmth and direct visit form."
         },
         corporate: {
-          es: "Presenta tu filosofía de cuidado, instalaciones, equipo educativo, horarios, tarifas y actividades diarias -- los padres necesitan confiar antes de dejar a sus hijos.",
-          en: "Present your care philosophy, facilities, educational team, schedules, rates and daily activities -- parents need to trust before leaving their children."
+          es: "Presenta tu filosofía de cuidado, instalaciones, equipo educativo, horarios, tarifas y actividades diarias — los padres necesitan confiar antes de dejar a sus hijos.",
+          en: "Present your care philosophy, facilities, educational team, schedules, rates and daily activities — parents need to trust before leaving their children."
         },
         ecommerce: {
-          es: "Permite pagos de mensualidad y actividades online con facturación automática -- simplifica la gestión administrativa de tu guardería.",
-          en: "Allow monthly fee and activity payments online with automatic billing -- simplify your daycare's administrative management."
+          es: "Permite pagos de mensualidad y actividades online con facturación automática — simplifica la gestión administrativa de tu guardería.",
+          en: "Allow monthly fee and activity payments online with automatic billing — simplify your daycare's administrative management."
         }
       },
       "Centro de capacitación": {
@@ -1922,85 +1922,85 @@ export default function WizardQuote() {
           en: "Present your program catalog, modalities (in-person, virtual, blended), certified instructors, corporate clients and methodology."
         },
         ecommerce: {
-          es: "Vende talleres públicos, cursos abiertos y certificaciones online con inscripción y pago inmediato -- llena tus grupos sin llamadas de ventas.",
-          en: "Sell public workshops, open courses and online certifications with immediate registration and payment -- fill your groups without sales calls."
+          es: "Vende talleres públicos, cursos abiertos y certificaciones online con inscripción y pago inmediato — llena tus grupos sin llamadas de ventas.",
+          en: "Sell public workshops, open courses and online certifications with immediate registration and payment — fill your groups without sales calls."
         }
       },
       "Música & Arte": {
         landing: {
-          es: "Una página que muestra tu talento con muestras de trabajo y captura inscripciones para clases -- el arte se vende con lo que se ve y escucha.",
-          en: "A page showcasing your talent with work samples and capturing class registrations -- art sells with what is seen and heard."
+          es: "Una página que muestra tu talento con muestras de trabajo y captura inscripciones para clases — el arte se vende con lo que se ve y escucha.",
+          en: "A page showcasing your talent with work samples and capturing class registrations — art sells with what is seen and heard."
         },
         corporate: {
           es: "Presenta tus programas por instrumento o disciplina, profesores, metodología, galería de presentaciones y sistema de inscripciones.",
           en: "Present your programs by instrument or discipline, teachers, methodology, performance gallery and enrollment system."
         },
         ecommerce: {
-          es: "Vende clases individuales, paquetes mensuales y materiales didácticos online -- escala tu enseñanza más allá de tu espacio físico.",
-          en: "Sell individual classes, monthly packages and teaching materials online -- scale your teaching beyond your physical space."
+          es: "Vende clases individuales, paquetes mensuales y materiales didácticos online — escala tu enseñanza más allá de tu espacio físico.",
+          en: "Sell individual classes, monthly packages and teaching materials online — scale your teaching beyond your physical space."
         }
       },
       // TURISMO, EVENTOS & HOSPITALIDAD
       "Hotel": {
         landing: {
-          es: "Una página de reserva directa con galería, tarifas y disponibilidad en tiempo real -- cada reserva directa que capturas elimina la comisión de Booking.com.",
-          en: "A direct booking page with gallery, rates and real-time availability -- every direct booking you capture eliminates the Booking.com commission."
+          es: "Una página de reserva directa con galería, tarifas y disponibilidad en tiempo real — cada reserva directa que capturas elimina la comisión de Booking.com.",
+          en: "A direct booking page with gallery, rates and real-time availability — every direct booking you capture eliminates the Booking.com commission."
         },
         corporate: {
-          es: "Presenta todas tus habitaciones, amenidades, restaurante, eventos disponibles, ubicación y sistema de reservas -- tu alternativa a depender de OTAs.",
-          en: "Present all your rooms, amenities, restaurant, available events, location and booking system -- your alternative to depending on OTAs."
+          es: "Presenta todas tus habitaciones, amenidades, restaurante, eventos disponibles, ubicación y sistema de reservas — tu alternativa a depender de OTAs.",
+          en: "Present all your rooms, amenities, restaurant, available events, location and booking system — your alternative to depending on OTAs."
         },
         ecommerce: {
-          es: "Sistema completo de reservas con calendario, pago online, confirmación automática y gestión de habitaciones -- elimina la comisión de intermediarios.",
-          en: "Complete booking system with calendar, online payment, automatic confirmation and room management -- eliminate intermediary commissions."
+          es: "Sistema completo de reservas con calendario, pago online, confirmación automática y gestión de habitaciones — elimina la comisión de intermediarios.",
+          en: "Complete booking system with calendar, online payment, automatic confirmation and room management — eliminate intermediary commissions."
         }
       },
       "Hostal": {
         landing: {
-          es: "Muestra tu ambiente único, precios competitivos y ubicación estratégica -- los viajeros independientes deciden rápido si la foto y el precio convencen.",
-          en: "Show your unique vibe, competitive prices and strategic location -- independent travelers decide fast if the photo and price convince."
+          es: "Muestra tu ambiente único, precios competitivos y ubicación estratégica — los viajeros independientes deciden rápido si la foto y el precio convencen.",
+          en: "Show your unique vibe, competitive prices and strategic location — independent travelers decide fast if the photo and price convince."
         },
         corporate: {
-          es: "Presenta tus habitaciones, áreas comunes, actividades, reviews de huéspedes y sistema de reservas -- compite con las grandes cadenas con autenticidad.",
-          en: "Present your rooms, common areas, activities, guest reviews and booking system -- compete with large chains through authenticity."
+          es: "Presenta tus habitaciones, áreas comunes, actividades, reviews de huéspedes y sistema de reservas — compite con las grandes cadenas con autenticidad.",
+          en: "Present your rooms, common areas, activities, guest reviews and booking system — compete with large chains through authenticity."
         },
         ecommerce: {
-          es: "Reservas directas con pago online, paquetes de experiencias locales y tours incluidos -- elimina las comisiones de Hostelworld o Booking.",
-          en: "Direct bookings with online payment, local experience packages and included tours -- eliminate Hostelworld or Booking commissions."
+          es: "Reservas directas con pago online, paquetes de experiencias locales y tours incluidos — elimina las comisiones de Hostelworld o Booking.",
+          en: "Direct bookings with online payment, local experience packages and included tours — eliminate Hostelworld or Booking commissions."
         }
       },
       "Tour operador": {
         landing: {
-          es: "Presenta tu tour estrella con itinerario detallado, fotos reales y botón de reserva directa -- los turistas deciden en minutos si el tour es visual.",
-          en: "Present your star tour with detailed itinerary, real photos and direct booking button -- tourists decide in minutes if the tour is visual."
+          es: "Presenta tu tour estrella con itinerario detallado, fotos reales y botón de reserva directa — los turistas deciden en minutos si el tour es visual.",
+          en: "Present your star tour with detailed itinerary, real photos and direct booking button — tourists decide in minutes if the tour is visual."
         },
         corporate: {
           es: "Presenta tu catálogo completo de tours, destinos, guías, reviews y sistema de reservas con disponibilidad en tiempo real.",
           en: "Present your full tour catalog, destinations, guides, reviews and booking system with real-time availability."
         },
         ecommerce: {
-          es: "Vende tours, excursiones y paquetes completos con reserva y pago online -- captura turistas que investigan y compran desde su hotel.",
-          en: "Sell tours, excursions and complete packages with online booking and payment -- capture tourists who research and buy from their hotel."
+          es: "Vende tours, excursiones y paquetes completos con reserva y pago online — captura turistas que investigan y compran desde su hotel.",
+          en: "Sell tours, excursions and complete packages with online booking and payment — capture tourists who research and buy from their hotel."
         }
       },
       "Renta de vehículos": {
         landing: {
-          es: "Muestra tu flota disponible con precios claros y formulario de reserva directa -- los viajeros comparan y reservan en el mismo momento.",
-          en: "Show your available fleet with clear prices and direct reservation form -- travelers compare and book at the same moment."
+          es: "Muestra tu flota disponible con precios claros y formulario de reserva directa — los viajeros comparan y reservan en el mismo momento.",
+          en: "Show your available fleet with clear prices and direct reservation form — travelers compare and book at the same moment."
         },
         corporate: {
-          es: "Presenta tu flota completa por categoría, tarifas, condiciones, cobertura y proceso de entrega -- diferénciate de las grandes cadenas con servicio personalizado.",
-          en: "Present your full fleet by category, rates, conditions, coverage and delivery process -- stand out from large chains with personalized service."
+          es: "Presenta tu flota completa por categoría, tarifas, condiciones, cobertura y proceso de entrega — diferénciate de las grandes cadenas con servicio personalizado.",
+          en: "Present your full fleet by category, rates, conditions, coverage and delivery process — stand out from large chains with personalized service."
         },
         ecommerce: {
-          es: "Reservas online con selección de fechas, vehículo y extras -- pago seguro y confirmación inmediata sin esperar llamadas.",
-          en: "Online bookings with date, vehicle and extras selection -- secure payment and immediate confirmation without waiting for calls."
+          es: "Reservas online con selección de fechas, vehículo y extras — pago seguro y confirmación inmediata sin esperar llamadas.",
+          en: "Online bookings with date, vehicle and extras selection — secure payment and immediate confirmation without waiting for calls."
         }
       },
       "Excursiones": {
         landing: {
-          es: "Una página por destino con galería impactante, itinerario y botón de reserva -- los turistas en Punta Cana buscan excursiones desde su teléfono.",
-          en: "A page per destination with impactful gallery, itinerary and booking button -- tourists in Punta Cana search for excursions from their phones."
+          es: "Una página por destino con galería impactante, itinerario y botón de reserva — los turistas en Punta Cana buscan excursiones desde su teléfono.",
+          en: "A page per destination with impactful gallery, itinerary and booking button — tourists in Punta Cana search for excursions from their phones."
         },
         corporate: {
           es: "Presenta todo tu catálogo de excursiones con destinos, duración, precio, inclusiones y sistema de reservas multilingüe.",
@@ -2013,26 +2013,26 @@ export default function WizardQuote() {
       },
       "Agencia de viajes": {
         landing: {
-          es: "Capta viajeros con una oferta específica de temporada -- luna de miel, viaje de grupo o destino particular -- con formulario de cotización directa.",
-          en: "Capture travelers with a specific seasonal offer -- honeymoon, group trip or particular destination -- with direct quote form."
+          es: "Capta viajeros con una oferta específica de temporada — luna de miel, viaje de grupo o destino particular — con formulario de cotización directa.",
+          en: "Capture travelers with a specific seasonal offer — honeymoon, group trip or particular destination — with direct quote form."
         },
         corporate: {
           es: "Presenta tus destinos, tipos de viajes, equipo de asesores, clientes satisfechos y proceso de planificación personalizada.",
           en: "Present your destinations, trip types, advisor team, satisfied clients and personalized planning process."
         },
         ecommerce: {
-          es: "Vende paquetes de viaje con precio cerrado, reserva online y pago seguro -- capta clientes que quieren planificar sin llamadas.",
-          en: "Sell closed-price travel packages with online booking and secure payment -- capture clients who want to plan without calls."
+          es: "Vende paquetes de viaje con precio cerrado, reserva online y pago seguro — capta clientes que quieren planificar sin llamadas.",
+          en: "Sell closed-price travel packages with online booking and secure payment — capture clients who want to plan without calls."
         }
       },
       "DJ": {
         landing: {
-          es: "Tu mix más impactante, galería de eventos y formulario de contratación directa -- los DJ se contratan por lo que suenan y lo que se ve en sus eventos.",
-          en: "Your most impactful mix, event gallery and direct booking form -- DJs are hired for how they sound and what is seen at their events."
+          es: "Tu mix más impactante, galería de eventos y formulario de contratación directa — los DJ se contratan por lo que suenan y lo que se ve en sus eventos.",
+          en: "Your most impactful mix, event gallery and direct booking form — DJs are hired for how they sound and what is seen at their events."
         },
         corporate: {
-          es: "Presenta tu catálogo de géneros, equipamiento, eventos pasados, rider técnico y paquetes disponibles -- profesionaliza tu imagen como artista.",
-          en: "Present your genre catalog, equipment, past events, technical rider and available packages -- professionalize your artist image."
+          es: "Presenta tu catálogo de géneros, equipamiento, eventos pasados, rider técnico y paquetes disponibles — profesionaliza tu imagen como artista.",
+          en: "Present your genre catalog, equipment, past events, technical rider and available packages — professionalize your artist image."
         },
         ecommerce: {
           es: "Vende paquetes de DJ para bodas, cumpleaños y eventos corporativos con cotización online y anticipo para reservar fecha.",
@@ -2041,26 +2041,26 @@ export default function WizardQuote() {
       },
       "Fotografía de eventos": {
         landing: {
-          es: "Tu mejor trabajo de bodas o eventos en una galería que enamora -- con botón de reserva directa para la fecha disponible más próxima.",
-          en: "Your best wedding or event work in a gallery that captivates -- with direct booking button for the nearest available date."
+          es: "Tu mejor trabajo de bodas o eventos en una galería que enamora — con botón de reserva directa para la fecha disponible más próxima.",
+          en: "Your best wedding or event work in a gallery that captivates — with direct booking button for the nearest available date."
         },
         corporate: {
           es: "Presenta tu portafolio por tipo de evento, paquetes con y sin álbum, proceso de trabajo y política de entrega de fotos.",
           en: "Present your portfolio by event type, packages with and without album, work process and photo delivery policy."
         },
         ecommerce: {
-          es: "Vende paquetes fotográficos con reserva de fecha y anticipo online -- llena tu agenda con meses de anticipación sin gestión manual.",
-          en: "Sell photography packages with date reservation and online advance payment -- fill your schedule months ahead without manual management."
+          es: "Vende paquetes fotográficos con reserva de fecha y anticipo online — llena tu agenda con meses de anticipación sin gestión manual.",
+          en: "Sell photography packages with date reservation and online advance payment — fill your schedule months ahead without manual management."
         }
       },
       "Decoración": {
         landing: {
-          es: "Una galería de tus montajes más impresionantes con formulario de cotización directa -- en decoración, la foto lo es todo.",
-          en: "A gallery of your most impressive setups with direct quote form -- in decoration, the photo is everything."
+          es: "Una galería de tus montajes más impresionantes con formulario de cotización directa — en decoración, la foto lo es todo.",
+          en: "A gallery of your most impressive setups with direct quote form — in decoration, the photo is everything."
         },
         corporate: {
-          es: "Presenta tu portafolio por tipo de evento, equipo, proveedores aliados, proceso y testimonios -- construye confianza para los momentos más importantes.",
-          en: "Present your portfolio by event type, team, allied suppliers, process and testimonials -- build trust for the most important moments."
+          es: "Presenta tu portafolio por tipo de evento, equipo, proveedores aliados, proceso y testimonios — construye confianza para los momentos más importantes.",
+          en: "Present your portfolio by event type, team, allied suppliers, process and testimonials — build trust for the most important moments."
         },
         ecommerce: {
           es: "Vende paquetes de decoración por tipo de evento con cotización base online y anticipo para reservar tu fecha.",
@@ -2069,8 +2069,8 @@ export default function WizardQuote() {
       },
       "Animación infantil": {
         landing: {
-          es: "Fotos de niños felices, personajes disponibles y botón de reserva directa -- los padres contratan animadores en minutos si lo que ven les da confianza.",
-          en: "Photos of happy children, available characters and direct booking button -- parents hire entertainers in minutes if what they see builds trust."
+          es: "Fotos de niños felices, personajes disponibles y botón de reserva directa — los padres contratan animadores en minutos si lo que ven les da confianza.",
+          en: "Photos of happy children, available characters and direct booking button — parents hire entertainers in minutes if what they see builds trust."
         },
         corporate: {
           es: "Presenta tus personajes, servicios completos, paquetes por duración, galería de eventos y testimonios de padres satisfechos.",
@@ -2083,59 +2083,59 @@ export default function WizardQuote() {
       },
       "Salón de fiestas": {
         landing: {
-          es: "Muestra tus espacios, capacidad, amenidades y disponibilidad -- capta reservas de cumpleaños, bodas y eventos corporativos directamente.",
-          en: "Show your spaces, capacity, amenities and availability -- capture birthday, wedding and corporate event bookings directly."
+          es: "Muestra tus espacios, capacidad, amenidades y disponibilidad — capta reservas de cumpleaños, bodas y eventos corporativos directamente.",
+          en: "Show your spaces, capacity, amenities and availability — capture birthday, wedding and corporate event bookings directly."
         },
         corporate: {
           es: "Presenta todos tus salones, paquetes de catering incluido, servicios adicionales, galería de eventos pasados y proceso de reserva.",
           en: "Present all your halls, included catering packages, additional services, past event gallery and reservation process."
         },
         ecommerce: {
-          es: "Sistema de reservas con selección de fecha, salón y extras -- anticipo online para confirmar y reducir cancelaciones de último momento.",
-          en: "Booking system with date, hall and extras selection -- online advance to confirm and reduce last-minute cancellations."
+          es: "Sistema de reservas con selección de fecha, salón y extras — anticipo online para confirmar y reducir cancelaciones de último momento.",
+          en: "Booking system with date, hall and extras selection — online advance to confirm and reduce last-minute cancellations."
         }
       },
       "Producción audiovisual": {
         landing: {
-          es: "Tu reel más impactante con los primeros 30 segundos que cautivan -- y formulario de proyecto para captar clientes corporativos.",
-          en: "Your most impactful reel with the first 30 seconds that captivate -- and project form to capture corporate clients."
+          es: "Tu reel más impactante con los primeros 30 segundos que cautivan — y formulario de proyecto para captar clientes corporativos.",
+          en: "Your most impactful reel with the first 30 seconds that captivate — and project form to capture corporate clients."
         },
         corporate: {
           es: "Presenta tus servicios por tipo (video corporativo, publicidad, documental), equipo técnico, clientes y proceso de producción.",
           en: "Present your services by type (corporate video, advertising, documentary), technical team, clients and production process."
         },
         ecommerce: {
-          es: "Vende paquetes de producción de video con precio base para YouTube, redes sociales y eventos -- capta clientes con presupuesto definido.",
-          en: "Sell video production packages with base price for YouTube, social media and events -- capture clients with defined budgets."
+          es: "Vende paquetes de producción de video con precio base para YouTube, redes sociales y eventos — capta clientes con presupuesto definido.",
+          en: "Sell video production packages with base price for YouTube, social media and events — capture clients with defined budgets."
         }
       },
       // TECNOLOGÍA & AGENCIAS
       "Startup": {
         landing: {
-          es: "Tu propuesta de valor en una página que convierte -- para validar el mercado, captar early adopters e inversores antes del lanzamiento.",
-          en: "Your value proposition on a converting page -- to validate the market, capture early adopters and investors before launch."
+          es: "Tu propuesta de valor en una página que convierte — para validar el mercado, captar early adopters e inversores antes del lanzamiento.",
+          en: "Your value proposition on a converting page — to validate the market, capture early adopters and investors before launch."
         },
         corporate: {
-          es: "Presenta tu producto, equipo fundador, tracción actual, modelo de negocio y roadmap -- genera confianza para clientes e inversores.",
-          en: "Present your product, founding team, current traction, business model and roadmap -- build trust for clients and investors."
+          es: "Presenta tu producto, equipo fundador, tracción actual, modelo de negocio y roadmap — genera confianza para clientes e inversores.",
+          en: "Present your product, founding team, current traction, business model and roadmap — build trust for clients and investors."
         },
         ecommerce: {
-          es: "Vende acceso anticipado, planes de suscripción y servicios adicionales online -- monetiza desde el día uno sin esperar el producto final.",
-          en: "Sell early access, subscription plans and additional services online -- monetize from day one without waiting for the final product."
+          es: "Vende acceso anticipado, planes de suscripción y servicios adicionales online — monetiza desde el día uno sin esperar el producto final.",
+          en: "Sell early access, subscription plans and additional services online — monetize from day one without waiting for the final product."
         }
       },
       "SaaS": {
         landing: {
-          es: "La landing más importante de tu empresa -- debe comunicar el valor en 5 segundos, mostrar el producto y convertir visitantes en trials.",
-          en: "The most important page of your company -- must communicate value in 5 seconds, show the product and convert visitors into trials."
+          es: "La landing más importante de tu empresa — debe comunicar el valor en 5 segundos, mostrar el producto y convertir visitantes en trials.",
+          en: "The most important page of your company — must communicate value in 5 seconds, show the product and convert visitors into trials."
         },
         corporate: {
-          es: "Presenta todas tus funcionalidades, integraciones, planes de precio, casos de uso por industria y testimonios de clientes -- tu web es tu vendedor principal.",
-          en: "Present all your features, integrations, pricing plans, use cases by industry and client testimonials -- your website is your main salesperson."
+          es: "Presenta todas tus funcionalidades, integraciones, planes de precio, casos de uso por industria y testimonios de clientes — tu web es tu vendedor principal.",
+          en: "Present all your features, integrations, pricing plans, use cases by industry and client testimonials — your website is your main salesperson."
         },
         ecommerce: {
-          es: "Planes de suscripción con pago online, upgrades automáticos y portal de cliente -- la infraestructura de monetización de tu SaaS.",
-          en: "Subscription plans with online payment, automatic upgrades and client portal -- the monetization infrastructure of your SaaS."
+          es: "Planes de suscripción con pago online, upgrades automáticos y portal de cliente — la infraestructura de monetización de tu SaaS.",
+          en: "Subscription plans with online payment, automatic upgrades and client portal — the monetization infrastructure of your SaaS."
         }
       },
       "App móvil": {
@@ -2148,22 +2148,22 @@ export default function WizardQuote() {
           en: "Present all your app features, screenshots, user reviews, use cases and direct buttons to App Store and Google Play."
         },
         ecommerce: {
-          es: "Vende suscripciones premium, funciones adicionales y acceso anticipado directamente desde tu web -- sin las comisiones del 30% de las tiendas.",
-          en: "Sell premium subscriptions, additional features and early access directly from your website -- without the 30% commission from app stores."
+          es: "Vende suscripciones premium, funciones adicionales y acceso anticipado directamente desde tu web — sin las comisiones del 30% de las tiendas.",
+          en: "Sell premium subscriptions, additional features and early access directly from your website — without the 30% commission from app stores."
         }
       },
       "Agencia digital": {
         landing: {
-          es: "Muestra tus mejores resultados en números reales y captura leads listos para invertir -- las agencias digitales se contratan por resultados probados.",
-          en: "Show your best results in real numbers and capture leads ready to invest -- digital agencies are hired for proven results."
+          es: "Muestra tus mejores resultados en números reales y captura leads listos para invertir — las agencias digitales se contratan por resultados probados.",
+          en: "Show your best results in real numbers and capture leads ready to invest — digital agencies are hired for proven results."
         },
         corporate: {
-          es: "Presenta tus servicios, casos de éxito por industria, equipo, metodología y stack tecnológico -- diferénciate en un mercado saturado de agencias.",
-          en: "Present your services, success cases by industry, team, methodology and technology stack -- stand out in a market saturated with agencies."
+          es: "Presenta tus servicios, casos de éxito por industria, equipo, metodología y stack tecnológico — diferénciate en un mercado saturado de agencias.",
+          en: "Present your services, success cases by industry, team, methodology and technology stack — stand out in a market saturated with agencies."
         },
         ecommerce: {
-          es: "Vende paquetes de servicios con precio fijo, auditorías digitales y cursos -- genera ingresos predecibles más allá de los proyectos por proyecto.",
-          en: "Sell fixed-price service packages, digital audits and courses -- generate predictable revenue beyond project-by-project work."
+          es: "Vende paquetes de servicios con precio fijo, auditorías digitales y cursos — genera ingresos predecibles más allá de los proyectos por proyecto.",
+          en: "Sell fixed-price service packages, digital audits and courses — generate predictable revenue beyond project-by-project work."
         }
       },
       "Soporte técnico": {
@@ -2190,8 +2190,8 @@ export default function WizardQuote() {
           en: "Present your catalog by category, brands you carry, after-sale services, warranties and corporate purchase process."
         },
         ecommerce: {
-          es: "Vende tu inventario completo online con especificaciones técnicas, comparativas y envío a domicilio -- tu tienda abierta 24/7.",
-          en: "Sell your full inventory online with technical specifications, comparisons and home delivery -- your store open 24/7."
+          es: "Vende tu inventario completo online con especificaciones técnicas, comparativas y envío a domicilio — tu tienda abierta 24/7.",
+          en: "Sell your full inventory online with technical specifications, comparisons and home delivery — your store open 24/7."
         }
       }
     };
@@ -2204,46 +2204,46 @@ export default function WizardQuote() {
     }> = {
       food: {
         landing: { es: "Captura clientes con una página enfocada en tu producto o servicio principal y un CTA directo de contacto o reserva.", en: "Capture clients with a page focused on your main product or service and a direct contact or booking CTA." },
-        corporate: { es: "Muestra todos tus servicios, historia, equipo y formas de contacto -- una presencia completa que genera confianza antes de la primera visita.", en: "Show all your services, story, team and contact methods -- a complete presence that builds trust before the first visit." },
+        corporate: { es: "Muestra todos tus servicios, historia, equipo y formas de contacto — una presencia completa que genera confianza antes de la primera visita.", en: "Show all your services, story, team and contact methods — a complete presence that builds trust before the first visit." },
         ecommerce: { es: "Vende tus productos o servicios online con pago inmediato y gestión automática de pedidos.", en: "Sell your products or services online with immediate payment and automatic order management." }
       },
       health: {
         landing: { es: "Capta pacientes o clientes nuevos con una página que muestra tu especialidad, equipo y formulario de cita directa.", en: "Capture new patients or clients with a page showing your specialty, team and direct appointment form." },
-        corporate: { es: "Presenta tus servicios completos, equipo profesional, instalaciones y proceso de atención -- genera confianza antes del primer contacto.", en: "Present your full services, professional team, facilities and care process -- build trust before first contact." },
+        corporate: { es: "Presenta tus servicios completos, equipo profesional, instalaciones y proceso de atención — genera confianza antes del primer contacto.", en: "Present your full services, professional team, facilities and care process — build trust before first contact." },
         ecommerce: { es: "Vende servicios, productos o planes de bienestar online con pago anticipado y gestión automática.", en: "Sell wellness services, products or plans online with advance payment and automatic management." }
       },
       retail: {
         landing: { es: "Lanza tu colección o producto estrella con una página de conversión directa y botón de compra inmediata.", en: "Launch your collection or star product with a direct conversion page and immediate purchase button." },
-        corporate: { es: "Presenta tu marca, catálogo completo, historia y puntos de venta -- construye identidad antes de que el cliente entre a tu tienda.", en: "Present your brand, full catalog, story and sales points -- build identity before the client enters your store." },
-        ecommerce: { es: "Vende tu catálogo completo online con filtros, variantes y pasarela de pago -- tu tienda abierta las 24 horas.", en: "Sell your full catalog online with filters, variants and payment gateway -- your store open 24 hours." }
+        corporate: { es: "Presenta tu marca, catálogo completo, historia y puntos de venta — construye identidad antes de que el cliente entre a tu tienda.", en: "Present your brand, full catalog, story and sales points — build identity before the client enters your store." },
+        ecommerce: { es: "Vende tu catálogo completo online con filtros, variantes y pasarela de pago — tu tienda abierta las 24 horas.", en: "Sell your full catalog online with filters, variants and payment gateway — your store open 24 hours." }
       },
       services: {
         landing: { es: "Capta clientes con tu propuesta de valor principal y un formulario de contacto o cotización directa.", en: "Capture clients with your main value proposition and a direct contact or quote form." },
-        corporate: { es: "Presenta tus servicios, equipo, proceso de trabajo y casos de éxito -- vende tu expertise antes de la primera reunión.", en: "Present your services, team, work process and success cases -- sell your expertise before the first meeting." },
-        ecommerce: { es: "Vende tus servicios con precio definido y contratación online -- elimina el proceso manual de cotización.", en: "Sell your services with defined price and online contracting -- eliminate the manual quoting process." }
+        corporate: { es: "Presenta tus servicios, equipo, proceso de trabajo y casos de éxito — vende tu expertise antes de la primera reunión.", en: "Present your services, team, work process and success cases — sell your expertise before the first meeting." },
+        ecommerce: { es: "Vende tus servicios con precio definido y contratación online — elimina el proceso manual de cotización.", en: "Sell your services with defined price and online contracting — eliminate the manual quoting process." }
       },
       realestate: {
         landing: { es: "Muestra tu propuesta inmobiliaria principal y captura leads calificados con formulario de contacto directo.", en: "Show your main real estate proposition and capture qualified leads with direct contact form." },
-        corporate: { es: "Presenta tu portafolio, equipo, áreas de especialización y proceso de trabajo -- construye confianza en el sector inmobiliario.", en: "Present your portfolio, team, areas of specialization and work process -- build trust in the real estate sector." },
-        ecommerce: { es: "Publica propiedades o servicios con sistema de reserva y pago online -- captura leads calificados directamente.", en: "Publish properties or services with online booking and payment system -- capture qualified leads directly." }
+        corporate: { es: "Presenta tu portafolio, equipo, áreas de especialización y proceso de trabajo — construye confianza en el sector inmobiliario.", en: "Present your portfolio, team, areas of specialization and work process — build trust in the real estate sector." },
+        ecommerce: { es: "Publica propiedades o servicios con sistema de reserva y pago online — captura leads calificados directamente.", en: "Publish properties or services with online booking and payment system — capture qualified leads directly." }
       },
       education: {
         landing: { es: "Capta estudiantes con tu oferta educativa principal, una clase de prueba y formulario de inscripción directa.", en: "Capture students with your main educational offer, a trial class and direct enrollment form." },
-        corporate: { es: "Presenta tus programas, metodología, equipo docente, horarios y testimonios -- construye confianza académica online.", en: "Present your programs, methodology, teaching team, schedules and testimonials -- build academic trust online." },
-        ecommerce: { es: "Vende cursos, programas y materiales online con inscripción y pago inmediato -- escala tu educación más allá del aula.", en: "Sell courses, programs and materials online with immediate enrollment and payment -- scale your education beyond the classroom." }
+        corporate: { es: "Presenta tus programas, metodología, equipo docente, horarios y testimonios — construye confianza académica online.", en: "Present your programs, methodology, teaching team, schedules and testimonials — build academic trust online." },
+        ecommerce: { es: "Vende cursos, programas y materiales online con inscripción y pago inmediato — escala tu educación más allá del aula.", en: "Sell courses, programs and materials online with immediate enrollment and payment — scale your education beyond the classroom." }
       },
       tourism: {
-        landing: { es: "Presenta tu experiencia estrella con galería visual impactante y botón de reserva directa -- los turistas deciden rápido.", en: "Present your star experience with impactful visual gallery and direct booking button -- tourists decide fast." },
+        landing: { es: "Presenta tu experiencia estrella con galería visual impactante y botón de reserva directa — los turistas deciden rápido.", en: "Present your star experience with impactful visual gallery and direct booking button — tourists decide fast." },
         corporate: { es: "Muestra todo tu catálogo de servicios, experiencias, equipo, reviews y sistema de reservas con disponibilidad en tiempo real.", en: "Show your full service and experience catalog, team, reviews and booking system with real-time availability." },
-        ecommerce: { es: "Vende experiencias, paquetes y servicios con reserva y pago online -- capta turistas que investigan y compran desde su dispositivo.", en: "Sell experiences, packages and services with online booking and payment -- capture tourists who research and buy from their device." }
+        ecommerce: { es: "Vende experiencias, paquetes y servicios con reserva y pago online — capta turistas que investigan y compran desde su dispositivo.", en: "Sell experiences, packages and services with online booking and payment — capture tourists who research and buy from their device." }
       },
       tech: {
-        landing: { es: "Tu propuesta de valor en una página que convierte -- comunica el problema que resuelves y captura leads calificados.", en: "Your value proposition on a converting page -- communicate the problem you solve and capture qualified leads." },
-        corporate: { es: "Presenta tu producto o servicios, equipo, casos de uso, integraciones y prueba social -- tu web es tu vendedor principal.", en: "Present your product or services, team, use cases, integrations and social proof -- your website is your main salesperson." },
+        landing: { es: "Tu propuesta de valor en una página que convierte — comunica el problema que resuelves y captura leads calificados.", en: "Your value proposition on a converting page — communicate the problem you solve and capture qualified leads." },
+        corporate: { es: "Presenta tu producto o servicios, equipo, casos de uso, integraciones y prueba social — tu web es tu vendedor principal.", en: "Present your product or services, team, use cases, integrations and social proof — your website is your main salesperson." },
         ecommerce: { es: "Vende suscripciones, servicios o productos digitales online con pago automático y entrega inmediata.", en: "Sell subscriptions, services or digital products online with automatic payment and immediate delivery." }
       },
       other: {
-        landing: { es: "Una página enfocada en tu propuesta de valor principal con un CTA claro -- ideal para captar clientes rápidamente.", en: "A page focused on your main value proposition with a clear CTA -- ideal for capturing clients quickly." },
+        landing: { es: "Una página enfocada en tu propuesta de valor principal con un CTA claro — ideal para captar clientes rápidamente.", en: "A page focused on your main value proposition with a clear CTA — ideal for capturing clients quickly." },
         corporate: { es: "Una presencia digital completa que muestra todo lo que ofreces, genera confianza y facilita el contacto.", en: "A complete digital presence showing everything you offer, building trust and facilitating contact." },
         ecommerce: { es: "Vende tus productos o servicios online con pasarela de pago integrada y gestión automática.", en: "Sell your products or services online with integrated payment gateway and automatic management." }
       }
@@ -2793,8 +2793,8 @@ export default function WizardQuote() {
           <div className="flex items-center justify-start mt-3 px-1">
             <span className="text-xs md:text-sm font-bold text-[var(--color-text-primary)]">
               <span className="text-[var(--color-primary-base)] font-extrabold">
-                <T en={`Step ${currentStep + 1} of ${steps.length} -- `}>
-                  Paso {currentStep + 1} de {steps.length}  -- {" "}
+                <T en={`Step ${currentStep + 1} of ${steps.length} — `}>
+                  Paso {currentStep + 1} de {steps.length}  — {" "}
                 </T>
               </span>
               <span>{steps[currentStep].title}</span>
@@ -3284,7 +3284,7 @@ export default function WizardQuote() {
                                 ) : domainOverage === null ? (
                                   <div className="space-y-1">
                                     <p className="text-emerald-600 dark:text-emerald-400 font-medium text-xs">
-                                      <T en="Included in your package -- no extra cost the first year.">Incluido en tu paquete, sin costo adicional el primer año.</T>
+                                      <T en="Included in your package — no extra cost the first year.">Incluido en tu paquete, sin costo adicional el primer año.</T>
                                     </p>
                                     {/* Bug real reportado por el usuario (19 de julio): casi todos los
                                         dominios de Porkbun cuestan menos de $15 el primer año (por eso
@@ -3303,8 +3303,8 @@ export default function WizardQuote() {
                                 ) : (
                                   <div className="space-y-1">
                                     <p className="text-amber-600 dark:text-amber-400 font-medium text-xs">
-                                      <T en={`This domain costs $${domainStatus.price} for the first year -- $${domainOverage} above the $15 included.`}>
-                                        {`Este dominio cuesta $${domainStatus.price} el primer año -- $${domainOverage} sobre los $15 incluidos.`}
+                                      <T en={`This domain costs $${domainStatus.price} for the first year — $${domainOverage} above the $15 included.`}>
+                                        {`Este dominio cuesta $${domainStatus.price} el primer año — $${domainOverage} sobre los $15 incluidos.`}
                                       </T>
                                     </p>
                                     {domainStatus.regularPrice !== undefined && (

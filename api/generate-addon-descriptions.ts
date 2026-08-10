@@ -51,7 +51,7 @@ ESTO ES LO QUE HACE CADA ADD-ON (no inventes funciones que no existen):
 - hosting: Mantenimiento mensual, backups, actualizaciones y soporte técnico
 
 REGLAS:
-- Personaliza SOLO el contexto del negocio -- no cambies lo que hace el add-on
+- Personaliza SOLO el contexto del negocio — no cambies lo que hace el add-on
 - 15-20 palabras por descripción
 - Habla al dueño: "tus clientes", "tu negocio"
 - Menciona una situación concreta y real de ese tipo de negocio
