@@ -16,7 +16,7 @@
   "rewrites": [
     { "source": "/api/check-domain", "destination": "/api/check-domain" },
     { "source": "/api/generate-addon-descriptions", "destination": "/api/generate-addon-descriptions" },
-    { "source": "/api/edge-timeout-test", "destination": "/api/edge-timeout-test" },
+    { "source": "/api/quotebot-chat", "destination": "/api/quotebot-chat" },
     { "source": "/api/(.*)", "destination": "/api/index.ts" },
     { "source": "/aprobar", "destination": "https://proposal-send-wdvfac6mgq-ue.a.run.app" },
     { "source": "/preferencias-boletin", "destination": "https://newsletter-prefs-wdvfac6mgq-ue.a.run.app" },

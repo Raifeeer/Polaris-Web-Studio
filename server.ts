@@ -1575,7 +1575,37 @@ const PORT = 3000;
       // ESM desde un módulo CJS (Node lo soporta nativo), así que el costo
       // se paga solo acá, en la primera vez que se llama esta ruta puntual.
       const { default: quoteBotChatHandler } = await import("./api/quotebot-chat.js");
-      await quoteBotChatHandler(req as any, res as any);
+      // quotebot-chat.ts corre en Vercel Edge Runtime en producción (Web
+      // Request/Response, ver Meridian/CLAUDE.md Fase 59 -- Node Functions
+      // bufferizan toda la respuesta antes de soltarla, rompiendo el
+      // streaming en vivo, y su techo de 60s en Hobby es insuficiente para
+      // una búsqueda web real). Acá, en dev local sobre Express, se adapta
+      // (req,res) de Node a un Request/Response Web real y de vuelta.
+      // Ojo: no re-leer el stream crudo de `req` acá -- el middleware global
+      // `express.json()` (arriba, antes de cualquier ruta) ya lo consumió y
+      // dejó el resultado parseado en `req.body`; el stream ya está drenado.
+      const headers = new Headers();
+      for (const [key, value] of Object.entries(req.headers)) {
+        if (typeof value === "string") headers.set(key, value);
+        else if (Array.isArray(value)) headers.set(key, value.join(", "));
+      }
+      const webRequest = new Request(`http://localhost${req.url}`, {
+        method: req.method,
+        headers,
+        body: JSON.stringify(req.body || {}),
+      });
+      const webResponse: Response = await quoteBotChatHandler(webRequest);
+      res.status(webResponse.status);
+      webResponse.headers.forEach((value, key) => res.setHeader(key, value));
+      if (webResponse.body) {
+        const reader = webResponse.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(value);
+        }
+      }
+      res.end();
     } catch (error: any) {
       console.error("Error in quotebot chat:", error);
       res.status(500).json({ error: error?.message || "Internal server error" });

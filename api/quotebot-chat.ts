@@ -1,14 +1,18 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { generateText, generateObject, streamText, stepCountIs } from "ai";
 
-// 60s -- el máximo real permitido en el plan Hobby (confirmado, no configurable
-// más alto sin pasar a Pro). Sin esto, la función corre con el default de la
-// plataforma (bastante más bajo que 60s) -- una búsqueda web real puede tardar
-// 60-180s+ (ver Fase 59 de Meridian/CLAUDE.md), así que sin este límite alto
-// explícito la función se corta a mitad de camino en cualquier búsqueda que no
-// sea trivial, lo que el cliente ve como "Algo falló" sin ningún detalle real.
-// Mismo valor ya usado en api/tts.ts para el mismo motivo.
-export const config = { maxDuration: 60 };
+// Edge Runtime, no Node -- probado en vivo (10 de agosto, ver Fase 59 de
+// Meridian/CLAUDE.md): las Vercel Node Functions bufferizan la respuesta
+// COMPLETA y solo la sueltan cuando la función termina (confirmado con un
+// test de timing real), rompiendo el streaming en vivo sin importar
+// res.write()/X-Accel-Buffering. Edge sí transmite de verdad byte a byte.
+// Además, Node en el plan Hobby tiene un techo duro de 60s (`maxDuration`,
+// no configurable más alto sin Pro) -- insuficiente para una búsqueda web
+// real (60-180s+ medido en vivo). Edge NO permite configurar `maxDuration`
+// en absoluto (la plataforma le da su propio límite fijo) -- medido en vivo
+// con un endpoint de prueba (`api/edge-timeout-test.ts`, borrado tras la
+// medición): sostuvo un stream real de más de 200s sin cortarse, muy por
+// encima de lo que necesita esta búsqueda -- confirma que Edge es viable acá.
+export const config = { runtime: "edge" };
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createXai } from "@ai-sdk/xai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
@@ -81,9 +85,16 @@ function rateLimited(ip: string, max: number, windowMs: number): boolean {
   b.count++;
   return false;
 }
-function clientIp(req: VercelRequest): string {
-  const fwd = (req.headers["x-forwarded-for"] as string) || "";
+function clientIp(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for") || "";
   return fwd.split(",")[0].trim() || "unknown";
+}
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
 }
 
 // Solo se aceptan turnos user/assistant del historial. Descartar cualquier otro
@@ -102,17 +113,31 @@ function sanitizeHistory(history: unknown): { role: "user" | "assistant"; conten
   return out;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+export default async function handler(req: Request): Promise<Response> {
+  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
   if (rateLimited(clientIp(req), 30, 10 * 60 * 1000)) {
-    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
+    return jsonResponse({ error: "Demasiadas solicitudes. Espera un momento." }, 429);
   }
 
-  const { message, stream: wantsStream, titleOnly, visitorId, conversationId, isTemporary } = req.body || {};
-  if (!message || typeof message !== "string") return res.status(400).json({ error: "Missing message" });
-  if (message.length > MAX_MESSAGE_CHARS) return res.status(400).json({ error: "Message too long" });
-  const history = sanitizeHistory((req.body || {}).history);
+  const body = await req.json().catch(() => ({}) as Record<string, unknown>);
+  const { message, stream: wantsStream, titleOnly, visitorId, conversationId, isTemporary } = body as {
+    message?: unknown;
+    stream?: boolean;
+    titleOnly?: boolean;
+    visitorId?: string;
+    conversationId?: string;
+    isTemporary?: boolean;
+  };
+  if (!message || typeof message !== "string") return jsonResponse({ error: "Missing message" }, 400);
+  if (message.length > MAX_MESSAGE_CHARS) return jsonResponse({ error: "Message too long" }, 400);
+  // Alias tipado explícito -- la narrowing de `message` a `string` de las dos
+  // líneas de arriba no sobrevive dentro del closure `async start(controller)`
+  // del ReadableStream más abajo (limitación real de TS con narrowing cruzando
+  // límites de función), así que backupConversation() usa este alias en vez
+  // del `message` original.
+  const messageText: string = message;
+  const history = sanitizeHistory((body as Record<string, unknown>).history);
 
   // Modo liviano: genera un título corto + elige un ícono real (de un pool
   // de ~60, no un match de palabras clave siempre determinista) para la
@@ -142,9 +167,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         abortSignal: AbortSignal.timeout(8000),
       });
       const title = result.object.title.trim().replace(/^["']|["']$/g, "").slice(0, 60);
-      return res.status(200).json({ title: title || null, icon: result.object.icon || null });
+      return jsonResponse({ title: title || null, icon: result.object.icon || null });
     } catch {
-      return res.status(200).json({ title: null, icon: null });
+      return jsonResponse({ title: null, icon: null });
     }
   }
 
@@ -400,45 +425,53 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   // evasión de precio a mitad de stream; el modo no-streaming (abajo) sigue
   // con la lógica completa para quien no pida streaming.
   if (wantsStream) {
-    res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("X-Accel-Buffering", "no");
-    const send = (obj: Record<string, unknown>) => res.write(`${JSON.stringify(obj)}\n`);
-    try {
-      let toolResults: ToolResultLike[] = [];
-      let finalRaw = "";
-      try {
-        const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
-        finalRaw = await streamWithLiveWebSearch(result, send);
-        const finalText = finalRaw.trim();
-        if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
-        if (omitsDomainCap(finalText)) throw new Error("Reply mentions included domain without the real $15 cap");
-        toolResults = (await result.toolResults) as unknown as ToolResultLike[];
-      } catch (err) {
-        if (defaultModel === "deepseek") throw err;
-        console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
-        send({ type: "restart" });
-        const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
-        finalRaw = await streamWithLiveWebSearch(result, send);
-        toolResults = (await result.toolResults) as unknown as ToolResultLike[];
-      }
-      const widget = buildWidget(toolResults);
-      if (widget) send({ type: "widget", widget });
-      if (usedWebSearch(toolResults)) send({ type: "web_search", sources: getWebSearchSources(toolResults) });
-      send({ type: "done" });
-      // Respaldo server-side (ver api/_atlasBackup.ts), con `await` a
-      // propósito -- ver Meridian/CLAUDE.md: esto mantiene viva la función
-      // de Vercel hasta que la escritura a Firestore termina de verdad, en
-      // vez de un fire-and-forget que puede quedar a mitad de camino si la
-      // plataforma corta el proceso apenas el cliente se desconecta. Corre
-      // DESPUÉS de "done" -- no demora la respuesta al cliente que sigue
-      // conectado, y también corre igual si ya se desconectó.
-      if (!isTemporary) await backupConversation(visitorId, conversationId, history, message, finalRaw, widget, usedWebSearch(toolResults));
-    } catch (err) {
-      send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
-    }
-    res.end();
-    return;
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (obj: Record<string, unknown>) => controller.enqueue(encoder.encode(`${JSON.stringify(obj)}\n`));
+        try {
+          let toolResults: ToolResultLike[] = [];
+          let finalRaw = "";
+          try {
+            const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
+            finalRaw = await streamWithLiveWebSearch(result, send);
+            const finalText = finalRaw.trim();
+            if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
+            if (omitsDomainCap(finalText)) throw new Error("Reply mentions included domain without the real $15 cap");
+            toolResults = (await result.toolResults) as unknown as ToolResultLike[];
+          } catch (err) {
+            if (defaultModel === "deepseek") throw err;
+            console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
+            send({ type: "restart" });
+            const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
+            finalRaw = await streamWithLiveWebSearch(result, send);
+            toolResults = (await result.toolResults) as unknown as ToolResultLike[];
+          }
+          const widget = buildWidget(toolResults);
+          if (widget) send({ type: "widget", widget });
+          if (usedWebSearch(toolResults)) send({ type: "web_search", sources: getWebSearchSources(toolResults) });
+          send({ type: "done" });
+          // Respaldo server-side (ver api/_atlasBackup.ts), con `await` a
+          // propósito -- ver Meridian/CLAUDE.md: esto mantiene viva la función
+          // hasta que la escritura a Firestore termina de verdad, en vez de un
+          // fire-and-forget que puede quedar a mitad de camino si la
+          // plataforma corta el proceso apenas el cliente se desconecta. Corre
+          // DESPUÉS de "done" -- no demora la respuesta al cliente que sigue
+          // conectado, y también corre igual si ya se desconectó.
+          if (!isTemporary) await backupConversation(visitorId, conversationId, history, messageText, finalRaw, widget, usedWebSearch(toolResults));
+        } catch (err) {
+          send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
+        }
+        controller.close();
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "application/x-ndjson; charset=utf-8",
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+      },
+    });
   }
 
   for (const key of tryOrder) {
@@ -457,15 +490,16 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       const toolResults = result.toolResults as unknown as ToolResultLike[];
       const widget = buildWidget(toolResults);
       const wasWebSearch = usedWebSearch(toolResults);
-      // Responde primero (no demora lo que ve el usuario) y recién después
-      // le hace `await` al respaldo -- mantiene la función viva hasta que
-      // termine de escribir, sin agregar latencia percibida.
-      res.status(200).json({ reply: text, provider: key, widget, usedWebSearch: wasWebSearch });
-      if (!isTemporary) await backupConversation(visitorId, conversationId, history, message, text, widget, wasWebSearch);
-      return;
+      // El respaldo corre antes de devolver la respuesta -- a diferencia del
+      // camino de streaming (que mantiene la función viva con un `await`
+      // después de responder), acá no hay una respuesta ya enviada al
+      // cliente que se pueda demorar de más: el `Response` recién se
+      // construye y se devuelve al final de este bloque.
+      if (!isTemporary) await backupConversation(visitorId, conversationId, history, messageText, text, widget, wasWebSearch);
+      return jsonResponse({ reply: text, provider: key, widget, usedWebSearch: wasWebSearch });
     } catch {
       continue;
     }
   }
-  return res.status(500).json({ error: "all_providers_failed" });
+  return jsonResponse({ error: "all_providers_failed" }, 500);
 }
