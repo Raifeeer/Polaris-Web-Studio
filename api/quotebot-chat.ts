@@ -355,13 +355,24 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   // a otro proveedor. Para DeepSeek/Grok se mantiene `web_search` tal cual,
   // ya que ninguno de los dos tiene un grounding nativo utilizable acá.
   function toolsFor(key: "deepseek" | "grok" | "gemini") {
-    if (key !== "gemini") return atlasTools;
+    if (key === "deepseek") return atlasTools;
     const { web_search: _unused, ...rest } = atlasTools;
-    // El tool nativo de Google es "provider-executed" (corre server-side en
-    // la API de Gemini, no vía execute() local) -- mismo motivo del `as any`
-    // ya usado para el tool de xAI en _atlasTools.ts, el tipo de ToolSet no
-    // modela bien esta forma.
-    return { ...rest, google_search: createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY }).tools.googleSearch({}) } as any;
+    if (key === "gemini") {
+      // El tool nativo de Google es "provider-executed" (corre server-side en
+      // la API de Gemini, no vía execute() local) -- mismo motivo del `as any`
+      // ya usado para el tool de xAI en _atlasTools.ts, el tipo de ToolSet no
+      // modela bien esta forma.
+      return { ...rest, google_search: createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY }).tools.googleSearch({}) } as any;
+    }
+    // key === "grok": mismo motivo que Gemini -- cuando el modelo que
+    // responde el turno YA ES Grok, usar su propio `webSearch` nativo
+    // (provider-executed, sin llamado aparte) en vez del wrapper de
+    // _atlasTools.ts, que hace un generateText() completo y anidado A GROK
+    // OTRA VEZ -- el mismo desperdicio doble que se corrigió para Gemini,
+    // encontrado al revisar por qué solo Gemini tenía el fix. El wrapper
+    // sigue existiendo tal cual para cuando responde DeepSeek (que no tiene
+    // ningún buscador propio) o como fallback si Grok falla como default.
+    return { ...rest, web_search: createXai({ apiKey: process.env.GROK_API_KEY }).tools.webSearch({}) } as any;
   }
 
   const baseParams = { system: systemPrompt, messages, stopWhen: stepCountIs(6), temperature: 0.3 };
