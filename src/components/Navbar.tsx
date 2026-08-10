@@ -26,6 +26,7 @@ type NavCard = { label: React.ReactNode; accent: string; links: CardLink[] };
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
@@ -50,11 +51,33 @@ export default function Navbar() {
     };
   }, [isOpen]);
 
+  // Mismo comportamiento que tenía el navbar clásico (pedido explícito del
+  // usuario al notar que se había perdido al portar el componente): se
+  // esconde al bajar, reaparece apenas se sube -- nunca mientras el menú de
+  // tarjetas está abierto (no tendría sentido esconder la barra con el menú
+  // desplegado debajo).
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          setScrolled(currentScrollY > 20);
+          if (currentScrollY > lastScrollY && currentScrollY > 100 && !isOpen) {
+            setHidden(true);
+          } else if (currentScrollY < lastScrollY) {
+            setHidden(false);
+          }
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
 
   // Cierra el menú al cambiar de ruta -- click en un link ya lo hace a mano,
   // pero esto cubre navegación por atrás/adelante del navegador también.
@@ -101,7 +124,7 @@ export default function Navbar() {
       <div className="h-16 w-full shrink-0" aria-hidden="true" />
       <nav
         ref={navRef}
-        className={`fixed left-0 right-0 top-0 z-50 mx-auto max-w-6xl px-3 pt-3 transition-transform duration-300`}
+        className={`fixed left-0 right-0 top-0 z-50 mx-auto max-w-6xl px-3 pt-3 transition-transform duration-300 ${hidden ? "-translate-y-[calc(100%+2rem)]" : "translate-y-0"}`}
       >
         {/* Barra superior -- siempre una sola "tarjeta" real (logo + botón +
             CTA), el menú de tarjetas se expande DEBAJO de esta, no dentro. */}
