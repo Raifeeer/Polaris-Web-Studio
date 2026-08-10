@@ -121,7 +121,7 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="h-16 w-full shrink-0" aria-hidden="true" />
+      <div className="h-[4.5rem] w-full shrink-0" aria-hidden="true" />
       {/* Pedido explícito del usuario, tres rondas de ajuste: primero ancho
           completo real (edge-to-edge, como el navbar clásico) -- no era lo
           que quería. Después el mismo max-w-7xl/px que el <main> del Hero,
@@ -138,12 +138,12 @@ export default function Navbar() {
         ref={navRef}
         className={`fixed left-0 right-0 top-0 z-50 w-full transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-10 pt-3">
+        <div className="max-w-7xl mx-auto px-4 md:px-10 pt-4">
           {/* Barra superior -- el borde/fondo real vive acá, adentro del
               wrapper de arriba (mismo patrón que la tarjeta del Hero). El
               menú de tarjetas se expande DEBAJO de este mismo wrapper. */}
           <div
-            className={`flex items-center justify-between h-16 px-4 rounded-2xl border transition-colors duration-300 ${
+            className={`flex items-center justify-between h-[4.5rem] px-4 rounded-2xl border transition-colors duration-300 ${
               scrolled || isOpen
                 ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] shadow-lg backdrop-blur-xl"
                 : "bg-[var(--color-surface-elevated)]/80 border-transparent backdrop-blur-md"
@@ -227,7 +227,7 @@ export default function Navbar() {
                   `fixed`, eso obligaba a scrollear TODA la página en vez de
                   solo el menú. Fix: tope real de alto (lo que sobra de
                   viewport debajo de la barra) + scroll interno. */}
-              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain pb-2">
+              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain pb-2">
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
