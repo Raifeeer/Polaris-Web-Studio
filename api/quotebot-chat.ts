@@ -345,6 +345,42 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   }
 
   const usedWebSearch = (toolResults: ToolResultLike[]) => toolResults.some((t) => t.toolName === "web_search" && t.output && !(t.output as any).error);
+  const getWebSearchSources = (toolResults: ToolResultLike[]): { url: string; title: string }[] => {
+    const hit = toolResults.find((t) => t.toolName === "web_search" && t.output && !(t.output as any).error);
+    return ((hit?.output as any)?.sources || []) as { url: string; title: string }[];
+  };
+
+  // Consume fullStream (no solo textStream) para poder avisarle al cliente
+  // EN VIVO que se está buscando en la web -- toolResults recién está
+  // disponible cuando el stream entero termina, demasiado tarde para un
+  // indicador en tiempo real. fullStream sí emite 'tool-call' en el momento
+  // real en que el modelo decide llamar la tool (antes del texto final) y
+  // 'tool-result' apenas execute() de la tool resuelve (con las fuentes
+  // reales ya armadas por webSearch() en _atlasTools.ts) -- ambos llegan
+  // antes de que el modelo empiece a redactar la respuesta final, así que
+  // el cliente puede mostrar primero "Buscando en la web..." y después,
+  // apenas se sepa, los dominios reales que se van a citar. Devuelve el
+  // texto acumulado.
+  const streamWithLiveWebSearch = async (
+    result: { fullStream: AsyncIterable<{ type: string; text?: string; toolName?: string; output?: unknown }> },
+    send: (obj: Record<string, unknown>) => void
+  ): Promise<string> => {
+    let raw = "";
+    let announcedWebSearch = false;
+    for await (const chunk of result.fullStream) {
+      if (chunk.type === "text-delta") {
+        raw += chunk.text;
+        send({ type: "delta", text: chunk.text });
+      } else if (chunk.type === "tool-call" && chunk.toolName === "web_search" && !announcedWebSearch) {
+        announcedWebSearch = true;
+        send({ type: "web_search_start" });
+      } else if (chunk.type === "tool-result" && chunk.toolName === "web_search") {
+        const output = chunk.output as { sources?: { url: string; title: string }[]; error?: string } | undefined;
+        if (output?.sources?.length) send({ type: "web_search_sources", sources: output.sources });
+      }
+    }
+    return raw;
+  };
 
   // Streaming real vía NDJSON (mismo patrón que meridian-assistant): el
   // frontend pide stream:true para ver el texto aparecer en vivo. Acá se
@@ -364,10 +400,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       let finalRaw = "";
       try {
         const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
-        for await (const delta of result.textStream) {
-          finalRaw += delta;
-          send({ type: "delta", text: delta });
-        }
+        finalRaw = await streamWithLiveWebSearch(result, send);
         const finalText = finalRaw.trim();
         if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
         if (omitsDomainCap(finalText)) throw new Error("Reply mentions included domain without the real $15 cap");
@@ -376,17 +409,13 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         if (defaultModel === "deepseek") throw err;
         console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
         send({ type: "restart" });
-        finalRaw = "";
         const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
-        for await (const delta of result.textStream) {
-          finalRaw += delta;
-          send({ type: "delta", text: delta });
-        }
+        finalRaw = await streamWithLiveWebSearch(result, send);
         toolResults = (await result.toolResults) as unknown as ToolResultLike[];
       }
       const widget = buildWidget(toolResults);
       if (widget) send({ type: "widget", widget });
-      if (usedWebSearch(toolResults)) send({ type: "web_search" });
+      if (usedWebSearch(toolResults)) send({ type: "web_search", sources: getWebSearchSources(toolResults) });
       send({ type: "done" });
       // Respaldo server-side (ver api/_atlasBackup.ts), con `await` a
       // propósito -- ver Meridian/CLAUDE.md: esto mantiene viva la función

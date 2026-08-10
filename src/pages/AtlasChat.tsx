@@ -27,6 +27,7 @@ import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
 import AtlasWidget from "../components/AtlasWidget";
+import WebSourcesPanel, { hostnameOf } from "../components/WebSourcesPanel";
 import ThinkingText from "../components/ThinkingText";
 import ConversationSearch from "../components/ConversationSearch";
 import { getConversationIcon } from "../lib/conversationIcon";
@@ -166,15 +167,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                   <Volume2 size={12} />
                 )}
               </button>
-              {message.usedWebSearch && (
-                <span
-                  className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]"
-                  title={"Búsqueda web usada para esta respuesta"}
-                >
-                  <Globe size={12} />
-                  <T en="Web search">Búsqueda web</T>
-                </span>
-              )}
+              {message.usedWebSearch && <WebSourcesPanel sources={message.webSearchSources || []} />}
             </div>
           )}
 
@@ -210,6 +203,9 @@ export default function AtlasChat() {
     messages,
     loading,
     thinkingMsg,
+    isSearchingWeb,
+    liveSearchSources,
+    liveSourceIdx,
     lastMsgLang,
     error,
     activeId,
@@ -723,8 +719,22 @@ export default function AtlasChat() {
                     <div className="w-8 h-8 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shrink-0">
                       <AtlasMark variant="isotipo" className="w-6 h-6" />
                     </div>
-                    <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center">
-                      <ThinkingText message={thinkingMsg} lang={lastMsgLang} />
+                    <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2">
+                      {isSearchingWeb && <Globe size={13} className="shrink-0 text-[var(--color-primary-base)] animate-pulse" />}
+                      {isSearchingWeb && liveSearchSources.length > 0 ? (
+                        <ThinkingText
+                          message={{
+                            es: `Leyendo **${hostnameOf(liveSearchSources[liveSourceIdx % liveSearchSources.length]?.url || "")}**…`,
+                            en: `Reading **${hostnameOf(liveSearchSources[liveSourceIdx % liveSearchSources.length]?.url || "")}**…`,
+                          }}
+                          lang={lastMsgLang}
+                        />
+                      ) : (
+                        <ThinkingText
+                          message={isSearchingWeb ? { es: "Buscando en la web...", en: "Searching the web..." } : thinkingMsg}
+                          lang={lastMsgLang}
+                        />
+                      )}
                     </div>
                   </div>
                 </motion.div>

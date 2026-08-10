@@ -3,10 +3,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
-import { useAtlasChat } from "../hooks/useAtlasChat";
+import { useAtlasChat, type WebSearchSource } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "./AtlasMarkdown";
 import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
+import WebSourcesPanel, { hostnameOf } from "./WebSourcesPanel";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "./VoiceInputBar";
@@ -87,7 +88,17 @@ const QUESTIONS: Question[] = [
   },
 ];
 
-function WidgetCopyButton({ text, usedWebSearch, lang }: { text: string; usedWebSearch?: boolean; lang: "es" | "en" }) {
+function WidgetCopyButton({
+  text,
+  usedWebSearch,
+  webSearchSources,
+  lang,
+}: {
+  text: string;
+  usedWebSearch?: boolean;
+  webSearchSources?: WebSearchSource[];
+  lang: "es" | "en";
+}) {
   const { translate } = useLanguage();
   const [copied, setCopied] = useState(false);
   const tts = useTextToSpeech(text, lang);
@@ -117,12 +128,7 @@ function WidgetCopyButton({ text, usedWebSearch, lang }: { text: string; usedWeb
       >
         {tts.loading ? <Loader2 size={11} className="animate-spin" /> : tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
       </button>
-      {usedWebSearch && (
-        <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]" title={translate("Búsqueda web usada para esta respuesta", "Web search used for this reply")}>
-          <Globe size={11} />
-          {translate("Búsqueda web", "Web search")}
-        </span>
-      )}
+      {usedWebSearch && <WebSourcesPanel sources={webSearchSources || []} iconSize={11} />}
     </div>
   );
 }
@@ -168,6 +174,9 @@ export default function QuoteBot() {
     messages: aiMessages,
     loading: aiLoading,
     thinkingMsg: aiThinkingMsg,
+    isSearchingWeb: aiIsSearchingWeb,
+    liveSearchSources: aiLiveSearchSources,
+    liveSourceIdx: aiLiveSourceIdx,
     lastMsgLang: aiLastMsgLang,
     error: aiError,
     sendMessage: sendAiMessageText,
@@ -608,7 +617,9 @@ export default function QuoteBot() {
                     />
                   )}
 
-                  {m.role === "assistant" && m.content && <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} lang={m.lang || "es"} />}
+                  {m.role === "assistant" && m.content && (
+                    <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} webSearchSources={m.webSearchSources} lang={m.lang || "es"} />
+                  )}
 
                   {m.role === "assistant" && i === aiMessages.length - 1 && m.suggestions && m.suggestions.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 mt-1.5 max-w-[85%]">
@@ -633,8 +644,22 @@ export default function QuoteBot() {
 
               {aiLoading && !aiMessages[aiMessages.length - 1]?.content && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center h-[42px] px-4">
-                    <ThinkingText message={aiThinkingMsg} lang={aiLastMsgLang} />
+                  <div className="p-3 rounded-2xl rounded-tl-none bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] flex items-center gap-2 h-[42px] px-4">
+                    {aiIsSearchingWeb && <Globe size={12} className="shrink-0 text-[var(--color-primary-base)] animate-pulse" />}
+                    {aiIsSearchingWeb && aiLiveSearchSources.length > 0 ? (
+                      <ThinkingText
+                        message={{
+                          es: `Leyendo **${hostnameOf(aiLiveSearchSources[aiLiveSourceIdx % aiLiveSearchSources.length]?.url || "")}**…`,
+                          en: `Reading **${hostnameOf(aiLiveSearchSources[aiLiveSourceIdx % aiLiveSearchSources.length]?.url || "")}**…`,
+                        }}
+                        lang={aiLastMsgLang}
+                      />
+                    ) : (
+                      <ThinkingText
+                        message={aiIsSearchingWeb ? { es: "Buscando en la web...", en: "Searching the web..." } : aiThinkingMsg}
+                        lang={aiLastMsgLang}
+                      />
+                    )}
                   </div>
                 </motion.div>
               )}

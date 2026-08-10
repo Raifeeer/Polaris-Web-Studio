@@ -17,7 +17,16 @@ export type AtlasWidgetData = { type: string; data: unknown };
 // de la interfaz, así el indicador de "pensando" y las mini UIs de esa
 // respuesta puntual quedan en el idioma real en el que escribió el usuario,
 // aunque no haya tocado el selector manual.
-export type AiMessage = { role: "user" | "assistant"; content: string; suggestions?: string[]; widget?: AtlasWidgetData; usedWebSearch?: boolean; lang?: "es" | "en" };
+export type WebSearchSource = { url: string; title: string };
+export type AiMessage = {
+  role: "user" | "assistant";
+  content: string;
+  suggestions?: string[];
+  widget?: AtlasWidgetData;
+  usedWebSearch?: boolean;
+  webSearchSources?: WebSearchSource[];
+  lang?: "es" | "en";
+};
 // `icon` es una clave de ICON_MAP (src/lib/conversationIcon.tsx), elegida por
 // la IA junto con el título -- undefined hasta que ese llamado responde (o si
 // falló), momento en el que el sidebar/búsqueda caen al ícono heurístico.
@@ -205,6 +214,17 @@ export function useAtlasChat() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [thinkingMsg, setThinkingMsg] = useState(THINKING_MESSAGES[0]);
+  // true entre el chunk 'web_search_start' (el modelo recién decidió buscar)
+  // y el primer 'delta' de texto real -- reemplaza el "pensando..." genérico
+  // por un aviso concreto de que está buscando en la web, en vez de dejar al
+  // usuario sin ninguna pista de qué está pasando durante esos segundos.
+  const [isSearchingWeb, setIsSearchingWeb] = useState(false);
+  // Fuentes reales encontradas por la tool `web_search`, disponibles apenas
+  // llega el chunk 'tool-result' (antes de que el modelo redacte la
+  // respuesta final) -- se usan para ir mostrando "Leyendo <dominio>..." en
+  // vez de un genérico "buscando en la web" sin ningún detalle real.
+  const [liveSearchSources, setLiveSearchSources] = useState<WebSearchSource[]>([]);
+  const [liveSourceIdx, setLiveSourceIdx] = useState(0);
   // Idioma detectado del último mensaje del usuario enviado (ver detectLang)
   // -- lo usa el indicador de "pensando" mientras se espera esa respuesta,
   // ver comentario junto a AiMessage.lang para el resto del criterio.
@@ -233,6 +253,20 @@ export function useAtlasChat() {
     }, 1500);
     return () => clearInterval(interval);
   }, [loading]);
+
+  // Mismo patrón de rotación que el "pensando..." de arriba, pero cicla los
+  // dominios reales que la tool de búsqueda ya encontró (no el thinkingMsg
+  // genérico) mientras se sigue esperando el texto final.
+  useEffect(() => {
+    if (!isSearchingWeb || liveSearchSources.length === 0) {
+      setLiveSourceIdx(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setLiveSourceIdx((i) => (i + 1) % liveSearchSources.length);
+    }, 1200);
+    return () => clearInterval(interval);
+  }, [isSearchingWeb, liveSearchSources]);
 
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem(ACTIVE_ID_KEY, activeId);
@@ -333,6 +367,7 @@ export function useAtlasChat() {
       const assistantIdx = withUser.length;
       setMessages([...withUser, { role: "assistant", content: "" }]);
       setThinkingMsg(THINKING_MESSAGES[Math.floor(Math.random() * THINKING_MESSAGES.length)]);
+      setIsSearchingWeb(false);
       setLoading(true);
 
       // Guarda el mensaje del usuario de inmediato, ANTES de esperar la
@@ -349,6 +384,7 @@ export function useAtlasChat() {
       let gotAnyDelta = false;
       let widget: AtlasWidgetData | undefined;
       let usedWebSearch = false;
+      let webSearchSources: WebSearchSource[] = [];
 
       try {
         const res = await fetch("/api/quotebot-chat", {
@@ -385,6 +421,7 @@ export function useAtlasChat() {
             }
             if (evt.type === "delta") {
               gotAnyDelta = true;
+              setIsSearchingWeb(false);
               raw += evt.text;
               // Nunca mostrar el bloque ---SUGERENCIAS--- crudo mientras se
               // tipea -- bug real reportado en vivo: el marcador y la lista
@@ -404,15 +441,24 @@ export function useAtlasChat() {
               gotAnyDelta = false;
               widget = undefined;
               usedWebSearch = false;
+              webSearchSources = [];
+              setIsSearchingWeb(false);
+              setLiveSearchSources([]);
               setMessages((prev) => {
                 const next = [...prev];
                 next[assistantIdx] = { role: "assistant", content: "" };
                 return next;
               });
+            } else if (evt.type === "web_search_start") {
+              setIsSearchingWeb(true);
+              setLiveSearchSources([]);
+            } else if (evt.type === "web_search_sources") {
+              setLiveSearchSources(evt.sources || []);
             } else if (evt.type === "widget") {
               widget = evt.widget;
             } else if (evt.type === "web_search") {
               usedWebSearch = true;
+              webSearchSources = evt.sources || [];
             } else if (evt.type === "error") {
               throw new Error(evt.message || "stream error");
             }
@@ -421,7 +467,7 @@ export function useAtlasChat() {
         if (!gotAnyDelta) throw new Error("empty reply");
 
         const { content, suggestions } = extractSuggestions(raw);
-        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch, lang: msgLang }];
+        const finalMsgs: AiMessage[] = [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch, webSearchSources, lang: msgLang }];
         setMessages(finalMsgs);
         if (!isTemporaryRef.current) {
           persist(activeId, finalMsgs);
@@ -433,7 +479,7 @@ export function useAtlasChat() {
           // parcial ya mostrado como respuesta final, en vez de descartarlo.
           const { content, suggestions } = extractSuggestions(raw);
           const finalMsgs: AiMessage[] = gotAnyDelta
-            ? [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch, lang: msgLang }]
+            ? [...withUser, { role: "assistant", content, suggestions, widget, usedWebSearch, webSearchSources, lang: msgLang }]
             : withUser;
           setMessages(finalMsgs);
           if (gotAnyDelta && !isTemporaryRef.current) {
@@ -446,6 +492,7 @@ export function useAtlasChat() {
         }
       } finally {
         setLoading(false);
+        setIsSearchingWeb(false);
         abortRef.current = null;
       }
     },
@@ -515,6 +562,9 @@ export function useAtlasChat() {
     messages,
     loading,
     thinkingMsg,
+    isSearchingWeb,
+    liveSearchSources,
+    liveSourceIdx,
     lastMsgLang,
     error,
     activeId,
