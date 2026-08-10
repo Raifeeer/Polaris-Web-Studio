@@ -174,6 +174,24 @@ export function extractSuggestions(raw: string): { content: string; suggestions:
   return { content: content || raw.trim(), suggestions };
 }
 
+// Igual que extractSuggestions().content, pero además recorta un prefijo
+// PARCIAL del marcador si el texto todavía se está tipeando (streaming) --
+// sin esto, mientras el modelo escribe "---SUGERENCIAS---" letra por letra
+// se alcanza a ver "-", "--", "---S", "---SU"... colgando al final de la
+// burbuja por una fracción de segundo antes de que el marcador quede
+// completo y extractSuggestions lo reconozca. Usado solo para lo que se
+// muestra en pantalla mientras llega el stream, nunca para el contenido
+// final guardado (ese sigue pasando por extractSuggestions normal).
+function stripStreamingSuggestionsMarker(raw: string): string {
+  const { content, suggestions } = extractSuggestions(raw);
+  if (suggestions.length > 0 || content !== raw.trim()) return content;
+  const marker = "---SUGERENCIAS---";
+  for (let len = Math.min(marker.length - 1, raw.length); len > 0; len--) {
+    if (raw.endsWith(marker.slice(0, len))) return raw.slice(0, raw.length - len).trimEnd();
+  }
+  return raw;
+}
+
 export function useAtlasChat() {
   const [activeId, setActiveId] = useState<string>(() => {
     if (typeof window === "undefined") return newId();
@@ -368,9 +386,17 @@ export function useAtlasChat() {
             if (evt.type === "delta") {
               gotAnyDelta = true;
               raw += evt.text;
+              // Nunca mostrar el bloque ---SUGERENCIAS--- crudo mientras se
+              // tipea -- bug real reportado en vivo: el marcador y la lista
+              // en formato "- texto" se veían un instante en la burbuja
+              // antes de que extractSuggestions() los recortara al terminar
+              // el stream. Se corta el texto mostrado en cuanto el marcador
+              // empieza a aparecer, igual que ya hace extractSuggestions()
+              // con el texto final.
+              const displayed = stripStreamingSuggestionsMarker(raw);
               setMessages((prev) => {
                 const next = [...prev];
-                next[assistantIdx] = { role: "assistant", content: raw };
+                next[assistantIdx] = { role: "assistant", content: displayed };
                 return next;
               });
             } else if (evt.type === "restart") {
