@@ -144,13 +144,21 @@ export default function Navbar() {
               menú de tarjetas se expande DEBAJO de este mismo wrapper.
               Alto/margen levemente mayores solo en desktop (pedido explícito
               del usuario) -- en mobile queda igual que antes, tanto por
-              tamaño de pantalla como por costo real de repintado (blur en
-              mobile es bastante más caro, ver nota de blur abajo). */}
+              tamaño de pantalla como por costo real de repintado.
+              `backdrop-blur-none` fijo en mobile (solo se habilita desde
+              `md:`): reportado en vivo por el usuario que el navbar se
+              trababa específicamente en Chrome mobile, no en otros
+              navegadores -- combinar `position: fixed` + `backdrop-filter`
+              en un elemento que además anima transform (esconder/mostrar al
+              scrollear) es un caso conocido donde Chrome mobile cae a un
+              modo de composición mucho más caro que Safari/WebKit para el
+              mismo CSS. Sin blur en mobile el navbar queda con fondo sólido
+              semi-opaco (sigue viéndose bien) pero sin ese costo. */}
           <div
-            className={`flex items-center justify-between h-16 md:h-[4.5rem] px-4 rounded-2xl border transition-colors duration-300 ${
+            className={`flex items-center justify-between h-16 md:h-[4.5rem] px-4 rounded-2xl border transition-colors duration-300 backdrop-blur-none ${
               scrolled || isOpen
-                ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] shadow-lg backdrop-blur-none md:backdrop-blur-xl"
-                : "bg-[var(--color-surface-elevated)]/80 border-transparent backdrop-blur-sm md:backdrop-blur-md"
+                ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] shadow-lg md:backdrop-blur-xl"
+                : "bg-[var(--color-surface-elevated)]/80 border-transparent md:backdrop-blur-md"
             }`}
           >
           <Link
