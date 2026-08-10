@@ -348,7 +348,7 @@ export const webSearch = tool({
     try {
       const xai = createXai({ apiKey: GROK_API_KEY });
       const result = await generateText({
-        model: xai("grok-4.3"),
+        model: xai("grok-4.20-non-reasoning"),
         // El tool de búsqueda de xAI es "provider-executed" (corre server-side
         // en la API de Grok, no vía `execute()` local) -- de ahí el `as any`
         // puntual, mismo motivo que el de Google antes.

@@ -96,7 +96,7 @@ REGLAS:
           "Authorization": `Bearer ${process.env.GROK_API_KEY}`
         },
         body: JSON.stringify({
-          model: "grok-4.3",
+          model: "grok-4.20-non-reasoning",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: `Negocio: ${businessType}\nSector: ${sector}\nPlan: ${planType || "corporate"}` }

@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
       const xai = createXai({ apiKey: process.env.GROK_API_KEY });
       const deepseek = createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY });
-      const model = key === "gemini" ? google("gemini-3.5-flash") : key === "grok" ? xai("grok-4.3") : deepseek("deepseek-chat");
+      const model = key === "gemini" ? google("gemini-3.5-flash") : key === "grok" ? xai("grok-4.20-non-reasoning") : deepseek("deepseek-chat");
       const result = await generateObject({
         model,
         schema: z.object({
@@ -298,7 +298,12 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
 
   function resolveModel(key: "deepseek" | "grok" | "gemini") {
     if (key === "gemini") return createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })("gemini-3.5-flash");
-    if (key === "grok") return createXai({ apiKey: process.env.GROK_API_KEY })("grok-4.3");
+    // grok-4.3 es un modelo de razonamiento -- bug real reportado en vivo:
+    // su "pensamiento" interno (borradores, conteo de palabras, notas tipo
+    // "thought...") se colaba directo en la respuesta visible al usuario en
+    // vez de quedar separado. grok-4.20-non-reasoning responde directo, sin
+    // ese problema -- no hace falta el razonamiento visible para este chat.
+    if (key === "grok") return createXai({ apiKey: process.env.GROK_API_KEY })("grok-4.20-non-reasoning");
     return createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-chat");
   }
 
