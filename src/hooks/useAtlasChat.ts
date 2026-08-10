@@ -192,6 +192,53 @@ function mergeConversations(local: AiConversation[], cloud: AiConversation[]): A
   return sortConversations([...byId.values()]).slice(0, MAX_CONVERSATIONS);
 }
 
+// Salvaguarda real contra un glitch de degeneración conocido de los modelos
+// (se traban repitiendo la misma frase corta muchas veces seguidas -- visto
+// en vivo, ej. "...pagadas sin costo pagadas sin costo pagadas sin costo..."
+// decenas de veces en una sugerencia real). Colapsa cualquier frase de 1 a 6
+// palabras que se repita 3+ veces seguidas a una sola aparición.
+//
+// Ojo real (bug encontrado probando esto mismo con el caso real de arriba):
+// una sola pasada por tamaño de ventana no alcanza si el número de
+// repeticiones no es múltiplo exacto de esa ventana (ej. 9 repeticiones de
+// una frase de 3 palabras = 27 palabras, no divide limpio en bloques de 6) --
+// quedan repeticiones sueltas sin colapsar. Por eso cada pasada empuja las
+// PALABRAS SUELTAS de la ventana retenida (no la frase ya unida como un solo
+// token), para que ventanas más chicas en pasadas siguientes las puedan
+// seguir analizando palabra por palabra; y todo el proceso se repite hasta
+// que una pasada completa ya no cambia nada (o hasta 4 rondas, de sobra para
+// cualquier caso real).
+function collapseRepeatedPhrases(text: string): string {
+  let words = text.split(/\s+/).filter(Boolean);
+  for (let round = 0; round < 4; round++) {
+    const before = words.join(" ");
+    for (let winSize = 6; winSize >= 1; winSize--) {
+      const out: string[] = [];
+      let i = 0;
+      while (i < words.length) {
+        const windowWords = words.slice(i, i + winSize);
+        const window = windowWords.join(" ").toLowerCase();
+        let j = i + winSize;
+        let repeatCount = 1;
+        while (j + winSize <= words.length && words.slice(j, j + winSize).join(" ").toLowerCase() === window) {
+          repeatCount++;
+          j += winSize;
+        }
+        if (repeatCount >= 3) {
+          out.push(...windowWords);
+          i = j;
+        } else {
+          out.push(words[i]);
+          i++;
+        }
+      }
+      words = out;
+    }
+    if (words.join(" ") === before) break;
+  }
+  return words.join(" ");
+}
+
 // Extrae el bloque ---SUGERENCIAS--- del texto del modelo (mismo contrato
 // que se le exige en el system prompt) y lo separa del cuerpo real de la
 // respuesta, para poder renderizarlo como chips clickeables aparte.
@@ -203,13 +250,19 @@ export function extractSuggestions(raw: string): { content: string; suggestions:
   const block = raw.slice(idx + marker.length);
   const suggestions = Array.from(block.matchAll(/^[-*]\s*(.+)$/gm))
     .map((m) =>
-      m[1]
-        .trim()
-        .replace(/^\[(.+)\]$/, "$1")
-        .replace(/\*\*(.+?)\*\*/g, "$1") // las sugerencias se muestran en chips de texto plano, sin render de Markdown
-        .trim(),
+      collapseRepeatedPhrases(
+        m[1]
+          .trim()
+          .replace(/^\[(.+)\]$/, "$1")
+          .replace(/\*\*(.+?)\*\*/g, "$1") // las sugerencias se muestran en chips de texto plano, sin render de Markdown
+          .trim(),
+      ),
     )
-    .filter(Boolean)
+    // Respaldo final: una pregunta de seguimiento real nunca debería superar
+    // ~140 caracteres -- si sigue así de larga incluso después de colapsar
+    // repeticiones, es una señal real de que el modelo se degeneró de otra
+    // forma; mejor descartarla que mostrar un chip roto.
+    .filter((s) => s.length > 0 && s.length <= 140)
     .slice(0, 2);
   return { content: content || raw.trim(), suggestions };
 }

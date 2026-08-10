@@ -149,6 +149,48 @@ function fromFirestoreValue(v: any): unknown {
 // Mismo contrato que extractSuggestions() en useAtlasChat.ts -- duplicado a
 // propósito (el hook es código de cliente, este módulo corre server-side),
 // mismo patrón de duplicación ya aceptado en esta cuenta.
+// Mismo contrato que collapseRepeatedPhrases() en useAtlasChat.ts --
+// duplicado a propósito (server-side vs. cliente, mismo patrón ya aceptado
+// en esta cuenta). Salvaguarda real contra un glitch de degeneración
+// conocido de los modelos (se traban repitiendo la misma frase corta muchas
+// veces seguidas, visto en vivo en una sugerencia real).
+// Ojo real (bug encontrado probando con el caso real que lo motivó): una
+// sola pasada por tamaño de ventana no alcanza si el número de repeticiones
+// no es múltiplo exacto de esa ventana -- quedan repeticiones sueltas sin
+// colapsar. Por eso cada pasada empuja las PALABRAS SUELTAS de la ventana
+// retenida (no la frase ya unida como un solo token), y todo el proceso se
+// repite hasta que una pasada completa ya no cambia nada.
+function collapseRepeatedPhrases(text: string): string {
+  let words = text.split(/\s+/).filter(Boolean);
+  for (let round = 0; round < 4; round++) {
+    const before = words.join(" ");
+    for (let winSize = 6; winSize >= 1; winSize--) {
+      const out: string[] = [];
+      let i = 0;
+      while (i < words.length) {
+        const windowWords = words.slice(i, i + winSize);
+        const window = windowWords.join(" ").toLowerCase();
+        let j = i + winSize;
+        let repeatCount = 1;
+        while (j + winSize <= words.length && words.slice(j, j + winSize).join(" ").toLowerCase() === window) {
+          repeatCount++;
+          j += winSize;
+        }
+        if (repeatCount >= 3) {
+          out.push(...windowWords);
+          i = j;
+        } else {
+          out.push(words[i]);
+          i++;
+        }
+      }
+      words = out;
+    }
+    if (words.join(" ") === before) break;
+  }
+  return words.join(" ");
+}
+
 function extractSuggestions(raw: string): { content: string; suggestions: string[] } {
   const marker = "---SUGERENCIAS---";
   const idx = raw.indexOf(marker);
@@ -156,8 +198,8 @@ function extractSuggestions(raw: string): { content: string; suggestions: string
   const content = raw.slice(0, idx).trim();
   const block = raw.slice(idx + marker.length);
   const suggestions = Array.from(block.matchAll(/^[-*]\s*(.+)$/gm))
-    .map((m) => m[1].trim().replace(/^\[(.+)\]$/, "$1").replace(/\*\*(.+?)\*\*/g, "$1").trim())
-    .filter(Boolean)
+    .map((m) => collapseRepeatedPhrases(m[1].trim().replace(/^\[(.+)\]$/, "$1").replace(/\*\*(.+?)\*\*/g, "$1").trim()))
+    .filter((s) => s.length > 0 && s.length <= 140)
     .slice(0, 2);
   return { content: content || raw.trim(), suggestions };
 }
