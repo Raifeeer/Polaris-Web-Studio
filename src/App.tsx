@@ -20,6 +20,7 @@ import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import Logo from "./components/Logo";
 import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
+import { initNavPerfDebug } from "./lib/navPerfDebug";
 import { prefetchPortfolioMediaIdle } from "./lib/mediaPrefetch";
 import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
@@ -361,6 +362,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // Recopilador temporal de rendimiento del navbar -- no-op salvo que la
+    // URL tenga ?navdebug=1 o ya se haya activado antes en este navegador.
+    initNavPerfDebug();
+
     // Calienta en segundo plano los chunks de las demás páginas, sin
     // competir con la carga/render inicial (solo corre en tiempo ocioso).
     prefetchAllRoutesIdle();

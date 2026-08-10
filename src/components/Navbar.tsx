@@ -37,6 +37,12 @@ export default function Navbar() {
     return () => document.body.classList.remove("mobile-menu-open");
   }, [isOpen]);
 
+  // Recopilador temporal de rendimiento (ver navPerfDebug.ts) -- no-op
+  // salvo que ya esté activado con ?navdebug=1 en este navegador.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("navdebug:toggle", { detail: { isOpen } }));
+  }, [isOpen]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (navRef.current && !navRef.current.contains(event.target as Node)) setIsOpen(false);
