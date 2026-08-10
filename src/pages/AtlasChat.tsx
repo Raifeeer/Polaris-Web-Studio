@@ -348,16 +348,16 @@ export default function AtlasChat() {
               <Tooltip label={translate("Ir al inicio", "Go to home")}>
                 <Link
                   to="/"
-                  className="flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2.5 md:px-2.5 md:py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Ir al inicio", "Go to home")}
                 >
-                  <Home size={18} className="md:w-4 md:h-4" />
+                  <Home size={18} className="md:w-3.5 md:h-3.5" />
                   <T en="Home">Inicio</T>
                 </Link>
               </Tooltip>
               <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-                <AtlasMark variant="isotipo" className="w-8 h-8 md:w-7 md:h-7 shrink-0" />
-                <AtlasMark variant="wordmark" className="h-7 md:h-6 w-auto" />
+                <AtlasMark variant="isotipo" className="w-8 h-8 md:w-6 md:h-6 shrink-0" />
+                <AtlasMark variant="wordmark" className="h-7 md:h-5 w-auto" />
               </div>
               {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
                   ES/EN normal) -- sin esto, alguien con el navegador en inglés y
@@ -365,7 +365,7 @@ export default function AtlasChat() {
               <Tooltip label={translate("Cambiar idioma", "Change language")}>
                 <button
                   onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                  className="px-3 py-2.5 md:py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  className="px-3 py-2.5 md:px-2.5 md:py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Cambiar idioma", "Change language")}
                 >
                   {language === "es" ? "EN" : "ES"}
@@ -399,7 +399,7 @@ export default function AtlasChat() {
                       setSidebarOpen(false);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 md:py-2 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-sm font-black uppercase tracking-wider transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 md:py-1.5 px-3 md:px-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-sm md:text-xs font-black uppercase tracking-wider transition-colors"
                 >
                   <SquarePen size={16} className="md:w-3.5 md:h-3.5" />
                   <T en="New chat">Nuevo chat</T>
@@ -416,7 +416,7 @@ export default function AtlasChat() {
                     }
                   }}
                   aria-label={translate("Chat temporal", "Temporary chat")}
-                  className={`p-2.5 md:p-2 rounded-lg border transition-colors shrink-0 ${
+                  className={`p-2.5 md:p-1.5 rounded-lg border transition-colors shrink-0 ${
                     isTemporary
                       ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
                       : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
@@ -433,7 +433,7 @@ export default function AtlasChat() {
                       setSidebarAboveSearch(false);
                     }}
                     aria-label={translate("Buscar conversaciones", "Search conversations")}
-                    className="p-2.5 md:p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                    className="p-2.5 md:p-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
                   >
                     <Search size={16} className="md:w-3.5 md:h-3.5" />
                   </button>
