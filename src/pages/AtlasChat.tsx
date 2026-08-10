@@ -521,7 +521,7 @@ export default function AtlasChat() {
                     <div
                       ref={menuRef}
                       onClick={(e) => e.stopPropagation()}
-                      className="absolute right-2 top-9 z-20 w-40 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg overflow-hidden text-[var(--color-text-primary)]"
+                      className="absolute right-2 top-10 z-20 w-48 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg overflow-hidden text-[var(--color-text-primary)]"
                     >
                       <button
                         onClick={() => {
@@ -529,9 +529,9 @@ export default function AtlasChat() {
                           setRenameValue(c.title);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-base font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
                       >
-                        <Pencil size={14} />
+                        <Pencil size={18} />
                         <T en="Rename">Renombrar</T>
                       </button>
                       <button
@@ -539,9 +539,9 @@ export default function AtlasChat() {
                           shareConversation(c.title, c.messages, c.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-base font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
                       >
-                        <Share2 size={14} />
+                        <Share2 size={18} />
                         <T en="Share">Compartir</T>
                       </button>
                       <button
@@ -549,9 +549,9 @@ export default function AtlasChat() {
                           setConfirmDeleteId(c.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 text-base font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={18} />
                         <T en="Delete">Eliminar</T>
                       </button>
                     </div>
@@ -583,16 +583,16 @@ export default function AtlasChat() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-sm rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 shadow-2xl"
             >
-              <h3 className="text-sm font-black text-[var(--color-text-primary)] mb-1.5">
+              <h3 className="text-base font-black text-[var(--color-text-primary)] mb-1.5">
                 <T en="Delete this conversation?">¿Eliminar esta conversación?</T>
               </h3>
-              <p className="text-xs text-[var(--color-text-secondary)] mb-4">
+              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
                 <T en="This can't be undone.">Esta acción no se puede deshacer.</T>
               </p>
               <div className="flex items-center justify-end gap-2">
                 <button
                   onClick={() => setConfirmDeleteId(null)}
-                  className="px-3.5 py-2 rounded-lg text-xs font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors"
+                  className="px-4 py-2.5 rounded-lg text-sm font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors"
                 >
                   <T en="Cancel">Cancelar</T>
                 </button>
@@ -601,7 +601,7 @@ export default function AtlasChat() {
                     deleteConversation(confirmDeleteId);
                     setConfirmDeleteId(null);
                   }}
-                  className="px-3.5 py-2 rounded-lg text-xs font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                  className="px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
                 >
                   <T en="Delete">Eliminar</T>
                 </button>
