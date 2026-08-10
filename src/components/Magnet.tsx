@@ -45,14 +45,22 @@ export default function Magnet({
       const { left, top, width, height } = magnetRef.current.getBoundingClientRect();
       const centerX = left + width / 2;
       const centerY = top + height / 2;
+      const maxX = width / 2 + padding;
+      const maxY = height / 2 + padding;
 
       const distX = Math.abs(centerX - e.clientX);
       const distY = Math.abs(centerY - e.clientY);
 
-      if (distX < width / 2 + padding && distY < height / 2 + padding) {
+      if (distX < maxX && distY < maxY) {
         setIsActive(true);
-        const offsetX = (e.clientX - centerX) / magnetStrength;
-        const offsetY = (e.clientY - centerY) / magnetStrength;
+        // Escala el tirón por qué tan adentro de la zona de activación está
+        // el cursor (0 justo en el borde, máximo cerca del centro) -- sin
+        // esto, el offset saltaba de golpe al valor completo apenas el
+        // cursor cruzaba el borde del padding, sintiéndose como un brinco
+        // brusco en vez de una atracción gradual.
+        const proximity = Math.min(1 - distX / maxX, 1 - distY / maxY);
+        const offsetX = ((e.clientX - centerX) / magnetStrength) * proximity;
+        const offsetY = ((e.clientY - centerY) / magnetStrength) * proximity;
         setPosition({ x: offsetX, y: offsetY });
       } else {
         setIsActive(false);
