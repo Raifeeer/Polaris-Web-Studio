@@ -200,7 +200,16 @@ export default function Navbar() {
 
         {/* Panel de tarjetas -- se expande debajo de la barra, una tarjeta
             por categoría (grid en desktop, apiladas en mobile), cada una con
-            su propio acento de color real de marca en el borde superior. */}
+            su propio acento de color real de marca en el borde superior.
+            Bug real de rendimiento encontrado y corregido (pedido explícito
+            del usuario, "los hover se sienten lentos"): las tarjetas tenían
+            su propio `backdrop-blur-xl` cada una, además del que ya lleva la
+            barra de arriba -- hasta 5 capas de blur simultáneas con el panel
+            abierto (barra + 4 tarjetas), contra 1 sola que tenía el navbar
+            clásico. A opacidad /98 el blur casi no se nota visualmente (el
+            fondo ya es casi sólido), pero el navegador lo sigue recalculando
+            en cada repintado -- quitado de las tarjetas, sin cambio visual
+            real, con una ganancia de rendimiento real. */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
@@ -225,7 +234,7 @@ export default function Navbar() {
                     initial={{ opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
-                    className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]/98 backdrop-blur-xl shadow-lg p-4 pt-3"
+                    className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-4 pt-3"
                     style={{ borderTopColor: card.accent, borderTopWidth: 3 }}
                   >
                     <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: card.accent }}>
@@ -257,7 +266,7 @@ export default function Navbar() {
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: cards.length * 0.06, ease: "easeOut" }}
-                  className="sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]/98 backdrop-blur-xl shadow-lg p-4 flex flex-wrap items-center gap-x-8 gap-y-3"
+                  className="sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-4 flex flex-wrap items-center gap-x-8 gap-y-3"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
