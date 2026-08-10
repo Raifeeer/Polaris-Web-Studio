@@ -29,7 +29,7 @@ import {
   Moon,
   Pin,
   PinOff,
-  Shrink,
+  FoldVertical,
   Download,
   CornerDownLeft,
   Type,
@@ -208,14 +208,16 @@ function MessageBubble({
                   Solo tiene sentido en la última respuesta y si el texto ya
                   es largo -- no tiene caso ofrecerlo sobre una de 1 línea. */}
               {isLast && message.content.length > 220 && (
-                <button
+                <motion.button
                   onClick={() => onSuggestionClick(message.lang === "en" ? "Make that shorter." : "Hazlo más corto.")}
                   aria-label={translate("Respuesta más corta", "Shorter answer")}
                   title={translate("Respuesta más corta", "Shorter answer")}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
                   className="opacity-100 focus:opacity-100 transition-opacity p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
                 >
-                  <Shrink size={12} />
-                </button>
+                  <FoldVertical size={12} />
+                </motion.button>
               )}
             </div>
           )}
@@ -236,6 +238,32 @@ function MessageBubble({
         </div>
       </div>
     </motion.div>
+  );
+}
+
+// Switch real (Ajustes), usado por "Sonido al responder" y "Enviar con
+// Enter". Alineación por flex (justify-start/end) en vez de calcular
+// translate-x a mano -- más robusto contra el box model real del botón
+// (bug real reportado en vivo: el switch se veía deformado con el enfoque
+// anterior). El thumb usa `layout` de framer-motion para deslizar con
+// resorte real entre las dos posiciones, y el botón entero escala un poco
+// al hacer hover/tap para que el control se sienta vivo, no solo un cambio
+// de color instantáneo.
+function ToggleSwitch({ checked, onChange, label }: { checked: boolean; onChange: () => void; label: string }) {
+  return (
+    <motion.button
+      onClick={onChange}
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      whileHover={{ scale: 1.06 }}
+      whileTap={{ scale: 0.94 }}
+      className={`w-11 h-6 shrink-0 rounded-full border-0 p-0.5 flex items-center transition-colors ${
+        checked ? "bg-[var(--color-primary-base)] justify-end" : "bg-[var(--color-border-subtle)] justify-start"
+      }`}
+    >
+      <motion.span layout transition={{ type: "spring", stiffness: 600, damping: 34 }} className="block w-5 h-5 rounded-full bg-white shadow-sm" />
+    </motion.button>
   );
 }
 
@@ -437,7 +465,13 @@ export default function AtlasChat() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: 0.2 }}
-            className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto ${desktopCollapsed ? "md:w-[68px]" : "md:w-[280px]"} shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden`}
+            // Sin overflow-hidden acá a propósito -- clipeaba el tooltip
+            // (position:absolute) de los íconos del rail colapsado, que
+            // necesita poder salirse del ancho angosto del panel (68px) para
+            // mostrarse completo hacia la derecha. Los contenedores internos
+            // (contenido completo, lista de conversaciones) ya manejan su
+            // propio overflow-hidden/overflow-y-auto por separado.
+            className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto ${desktopCollapsed ? "md:w-[68px]" : "md:w-[280px]"} shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col`}
           >
             {/* ---- Contenido completo: siempre visible en mobile (el sidebar
                 ahí es un overlay a pantalla completa, "colapsar a rail" no
@@ -696,8 +730,14 @@ export default function AtlasChat() {
             {/* ---- Rail de solo íconos (desktop, colapsado) -- mismo patrón
                 que el sidebar colapsado de Gemini: sin lista de
                 conversaciones ni texto, solo los accesos rápidos reales. ---- */}
-            <div className={`hidden ${desktopCollapsed ? "md:flex" : ""} flex-col items-center flex-1 overflow-hidden py-3 gap-1`}>
-              <Tooltip label={translate("Expandir panel", "Expand panel")}>
+            <div className={`hidden ${desktopCollapsed ? "md:flex" : ""} flex-col items-center flex-1 py-3 gap-1`}>
+              {/* Sin overflow-hidden acá (a diferencia del resto del sidebar)
+                  -- bug real reportado: el tooltip (position:absolute) de
+                  cada ícono quedaba cortado por el propio contenedor angosto
+                  del rail. side="right" además evita que el tooltip intente
+                  centrarse sobre un ícono pegado al borde izquierdo real de
+                  la pantalla. */}
+              <Tooltip label={translate("Expandir panel", "Expand panel")} side="right">
                 <button
                   onClick={() => setDesktopCollapsed(false)}
                   className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
@@ -707,7 +747,7 @@ export default function AtlasChat() {
                 </button>
               </Tooltip>
               <div className="h-px w-8 my-1.5 bg-[var(--color-border-subtle)]" />
-              <Tooltip label={translate("Ir al inicio", "Go to home")}>
+              <Tooltip label={translate("Ir al inicio", "Go to home")} side="right">
                 <Link
                   to="/"
                   className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
@@ -716,7 +756,7 @@ export default function AtlasChat() {
                   <Home size={16} />
                 </Link>
               </Tooltip>
-              <Tooltip label={translate("Nuevo chat", "New chat")}>
+              <Tooltip label={translate("Nuevo chat", "New chat")} side="right">
                 <button
                   onClick={() => {
                     newChat();
@@ -729,7 +769,7 @@ export default function AtlasChat() {
                   <SquarePen size={16} />
                 </button>
               </Tooltip>
-              <Tooltip label={translate("Chat temporal", "Temporary chat")}>
+              <Tooltip label={translate("Chat temporal", "Temporary chat")} side="right">
                 <button
                   onClick={() => {
                     toggleTemporary();
@@ -747,7 +787,7 @@ export default function AtlasChat() {
                 </button>
               </Tooltip>
               {conversations.length > 0 && (
-                <Tooltip label={translate("Buscar conversaciones", "Search conversations")}>
+                <Tooltip label={translate("Buscar conversaciones", "Search conversations")} side="right">
                   <button
                     onClick={() => {
                       setSearchOpen(true);
@@ -761,7 +801,7 @@ export default function AtlasChat() {
                 </Tooltip>
               )}
               <div className="flex-1" />
-              <Tooltip label={translate("Ajustes", "Settings")}>
+              <Tooltip label={translate("Ajustes", "Settings")} side="right">
                 <button
                   onClick={() => setSettingsOpen(true)}
                   className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
@@ -931,18 +971,28 @@ export default function AtlasChat() {
                           <Type size={18} className="text-[var(--color-text-secondary)]" />
                           <T en="Text size">Tamaño de texto</T>
                         </div>
-                        <div className="flex items-center rounded-lg border border-[var(--color-border-subtle)] overflow-hidden">
+                        {/* Segmentado con indicador que desliza entre
+                            opciones (layoutId de framer-motion, sin
+                            overflow-hidden en el contenedor -- cada botón
+                            tiene su propio radio real, no depende de que el
+                            padre lo recorte). */}
+                        <div className="relative flex items-center gap-0.5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-0.5">
                           {(["sm", "md", "lg"] as AtlasFontSize[]).map((size) => (
                             <button
                               key={size}
                               onClick={() => setFontSize(size)}
                               aria-label={size === "sm" ? translate("Chico", "Small") : size === "md" ? translate("Mediano", "Medium") : translate("Grande", "Large")}
-                              className={`w-9 py-1.5 font-black transition-colors ${size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"} ${
-                                fontSize === size
-                                  ? "bg-[var(--color-primary-base)] text-white"
-                                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"
+                              className={`relative w-9 py-1.5 rounded-lg font-black transition-colors ${size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"} ${
+                                fontSize === size ? "text-white" : "text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
                               }`}
                             >
+                              {fontSize === size && (
+                                <motion.span
+                                  layoutId="fontSizeIndicator"
+                                  transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                                  className="absolute inset-0 -z-10 rounded-lg bg-[var(--color-primary-base)]"
+                                />
+                              )}
                               A
                             </button>
                           ))}
@@ -962,14 +1012,7 @@ export default function AtlasChat() {
                           {soundEnabled ? <Bell size={18} className="text-[var(--color-text-secondary)]" /> : <BellOff size={18} className="text-[var(--color-text-secondary)]" />}
                           <T en="Sound on reply">Sonido al responder</T>
                         </div>
-                        <button
-                          onClick={() => setSoundEnabled(!soundEnabled)}
-                          role="switch"
-                          aria-checked={soundEnabled}
-                          className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${soundEnabled ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-border-subtle)]"}`}
-                        >
-                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${soundEnabled ? "translate-x-[18px]" : "translate-x-0.5"}`} />
-                        </button>
+                        <ToggleSwitch checked={soundEnabled} onChange={() => setSoundEnabled(!soundEnabled)} label={translate("Sonido al responder", "Sound on reply")} />
                       </div>
 
                       {/* Enviar con Enter -- ON por defecto en desktop
@@ -986,14 +1029,7 @@ export default function AtlasChat() {
                             </p>
                           </div>
                         </div>
-                        <button
-                          onClick={() => setEnterToSend(!enterToSend)}
-                          role="switch"
-                          aria-checked={enterToSend}
-                          className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${enterToSend ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-border-subtle)]"}`}
-                        >
-                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${enterToSend ? "translate-x-[18px]" : "translate-x-0.5"}`} />
-                        </button>
+                        <ToggleSwitch checked={enterToSend} onChange={() => setEnterToSend(!enterToSend)} label={translate("Enviar con Enter", "Send with Enter")} />
                       </div>
                     </div>
 
@@ -1039,9 +1075,14 @@ export default function AtlasChat() {
             isTemporary ? "bg-[var(--color-text-primary)] border-[var(--color-text-primary)]" : "bg-[var(--color-surface-base)]/80 border-[var(--color-border-subtle)]"
           }`}
         >
+          {/* Solo mobile -- en desktop el sidebar ya no se oculta del todo
+              desde acá (pedido explícito del usuario, redundante con el
+              colapso a rail de íconos que ahora vive dentro del propio
+              sidebar). En mobile sigue siendo el único acceso real para
+              volver a abrir el overlay una vez cerrado. */}
           <button
             onClick={() => setSidebarOpen((v) => !v)}
-            className={`p-2 rounded-lg transition-colors ${isTemporary ? "text-[var(--color-surface-base)] hover:bg-white/10" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"}`}
+            className={`md:hidden p-2 rounded-lg transition-colors ${isTemporary ? "text-[var(--color-surface-base)] hover:bg-white/10" : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"}`}
             aria-label={translate("Mostrar/ocultar historial", "Toggle history")}
           >
             {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}

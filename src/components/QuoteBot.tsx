@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2, RotateCcw, Shrink } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2, RotateCcw, FoldVertical } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type WebSearchSource } from "../hooks/useAtlasChat";
@@ -141,14 +141,16 @@ function WidgetCopyButton({
       {/* Mismo criterio que AtlasChat.tsx (página completa) -- solo tiene
           sentido en la última respuesta y si el texto ya es largo. */}
       {isLast && text.length > 220 && onShorten && (
-        <button
+        <motion.button
           onClick={onShorten}
           aria-label={translate("Respuesta más corta", "Shorter answer")}
           title={translate("Respuesta más corta", "Shorter answer")}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
           className="p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
         >
-          <Shrink size={11} />
-        </button>
+          <FoldVertical size={11} />
+        </motion.button>
       )}
     </div>
   );
