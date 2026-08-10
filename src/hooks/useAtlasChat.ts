@@ -137,14 +137,33 @@ function pushToCloud(list: AiConversation[]) {
   if (typeof window === "undefined") return;
   if (pushDebounce) clearTimeout(pushDebounce);
   pushDebounce = setTimeout(() => {
-    setDoc(doc(db, "atlas_conversations", getVisitorId()), {
-      conversations: list,
-      updatedAt: serverTimestamp(),
-    }).catch(() => {
-      // Best-effort -- si falla (sin red, reglas, etc.) el chat sigue
-      // funcionando normal desde localStorage, no hay nada que reintentar
-      // acá que valga la pena bloquear la UI por eso.
-    });
+    // Bug real encontrado en vivo: `icon`/`pinned` viven en el tipo como
+    // opcionales y pueden valer `undefined` (conversación nueva sin ícono
+    // resuelto todavía, o nunca fijada) -- el SDK de Firestore VALIDA el
+    // payload de forma síncrona ANTES de intentar el request real, y
+    // `setDoc()` con un campo `undefined` en cualquier parte del árbol
+        // LANZA de inmediato (no es un rechazo de promesa) -- el `.catch()`
+    // de abajo nunca lo atrapa porque el throw pasa fuera de la cadena de
+    // promesas, tumbando toda la página con un error real no manejado. El
+    // JSON round-trip abajo elimina cualquier clave `undefined` (mismo
+    // efecto que ya tiene JSON.stringify() al guardar en localStorage, acá
+    // aplicado también a lo que se manda a la nube) antes de llamar a
+    // setDoc(), y el try/catch es un segundo resguardo real por si algún
+    // otro caso similar aparece más adelante.
+    try {
+      const sanitized = JSON.parse(JSON.stringify(list)) as AiConversation[];
+      setDoc(doc(db, "atlas_conversations", getVisitorId()), {
+        conversations: sanitized,
+        updatedAt: serverTimestamp(),
+      }).catch(() => {
+        // Best-effort -- si falla (sin red, reglas, etc.) el chat sigue
+        // funcionando normal desde localStorage, no hay nada que reintentar
+        // acá que valga la pena bloquear la UI por eso.
+      });
+    } catch {
+      // Ver comentario arriba -- respaldo real de la nube, nunca debe poder
+      // tumbar el chat si algo sale mal acá.
+    }
   }, 1200);
 }
 
@@ -318,7 +337,9 @@ export function useAtlasChat() {
       // El ícono (si ya se resolvió por IA) se conserva igual que el título --
       // persist() se llama en cada mensaje, no solo en el primero.
       const icon = existingIdx >= 0 ? prev[existingIdx].icon : undefined;
-      const pinned = existingIdx >= 0 ? prev[existingIdx].pinned : undefined;
+      // `false`, no `undefined` -- ver el sanitizado real en pushToCloud()
+      // para el motivo (Firestore rechaza `undefined` de forma síncrona).
+      const pinned = existingIdx >= 0 ? !!prev[existingIdx].pinned : false;
       const entry: AiConversation = { id, title, icon, messages: msgs, updatedAt: Date.now(), pinned };
       const next = existingIdx >= 0 ? prev.map((c, i) => (i === existingIdx ? entry : c)) : [entry, ...prev];
       const trimmed = sortConversations(next).slice(0, MAX_CONVERSATIONS);

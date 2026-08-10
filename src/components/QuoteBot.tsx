@@ -12,7 +12,6 @@ import WebSourcesPanel, { hostnameOf } from "./WebSourcesPanel";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "./VoiceInputBar";
-import AnimatedCheckIcon from "./AnimatedCheckIcon";
 import AtlasMark from "./AtlasMark";
 import TemporaryChatIcon from "./TemporaryChatIcon";
 
@@ -113,7 +112,7 @@ function WidgetCopyButton({
   const revealCls = isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100";
   return (
     <div className={`mt-1 flex items-center gap-3 opacity-100 ${revealCls} focus-within:opacity-100 transition-opacity`}>
-      <button
+      <motion.button
         onClick={() => {
           navigator.clipboard?.writeText(text).then(() => {
             setCopied(true);
@@ -122,10 +121,40 @@ function WidgetCopyButton({
         }}
         aria-label={translate("Copiar", "Copy")}
         title={translate("Copiar", "Copy")}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
         className="p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
       >
-        {copied ? <AnimatedCheckIcon size={11} /> : <Copy size={11} />}
-      </button>
+        {/* Morph real entre Copy/Check con los colores de la web (currentColor
+            hereda del botón) -- mismo patrón que AtlasChat.tsx. */}
+        <div className="relative w-[11px] h-[11px] flex items-center justify-center">
+          <AnimatePresence mode="popLayout" initial={false}>
+            {copied ? (
+              <motion.span
+                key="check"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 600, damping: 25 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <Check size={11} />
+              </motion.span>
+            ) : (
+              <motion.span
+                key="copy"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 600, damping: 25 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <Copy size={11} />
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.button>
       <button
         onClick={tts.toggle}
         disabled={tts.loading}

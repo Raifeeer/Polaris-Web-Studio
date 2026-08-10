@@ -50,7 +50,6 @@ import { getConversationIcon } from "../lib/conversationIcon";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "../components/VoiceInputBar";
-import AnimatedCheckIcon from "../components/AnimatedCheckIcon";
 import Tooltip from "../components/Tooltip";
 import TemporaryChatIcon from "../components/TemporaryChatIcon";
 
@@ -166,18 +165,51 @@ function MessageBubble({
 
           {message.content && (
             <div className="mt-1.5 flex items-center gap-3">
-              <button
+              <motion.button
                 onClick={handleCopy}
                 aria-label={translate("Copiar", "Copy")}
                 title={translate("Copiar", "Copy")}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 // Siempre visible en mobile (no hay hover real). En desktop:
                 // siempre visible en la ÚLTIMA respuesta (pedido explícito del
                 // usuario, mismo criterio ya usado para las sugerencias de
                 // seguimiento), hover-only en las anteriores.
                 className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus:opacity-100 transition-opacity p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]`}
               >
-                {copied ? <AnimatedCheckIcon size={12} /> : <Copy size={12} />}
-              </button>
+                {/* Morph real entre Copy/Check (pedido explícito del usuario,
+                    con los colores de la web -- currentColor hereda del botón,
+                    sin blanco/negro fijo como el ejemplo original) -- mismo
+                    resorte (scale+opacity) que ya usan otras animaciones de
+                    esta página, en vez del cambio de ícono instantáneo. */}
+                <div className="relative w-3 h-3 flex items-center justify-center">
+                  <AnimatePresence mode="popLayout" initial={false}>
+                    {copied ? (
+                      <motion.span
+                        key="check"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 600, damping: 25 }}
+                        className="absolute inset-0 flex items-center justify-center"
+                      >
+                        <Check size={12} />
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="copy"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.5, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 600, damping: 25 }}
+                        className="absolute inset-0 flex items-center justify-center"
+                      >
+                        <Copy size={12} />
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.button>
               <button
                 onClick={tts.toggle}
                 disabled={tts.loading}
