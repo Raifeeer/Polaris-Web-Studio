@@ -122,16 +122,25 @@ export default function Navbar() {
   return (
     <>
       <div className="h-16 w-full shrink-0" aria-hidden="true" />
+      {/* Bug real reportado en vivo: la barra quedaba angosta y centrada con
+          mucho margen a los lados en desktop (max-w-6xl + mx-auto) -- el
+          navbar clásico ocupaba todo el ancho real de la página. Fix: la
+          barra superior vuelve a ser de ancho completo (mismo padding
+          horizontal responsive que usaba el navbar clásico), sin la
+          "tarjeta" flotante angosta -- el panel de tarjetas que se expande
+          abajo sí mantiene su propio ancho máximo centrado, solo para que
+          las tarjetas de categorías no queden absurdamente estiradas en
+          pantallas muy anchas. */}
       <nav
         ref={navRef}
-        className={`fixed left-0 right-0 top-0 z-50 mx-auto max-w-6xl px-3 pt-3 transition-transform duration-300 ${hidden ? "-translate-y-[calc(100%+2rem)]" : "translate-y-0"}`}
+        className={`fixed left-0 right-0 top-0 z-50 w-full transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
-        {/* Barra superior -- siempre una sola "tarjeta" real (logo + botón +
-            CTA), el menú de tarjetas se expande DEBAJO de esta, no dentro. */}
+        {/* Barra superior -- ancho completo real (logo + botón + CTA), el
+            menú de tarjetas se expande DEBAJO de esta, no dentro. */}
         <div
-          className={`flex items-center justify-between h-14 px-4 rounded-2xl border transition-colors duration-300 ${
+          className={`flex items-center justify-between h-16 px-4 md:px-6 lg:px-8 xl:px-12 border-b transition-colors duration-300 ${
             scrolled || isOpen
-              ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] shadow-lg backdrop-blur-xl"
+              ? "bg-[var(--color-surface-elevated)]/98 border-[var(--color-border-subtle)] backdrop-blur-xl"
               : "bg-[var(--color-surface-elevated)]/80 border-transparent backdrop-blur-md"
           }`}
         >
@@ -140,8 +149,8 @@ export default function Navbar() {
             className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
             aria-label={translate("Polaris Web Studio - Inicio", "Polaris Web Studio - Home")}
           >
-            <img src="/brand/lockup-horizontal-blanco.svg" alt="Polaris Web Studio" className="h-9 w-auto shrink-0 [.light_&]:hidden" />
-            <img src="/brand/lockup-horizontal-color.svg" alt="Polaris Web Studio" className="h-9 w-auto shrink-0 hidden [.light_&]:block" />
+            <img src="/brand/lockup-horizontal-blanco.svg" alt="Polaris Web Studio" className="h-12 w-auto shrink-0 [.light_&]:hidden" />
+            <img src="/brand/lockup-horizontal-color.svg" alt="Polaris Web Studio" className="h-12 w-auto shrink-0 hidden [.light_&]:block" />
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -193,7 +202,7 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden"
+              className="overflow-hidden bg-[var(--color-surface-elevated)]/98 backdrop-blur-xl border-b border-[var(--color-border-subtle)] shadow-lg"
             >
               {/* Bug real reportado en vivo (mobile, pantalla chica): con
                   las 3 tarjetas + la de ajustes apiladas, el panel entero
@@ -204,8 +213,11 @@ export default function Navbar() {
                   raro. Fix: el propio panel de tarjetas tiene su tope real de
                   alto (lo que sobra de viewport debajo de la barra superior)
                   y scroll interno -- el menú queda 100% navegable sin
-                  necesidad de tocar el scroll de la página de atrás. */}
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain pb-2">
+                  necesidad de tocar el scroll de la página de atrás.
+                  max-w-6xl mx-auto acá adentro (no en la barra) -- centra las
+                  tarjetas en pantallas muy anchas sin angostar la barra de
+                  arriba, que ahora sí ocupa el ancho real completo. */}
+              <div className="max-w-6xl mx-auto px-4 md:px-6 lg:px-8 xl:px-12 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain">
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
