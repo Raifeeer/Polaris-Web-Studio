@@ -29,10 +29,17 @@ import {
   Moon,
   Pin,
   PinOff,
+  Shrink,
+  Download,
+  CornerDownLeft,
+  Type,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useTheme } from "../hooks/useTheme";
-import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
+import { useAtlasPrefs, FONT_SIZE_CLASS, playAtlasChime, type AtlasFontSize } from "../hooks/useAtlasPrefs";
+import { useAtlasChat, type AiMessage, type AiConversation } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
 import AtlasWidget from "../components/AtlasWidget";
@@ -111,7 +118,17 @@ function pickRandomSuggestions(count: number): { es: string; en: string }[] {
   return pool.slice(0, count);
 }
 
-function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMessage; onSuggestionClick: (q: string) => void; isLast: boolean }) {
+function MessageBubble({
+  message,
+  onSuggestionClick,
+  isLast,
+  fontSizeClass = "text-sm",
+}: {
+  message: AiMessage;
+  onSuggestionClick: (q: string) => void;
+  isLast: boolean;
+  fontSizeClass?: string;
+}) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === "user";
   const tts = useTextToSpeech(message.content, message.lang || "es");
@@ -128,7 +145,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex justify-end">
         <div className="max-w-[85%] sm:max-w-[70%] p-3 rounded-2xl rounded-tr-md bg-[var(--color-primary-base)] text-white shadow-sm">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+          <p className={`${fontSizeClass} leading-relaxed whitespace-pre-wrap`}>{message.content}</p>
         </div>
       </motion.div>
     );
@@ -142,7 +159,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
         </div>
         <div className="group flex-1 min-w-0">
           <div className="p-3 rounded-2xl rounded-tl-md bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-[var(--color-text-primary)]">
-            <AtlasMarkdown content={message.content} />
+            <AtlasMarkdown content={message.content} sizeClass={fontSizeClass} />
           </div>
 
           <AtlasWidget widget={message.widget} onAction={onSuggestionClick} lang={message.lang || "es"} />
@@ -182,6 +199,23 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                 <div className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus-within:opacity-100 transition-opacity`}>
                   <WebSourcesPanel sources={message.webSearchSources || []} />
                 </div>
+              )}
+              {/* Pedido explícito del usuario: la longitud de la respuesta
+                  ahora la decide el modelo según lo que amerite la pregunta
+                  (ver REGLAS en quotebot-chat.ts) -- no siempre corta. Este
+                  botón cubre el caso contrario: pedir una versión más breve
+                  de una respuesta puntual sin tener que escribirlo a mano.
+                  Solo tiene sentido en la última respuesta y si el texto ya
+                  es largo -- no tiene caso ofrecerlo sobre una de 1 línea. */}
+              {isLast && message.content.length > 220 && (
+                <button
+                  onClick={() => onSuggestionClick(message.lang === "en" ? "Make that shorter." : "Hazlo más corto.")}
+                  aria-label={translate("Respuesta más corta", "Shorter answer")}
+                  title={translate("Respuesta más corta", "Shorter answer")}
+                  className="opacity-100 focus:opacity-100 transition-opacity p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                >
+                  <Shrink size={12} />
+                </button>
               )}
             </div>
           )}
@@ -239,6 +273,7 @@ export default function AtlasChat() {
     maxPinned,
   } = useAtlasChat();
   const { theme, toggleTheme } = useTheme();
+  const { fontSize, setFontSize, soundEnabled, setSoundEnabled, enterToSend, setEnterToSend } = useAtlasPrefs();
   const [input, setInput] = useState("");
   const speech = useSpeechToText(
     (transcript) => setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript)),
@@ -258,6 +293,37 @@ export default function AtlasChat() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
   const pinnedCount = conversations.filter((c) => c.pinned).length;
+
+  // Sonido opcional al terminar de responder (ajuste apagado por defecto) --
+  // se detecta la transición true -> false de `loading`, no cada render.
+  const prevLoadingRef = useRef(false);
+  useEffect(() => {
+    if (prevLoadingRef.current && !loading && soundEnabled) playAtlasChime();
+    prevLoadingRef.current = loading;
+  }, [loading, soundEnabled]);
+
+  // Exporta todo el historial local a un .txt real -- distinto de
+  // "Compartir" (una sola conversación a la vez). Genera el archivo
+  // client-side (Blob + <a download>), sin pegarle a ningún backend.
+  const exportAllConversations = () => {
+    const lines: string[] = [];
+    for (const c of conversations as AiConversation[]) {
+      lines.push(`# ${c.title}`, "");
+      for (const m of c.messages) {
+        lines.push(`${m.role === "user" ? translate("Yo", "Me") : "Atlas"}: ${m.content}`, "");
+      }
+      lines.push("---", "");
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `atlas-conversaciones-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -776,7 +842,7 @@ export default function AtlasChat() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 shadow-2xl"
+              className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-6 shadow-2xl"
             >
               {confirmClearAll ? (
                 <>
@@ -820,49 +886,144 @@ export default function AtlasChat() {
                     </button>
                   </div>
 
-                  <div className="space-y-1.5">
-                    {/* Idioma -- esta página no tiene el Navbar del sitio
-                        (donde vive el switcher ES/EN normal), sin esto
-                        alguien con el navegador en inglés y sin preferencia
-                        guardada queda atascado en inglés acá. */}
-                    <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
-                      <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
-                        <Globe size={18} className="text-[var(--color-text-secondary)]" />
-                        <T en="Language">Idioma</T>
+                  <div className="space-y-5">
+                    <div className="space-y-1.5">
+                      <p className="px-3 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                        <T en="Appearance">Apariencia</T>
+                      </p>
+                      {/* Idioma -- esta página no tiene el Navbar del sitio
+                          (donde vive el switcher ES/EN normal), sin esto
+                          alguien con el navegador en inglés y sin preferencia
+                          guardada queda atascado en inglés acá. */}
+                      <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                        <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                          <Globe size={18} className="text-[var(--color-text-secondary)]" />
+                          <T en="Language">Idioma</T>
+                        </div>
+                        <button
+                          onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                          className="px-3 py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors"
+                        >
+                          {language === "es" ? "Español" : "English"}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                        className="px-3 py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors"
-                      >
-                        {language === "es" ? "Español" : "English"}
-                      </button>
+
+                      {/* Tema -- claro/oscuro, mismo useTheme() que ya usa el
+                          resto del sitio (persistido en localStorage). */}
+                      <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                        <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                          {theme === "light" ? <Sun size={18} className="text-[var(--color-text-secondary)]" /> : <Moon size={18} className="text-[var(--color-text-secondary)]" />}
+                          <T en="Theme">Tema</T>
+                        </div>
+                        <button
+                          onClick={toggleTheme}
+                          className="px-3 py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors"
+                        >
+                          {theme === "light" ? <T en="Light">Claro</T> : <T en="Dark">Oscuro</T>}
+                        </button>
+                      </div>
+
+                      {/* Tamaño de texto -- 3 opciones reales (Chico/Mediano/Grande),
+                          aplican tanto al widget flotante como a esta página (mismo
+                          hook useAtlasPrefs, persistido en localStorage). */}
+                      <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                        <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                          <Type size={18} className="text-[var(--color-text-secondary)]" />
+                          <T en="Text size">Tamaño de texto</T>
+                        </div>
+                        <div className="flex items-center rounded-lg border border-[var(--color-border-subtle)] overflow-hidden">
+                          {(["sm", "md", "lg"] as AtlasFontSize[]).map((size) => (
+                            <button
+                              key={size}
+                              onClick={() => setFontSize(size)}
+                              aria-label={size === "sm" ? translate("Chico", "Small") : size === "md" ? translate("Mediano", "Medium") : translate("Grande", "Large")}
+                              className={`w-9 py-1.5 font-black transition-colors ${size === "sm" ? "text-xs" : size === "md" ? "text-sm" : "text-base"} ${
+                                fontSize === size
+                                  ? "bg-[var(--color-primary-base)] text-white"
+                                  : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)]"
+                              }`}
+                            >
+                              A
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
-                    {/* Tema -- claro/oscuro, mismo useTheme() que ya usa el
-                        resto del sitio (persistido en localStorage). */}
-                    <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
-                      <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
-                        {theme === "light" ? <Sun size={18} className="text-[var(--color-text-secondary)]" /> : <Moon size={18} className="text-[var(--color-text-secondary)]" />}
-                        <T en="Theme">Tema</T>
+                    <div className="space-y-1.5">
+                      <p className="px-3 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                        <T en="Chat behavior">Comportamiento del chat</T>
+                      </p>
+                      {/* Sonido al terminar de responder -- apagado por
+                          defecto, útil para quien cambia de pestaña mientras
+                          espera. Beep generado con Web Audio, sin archivo. */}
+                      <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                        <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                          {soundEnabled ? <Bell size={18} className="text-[var(--color-text-secondary)]" /> : <BellOff size={18} className="text-[var(--color-text-secondary)]" />}
+                          <T en="Sound on reply">Sonido al responder</T>
+                        </div>
+                        <button
+                          onClick={() => setSoundEnabled(!soundEnabled)}
+                          role="switch"
+                          aria-checked={soundEnabled}
+                          className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${soundEnabled ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-border-subtle)]"}`}
+                        >
+                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${soundEnabled ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+                        </button>
                       </div>
-                      <button
-                        onClick={toggleTheme}
-                        className="px-3 py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors"
-                      >
-                        {theme === "light" ? <T en="Light">Claro</T> : <T en="Dark">Oscuro</T>}
-                      </button>
+
+                      {/* Enviar con Enter -- ON por defecto en desktop
+                          (comportamiento ya existente); apagarlo hace que
+                          Enter SIEMPRE agregue una línea nueva, solo se envía
+                          con el botón. No aplica en mobile (ver textarea). */}
+                      <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                        <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                          <CornerDownLeft size={18} className="text-[var(--color-text-secondary)]" />
+                          <div>
+                            <T en="Send with Enter">Enviar con Enter</T>
+                            <p className="text-xs font-normal text-[var(--color-text-tertiary)]">
+                              <T en="Desktop only">Solo en desktop</T>
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setEnterToSend(!enterToSend)}
+                          role="switch"
+                          aria-checked={enterToSend}
+                          className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${enterToSend ? "bg-[var(--color-primary-base)]" : "bg-[var(--color-border-subtle)]"}`}
+                        >
+                          <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${enterToSend ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Borrar historial -- irreversible, pide confirmación
-                        aparte (misma vista del modal, no un segundo modal). */}
-                    <button
-                      onClick={() => setConfirmClearAll(true)}
-                      disabled={conversations.length === 0}
-                      className="w-full flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
-                    >
-                      <Trash2 size={18} />
-                      <T en="Delete all conversations">Borrar todo el historial</T>
-                    </button>
+                    <div className="space-y-1.5">
+                      <p className="px-3 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+                        <T en="Data">Datos</T>
+                      </p>
+                      {/* Exportar TODO el historial de una vez -- distinto de
+                          "Compartir" (una sola conversación a la vez, desde el
+                          menú de 3 puntos de cada chat). */}
+                      <button
+                        onClick={exportAllConversations}
+                        disabled={conversations.length === 0}
+                        className="w-full flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-surface-highlight)] transition-colors text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                      >
+                        <Download size={18} className="text-[var(--color-text-secondary)]" />
+                        <T en="Export all conversations (.txt)">Exportar todo el historial (.txt)</T>
+                      </button>
+
+                      {/* Borrar historial -- irreversible, pide confirmación
+                          aparte (misma vista del modal, no un segundo modal). */}
+                      <button
+                        onClick={() => setConfirmClearAll(true)}
+                        disabled={conversations.length === 0}
+                        className="w-full flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                      >
+                        <Trash2 size={18} />
+                        <T en="Delete all conversations">Borrar todo el historial</T>
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
@@ -974,7 +1135,15 @@ export default function AtlasChat() {
                 // (streaming aún sin el primer delta) -- ya la cubre el
                 // indicador de "escribiendo" de abajo.
                 if (m.role === "assistant" && !m.content && i === messages.length - 1) return null;
-                return <MessageBubble key={i} message={m} onSuggestionClick={handleSend} isLast={i === messages.length - 1} />;
+                return (
+                  <MessageBubble
+                    key={i}
+                    message={m}
+                    onSuggestionClick={handleSend}
+                    isLast={i === messages.length - 1}
+                    fontSizeClass={FONT_SIZE_CLASS[fontSize]}
+                  />
+                );
               })}
 
               {loading && !messages[messages.length - 1]?.content && (
@@ -1046,7 +1215,11 @@ export default function AtlasChat() {
                     // Enter envía el mensaje solo en desktop (mouse/teclado físico,
                     // sin touch) -- en mobile el teclado virtual tapa la caja justo
                     // después de escribir, así que ahí Enter solo agrega una línea.
+                    // `enterToSend` (ajuste real en /asistente, ON por defecto) deja
+                    // apagar esto del todo -- con el ajuste apagado, Enter SIEMPRE
+                    // agrega una línea nueva, incluso en desktop.
                     if (
+                      enterToSend &&
                       e.key === "Enter" &&
                       !e.shiftKey &&
                       typeof window !== "undefined" &&

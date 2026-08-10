@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2, RotateCcw } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2, RotateCcw, Shrink } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type WebSearchSource } from "../hooks/useAtlasChat";
+import { useAtlasPrefs, FONT_SIZE_CLASS, playAtlasChime } from "../hooks/useAtlasPrefs";
 import AtlasMarkdown from "./AtlasMarkdown";
 import AtlasWidget from "./AtlasWidget";
 import ThinkingText from "./ThinkingText";
@@ -94,12 +95,14 @@ function WidgetCopyButton({
   webSearchSources,
   lang,
   isLast,
+  onShorten,
 }: {
   text: string;
   usedWebSearch?: boolean;
   webSearchSources?: WebSearchSource[];
   lang: "es" | "en";
   isLast: boolean;
+  onShorten?: () => void;
 }) {
   const { translate } = useLanguage();
   const [copied, setCopied] = useState(false);
@@ -135,6 +138,18 @@ function WidgetCopyButton({
         {tts.loading ? <Loader2 size={11} className="animate-spin" /> : tts.speaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
       </button>
       {usedWebSearch && <WebSourcesPanel sources={webSearchSources || []} iconSize={11} />}
+      {/* Mismo criterio que AtlasChat.tsx (página completa) -- solo tiene
+          sentido en la última respuesta y si el texto ya es largo. */}
+      {isLast && text.length > 220 && onShorten && (
+        <button
+          onClick={onShorten}
+          aria-label={translate("Respuesta más corta", "Shorter answer")}
+          title={translate("Respuesta más corta", "Shorter answer")}
+          className="p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
+          <Shrink size={11} />
+        </button>
+      )}
     </div>
   );
 }
@@ -194,6 +209,16 @@ export default function QuoteBot() {
   } = useAtlasChat();
   const [aiInput, setAiInput] = useState("");
   const speech = useSpeechToText((transcript) => setAiInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript)), language);
+  // Mismas preferencias reales (tamaño de texto, sonido) que la página
+  // completa /asistente -- sin UI propia acá, el widget solo LEE lo que
+  // ya se configuró desde el modal de ajustes de la página completa
+  // (localStorage compartido, ver useAtlasPrefs.ts).
+  const { fontSize, soundEnabled } = useAtlasPrefs();
+  const prevAiLoadingRef = useRef(false);
+  useEffect(() => {
+    if (prevAiLoadingRef.current && !aiLoading && soundEnabled) playAtlasChime();
+    prevAiLoadingRef.current = aiLoading;
+  }, [aiLoading, soundEnabled]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -606,9 +631,9 @@ export default function QuoteBot() {
                     }
                   >
                     {m.role === "user" ? (
-                      <p className="text-sm font-bold leading-relaxed">{m.content}</p>
+                      <p className={`${FONT_SIZE_CLASS[fontSize]} font-bold leading-relaxed`}>{m.content}</p>
                     ) : (
-                      <AtlasMarkdown content={m.content} />
+                      <AtlasMarkdown content={m.content} sizeClass={FONT_SIZE_CLASS[fontSize]} />
                     )}
                   </div>
 
@@ -631,6 +656,11 @@ export default function QuoteBot() {
                       webSearchSources={m.webSearchSources}
                       lang={m.lang || "es"}
                       isLast={i === aiMessages.length - 1}
+                      onShorten={() => {
+                        setAiInput("");
+                        sendAiMessageText(m.lang === "en" ? "Make that shorter." : "Hazlo más corto.");
+                        scrollToBottom();
+                      }}
                     />
                   )}
 

@@ -7,9 +7,12 @@ import { Link } from "react-router-dom";
 // completa /asistente) -- mismo look en los dos lugares. Los enlaces
 // internos (rutas del sitio) usan <Link> del router en vez de <a> para no
 // recargar la página; todo lo demás abre en pestaña nueva.
-export default function AtlasMarkdown({ content }: { content: string }) {
+// `sizeClass` -- clase real de Tailwind para el tamaño de fuente (ver ajuste
+// "Tamaño de texto" en /asistente y el widget flotante) -- text-sm por
+// defecto, mismo tamaño de siempre si el consumidor no pasa nada.
+export default function AtlasMarkdown({ content, sizeClass = "text-sm" }: { content: string; sizeClass?: string }) {
   return (
-    <div className="atlas-markdown text-sm leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:mb-2 [&_ul]:mt-1 [&_ul]:space-y-1 [&_ul]:pl-4 [&_ol]:mb-2 [&_ol]:mt-1 [&_ol]:space-y-1 [&_ol]:pl-4 [&_li]:list-disc [&_ol_li]:list-decimal">
+    <div className={`atlas-markdown ${sizeClass} leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0 [&_ul]:mb-2 [&_ul]:mt-1 [&_ul]:space-y-1 [&_ul]:pl-4 [&_ol]:mb-2 [&_ol]:mt-1 [&_ol]:space-y-1 [&_ol]:pl-4 [&_li]:list-disc [&_ol_li]:list-decimal`}>
       <Markdown
         remarkPlugins={[remarkGfm]}
         components={{
