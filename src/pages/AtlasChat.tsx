@@ -348,16 +348,16 @@ export default function AtlasChat() {
               <Tooltip label={translate("Ir al inicio", "Go to home")}>
                 <Link
                   to="/"
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  className="flex items-center gap-1.5 px-3 py-2.5 md:py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Ir al inicio", "Go to home")}
                 >
-                  <Home size={18} />
+                  <Home size={18} className="md:w-4 md:h-4" />
                   <T en="Home">Inicio</T>
                 </Link>
               </Tooltip>
               <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
-                <AtlasMark variant="isotipo" className="w-8 h-8 shrink-0" />
-                <AtlasMark variant="wordmark" className="h-7 w-auto" />
+                <AtlasMark variant="isotipo" className="w-8 h-8 md:w-7 md:h-7 shrink-0" />
+                <AtlasMark variant="wordmark" className="h-7 md:h-6 w-auto" />
               </div>
               {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
                   ES/EN normal) -- sin esto, alguien con el navegador en inglés y
@@ -365,7 +365,7 @@ export default function AtlasChat() {
               <Tooltip label={translate("Cambiar idioma", "Change language")}>
                 <button
                   onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                  className="px-3 py-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  className="px-3 py-2.5 md:py-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Cambiar idioma", "Change language")}
                 >
                   {language === "es" ? "EN" : "ES"}
@@ -399,9 +399,9 @@ export default function AtlasChat() {
                       setSidebarOpen(false);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-sm font-black uppercase tracking-wider transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 md:py-2 px-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-sm font-black uppercase tracking-wider transition-colors"
                 >
-                  <SquarePen size={16} />
+                  <SquarePen size={16} className="md:w-3.5 md:h-3.5" />
                   <T en="New chat">Nuevo chat</T>
                 </button>
               </Tooltip>
@@ -416,13 +416,13 @@ export default function AtlasChat() {
                     }
                   }}
                   aria-label={translate("Chat temporal", "Temporary chat")}
-                  className={`p-2.5 rounded-lg border transition-colors shrink-0 ${
+                  className={`p-2.5 md:p-2 rounded-lg border transition-colors shrink-0 ${
                     isTemporary
                       ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
                       : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
                   }`}
                 >
-                  <TemporaryChatIcon size={16} />
+                  <TemporaryChatIcon size={16} className="md:w-3.5 md:h-3.5" />
                 </button>
               </Tooltip>
               {conversations.length > 0 && (
@@ -433,9 +433,9 @@ export default function AtlasChat() {
                       setSidebarAboveSearch(false);
                     }}
                     aria-label={translate("Buscar conversaciones", "Search conversations")}
-                    className="p-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                    className="p-2.5 md:p-2 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
                   >
-                    <Search size={16} />
+                    <Search size={16} className="md:w-3.5 md:h-3.5" />
                   </button>
                 </Tooltip>
               )}
@@ -457,7 +457,7 @@ export default function AtlasChat() {
                 return (
                 <div
                   key={c.id}
-                  className={`group relative flex items-center gap-2.5 px-3 py-3 rounded-lg cursor-pointer transition-colors ${
+                  className={`group relative flex items-center gap-2.5 px-3 py-3 md:py-2 rounded-lg cursor-pointer transition-colors ${
                     c.id === activeId
                       ? "bg-[var(--color-primary-muted)] text-[var(--color-primary-base)]"
                       : "hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"
@@ -478,7 +478,7 @@ export default function AtlasChat() {
                     }
                   }}
                 >
-                  <ConvIcon size={18} className="shrink-0 opacity-60" />
+                  <ConvIcon size={18} className="shrink-0 opacity-60 md:w-4 md:h-4" />
                   {renamingId === c.id ? (
                     <input
                       autoFocus
@@ -498,10 +498,10 @@ export default function AtlasChat() {
                         renameConversation(c.id, renameValue);
                         setRenamingId(null);
                       }}
-                      className="flex-1 min-w-0 text-base font-semibold bg-transparent outline-none border-b border-[var(--color-primary-base)]"
+                      className="flex-1 min-w-0 text-base md:text-sm font-semibold bg-transparent outline-none border-b border-[var(--color-primary-base)]"
                     />
                   ) : (
-                    <span className="flex-1 min-w-0 text-base font-semibold truncate">
+                    <span className="flex-1 min-w-0 text-base md:text-sm font-semibold truncate">
                       {shareFeedbackId === c.id ? <T en="Copied to clipboard">Copiado al portapapeles</T> : c.title}
                     </span>
                   )}
@@ -514,7 +514,7 @@ export default function AtlasChat() {
                       className="shrink-0 p-1 rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
                       aria-label={translate("Más opciones", "More options")}
                     >
-                      <MoreVertical size={16} />
+                      <MoreVertical size={16} className="md:w-3.5 md:h-3.5" />
                     </button>
                   )}
                   {openMenuId === c.id && (
@@ -529,9 +529,9 @@ export default function AtlasChat() {
                           setRenameValue(c.title);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-base font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 md:py-2 text-base md:text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
                       >
-                        <Pencil size={18} />
+                        <Pencil size={18} className="md:w-4 md:h-4" />
                         <T en="Rename">Renombrar</T>
                       </button>
                       <button
@@ -539,9 +539,9 @@ export default function AtlasChat() {
                           shareConversation(c.title, c.messages, c.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-base font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 md:py-2 text-base md:text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
                       >
-                        <Share2 size={18} />
+                        <Share2 size={18} className="md:w-4 md:h-4" />
                         <T en="Share">Compartir</T>
                       </button>
                       <button
@@ -549,9 +549,9 @@ export default function AtlasChat() {
                           setConfirmDeleteId(c.id);
                           setOpenMenuId(null);
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-3 text-base font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-3 md:py-2 text-base md:text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left"
                       >
-                        <Trash2 size={18} />
+                        <Trash2 size={18} className="md:w-4 md:h-4" />
                         <T en="Delete">Eliminar</T>
                       </button>
                     </div>
@@ -759,6 +759,20 @@ export default function AtlasChat() {
                   ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    // Enter envía el mensaje solo en desktop (mouse/teclado físico,
+                    // sin touch) -- en mobile el teclado virtual tapa la caja justo
+                    // después de escribir, así que ahí Enter solo agrega una línea.
+                    if (
+                      e.key === "Enter" &&
+                      !e.shiftKey &&
+                      typeof window !== "undefined" &&
+                      window.matchMedia("(min-width: 768px) and (hover: hover) and (pointer: fine)").matches
+                    ) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   rows={1}
                   maxLength={2000}
                   placeholder={translate("Escríbeme lo que quieras...", "Ask me anything...")}
