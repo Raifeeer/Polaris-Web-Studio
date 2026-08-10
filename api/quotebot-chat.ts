@@ -346,7 +346,25 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     return createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-v4-flash");
   }
 
-  const baseParams = { system: systemPrompt, messages, tools: atlasTools, stopWhen: stepCountIs(6), temperature: 0.3 };
+  // Cuando responde Gemini, se usa su grounding nativo (`google_search`, un
+  // tool provider-executed real de Google) en vez de `web_search` (la tool
+  // que envuelve un llamado completo y anidado a Grok, ver _atlasTools.ts) --
+  // esto era el cuello de botella real medido en vivo el 10 de agosto (~30s
+  // solo en esa llamada anidada, ver Fase 59 de Meridian/CLAUDE.md): Gemini
+  // hace la búsqueda como parte de su propia generación, sin ese salto extra
+  // a otro proveedor. Para DeepSeek/Grok se mantiene `web_search` tal cual,
+  // ya que ninguno de los dos tiene un grounding nativo utilizable acá.
+  function toolsFor(key: "deepseek" | "grok" | "gemini") {
+    if (key !== "gemini") return atlasTools;
+    const { web_search: _unused, ...rest } = atlasTools;
+    // El tool nativo de Google es "provider-executed" (corre server-side en
+    // la API de Gemini, no vía execute() local) -- mismo motivo del `as any`
+    // ya usado para el tool de xAI en _atlasTools.ts, el tipo de ToolSet no
+    // modela bien esta forma.
+    return { ...rest, google_search: createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY }).tools.googleSearch({}) } as any;
+  }
+
+  const baseParams = { system: systemPrompt, messages, stopWhen: stepCountIs(6), temperature: 0.3 };
 
   // Construye la "mini UI" que se dibuja debajo de la respuesta (ver
   // AtlasWidget.tsx en el cliente) a partir de datos REALES de las tools --
@@ -378,39 +396,88 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
     return null;
   }
 
-  const usedWebSearch = (toolResults: ToolResultLike[]) => toolResults.some((t) => t.toolName === "web_search" && t.output && !(t.output as any).error);
-  const getWebSearchSources = (toolResults: ToolResultLike[]): { url: string; title: string }[] => {
+  // Dos mecanismos distintos de búsqueda real conviven acá (ver toolsFor()
+  // arriba): `web_search` (Grok, envuelto en _atlasTools.ts -- las fuentes
+  // viajan DENTRO del output de esa tool) y `google_search` (grounding nativo
+  // de Gemini, provider-executed -- las fuentes viajan como content parts
+  // `source` sueltos del propio `result`, nunca dentro de un tool output).
+  // Ambos se tratan como "hubo búsqueda web" indistintamente.
+  const WEB_SEARCH_TOOL_NAMES = new Set(["web_search", "google_search"]);
+  type WebSource = { url: string; title: string };
+  const usedWebSearch = (toolResults: ToolResultLike[], topSources: WebSource[] = []) =>
+    topSources.length > 0 || toolResults.some((t) => WEB_SEARCH_TOOL_NAMES.has(t.toolName) && t.output && !(t.output as any).error);
+  const getWebSearchSources = (toolResults: ToolResultLike[], topSources: WebSource[] = []): WebSource[] => {
     const hit = toolResults.find((t) => t.toolName === "web_search" && t.output && !(t.output as any).error);
-    return ((hit?.output as any)?.sources || []) as { url: string; title: string }[];
+    const fromTool = ((hit?.output as any)?.sources || []) as WebSource[];
+    const merged = [...fromTool, ...topSources];
+    const seen = new Set<string>();
+    const out: WebSource[] = [];
+    for (const s of merged) {
+      if (!s.url || seen.has(s.url)) continue;
+      seen.add(s.url);
+      out.push(s);
+      if (out.length >= 5) break;
+    }
+    return out;
   };
 
   // Consume fullStream (no solo textStream) para poder avisarle al cliente
   // EN VIVO que se está buscando en la web -- toolResults recién está
   // disponible cuando el stream entero termina, demasiado tarde para un
   // indicador en tiempo real. fullStream sí emite 'tool-call' en el momento
-  // real en que el modelo decide llamar la tool (antes del texto final) y
-  // 'tool-result' apenas execute() de la tool resuelve (con las fuentes
-  // reales ya armadas por webSearch() en _atlasTools.ts) -- ambos llegan
-  // antes de que el modelo empiece a redactar la respuesta final, así que
-  // el cliente puede mostrar primero "Buscando en la web..." y después,
-  // apenas se sepa, los dominios reales que se van a citar. Devuelve el
-  // texto acumulado.
+  // real en que el modelo decide llamar la tool (antes del texto final);
+  // las fuentes reales llegan por dos vías según el proveedor (ver arriba):
+  // 'tool-result' con `output.sources` (Grok) o content parts 'source'
+  // sueltos (Gemini) -- ambas se anuncian igual apenas se conocen, antes de
+  // que el modelo empiece a redactar la respuesta final. Devuelve el texto
+  // acumulado.
   const streamWithLiveWebSearch = async (
-    result: { fullStream: AsyncIterable<{ type: string; text?: string; toolName?: string; output?: unknown }> },
+    result: {
+      fullStream: AsyncIterable<{
+        type: string;
+        text?: string;
+        toolName?: string;
+        output?: unknown;
+        sourceType?: string;
+        url?: string;
+        title?: string;
+      }>;
+    },
     send: (obj: Record<string, unknown>) => void
   ): Promise<string> => {
     let raw = "";
     let announcedWebSearch = false;
+    const liveSources: WebSource[] = [];
+    const seenUrls = new Set<string>();
+    const addSource = (url?: string, title?: string) => {
+      if (!url || seenUrls.has(url)) return;
+      seenUrls.add(url);
+      let displayTitle = title || url;
+      try {
+        displayTitle = title || new URL(url).hostname.replace(/^www\./, "");
+      } catch {
+        // URL inválida -- se deja el string crudo
+      }
+      liveSources.push({ url, title: displayTitle });
+      if (liveSources.length > 5) liveSources.length = 5;
+      send({ type: "web_search_sources", sources: liveSources });
+    };
     for await (const chunk of result.fullStream) {
       if (chunk.type === "text-delta") {
         raw += chunk.text;
         send({ type: "delta", text: chunk.text });
-      } else if (chunk.type === "tool-call" && chunk.toolName === "web_search" && !announcedWebSearch) {
+      } else if (chunk.type === "tool-call" && chunk.toolName && WEB_SEARCH_TOOL_NAMES.has(chunk.toolName) && !announcedWebSearch) {
         announcedWebSearch = true;
         send({ type: "web_search_start" });
       } else if (chunk.type === "tool-result" && chunk.toolName === "web_search") {
-        const output = chunk.output as { sources?: { url: string; title: string }[]; error?: string } | undefined;
-        if (output?.sources?.length) send({ type: "web_search_sources", sources: output.sources });
+        const output = chunk.output as { sources?: WebSource[]; error?: string } | undefined;
+        if (output?.sources?.length) for (const s of output.sources) addSource(s.url, s.title);
+      } else if (chunk.type === "source" && chunk.sourceType === "url") {
+        if (!announcedWebSearch) {
+          announcedWebSearch = true;
+          send({ type: "web_search_start" });
+        }
+        addSource(chunk.url, chunk.title);
       }
     }
     return raw;
@@ -431,25 +498,28 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         const send = (obj: Record<string, unknown>) => controller.enqueue(encoder.encode(`${JSON.stringify(obj)}\n`));
         try {
           let toolResults: ToolResultLike[] = [];
+          let topSources: WebSource[] = [];
           let finalRaw = "";
           try {
-            const result = streamText({ model: resolveModel(defaultModel), ...baseParams });
+            const result = streamText({ model: resolveModel(defaultModel), tools: toolsFor(defaultModel), ...baseParams });
             finalRaw = await streamWithLiveWebSearch(result, send);
             const finalText = finalRaw.trim();
             if (!finalText) throw new Error("Respuesta vacía del modelo seleccionado.");
             if (omitsDomainCap(finalText)) throw new Error("Reply mentions included domain without the real $15 cap");
             toolResults = (await result.toolResults) as unknown as ToolResultLike[];
+            topSources = ((await result.sources) || []).filter((s: any) => s.sourceType === "url" && s.url) as WebSource[];
           } catch (err) {
             if (defaultModel === "deepseek") throw err;
             console.warn(`Fallo con modelo "${defaultModel}" (stream), cayendo a DeepSeek:`, (err as Error)?.message);
             send({ type: "restart" });
-            const result = streamText({ model: resolveModel("deepseek"), ...baseParams });
+            const result = streamText({ model: resolveModel("deepseek"), tools: toolsFor("deepseek"), ...baseParams });
             finalRaw = await streamWithLiveWebSearch(result, send);
             toolResults = (await result.toolResults) as unknown as ToolResultLike[];
+            topSources = ((await result.sources) || []).filter((s: any) => s.sourceType === "url" && s.url) as WebSource[];
           }
           const widget = buildWidget(toolResults);
           if (widget) send({ type: "widget", widget });
-          if (usedWebSearch(toolResults)) send({ type: "web_search", sources: getWebSearchSources(toolResults) });
+          if (usedWebSearch(toolResults, topSources)) send({ type: "web_search", sources: getWebSearchSources(toolResults, topSources) });
           send({ type: "done" });
           // Respaldo server-side (ver api/_atlasBackup.ts), con `await` a
           // propósito -- ver Meridian/CLAUDE.md: esto mantiene viva la función
@@ -458,7 +528,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
           // plataforma corta el proceso apenas el cliente se desconecta. Corre
           // DESPUÉS de "done" -- no demora la respuesta al cliente que sigue
           // conectado, y también corre igual si ya se desconectó.
-          if (!isTemporary) await backupConversation(visitorId, conversationId, history, messageText, finalRaw, widget, usedWebSearch(toolResults));
+          if (!isTemporary) await backupConversation(visitorId, conversationId, history, messageText, finalRaw, widget, usedWebSearch(toolResults, topSources));
         } catch (err) {
           send({ type: "error", message: (err as Error)?.message || "Error interno del asistente." });
         }
@@ -476,7 +546,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
 
   for (const key of tryOrder) {
     try {
-      const result = await generateText({ model: resolveModel(key), ...baseParams });
+      const result = await generateText({ model: resolveModel(key), tools: toolsFor(key), ...baseParams });
       const text = result.text.trim();
       if (!text) throw new Error("Empty response");
       // DeepSeek, probado en vivo, tiende a "cubrirse" sobre precios de addons de
@@ -488,8 +558,9 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       if (key === "deepseek" && looksLikePriceHedge(text)) throw new Error("DeepSeek hedged on a known price");
       if (omitsDomainCap(text)) throw new Error("Reply mentions included domain without the real $15 cap");
       const toolResults = result.toolResults as unknown as ToolResultLike[];
+      const topSources = ((result.sources || []) as any[]).filter((s) => s.sourceType === "url" && s.url) as WebSource[];
       const widget = buildWidget(toolResults);
-      const wasWebSearch = usedWebSearch(toolResults);
+      const wasWebSearch = usedWebSearch(toolResults, topSources);
       // El respaldo corre antes de devolver la respuesta -- a diferencia del
       // camino de streaming (que mantiene la función viva con un `await`
       // después de responder), acá no hay una respuesta ya enviada al
