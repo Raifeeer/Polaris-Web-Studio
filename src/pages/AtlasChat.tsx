@@ -817,7 +817,21 @@ export default function AtlasChat() {
           setSidebarAboveSearch(true);
         }}
         items={searchItems}
-        onSelect={loadConversation}
+        onSelect={(id) => {
+          loadConversation(id);
+          // Bug real reportado en vivo: abrir la búsqueda desde el botón
+          // del sidebar deja `sidebarOpen` en true por debajo (la búsqueda
+          // solo se monta encima, ver `onBack` arriba) -- sin cerrarlo acá,
+          // al elegir una conversación la búsqueda se cierra y lo que
+          // queda visible es el sidebar todavía abierto, no la
+          // conversación elegida. Mismo criterio que el click de un chat
+          // dentro del propio sidebar (ver más arriba): solo se fuerza en
+          // mobile, en desktop el sidebar es inline y debe seguir visible.
+          setSidebarAboveSearch(false);
+          if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+            setSidebarOpen(false);
+          }
+        }}
       />
     </div>
   );
