@@ -245,19 +245,30 @@ export default function Navbar() {
                   la mitad el alto total apilado. Padding/gaps también más
                   ajustados en mobile (md: los agranda de vuelta). */}
               <div className="max-w-7xl mx-auto px-4 md:px-10 mt-1.5 md:mt-2 grid grid-cols-2 sm:grid-cols-3 gap-1.5 md:gap-2 max-h-[calc(100dvh-6.5rem)] md:max-h-[calc(100dvh-7.5rem)] overflow-y-auto overscroll-contain pb-2">
-                {cards.map((card, i) => (
+                {cards.map((card, i) => {
+                  // Con grid de 2 columnas en mobile y 3 tarjetas de
+                  // categoría, la 3ra (Contacto) siempre queda sola en su
+                  // fila -- dejaba un hueco vacío al lado (reportado por el
+                  // usuario con captura real). En vez de inventar una 4ta
+                  // categoría (más trabajo, requeriría secciones nuevas), se
+                  // expande esta tarjeta a las 2 columnas y sus links pasan
+                  // de columna a fila para aprovechar el ancho extra, sin
+                  // dejarlo vacío. Vuelve a una columna normal desde `sm:`
+                  // (3 columnas, ahí ya no sobra espacio).
+                  const isLastAlone = i === cards.length - 1;
+                  return (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
-                    className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 pt-2 md:p-4 md:pt-3"
+                    className={`${isLastAlone ? "col-span-2 sm:col-span-1" : ""} rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 pt-2 md:p-4 md:pt-3`}
                     style={{ borderTopColor: card.accent, borderTopWidth: 3 }}
                   >
                     <p className="text-[10px] md:text-xs font-black uppercase tracking-widest mb-1.5 md:mb-3" style={{ color: card.accent }}>
                       {card.label}
                     </p>
-                    <div className="flex flex-col gap-0.5 md:gap-1">
+                    <div className={isLastAlone ? "flex flex-row flex-wrap gap-x-4 gap-y-0.5 sm:flex-col sm:gap-1" : "flex flex-col gap-0.5 md:gap-1"}>
                       {card.links.map((link) => (
                         <Link
                           key={link.path}
@@ -274,7 +285,8 @@ export default function Navbar() {
                       ))}
                     </div>
                   </motion.div>
-                ))}
+                  );
+                })}
 
                 {/* Cuarta tarjeta -- ajustes reales (tema/idioma/tamaño de
                     texto) que antes vivían al fondo del menú mobile en lista;
