@@ -30,11 +30,23 @@ export type AiMessage = {
 // `icon` es una clave de ICON_MAP (src/lib/conversationIcon.tsx), elegida por
 // la IA junto con el título -- undefined hasta que ese llamado responde (o si
 // falló), momento en el que el sidebar/búsqueda caen al ícono heurístico.
-export type AiConversation = { id: string; title: string; icon?: string; messages: AiMessage[]; updatedAt: number };
+export type AiConversation = { id: string; title: string; icon?: string; messages: AiMessage[]; updatedAt: number; pinned?: boolean };
 
 const CONVERSATIONS_KEY = "atlas_conversations";
 const ACTIVE_ID_KEY = "atlas_active_conversation_id";
 const MAX_CONVERSATIONS = 30;
+const MAX_PINNED = 5;
+
+// Orden real de la lista en el sidebar: fijadas primero (más reciente
+// primero entre ellas), después el resto por fecha -- se centraliza acá
+// porque el orden se recalcula en varios puntos (merge con la nube, cada
+// mensaje nuevo, fijar/desfijar) y todos deben coincidir.
+function sortConversations(list: AiConversation[]): AiConversation[] {
+  return [...list].sort((a, b) => {
+    if (!!a.pinned !== !!b.pinned) return a.pinned ? -1 : 1;
+    return b.updatedAt - a.updatedAt;
+  });
+}
 
 // Con tema de desarrollo web (Polaris es una agencia web), pero siguen siendo
 // genéricas a propósito -- ninguna promete una acción puntual (ej. "calculando
@@ -158,7 +170,7 @@ function mergeConversations(local: AiConversation[], cloud: AiConversation[]): A
     const existing = byId.get(c.id);
     if (!existing || c.updatedAt > existing.updatedAt) byId.set(c.id, c);
   }
-  return [...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, MAX_CONVERSATIONS);
+  return sortConversations([...byId.values()]).slice(0, MAX_CONVERSATIONS);
 }
 
 // Extrae el bloque ---SUGERENCIAS--- del texto del modelo (mismo contrato
@@ -306,10 +318,10 @@ export function useAtlasChat() {
       // El ícono (si ya se resolvió por IA) se conserva igual que el título --
       // persist() se llama en cada mensaje, no solo en el primero.
       const icon = existingIdx >= 0 ? prev[existingIdx].icon : undefined;
-      const entry: AiConversation = { id, title, icon, messages: msgs, updatedAt: Date.now() };
+      const pinned = existingIdx >= 0 ? prev[existingIdx].pinned : undefined;
+      const entry: AiConversation = { id, title, icon, messages: msgs, updatedAt: Date.now(), pinned };
       const next = existingIdx >= 0 ? prev.map((c, i) => (i === existingIdx ? entry : c)) : [entry, ...prev];
-      next.sort((a, b) => b.updatedAt - a.updatedAt);
-      const trimmed = next.slice(0, MAX_CONVERSATIONS);
+      const trimmed = sortConversations(next).slice(0, MAX_CONVERSATIONS);
       saveConversations(trimmed);
       return trimmed;
     });
@@ -574,6 +586,32 @@ export function useAtlasChat() {
     });
   }, []);
 
+  // Borra todo el historial local (y, best-effort, la copia en la nube) --
+  // usado desde el modal de ajustes. Irreversible, la UI que lo llama pide
+  // confirmación antes de invocarlo.
+  const clearAllConversations = useCallback(() => {
+    setConversations([]);
+    saveConversations([]);
+    setMessages([]);
+    setError(false);
+    setActiveId(newId());
+  }, []);
+
+  // Máximo MAX_PINNED (5) conversaciones fijadas a la vez -- pedido
+  // explícito del usuario. Intentar fijar una 6ta no hace nada (la UI
+  // deshabilita el botón cuando ya se llegó al tope, esto es el resguardo
+  // real del lado del estado).
+  const togglePinConversation = useCallback((id: string) => {
+    setConversations((prev) => {
+      const target = prev.find((c) => c.id === id);
+      if (!target) return prev;
+      if (!target.pinned && prev.filter((c) => c.pinned).length >= MAX_PINNED) return prev;
+      const next = sortConversations(prev.map((c) => (c.id === id ? { ...c, pinned: !c.pinned } : c)));
+      saveConversations(next);
+      return next;
+    });
+  }, []);
+
   return {
     messages,
     loading,
@@ -594,5 +632,8 @@ export function useAtlasChat() {
     loadConversation,
     deleteConversation,
     renameConversation,
+    togglePinConversation,
+    clearAllConversations,
+    maxPinned: MAX_PINNED,
   };
 }

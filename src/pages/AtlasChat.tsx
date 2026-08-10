@@ -12,6 +12,8 @@ import {
   Check,
   PanelLeftClose,
   PanelLeftOpen,
+  ChevronsLeft,
+  ChevronsRight,
   MoreVertical,
   Pencil,
   Share2,
@@ -22,8 +24,14 @@ import {
   VolumeX,
   Loader2,
   RotateCcw,
+  Settings,
+  Sun,
+  Moon,
+  Pin,
+  PinOff,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
+import { useTheme } from "../hooks/useTheme";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
 import AtlasMarkdown from "../components/AtlasMarkdown";
 import AtlasMark from "../components/AtlasMark";
@@ -226,13 +234,30 @@ export default function AtlasChat() {
     loadConversation,
     deleteConversation,
     renameConversation,
+    togglePinConversation,
+    clearAllConversations,
+    maxPinned,
   } = useAtlasChat();
+  const { theme, toggleTheme } = useTheme();
   const [input, setInput] = useState("");
   const speech = useSpeechToText(
     (transcript) => setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcript}` : transcript)),
     language,
   );
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 1024);
+  // Solo aplica en desktop (md+) -- en mobile el sidebar siempre es un
+  // overlay a pantalla completa, "colapsar a rail de íconos" no tendría
+  // sentido ahí. Persistido para que la preferencia sobreviva un refresh.
+  const [desktopCollapsed, setDesktopCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("atlas_sidebar_collapsed") === "1";
+  });
+  useEffect(() => {
+    localStorage.setItem("atlas_sidebar_collapsed", desktopCollapsed ? "1" : "0");
+  }, [desktopCollapsed]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const pinnedCount = conversations.filter((c) => c.pinned).length;
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -346,33 +371,42 @@ export default function AtlasChat() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ duration: 0.2 }}
-            className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto md:w-[280px] shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden`}
+            className={`fixed inset-y-0 left-0 ${sidebarAboveSearch ? "z-[80]" : "z-50"} w-full md:static md:z-auto ${desktopCollapsed ? "md:w-[68px]" : "md:w-[280px]"} shrink-0 border-r border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] flex flex-col overflow-hidden`}
           >
+            {/* ---- Contenido completo: siempre visible en mobile (el sidebar
+                ahí es un overlay a pantalla completa, "colapsar a rail" no
+                aplica), y en desktop cuando NO está colapsado. ---- */}
+            <div className={`flex-1 flex flex-col overflow-hidden ${desktopCollapsed ? "md:hidden" : ""}`}>
             <div className="p-3 flex items-center gap-2">
+              {/* Ícono solo (sin la palabra "Inicio") -- deja más espacio real
+                  para que el logo de Atlas quede centrado de verdad en el
+                  header, en vez de descentrado por el ancho variable del
+                  botón de texto que había antes. */}
               <Tooltip label={translate("Ir al inicio", "Go to home")}>
                 <Link
                   to="/"
-                  className="flex items-center gap-1.5 px-3 py-2.5 md:px-2.5 md:py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  className="flex items-center justify-center p-2.5 md:p-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Ir al inicio", "Go to home")}
                 >
                   <Home size={18} className="md:w-3.5 md:h-3.5" />
-                  <T en="Home">Inicio</T>
                 </Link>
               </Tooltip>
               <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
                 <AtlasMark variant="isotipo" className="w-8 h-8 md:w-6 md:h-6 shrink-0" />
                 <AtlasMark variant="wordmark" className="h-7 md:h-5 w-auto" />
               </div>
-              {/* Esta página no tiene el Navbar del sitio (donde vive el switcher
-                  ES/EN normal) -- sin esto, alguien con el navegador en inglés y
-                  sin preferencia guardada queda atascado en inglés acá. */}
-              <Tooltip label={translate("Cambiar idioma", "Change language")}>
+              {/* Reemplaza al botón de idioma de antes (movido al modal de
+                  ajustes) -- colapsa el sidebar a un rail de solo íconos,
+                  mismo patrón que Gemini. Solo visible en desktop -- en
+                  mobile el sidebar es un overlay a pantalla completa, sin
+                  concepto de "colapsado". */}
+              <Tooltip label={translate("Colapsar panel", "Collapse panel")}>
                 <button
-                  onClick={() => setLanguage(language === "es" ? "en" : "es")}
-                  className="px-3 py-2.5 md:px-2.5 md:py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors shrink-0"
-                  aria-label={translate("Cambiar idioma", "Change language")}
+                  onClick={() => setDesktopCollapsed(true)}
+                  className="hidden md:flex items-center justify-center p-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  aria-label={translate("Colapsar panel", "Collapse panel")}
                 >
-                  {language === "es" ? "EN" : "ES"}
+                  <ChevronsLeft size={14} />
                 </button>
               </Tooltip>
               <button
@@ -483,6 +517,7 @@ export default function AtlasChat() {
                   }}
                 >
                   <ConvIcon size={18} className="shrink-0 opacity-60 md:w-4 md:h-4" />
+                  {c.pinned && <Pin size={12} className="shrink-0 opacity-70 -ml-1 md:w-3 md:h-3" />}
                   {renamingId === c.id ? (
                     <input
                       autoFocus
@@ -529,6 +564,18 @@ export default function AtlasChat() {
                     >
                       <button
                         onClick={() => {
+                          togglePinConversation(c.id);
+                          setOpenMenuId(null);
+                        }}
+                        disabled={!c.pinned && pinnedCount >= maxPinned}
+                        title={!c.pinned && pinnedCount >= maxPinned ? translate(`Máximo ${maxPinned} conversaciones fijadas`, `Max ${maxPinned} pinned conversations`) : undefined}
+                        className="w-full flex items-center gap-2.5 px-4 py-3 md:py-2 text-base md:text-sm font-semibold hover:bg-[var(--color-surface-highlight)] transition-colors text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                      >
+                        {c.pinned ? <PinOff size={18} className="md:w-4 md:h-4" /> : <Pin size={18} className="md:w-4 md:h-4" />}
+                        {c.pinned ? <T en="Unpin">Desfijar</T> : <T en="Pin">Fijar</T>}
+                      </button>
+                      <button
+                        onClick={() => {
                           setRenamingId(c.id);
                           setRenameValue(c.title);
                           setOpenMenuId(null);
@@ -563,6 +610,100 @@ export default function AtlasChat() {
                 </div>
                 );
               })}
+            </div>
+
+            {/* Botón de ajustes al fondo del panel -- abre el modal centrado
+                con idioma, tema y borrar historial (pedido explícito del
+                usuario, en vez de que el botón de idioma viviera suelto
+                arriba del todo). */}
+            <div className="shrink-0 border-t border-[var(--color-border-subtle)] p-2">
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded-lg text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] transition-colors"
+              >
+                <Settings size={16} className="md:w-3.5 md:h-3.5" />
+                <T en="Settings">Ajustes</T>
+              </button>
+            </div>
+            </div>
+
+            {/* ---- Rail de solo íconos (desktop, colapsado) -- mismo patrón
+                que el sidebar colapsado de Gemini: sin lista de
+                conversaciones ni texto, solo los accesos rápidos reales. ---- */}
+            <div className={`hidden ${desktopCollapsed ? "md:flex" : ""} flex-col items-center flex-1 overflow-hidden py-3 gap-1`}>
+              <Tooltip label={translate("Expandir panel", "Expand panel")}>
+                <button
+                  onClick={() => setDesktopCollapsed(false)}
+                  className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
+                  aria-label={translate("Expandir panel", "Expand panel")}
+                >
+                  <ChevronsRight size={16} />
+                </button>
+              </Tooltip>
+              <div className="h-px w-8 my-1.5 bg-[var(--color-border-subtle)]" />
+              <Tooltip label={translate("Ir al inicio", "Go to home")}>
+                <Link
+                  to="/"
+                  className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
+                  aria-label={translate("Ir al inicio", "Go to home")}
+                >
+                  <Home size={16} />
+                </Link>
+              </Tooltip>
+              <Tooltip label={translate("Nuevo chat", "New chat")}>
+                <button
+                  onClick={() => {
+                    newChat();
+                    setSearchOpen(false);
+                    setSidebarAboveSearch(false);
+                  }}
+                  className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
+                  aria-label={translate("Nuevo chat", "New chat")}
+                >
+                  <SquarePen size={16} />
+                </button>
+              </Tooltip>
+              <Tooltip label={translate("Chat temporal", "Temporary chat")}>
+                <button
+                  onClick={() => {
+                    toggleTemporary();
+                    setSearchOpen(false);
+                    setSidebarAboveSearch(false);
+                  }}
+                  aria-label={translate("Chat temporal", "Temporary chat")}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isTemporary
+                      ? "bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
+                      : "text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)]"
+                  }`}
+                >
+                  <TemporaryChatIcon size={16} />
+                </button>
+              </Tooltip>
+              {conversations.length > 0 && (
+                <Tooltip label={translate("Buscar conversaciones", "Search conversations")}>
+                  <button
+                    onClick={() => {
+                      setSearchOpen(true);
+                      setSidebarAboveSearch(false);
+                    }}
+                    aria-label={translate("Buscar conversaciones", "Search conversations")}
+                    className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
+                  >
+                    <Search size={16} />
+                  </button>
+                </Tooltip>
+              )}
+              <div className="flex-1" />
+              <Tooltip label={translate("Ajustes", "Settings")}>
+                <button
+                  onClick={() => setSettingsOpen(true)}
+                  className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-colors"
+                  aria-label={translate("Ajustes", "Settings")}
+                >
+                  <Settings size={16} />
+                </button>
+              </Tooltip>
             </div>
           </motion.aside>
         )}
@@ -610,6 +751,121 @@ export default function AtlasChat() {
                   <T en="Delete">Eliminar</T>
                 </button>
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de ajustes -- centrado, reemplaza el botón de idioma suelto
+          que vivía arriba del sidebar (pedido explícito del usuario). Idioma,
+          tema y borrar historial, todo en un mismo lugar en vez de esparcido. */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setSettingsOpen(false);
+              setConfirmClearAll(false);
+            }}
+            className="fixed inset-0 z-[90] flex items-center justify-center p-6 bg-black/60"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 shadow-2xl"
+            >
+              {confirmClearAll ? (
+                <>
+                  <h3 className="text-base font-black text-[var(--color-text-primary)] mb-1.5">
+                    <T en="Delete all conversations?">¿Borrar todo el historial?</T>
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                    <T en="This can't be undone.">Esta acción no se puede deshacer.</T>
+                  </p>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => setConfirmClearAll(false)}
+                      className="px-4 py-2.5 rounded-lg text-sm font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors"
+                    >
+                      <T en="Cancel">Cancelar</T>
+                    </button>
+                    <button
+                      onClick={() => {
+                        clearAllConversations();
+                        setConfirmClearAll(false);
+                        setSettingsOpen(false);
+                      }}
+                      className="px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition-colors"
+                    >
+                      <T en="Delete all">Borrar todo</T>
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-black text-[var(--color-text-primary)]">
+                      <T en="Settings">Ajustes</T>
+                    </h3>
+                    <button
+                      onClick={() => setSettingsOpen(false)}
+                      className="p-1.5 rounded-lg text-[var(--color-text-tertiary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] transition-colors"
+                      aria-label={translate("Cerrar", "Close")}
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    {/* Idioma -- esta página no tiene el Navbar del sitio
+                        (donde vive el switcher ES/EN normal), sin esto
+                        alguien con el navegador en inglés y sin preferencia
+                        guardada queda atascado en inglés acá. */}
+                    <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                      <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                        <Globe size={18} className="text-[var(--color-text-secondary)]" />
+                        <T en="Language">Idioma</T>
+                      </div>
+                      <button
+                        onClick={() => setLanguage(language === "es" ? "en" : "es")}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors"
+                      >
+                        {language === "es" ? "Español" : "English"}
+                      </button>
+                    </div>
+
+                    {/* Tema -- claro/oscuro, mismo useTheme() que ya usa el
+                        resto del sitio (persistido en localStorage). */}
+                    <div className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-[var(--color-surface-highlight)] transition-colors">
+                      <div className="flex items-center gap-2.5 text-sm font-semibold text-[var(--color-text-primary)]">
+                        {theme === "light" ? <Sun size={18} className="text-[var(--color-text-secondary)]" /> : <Moon size={18} className="text-[var(--color-text-secondary)]" />}
+                        <T en="Theme">Tema</T>
+                      </div>
+                      <button
+                        onClick={toggleTheme}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] transition-colors"
+                      >
+                        {theme === "light" ? <T en="Light">Claro</T> : <T en="Dark">Oscuro</T>}
+                      </button>
+                    </div>
+
+                    {/* Borrar historial -- irreversible, pide confirmación
+                        aparte (misma vista del modal, no un segundo modal). */}
+                    <button
+                      onClick={() => setConfirmClearAll(true)}
+                      disabled={conversations.length === 0}
+                      className="w-full flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-500/10 transition-colors text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                    >
+                      <Trash2 size={18} />
+                      <T en="Delete all conversations">Borrar todo el historial</T>
+                    </button>
+                  </div>
+                </>
+              )}
             </motion.div>
           </motion.div>
         )}
