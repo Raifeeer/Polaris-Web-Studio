@@ -331,7 +331,7 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   const tryOrder = [...new Set([defaultModel, "deepseek", "grok"])] as ("deepseek" | "grok" | "gemini")[];
 
   function resolveModel(key: "deepseek" | "grok" | "gemini") {
-    if (key === "gemini") return createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })("gemini-3.5-flash");
+    if (key === "gemini") return createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })("gemini-3.1-flash-lite");
     // grok-4.3 es un modelo de razonamiento -- bug real reportado en vivo:
     // su "pensamiento" interno (borradores, conteo de palabras, notas tipo
     // "thought...") se colaba directo en la respuesta visible al usuario en
