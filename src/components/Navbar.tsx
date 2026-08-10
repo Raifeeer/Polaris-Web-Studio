@@ -172,7 +172,17 @@ export default function Navbar() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {/* Bug real reportado en vivo (mobile, pantalla chica): con
+                  las 3 tarjetas + la de ajustes apiladas, el panel entero
+                  podía superar el alto de la pantalla -- como el <nav> es
+                  `fixed`, eso obligaba a scrollear TODA la página (arrastrando
+                  la barra fija con el contenido de atrás) en vez de solo el
+                  menú, y el final quedaba tapado/inalcanzable sin ese scroll
+                  raro. Fix: el propio panel de tarjetas tiene su tope real de
+                  alto (lo que sobra de viewport debajo de la barra superior)
+                  y scroll interno -- el menú queda 100% navegable sin
+                  necesidad de tocar el scroll de la página de atrás. */}
+              <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain pb-2">
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
