@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, VenetianMask, Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat } from "../hooks/useAtlasChat";
@@ -12,6 +12,7 @@ import { useTextToSpeech } from "../hooks/useTextToSpeech";
 import VoiceInputBar from "./VoiceInputBar";
 import AnimatedCheckIcon from "./AnimatedCheckIcon";
 import AtlasMark from "./AtlasMark";
+import TemporaryChatIcon from "./TemporaryChatIcon";
 
 type Question = {
   id: number;
@@ -331,7 +332,7 @@ export default function QuoteBot() {
                 aria-label={translate("Chat temporal", "Temporary chat")}
                 title={translate("Chat temporal", "Temporary chat")}
               >
-                <VenetianMask size={16} />
+                <TemporaryChatIcon size={16} />
               </button>
               {aiMessages.length > 0 && (
                 <button
