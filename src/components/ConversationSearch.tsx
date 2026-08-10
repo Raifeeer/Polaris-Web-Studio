@@ -165,43 +165,43 @@ export default function ConversationSearch({
     <div className="fixed inset-0 z-[70] flex flex-col sm:items-center sm:justify-center sm:p-6 bg-black/50 backdrop-blur-sm">
       <div className="flex flex-col w-full h-full sm:h-auto sm:max-h-[80vh] sm:max-w-lg bg-[var(--color-surface-elevated)] sm:rounded-2xl sm:border sm:border-[var(--color-border-subtle)] sm:shadow-2xl overflow-hidden">
         <div className="shrink-0 flex items-center gap-2 p-3 border-b border-[var(--color-border-subtle)]">
-          <button onClick={onBack || onClose} className="p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors sm:hidden">
-            <PanelLeftOpen size={18} />
+          <button onClick={onBack || onClose} className="p-2.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors sm:hidden">
+            <PanelLeftOpen size={20} />
           </button>
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)] pointer-events-none" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-[var(--color-text-tertiary)] pointer-events-none" />
             <input
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={translate("Buscar en tus conversaciones…", "Search your conversations…")}
-              className="w-full pl-9 pr-8 py-2.5 rounded-full bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-primary-base)] transition-colors"
+              className="w-full pl-10 pr-9 py-3 rounded-full bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-base text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] outline-none focus:border-[var(--color-primary-base)] transition-colors"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
                 aria-label={translate("Limpiar búsqueda", "Clear search")}
               >
-                <X size={14} />
+                <X size={16} />
               </button>
             )}
           </div>
-          <button onClick={onClose} className="hidden sm:block p-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors">
-            <X size={18} />
+          <button onClick={onClose} className="hidden sm:block p-2.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] transition-colors">
+            <X size={20} />
           </button>
         </div>
 
         {semanticLoading && (
-          <div className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[var(--color-primary-base)] border-b border-[var(--color-border-subtle)]">
-            <AISparkleIcon size={12} className="animate-pulse" />
+          <div className="shrink-0 flex items-center gap-1.5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--color-primary-base)] border-b border-[var(--color-border-subtle)]">
+            <AISparkleIcon size={14} className="animate-pulse" />
             <T en="Searching by meaning…">Buscando por significado…</T>
           </div>
         )}
 
         <div className="flex-1 overflow-y-auto p-2">
           {results.length === 0 && (
-            <p className="text-xs text-[var(--color-text-tertiary)] text-center py-10">
+            <p className="text-sm text-[var(--color-text-tertiary)] text-center py-10">
               {query ? (
                 <T en={`No results for "${query}".`}>{`Sin resultados para "${query}".`}</T>
               ) : (
@@ -215,12 +215,12 @@ export default function ConversationSearch({
               Con búsqueda activa, el conteo real de resultados (estilo
               Gemini: "24 resultados coinciden con 'hola'"). */}
           {!query && results.length > 0 && (
-            <p className="px-3 pt-1 pb-1.5 text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            <p className="px-3 pt-1 pb-1.5 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
               <T en="Recent">Recientes</T>
             </p>
           )}
           {query && results.length > 0 && (
-            <p className="px-3 pt-1 pb-2 text-xs text-[var(--color-text-tertiary)]">
+            <p className="px-3 pt-1 pb-2 text-sm text-[var(--color-text-tertiary)]">
               <T
                 en={`${results.length} result${results.length === 1 ? "" : "s"} match "${query}"`}
               >{`${results.length} resultado${results.length === 1 ? "" : "s"} coinciden con "${query}"`}</T>
@@ -235,20 +235,20 @@ export default function ConversationSearch({
                 onSelect(c.id);
                 onClose();
               }}
-              className="w-full flex items-start gap-2.5 px-3 py-2.5 rounded-xl hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
+              className="w-full flex items-start gap-3 px-3 py-3 rounded-xl hover:bg-[var(--color-surface-highlight)] transition-colors text-left"
             >
-              <ConvIcon size={14} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
+              <ConvIcon size={16} className="mt-0.5 shrink-0 text-[var(--color-text-tertiary)]" />
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline gap-2">
-                  <span className="flex-1 min-w-0 text-sm font-bold text-[var(--color-text-primary)] truncate">
+                  <span className="flex-1 min-w-0 text-base font-bold text-[var(--color-text-primary)] truncate">
                     {highlightWords.length > 0 ? highlightMatches(c.title, highlightWords) : c.title}
                   </span>
-                  <span className="shrink-0 text-[10px] text-[var(--color-text-tertiary)]">
+                  <span className="shrink-0 text-xs text-[var(--color-text-tertiary)]">
                     {formatRelativeShort(c.updatedAt, language)}
                   </span>
                 </div>
                 {q && (
-                  <p className="text-[11px] text-[var(--color-text-tertiary)] truncate mt-0.5">
+                  <p className="text-xs text-[var(--color-text-tertiary)] truncate mt-0.5">
                     {highlightWords.length > 0 ? highlightMatches(snippetAround(c.text, q), highlightWords) : snippetAround(c.text, q)}
                   </p>
                 )}
