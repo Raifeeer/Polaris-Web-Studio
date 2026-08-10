@@ -503,6 +503,22 @@ export function useAtlasChat() {
     abortRef.current?.abort();
   }, []);
 
+  // Reintenta el último mensaje del usuario tras un error real (network,
+  // timeout de la función, respuesta vacía, etc.) -- pedido explícito del
+  // usuario, que antes tenía que reescribir el mensaje a mano. Quita el
+  // mensaje de usuario "colgado" (sin respuesta, es lo que queda tras un
+  // error real, ver el catch de arriba) y lo vuelve a mandar, en vez de
+  // agregarlo duplicado.
+  const retryLast = useCallback(() => {
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+    setMessages((prev) => {
+      const idx = prev.lastIndexOf(lastUserMsg);
+      return idx === -1 ? prev : prev.slice(0, idx);
+    });
+    sendMessage(lastUserMsg.content);
+  }, [messages, sendMessage]);
+
   const newChat = useCallback(() => {
     setMessages([]);
     setError(false);
@@ -572,6 +588,7 @@ export function useAtlasChat() {
     isTemporary,
     toggleTemporary,
     sendMessage,
+    retryLast,
     stopGenerating,
     newChat,
     loadConversation,

@@ -21,6 +21,7 @@ import {
   Volume2,
   VolumeX,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type AiMessage } from "../hooks/useAtlasChat";
@@ -219,6 +220,7 @@ export default function AtlasChat() {
     isTemporary,
     toggleTemporary,
     sendMessage,
+    retryLast,
     stopGenerating,
     newChat,
     loadConversation,
@@ -747,11 +749,20 @@ export default function AtlasChat() {
               )}
 
               {error && (
-                <p className="text-xs text-red-500 text-center">
-                  <T en="Something went wrong. Try again or write to us on WhatsApp.">
-                    Algo falló. Intenta de nuevo o escríbenos por WhatsApp.
-                  </T>
-                </p>
+                <div className="flex flex-col items-center gap-1.5">
+                  <p className="text-xs text-red-500 text-center">
+                    <T en="Something went wrong. Try again or write to us on WhatsApp.">
+                      Algo falló. Intenta de nuevo o escríbenos por WhatsApp.
+                    </T>
+                  </p>
+                  <button
+                    onClick={retryLast}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-500/30 text-red-500 text-xs font-bold hover:bg-red-500/10 transition-colors"
+                  >
+                    <RotateCcw size={12} />
+                    <T en="Retry">Reintentar</T>
+                  </button>
+                </div>
               )}
               <div ref={endRef} />
             </div>

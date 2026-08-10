@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { MessageSquare, X, ArrowRight, Share2, Send, Square, Maximize2, SquarePen, Copy, Check, Globe, Mic, Volume2, VolumeX, Loader2, RotateCcw } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useLanguage, T } from "../context/LanguageContext";
 import { useAtlasChat, type WebSearchSource } from "../hooks/useAtlasChat";
@@ -186,6 +186,7 @@ export default function QuoteBot() {
     lastMsgLang: aiLastMsgLang,
     error: aiError,
     sendMessage: sendAiMessageText,
+    retryLast: retryLastAiMessage,
     stopGenerating,
     newChat: newAiChat,
     isTemporary: aiIsTemporary,
@@ -677,11 +678,20 @@ export default function QuoteBot() {
               )}
 
               {aiError && (
-                <p className="text-xs text-red-500 px-1">
-                  <T en="Something went wrong. Try again or write to us on WhatsApp.">
-                    Algo falló. Intenta de nuevo o escríbenos por WhatsApp.
-                  </T>
-                </p>
+                <div className="flex flex-col items-start gap-1.5 px-1">
+                  <p className="text-xs text-red-500">
+                    <T en="Something went wrong. Try again or write to us on WhatsApp.">
+                      Algo falló. Intenta de nuevo o escríbenos por WhatsApp.
+                    </T>
+                  </p>
+                  <button
+                    onClick={retryLastAiMessage}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-red-500/30 text-red-500 text-xs font-bold hover:bg-red-500/10 transition-colors"
+                  >
+                    <RotateCcw size={12} />
+                    <T en="Retry">Reintentar</T>
+                  </button>
+                </div>
               )}
 
               <div ref={chatEndRef} />

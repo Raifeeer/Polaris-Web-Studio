@@ -1,5 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { generateText, generateObject, streamText, stepCountIs } from "ai";
+
+// 60s -- el máximo real permitido en el plan Hobby (confirmado, no configurable
+// más alto sin pasar a Pro). Sin esto, la función corre con el default de la
+// plataforma (bastante más bajo que 60s) -- una búsqueda web real puede tardar
+// 60-180s+ (ver Fase 59 de Meridian/CLAUDE.md), así que sin este límite alto
+// explícito la función se corta a mitad de camino en cualquier búsqueda que no
+// sea trivial, lo que el cliente ve como "Algo falló" sin ningún detalle real.
+// Mismo valor ya usado en api/tts.ts para el mismo motivo.
+export const config = { maxDuration: 60 };
 import { createDeepSeek } from "@ai-sdk/deepseek";
 import { createXai } from "@ai-sdk/xai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
