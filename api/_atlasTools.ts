@@ -362,7 +362,8 @@ export const webSearch = tool({
       // Google), no solo el número de cita -- se usa igual el hostname como
       // respaldo si faltara. La misma URL puede repetirse varias veces (una
       // cita por uso dentro de la respuesta), así que se deduplica por URL
-      // antes de recortar a 5.
+      // -- sin recorte de cantidad, se muestran todas las fuentes reales
+      // usadas (pedido explícito del usuario, 10 de agosto).
       const rawSources = (result.sources || []).filter((s: any) => s.sourceType === "url" && s.url) as { url: string; title?: string }[];
       const seen = new Set<string>();
       const sources: { url: string; title: string }[] = [];
@@ -378,7 +379,6 @@ export const webSearch = tool({
           }
         }
         sources.push({ url: s.url, title });
-        if (sources.length >= 5) break;
       }
       return { answer: result.text, sources };
     } catch {

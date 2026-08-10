@@ -408,15 +408,19 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
   }
 
   // Dos mecanismos distintos de búsqueda real conviven acá (ver toolsFor()
-  // arriba): `web_search` (Grok, envuelto en _atlasTools.ts -- las fuentes
-  // viajan DENTRO del output de esa tool) y `google_search` (grounding nativo
-  // de Gemini, provider-executed -- las fuentes viajan como content parts
-  // `source` sueltos del propio `result`, nunca dentro de un tool output).
-  // Ambos se tratan como "hubo búsqueda web" indistintamente.
+  // arriba): `web_search` (tool con execute() propio -- puede ser el wrapper
+  // de _atlasTools.ts para DeepSeek, o el buscador nativo de Grok cuando
+  // responde él mismo; en ambos casos las fuentes viajan DENTRO del output
+  // de la tool) y `google_search` (grounding nativo de Gemini,
+  // provider-executed -- las fuentes viajan como content parts `source`
+  // sueltos del propio `result`, nunca dentro de un tool output). Ambos se
+  // tratan como "hubo búsqueda web" indistintamente.
   const WEB_SEARCH_TOOL_NAMES = new Set(["web_search", "google_search"]);
   type WebSource = { url: string; title: string };
   const usedWebSearch = (toolResults: ToolResultLike[], topSources: WebSource[] = []) =>
     topSources.length > 0 || toolResults.some((t) => WEB_SEARCH_TOOL_NAMES.has(t.toolName) && t.output && !(t.output as any).error);
+  // Sin tope de cantidad -- se muestran todas las fuentes reales usadas,
+  // deduplicadas por URL (pedido explícito del usuario, 10 de agosto).
   const getWebSearchSources = (toolResults: ToolResultLike[], topSources: WebSource[] = []): WebSource[] => {
     const hit = toolResults.find((t) => t.toolName === "web_search" && t.output && !(t.output as any).error);
     const fromTool = ((hit?.output as any)?.sources || []) as WebSource[];
@@ -427,7 +431,6 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
       if (!s.url || seen.has(s.url)) continue;
       seen.add(s.url);
       out.push(s);
-      if (out.length >= 5) break;
     }
     return out;
   };
@@ -470,7 +473,6 @@ Al final de tu respuesta agrega exactamente este bloque con EXACTAMENTE 2 pregun
         // URL inválida -- se deja el string crudo
       }
       liveSources.push({ url, title: displayTitle });
-      if (liveSources.length > 5) liveSources.length = 5;
       send({ type: "web_search_sources", sources: liveSources });
     };
     for await (const chunk of result.fullStream) {
