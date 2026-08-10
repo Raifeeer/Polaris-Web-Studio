@@ -93,17 +93,23 @@ function WidgetCopyButton({
   usedWebSearch,
   webSearchSources,
   lang,
+  isLast,
 }: {
   text: string;
   usedWebSearch?: boolean;
   webSearchSources?: WebSearchSource[];
   lang: "es" | "en";
+  isLast: boolean;
 }) {
   const { translate } = useLanguage();
   const [copied, setCopied] = useState(false);
   const tts = useTextToSpeech(text, lang);
+  // Siempre visible en mobile (no hay hover real) y en la ÚLTIMA respuesta en
+  // desktop (pedido explícito del usuario) -- hover-only en desktop para el
+  // resto (requiere el `group` en el contenedor del mensaje, ver más abajo).
+  const revealCls = isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100";
   return (
-    <div className="mt-1 flex items-center gap-3">
+    <div className={`mt-1 flex items-center gap-3 opacity-100 ${revealCls} focus-within:opacity-100 transition-opacity`}>
       <button
         onClick={() => {
           navigator.clipboard?.writeText(text).then(() => {
@@ -589,7 +595,7 @@ export default function QuoteBot() {
                   key={i}
                   initial={{ opacity: 0, x: m.role === "user" ? 10 : -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
+                  className={`group flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
                 >
                   <div
                     className={
@@ -618,7 +624,13 @@ export default function QuoteBot() {
                   )}
 
                   {m.role === "assistant" && m.content && (
-                    <WidgetCopyButton text={m.content} usedWebSearch={m.usedWebSearch} webSearchSources={m.webSearchSources} lang={m.lang || "es"} />
+                    <WidgetCopyButton
+                      text={m.content}
+                      usedWebSearch={m.usedWebSearch}
+                      webSearchSources={m.webSearchSources}
+                      lang={m.lang || "es"}
+                      isLast={i === aiMessages.length - 1}
+                    />
                   )}
 
                   {m.role === "assistant" && i === aiMessages.length - 1 && m.suggestions && m.suggestions.length > 0 && (

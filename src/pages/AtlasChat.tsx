@@ -144,9 +144,11 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                 onClick={handleCopy}
                 aria-label={translate("Copiar", "Copy")}
                 title={translate("Copiar", "Copy")}
-                // Siempre visible en mobile (no hay hover real); en desktop se
-                // revela solo al pasar el mouse sobre el mensaje, como antes.
-                className="opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                // Siempre visible en mobile (no hay hover real). En desktop:
+                // siempre visible en la ÚLTIMA respuesta (pedido explícito del
+                // usuario, mismo criterio ya usado para las sugerencias de
+                // seguimiento), hover-only en las anteriores.
+                className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus:opacity-100 transition-opacity p-1 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]`}
               >
                 {copied ? <AnimatedCheckIcon size={12} /> : <Copy size={12} />}
               </button>
@@ -155,7 +157,7 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                 disabled={tts.loading}
                 aria-label={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
                 title={tts.speaking ? translate("Detener", "Stop") : translate("Escuchar", "Listen")}
-                className={`opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 ${
+                className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus:opacity-100 transition-opacity p-1 ${
                   tts.speaking || tts.loading ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
                 }`}
               >
@@ -167,7 +169,11 @@ function MessageBubble({ message, onSuggestionClick, isLast }: { message: AiMess
                   <Volume2 size={12} />
                 )}
               </button>
-              {message.usedWebSearch && <WebSourcesPanel sources={message.webSearchSources || []} />}
+              {message.usedWebSearch && (
+                <div className={`opacity-100 ${isLast ? "md:opacity-100" : "md:opacity-0 md:group-hover:opacity-100"} focus-within:opacity-100 transition-opacity`}>
+                  <WebSourcesPanel sources={message.webSearchSources || []} />
+                </div>
+              )}
             </div>
           )}
 
