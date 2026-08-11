@@ -19,7 +19,6 @@ import { AuthProvider } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import Logo from "./components/Logo";
-import { prefetchAllRoutesIdle } from "./lib/routePrefetch";
 import { initNavPerfDebug } from "./lib/navPerfDebug";
 import { prefetchPortfolioMediaIdle } from "./lib/mediaPrefetch";
 import EasterEgg from "./components/EasterEgg";
@@ -366,9 +365,23 @@ export default function App() {
     // URL tenga ?navdebug=1 o ya se haya activado antes en este navegador.
     initNavPerfDebug();
 
-    // Calienta en segundo plano los chunks de las demás páginas, sin
-    // competir con la carga/render inicial (solo corre en tiempo ocioso).
-    prefetchAllRoutesIdle();
+    // Bug real de rendimiento encontrado y corregido en vivo (11 de agosto,
+    // con datos reales de un usuario en Chrome/iPhone -- CriOS/WebKit):
+    // esto precargaba las 9 páginas del sitio en segundo plano apenas
+    // cargaba cualquier página, sin que el visitante hubiera mostrado
+    // ningún interés real en ellas. Aun respetando el deadline real de
+    // requestIdleCallback (fix anterior, ver routePrefetch.ts), cada
+    // import() individual seguía tardando varios segundos reales en
+    // resolver en este tipo de dispositivo/conexión -- y ese tiempo,
+    // aunque debería ser asíncrono, bloqueaba el hilo principal por
+    // completo mientras tanto. Confirmado con correlación casi exacta y
+    // repetida (recopilador de rendimiento temporal, ver navPerfDebug.ts):
+    // cada vez que arrancaba un prefetch, la página se congelaba casi
+    // exactamente ese mismo tiempo. Quitado el barrido automático de las 9
+    // rutas -- el prefetch real y liviano (hover/touch sobre un link
+    // puntual, en Navbar.tsx, vía prefetchRoute()) sigue intacto, es
+    // intencional y de bajo riesgo porque solo calienta UN chunk cuando el
+    // visitante ya mostró interés real en esa página.
 
     // Mismo criterio, para los mockups pesados del portafolio (WebP/GIF de
     // Lúmina Sky y, a futuro, de los demás proyectos): para cuando el
