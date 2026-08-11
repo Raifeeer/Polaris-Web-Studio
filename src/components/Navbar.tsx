@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import TextSizeToggle from "./TextSizeToggle";
 import AtlasMark from "./AtlasMark";
@@ -193,25 +192,31 @@ export default function Navbar() {
             >
               <T en="Plan your Project">Planifica tu Proyecto</T>
             </button>
-            <motion.button
+            {/* Botón hamburguesa reescrito sin framer-motion (11 de agosto,
+                pedido explícito del usuario tras varias rondas de freeze real
+                sin resolver del todo con ajustes puntuales: "recrea el navbar
+                con otra tecnología, el antiguo no tenía problemas con nada de
+                esto"). El cruce Menu/X es una transición CSS pura
+                (opacity+rotate en dos íconos superpuestos, sin JS
+                orquestando nada) -- el navbar clásico tampoco usaba
+                framer-motion para esto. */}
+            <button
               onClick={() => setIsOpen((v) => !v)}
-              whileTap={{ scale: 0.92 }}
-              className="text-[var(--color-text-primary)] rounded-lg relative w-10 h-10 flex items-center justify-center overflow-hidden shrink-0"
+              className="text-[var(--color-text-primary)] rounded-lg relative w-10 h-10 flex items-center justify-center overflow-hidden shrink-0 active:scale-90 transition-transform duration-150"
               aria-label={isOpen ? translate("Cerrar menú", "Close menu") : translate("Abrir menú", "Open menu")}
               aria-expanded={isOpen}
             >
-              <AnimatePresence mode="wait">
-                {isOpen ? (
-                  <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }} className="absolute">
-                    <X size={24} aria-hidden="true" />
-                  </motion.div>
-                ) : (
-                  <motion.div key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }} className="absolute">
-                    <Menu size={24} aria-hidden="true" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.button>
+              <X
+                size={24}
+                aria-hidden="true"
+                className={`absolute transition-all duration-200 ${isOpen ? "opacity-100 rotate-0" : "opacity-0 rotate-90"}`}
+              />
+              <Menu
+                size={24}
+                aria-hidden="true"
+                className={`absolute transition-all duration-200 ${isOpen ? "opacity-0 -rotate-90" : "opacity-100 rotate-0"}`}
+              />
+            </button>
           </div>
         </div>
         </div>
@@ -228,28 +233,22 @@ export default function Navbar() {
             fondo ya es casi sólido), pero el navegador lo sigue recalculando
             en cada repintado -- quitado de las tarjetas, sin cambio visual
             real, con una ganancia de rendimiento real. */}
-        <AnimatePresence>
-          {isOpen && (
-            <motion.div
-              // Bug real y causa directa del freeze reportado (11 de agosto):
-              // esto animaba `height: 0 -> "auto"`. Para resolver el "auto",
-              // framer-motion tiene que MEDIR la altura natural del panel, lo
-              // que fuerza un reflow síncrono -- y durante la carga inicial
-              // ese reflow obliga al navegador a completar de golpe todo el
-              // layout pendiente de la página (imágenes, tarjetas, etc.),
-              // bloqueando el hilo principal por segundos en un teléfono.
-              // Encima, `height` NO se compone en GPU: cada cuadro de la
-              // animación recalculaba el layout de las 4 tarjetas. Coincide
-              // exacto con el síntoma real: abrir el navbar apenas entrás
-              // congela todo, abrirlo con la página ya cargada anda perfecto
-              // (60 fps confirmados en los datos). Reemplazado por
-              // transform + opacity, que sí se componen en GPU y no piden
-              // layout en ningún momento.
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-            >
+        {/* Panel reescrito sin framer-motion (11 de agosto): pese a varios
+            fixes puntuales reales (blur, prefetch, animación de height,
+            layoutId), el freeze persistía en pruebas reales repetidas.
+            Pedido explícito del usuario: reconstruir con otra tecnología en
+            vez de seguir ajustando -- el navbar clásico, sin este patrón de
+            montar/desmontar 4+ motion.div vía AnimatePresence en cada
+            apertura, nunca tuvo este problema. Ahora el panel queda SIEMPRE
+            montado en el DOM (nunca se desmonta), controlado 100% por CSS
+            (opacity + transform + pointer-events), sin AnimatePresence ni
+            ningún motion.* -- el navegador anima con su propio motor de
+            transiciones CSS, sin que React/JS orqueste nada por cuadro. */}
+        <div
+          className={`transition-[opacity,transform] duration-200 ease-out ${
+            isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none invisible"
+          }`}
+        >
               {/* Mismo max-w-7xl/mx-auto/px que la barra de arriba y que el
                   Hero de la landing -- el panel queda alineado con ambos.
                   Bug real corregido acá también (mobile, pantalla chica): con
@@ -276,11 +275,8 @@ export default function Navbar() {
                   // (3 columnas, ahí ya no sobra espacio).
                   const isLastAlone = i === cards.length - 1;
                   return (
-                  <motion.div
+                  <div
                     key={i}
-                    initial={{ opacity: 0, y: -12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
                     className={`${isLastAlone ? "col-span-2 sm:col-span-1" : ""} rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 pt-2 md:p-4 md:pt-3`}
                     style={{ borderTopColor: card.accent, borderTopWidth: 3 }}
                   >
@@ -303,7 +299,7 @@ export default function Navbar() {
                         </Link>
                       ))}
                     </div>
-                  </motion.div>
+                  </div>
                   );
                 })}
 
@@ -315,12 +311,7 @@ export default function Navbar() {
                     depender de scroll -- el resto de los ajustes (idioma,
                     tema, tamaño de texto) quedan debajo, en una fila que
                     envuelve si hace falta. */}
-                <motion.div
-                  initial={{ opacity: 0, y: -12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: cards.length * 0.06, ease: "easeOut" }}
-                  className="col-span-2 sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 md:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-8 sm:gap-y-3"
-                >
+                <div className="col-span-2 sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 md:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-8 sm:gap-y-3">
                   <button
                     onClick={() => {
                       setIsOpen(false);
@@ -373,11 +364,9 @@ export default function Navbar() {
                       ))}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        </div>
       </nav>
     </>
   );
