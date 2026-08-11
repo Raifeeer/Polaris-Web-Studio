@@ -266,35 +266,18 @@ export default function LandingPage() {
     return false;
   });
   const [activeSlide, setActiveSlide] = useState(0);
-  const slideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Bug real de rendimiento encontrado y corregido en vivo (11 de agosto,
-  // datos reales de un usuario en Chrome/iPhone): el timer del carrusel
-  // arrancaba apenas montaba la página, sin importar si esa sección
-  // (bastante más abajo del fold) ya estaba visible o no -- cada rotación
-  // de todos modos remonta el slide activo (AnimatePresence), y ese costo
-  // se pagaba cada 3.5s desde el segundo 0, aunque el visitante siguiera
-  // arriba interactuando con el navbar. Confirmado con el recopilador de
-  // rendimiento temporal: bloqueos reales cada ~2.7-3s desde el arranque,
-  // ya sin el prefetch de rutas de por medio (ver fix anterior). Ahora el
-  // timer solo arranca una vez que esta sección entra en pantalla de
-  // verdad (`useInView`, `once:true`).
-  const carouselSectionRef = useRef<HTMLDivElement>(null);
-  const carouselInView = useInView(carouselSectionRef, { once: true, amount: 0.2 });
-
-  const startSlideTimer = useCallback(() => {
-    if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
-    slideIntervalRef.current = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % featuredProjects.length);
-    }, 3500);
-  }, []);
-
-  useEffect(() => {
-    if (!carouselInView) return;
-    startSlideTimer();
-    return () => {
-      if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
-    };
-  }, [startSlideTimer, carouselInView]);
+  // Bug real de rendimiento encontrado en vivo (11 de agosto, datos reales
+  // de un usuario en Chrome/iPhone): el auto-rotate de este carrusel
+  // (antes un setInterval de 3.5s) remonta el slide activo completo en
+  // cada rotación (AnimatePresence) -- costo real que, en este tipo de
+  // dispositivo/conexión, bloqueaba el hilo principal cada ~3s. Se probó
+  // primero aliviar el blur (glass-panel-lite) y después pausar el timer
+  // hasta que la sección entrara en pantalla (useInView) -- ninguno de los
+  // dos alcanzó (la sección ya asoma dentro del viewport inicial en
+  // pantallas de teléfono, así que el timer igual arrancaba casi de
+  // inmediato). Fix definitivo: se quitó el auto-rotate por completo --
+  // la navegación sigue disponible a mano (dots, swipe), solo que ya no
+  // rota sola.
   const techStackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1401,7 +1384,6 @@ export default function LandingPage() {
 
           {/* Featured Projects - "Lo que construimos" */}
           <motion.div
-            ref={carouselSectionRef}
             id="portafolio"
             initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
             whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
@@ -1518,10 +1500,6 @@ export default function LandingPage() {
                         transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
                         onClick={() => navigate(`/portafolio/${p.slug}`)}
                         className="p-8 rounded-[var(--radius-bento)] glass-panel-lite flex flex-col justify-between space-y-6 cursor-pointer border border-[var(--color-border-subtle)] h-full w-full"
-                        onTouchStart={() => {
-                          if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
-                        }}
-                        onTouchEnd={() => startSlideTimer()}
                       >
                         <div className="space-y-4">
                           <div className="flex justify-between items-start">
@@ -1578,10 +1556,7 @@ export default function LandingPage() {
                 {featuredProjects.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => {
-                      setActiveSlide(i);
-                      startSlideTimer();
-                    }}
+                    onClick={() => setActiveSlide(i)}
                     className={`transition-all duration-300 rounded-full ${
                       i === activeSlide
                         ? "w-6 h-2 bg-[var(--color-primary-base)]"
