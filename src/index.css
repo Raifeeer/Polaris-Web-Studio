@@ -326,6 +326,25 @@ button:not(:disabled),
     0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
+/* Variante liviana de .glass-panel, para elementos que se REMONTAN
+   completos de forma repetida (ej. el carrusel del Hero en mobile, que
+   cambia de slide cada 3.5s vía setInterval) -- bug real de rendimiento
+   encontrado en vivo (11 de agosto), confirmado con un recopilador de
+   métricas real en un iPhone: cada remontaje forzaba recomponer un
+   backdrop-filter de blur(20px) desde cero, causando bloqueos reales del
+   hilo principal de ~3s en cada rotación ("empezaba bien, luego se
+   trababa" cada 3.5s, justo el intervalo del carrusel). Mismo fondo
+   visual, blur mucho más liviano. */
+.glass-panel-lite {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
 .glass-panel-indigo {
   background: rgba(99, 102, 241, 0.07);
   backdrop-filter: blur(24px) saturate(200%);
@@ -370,6 +389,16 @@ button:not(:disabled),
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 32px rgba(79, 70, 229, 0.08);
+}
+
+.light .glass-panel-lite {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(6px) saturate(140%);
+  -webkit-backdrop-filter: blur(6px) saturate(140%);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),

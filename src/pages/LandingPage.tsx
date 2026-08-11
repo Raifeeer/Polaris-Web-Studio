@@ -1502,7 +1502,7 @@ export default function LandingPage() {
                         exit={{ opacity: 0, x: -40 }}
                         transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
                         onClick={() => navigate(`/portafolio/${p.slug}`)}
-                        className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 cursor-pointer border border-[var(--color-border-subtle)] h-full w-full"
+                        className="p-8 rounded-[var(--radius-bento)] glass-panel-lite flex flex-col justify-between space-y-6 cursor-pointer border border-[var(--color-border-subtle)] h-full w-full"
                         onTouchStart={() => {
                           if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
                         }}
