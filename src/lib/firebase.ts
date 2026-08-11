@@ -5,6 +5,14 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppChec
 import { getPerformance } from "firebase/performance";
 import firebaseConfig from "../../firebase-applet-config.json";
 
+// Marcas reales de diagnóstico temporal (ver navPerfDebug.ts) -- para
+// confirmar con datos reales si inicializar Firebase (este módulo se
+// importa desde AuthContext.tsx, que envuelve toda la app) es lo que
+// bloquea el hilo principal al arrancar, en vez de asumirlo.
+if (typeof window !== "undefined" && "performance" in window) {
+  performance.mark("polaris:firebase-init-start");
+}
+
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
@@ -13,6 +21,7 @@ export const auth = getAuth(app);
 // (RUM), sin costo ni configuración server-side.
 if (typeof window !== "undefined") {
   getPerformance(app);
+  performance.mark("polaris:firebase-init-end");
 }
 
 // Protege el endpoint de suscripción al newsletter (newsletter-subscribe)

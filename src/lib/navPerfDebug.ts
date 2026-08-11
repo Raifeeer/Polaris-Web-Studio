@@ -51,6 +51,18 @@ export function initNavPerfDebug() {
     connection?: { effectiveType?: string; downlink?: number; rtt?: number };
   };
 
+  // Marcas reales de arranque (main.tsx, firebase.ts) -- para confirmar
+  // con datos reales en qué fase real se va el tiempo, en vez de asumir.
+  try {
+    for (const mark of performance.getEntriesByType("mark")) {
+      if (mark.name.startsWith("polaris:")) {
+        send({ type: "phase-mark", name: mark.name, startTime: Math.round(mark.startTime) });
+      }
+    }
+  } catch {
+    // no crítico
+  }
+
   send({
     type: "session-start",
     userAgent: navigator.userAgent,
@@ -97,7 +109,12 @@ export function initNavPerfDebug() {
     const tick = () => {
       const now = performance.now();
       const drift = now - last - 0; // delay esperado del setTimeout(0) es ~0-4ms
-      if (drift > 100) {
+      // Safari (y por herencia Chrome/CriOS en iOS, mismo motor) limita los
+      // timers a ~1Hz cuando la pestaña pasa a segundo plano -- sin este
+      // chequeo, cada vez que el usuario cambia de app se reportaban
+      // "bloqueos" de ~1000ms en cadena que no son un freeze real, solo el
+      // throttling esperado de una pestaña en background.
+      if (drift > 100 && !document.hidden) {
         send({ type: "main-thread-block", blockedMs: Math.round(drift) });
       }
       last = now;

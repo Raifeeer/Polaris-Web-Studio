@@ -3,6 +3,13 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
+// Marca real de arranque -- diagnóstico temporal (ver navPerfDebug.ts), para
+// confirmar con datos reales si el bloqueo inicial reportado por el usuario
+// viene de acá (parseo/eval del bundle) o de otra fase posterior.
+if (typeof window !== "undefined" && "performance" in window) {
+  performance.mark("polaris:script-start");
+}
+
 // ✦ Polaris DevTools Easter Egg
 if (typeof window !== "undefined") {
   const styles = {
@@ -38,6 +45,10 @@ if (typeof window !== "undefined") {
     "%c⚡ Psst... escribe la secuencia secreta en cualquier página para desbloquear algo especial.",
     styles.warn
   );
+}
+
+if (typeof window !== "undefined" && "performance" in window) {
+  performance.mark("polaris:render-called");
 }
 
 createRoot(document.getElementById("root")!).render(
