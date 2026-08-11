@@ -130,12 +130,18 @@
   background-color: var(--color-primary-hover);
 }
 
+/* Sin `bottom: 0` a propósito: con `overflow` visible (default), el
+   `scrollHeight` de una caja con altura ya fijada por top+bottom no
+   refleja el contenido real que desborda -- eso causaba el bug real visto
+   en vivo (link de "Contacto" tapado por la fila de idioma, medición
+   circular: la altura dependía del estado que se supone debía medirla).
+   Con solo `top`, la caja crece a su alto natural y `scrollHeight` mide
+   bien de entrada. */
 .card-nav-content {
   position: absolute;
   left: 0;
   right: 0;
   top: 60px;
-  bottom: 0;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -161,86 +167,93 @@
 
 /* Cards: sin backdrop-filter a propósito -- esa propiedad fue una de las
    causas reales del freeze en Chrome/iPhone documentadas hoy (11 de
-   agosto). El acabado "vidrio" acá se logra solo con gradiente + borde +
-   sombra, nunca con blur. */
+   agosto). Colores planos (no gradiente) -- fiel al diseño original de
+   reactbits.dev/components/card-nav, solo recoloreado con la paleta real
+   de Polaris. Entrada con stagger vía CSS `transition-delay` (fijado
+   inline por card en CardNav.tsx), replicando el efecto GSAP
+   `stagger:0.08` del original SIN GSAP -- disparada una sola vez al
+   abrir/cerrar (clase .open), nunca una animación continua ni un
+   timeline recreado en cada resize (esa recreación + el reflow forzado
+   síncrono del componente original, `contentEl.offsetHeight`, es la
+   sospecha real del freeze en Chrome-iOS). */
 .nav-card {
   height: 100%;
   min-height: 128px;
   flex: 1 1 0;
   min-width: 0;
-  border-radius: calc(0.75rem - 0.1rem);
+  border-radius: calc(0.75rem - 0.2rem);
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 14px 18px 16px;
-  gap: 6px;
+  padding: 12px 16px;
+  gap: 8px;
   user-select: none;
   overflow: visible;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.35s ease, transform 0.35s ease, box-shadow 0.2s ease;
+}
+
+.card-nav.open .nav-card {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .nav-card:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 10px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
 }
 
-/* Cada accent es un gradiente sutil de dos tonos de la propia paleta de
-   marca (índigo/violeta/púrpura/azul, --color-primary-base y
-   --color-accent-*), no un color plano saturado -- consistente con
-   glass-panel-indigo/el resto del sitio en vez de bloques duros. */
+/* Paleta real de marca de Polaris (índigo/violeta/púrpura/azul), un color
+   plano por card -- no la paleta de demo genérica del original. */
 .nav-card--indigo {
-  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+  background-color: #3730a3;
   color: #ffffff;
 }
 
 .nav-card--violet {
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  background-color: #4f46e5;
   color: #ffffff;
 }
 
 .nav-card--purple {
-  background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%);
+  background-color: #7c3aed;
   color: #ffffff;
 }
 
 .nav-card--blue {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background-color: #6366f1;
   color: #ffffff;
 }
 
 .nav-card-label {
-  font-weight: 600;
-  font-size: 19px;
-  letter-spacing: -0.3px;
+  font-weight: 400;
+  font-size: 22px;
+  letter-spacing: -0.5px;
 }
 
 .nav-card-links {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .nav-card-link {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 16px;
   cursor: pointer;
   text-decoration: none;
-  opacity: 0.85;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.3s ease;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 0;
 }
 
 .nav-card-link:hover {
-  opacity: 1;
-  transform: translateX(2px);
+  opacity: 0.75;
+}
+
+.nav-card-link-icon {
+  flex: 0 0 auto;
 }
 
 /* Utilidades (Atlas, tema, idioma, tamaño de texto): misma superficie que
@@ -295,7 +308,6 @@
     align-items: stretch;
     gap: 8px;
     padding: 0.5rem;
-    bottom: 0;
     justify-content: flex-start;
   }
 

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useLayoutEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { ArrowUpRight } from "lucide-react";
 import { prefetchRoute } from "../lib/routePrefetch";
 import "./CardNav.css";
 
@@ -144,7 +145,11 @@ export default function CardNav({
         <div className="card-nav-content" ref={contentRef}>
           <div className="nav-cards-row">
             {items.map((item, i) => (
-              <div key={i} className={`nav-card nav-card--${item.accent}`}>
+              <div
+                key={i}
+                className={`nav-card nav-card--${item.accent}`}
+                style={{ transitionDelay: open ? `${i * 60}ms` : "0ms" }}
+              >
                 <span className="nav-card-label">{item.label}</span>
                 <div className="nav-card-links">
                   {item.links.map((link, j) => (
@@ -157,6 +162,7 @@ export default function CardNav({
                       onMouseEnter={() => prefetchRoute(link.to)}
                       onFocus={() => prefetchRoute(link.to)}
                     >
+                      <ArrowUpRight className="nav-card-link-icon" size={16} aria-hidden="true" />
                       {link.label}
                     </Link>
                   ))}
