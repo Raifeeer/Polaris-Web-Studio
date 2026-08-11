@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,7 +16,35 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
+  const capsuleRef = useRef<HTMLDivElement>(null);
   const { language, setLanguage, translate } = useLanguage();
+
+  // Cápsula con "pill" deslizante: mide la posición real del link/botón
+  // activo dentro del contenedor y mueve un div absoluto vía CSS transform +
+  // transition -- una sola escritura de estilo por cambio de ruta/resize,
+  // nunca una animación continua por frame (esa fue la causa real del
+  // freeze del navbar anterior, ver commit del 11 de agosto).
+  const [pill, setPill] = useState<{ left: number; width: number; opacity: number }>({
+    left: 0,
+    width: 0,
+    opacity: 0,
+  });
+
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = capsuleRef.current?.querySelector<HTMLElement>('[data-nav-active="true"]');
+      if (!el || !capsuleRef.current) {
+        setPill((p) => ({ ...p, opacity: 0 }));
+        return;
+      }
+      const containerRect = capsuleRef.current.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      setPill({ left: elRect.left - containerRect.left, width: elRect.width, opacity: 1 });
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [location.pathname]);
 
   // Le avisa al widget flotante de Atlas Assistant (QuoteBot.tsx) que se
   // esconda mientras el menú hamburguesa mobile está abierto -- mismo patrón
@@ -141,26 +169,47 @@ export default function Navbar() {
           />
         </Link>
 
-        {/* Desktop Nav */}
-        <div className="hidden lg:flex items-center gap-10 xl:gap-14 text-xs lg:text-xs xl:text-sm font-bold text-[var(--color-text-secondary)] uppercase tracking-widest">
+        {/* Desktop Nav -- cápsula con "pill" deslizante detrás del link
+            activo. La pill se mueve con CSS transform + transition (una
+            sola escritura por cambio de ruta), nunca por frame. */}
+        <div
+          ref={capsuleRef}
+          className="hidden lg:flex items-center gap-1 relative rounded-full p-1.5 glass-panel-lite border border-[var(--color-border-subtle)] text-xs lg:text-xs xl:text-sm font-bold text-[var(--color-text-secondary)] uppercase tracking-widest"
+        >
+          <div
+            className="absolute top-1.5 bottom-1.5 rounded-full bg-[var(--color-primary-base)] transition-[transform,width] duration-300 ease-out pointer-events-none"
+            style={{
+              width: pill.width,
+              transform: `translateX(${pill.left}px)`,
+              opacity: pill.opacity,
+            }}
+          />
+
           <Link
             to="/"
+            data-nav-active={location.pathname === "/" ? "true" : undefined}
             onMouseEnter={() => prefetchRoute("/")}
             onFocus={() => prefetchRoute("/")}
-            className={`hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
-              location.pathname === "/" ? "text-[var(--color-primary-base)]" : ""
+            className={`relative z-10 px-4 py-2 rounded-full transition-colors focus-visible:outline-none ${
+              location.pathname === "/"
+                ? "text-[var(--color-on-primary)]"
+                : "hover:text-[var(--color-primary-base)]"
             }`}
           >
             <T en="Home">Inicio</T>
-            {location.pathname === "/" && (
-              <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]" />
-            )}
           </Link>
 
-          <div className="relative" onMouseEnter={() => setCompanyOpen(true)} onMouseLeave={() => setCompanyOpen(false)}>
+          <div
+            className="relative"
+            onMouseEnter={() => setCompanyOpen(true)}
+            onMouseLeave={() => setCompanyOpen(false)}
+          >
             <button
-              className={`flex items-center gap-1 hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
-                isCompanyActive ? "text-[var(--color-primary-base)]" : ""
+              data-nav-active={isCompanyActive ? "true" : undefined}
+              className={`relative z-10 flex items-center gap-1 px-4 py-2 rounded-full transition-colors focus-visible:outline-none ${
+                isCompanyActive
+                  ? "text-[var(--color-on-primary)]"
+                  : "hover:text-[var(--color-primary-base)]"
               }`}
               onFocus={() => setCompanyOpen(true)}
               aria-expanded={companyOpen}
@@ -168,9 +217,6 @@ export default function Navbar() {
             >
               <T en="Company">Compañía</T>
               <ChevronDown size={14} className={`transition-transform ${companyOpen ? "rotate-180" : ""}`} />
-              {isCompanyActive && (
-                <motion.div layoutId="nav-underline" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]" />
-              )}
             </button>
             <AnimatePresence>
               {companyOpen && (
@@ -205,21 +251,16 @@ export default function Navbar() {
               <Link
                 key={link.path}
                 to={link.path}
+                data-nav-active={location.pathname === link.path ? "true" : undefined}
                 onMouseEnter={() => prefetchRoute(link.path)}
                 onFocus={() => prefetchRoute(link.path)}
-                className={`hover:text-[var(--color-primary-base)] transition-colors relative focus-visible:outline-none focus-visible:text-[var(--color-primary-base)] ${
+                className={`relative z-10 px-4 py-2 rounded-full transition-colors focus-visible:outline-none ${
                   location.pathname === link.path
-                    ? "text-[var(--color-primary-base)]"
-                    : ""
+                    ? "text-[var(--color-on-primary)]"
+                    : "hover:text-[var(--color-primary-base)]"
                 }`}
               >
                 {link.name}
-                {location.pathname === link.path && (
-                  <motion.div
-                    layoutId="nav-underline"
-                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[var(--color-primary-base)]"
-                  />
-                )}
               </Link>
             ))}
         </div>
