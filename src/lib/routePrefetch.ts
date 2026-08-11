@@ -36,12 +36,35 @@ export function prefetchRoute(path: string) {
     });
 }
 
-function scheduleIdle(cb: () => void) {
+// Bug real encontrado en vivo (10-11 de agosto, con datos reales de un
+// usuario en Chrome/iPhone -- CriOS, motor WebKit): esta función ignoraba
+// el `deadline` real que entrega requestIdleCallback y forzaba la
+// ejecución cada 2000ms pase lo que pase, sin importar si el navegador
+// tenía tiempo ocioso de verdad. Confirmado con un recopilador de
+// rendimiento temporal (ver navPerfDebug.ts): cada vez que arrancaba un
+// prefetchRoute() de esta lista, el hilo principal se bloqueaba casi
+// exactamente el mismo tiempo que tardaba ese import() -- hasta 12.5s de
+// bloqueo real en un caso, sintiéndose como que "la página se congela".
+// Fix real: respetar `deadline.timeRemaining()` (solo procede si hay
+// presupuesto ocioso real, o si `didTimeout` fuerza el último recurso) y
+// un timeout mucho más generoso (8s en vez de 2s) para que el navegador
+// tenga margen real de encontrar un hueco ocioso genuino en vez de forzar
+// la ejecución cada 2 segundos sin importar el estado real de la página.
+function scheduleIdle(cb: (deadline?: IdleDeadline) => void) {
   if (typeof window === "undefined") return;
   if ("requestIdleCallback" in window) {
-    (window as any).requestIdleCallback(cb, { timeout: 2000 });
+    (window as any).requestIdleCallback(
+      (deadline: IdleDeadline) => {
+        if (deadline.didTimeout || deadline.timeRemaining() > 0) {
+          cb(deadline);
+        } else {
+          scheduleIdle(cb);
+        }
+      },
+      { timeout: 8000 }
+    );
   } else {
-    setTimeout(cb, 300);
+    setTimeout(() => cb(), 1000);
   }
 }
 

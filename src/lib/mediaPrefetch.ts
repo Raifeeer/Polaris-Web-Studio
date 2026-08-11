@@ -41,12 +41,28 @@ function prefetchOne(url: string) {
   });
 }
 
-function scheduleIdle(cb: () => void) {
+// Mismo fix real que routePrefetch.ts (ver ese archivo): respetar el
+// `deadline` real de requestIdleCallback en vez de forzar la ejecución
+// pase lo que pase -- de paso, la detección de conexión lenta de arriba
+// (hasSlowConnection) es un no-op en Safari/WebKit (iOS nunca implementó
+// la Network Information API, navigator.connection es undefined ahí), así
+// que en iPhone el único guard real contra saturar el hilo principal es
+// este -- respetar el tiempo ocioso genuino.
+function scheduleIdle(cb: (deadline?: IdleDeadline) => void) {
   if (typeof window === "undefined") return;
   if ("requestIdleCallback" in window) {
-    (window as any).requestIdleCallback(cb, { timeout: 4000 });
+    (window as any).requestIdleCallback(
+      (deadline: IdleDeadline) => {
+        if (deadline.didTimeout || deadline.timeRemaining() > 0) {
+          cb(deadline);
+        } else {
+          scheduleIdle(cb);
+        }
+      },
+      { timeout: 8000 }
+    );
   } else {
-    setTimeout(cb, 500);
+    setTimeout(() => cb(), 1000);
   }
 }
 
