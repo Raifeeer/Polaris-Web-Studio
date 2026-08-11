@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -17,8 +18,50 @@ export default function Navbar() {
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
   const capsuleRef = useRef<HTMLDivElement>(null);
-  const { language, setLanguage, translate } = useLanguage();
+=======
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { T, useLanguage } from "../context/LanguageContext";
+import { motion } from "framer-motion";
+import { prefetchRoute } from "../lib/routePrefetch";
+import CardNav, { CardNavItem } from "./CardNav";
+import AtlasMark from "./AtlasMark";
+import ThemeToggle from "./ThemeToggle";
+import TextSizeToggle from "./TextSizeToggle";
 
+// Paleta de Polaris para los colores de las cards
+const POLARIS_ACCENTS = {
+  indigoDeep: "#3730a3", // Dark Indigo
+  indigo: "#4f46e5", // Medium Indigo
+  indigoLight: "#6366f1", // Light Indigo
+  violet: "#7c3aed", // Violet
+} as const;
+
+// Utiliza variables CSS para los colores de las cards en modo claro/oscuro
+const getCardBgColor = (accentKey: keyof typeof POLARIS_ACCENTS) => {
+  switch (accentKey) {
+    case "indigoDeep":
+      return "var(--color-primary-base)"; // Usar el primary base
+    case "indigo":
+      return "var(--color-accent-purple)"; // Usar el accent purple
+    case "indigoLight":
+      return "var(--color-accent-blue)"; // Usar el accent blue
+    case "violet":
+      return "#7c3aed"; // Violeta específico si no hay una var CSS directa
+    default:
+      return "var(--color-surface-elevated)";
+  }
+};
+
+export default function Navbar() {
+  const [open, setOpen] = useState(false); // Estado para controlar la apertura del CardNav
+  const [hidden, setHidden] = useState(false);
+  const navRef = useRef<HTMLElement>(null); // Todavía útil si queremos interactuar con el contenedor del navbar
+>>>>>>> 8c9e030 (feat: Implement CardNav and integrate into Navbar)
+  const { language, setLanguage, translate } = useLanguage();
+  const navigate = useNavigate();
+
+<<<<<<< HEAD
   // Cápsula con "pill" deslizante: mide la posición real del link/botón
   // activo dentro del contenedor y mueve un div absoluto vía CSS transform +
   // transition -- una sola escritura de estilo por cambio de ruta/resize,
@@ -72,6 +115,9 @@ export default function Navbar() {
     };
   }, [isOpen]);
 
+=======
+  // Lógica para esconder/mostrar el navbar al hacer scroll
+>>>>>>> 8c9e030 (feat: Implement CardNav and integrate into Navbar)
   useEffect(() => {
     let lastScrollY = window.scrollY;
     let ticking = false;
@@ -80,14 +126,11 @@ export default function Navbar() {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          setScrolled(currentScrollY > 20);
-
-          if (currentScrollY > lastScrollY && currentScrollY > 100 && !isOpen) {
+          if (currentScrollY > lastScrollY && currentScrollY > 100 && !open) {
             setHidden(true);
           } else if (currentScrollY < lastScrollY) {
             setHidden(false);
           }
-
           lastScrollY = currentScrollY;
           ticking = false;
         });
@@ -97,8 +140,9 @@ export default function Navbar() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [isOpen]);
+  }, [open]); // Depende de `open` para no esconderse si el menú está abierto
 
+<<<<<<< HEAD
   // Lista completa, usada tal cual solo en el menú mobile (ahí el espacio
   // horizontal no es un problema, un dropdown solo agregaría un toque extra).
   const navLinks = [
@@ -111,6 +155,113 @@ export default function Navbar() {
     { name: <T en="Contact">Contacto</T>, path: "/contacto" },
     { name: <T en="Client Portal">Portal</T>, path: "/login" },
   ];
+=======
+  // Items del CardNav: cards desplegables con links reales del sitio
+  const cardItems: CardNavItem[] = [
+    {
+      bgColor: getCardBgColor("indigoDeep"),
+      label: <T en="About">Nosotros</T>,
+      links: [
+        { label: <T en="Company">La empresa</T>, to: "/nosotros", ariaLabel: "Sobre nosotros" },
+        { label: <T en="Blog">Blog</T>, to: "/blog", ariaLabel: "Blog de Polaris" },
+      ],
+    },
+    {
+      bgColor: getCardBgColor("indigo"),
+      label: <T en="Services">Servicios</T>,
+      links: [
+        { label: <T en="Services">Servicios</T>, to: "/servicios", ariaLabel: "Servicios de Polaris" },
+        { label: <T en="Process">Metodología</T>, to: "/proceso", ariaLabel: "Nuestra metodología" },
+        {
+          label: <T en="Plan your Project">Planifica tu Proyecto</T>,
+          to: "/cotizar",
+          ariaLabel: "Cotizar un proyecto",
+        },
+      ],
+    },
+    {
+      bgColor: getCardBgColor("violet"),
+      label: <T en="Portfolio">Portafolio</T>,
+      links: [
+        { label: <T en="Featured">Proyectos</T>, to: "/portafolio", ariaLabel: "Portafolio de proyectos" },
+      ],
+    },
+    {
+      bgColor: getCardBgColor("indigoLight"),
+      label: <T en="Contact">Contacto</T>,
+      links: [
+        { label: <T en="Contact">Contacto</T>, to: "/contacto", ariaLabel: "Contactar a Polaris" },
+        { label: <T en="Client Portal">Portal Cliente</T>, to: "/login", ariaLabel: "Portal de clientes" },
+      ],
+    },
+  ];
+
+  // Componentes de utilidad que van dentro del panel expandido del CardNav
+  const utilities = (
+    <>
+      <Link
+        to="/asistente"
+        onMouseEnter={() => prefetchRoute("/asistente")}
+        onFocus={() => prefetchRoute("/asistente")}
+        className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest hover:text-[var(--color-primary-base)] transition-colors"
+      >
+        <AtlasMark variant="isotipo" className="w-5 h-5" />
+        Atlas Assistant
+      </Link>
+
+      <div className="flex items-center gap-2">
+        <TextSizeToggle />
+        <ThemeToggle />
+        <div className="flex items-center gap-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full p-1 relative">
+          <button
+            type="button"
+            onClick={() => setLanguage("es")}
+            className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-colors ${
+              language === "es"
+                ? "text-[var(--color-on-primary)]"
+                : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+            }`}
+          >
+            {language === "es" && (
+              <motion.span
+                layoutId="activeLang"
+                className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
+              />
+            )}
+            ES
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("en")}
+            className={`relative z-10 px-3 py-1 text-xs font-bold rounded-full transition-colors ${
+              language === "en"
+                ? "text-[var(--color-on-primary)]"
+                : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
+            }`}
+          >
+            {language === "en" && (
+              <motion.span
+                layoutId="activeLang"
+                className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
+                transition={{
+                  type: "spring",
+                  stiffness: 380,
+                  damping: 30,
+                }}
+              />
+            )}
+            EN
+          </button>
+        </div>
+      </div>
+    </>
+  );
+>>>>>>> 8c9e030 (feat: Implement CardNav and integrate into Navbar)
 
   // En desktop, "Nosotros"/"Metodología"/"Blog" (descubrimiento/confianza,
   // no de decisión inmediata) se agrupan bajo un dropdown "Compañía" -- deja
@@ -133,25 +284,8 @@ export default function Navbar() {
   const isCompanyActive = companyLinks.some((l) => l.path === location.pathname);
 
   return (
-    <>
-      <div
-        className="h-16 w-full shrink-0"
-        aria-hidden="true"
-      />
-      <nav
-        ref={navRef}
-        className={`fixed left-0 right-0 top-0 w-full h-16 px-4 md:px-6 lg:px-8 xl:px-12 flex items-center justify-between z-50 transition duration-300 backdrop-blur-xl border-b overflow-visible ${
-          scrolled || isOpen
-            ? "bg-[var(--color-surface-base)]/98"
-            : "bg-transparent"
-        } ${
-          isOpen
-            ? "border-b-transparent"
-            : scrolled
-            ? "border-b-[var(--color-border-subtle)]"
-            : "border-b-transparent"
-        } ${hidden ? "-translate-y-full" : "translate-y-0"}`}
-      >
+    <CardNav
+      logo={
         <Link
           to="/"
           className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] rounded-lg"
@@ -160,14 +294,15 @@ export default function Navbar() {
           <img
             src="/brand/lockup-horizontal-blanco.svg"
             alt="Polaris Web Studio"
-            className="h-12 w-auto shrink-0 [.light_&]:hidden"
+            className="logo [.light_&]:hidden"
           />
           <img
             src="/brand/lockup-horizontal-color.svg"
             alt="Polaris Web Studio"
-            className="h-12 w-auto shrink-0 hidden [.light_&]:block"
+            className="logo hidden [.light_&]:block"
           />
         </Link>
+<<<<<<< HEAD
 
         {/* Desktop Nav -- cápsula con "pill" deslizante detrás del link
             activo. La pill se mueve con CSS transform + transition (una
@@ -428,5 +563,14 @@ export default function Navbar() {
         </AnimatePresence>
       </nav>
     </>
+=======
+      }
+      items={cardItems}
+      ctaLabel={<T en="Plan your Project">Planifica tu Proyecto</T>}
+      onCtaClick={() => navigate("/cotizar")}
+      utilities={utilities}
+      hidden={hidden}
+    />
+>>>>>>> 8c9e030 (feat: Implement CardNav and integrate into Navbar)
   );
 }
