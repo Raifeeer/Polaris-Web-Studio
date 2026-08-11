@@ -1746,22 +1746,21 @@ export default function LandingPage() {
                                   }}
                                   className="flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all duration-300 cursor-pointer select-none group/tech shrink-0 whitespace-nowrap min-w-max"
                                 >
-                                  <motion.div
-                                    animate={{
-                                      opacity: [0.7, 1, 0.7],
-                                      scale: [0.95, 1, 0.95],
+                                  {/* Era un motion.div con repeat:Infinity -- con
+                                      48 íconos en el marquee eso son 48
+                                      animaciones de JS reescribiendo estilos
+                                      en cada cuadro, para siempre. Ver la nota
+                                      completa en index.css
+                                      (@keyframes tech-icon-pulse). */}
+                                  <div
+                                    style={{
+                                      color: tech.hex,
+                                      animationDelay: `${(idx % 5) * 0.15}s`,
                                     }}
-                                    transition={{
-                                      repeat: Infinity,
-                                      duration: 2.5,
-                                      ease: "easeInOut",
-                                      delay: (idx % 5) * 0.15,
-                                    }}
-                                    style={{ color: tech.hex }}
-                                    className="shrink-0"
+                                    className="shrink-0 tech-icon-pulse"
                                   >
                                     <IconComponent size={18} />
-                                  </motion.div>
+                                  </div>
                                   <span className="font-bold text-xs tracking-tight text-[var(--color-text-primary)] transition-colors duration-200 whitespace-nowrap">
                                     {tech.name}
                                   </span>
@@ -1912,22 +1911,18 @@ export default function LandingPage() {
                               <div className="absolute top-2.5 right-2.5 opacity-0 group-hover/tech:opacity-100 transition-opacity duration-300" style={{ color: tech.hex }}>
                                 <ArrowRight size={12} className="-rotate-45" />
                               </div>
-                              <motion.div
-                                animate={{
-                                  opacity: [0.8, 1, 0.8],
-                                  scale: [0.97, 1, 0.97],
+                              {/* Mismo caso que el marquee de arriba: pulso
+                                  infinito movido de framer-motion a CSS puro.
+                                  Ver nota en index.css. */}
+                              <div
+                                style={{
+                                  color: tech.hex,
+                                  animationDelay: `${idx * 0.2}s`,
                                 }}
-                                transition={{
-                                  repeat: Infinity,
-                                  duration: 3,
-                                  ease: "easeInOut",
-                                  delay: idx * 0.2,
-                                }}
-                                style={{ color: tech.hex }}
-                                className="mb-3"
+                                className="mb-3 tech-icon-pulse-soft"
                               >
                                 <IconComponent size={24} />
-                              </motion.div>
+                              </div>
                               <span className="font-bold text-xs sm:text-sm tracking-tight text-[var(--color-text-primary)] transition-colors duration-200">
                                 {tech.name}
                               </span>

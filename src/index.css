@@ -434,6 +434,68 @@ button:not(:disabled),
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+/* === Pulso de los íconos del marquee de tecnologías ===
+   CAUSA RAÍZ REAL del freeze, encontrada con perfilado del navegador
+   (11 de agosto). Estos íconos eran `motion.div` de framer-motion con
+   `animate={{opacity:[...], scale:[...]}}` + `repeat: Infinity`. El
+   marquee renderiza [...baseTechs, ...baseTechs] (24) x 2 tracks = 48
+   íconos, o sea 48 animaciones infinitas manejadas por JavaScript, cada
+   una reescribiendo estilos inline en cada cuadro, para siempre.
+
+   Medido en el build real de producción (Chromium, viewport de iPhone,
+   CPU 6x lenta, 10s SIN interactuar con la página):
+     - LandingPage:  9947ms de trabajo del hilo principal en 10s (~99%)
+     - /nosotros:    1605ms  (16%)
+     - 117 capas de composición vs 23
+     - árbol de capas reconstruido 356 veces en 6s (~1 por cuadro)
+     - 8096 mutaciones de atributo `style` en 6s con la página quieta
+   Un MutationObserver identificó al culpable exacto: estos íconos.
+
+   Explica todo lo que ningún arreglo anterior explicaba: por qué solo
+   pasaba en la landing (el marquee está solo ahí), por qué apagar las
+   animaciones CSS no cambiaba nada (estas eran de JS, no CSS), y por qué
+   el navbar parecía culpable sin serlo (quedaba atrapado en un hilo
+   principal ya saturado -- los bloqueos se medían incluso con el menú
+   cerrado, sin tocarlo).
+
+   Ahora es una animación CSS pura: el compositor la resuelve sin
+   despertar al hilo principal en cada cuadro. En mobile se desactiva
+   directamente -- son 48 capas extra en el dispositivo más limitado, y
+   un pulso sutil dentro de un marquee en movimiento no se percibe en una
+   pantalla de teléfono. En desktop queda idéntico a como estaba. */
+@keyframes tech-icon-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tech-icon-pulse-soft {
+  0%,
+  100% {
+    opacity: 0.8;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .tech-icon-pulse {
+    animation: tech-icon-pulse 2.5s ease-in-out infinite;
+  }
+  .tech-icon-pulse-soft {
+    animation: tech-icon-pulse-soft 3s ease-in-out infinite;
+  }
+}
+
 /* === Sistema glass sin backdrop-filter en mobile ===
    Causa raíz real del freeze en Chrome de iPhone (11 de agosto),
    encontrada tras descartar una por una las demás candidatas (prefetch de
