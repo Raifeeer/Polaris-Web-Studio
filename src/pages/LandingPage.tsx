@@ -267,6 +267,19 @@ export default function LandingPage() {
   });
   const [activeSlide, setActiveSlide] = useState(0);
   const slideIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Bug real de rendimiento encontrado y corregido en vivo (11 de agosto,
+  // datos reales de un usuario en Chrome/iPhone): el timer del carrusel
+  // arrancaba apenas montaba la página, sin importar si esa sección
+  // (bastante más abajo del fold) ya estaba visible o no -- cada rotación
+  // de todos modos remonta el slide activo (AnimatePresence), y ese costo
+  // se pagaba cada 3.5s desde el segundo 0, aunque el visitante siguiera
+  // arriba interactuando con el navbar. Confirmado con el recopilador de
+  // rendimiento temporal: bloqueos reales cada ~2.7-3s desde el arranque,
+  // ya sin el prefetch de rutas de por medio (ver fix anterior). Ahora el
+  // timer solo arranca una vez que esta sección entra en pantalla de
+  // verdad (`useInView`, `once:true`).
+  const carouselSectionRef = useRef<HTMLDivElement>(null);
+  const carouselInView = useInView(carouselSectionRef, { once: true, amount: 0.2 });
 
   const startSlideTimer = useCallback(() => {
     if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
@@ -276,11 +289,12 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
+    if (!carouselInView) return;
     startSlideTimer();
     return () => {
       if (slideIntervalRef.current) clearInterval(slideIntervalRef.current);
     };
-  }, [startSlideTimer]);
+  }, [startSlideTimer, carouselInView]);
   const techStackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1387,6 +1401,7 @@ export default function LandingPage() {
 
           {/* Featured Projects - "Lo que construimos" */}
           <motion.div
+            ref={carouselSectionRef}
             id="portafolio"
             initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
             whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
