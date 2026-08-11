@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { Mail, Check, AlertCircle } from "lucide-react";
-import { getAppCheckToken } from "../lib/firebase";
+// Import perezoso de Firebase (11 de agosto): este formulario vive en el
+// Footer, o sea que está en TODAS las páginas -- incluida la landing. Con el
+// import estático arrastraba los 542 KB del SDK de Firebase al arranque de
+// cada visita, aunque el token de App Check solo se necesita si alguien
+// realmente se suscribe. Ver la nota completa en context/AuthContext.tsx.
 import { T, useLanguage } from "../context/LanguageContext";
 import { useToast } from "../context/ToastContext";
 
@@ -30,6 +34,7 @@ export default function NewsletterForm() {
 
     setStatus("loading");
     try {
+      const { getAppCheckToken } = await import("../lib/firebase");
       const appCheckToken = await getAppCheckToken();
       const res = await fetch(SUBSCRIBE_URL, {
         method: "POST",

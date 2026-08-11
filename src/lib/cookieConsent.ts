@@ -1,5 +1,9 @@
-import { doc, setDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebase";
+// Firebase se importa de forma PEREZOSA (11 de agosto). App.tsx importa este
+// módulo en cada carga (para saber si mostrar el banner de cookies), así que
+// un import estático de Firestore arrastraba los 542 KB del SDK de Firebase al
+// arranque de TODAS las visitas -- siendo que acá solo se usa al registrar una
+// decisión del usuario sobre las cookies. Ver nota completa en
+// context/AuthContext.tsx.
 
 // Consentimiento de cookies analíticas (GA4 + Microsoft Clarity). Las
 // cookies/almacenamiento estrictamente necesarios (tema, idioma, sesión del
@@ -84,6 +88,9 @@ async function logConsentToFirestore(analytics: boolean) {
     } catch {
       // Sin IP disponible, igual dejamos registro de la decisión.
     }
+
+    const [{ doc, setDoc, addDoc, collection, serverTimestamp }, { db }] =
+      await Promise.all([import("firebase/firestore"), import("./firebase")]);
 
     const consentId = getOrCreateConsentId();
     const entry = {

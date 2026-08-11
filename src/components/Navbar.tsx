@@ -246,7 +246,9 @@ export default function Navbar() {
             transiciones CSS, sin que React/JS orqueste nada por cuadro. */}
         <div
           className={`transition-[opacity,transform] duration-200 ease-out ${
-            isOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none invisible"
+            isOpen
+              ? "nav-panel-open opacity-100 translate-y-0"
+              : "opacity-0 -translate-y-2 pointer-events-none invisible"
           }`}
         >
               {/* Mismo max-w-7xl/mx-auto/px que la barra de arriba y que el
@@ -277,8 +279,12 @@ export default function Navbar() {
                   return (
                   <div
                     key={i}
-                    className={`${isLastAlone ? "col-span-2 sm:col-span-1" : ""} rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 pt-2 md:p-4 md:pt-3`}
-                    style={{ borderTopColor: card.accent, borderTopWidth: 3 }}
+                    className={`nav-card ${isLastAlone ? "col-span-2 sm:col-span-1" : ""} rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 pt-2 md:p-4 md:pt-3`}
+                    style={{
+                      borderTopColor: card.accent,
+                      borderTopWidth: 3,
+                      animationDelay: `${i * 0.06}s`,
+                    }}
                   >
                     <p className="text-[10px] md:text-xs font-black uppercase tracking-widest mb-1.5 md:mb-3" style={{ color: card.accent }}>
                       {card.label}
@@ -311,7 +317,10 @@ export default function Navbar() {
                     depender de scroll -- el resto de los ajustes (idioma,
                     tema, tamaño de texto) quedan debajo, en una fila que
                     envuelve si hace falta. */}
-                <div className="col-span-2 sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 md:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-8 sm:gap-y-3">
+                <div
+                  className="nav-card col-span-2 sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-2.5 md:p-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-x-8 sm:gap-y-3"
+                  style={{ animationDelay: `${cards.length * 0.06}s` }}
+                >
                   <button
                     onClick={() => {
                       setIsOpen(false);

@@ -1,6 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { auth } from "../lib/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onIdTokenChanged } from "firebase/auth";
+
+// Firebase se carga de forma PEREZOSA (11 de agosto). Medido sobre el build
+// real de producción: la landing descargaba y ejecutaba 1213 KB de JS, de los
+// cuales `vendor-firebase` son 542 KB -- el 45%, el chunk más grande de todos --
+// y se cargaba en CADA página por este import de arriba, aunque un visitante
+// anónimo de la landing nunca toca autenticación. Eso es parte del "va lento
+// al principio": ese JS hay que parsearlo y ejecutarlo antes de nada.
+//
+// El login real de este portal NO depende de Firebase para arrancar: la sesión
+// se restaura con un token propio en localStorage (`portal_token`) contra
+// /api/auth/me. Firebase solo hace falta para (a) refrescar el ID token de una
+// sesión que YA existe y (b) el propio login/logout. Los tres casos son bajo
+// acción del usuario o con sesión previa, así que se cargan cuando de verdad
+// se necesitan, no en el arranque de cada visita.
+async function loadFirebaseAuth() {
+  const [{ auth }, fbAuth] = await Promise.all([
+    import("../lib/firebase"),
+    import("firebase/auth"),
+  ]);
+  return { auth, ...fbAuth };
+}
 
 export interface User {
   id: string;
@@ -42,17 +61,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // (cada ~60 min); este listener captura ese refresh y lo sincroniza con el
     // token que usamos para autenticar contra nuestra propia API, evitando que
     // una sesión activa termine cerrándose sola por expiración del token.
-    const unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
-      if (!firebaseUser) return;
-      try {
-        const freshToken = await firebaseUser.getIdToken();
-        localStorage.setItem("portal_token", freshToken);
-        setToken(freshToken);
-      } catch (err) {
-        console.error("Error al renovar el ID token de Firebase:", err);
-      }
-    });
-    return () => unsubscribe();
+    //
+    // Solo tiene sentido si YA hay una sesión guardada: sin `portal_token` no
+    // hay nada que refrescar, así que un visitante anónimo (el caso normal en
+    // la landing) nunca paga los 542 KB de Firebase. Ver nota arriba.
+    if (!localStorage.getItem("portal_token")) return;
+
+    let unsubscribe: (() => void) | undefined;
+    let cancelled = false;
+
+    loadFirebaseAuth()
+      .then(({ auth, onIdTokenChanged }) => {
+        if (cancelled) return;
+        unsubscribe = onIdTokenChanged(auth, async (firebaseUser) => {
+          if (!firebaseUser) return;
+          try {
+            const freshToken = await firebaseUser.getIdToken();
+            localStorage.setItem("portal_token", freshToken);
+            setToken(freshToken);
+          } catch (err) {
+            console.error("Error al renovar el ID token de Firebase:", err);
+          }
+        });
+      })
+      .catch((err) => console.error("No se pudo cargar Firebase Auth:", err));
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, []);
 
   const fetchUserInfo = async (authToken: string) => {
@@ -82,6 +119,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const emailClean = email.trim().toLowerCase();
       let firebaseUserCred = null;
       let fbErrorMsg = null;
+
+      // Carga perezosa: recién acá, cuando el usuario de verdad inicia sesión,
+      // se descarga el SDK de Firebase (ver nota al inicio del archivo).
+      const { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword } =
+        await loadFirebaseAuth();
 
       try {
         // 1. Try to login via Firebase Auth first
@@ -171,11 +213,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setLoading(false);
     // Explicitly sign out of client-side Firebase Auth as well
-    try {
-      signOut(auth);
-    } catch (err) {
-      console.error("Error signing out of Firebase Auth:", err);
-    }
+    loadFirebaseAuth()
+      .then(({ auth, signOut }) => signOut(auth))
+      .catch((err) => console.error("Error signing out of Firebase Auth:", err));
   };
 
   return (

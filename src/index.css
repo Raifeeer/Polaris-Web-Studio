@@ -434,6 +434,30 @@ button:not(:disabled),
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+/* === Entrada escalonada de las tarjetas del navbar ===
+   Al reescribir el navbar sin framer-motion (para descartarlo como causa
+   del freeze) se perdió la animación de entrada de las tarjetas, que antes
+   hacían initial/animate con delay por índice. Se restaura igual pero en
+   CSS puro: el panel queda siempre montado y la clase `nav-panel-open` se
+   agrega solo al abrir, lo que re-dispara la animación cada vez. El
+   `animation-delay` por tarjeta va inline desde el JSX. */
+@keyframes nav-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-panel-open .nav-card {
+    animation: nav-card-in 0.3s ease-out backwards;
+  }
+}
+
 /* === Pulso de los íconos del marquee de tecnologías ===
    CAUSA RAÍZ REAL del freeze, encontrada con perfilado del navegador
    (11 de agosto). Estos íconos eran `motion.div` de framer-motion con
