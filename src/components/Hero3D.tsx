@@ -314,25 +314,46 @@ export default function Hero3D() {
           animation: drift 20s ease-in-out infinite alternate;
         }
 
+        /* CAUSA RAÍZ REAL del freeze en Chrome de iPhone (11 de agosto),
+           encontrada tras descartar una por una las demás (prefetch de
+           rutas, prefetch de ~20MB de video, carrusel, animación de height
+           del navbar, layoutId, framer-motion entero, gtag.js incondicional).
+           Los datos ya mostraban que el navbar era la víctima y no la causa:
+           los bloqueos del hilo principal ocurrían con el menú CERRADO,
+           antes de tocarlo, y siguieron idénticos con el navbar reescrito
+           100% en CSS.
+
+           El costo real vive acá: filter: blur() sobre 4 elementos
+           animados infinitamente. Un blur expande la capa ~3x el radio por
+           cada lado, y a DPR 3 (iPhone) eso son texturas de varios MB cada
+           una -- que además hay que RE-RASTERIZAR en cada cuadro, porque
+           las keyframes animan rotate y scale (un blur no se puede
+           cachear y solo transformar cuando cambia de tamaño/ángulo).
+           Chrome en iOS corre sobre WKWebView de app de terceros, con un
+           techo de memoria más bajo que Safari -- de ahí que el mismo
+           código vaya bien en Safari/Opera y se trabe solo en Chrome, y
+           que se normalice una vez que el resto de la carga libera memoria.
+
+           Y explica lo que el usuario notó desde el principio: Hero3D solo
+           existe en la LandingPage, así que "el resto de la web va fluido".
+
+           Fix: en mobile se quita el blur y el will-change. El propio
+           radial-gradient ya se desvanece a transparente en el 70% del
+           radio, así que se ve prácticamente igual (son fondos decorativos
+           al 28-40% de opacidad) pero pasa a ser una capa plana que el
+           compositor mueve sin re-rasterizar nada. En desktop se mantiene
+           tal cual, que es donde no hay problema real de memoria. */
         .gradient-mesh-blob {
           position: absolute;
           border-radius: 50%;
           mix-blend-mode: var(--blob-blend, normal);
-          will-change: transform;
-          /* Bug real de rendimiento encontrado en vivo (11 de agosto):
-             blur(80px) sobre 4 elementos de hasta 650px (casi el ancho
-             completo de un teléfono), animando infinito y con
-             mix-blend-mode:screen en modo oscuro -- de los filtros más
-             pesados de todo el sitio. WebKit (mismo motor en Chrome/Safari/
-             Opera de iOS) a veces tarda varios segundos en promover un
-             elemento con blur animado a una capa de GPU real, renderizándolo
-             por software mientras tanto -- coincide exacto con el patrón
-             reportado ("se congela al principio, después anda perfecto").
-             El propio radial-gradient ya tiene un desvanecido suave hacia
-             transparente en el 70% del radio, así que blur(80px) era en
-             gran parte redundante -- bajado a 32px, visualmente casi
-             idéntico pero mucho más barato de componer. */
-          filter: blur(32px);
+        }
+
+        @media (min-width: 768px) {
+          .gradient-mesh-blob {
+            will-change: transform;
+            filter: blur(32px);
+          }
         }
 
         .dark .gradient-mesh-blob {

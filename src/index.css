@@ -434,6 +434,77 @@ button:not(:disabled),
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+/* === Sistema glass sin backdrop-filter en mobile ===
+   Causa raíz real del freeze en Chrome de iPhone (11 de agosto),
+   encontrada tras descartar una por una las demás candidatas (prefetch de
+   rutas, ~20MB de video precargado, carrusel, animación de height del
+   navbar, layoutId, framer-motion entero, gtag.js incondicional). Los
+   datos ya eran claros en que el navbar era la víctima y no la causa: los
+   bloqueos del hilo principal ocurrían con el menú CERRADO, antes de
+   tocarlo, y siguieron idénticos con el navbar reescrito 100% en CSS.
+
+   La LandingPage renderiza 17 elementos con `.glass-panel`, cada uno con
+   `backdrop-filter: blur(20px) saturate(180%)`. A diferencia de un `filter`
+   normal, un `backdrop-filter` obliga al navegador a capturar TODO lo que
+   hay pintado detrás del elemento, desenfocarlo y componerlo -- y no se
+   puede cachear, porque se invalida apenas cambia algo detrás. ¿Y qué hay
+   detrás? Los blobs de Hero3D animándose infinitamente. O sea: 17
+   backdrops caros recalculándose sin parar.
+
+   Chrome en iOS corre sobre WKWebView de app de terceros, con menos
+   memoria y un pipeline de composición distinto al de Safari -- por eso el
+   mismo código va bien en Safari/Opera y se traba solo en Chrome. Y como
+   Hero3D solo existe en la LandingPage, encaja con lo que el usuario notó
+   desde el principio: "el resto de la web va fluido".
+
+   En mobile se desactiva el backdrop-filter en todo el sistema glass y se
+   compensa con un fondo un poco más opaco, que da la misma separación
+   visual sin costo de composición. En desktop queda intacto. */
+@media (max-width: 767px) {
+  .glass-panel,
+  .glass-panel-lite,
+  .glass-panel-indigo,
+  .glass-input,
+  .glass-badge,
+  .glass-menu-mobile,
+  .light .glass-panel,
+  .light .glass-panel-lite,
+  .light .glass-panel-indigo,
+  .light .glass-input,
+  .light .glass-badge {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .glass-panel-lite {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .glass-panel-indigo {
+    background: rgba(99, 102, 241, 0.12);
+  }
+  .glass-input {
+    background: rgba(255, 255, 255, 0.07);
+  }
+  .glass-badge {
+    background: rgba(99, 102, 241, 0.14);
+  }
+
+  .light .glass-panel {
+    background: rgba(255, 255, 255, 0.82);
+  }
+  .light .glass-panel-lite {
+    background: rgba(255, 255, 255, 0.85);
+  }
+  .light .glass-input {
+    background: rgba(255, 255, 255, 0.85);
+  }
+  .light .glass-badge {
+    background: rgba(79, 70, 229, 0.1);
+  }
+}
 
 ::-webkit-calendar-picker-indicator {
   filter: invert(1) opacity(0.5);
