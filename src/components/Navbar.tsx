@@ -231,11 +231,24 @@ export default function Navbar() {
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="overflow-hidden"
+              // Bug real y causa directa del freeze reportado (11 de agosto):
+              // esto animaba `height: 0 -> "auto"`. Para resolver el "auto",
+              // framer-motion tiene que MEDIR la altura natural del panel, lo
+              // que fuerza un reflow síncrono -- y durante la carga inicial
+              // ese reflow obliga al navegador a completar de golpe todo el
+              // layout pendiente de la página (imágenes, tarjetas, etc.),
+              // bloqueando el hilo principal por segundos en un teléfono.
+              // Encima, `height` NO se compone en GPU: cada cuadro de la
+              // animación recalculaba el layout de las 4 tarjetas. Coincide
+              // exacto con el síntoma real: abrir el navbar apenas entrás
+              // congela todo, abrirlo con la página ya cargada anda perfecto
+              // (60 fps confirmados en los datos). Reemplazado por
+              // transform + opacity, que sí se componen en GPU y no piden
+              // layout en ningún momento.
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
               {/* Mismo max-w-7xl/mx-auto/px que la barra de arriba y que el
                   Hero de la landing -- el panel queda alineado con ambos.
@@ -343,12 +356,17 @@ export default function Navbar() {
                             language === lng ? "text-[var(--color-on-primary)]" : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-secondary)]"
                           }`}
                         >
+                          {/* Antes esto era un `motion.span` con `layoutId`
+                              (píldora que se deslizaba entre ES y EN). Un
+                              `layoutId` obliga a framer-motion a medir
+                              posiciones reales cada vez que el elemento monta
+                              -- y este panel monta/desmonta en cada apertura
+                              del menú, sumando trabajo de layout justo en el
+                              momento más sensible. El deslizamiento es un
+                              detalle mínimo; se cambia por un fondo simple
+                              con transición de color, sin costo de layout. */}
                           {language === lng && (
-                            <motion.span
-                              layoutId="cardnav-active-lang"
-                              className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10"
-                              transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                            />
+                            <span className="absolute inset-0 bg-[var(--color-primary-base)] rounded-full -z-10" />
                           )}
                           {lng.toUpperCase()}
                         </button>
