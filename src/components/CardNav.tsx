@@ -10,10 +10,11 @@ export interface CardNavLink {
   to: string;
 }
 
+export type CardNavAccent = "indigo" | "violet" | "purple" | "blue";
+
 export interface CardNavItem {
   label: React.ReactNode;
-  bgColor: string;
-  textColor?: string;
+  accent: CardNavAccent;
   links: CardNavLink[];
 }
 
@@ -133,14 +134,7 @@ export default function CardNav({
         <div className="card-nav-content" ref={contentRef}>
           <div className="nav-cards-row">
             {items.map((item, i) => (
-              <div
-                key={i}
-                className="nav-card"
-                style={{
-                  backgroundColor: item.bgColor,
-                  color: item.textColor ?? "#fff",
-                }}
-              >
+              <div key={i} className={`nav-card nav-card--${item.accent}`}>
                 <span className="nav-card-label">{item.label}</span>
                 <div className="nav-card-links">
                   {item.links.map((link, j) => (
