@@ -319,7 +319,20 @@ export default function Hero3D() {
           border-radius: 50%;
           mix-blend-mode: var(--blob-blend, normal);
           will-change: transform;
-          filter: blur(80px);
+          /* Bug real de rendimiento encontrado en vivo (11 de agosto):
+             blur(80px) sobre 4 elementos de hasta 650px (casi el ancho
+             completo de un teléfono), animando infinito y con
+             mix-blend-mode:screen en modo oscuro -- de los filtros más
+             pesados de todo el sitio. WebKit (mismo motor en Chrome/Safari/
+             Opera de iOS) a veces tarda varios segundos en promover un
+             elemento con blur animado a una capa de GPU real, renderizándolo
+             por software mientras tanto -- coincide exacto con el patrón
+             reportado ("se congela al principio, después anda perfecto").
+             El propio radial-gradient ya tiene un desvanecido suave hacia
+             transparente en el 70% del radio, así que blur(80px) era en
+             gran parte redundante -- bajado a 32px, visualmente casi
+             idéntico pero mucho más barato de componer. */
+          filter: blur(32px);
         }
 
         .dark .gradient-mesh-blob {
