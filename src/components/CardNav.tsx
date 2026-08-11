@@ -47,12 +47,22 @@ export default function CardNav({
   const contentRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Mide la altura natural del contenido para animar la expansión de la card
+  // Mide la altura natural del contenido para animar la expansión de la card.
+  // Un `useLayoutEffect` sin dependencias solo vuelve a medir en cada
+  // re-render de React -- si las fuentes o el layout todavía se están
+  // asentando (webfonts cargando, reflow tardío), la medición inicial
+  // puede quedar corta y recortar el último link/fila de utilidades.
+  // ResizeObserver corrige esto reaccionando a cambios reales de tamaño
+  // del contenido, sin ser una animación continua (solo dispara ante un
+  // cambio real, no por frame).
   useLayoutEffect(() => {
-    if (contentRef.current) {
-      setContentHeight(contentRef.current.scrollHeight);
-    }
-  });
+    const el = contentRef.current;
+    if (!el) return;
+    setContentHeight(el.scrollHeight);
+    const ro = new ResizeObserver(() => setContentHeight(el.scrollHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Cierra el menú al hacer click fuera del navbar
   useLayoutEffect(() => {
