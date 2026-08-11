@@ -15,10 +15,16 @@ const FLAG_KEY = "navPerfDebug";
 function send(payload: Record<string, unknown>) {
   try {
     const body = JSON.stringify({ sessionId, ...payload });
+    // Bug real encontrado (10 de agosto): un Blob con type "application/json"
+    // hace que sendBeacon dispare un preflight CORS (OPTIONS) que nunca
+    // termina en el POST real -- confirmado en Cloud Logging, solo
+    // llegaban OPTIONS, nunca datos. "text/plain" es un content-type
+    // "simple" (no dispara preflight), y el servidor igual lo parsea a
+    // mano si hace falta.
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(ENDPOINT, new Blob([body], { type: "application/json" }));
+      navigator.sendBeacon(ENDPOINT, new Blob([body], { type: "text/plain" }));
     } else {
-      fetch(ENDPOINT, { method: "POST", body, headers: { "Content-Type": "application/json" }, keepalive: true }).catch(() => {});
+      fetch(ENDPOINT, { method: "POST", body, headers: { "Content-Type": "text/plain" }, keepalive: true }).catch(() => {});
     }
   } catch {
     // silencioso -- esto es un diagnóstico, nunca debe afectar la app real
