@@ -65,6 +65,11 @@ export function initNavPerfDebug() {
 
   // Long tasks: cualquier trabajo del hilo principal que bloquee por más de
   // 50ms -- exactamente lo que se siente como "se traba"/"se congela".
+  // OJO: la Long Tasks API es exclusiva de motores basados en Chromium
+  // (Blink) -- Safari/WebKit nunca la implementó, y como Chrome en iOS
+  // (CriOS) usa WebKit por obligación de Apple (nunca Blink), esto NO
+  // captura nada ahí. Confirmado en vivo el 10 de agosto: cero eventos
+  // "longtask" pese a un freeze real medido por otro lado (ver abajo).
   try {
     const observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
@@ -80,6 +85,34 @@ export function initNavPerfDebug() {
   } catch {
     // longtask no soportado en este navegador -- no hay nada más que hacer
   }
+
+  // Detector de bloqueo real del hilo principal, funciona en cualquier
+  // motor (no depende de la Long Tasks API): agenda un setTimeout(0) en
+  // loop y mide cuánto tarda de más en dispararse -- si el hilo principal
+  // está trabado con otra cosa, este timer se atrasa exactamente esa
+  // cantidad de tiempo. Es la señal que sí confirmó el freeze real en
+  // WebKit cuando "longtask" no reportó nada.
+  (function watchMainThreadBlock() {
+    let last = performance.now();
+    const tick = () => {
+      const now = performance.now();
+      const drift = now - last - 0; // delay esperado del setTimeout(0) es ~0-4ms
+      if (drift > 100) {
+        send({ type: "main-thread-block", blockedMs: Math.round(drift) });
+      }
+      last = now;
+      setTimeout(tick, 0);
+    };
+    setTimeout(tick, 0);
+  })();
+
+  // Correlación real: qué chunk de ruta se está precargando en segundo
+  // plano (prefetchAllRoutesIdle, App.tsx) justo cuando ocurre un freeze --
+  // parsear/evaluar un chunk grande (WizardQuote ~147kb, ClientDashboard
+  // ~223kb) es trabajo síncrono real del hilo principal.
+  window.addEventListener("navdebug:prefetch", ((e: CustomEvent) => {
+    send({ type: "route-prefetch", path: e.detail?.path, phase: e.detail?.phase, ms: e.detail?.ms });
+  }) as EventListener);
 
   // Muestreo de FPS real durante 6s después de cada apertura/cierre del
   // navbar (evento custom disparado desde Navbar.tsx), para ver caídas de

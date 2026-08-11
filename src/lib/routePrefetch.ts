@@ -14,15 +14,26 @@ const importers: Record<string, () => Promise<unknown>> = {
 
 const prefetched = new Set<string>();
 
+// Instrumentación temporal (recopilador de rendimiento del navbar, ver
+// navPerfDebug.ts) -- no-op si nadie está escuchando el evento.
+function reportPrefetch(path: string, phase: "start" | "end", ms?: number) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("navdebug:prefetch", { detail: { path, phase, ms } }));
+}
+
 export function prefetchRoute(path: string) {
   if (prefetched.has(path)) return;
   const importer = importers[path];
   if (!importer) return;
   prefetched.add(path);
-  importer().catch(() => {
-    // Si falla (p. ej. sin red), permite reintentar en el próximo hover/idle
-    prefetched.delete(path);
-  });
+  const start = performance.now();
+  reportPrefetch(path, "start");
+  importer()
+    .then(() => reportPrefetch(path, "end", Math.round(performance.now() - start)))
+    .catch(() => {
+      // Si falla (p. ej. sin red), permite reintentar en el próximo hover/idle
+      prefetched.delete(path);
+    });
 }
 
 function scheduleIdle(cb: () => void) {
