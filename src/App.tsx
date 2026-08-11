@@ -20,7 +20,6 @@ import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import Logo from "./components/Logo";
 import { initNavPerfDebug } from "./lib/navPerfDebug";
-import { prefetchPortfolioMediaIdle } from "./lib/mediaPrefetch";
 import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
 import { getCookieConsent, onCookieConsentChange } from "./lib/cookieConsent";
@@ -382,12 +381,23 @@ export default function App() {
     // puntual, en Navbar.tsx, vía prefetchRoute()) sigue intacto, es
     // intencional y de bajo riesgo porque solo calienta UN chunk cuando el
     // visitante ya mostró interés real en esa página.
-
-    // Mismo criterio, para los mockups pesados del portafolio (WebP/GIF de
-    // Lúmina Sky y, a futuro, de los demás proyectos): para cuando el
-    // visitante llegue a /portafolio, el navegador ya los tiene en su
-    // caché HTTP -- se sienten instantáneos en vez de tardar en cargar.
-    prefetchPortfolioMediaIdle();
+    //
+    // Mismo criterio, y por la misma causa medida, para los mockups del
+    // portafolio (`prefetchPortfolioMediaIdle`): descargaba en segundo
+    // plano ~20 MB reales de video mp4 (los mockups de scroll de Lúmina,
+    // Nexus, Chroma y Vitality: 6.03 MB solo el de Nexus mobile) en CADA
+    // carga de CUALQUIER página, para un /portafolio que la mayoría de los
+    // visitantes nunca abre. Su único guard contra hacerlo en conexiones
+    // pobres era `navigator.connection`, que NO EXISTE en Safari/WebKit
+    // (Apple nunca implementó la Network Information API) -- así que en
+    // iPhone, justo donde más duele, no se saltaba nunca. Medido en vivo
+    // con el recopilador: ~38 s de bloqueos encadenados del hilo principal
+    // (3-4 frames por muestra) desde el arranque, y 60 fps limpios
+    // (361 frames, 0-1 perdidos) apenas terminaba esa descarga. Ese era el
+    // "se congela si abro el navbar apenas entro, pero anda bien si espero
+    // a que cargue" que reportó el usuario -- el navbar solo quedaba
+    // atrapado en un hilo principal ya saturado. La media del portafolio
+    // ahora se carga cuando el visitante realmente llega a esa página.
 
     // 1. Defer chatbot to save initial bundles & execution cycles
     const botTimer = setTimeout(() => {

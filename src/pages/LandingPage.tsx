@@ -1462,9 +1462,17 @@ export default function LandingPage() {
                       <div className="relative w-full overflow-hidden rounded-lg transition-transform duration-500 group-hover:scale-[1.03]">
                         {p.desktopImg ? (
                           <div className="relative w-full overflow-hidden rounded-xl bg-transparent h-[200px]">
+                            {/* loading/decoding explícitos (11 de agosto): estos
+                                PNG pesan 0.67-1.68 MB reales y se muestran a
+                                200px de alto -- sin esto, el navegador los
+                                decodificaba a resolución completa en el hilo
+                                principal durante la carga inicial, justo cuando
+                                el visitante intenta abrir el navbar. */}
                             <img
                               src={p.desktopImg}
                               alt={p.title}
+                              loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-contain object-center rounded-lg"
                             />
                           </div>
@@ -1525,9 +1533,13 @@ export default function LandingPage() {
                             <div className="relative w-full overflow-hidden rounded-lg">
                               {p.desktopImg ? (
                                 <div className="relative w-full overflow-hidden rounded-xl bg-transparent h-[200px]">
+                                  {/* Mismo criterio que la grilla de escritorio
+                                      de arriba -- ver nota ahí. */}
                                   <img
                                     src={p.desktopImg}
                                     alt={p.title}
+                                    loading="lazy"
+                                    decoding="async"
                                     className="w-full h-full object-contain object-center rounded-lg"
                                   />
                                 </div>
