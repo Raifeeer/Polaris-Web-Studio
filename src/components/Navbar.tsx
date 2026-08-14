@@ -98,6 +98,7 @@ export default function Navbar() {
       accent: "var(--color-accent-blue)",
       links: [
         { label: <T en="Services">Servicios</T>, path: "/servicios" },
+        { label: <T en="Local Lift">Local Lift</T>, path: "/local-lift" },
         { label: <T en="Portfolio">Portafolio</T>, path: "/portafolio" },
       ],
     },
