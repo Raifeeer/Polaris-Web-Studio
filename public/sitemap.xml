@@ -37,12 +37,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://polarisweb.studio/local-lift</loc>
-    <lastmod>2026-08-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-  <url>
     <loc>https://polarisweb.studio/blog</loc>
     <lastmod>2026-08-14</lastmod>
     <changefreq>weekly</changefreq>
