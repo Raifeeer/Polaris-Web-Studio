@@ -95,6 +95,212 @@ function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string
   return `${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
 }
 
+// Plantilla HTML real (Familia A de Polaris, misma que usa
+// quote-confirmation-send en Meridian: logo real, tipografía Cabinet
+// Grotesk/Satoshi, tarjeta blanca sobre fondo gris) -- reemplaza el correo
+// de texto plano que salía antes. Pedido explícito del usuario (15 de
+// agosto) tras recibir el diagnóstico y notar que no seguía la plantilla
+// de marca ya usada en el resto de los correos de Polaris.
+const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
+const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
+const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
+const ACCENT = "#4f46e5"; // mismo indigo que "Impulso", color primario de marca
+
+function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactName: string, lang: "es" | "en"): string {
+  const hasName = !!contactName && contactName.trim().length > 0;
+  const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
+
+  const copy = lang === "en"
+    ? {
+        preheader: `Your Local Lift diagnosis for ${place.name} is ready.`,
+        eyebrow: "Free diagnosis",
+        title: hasName ? `Here's your diagnosis, ${firstName}!` : "Here's your diagnosis!",
+        problemsLabel: "Priority issues",
+        planLabel: "7-day action plan",
+        dayLabel: "Day",
+        ctaPrimary: "I want you to implement this for me",
+        ctaSecondaryTop: "Questions?",
+        ctaSecondaryBottom: "Reply to this email",
+        footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
+        footerLine2: "You requested this diagnosis from our website.",
+      }
+    : {
+        preheader: `Tu diagnóstico Local Lift de ${place.name} está listo.`,
+        eyebrow: "Diagnóstico gratis",
+        title: hasName ? `¡Aquí está tu diagnóstico, ${firstName}!` : "¡Aquí está tu diagnóstico!",
+        problemsLabel: "Problemas prioritarios",
+        planLabel: "Plan de acción de 7 días",
+        dayLabel: "Día",
+        ctaPrimary: "Quiero que lo implementen por mí",
+        ctaSecondaryTop: "¿Dudas?",
+        ctaSecondaryBottom: "Responde este correo",
+        footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
+        footerLine2: "Solicitaste este diagnóstico desde nuestro sitio.",
+      };
+
+  const problemRows = diagnostic.problems
+    .map(
+      (p, i) => `
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 14px 0;">
+        <tr>
+          <td width="28" valign="top" style="padding:2px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td width="22" height="22" align="center" valign="middle" style="width:22px;height:22px;border-radius:50%;background:${ACCENT};font-family:${FONT_DISPLAY};font-weight:700;font-size:11px;color:#ffffff;mso-line-height-rule:exactly;">${i + 1}</td>
+            </tr></table>
+          </td>
+          <td valign="top" style="padding:0 0 0 4px;">
+            <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:14px;color:#0f172a;">${p.title}</div>
+            <div style="font-size:13px;line-height:1.5;color:#475569;margin-top:3px;">${p.why}</div>
+            <div style="font-size:13px;line-height:1.5;color:${ACCENT};margin-top:4px;">→ ${p.fix}</div>
+          </td>
+        </tr>
+      </table>`
+    )
+    .join("");
+
+  const planRows = diagnostic.sevenDayPlan
+    .map(
+      (d) => `
+      <tr style="border-bottom:1px solid #e2e8f0;">
+        <td style="padding:8px 0;font-family:${FONT_DISPLAY};font-weight:700;font-size:12px;color:${ACCENT};width:60px;border-bottom:1px solid #e2e8f0;">${copy.dayLabel} ${d.day}</td>
+        <td style="padding:8px 0;font-size:13px;color:#1f2937;border-bottom:1px solid #e2e8f0;">${d.action}</td>
+      </tr>`
+    )
+    .join("");
+
+  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift -- ${place.name}`)}`;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
+</head>
+<body>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${copy.preheader}</div>
+<div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
+<div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+
+  <div style="padding:40px 40px 0 40px;text-align:center;">
+    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+  </div>
+
+  <div style="padding:32px 40px 8px 40px;text-align:center;">
+    <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">${copy.eyebrow}</div>
+    <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:30px;line-height:1.2;color:#0f172a;">${copy.title}</div>
+    <div style="font-size:14px;color:#64748b;margin-top:8px;">${place.name}${place.address ? ` · ${place.address}` : ""}</div>
+  </div>
+
+  <div style="padding:16px 40px 0 40px;text-align:center;">
+    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${diagnostic.summary}</p>
+  </div>
+
+  <div style="padding:28px 40px 0 40px;">
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
+      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:14px;">${copy.problemsLabel}</div>
+      ${problemRows}
+    </div>
+  </div>
+
+  <div style="padding:20px 40px 0 40px;">
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
+      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:12px;">${copy.planLabel}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${planRows}</table>
+    </div>
+  </div>
+
+  <div style="padding:28px 40px 0 40px;text-align:center;">
+    <a href="https://wa.me/18299200544" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">${copy.ctaPrimary}</a>
+  </div>
+  <div style="padding:14px 40px 0 40px;text-align:center;">
+    <a href="${contactMailto}" style="display:inline-block;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-family:${FONT_DISPLAY};font-weight:700;padding:11px 32px;border-radius:8px;line-height:1.4;">
+      <span style="display:block;font-size:12px;font-weight:700;color:#0f172a;">${copy.ctaSecondaryTop}</span>
+      <span style="display:block;font-size:15px;">${copy.ctaSecondaryBottom}</span>
+    </a>
+  </div>
+
+  <div style="padding:40px 40px 0 40px;">
+    <div style="height:1px;background:#e2e8f0;"></div>
+  </div>
+
+  <div style="padding:24px 40px 40px 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;">
+      <tr>
+        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Website" : "Sitio web"}</a></td>
+        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Contact" : "Contacto"}</a></td>
+      </tr>
+    </table>
+    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${copy.footerLine1}<br>${copy.footerLine2}</div>
+  </div>
+
+</div>
+</div>
+</body></html>`;
+}
+
+// Aviso interno a Cristian con el diagnóstico completo -- misma "Familia A"
+// que buildInternalAlertHtml de quote-confirmation-send (Meridian), franja
+// superior de color + tabla de datos + CTA de contacto directo con el lead.
+function buildInternalAlertHtml(diagnostic: Diagnostic, place: PlaceData, city: string, contactName: string, email: string): string {
+  const row = (label: string, value: string) => `
+      <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:9px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:110px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:9px 0;font-size:13px;font-family:'Courier New',Courier,monospace;color:#0f172a;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
+
+  const problemsList = diagnostic.problems
+    .map((p, i) => `<div style="font-size:13px;line-height:1.6;color:#1f2937;margin-bottom:6px;"><strong>${i + 1}. ${p.title}</strong><br>${p.why} → ${p.fix}</div>`)
+    .join("");
+
+  const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(`Tu diagnóstico Local Lift de ${place.name}`)}&body=${encodeURIComponent(`Hola ${contactName || ""},\n\nSoy Cristian de Polaris Web Studio, vi tu diagnóstico de Local Lift.`.trim())}`;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
+</head>
+<body>
+<div style="width:100%;min-height:100vh;background:#f1f5f9;padding:40px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
+<div style="width:520px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td height="6" style="font-size:0;line-height:0;background:${ACCENT};" bgcolor="${ACCENT}">&nbsp;</td>
+  </tr></table>
+  <div style="padding:24px 32px 0 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td valign="middle" style="font-family:${FONT_DISPLAY};font-weight:700;font-size:13px;color:#0f172a;">Local Lift · Alerta interna</td>
+      <td valign="middle" align="right" style="font-family:'Courier New',Courier,monospace;font-size:11px;color:#94a3b8;">${place.reviewCount} reseñas</td>
+    </tr></table>
+  </div>
+  <div style="padding:20px 32px 4px 32px;">
+    <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:22px;color:#0f172a;">Nuevo diagnóstico Local Lift</div>
+    <div style="font-size:13px;color:#64748b;margin-top:4px;">${place.name}</div>
+  </div>
+  <div style="padding:20px 32px 0 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e8f0;">
+      ${row("Contacto", contactName || "(sin nombre)")}
+      ${row("Email", email)}
+      ${row("Ciudad", city)}
+      ${row("Ficha", place.mapsUri ? `<a href="${place.mapsUri}" target="_blank">Ver en Google Maps</a>` : "no disponible")}
+      ${row("Calificación", place.rating !== null ? `${place.rating}/5` : "sin calificación")}
+    </table>
+  </div>
+  <div style="padding:16px 32px 0 32px;">
+    <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Problemas detectados</div>
+    ${problemsList}
+  </div>
+  <div style="padding:24px 32px 32px 32px;text-align:center;">
+    <a href="${mailtoUrl}" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:13px 28px;border-radius:8px;">Responder a ${contactName || "el lead"}</a>
+  </div>
+</div>
+</div>
+</body>
+</html>`;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST");
@@ -158,11 +364,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             language === "en"
               ? `Your Local Lift diagnosis for ${place.name}`
               : `Tu diagnóstico Local Lift de ${place.name}`,
-          text: `${language === "en" ? "Hi" : "Hola"} ${contactName},\n\n${diagnosticText}\n\n${
-            language === "en"
-              ? "Want us to implement these fixes for you? Reply to this email or write us on WhatsApp: https://wa.me/18299200544"
-              : "¿Querés que implementemos estos cambios por vos? Respondé este correo o escribinos por WhatsApp: https://wa.me/18299200544"
-          }`,
+          text: diagnosticText,
+          html: buildDiagnosticHtml(diagnostic, place, contactName, language),
         });
 
         await transporter.sendMail({
@@ -171,6 +374,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           replyTo: email,
           subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
           text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\n\n${diagnosticText}`,
+          html: buildInternalAlertHtml(diagnostic, place, city, contactName, email),
         });
       } catch (mailErr) {
         console.error("[local-lift-diagnostic] Error enviando correos:", mailErr);
