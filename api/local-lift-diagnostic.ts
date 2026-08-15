@@ -1,12 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { generateObject } from "ai";
-import { createDeepSeek } from "@ai-sdk/deepseek";
-import { createXai } from "@ai-sdk/xai";
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { findPlace, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 // Endpoint real detrás de "Diagnóstico Express" de Polaris Local Lift
 // (/local-lift): a diferencia de la venta manual por WhatsApp que existía
@@ -16,7 +13,8 @@ import { getFirestore } from "firebase-admin/firestore";
 // (reseñas, si tiene web, teléfono, fotos, horario, etc. salen de Places,
 // no del modelo). Mismo patrón de fallback DeepSeek -> Grok -> Gemini que
 // quotebot-chat.ts, y misma cuenta de Firestore ("polaris-web-studio") que
-// server-db.ts.
+// server-db.ts. Este es el tier gratis (gancho); el paquete pago completo
+// del tier 48H vive en local-lift-package.ts, admin-only.
 
 const firebaseApp = getApps().length
   ? getApps()[0]
@@ -52,22 +50,6 @@ const diagnosticSchema = z.object({
 
 type Diagnostic = z.infer<typeof diagnosticSchema>;
 
-interface PlaceData {
-  name: string;
-  address: string | null;
-  rating: number | null;
-  reviewCount: number;
-  hasWebsite: boolean;
-  websiteUri: string | null;
-  hasPhone: boolean;
-  hasHours: boolean;
-  photoCount: number;
-  hasDescription: boolean;
-  isOperational: boolean;
-  mapsUri: string | null;
-  primaryType: string | null;
-}
-
 const rlBuckets = new Map<string, { count: number; resetAt: number }>();
 function rateLimited(ip: string, max: number, windowMs: number): boolean {
   const now = Date.now();
@@ -81,109 +63,17 @@ function rateLimited(ip: string, max: number, windowMs: number): boolean {
   return false;
 }
 
-async function findPlace(businessName: string, city: string): Promise<PlaceData | null> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY no configurada");
-
-  const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask":
-        "places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryTypeDisplayName",
-    },
-    body: JSON.stringify({ textQuery: `${businessName} ${city}`, languageCode: "es" }),
-    signal: AbortSignal.timeout(8000),
-  });
-
-  if (!res.ok) {
-    console.error("[local-lift-diagnostic] Places API error:", res.status, await res.text().catch(() => ""));
-    return null;
-  }
-
-  const data = await res.json();
-  const place = data?.places?.[0];
-  if (!place) return null;
-
-  return {
-    name: place.displayName?.text || businessName,
-    address: place.formattedAddress || null,
-    rating: typeof place.rating === "number" ? place.rating : null,
-    reviewCount: place.userRatingCount || 0,
-    hasWebsite: !!place.websiteUri,
-    websiteUri: place.websiteUri || null,
-    hasPhone: !!place.nationalPhoneNumber,
-    hasHours: !!place.currentOpeningHours,
-    photoCount: Array.isArray(place.photos) ? place.photos.length : 0,
-    hasDescription: !!place.editorialSummary?.text,
-    isOperational: place.businessStatus ? place.businessStatus === "OPERATIONAL" : true,
-    mapsUri: place.googleMapsUri || null,
-    primaryType: place.primaryTypeDisplayName?.text || null,
-  };
-}
-
 async function generateDiagnostic(place: PlaceData, lang: "es" | "en"): Promise<Diagnostic> {
-  const dataSummary = `
-Nombre real: ${place.name}
-Dirección: ${place.address || "no disponible en la ficha"}
-Categoría: ${place.primaryType || "no especificada"}
-Calificación: ${place.rating !== null ? `${place.rating}/5` : "sin calificación"}
-Cantidad de reseñas: ${place.reviewCount}
-Tiene sitio web enlazado en Google: ${place.hasWebsite ? `sí (${place.websiteUri})` : "no"}
-Tiene teléfono visible: ${place.hasPhone ? "sí" : "no"}
-Tiene horario de atención cargado: ${place.hasHours ? "sí" : "no"}
-Cantidad de fotos en la ficha: ${place.photoCount}
-Tiene descripción/resumen: ${place.hasDescription ? "sí" : "no"}
-Estado del negocio: ${place.isOperational ? "operativo" : "cerrado o no operativo según Google"}
-`.trim();
-
   const prompt = `Sos un consultor de Polaris Local Lift analizando la ficha real de Google de este negocio (Punta Cana / República Dominicana o similar). Estos son los datos REALES de su ficha de Google, obtenidos vía Google Places API -- no inventes ningún dato adicional, cifra, reseña ni promesa de ranking:
 
-${dataSummary}
+${placeDataSummary(place)}
 
 Con base ÚNICAMENTE en estos datos reales, generá exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
 
-  const attempts: Array<() => ReturnType<typeof generateObject<typeof diagnosticSchema>>> = [
-    () =>
-      generateObject({
-        model: createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-v4-flash"),
-        schema: diagnosticSchema,
-        prompt,
-        temperature: 0.5,
-        abortSignal: AbortSignal.timeout(20000),
-      }),
-    () =>
-      generateObject({
-        model: createXai({ apiKey: process.env.GROK_API_KEY })("grok-4.20-non-reasoning"),
-        schema: diagnosticSchema,
-        prompt,
-        temperature: 0.5,
-        abortSignal: AbortSignal.timeout(20000),
-      }),
-    () =>
-      generateObject({
-        model: createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })("gemini-3.5-flash"),
-        schema: diagnosticSchema,
-        prompt,
-        temperature: 0.5,
-        abortSignal: AbortSignal.timeout(20000),
-      }),
-  ];
-
-  let lastError: unknown;
-  for (const attempt of attempts) {
-    try {
-      const result = await attempt();
-      return result.object;
-    } catch (err) {
-      lastError = err;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error("Los 3 modelos fallaron");
+  return generateWithFallback(diagnosticSchema, prompt);
 }
 
-function renderDiagnosticText(place: PlaceData, diagnostic: Diagnostic, lang: "es" | "en"): string {
+function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string {
   const problemsLabel = lang === "en" ? "Priority issues" : "Problemas prioritarios";
   const planLabel = lang === "en" ? "7-day action plan" : "Plan de acción de 7 días";
   const dayLabel = lang === "en" ? "Day" : "Día";
@@ -237,7 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const diagnostic = await generateDiagnostic(place, language);
-    const diagnosticText = renderDiagnosticText(place, diagnostic, language);
+    const diagnosticText = renderDiagnosticText(diagnostic, language);
 
     // Envío de correos y registro en Firestore -- best-effort, nunca deben
     // tumbar la respuesta al cliente si fallan (ya generamos el diagnóstico

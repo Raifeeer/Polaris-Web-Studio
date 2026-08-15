@@ -1644,6 +1644,19 @@ const PORT = 3000;
     }
   });
 
+  // Paquete completo del tier pago (48H/Implementado) -- admin-only, mismo
+  // middleware que el resto de las rutas admin del portal. authenticateToken
+  // ya deja `req.user` listo; requireAdmin corta acá si no es admin real.
+  app.post("/api/local-lift-package", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { default: localLiftPackageHandler } = await import("./api/local-lift-package.js");
+      await localLiftPackageHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in local-lift-package:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);
