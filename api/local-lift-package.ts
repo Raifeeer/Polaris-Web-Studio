@@ -388,11 +388,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         secure: true,
         auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
       });
+      const connectCta =
+        typeof leadId === "string" && leadId.trim()
+          ? `<p style="margin-top:24px;">${
+              language === "en"
+                ? `Want us to publish this directly on your real Google listing? <a href="https://polarisweb.studio/local-lift/conectar/${leadId.trim()}">Connect your Google Business Profile</a> (optional, you approve everything before we publish anything).`
+                : `¿Quieres que publiquemos esto directo en tu ficha real de Google? <a href="https://polarisweb.studio/local-lift/conectar/${leadId.trim()}">Conecta tu Google Business Profile</a> (opcional, apruebas todo antes de que publiquemos nada).`
+            }</p>`
+          : "";
       await transporter.sendMail({
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
         subject: language === "en" ? `Your Local Lift content package -- ${givenPlace.name}` : `Tu paquete de contenido Local Lift -- ${givenPlace.name}`,
-        html: `<p>${language === "en" ? "Hi" : "Hola"} ${contactName || ""},</p>${renderPackageHtml(givenPackage, language)}`,
+        html: `<p>${language === "en" ? "Hi" : "Hola"} ${contactName || ""},</p>${renderPackageHtml(givenPackage, language)}${connectCta}`,
       });
       if (docRef) {
         await docRef.update({ status: "sent", contactName: contactName || null, email, sentAt: new Date() });

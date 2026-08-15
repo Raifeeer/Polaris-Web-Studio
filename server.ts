@@ -1670,6 +1670,20 @@ const PORT = 3000;
     }
   });
 
+  // Conexión OAuth de Google Business Profile -- ruta exacta registrada en
+  // el OAuth Client de Google (redirect URI), maneja GET (start/status/el
+  // redirect real de Google) todo en un solo archivo. Público -- el cliente
+  // real (dueño del negocio) nunca tiene sesión admin del portal.
+  app.get("/api/gbp-oauth-callback", async (req, res) => {
+    try {
+      const { default: gbpOauthCallbackHandler } = await import("./api/gbp-oauth-callback.js");
+      await gbpOauthCallbackHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in gbp-oauth-callback:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);
