@@ -19,45 +19,49 @@ import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_
 // de llegar a este handler -- no se revalida acá.
 //
 // Vercel Hobby (plan real de esta cuenta) mata cualquier función serverless
-// a los 10s, sin excepción. Generar los ~30 items del paquete (descripción +
-// posts + respuestas + plantillas + WhatsApp) en un solo llamado a un
-// modelo no entra ahí -- por eso se parte en 3 llamados MÁS CHICOS que
-// corren EN PARALELO (Promise.allSettled), cada uno con un solo intento y
-// timeout corto (ver generateFast en _localLift.ts). Si una pieza falla, se
-// devuelve igual con las otras dos completas y esa pieza en null -- mejor
-// un resultado parcial que nada.
+// a los 10s, sin excepción. Un primer intento con 3 llamados en paralelo
+// (bloques más grandes: descripción+servicios+10 posts juntos, etc.) seguía
+// sin entrar -- probado en vivo, los 3 abortaron a los 8s sin terminar.
+// Partido en 5 llamados AÚN más chicos, cada uno con un solo campo/lista
+// bien acotada, para que cada uno individualmente termine rápido.
 
-const contentSchema = z.object({
+const descriptionSchema = z.object({
   rewrittenDescription: z.string().describe("Descripción reescrita de la ficha de Google (máx. 750 caracteres), destacando servicios/ambiente/ubicación reales y una llamada a la acción clara."),
-  services: z.array(z.string()).min(3).max(10).describe("Lista de servicios/productos reales a destacar en el perfil, inferidos de la categoría del negocio."),
+  services: z.array(z.string()).min(3).max(8).describe("Lista de servicios/productos reales a destacar en el perfil, inferidos de la categoría del negocio."),
+});
+
+const postsSchema = z.object({
   googlePosts: z
     .array(
       z.object({
         title: z.string().describe("Título corto de la publicación (máx. 10 palabras)."),
-        body: z.string().describe("Texto de la publicación para Google Business Profile, máx. 1500 caracteres, listo para adaptar."),
+        body: z.string().describe("Texto de la publicación para Google Business Profile, máx. 800 caracteres, listo para adaptar."),
         cta: z.enum(["Reservar", "Llamar ahora", "Ver más", "Comprar", "Cómo llegar", "Ninguno"]).describe("Botón de llamada a la acción sugerido."),
       })
     )
     .length(10)
-    .describe("10 publicaciones variadas: ofertas, novedades, servicios destacados, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción directos -- sin repetir el mismo enfoque dos veces."),
+    .describe("10 publicaciones variadas y breves: ofertas, novedades, servicios destacados, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción directos -- sin repetir el mismo enfoque dos veces."),
 });
 
-const reviewsSchema = z.object({
+const repliesSchema = z.object({
   reviewReplies: z
     .array(
       z.object({
         author: z.string(),
         rating: z.number(),
         originalText: z.string(),
-        reply: z.string().describe("Respuesta personalizada y real a ESA reseña puntual, en tono profesional/cálido, agradeciendo o resolviendo la queja según corresponda."),
+        reply: z.string().describe("Respuesta breve y personalizada a ESA reseña puntual, tono profesional/cálido, agradeciendo o resolviendo la queja según corresponda."),
       })
     )
     .describe("Respuesta a cada una de las reseñas reales provistas (puede haber menos de 5 si la ficha tiene menos)."),
+});
+
+const templatesSchema = z.object({
   reviewReplyTemplates: z
     .array(
       z.object({
         forRating: z.number().int().min(1).max(5),
-        template: z.string().describe("Plantilla genérica de respuesta para una reseña de esa calificación, con [corchetes] donde el cliente debe personalizar."),
+        template: z.string().describe("Plantilla breve y genérica de respuesta para una reseña de esa calificación, con [corchetes] donde el cliente debe personalizar."),
       })
     )
     .length(5)
@@ -69,26 +73,28 @@ const whatsappSchema = z.object({
     .array(
       z.object({
         scenario: z.string().describe("Escenario breve (ej. 'Consulta sin respuesta en 24h', 'Confirmación de reserva')."),
-        message: z.string().describe("Mensaje de WhatsApp listo para adaptar, tono cercano y profesional."),
+        message: z.string().describe("Mensaje breve de WhatsApp listo para adaptar, tono cercano y profesional."),
       })
     )
     .length(10)
     .describe("10 mensajes cubriendo: seguimiento de consulta, confirmación, recordatorio previo a la visita, agradecimiento post-visita, pedido de reseña, reactivación de cliente inactivo, promoción puntual, y otros escenarios reales de un negocio local."),
 });
 
-type ContentPart = z.infer<typeof contentSchema>;
-type ReviewsPart = z.infer<typeof reviewsSchema>;
+type DescPart = z.infer<typeof descriptionSchema>;
+type PostsPart = z.infer<typeof postsSchema>;
+type RepliesPart = z.infer<typeof repliesSchema>;
+type TemplatesPart = z.infer<typeof templatesSchema>;
 type WhatsappPart = z.infer<typeof whatsappSchema>;
 
 interface LocalLiftPackage {
   rewrittenDescription: string | null;
   services: string[] | null;
-  googlePosts: ContentPart["googlePosts"] | null;
-  reviewReplies: ReviewsPart["reviewReplies"] | null;
-  reviewReplyTemplates: ReviewsPart["reviewReplyTemplates"] | null;
+  googlePosts: PostsPart["googlePosts"] | null;
+  reviewReplies: RepliesPart["reviewReplies"] | null;
+  reviewReplyTemplates: TemplatesPart["reviewReplyTemplates"] | null;
   whatsappMessages: WhatsappPart["whatsappMessages"] | null;
   partialFailure: boolean;
-  errors: { content: string | null; reviews: string | null; whatsapp: string | null };
+  errors: Record<"description" | "posts" | "replies" | "templates" | "whatsapp", string | null>;
 }
 
 async function generatePackage(
@@ -105,39 +111,55 @@ async function generatePackage(
       ? reviews.map((r, i) => `${i + 1}. [${r.rating}/5] ${r.author}: "${r.text}"`).join("\n")
       : "No hay reseñas con texto disponibles en la ficha.";
 
-  const contentPrompt = `${baseHeader}Generá: descripción reescrita, lista de servicios, y 10 publicaciones para Google Business Profile (variadas: ofertas, novedades, servicios, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción -- sin repetir enfoque). Grounded en los datos reales de arriba, tono profesional y cálido, sin prometer resultados garantizados. Todo en ${langInstruction}.`;
+  const prompts = {
+    description: `${baseHeader}Generá una descripción reescrita del negocio y una lista de sus servicios/productos reales. Grounded en los datos de arriba. Todo en ${langInstruction}.`,
+    posts: `${baseHeader}Generá 10 publicaciones breves para Google Business Profile (variadas: ofertas, novedades, servicios, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción -- sin repetir enfoque). Todo en ${langInstruction}.`,
+    replies: `${baseHeader}Reseñas reales disponibles (máximo 5, límite real de la API):\n${reviewsBlock}\n\nGenerá una respuesta breve y personalizada a cada reseña real de arriba. Todo en ${langInstruction}.`,
+    templates: `${baseHeader}Generá 5 plantillas breves y genéricas de respuesta a reseñas, una por calificación (1 a 5 estrellas), para reseñas futuras. Todo en ${langInstruction}.`,
+    whatsapp: `${baseHeader}Generá 10 mensajes breves de WhatsApp de seguimiento, cubriendo escenarios reales de atención al cliente (consulta sin respuesta, confirmación, recordatorio, agradecimiento post-visita, pedido de reseña, reactivación, promoción, etc.). Todo en ${langInstruction}.`,
+  };
 
-  const reviewsPrompt = `${baseHeader}Reseñas reales disponibles (máximo 5, límite real de la API):\n${reviewsBlock}\n\nGenerá una respuesta personalizada a cada reseña real de arriba, y 5 plantillas genéricas de respuesta (una por calificación, 1 a 5 estrellas) para reseñas futuras. Tono profesional y cálido. Todo en ${langInstruction}.`;
-
-  const whatsappPrompt = `${baseHeader}Generá 10 mensajes de WhatsApp de seguimiento, cubriendo escenarios reales de atención al cliente de un negocio local (consulta sin respuesta, confirmación, recordatorio, agradecimiento post-visita, pedido de reseña, reactivación, promoción, etc.). Tono cercano y profesional. Todo en ${langInstruction}.`;
-
-  const [contentResult, reviewsResult, whatsappResult] = await Promise.allSettled([
-    generateFast(contentSchema, contentPrompt, 0.6),
-    generateFast(reviewsSchema, reviewsPrompt, 0.6),
-    generateFast(whatsappSchema, whatsappPrompt, 0.6),
+  const [descResult, postsResult, repliesResult, templatesResult, whatsappResult] = await Promise.allSettled([
+    generateFast(descriptionSchema, prompts.description, 0.6),
+    generateFast(postsSchema, prompts.posts, 0.6),
+    generateFast(repliesSchema, prompts.replies, 0.6),
+    generateFast(templatesSchema, prompts.templates, 0.6),
+    generateFast(whatsappSchema, prompts.whatsapp, 0.6),
   ]);
 
-  const errMsg = (r: PromiseRejectedResult) => String(r.reason?.message || r.reason).slice(0, 300);
-  if (contentResult.status === "rejected") console.error("[local-lift-package] contentPart falló:", contentResult.reason);
-  if (reviewsResult.status === "rejected") console.error("[local-lift-package] reviewsPart falló:", reviewsResult.reason);
-  if (whatsappResult.status === "rejected") console.error("[local-lift-package] whatsappPart falló:", whatsappResult.reason);
+  const errMsg = (r: PromiseSettledResult<unknown>) =>
+    r.status === "rejected" ? String((r.reason as any)?.message || r.reason).slice(0, 300) : null;
 
-  const content = contentResult.status === "fulfilled" ? contentResult.value : null;
-  const reviewsPart = reviewsResult.status === "fulfilled" ? reviewsResult.value : null;
-  const whatsapp = whatsappResult.status === "fulfilled" ? whatsappResult.value : null;
+  const desc = descResult.status === "fulfilled" ? (descResult.value as DescPart) : null;
+  const posts = postsResult.status === "fulfilled" ? (postsResult.value as PostsPart) : null;
+  const replies = repliesResult.status === "fulfilled" ? (repliesResult.value as RepliesPart) : null;
+  const templates = templatesResult.status === "fulfilled" ? (templatesResult.value as TemplatesPart) : null;
+  const whatsapp = whatsappResult.status === "fulfilled" ? (whatsappResult.value as WhatsappPart) : null;
+
+  for (const [label, r] of [
+    ["description", descResult],
+    ["posts", postsResult],
+    ["replies", repliesResult],
+    ["templates", templatesResult],
+    ["whatsapp", whatsappResult],
+  ] as const) {
+    if (r.status === "rejected") console.error(`[local-lift-package] pieza '${label}' falló:`, r.reason);
+  }
 
   return {
-    rewrittenDescription: content?.rewrittenDescription ?? null,
-    services: content?.services ?? null,
-    googlePosts: content?.googlePosts ?? null,
-    reviewReplies: reviewsPart?.reviewReplies ?? null,
-    reviewReplyTemplates: reviewsPart?.reviewReplyTemplates ?? null,
+    rewrittenDescription: desc?.rewrittenDescription ?? null,
+    services: desc?.services ?? null,
+    googlePosts: posts?.googlePosts ?? null,
+    reviewReplies: replies?.reviewReplies ?? null,
+    reviewReplyTemplates: templates?.reviewReplyTemplates ?? null,
     whatsappMessages: whatsapp?.whatsappMessages ?? null,
-    partialFailure: !content || !reviewsPart || !whatsapp,
+    partialFailure: !desc || !posts || !replies || !templates || !whatsapp,
     errors: {
-      content: contentResult.status === "rejected" ? errMsg(contentResult) : null,
-      reviews: reviewsResult.status === "rejected" ? errMsg(reviewsResult) : null,
-      whatsapp: whatsappResult.status === "rejected" ? errMsg(whatsappResult) : null,
+      description: errMsg(descResult),
+      posts: errMsg(postsResult),
+      replies: errMsg(repliesResult),
+      templates: errMsg(templatesResult),
+      whatsapp: errMsg(whatsappResult),
     },
   };
 }
