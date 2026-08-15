@@ -120,11 +120,13 @@ async function generatePackage(
   };
 
   const [descResult, postsResult, repliesResult, templatesResult, whatsappResult] = await Promise.allSettled([
-    generateFast(descriptionSchema, prompts.description, 0.6),
-    generateFast(postsSchema, prompts.posts, 0.6),
-    generateFast(repliesSchema, prompts.replies, 0.6),
-    generateFast(templatesSchema, prompts.templates, 0.6),
-    generateFast(whatsappSchema, prompts.whatsapp, 0.6),
+    // Repartidas entre los 3 proveedores para no competir por el mismo rate
+    // limit al correr las 5 en simultáneo (ver nota en generateFast).
+    generateFast(descriptionSchema, prompts.description, 0.6, "deepseek"),
+    generateFast(postsSchema, prompts.posts, 0.6, "grok"),
+    generateFast(repliesSchema, prompts.replies, 0.6, "gemini"),
+    generateFast(templatesSchema, prompts.templates, 0.6, "deepseek"),
+    generateFast(whatsappSchema, prompts.whatsapp, 0.6, "grok"),
   ]);
 
   const errMsg = (r: PromiseSettledResult<unknown>) =>

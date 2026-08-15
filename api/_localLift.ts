@@ -110,17 +110,32 @@ export async function findPlaceReviews(placeId: string, lang: "es" | "en"): Prom
 // de esta función EN PARALELO (Promise.allSettled) dentro del mismo
 // handler cabe en ese presupuesto; encadenar 3 proveedores en serie con
 // generateWithFallback (hasta 25s cada intento) no cabe nunca.
+export type FastProvider = "deepseek" | "grok" | "gemini";
+
+function fastModel(provider: FastProvider) {
+  if (provider === "grok") return createXai({ apiKey: process.env.GROK_API_KEY })("grok-4.20-non-reasoning");
+  if (provider === "gemini") return createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY })("gemini-3.5-flash");
+  return createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-v4-flash");
+}
+
+// `provider` es elegible por el caller a propósito: cuando varios llamados
+// de generateFast corren EN PARALELO (ver local-lift-package.ts), mandarlos
+// todos al mismo proveedor los hace competir por el mismo rate limit de esa
+// cuenta -- probado en vivo, 5 llamados simultáneos a DeepSeek solo dejaron
+// completar el más chico de los 5 antes del timeout. Repartir entre
+// DeepSeek/Grok/Gemini baja la concurrencia real por proveedor.
 export async function generateFast<S extends z.ZodTypeAny>(
   schema: S,
   prompt: string,
-  temperature = 0.5
+  temperature = 0.5,
+  provider: FastProvider = "deepseek"
 ): Promise<z.infer<S>> {
   const result = await generateObject({
-    model: createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-v4-flash"),
+    model: fastModel(provider),
     schema,
     prompt,
     temperature,
-    abortSignal: AbortSignal.timeout(8000),
+    abortSignal: AbortSignal.timeout(8500),
   } as any);
   return result.object;
 }
