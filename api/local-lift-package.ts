@@ -122,11 +122,12 @@ async function generatePackage(
     whatsapp2: `${baseHeader}Generá otros 5 mensajes breves de WhatsApp para: reactivación de cliente inactivo, promoción puntual, respuesta a consulta de horario/ubicación, respuesta a consulta de precio, y mensaje de bienvenida a cliente nuevo. No repitas los escenarios de otra tanda (consulta sin respuesta, confirmación, recordatorio, agradecimiento, pedido de reseña). Todo en ${langInstruction}.`,
   };
 
-  // DeepSeek lleva UN SOLO llamado a propósito -- 2 llamados simultáneos a
-  // DeepSeek fallaron los 2 en pruebas en vivo; el resto se reparte entre
-  // Grok y Gemini, que sí toleraron 2-3 llamados paralelos cada uno.
+  // DeepSeek queda afuera de este endpoint -- probado en vivo varias
+  // rondas: falló la enorme mayoría de las veces que se usó acá (con o sin
+  // concurrencia), mientras Grok y Gemini toleraron bien 3-4 llamados
+  // paralelos cada uno. Repartido entre esos dos únicamente.
   const calls: Array<[keyof LocalLiftPackage["errors"], () => Promise<any>]> = [
-    ["description", () => generateFast(descriptionSchema, prompts.description, 0.6, "deepseek")],
+    ["description", () => generateFast(descriptionSchema, prompts.description, 0.6, "gemini")],
     ["posts1", () => generateFast(postsHalfSchema, prompts.posts1, 0.6, "grok")],
     ["posts2", () => generateFast(postsHalfSchema, prompts.posts2, 0.6, "gemini")],
     ["replies", () => generateFast(repliesSchema, prompts.replies, 0.6, "grok")],
