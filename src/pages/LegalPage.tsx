@@ -185,6 +185,35 @@ function PrivacyContent() {
             Solo revelamos datos a autoridades si nos lo exige una orden legal válida.
           </T>
         </p>
+
+        <SubHeading><T en="Google Business Profile (only if you explicitly connect your account)">Google Business Profile (solo si conectas tu cuenta explícitamente)</T></SubHeading>
+        <p>
+          <T en="If you use our Local Lift service and choose to connect your Google Business Profile account, we request read/write access to your business listing (description, posts, and review replies) only for the specific actions you authorize -- publishing content you approved, or replying to reviews on your behalf. We never post or reply without your prior review and explicit confirmation.">
+            Si usas nuestro servicio Local Lift y decides conectar tu cuenta de Google Business
+            Profile, pedimos acceso de lectura/escritura a tu ficha de negocio (descripción,
+            publicaciones, y respuestas a reseñas) únicamente para las acciones específicas que
+            autorices -- publicar contenido que ya aprobaste, o responder reseñas en tu nombre.
+            Nunca publicamos ni respondemos sin tu revisión previa y confirmación explícita.
+          </T>
+        </p>
+        <p>
+          <T en="Our use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. We only use this data to provide and improve the Local Lift feature you requested -- we do not sell it, share it with third parties for advertising, or use it for any purpose other than operating the service you explicitly connected.">
+            El uso y la transferencia de información recibida de las APIs de Google que hacemos
+            cumple con la Política de Datos de Usuario de los Servicios de API de Google,
+            incluidos los requisitos de Uso Limitado. Solo usamos estos datos para brindar y
+            mejorar la función Local Lift que solicitaste -- no los vendemos, no los compartimos
+            con terceros con fines publicitarios, ni los usamos para ningún propósito distinto de
+            operar el servicio que conectaste explícitamente.
+          </T>
+        </p>
+        <p>
+          <T en="You can disconnect your Google Business Profile account at any time from your Local Lift panel, or by revoking access directly from your Google Account settings (myaccount.google.com/permissions). Disconnecting deletes any stored access token immediately.">
+            Puedes desconectar tu cuenta de Google Business Profile en cualquier momento desde tu
+            panel de Local Lift, o revocando el acceso directamente desde la configuración de tu
+            cuenta de Google (myaccount.google.com/permissions). Desconectar borra de inmediato
+            cualquier token de acceso almacenado.
+          </T>
+        </p>
       </Section>
 
       <Section heading={<T en="5. How long we keep your data">5. Cuánto tiempo conservamos tus datos</T>}>
