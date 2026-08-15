@@ -122,11 +122,14 @@ async function generatePackage(
   const [descResult, postsResult, repliesResult, templatesResult, whatsappResult] = await Promise.allSettled([
     // Repartidas entre los 3 proveedores para no competir por el mismo rate
     // limit al correr las 5 en simultáneo (ver nota en generateFast).
-    generateFast(descriptionSchema, prompts.description, 0.6, "deepseek"),
-    generateFast(postsSchema, prompts.posts, 0.6, "grok"),
-    generateFast(repliesSchema, prompts.replies, 0.6, "gemini"),
+    // DeepSeek solo lleva UNA pieza (la más chica) sin compañía -- probado
+    // en vivo que las 2 veces que corrió junto a otra llamada de DeepSeek,
+    // ambas fallaron por timeout; en solitario no tuvo ese problema.
+    generateFast(descriptionSchema, prompts.description, 0.6, "grok"),
+    generateFast(postsSchema, prompts.posts, 0.6, "gemini"),
+    generateFast(repliesSchema, prompts.replies, 0.6, "grok"),
     generateFast(templatesSchema, prompts.templates, 0.6, "deepseek"),
-    generateFast(whatsappSchema, prompts.whatsapp, 0.6, "grok"),
+    generateFast(whatsappSchema, prompts.whatsapp, 0.6, "gemini"),
   ]);
 
   const errMsg = (r: PromiseSettledResult<unknown>) =>

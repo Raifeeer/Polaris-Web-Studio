@@ -135,7 +135,7 @@ export async function generateFast<S extends z.ZodTypeAny>(
     schema,
     prompt,
     temperature,
-    abortSignal: AbortSignal.timeout(8500),
+    abortSignal: AbortSignal.timeout(9200),
   } as any);
   return result.object;
 }
