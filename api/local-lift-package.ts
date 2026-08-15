@@ -1,7 +1,24 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import nodemailer from "nodemailer";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_localLift.js";
+
+const firebaseApp = getApps().length
+  ? getApps()[0]
+  : initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
+      }),
+    });
+
+const TIER_PRICE: Record<string, { amount: string; label: string }> = {
+  "48h": { amount: "99", label: "Local Lift 48H" },
+  implementado: { amount: "179", label: "Implementado" },
+};
 
 // Genera el paquete completo del tier "Local Lift 48H" ($99) / "Implementado"
 // ($179): descripción reescrita, 10 publicaciones para Google Business
@@ -219,6 +236,42 @@ function renderPackageHtml(pkg: LocalLiftPackage, lang: "es" | "en"): string {
   `;
 }
 
+function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: string, leadId: string, language: "es" | "en"): string {
+  const price = TIER_PRICE[tier] || TIER_PRICE["48h"];
+  const postsCount = pkg.googlePosts?.length || 0;
+  const repliesCount = pkg.reviewReplies?.length || 0;
+  const waCount = pkg.whatsappMessages?.length || 0;
+  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
+  if (language === "en") {
+    return `
+      <p>Hi,</p>
+      <p>We already prepared your <strong>${price.label}</strong> package for <strong>${place.name}</strong> -- everything is ready to send, based on your real Google listing:</p>
+      <ul>
+        <li>A rewritten description and highlighted services</li>
+        <li>${postsCount || 10} Google posts ready to publish</li>
+        <li>${repliesCount || "Your"} personalized replies to your real reviews</li>
+        <li>${waCount || 10} WhatsApp follow-up messages</li>
+      </ul>
+      <p>Complete your payment to receive the full package with all the actual content, ready to use:</p>
+      <p><a href="${payUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pay $${price.amount} and get my package</a></p>
+      <p>Questions? Just reply to this email or write us on WhatsApp: https://wa.me/18299200544</p>
+    `;
+  }
+  return `
+    <p>Hola,</p>
+    <p>Ya preparamos tu paquete <strong>${price.label}</strong> para <strong>${place.name}</strong> -- todo está listo para enviarte, basado en tu ficha real de Google:</p>
+    <ul>
+      <li>Descripción reescrita y servicios destacados</li>
+      <li>${postsCount || 10} publicaciones listas para tu perfil de Google</li>
+      <li>${repliesCount || "Tus"} respuestas personalizadas a tus reseñas reales</li>
+      <li>${waCount || 10} mensajes de WhatsApp de seguimiento</li>
+    </ul>
+    <p>Completa tu pago para recibir el paquete completo con todo el contenido real, listo para usar:</p>
+    <p><a href="${payUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pagar $${price.amount} y recibir mi paquete</a></p>
+    <p>¿Dudas? Responde este correo o escríbenos por WhatsApp: https://wa.me/18299200544</p>
+  `;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST");
@@ -232,19 +285,98 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
   }
 
-  const { action, businessName, city, lang, email, contactName, place: givenPlace, package: givenPackage } = req.body || {};
+  const { action, businessName, city, lang, email, contactName, tier, leadId, place: givenPlace, package: givenPackage } = req.body || {};
   const language: "es" | "en" = lang === "en" ? "en" : "es";
+  const firestore = getFirestore(firebaseApp, "polaris-web-studio");
 
   try {
+    if (action === "leads") {
+      // Lista de leads recientes (gratis + pagos directos) para el panel --
+      // el mismo middleware admin de server.ts ya protege esta ruta entera.
+      const snap = await firestore
+        .collection("localLiftDiagnostics")
+        .orderBy("createdAt", "desc")
+        .limit(50)
+        .get();
+      const leads = snap.docs.map((d) => {
+        const v = d.data();
+        return {
+          id: d.id,
+          businessName: v.businessName || "",
+          city: v.city || "",
+          contactName: v.contactName || "",
+          email: v.email || "",
+          tier: v.tier || "48h",
+          status: v.status || "diagnostic_sent",
+          paid: !!v.paid,
+          source: v.source || "free_diagnostic",
+          createdAt: v.createdAt?.toDate?.() || null,
+        };
+      });
+      return res.json({ success: true, leads });
+    }
+
+    if (action === "send_teaser") {
+      // Manda la propuesta SIN el contenido exacto -- solo highlights reales
+      // + botón de pago hacia /local-lift/pagar/:leadId. Nunca revela el
+      // paquete completo antes de que el pago quede confirmado.
+      if (typeof leadId !== "string" || !leadId.trim()) {
+        return res.status(400).json({ error: "Falta el lead a enviar." });
+      }
+      const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
+      const doc = await docRef.get();
+      if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
+      const lead = doc.data()!;
+      if (!lead.place || !lead.package) {
+        return res.status(400).json({ error: "Genera el paquete primero antes de enviar la propuesta." });
+      }
+      const finalEmail = typeof email === "string" && email.trim() ? email.trim() : lead.email;
+      const finalContactName = typeof contactName === "string" && contactName.trim() ? contactName.trim() : lead.contactName;
+      if (!finalEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(finalEmail)) {
+        return res.status(400).json({ error: "El correo del cliente no es válido." });
+      }
+      const zohoPassword = process.env.ZOHO_PASSWORD;
+      if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
+      const finalTier = lead.tier || tier || "48h";
+      const transporter = nodemailer.createTransport({
+        host: "smtp.zoho.com", port: 465, secure: true,
+        auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+      });
+      await transporter.sendMail({
+        from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+        to: finalEmail,
+        subject: language === "en" ? `Your Local Lift package is ready -- ${lead.place.name}` : `Tu paquete Local Lift está listo -- ${lead.place.name}`,
+        html: renderTeaserHtml(lead.place, lead.package, finalTier, leadId.trim(), language),
+      });
+      await docRef.update({
+        status: "teaser_sent",
+        tier: finalTier,
+        contactName: finalContactName || lead.contactName || null,
+        email: finalEmail,
+        teaserSentAt: new Date(),
+      });
+      return res.json({ success: true, sent: true });
+    }
+
     if (action === "send") {
-      // Envía un paquete YA generado (revisado por el admin en pantalla) --
-      // no vuelve a llamar a la IA ni a Places, así el admin puede editar el
-      // texto antes de mandarlo sin gastar otro llamado.
+      // Envía el paquete COMPLETO -- exige que el lead ya esté pagado
+      // (cuando se rastrea con leadId) para nunca regalar el contenido real
+      // antes del pago. Sin leadId (uso manual/legacy) no se puede validar
+      // el pago, así que se deja pasar -- comportamiento previo preservado.
       if (!givenPlace || !givenPackage) {
         return res.status(400).json({ error: "Falta 'place' o 'package' para enviar." });
       }
       if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return res.status(400).json({ error: "El correo no es válido." });
+      }
+      let docRef = null;
+      if (typeof leadId === "string" && leadId.trim()) {
+        docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
+        const doc = await docRef.get();
+        if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
+        if (!doc.data()!.paid) {
+          return res.status(400).json({ error: "Este lead todavía no ha pagado. Envía la propuesta primero (botón 'Enviar propuesta')." });
+        }
       }
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) {
@@ -262,6 +394,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         subject: language === "en" ? `Your Local Lift content package -- ${givenPlace.name}` : `Tu paquete de contenido Local Lift -- ${givenPlace.name}`,
         html: `<p>${language === "en" ? "Hi" : "Hola"} ${contactName || ""},</p>${renderPackageHtml(givenPackage, language)}`,
       });
+      if (docRef) {
+        await docRef.update({ status: "sent", contactName: contactName || null, email, sentAt: new Date() });
+      }
       return res.json({ success: true, sent: true });
     }
 
@@ -281,7 +416,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const reviews = await findPlaceReviews(place.id, language);
     const pkg = await generatePackage(place, reviews, language);
 
-    return res.json({ success: true, place, reviews, package: pkg });
+    // Cada generación queda rastreada como un lead -- si viene un leadId
+    // existente (lead ya originado por el diagnóstico gratis o un pago
+    // directo) se actualiza preservando su `paid`/`status` real; si no,
+    // se crea uno nuevo (ej. admin busca un negocio nuevo desde cero en el
+    // panel) para que siempre haya un lead consistente al que mandarle algo.
+    let finalLeadId = typeof leadId === "string" && leadId.trim() ? leadId.trim() : null;
+    let finalStatus = "package_ready";
+    let finalPaid = false;
+    try {
+      if (finalLeadId) {
+        const docRef = firestore.collection("localLiftDiagnostics").doc(finalLeadId);
+        const existing = await docRef.get();
+        if (existing.exists) {
+          const v = existing.data()!;
+          finalPaid = !!v.paid;
+          await docRef.update({ place, package: pkg, tier: tier || v.tier || "48h", status: "package_ready", businessName: place.name, city });
+        } else {
+          finalLeadId = null; // lead inválido/borrado -- cae al branch de creación abajo
+        }
+      }
+      if (!finalLeadId) {
+        const docRef = await firestore.collection("localLiftDiagnostics").add({
+          businessName: place.name,
+          city,
+          contactName: contactName || null,
+          email: email || null,
+          place,
+          package: pkg,
+          tier: tier || "48h",
+          status: "package_ready",
+          paid: false,
+          source: "admin_manual",
+          createdAt: new Date(),
+        });
+        finalLeadId = docRef.id;
+      }
+    } catch (dbErr) {
+      console.error("[local-lift-package] Error guardando lead:", dbErr);
+    }
+
+    return res.json({ success: true, place, reviews, package: pkg, leadId: finalLeadId, status: finalStatus, paid: finalPaid });
   } catch (error: any) {
     console.error("[local-lift-package] Error:", error);
     return res.status(500).json({ error: error?.message || "No se pudo generar/enviar el paquete." });

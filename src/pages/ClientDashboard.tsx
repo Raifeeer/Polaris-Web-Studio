@@ -35,6 +35,7 @@ import {
   Archive,
   Inbox,
   Receipt,
+  ArrowRight,
   Sparkles,
   Mail,
   Loader2,
@@ -5598,6 +5599,26 @@ export default function ClientDashboard() {
                 <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
                   Configuración del Sistema
                 </p>
+
+                {/* Acceso directo al panel de Local Lift -- fuera del sistema
+                    de pestañas de este dashboard (es una ruta propia, no un
+                    tab interno), así que se enlaza acá en vez de sumarse a
+                    la lista de tabs de la barra lateral. */}
+                <a
+                  href="/local-lift/panel"
+                  className="flex items-center justify-between p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] transition-colors group"
+                >
+                  <div>
+                    <p className="text-xs font-black text-[var(--color-text-primary)] mb-1 flex items-center gap-1.5">
+                      <Sparkles size={13} className="text-[var(--color-primary-base)]" />
+                      Panel Local Lift
+                    </p>
+                    <p className="text-[11px] text-[var(--color-text-tertiary)]">
+                      Genera y envía los paquetes de contenido del tier pago ($99/$179) para leads de Local Lift.
+                    </p>
+                  </div>
+                  <ArrowRight size={16} className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] transition-colors shrink-0" />
+                </a>
 
                 {/* Idioma de la interfaz */}
                 <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3">

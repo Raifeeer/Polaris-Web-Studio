@@ -12,14 +12,15 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "ai": "^7.0.0",
     "@ai-sdk/deepseek": "^3.0.0",
-    "@ai-sdk/xai": "^4.0.0",
     "@ai-sdk/google": "^3.0.0",
+    "@ai-sdk/xai": "^4.0.0",
     "@google/genai": "^1.29.0",
+    "@paypal/react-paypal-js": "^10.3.0",
     "@tailwindcss/vite": "^4.1.14",
     "@types/nodemailer": "^8.0.1",
     "@vitejs/plugin-react": "^5.0.4",
+    "ai": "^7.0.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",

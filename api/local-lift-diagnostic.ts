@@ -171,9 +171,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    let leadId: string | null = null;
     try {
       const firestore = getFirestore(firebaseApp, "polaris-web-studio");
-      await firestore.collection("localLiftDiagnostics").add({
+      const docRef = await firestore.collection("localLiftDiagnostics").add({
         businessName: place.name,
         city,
         contactName,
@@ -181,13 +182,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         placeData: place,
         diagnostic,
         lang: language,
+        source: "free_diagnostic",
+        status: "diagnostic_sent",
+        paid: false,
+        tier: "48h",
         createdAt: new Date(),
       });
+      leadId = docRef.id;
     } catch (dbErr) {
       console.error("[local-lift-diagnostic] Error guardando en Firestore:", dbErr);
     }
 
-    return res.json({ success: true, place, diagnostic });
+    return res.json({ success: true, place, diagnostic, leadId });
   } catch (error: any) {
     console.error("[local-lift-diagnostic] Error:", error);
     return res.status(500).json({

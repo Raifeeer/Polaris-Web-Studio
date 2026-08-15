@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { PayPalButtons } from "@paypal/react-paypal-js";
 import {
   AlertCircle,
   ArrowRight,
@@ -8,6 +9,7 @@ import {
   Clock3,
   Eye,
   Loader2,
+  Mail,
   MapPin,
   MessageCircle,
   Search,
@@ -15,11 +17,15 @@ import {
   Sparkles,
   Star,
   Zap,
+  Zap as ZapFast,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
+
+const TIER_PRICE: Record<string, string> = { "48h": "99", implementado: "179" };
 
 const WHATSAPP_NUMBER = "18299200544";
 const whatsappLink = (message: string) =>
@@ -34,6 +40,7 @@ const tiers = [
     time: "24 horas",
     enTime: "24 hours",
     accent: "amber",
+    tierKey: undefined as string | undefined,
     description: "Un mapa claro de lo que está frenando tus llamadas, mensajes o reservas.",
     enDescription: "A clear map of what is blocking calls, messages, or bookings.",
     items: [
@@ -51,6 +58,7 @@ const tiers = [
     enTime: "48 hours",
     accent: "indigo",
     featured: true,
+    tierKey: "48h",
     description: "La presencia local lista para que tus clientes entiendan, confíen y contacten.",
     enDescription: "A local presence ready to help customers understand, trust, and contact you.",
     items: [
@@ -69,6 +77,7 @@ const tiers = [
     time: "3–5 días",
     enTime: "3–5 days",
     accent: "violet",
+    tierKey: "implementado",
     description: "Todo el sistema preparado y aplicado contigo, sin pedirte contraseñas.",
     enDescription: "The complete system prepared and applied with you, without requesting passwords.",
     items: [
@@ -107,10 +116,16 @@ export default function LocalLift() {
   const [city, setCity] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  // "queued": el correo ya está en camino (o ya se mandó), pero no se
+  // revela en pantalla -- se ve como si un humano lo estuviera preparando.
+  // "success": el diagnóstico se muestra en pantalla (revelado por Atlas,
+  // instantáneo, o porque el cliente ya esperó). Pedido explícito del
+  // usuario: que no se sienta "generado por IA al toque" por default.
+  const [status, setStatus] = useState<"idle" | "loading" | "queued" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
+  const [revealedByAtlas, setRevealedByAtlas] = useState(false);
 
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,12 +146,20 @@ export default function LocalLift() {
       }
       setDiagnostic(data.diagnostic);
       setPlace(data.place);
-      setStatus("success");
+      setStatus("queued");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
       setStatus("error");
     }
   };
+
+  // Direct-to-paid: comprar un tier ($99/$179) sin pasar por el diagnóstico
+  // gratis. Formulario chico + PayPal, se abre inline en la tarjeta del tier.
+  const [buyOpenTier, setBuyOpenTier] = useState<string | null>(null);
+  const [buyForm, setBuyForm] = useState({ businessName: "", city: "", contactName: "", email: "" });
+  const [buyStatus, setBuyStatus] = useState<"idle" | "paid" | "error">("idle");
+  const [buyError, setBuyError] = useState("");
+  const buyFormValid = buyForm.businessName.trim() && buyForm.city.trim() && buyForm.contactName.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyForm.email);
 
   useDocumentTitle(
     "Polaris Local Lift | Más visibilidad y conversaciones en 48 horas",
@@ -267,6 +290,90 @@ export default function LocalLift() {
                   <MessageCircle size={16} />
                   <T en="Start on WhatsApp">Empezar por WhatsApp</T>
                 </a>
+
+                {tier.tierKey && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setBuyStatus("idle");
+                        setBuyError("");
+                        setBuyOpenTier(buyOpenTier === tier.tierKey ? null : tier.tierKey!);
+                      }}
+                      className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] transition-colors"
+                    >
+                      <Zap size={16} className="text-[var(--color-primary-base)]" />
+                      <T en="Buy now with PayPal">Comprar ahora con PayPal</T>
+                    </button>
+
+                    {buyOpenTier === tier.tierKey && (
+                      <div className="mt-4 rounded-xl bg-[var(--color-surface-elevated)] p-4">
+                        {buyStatus === "paid" ? (
+                          <div className="flex items-start gap-2 text-emerald-500 text-xs font-black">
+                            <Check size={16} className="mt-0.5 shrink-0" />
+                            <span><T en="Payment received. Your package will be prepared and sent to your email within 48 hours.">Pago recibido. Tu paquete se prepara y te llega a tu correo en las próximas 48 horas.</T></span>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="grid grid-cols-1 gap-2">
+                              <input type="text" placeholder={language === "en" ? "Business name" : "Nombre del negocio"} value={buyForm.businessName} onChange={(e) => setBuyForm({ ...buyForm, businessName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
+                              <input type="text" placeholder={language === "en" ? "City" : "Ciudad"} value={buyForm.city} onChange={(e) => setBuyForm({ ...buyForm, city: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
+                              <input type="text" placeholder={language === "en" ? "Your name" : "Tu nombre"} value={buyForm.contactName} onChange={(e) => setBuyForm({ ...buyForm, contactName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
+                              <input type="email" placeholder={language === "en" ? "Your email" : "Tu correo"} value={buyForm.email} onChange={(e) => setBuyForm({ ...buyForm, email: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
+                            </div>
+                            {buyFormValid ? (
+                              <div className="mt-3">
+                                <PayPalCheckoutProvider>
+                                  <PayPalButtons
+                                    style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 45 }}
+                                    createOrder={(_data, actions) =>
+                                      actions.order.create({
+                                        intent: "CAPTURE",
+                                        purchase_units: [{ amount: { value: TIER_PRICE[tier.tierKey!], currency_code: "USD" }, description: `Polaris Local Lift -- ${tier.name} -- ${buyForm.businessName}` }],
+                                      })
+                                    }
+                                    onApprove={async (_data, actions) => {
+                                      if (!actions.order) return;
+                                      const details = await actions.order.capture();
+                                      try {
+                                        const res = await fetch("/api/local-lift-order", {
+                                          method: "POST",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({
+                                            action: "confirm",
+                                            ...buyForm,
+                                            tier: tier.tierKey,
+                                            paypalOrderId: details.id,
+                                            paypalPayerEmail: details.payer?.email_address || null,
+                                          }),
+                                        });
+                                        const data = await res.json();
+                                        if (!res.ok || !data.success) {
+                                          setBuyError(language === "en" ? "Payment went through, but we couldn't confirm it -- write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo -- escríbenos por WhatsApp.");
+                                          setBuyStatus("error");
+                                          return;
+                                        }
+                                        setBuyStatus("paid");
+                                      } catch {
+                                        setBuyError(language === "en" ? "Payment went through, but something failed -- write us on WhatsApp." : "El pago pasó, pero algo falló -- escríbenos por WhatsApp.");
+                                        setBuyStatus("error");
+                                      }
+                                    }}
+                                  />
+                                </PayPalCheckoutProvider>
+                              </div>
+                            ) : (
+                              <p className="mt-3 text-[11px] text-[var(--color-text-tertiary)]"><T en="Fill in all fields to enable payment.">Completa todos los campos para habilitar el pago.</T></p>
+                            )}
+                            {buyStatus === "error" && (
+                              <div className="mt-2 flex items-start gap-2 text-xs text-red-400"><AlertCircle size={14} className="mt-0.5 shrink-0" /><span>{buyError}</span></div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
               </article>
             ))}
           </div>
@@ -304,7 +411,7 @@ export default function LocalLift() {
             <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Tell us your business name and city -- we'll pull your real Google listing and email your priority issues in under a minute.">Dinos el nombre de tu negocio y ciudad -- traemos tu ficha real de Google y te enviamos por correo tus problemas prioritarios en menos de un minuto.</T></p>
           </div>
 
-          {status !== "success" && (
+          {status !== "success" && status !== "queued" && (
             <form onSubmit={handleDiagnosticSubmit} className="mt-8 max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="text"
@@ -371,6 +478,27 @@ export default function LocalLift() {
             </form>
           )}
 
+          {status === "queued" && (
+            <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
+              <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
+              <h3 className="mt-4 text-lg font-display font-black"><T en="We're preparing your diagnosis.">Estamos preparando tu diagnóstico.</T></h3>
+              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                <T en={`It will arrive at ${email} within the next 5-10 minutes.`}>{`Te llegará a ${email} dentro de los próximos 5 a 10 minutos.`}</T>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setRevealedByAtlas(true);
+                  setStatus("success");
+                }}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
+              >
+                <ZapFast size={14} />
+                <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
+              </button>
+            </div>
+          )}
+
           {status === "success" && diagnostic && (
             <div className="mt-8 max-w-2xl mx-auto">
               <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
@@ -378,6 +506,12 @@ export default function LocalLift() {
                 <T en={`Sent to ${email}`}>{`Enviado a ${email}`}</T>
                 {place && <span className="text-[var(--color-text-tertiary)] font-semibold normal-case">· {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}</span>}
               </div>
+              {revealedByAtlas && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">
+                  <Sparkles size={11} />
+                  <T en="Generated instantly by Atlas AI">Generado al instante por Atlas IA</T>
+                </div>
+              )}
               <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]">{diagnostic.summary}</p>
 
               <div className="mt-6 space-y-3">

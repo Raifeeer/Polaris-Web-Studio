@@ -1657,6 +1657,19 @@ const PORT = 3000;
     }
   });
 
+  // Confirmación de pago (compra directa o desde el correo de propuesta) +
+  // lookup mínimo para /local-lift/pagar/:leadId -- público, el cliente
+  // nunca tiene sesión admin del portal.
+  app.post("/api/local-lift-order", async (req, res) => {
+    try {
+      const { default: localLiftOrderHandler } = await import("./api/local-lift-order.js");
+      await localLiftOrderHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in local-lift-order:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);
