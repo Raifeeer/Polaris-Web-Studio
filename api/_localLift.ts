@@ -104,6 +104,27 @@ export async function findPlaceReviews(placeId: string, lang: "es" | "en"): Prom
     }));
 }
 
+// Variante de un solo intento (sin cadena de fallback), pensada para
+// endpoints que corren en Vercel Hobby -- límite DURO de 10s por función
+// serverless, no configurable (a diferencia de Pro). Correr 2-3 llamados
+// de esta función EN PARALELO (Promise.allSettled) dentro del mismo
+// handler cabe en ese presupuesto; encadenar 3 proveedores en serie con
+// generateWithFallback (hasta 25s cada intento) no cabe nunca.
+export async function generateFast<S extends z.ZodTypeAny>(
+  schema: S,
+  prompt: string,
+  temperature = 0.5
+): Promise<z.infer<S>> {
+  const result = await generateObject({
+    model: createDeepSeek({ apiKey: process.env.DEEPSEEK_API_KEY })("deepseek-v4-flash"),
+    schema,
+    prompt,
+    temperature,
+    abortSignal: AbortSignal.timeout(8000),
+  } as any);
+  return result.object;
+}
+
 export async function generateWithFallback<S extends z.ZodTypeAny>(
   schema: S,
   prompt: string,

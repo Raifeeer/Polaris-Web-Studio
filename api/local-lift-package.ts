@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import nodemailer from "nodemailer";
-import { findPlace, findPlaceReviews, generateWithFallback, placeDataSummary } from "./_localLift.js";
+import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_localLift.js";
 
 // Genera el paquete completo del tier "Local Lift 48H" ($99) / "Implementado"
 // ($179): descripción reescrita, 10 publicaciones para Google Business
@@ -17,8 +17,17 @@ import { findPlace, findPlaceReviews, generateWithFallback, placeDataSummary } f
 // que quien llama es un admin del portal) la hace el middleware
 // authenticateToken+requireAdmin ya existente, aplicado en server.ts ANTES
 // de llegar a este handler -- no se revalida acá.
+//
+// Vercel Hobby (plan real de esta cuenta) mata cualquier función serverless
+// a los 10s, sin excepción. Generar los ~30 items del paquete (descripción +
+// posts + respuestas + plantillas + WhatsApp) en un solo llamado a un
+// modelo no entra ahí -- por eso se parte en 3 llamados MÁS CHICOS que
+// corren EN PARALELO (Promise.allSettled), cada uno con un solo intento y
+// timeout corto (ver generateFast en _localLift.ts). Si una pieza falla, se
+// devuelve igual con las otras dos completas y esa pieza en null -- mejor
+// un resultado parcial que nada.
 
-const packageSchema = z.object({
+const contentSchema = z.object({
   rewrittenDescription: z.string().describe("Descripción reescrita de la ficha de Google (máx. 750 caracteres), destacando servicios/ambiente/ubicación reales y una llamada a la acción clara."),
   services: z.array(z.string()).min(3).max(10).describe("Lista de servicios/productos reales a destacar en el perfil, inferidos de la categoría del negocio."),
   googlePosts: z
@@ -31,6 +40,9 @@ const packageSchema = z.object({
     )
     .length(10)
     .describe("10 publicaciones variadas: ofertas, novedades, servicios destacados, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción directos -- sin repetir el mismo enfoque dos veces."),
+});
+
+const reviewsSchema = z.object({
   reviewReplies: z
     .array(
       z.object({
@@ -50,6 +62,9 @@ const packageSchema = z.object({
     )
     .length(5)
     .describe("Una plantilla por cada calificación de 1 a 5 estrellas, para reseñas futuras que la ficha no tiene todavía."),
+});
+
+const whatsappSchema = z.object({
   whatsappMessages: z
     .array(
       z.object({
@@ -61,32 +76,63 @@ const packageSchema = z.object({
     .describe("10 mensajes cubriendo: seguimiento de consulta, confirmación, recordatorio previo a la visita, agradecimiento post-visita, pedido de reseña, reactivación de cliente inactivo, promoción puntual, y otros escenarios reales de un negocio local."),
 });
 
-type LocalLiftPackage = z.infer<typeof packageSchema>;
+type ContentPart = z.infer<typeof contentSchema>;
+type ReviewsPart = z.infer<typeof reviewsSchema>;
+type WhatsappPart = z.infer<typeof whatsappSchema>;
+
+interface LocalLiftPackage {
+  rewrittenDescription: string | null;
+  services: string[] | null;
+  googlePosts: ContentPart["googlePosts"] | null;
+  reviewReplies: ReviewsPart["reviewReplies"] | null;
+  reviewReplyTemplates: ReviewsPart["reviewReplyTemplates"] | null;
+  whatsappMessages: WhatsappPart["whatsappMessages"] | null;
+  partialFailure: boolean;
+}
 
 async function generatePackage(
-  place: Awaited<ReturnType<typeof findPlace>>,
+  place: NonNullable<Awaited<ReturnType<typeof findPlace>>>,
   reviews: Awaited<ReturnType<typeof findPlaceReviews>>,
   lang: "es" | "en"
 ): Promise<LocalLiftPackage> {
-  if (!place) throw new Error("place es requerido");
+  const dataBlock = placeDataSummary(place);
+  const langInstruction = lang === "en" ? "inglés" : "español neutro, sin voseo";
+  const baseHeader = `Sos un consultor de Polaris Local Lift preparando contenido para este negocio. Datos REALES de su ficha de Google (Places API) -- no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n`;
 
   const reviewsBlock =
     reviews.length > 0
-      ? reviews
-          .map((r, i) => `${i + 1}. [${r.rating}/5] ${r.author}: "${r.text}"`)
-          .join("\n")
+      ? reviews.map((r, i) => `${i + 1}. [${r.rating}/5] ${r.author}: "${r.text}"`).join("\n")
       : "No hay reseñas con texto disponibles en la ficha.";
 
-  const prompt = `Sos un consultor de Polaris Local Lift preparando el paquete completo de contenido (tier 48H) para este negocio. Datos REALES de su ficha de Google (Places API) -- no inventes cifras ni datos que no estén acá:
+  const contentPrompt = `${baseHeader}Generá: descripción reescrita, lista de servicios, y 10 publicaciones para Google Business Profile (variadas: ofertas, novedades, servicios, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción -- sin repetir enfoque). Grounded en los datos reales de arriba, tono profesional y cálido, sin prometer resultados garantizados. Todo en ${langInstruction}.`;
 
-${placeDataSummary(place)}
+  const reviewsPrompt = `${baseHeader}Reseñas reales disponibles (máximo 5, límite real de la API):\n${reviewsBlock}\n\nGenerá una respuesta personalizada a cada reseña real de arriba, y 5 plantillas genéricas de respuesta (una por calificación, 1 a 5 estrellas) para reseñas futuras. Tono profesional y cálido. Todo en ${langInstruction}.`;
 
-Reseñas reales disponibles (máximo 5, límite real de la API -- si hay menos, generá reviewReplies solo para las que hay):
-${reviewsBlock}
+  const whatsappPrompt = `${baseHeader}Generá 10 mensajes de WhatsApp de seguimiento, cubriendo escenarios reales de atención al cliente de un negocio local (consulta sin respuesta, confirmación, recordatorio, agradecimiento post-visita, pedido de reseña, reactivación, promoción, etc.). Tono cercano y profesional. Todo en ${langInstruction}.`;
 
-Generá el paquete completo: descripción reescrita, lista de servicios, 10 publicaciones para Google Business Profile (variadas, ver instrucciones del schema), respuesta personalizada a cada reseña real de arriba, 5 plantillas genéricas por calificación (1 a 5 estrellas) para reseñas futuras, y 10 mensajes de WhatsApp de seguimiento cubriendo distintos escenarios reales de atención al cliente. Todo grounded en los datos reales del negocio (nombre, categoría, ubicación) -- nada genérico ni copiado de otro rubro. Tono profesional, cálido, sin prometer resultados garantizados. Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
+  const [contentResult, reviewsResult, whatsappResult] = await Promise.allSettled([
+    generateFast(contentSchema, contentPrompt, 0.6),
+    generateFast(reviewsSchema, reviewsPrompt, 0.6),
+    generateFast(whatsappSchema, whatsappPrompt, 0.6),
+  ]);
 
-  return generateWithFallback(packageSchema, prompt, 0.6);
+  if (contentResult.status === "rejected") console.error("[local-lift-package] contentPart falló:", contentResult.reason);
+  if (reviewsResult.status === "rejected") console.error("[local-lift-package] reviewsPart falló:", reviewsResult.reason);
+  if (whatsappResult.status === "rejected") console.error("[local-lift-package] whatsappPart falló:", whatsappResult.reason);
+
+  const content = contentResult.status === "fulfilled" ? contentResult.value : null;
+  const reviewsPart = reviewsResult.status === "fulfilled" ? reviewsResult.value : null;
+  const whatsapp = whatsappResult.status === "fulfilled" ? whatsappResult.value : null;
+
+  return {
+    rewrittenDescription: content?.rewrittenDescription ?? null,
+    services: content?.services ?? null,
+    googlePosts: content?.googlePosts ?? null,
+    reviewReplies: reviewsPart?.reviewReplies ?? null,
+    reviewReplyTemplates: reviewsPart?.reviewReplyTemplates ?? null,
+    whatsappMessages: whatsapp?.whatsappMessages ?? null,
+    partialFailure: !content || !reviewsPart || !whatsapp,
+  };
 }
 
 const rlBuckets = new Map<string, { count: number; resetAt: number }>();
@@ -104,24 +150,24 @@ function rateLimited(key: string, max: number, windowMs: number): boolean {
 
 function renderPackageHtml(pkg: LocalLiftPackage, lang: "es" | "en"): string {
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const postsHtml = pkg.googlePosts
+  const postsHtml = (pkg.googlePosts || [])
     .map((p) => `<li><strong>${esc(p.title)}</strong><br/>${esc(p.body)}<br/><em>CTA: ${esc(p.cta)}</em></li>`)
     .join("");
-  const repliesHtml = pkg.reviewReplies
+  const repliesHtml = (pkg.reviewReplies || [])
     .map((r) => `<li><strong>${esc(r.author)} (${r.rating}/5):</strong> "${esc(r.originalText)}"<br/>→ ${esc(r.reply)}</li>`)
     .join("");
-  const templatesHtml = pkg.reviewReplyTemplates
+  const templatesHtml = (pkg.reviewReplyTemplates || [])
     .map((t) => `<li><strong>${t.forRating}/5:</strong> ${esc(t.template)}</li>`)
     .join("");
-  const waHtml = pkg.whatsappMessages
+  const waHtml = (pkg.whatsappMessages || [])
     .map((m) => `<li><strong>${esc(m.scenario)}:</strong> ${esc(m.message)}</li>`)
     .join("");
 
   return `
     <h2>${lang === "en" ? "New description" : "Descripción nueva"}</h2>
-    <p>${esc(pkg.rewrittenDescription)}</p>
+    <p>${pkg.rewrittenDescription ? esc(pkg.rewrittenDescription) : "--"}</p>
     <h2>${lang === "en" ? "Services to highlight" : "Servicios a destacar"}</h2>
-    <ul>${pkg.services.map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
+    <ul>${(pkg.services || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
     <h2>${lang === "en" ? "10 Google posts" : "10 publicaciones para Google"}</h2>
     <ol>${postsHtml}</ol>
     <h2>${lang === "en" ? "Replies to real reviews" : "Respuestas a reseñas reales"}</h2>

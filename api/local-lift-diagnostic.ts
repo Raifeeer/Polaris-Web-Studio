@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlace, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
+import { findPlace, generateFast, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 // Endpoint real detrás de "Diagnóstico Express" de Polaris Local Lift
 // (/local-lift): a diferencia de la venta manual por WhatsApp que existía
@@ -70,7 +70,10 @@ ${placeDataSummary(place)}
 
 Con base ÚNICAMENTE en estos datos reales, generá exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
 
-  return generateWithFallback(diagnosticSchema, prompt);
+  // Un solo intento con timeout corto -- Vercel Hobby mata la función a los
+  // 10s sin importar cuántos proveedores queden por probar en la cadena de
+  // fallback, así que encadenar 2-3 intentos seriados acá nunca es seguro.
+  return generateFast(diagnosticSchema, prompt);
 }
 
 function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string {
