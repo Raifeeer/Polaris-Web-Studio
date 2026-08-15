@@ -18,6 +18,7 @@
     { "source": "/api/generate-addon-descriptions", "destination": "/api/generate-addon-descriptions" },
     { "source": "/api/quotebot-chat", "destination": "/api/quotebot-chat" },
     { "source": "/api/(.*)", "destination": "/api/index.ts" },
+    { "source": "/local-lift", "destination": "/local-lift-static.html" },
     { "source": "/aprobar", "destination": "https://proposal-send-wdvfac6mgq-ue.a.run.app" },
     { "source": "/preferencias-boletin", "destination": "https://newsletter-prefs-wdvfac6mgq-ue.a.run.app" },
     { "source": "/preferencias-cotizacion", "destination": "https://lead-drip-send-wdvfac6mgq-ue.a.run.app" },
