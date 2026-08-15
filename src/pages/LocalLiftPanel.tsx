@@ -48,7 +48,7 @@ interface Lead {
 
 const STATUS_LABEL: Record<string, string> = {
   diagnostic_sent: "Diagnóstico gratis enviado",
-  awaiting_generation: "Pagado -- falta generar",
+  awaiting_generation: "Pagado — falta generar",
   package_ready: "Paquete generado",
   teaser_sent: "Propuesta enviada",
   sent: "Paquete completo enviado",
@@ -205,7 +205,7 @@ export default function LocalLiftPanel() {
     <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)] px-4 sm:px-8 py-10 max-w-4xl mx-auto">
       <Link to="/dashboard" className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]">← Volver al portal</Link>
       <h1 className="mt-3 text-2xl md:text-4xl font-display font-black tracking-[-0.03em]">Panel Local Lift</h1>
-      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido del tier pago y envíalo -- primero como propuesta (sin el contenido exacto, con botón de pago) si el cliente todavía no pagó, o directo como paquete completo si ya pagó.</p>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido del tier pago y envíalo — primero como propuesta (sin el contenido exacto, con botón de pago) si el cliente todavía no pagó, o directo como paquete completo si ya pagó.</p>
 
       <section className="mt-8">
         <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Leads recientes</h2>
@@ -235,7 +235,7 @@ export default function LocalLiftPanel() {
       <form onSubmit={handleGenerate} className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
         {leadId && (
           <div className="sm:col-span-2 flex items-center justify-between text-xs text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] rounded-lg px-3 py-2">
-            <span>Lead cargado -- puedes corregir cualquier campo antes de generar.</span>
+            <span>Lead cargado — puedes corregir cualquier campo antes de generar.</span>
             <button type="button" onClick={() => { setLeadId(null); setLeadPaid(false); setBusinessName(""); setCity(""); setContactName(""); setEmail(""); setPlace(null); setPkg(null); }} className="font-bold text-[var(--color-primary-base)]">Nuevo</button>
           </div>
         )}
@@ -342,7 +342,7 @@ export default function LocalLiftPanel() {
                 <button onClick={handleSendTeaser} disabled={teaserStatus === "loading" || !email.trim() || !leadId} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">
                   {teaserStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando propuesta...</> : <><Mail size={15} />Enviar propuesta (con botón de pago)<ArrowRight size={15} /></>}
                 </button>
-                <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">El cliente recibe los highlights del paquete y un enlace de pago -- el contenido exacto solo se manda después de que pague.</p>
+                <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">El cliente recibe los highlights del paquete y un enlace de pago — el contenido exacto solo se manda después de que pague.</p>
                 {teaserStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Propuesta enviada a {email}.</p>}
                 {teaserStatus === "error" && <p className="mt-2 text-xs text-red-400">{teaserError}</p>}
               </>

@@ -106,8 +106,8 @@ export default function LocalLiftConnect() {
             {businessName && <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{businessName}</p>}
 
             <p className="mt-5 text-sm leading-relaxed text-[var(--color-text-secondary)]">
-              <T en="This lets us publish content you've already approved -- or reply to reviews on your behalf -- directly on your real Google listing. We never see or ask for your Google password, and you can disconnect at any time.">
-                Esto nos permite publicar contenido que ya aprobaste -- o responder reseñas en tu nombre -- directamente en tu ficha real de Google. Nunca vemos ni pedimos tu contraseña de Google, y puedes desconectar en cualquier momento.
+              <T en="This lets us publish content you've already approved — or reply to reviews on your behalf — directly on your real Google listing. We never see or ask for your Google password, and you can disconnect at any time.">
+                Esto nos permite publicar contenido que ya aprobaste — o responder reseñas en tu nombre — directamente en tu ficha real de Google. Nunca vemos ni pedimos tu contraseña de Google, y puedes desconectar en cualquier momento.
               </T>
             </p>
 
@@ -134,8 +134,8 @@ export default function LocalLiftConnect() {
 
             <p className="mt-6 flex items-start gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
               <ShieldCheck size={13} className="mt-0.5 shrink-0" />
-              <T en="While Google finishes reviewing this app, you may see an 'app not verified' warning screen -- that's normal at this stage, it doesn't mean anything is wrong.">
-                Mientras Google termina de revisar esta app, es posible que veas una pantalla de advertencia de "app no verificada" -- es normal en esta etapa, no significa que algo esté mal.
+              <T en="While Google finishes reviewing this app, you may see an 'app not verified' warning screen — that's normal at this stage, it doesn't mean anything is wrong.">
+                Mientras Google termina de revisar esta app, es posible que veas una pantalla de advertencia de "app no verificada" — es normal en esta etapa, no significa que algo esté mal.
               </T>
             </p>
           </div>

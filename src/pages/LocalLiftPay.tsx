@@ -63,7 +63,7 @@ export default function LocalLiftPay() {
         {status === "notfound" && (
           <div className="text-center rounded-[var(--radius-bento)] glass-panel p-10 border border-[var(--color-border-subtle)]">
             <AlertCircle size={28} className="mx-auto text-red-400" />
-            <p className="mt-4 text-sm text-[var(--color-text-secondary)]"><T en="We couldn't find this payment link. It may have expired -- write us on WhatsApp and we'll help you directly.">No pudimos encontrar este enlace de pago. Puede haber vencido -- escríbenos por WhatsApp y te ayudamos directo.</T></p>
+            <p className="mt-4 text-sm text-[var(--color-text-secondary)]"><T en="We couldn't find this payment link. It may have expired — write us on WhatsApp and we'll help you directly.">No pudimos encontrar este enlace de pago. Puede haber vencido — escríbenos por WhatsApp y te ayudamos directo.</T></p>
             <a href="https://wa.me/18299200544" target="_blank" rel="noreferrer" className="mt-6 inline-block rounded-xl bg-[var(--color-primary-base)] px-6 py-3 text-sm font-black text-white">WhatsApp</a>
           </div>
         )}
@@ -81,7 +81,7 @@ export default function LocalLiftPay() {
 
             {status === "paid" ? (
               <div className="mt-8 flex items-center gap-2 text-emerald-500 text-sm font-black">
-                <Check size={18} /> <T en="Already paid -- your full package will arrive by email shortly.">Ya está pagado -- tu paquete completo te llega por correo en breve.</T>
+                <Check size={18} /> <T en="Already paid — your full package will arrive by email shortly.">Ya está pagado — tu paquete completo te llega por correo en breve.</T>
               </div>
             ) : (
               <div className="mt-8">
@@ -91,7 +91,7 @@ export default function LocalLiftPay() {
                     createOrder={(_data, actions) =>
                       actions.order.create({
                         intent: "CAPTURE",
-                        purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift -- ${price.label} -- ${lead.businessName}` }],
+                        purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift — ${price.label} — ${lead.businessName}` }],
                       })
                     }
                     onApprove={async (_data, actions) => {
@@ -111,12 +111,12 @@ export default function LocalLiftPay() {
                         });
                         const data = await res.json();
                         if (!res.ok || !data.success) {
-                          setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically -- write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente -- escríbenos por WhatsApp.");
+                          setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente — escríbenos por WhatsApp.");
                           return;
                         }
                         setStatus("paid");
                       } catch {
-                        setErrorMsg(language === "en" ? "Payment went through, but something failed on our end -- write us on WhatsApp." : "El pago pasó, pero algo falló de nuestro lado -- escríbenos por WhatsApp.");
+                        setErrorMsg(language === "en" ? "Payment went through, but something failed on our end — write us on WhatsApp." : "El pago pasó, pero algo falló de nuestro lado — escríbenos por WhatsApp.");
                       }
                     }}
                   />

@@ -329,7 +329,7 @@ export default function LocalLift() {
                                     createOrder={(_data, actions) =>
                                       actions.order.create({
                                         intent: "CAPTURE",
-                                        purchase_units: [{ amount: { value: TIER_PRICE[tier.tierKey!], currency_code: "USD" }, description: `Polaris Local Lift -- ${tier.name} -- ${buyForm.businessName}` }],
+                                        purchase_units: [{ amount: { value: TIER_PRICE[tier.tierKey!], currency_code: "USD" }, description: `Polaris Local Lift — ${tier.name} — ${buyForm.businessName}` }],
                                       })
                                     }
                                     onApprove={async (_data, actions) => {
@@ -349,13 +349,13 @@ export default function LocalLift() {
                                         });
                                         const data = await res.json();
                                         if (!res.ok || !data.success) {
-                                          setBuyError(language === "en" ? "Payment went through, but we couldn't confirm it -- write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo -- escríbenos por WhatsApp.");
+                                          setBuyError(language === "en" ? "Payment went through, but we couldn't confirm it — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo — escríbenos por WhatsApp.");
                                           setBuyStatus("error");
                                           return;
                                         }
                                         setBuyStatus("paid");
                                       } catch {
-                                        setBuyError(language === "en" ? "Payment went through, but something failed -- write us on WhatsApp." : "El pago pasó, pero algo falló -- escríbenos por WhatsApp.");
+                                        setBuyError(language === "en" ? "Payment went through, but something failed — write us on WhatsApp." : "El pago pasó, pero algo falló — escríbenos por WhatsApp.");
                                         setBuyStatus("error");
                                       }
                                     }}
@@ -408,7 +408,7 @@ export default function LocalLift() {
           <div className="text-center max-w-2xl mx-auto">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Ready to be easier to find?">¿Listo para que te encuentren más fácilmente?</T></p>
             <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Get your diagnosis now.">Genera tu diagnóstico ahora.</T></h2>
-            <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Tell us your business name and city -- we'll pull your real Google listing and email your priority issues in under a minute.">Dinos el nombre de tu negocio y ciudad -- traemos tu ficha real de Google y te enviamos por correo tus problemas prioritarios en menos de un minuto.</T></p>
+            <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Tell us your business name and city — we'll pull your real Google listing and email your priority issues in under a minute.">Dinos el nombre de tu negocio y ciudad — traemos tu ficha real de Google y te enviamos por correo tus problemas prioritarios en menos de un minuto.</T></p>
           </div>
 
           {status !== "success" && status !== "queued" && (

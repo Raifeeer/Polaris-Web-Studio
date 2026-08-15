@@ -122,7 +122,7 @@ async function generatePackage(
 ): Promise<LocalLiftPackage> {
   const dataBlock = placeDataSummary(place);
   const langInstruction = lang === "en" ? "inglés" : "español neutro, sin voseo";
-  const baseHeader = `Sos un consultor de Polaris Local Lift preparando contenido para este negocio. Datos REALES de su ficha de Google (Places API) -- no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n`;
+  const baseHeader = `Sos un consultor de Polaris Local Lift preparando contenido para este negocio. Datos REALES de su ficha de Google (Places API) — no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n`;
 
   const reviewsBlock =
     reviews.length > 0
@@ -245,7 +245,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
   if (language === "en") {
     return `
       <p>Hi,</p>
-      <p>We already prepared your <strong>${price.label}</strong> package for <strong>${place.name}</strong> -- everything is ready to send, based on your real Google listing:</p>
+      <p>We already prepared your <strong>${price.label}</strong> package for <strong>${place.name}</strong> — everything is ready to send, based on your real Google listing:</p>
       <ul>
         <li>A rewritten description and highlighted services</li>
         <li>${postsCount || 10} Google posts ready to publish</li>
@@ -259,7 +259,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
   }
   return `
     <p>Hola,</p>
-    <p>Ya preparamos tu paquete <strong>${price.label}</strong> para <strong>${place.name}</strong> -- todo está listo para enviarte, basado en tu ficha real de Google:</p>
+    <p>Ya preparamos tu paquete <strong>${price.label}</strong> para <strong>${place.name}</strong> — todo está listo para enviarte, basado en tu ficha real de Google:</p>
     <ul>
       <li>Descripción reescrita y servicios destacados</li>
       <li>${postsCount || 10} publicaciones listas para tu perfil de Google</li>
@@ -345,7 +345,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await transporter.sendMail({
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: finalEmail,
-        subject: language === "en" ? `Your Local Lift package is ready -- ${lead.place.name}` : `Tu paquete Local Lift está listo -- ${lead.place.name}`,
+        subject: language === "en" ? `Your Local Lift package is ready — ${lead.place.name}` : `Tu paquete Local Lift está listo — ${lead.place.name}`,
         html: renderTeaserHtml(lead.place, lead.package, finalTier, leadId.trim(), language),
       });
       await docRef.update({
@@ -380,7 +380,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) {
-        return res.status(500).json({ error: "ZOHO_PASSWORD no configurado -- no se puede enviar." });
+        return res.status(500).json({ error: "ZOHO_PASSWORD no configurado — no se puede enviar." });
       }
       const transporter = nodemailer.createTransport({
         host: "smtp.zoho.com",
@@ -399,7 +399,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await transporter.sendMail({
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
-        subject: language === "en" ? `Your Local Lift content package -- ${givenPlace.name}` : `Tu paquete de contenido Local Lift -- ${givenPlace.name}`,
+        subject: language === "en" ? `Your Local Lift content package — ${givenPlace.name}` : `Tu paquete de contenido Local Lift — ${givenPlace.name}`,
         html: `<p>${language === "en" ? "Hi" : "Hola"} ${contactName || ""},</p>${renderPackageHtml(givenPackage, language)}${connectCta}`,
       });
       if (docRef) {
@@ -441,7 +441,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           finalPaid = !!v.paid;
           await docRef.update({ place, package: pkg, tier: tier || v.tier || "48h", status: "package_ready", businessName: place.name, city });
         } else {
-          finalLeadId = null; // lead inválido/borrado -- cae al branch de creación abajo
+          finalLeadId = null; // lead inválido/borrado — cae al branch de creación abajo
         }
       }
       if (!finalLeadId) {
