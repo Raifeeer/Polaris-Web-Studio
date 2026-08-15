@@ -835,6 +835,7 @@ export default function ClientDashboard() {
 
   // Tab State
   const [activeTab, setActiveTab] = useState<"overview" | "tasks" | "invoices" | "meetings" | "updates" | "admin-clients" | "admin-config">("overview");
+  const [servicesMenuOpen, setServicesMenuOpen] = useState(false);
 
   // Scroll to top when changing tabs
   useEffect(() => {
@@ -2867,6 +2868,45 @@ export default function ClientDashboard() {
                       </button>
                     );
                   })}
+
+                  {/* "Servicios" -- no navega a un tab propio, sino que
+                      expande un submenú en el mismo dropdown con el acceso
+                      directo a cada servicio complementario (Local Lift es
+                      el primero, más servicios futuros se suman acá abajo). */}
+                  {isAdmin && (
+                    <div className="border-t border-[var(--color-border-subtle)]/50">
+                      <button
+                        type="button"
+                        onClick={() => setServicesMenuOpen((v) => !v)}
+                        className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold transition-all text-left text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] border-l-4 border-transparent"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Sparkles size={16} className="text-indigo-400" />
+                          <span>Servicios</span>
+                        </div>
+                        <ChevronDown size={14} className={`text-[var(--color-text-tertiary)] transition-transform duration-200 ${servicesMenuOpen ? "rotate-180" : ""}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {servicesMenuOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="overflow-hidden bg-[var(--color-surface-highlight)]/40"
+                          >
+                            <a
+                              href="/local-lift/panel"
+                              className="w-full flex items-center gap-3 pl-11 pr-4 py-2.5 text-sm font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)] transition-all"
+                            >
+                              <span>Local Lift</span>
+                            </a>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -5599,26 +5639,6 @@ export default function ClientDashboard() {
                 <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
                   Configuración del Sistema
                 </p>
-
-                {/* Acceso directo al panel de Local Lift -- fuera del sistema
-                    de pestañas de este dashboard (es una ruta propia, no un
-                    tab interno), así que se enlaza acá en vez de sumarse a
-                    la lista de tabs de la barra lateral. */}
-                <a
-                  href="/local-lift/panel"
-                  className="flex items-center justify-between p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] transition-colors group"
-                >
-                  <div>
-                    <p className="text-xs font-black text-[var(--color-text-primary)] mb-1 flex items-center gap-1.5">
-                      <Sparkles size={13} className="text-[var(--color-primary-base)]" />
-                      Panel Local Lift
-                    </p>
-                    <p className="text-[11px] text-[var(--color-text-tertiary)]">
-                      Genera y envía los paquetes de contenido del tier pago ($99/$179) para leads de Local Lift.
-                    </p>
-                  </div>
-                  <ArrowRight size={16} className="text-[var(--color-text-tertiary)] group-hover:text-[var(--color-primary-base)] transition-colors shrink-0" />
-                </a>
 
                 {/* Idioma de la interfaz */}
                 <div className="p-5 rounded-2xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] space-y-3">
