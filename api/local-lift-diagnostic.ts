@@ -106,9 +106,12 @@ const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvet
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#4f46e5"; // mismo indigo que "Impulso", color primario de marca
 
-function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactName: string, lang: "es" | "en"): string {
+function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactName: string, lang: "es" | "en", leadId: string): string {
   const hasName = !!contactName && contactName.trim().length > 0;
   const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
+  // Tier "Impulso" ($29) -- mismo tier con el que se crea el lead del
+  // diagnóstico gratis (ver TIER_PRICE de local-lift-order.ts/LocalLift.tsx).
+  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
 
   const copy = lang === "en"
     ? {
@@ -118,7 +121,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         problemsLabel: "Priority issues",
         planLabel: "7-day action plan",
         dayLabel: "Day",
-        ctaPrimary: "I want you to implement this for me",
+        ctaPrimary: "I want you to implement this — $29",
         ctaSecondaryTop: "Questions?",
         ctaSecondaryBottom: "Reply to this email",
         footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
@@ -131,7 +134,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         problemsLabel: "Problemas prioritarios",
         planLabel: "Plan de acción de 7 días",
         dayLabel: "Día",
-        ctaPrimary: "Quiero que lo implementen por mí",
+        ctaPrimary: "Quiero que lo implementen — $29",
         ctaSecondaryTop: "¿Dudas?",
         ctaSecondaryBottom: "Responde este correo",
         footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
@@ -213,7 +216,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
   </div>
 
   <div style="padding:28px 40px 0 40px;text-align:center;">
-    <a href="https://wa.me/18299200544" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">${copy.ctaPrimary}</a>
+    <a href="${payUrl}" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">${copy.ctaPrimary}</a>
   </div>
   <div style="padding:14px 40px 0 40px;text-align:center;">
     <a href="${contactMailto}" style="display:inline-block;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-family:${FONT_DISPLAY};font-weight:700;padding:11px 32px;border-radius:8px;line-height:1.4;">
@@ -344,43 +347,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const diagnostic = await generateDiagnostic(place, language);
     const diagnosticText = renderDiagnosticText(diagnostic, language);
 
-    // Envío de correos y registro en Firestore -- best-effort, nunca deben
-    // tumbar la respuesta al cliente si fallan (ya generamos el diagnóstico
-    // real, mostrarlo en pantalla es lo mínimo garantizado).
-    const zohoPassword = process.env.ZOHO_PASSWORD;
-    if (zohoPassword) {
-      try {
-        const transporter = nodemailer.createTransport({
-          host: "smtp.zoho.com",
-          port: 465,
-          secure: true,
-          auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
-        });
-
-        await transporter.sendMail({
-          from: '"Polaris Local Lift" <hola@polarisweb.studio>',
-          to: email,
-          subject:
-            language === "en"
-              ? `Your Local Lift diagnosis for ${place.name}`
-              : `Tu diagnóstico Local Lift de ${place.name}`,
-          text: diagnosticText,
-          html: buildDiagnosticHtml(diagnostic, place, contactName, language),
-        });
-
-        await transporter.sendMail({
-          from: '"Local Lift -- Diagnóstico nuevo" <hola@polarisweb.studio>',
-          to: "hola@polarisweb.studio",
-          replyTo: email,
-          subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
-          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\n\n${diagnosticText}`,
-          html: buildInternalAlertHtml(diagnostic, place, city, contactName, email),
-        });
-      } catch (mailErr) {
-        console.error("[local-lift-diagnostic] Error enviando correos:", mailErr);
-      }
-    }
-
+    // El lead se crea ANTES de mandar el correo (no después, como antes) --
+    // el botón de pago del correo necesita el leadId real para llevar
+    // directo a /local-lift/pagar/:leadId, con el flujo de PayPal ya
+    // resuelto ahí (ver local-lift-order.ts action=confirm). Best-effort:
+    // si Firestore falla, igual se manda el correo (sin botón de pago
+    // funcional -- degradación aceptable, nunca bloquea la respuesta real).
     let leadId: string | null = null;
     try {
       const firestore = getFirestore(firebaseApp, "polaris-web-studio");
@@ -401,6 +373,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       leadId = docRef.id;
     } catch (dbErr) {
       console.error("[local-lift-diagnostic] Error guardando en Firestore:", dbErr);
+    }
+
+    const zohoPassword = process.env.ZOHO_PASSWORD;
+    if (zohoPassword && leadId) {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: "smtp.zoho.com",
+          port: 465,
+          secure: true,
+          auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+        });
+
+        await transporter.sendMail({
+          from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+          to: email,
+          subject:
+            language === "en"
+              ? `Your Local Lift diagnosis for ${place.name}`
+              : `Tu diagnóstico Local Lift de ${place.name}`,
+          text: diagnosticText,
+          html: buildDiagnosticHtml(diagnostic, place, contactName, language, leadId),
+        });
+
+        await transporter.sendMail({
+          from: '"Local Lift -- Diagnóstico nuevo" <hola@polarisweb.studio>',
+          to: "hola@polarisweb.studio",
+          replyTo: email,
+          subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
+          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\n\n${diagnosticText}`,
+          html: buildInternalAlertHtml(diagnostic, place, city, contactName, email),
+        });
+      } catch (mailErr) {
+        console.error("[local-lift-diagnostic] Error enviando correos:", mailErr);
+      }
     }
 
     return res.json({ success: true, place, diagnostic, leadId });

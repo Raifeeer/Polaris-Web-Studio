@@ -66,9 +66,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!existing.exists) return res.status(404).json({ error: "Lead no encontrado." });
         const v = existing.data()!;
         data = { businessName: v.businessName, city: v.city, contactName: v.contactName, email: v.email };
+        // "awaiting_generation" -- antes se dejaba el status viejo tal cual
+        // (ej. "diagnostic_sent"), así que un lead que pagó desde el botón
+        // del correo de diagnóstico gratis seguía apareciendo en el panel
+        // como si todavía no hubiera pagado nada. Con esto el panel lo
+        // muestra de una como "Pagado -- falta generar" (mismo estado que
+        // ya usa una compra directa nueva, ver la rama de abajo).
         await docRef.update({
           paid: true,
           tier,
+          status: "awaiting_generation",
           paypalOrderId,
           paypalPayerEmail: paypalPayerEmail || null,
           paidAt: new Date(),
