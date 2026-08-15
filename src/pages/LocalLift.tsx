@@ -25,7 +25,7 @@ import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
-const TIER_PRICE: Record<string, string> = { "48h": "99", implementado: "179" };
+const TIER_PRICE: Record<string, string> = { "48h": "29", implementado: "99" };
 
 const WHATSAPP_NUMBER = "18299200544";
 const whatsappLink = (message: string) =>
@@ -50,10 +50,10 @@ const tiers = [
     ],
   },
   {
-    name: "Local Lift 48H",
-    enName: "Local Lift 48H",
-    price: "99",
-    rdPrice: "RD$5,900",
+    name: "Impulso",
+    enName: "Impulso",
+    price: "29",
+    rdPrice: "RD$1,800",
     time: "48 horas",
     enTime: "48 hours",
     accent: "indigo",
@@ -70,10 +70,10 @@ const tiers = [
     ],
   },
   {
-    name: "Implementado",
-    enName: "Implemented",
-    price: "179",
-    rdPrice: "RD$10,500",
+    name: "Ascenso",
+    enName: "Ascenso",
+    price: "99",
+    rdPrice: "RD$5,900",
     time: "3–5 días",
     enTime: "3–5 days",
     accent: "violet",
@@ -81,7 +81,7 @@ const tiers = [
     description: "Todo el sistema preparado y aplicado contigo, sin pedirte contraseñas.",
     enDescription: "The complete system prepared and applied with you, without requesting passwords.",
     items: [
-      ["Todo lo incluido en Local Lift 48H", "Everything in Local Lift 48H"],
+      ["Todo lo incluido en Impulso", "Everything in Impulso"],
       ["Implementación asistida de cambios autorizados", "Assisted implementation of authorized changes"],
       ["Carga de textos e imágenes proporcionados", "Upload of supplied text and images"],
       ["Una ronda de revisión", "One revision round"],

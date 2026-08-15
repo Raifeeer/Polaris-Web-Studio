@@ -110,8 +110,8 @@ const html = `<!doctype html>
         <p>Tus clientes ya te están buscando. Polaris Local Lift organiza tu presencia en Google y WhatsApp en 48 horas para que tus clientes entiendan qué ofreces, dónde estás y cómo contactarte.</p>
         <ul>
           <li>Diagnóstico Express (24 horas) -- revisión de tu ficha de Google/Maps y WhatsApp, cinco problemas prioritarios, y un plan de acción de 7 días.</li>
-          <li>Local Lift 48H -- auditoría completa, descripción y servicios reescritos, 10 publicaciones listas, respuestas personalizadas a tus reseñas reales, y 10 mensajes de WhatsApp de seguimiento.</li>
-          <li>Implementado -- todo lo de Local Lift 48H, más implementación asistida de los cambios que autorices.</li>
+          <li>Impulso -- auditoría completa, descripción y servicios reescritos, 10 publicaciones listas, respuestas personalizadas a tus reseñas reales, y 10 mensajes de WhatsApp de seguimiento.</li>
+          <li>Ascenso -- todo lo de Impulso, más implementación asistida de los cambios que autorices.</li>
         </ul>
         <p>Si conectas tu cuenta de Google Business Profile, con tu autorización explícita en cada caso, publicamos el contenido aprobado directamente en tu ficha o respondemos tus reseñas en tu nombre.</p>
       </main>

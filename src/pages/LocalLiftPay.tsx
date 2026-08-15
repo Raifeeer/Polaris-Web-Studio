@@ -9,8 +9,8 @@ import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string }> = {
-  "48h": { amount: "99", label: "Local Lift 48H", enLabel: "Local Lift 48H" },
-  implementado: { amount: "179", label: "Implementado", enLabel: "Implemented" },
+  "48h": { amount: "29", label: "Impulso", enLabel: "Impulso" },
+  implementado: { amount: "99", label: "Ascenso", enLabel: "Ascenso" },
 };
 
 // Página de pago dedicada: llega tanto de la compra directa (link "Comprar

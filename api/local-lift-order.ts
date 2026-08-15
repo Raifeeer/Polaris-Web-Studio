@@ -25,7 +25,7 @@ const firebaseApp = getApps().length
       }),
     });
 
-const TIER_PRICE: Record<string, number> = { "48h": 99, implementado: 179 };
+const TIER_PRICE: Record<string, number> = { "48h": 29, implementado: 99 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");

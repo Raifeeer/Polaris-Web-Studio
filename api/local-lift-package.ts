@@ -16,12 +16,12 @@ const firebaseApp = getApps().length
     });
 
 const TIER_PRICE: Record<string, { amount: string; label: string }> = {
-  "48h": { amount: "99", label: "Local Lift 48H" },
-  implementado: { amount: "179", label: "Implementado" },
+  "48h": { amount: "29", label: "Impulso" },
+  implementado: { amount: "99", label: "Ascenso" },
 };
 
-// Genera el paquete completo del tier "Local Lift 48H" ($99) / "Implementado"
-// ($179): descripción reescrita, 10 publicaciones para Google Business
+// Genera el paquete completo del tier "Impulso" ($29) / "Ascenso"
+// ($99): descripción reescrita, 10 publicaciones para Google Business
 // Profile, respuestas a reseñas reales (hasta 5 -- límite real de Places API,
 // nunca 15, ver nota en el schema) + plantillas por calificación, y 10
 // mensajes de WhatsApp de seguimiento. Solo contenido -- la "implementación"

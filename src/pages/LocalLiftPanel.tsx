@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // Panel interno para generar y enviar el paquete completo del tier
-// "Local Lift 48H" ($99) / "Implementado" ($179) -- admin-only, protegido
+// "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido
 // tanto acá (redirect si no hay sesión admin) como en el backend
 // (authenticateToken + requireAdmin en server.ts, la protección real).
 // A diferencia de /local-lift (gratis, público), esto es el entregable
@@ -242,8 +242,8 @@ export default function LocalLiftPanel() {
         <input type="text" required placeholder="Nombre del negocio" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]" />
         <input type="text" required placeholder="Ciudad" value={city} onChange={(e) => setCity(e.target.value)} className="glass-input rounded-xl px-4 py-3 text-sm border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]" />
         <select value={tier} onChange={(e) => setTier(e.target.value as "48h" | "implementado")} className="glass-input rounded-xl px-4 py-3 text-sm border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]">
-          <option value="48h">Local Lift 48H ($99)</option>
-          <option value="implementado">Implementado ($179)</option>
+          <option value="48h">Impulso ($29)</option>
+          <option value="implementado">Ascenso ($99)</option>
         </select>
         <button type="submit" disabled={genStatus === "loading"} className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-4 py-3 text-sm font-black text-white disabled:opacity-60">
           {genStatus === "loading" ? <><Loader2 size={16} className="animate-spin" />Generando...</> : <><Sparkles size={16} />Generar paquete</>}
