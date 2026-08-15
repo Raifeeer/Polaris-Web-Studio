@@ -88,6 +88,7 @@ interface LocalLiftPackage {
   reviewReplyTemplates: ReviewsPart["reviewReplyTemplates"] | null;
   whatsappMessages: WhatsappPart["whatsappMessages"] | null;
   partialFailure: boolean;
+  errors: { content: string | null; reviews: string | null; whatsapp: string | null };
 }
 
 async function generatePackage(
@@ -116,6 +117,7 @@ async function generatePackage(
     generateFast(whatsappSchema, whatsappPrompt, 0.6),
   ]);
 
+  const errMsg = (r: PromiseRejectedResult) => String(r.reason?.message || r.reason).slice(0, 300);
   if (contentResult.status === "rejected") console.error("[local-lift-package] contentPart falló:", contentResult.reason);
   if (reviewsResult.status === "rejected") console.error("[local-lift-package] reviewsPart falló:", reviewsResult.reason);
   if (whatsappResult.status === "rejected") console.error("[local-lift-package] whatsappPart falló:", whatsappResult.reason);
@@ -132,6 +134,11 @@ async function generatePackage(
     reviewReplyTemplates: reviewsPart?.reviewReplyTemplates ?? null,
     whatsappMessages: whatsapp?.whatsappMessages ?? null,
     partialFailure: !content || !reviewsPart || !whatsapp,
+    errors: {
+      content: contentResult.status === "rejected" ? errMsg(contentResult) : null,
+      reviews: reviewsResult.status === "rejected" ? errMsg(reviewsResult) : null,
+      whatsapp: whatsappResult.status === "rejected" ? errMsg(whatsappResult) : null,
+    },
   };
 }
 
