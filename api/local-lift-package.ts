@@ -19,18 +19,21 @@ import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_
 // de llegar a este handler -- no se revalida acá.
 //
 // Vercel Hobby (plan real de esta cuenta) mata cualquier función serverless
-// a los 10s, sin excepción. Un primer intento con 3 llamados en paralelo
-// (bloques más grandes: descripción+servicios+10 posts juntos, etc.) seguía
-// sin entrar -- probado en vivo, los 3 abortaron a los 8s sin terminar.
-// Partido en 5 llamados AÚN más chicos, cada uno con un solo campo/lista
-// bien acotada, para que cada uno individualmente termine rápido.
+// a los 10s, sin excepción. Probado en vivo, varias rondas: el cuello de
+// botella real es CANTIDAD DE ITEMS por llamado, no el proveedor -- los
+// schemas de 5 items (respuestas, plantillas) siempre completaron a tiempo,
+// los de 10 items (posts, WhatsApp) nunca lo hicieron, sin importar el
+// modelo. Fix real: partir "10 posts" y "10 mensajes" en 2 llamados de 5
+// cada uno, y correr los 7 llamados totales en paralelo, repartidos entre
+// los 3 proveedores (DeepSeek solo lleva UNO -- 2 llamados simultáneos a
+// DeepSeek fallaron los 2 en las pruebas).
 
 const descriptionSchema = z.object({
   rewrittenDescription: z.string().describe("Descripción reescrita de la ficha de Google (máx. 750 caracteres), destacando servicios/ambiente/ubicación reales y una llamada a la acción clara."),
   services: z.array(z.string()).min(3).max(8).describe("Lista de servicios/productos reales a destacar en el perfil, inferidos de la categoría del negocio."),
 });
 
-const postsSchema = z.object({
+const postsHalfSchema = z.object({
   googlePosts: z
     .array(
       z.object({
@@ -39,8 +42,7 @@ const postsSchema = z.object({
         cta: z.enum(["Reservar", "Llamar ahora", "Ver más", "Comprar", "Cómo llegar", "Ninguno"]).describe("Botón de llamada a la acción sugerido."),
       })
     )
-    .length(10)
-    .describe("10 publicaciones variadas y breves: ofertas, novedades, servicios destacados, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción directos -- sin repetir el mismo enfoque dos veces."),
+    .length(5),
 });
 
 const repliesSchema = z.object({
@@ -68,7 +70,7 @@ const templatesSchema = z.object({
     .describe("Una plantilla por cada calificación de 1 a 5 estrellas, para reseñas futuras que la ficha no tiene todavía."),
 });
 
-const whatsappSchema = z.object({
+const whatsappHalfSchema = z.object({
   whatsappMessages: z
     .array(
       z.object({
@@ -76,25 +78,24 @@ const whatsappSchema = z.object({
         message: z.string().describe("Mensaje breve de WhatsApp listo para adaptar, tono cercano y profesional."),
       })
     )
-    .length(10)
-    .describe("10 mensajes cubriendo: seguimiento de consulta, confirmación, recordatorio previo a la visita, agradecimiento post-visita, pedido de reseña, reactivación de cliente inactivo, promoción puntual, y otros escenarios reales de un negocio local."),
+    .length(5),
 });
 
 type DescPart = z.infer<typeof descriptionSchema>;
-type PostsPart = z.infer<typeof postsSchema>;
+type PostsHalfPart = z.infer<typeof postsHalfSchema>;
 type RepliesPart = z.infer<typeof repliesSchema>;
 type TemplatesPart = z.infer<typeof templatesSchema>;
-type WhatsappPart = z.infer<typeof whatsappSchema>;
+type WhatsappHalfPart = z.infer<typeof whatsappHalfSchema>;
 
 interface LocalLiftPackage {
   rewrittenDescription: string | null;
   services: string[] | null;
-  googlePosts: PostsPart["googlePosts"] | null;
+  googlePosts: PostsHalfPart["googlePosts"] | null;
   reviewReplies: RepliesPart["reviewReplies"] | null;
   reviewReplyTemplates: TemplatesPart["reviewReplyTemplates"] | null;
-  whatsappMessages: WhatsappPart["whatsappMessages"] | null;
+  whatsappMessages: WhatsappHalfPart["whatsappMessages"] | null;
   partialFailure: boolean;
-  errors: Record<"description" | "posts" | "replies" | "templates" | "whatsapp", string | null>;
+  errors: Record<"description" | "posts1" | "posts2" | "replies" | "templates" | "whatsapp1" | "whatsapp2", string | null>;
 }
 
 async function generatePackage(
@@ -113,59 +114,63 @@ async function generatePackage(
 
   const prompts = {
     description: `${baseHeader}Generá una descripción reescrita del negocio y una lista de sus servicios/productos reales. Grounded en los datos de arriba. Todo en ${langInstruction}.`,
-    posts: `${baseHeader}Generá 10 publicaciones breves para Google Business Profile (variadas: ofertas, novedades, servicios, testimonios, fechas especiales, detrás de escena, preguntas frecuentes, llamados a la acción -- sin repetir enfoque). Todo en ${langInstruction}.`,
+    posts1: `${baseHeader}Generá 5 publicaciones breves para Google Business Profile, enfocadas en: ofertas/promociones, novedades, y servicios destacados. Todo en ${langInstruction}.`,
+    posts2: `${baseHeader}Generá otras 5 publicaciones breves para Google Business Profile, enfocadas en: testimonios/reseñas, fechas especiales o temporada, detrás de escena, preguntas frecuentes, y un llamado a la acción directo. No repitas el enfoque de ofertas/novedades/servicios (ya cubierto en otra tanda). Todo en ${langInstruction}.`,
     replies: `${baseHeader}Reseñas reales disponibles (máximo 5, límite real de la API):\n${reviewsBlock}\n\nGenerá una respuesta breve y personalizada a cada reseña real de arriba. Todo en ${langInstruction}.`,
     templates: `${baseHeader}Generá 5 plantillas breves y genéricas de respuesta a reseñas, una por calificación (1 a 5 estrellas), para reseñas futuras. Todo en ${langInstruction}.`,
-    whatsapp: `${baseHeader}Generá 10 mensajes breves de WhatsApp de seguimiento, cubriendo escenarios reales de atención al cliente (consulta sin respuesta, confirmación, recordatorio, agradecimiento post-visita, pedido de reseña, reactivación, promoción, etc.). Todo en ${langInstruction}.`,
+    whatsapp1: `${baseHeader}Generá 5 mensajes breves de WhatsApp de seguimiento para: consulta sin respuesta en 24h, confirmación de reserva/pedido, recordatorio previo a la visita, agradecimiento post-visita, y pedido de reseña. Todo en ${langInstruction}.`,
+    whatsapp2: `${baseHeader}Generá otros 5 mensajes breves de WhatsApp para: reactivación de cliente inactivo, promoción puntual, respuesta a consulta de horario/ubicación, respuesta a consulta de precio, y mensaje de bienvenida a cliente nuevo. No repitas los escenarios de otra tanda (consulta sin respuesta, confirmación, recordatorio, agradecimiento, pedido de reseña). Todo en ${langInstruction}.`,
   };
 
-  const [descResult, postsResult, repliesResult, templatesResult, whatsappResult] = await Promise.allSettled([
-    // Repartidas entre los 3 proveedores para no competir por el mismo rate
-    // limit al correr las 5 en simultáneo (ver nota en generateFast).
-    // DeepSeek solo lleva UNA pieza (la más chica) sin compañía -- probado
-    // en vivo que las 2 veces que corrió junto a otra llamada de DeepSeek,
-    // ambas fallaron por timeout; en solitario no tuvo ese problema.
-    generateFast(descriptionSchema, prompts.description, 0.6, "grok"),
-    generateFast(postsSchema, prompts.posts, 0.6, "gemini"),
-    generateFast(repliesSchema, prompts.replies, 0.6, "grok"),
-    generateFast(templatesSchema, prompts.templates, 0.6, "deepseek"),
-    generateFast(whatsappSchema, prompts.whatsapp, 0.6, "gemini"),
-  ]);
+  // DeepSeek lleva UN SOLO llamado a propósito -- 2 llamados simultáneos a
+  // DeepSeek fallaron los 2 en pruebas en vivo; el resto se reparte entre
+  // Grok y Gemini, que sí toleraron 2-3 llamados paralelos cada uno.
+  const calls: Array<[keyof LocalLiftPackage["errors"], () => Promise<any>]> = [
+    ["description", () => generateFast(descriptionSchema, prompts.description, 0.6, "deepseek")],
+    ["posts1", () => generateFast(postsHalfSchema, prompts.posts1, 0.6, "grok")],
+    ["posts2", () => generateFast(postsHalfSchema, prompts.posts2, 0.6, "gemini")],
+    ["replies", () => generateFast(repliesSchema, prompts.replies, 0.6, "grok")],
+    ["templates", () => generateFast(templatesSchema, prompts.templates, 0.6, "gemini")],
+    ["whatsapp1", () => generateFast(whatsappHalfSchema, prompts.whatsapp1, 0.6, "grok")],
+    ["whatsapp2", () => generateFast(whatsappHalfSchema, prompts.whatsapp2, 0.6, "gemini")],
+  ];
 
-  const errMsg = (r: PromiseSettledResult<unknown>) =>
-    r.status === "rejected" ? String((r.reason as any)?.message || r.reason).slice(0, 300) : null;
+  const results = await Promise.allSettled(calls.map(([, fn]) => fn()));
 
-  const desc = descResult.status === "fulfilled" ? (descResult.value as DescPart) : null;
-  const posts = postsResult.status === "fulfilled" ? (postsResult.value as PostsPart) : null;
-  const replies = repliesResult.status === "fulfilled" ? (repliesResult.value as RepliesPart) : null;
-  const templates = templatesResult.status === "fulfilled" ? (templatesResult.value as TemplatesPart) : null;
-  const whatsapp = whatsappResult.status === "fulfilled" ? (whatsappResult.value as WhatsappPart) : null;
+  const errors = {} as LocalLiftPackage["errors"];
+  const values: Record<string, any> = {};
+  results.forEach((r, i) => {
+    const [label] = calls[i];
+    if (r.status === "fulfilled") {
+      values[label] = r.value;
+      errors[label] = null;
+    } else {
+      values[label] = null;
+      errors[label] = String((r.reason as any)?.message || r.reason).slice(0, 300);
+      console.error(`[local-lift-package] pieza '${label}' falló:`, r.reason);
+    }
+  });
 
-  for (const [label, r] of [
-    ["description", descResult],
-    ["posts", postsResult],
-    ["replies", repliesResult],
-    ["templates", templatesResult],
-    ["whatsapp", whatsappResult],
-  ] as const) {
-    if (r.status === "rejected") console.error(`[local-lift-package] pieza '${label}' falló:`, r.reason);
-  }
+  const desc = values.description as DescPart | null;
+  const posts1 = values.posts1 as PostsHalfPart | null;
+  const posts2 = values.posts2 as PostsHalfPart | null;
+  const repliesPart = values.replies as RepliesPart | null;
+  const templates = values.templates as TemplatesPart | null;
+  const wa1 = values.whatsapp1 as WhatsappHalfPart | null;
+  const wa2 = values.whatsapp2 as WhatsappHalfPart | null;
+
+  const googlePosts = [...(posts1?.googlePosts || []), ...(posts2?.googlePosts || [])];
+  const whatsappMessages = [...(wa1?.whatsappMessages || []), ...(wa2?.whatsappMessages || [])];
 
   return {
     rewrittenDescription: desc?.rewrittenDescription ?? null,
     services: desc?.services ?? null,
-    googlePosts: posts?.googlePosts ?? null,
-    reviewReplies: replies?.reviewReplies ?? null,
+    googlePosts: googlePosts.length > 0 ? googlePosts : null,
+    reviewReplies: repliesPart?.reviewReplies ?? null,
     reviewReplyTemplates: templates?.reviewReplyTemplates ?? null,
-    whatsappMessages: whatsapp?.whatsappMessages ?? null,
-    partialFailure: !desc || !posts || !replies || !templates || !whatsapp,
-    errors: {
-      description: errMsg(descResult),
-      posts: errMsg(postsResult),
-      replies: errMsg(repliesResult),
-      templates: errMsg(templatesResult),
-      whatsapp: errMsg(whatsappResult),
-    },
+    whatsappMessages: whatsappMessages.length > 0 ? whatsappMessages : null,
+    partialFailure: Object.values(errors).some((e) => e !== null),
+    errors,
   };
 }
 
@@ -202,13 +207,13 @@ function renderPackageHtml(pkg: LocalLiftPackage, lang: "es" | "en"): string {
     <p>${pkg.rewrittenDescription ? esc(pkg.rewrittenDescription) : "--"}</p>
     <h2>${lang === "en" ? "Services to highlight" : "Servicios a destacar"}</h2>
     <ul>${(pkg.services || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
-    <h2>${lang === "en" ? "10 Google posts" : "10 publicaciones para Google"}</h2>
+    <h2>${lang === "en" ? "Google posts" : "Publicaciones para Google"}</h2>
     <ol>${postsHtml}</ol>
     <h2>${lang === "en" ? "Replies to real reviews" : "Respuestas a reseñas reales"}</h2>
     <ol>${repliesHtml || `<li>${lang === "en" ? "No reviews with text found." : "No se encontraron reseñas con texto."}</li>`}</ol>
     <h2>${lang === "en" ? "Reply templates by rating" : "Plantillas de respuesta por calificación"}</h2>
     <ol>${templatesHtml}</ol>
-    <h2>${lang === "en" ? "10 WhatsApp follow-up messages" : "10 mensajes de WhatsApp de seguimiento"}</h2>
+    <h2>${lang === "en" ? "WhatsApp follow-up messages" : "Mensajes de WhatsApp de seguimiento"}</h2>
     <ol>${waHtml}</ol>
   `;
 }
