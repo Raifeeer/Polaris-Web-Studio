@@ -3,7 +3,16 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlace, generateFast, placeDataSummary, type PlaceData } from "./_localLift.js";
+import { findPlace, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
+
+// Node en Vercel Hobby soporta hasta 60s reales por función (config
+// maxDuration explícito) -- no el techo duro de 10s que asumía la versión
+// anterior de este archivo. Bug real encontrado en vivo (15 de agosto): con
+// un solo intento a DeepSeek y un timeout de 9.2s, la llamada real medía
+// 10-15s (DeepSeek/Grok son modelos con razonamiento, no instantáneos) y
+// fallaba con 500 en la enorme mayoría de los casos. Con maxDuration:60 la
+// cadena completa DeepSeek -> Grok -> Gemini (25s cada intento) cabe cómoda.
+export const config = { maxDuration: 60 };
 
 // Endpoint real detrás de "Diagnóstico Express" de Polaris Local Lift
 // (/local-lift): a diferencia de la venta manual por WhatsApp que existía
@@ -70,10 +79,7 @@ ${placeDataSummary(place)}
 
 Con base ÚNICAMENTE en estos datos reales, generá exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
 
-  // Un solo intento con timeout corto -- Vercel Hobby mata la función a los
-  // 10s sin importar cuántos proveedores queden por probar en la cadena de
-  // fallback, así que encadenar 2-3 intentos seriados acá nunca es seguro.
-  return generateFast(diagnosticSchema, prompt);
+  return generateWithFallback(diagnosticSchema, prompt);
 }
 
 function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string {
