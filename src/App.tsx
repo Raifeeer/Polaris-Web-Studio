@@ -34,6 +34,7 @@ const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const About = lazy(() => import("./pages/About"));
 const Contacto = lazy(() => import("./pages/Contacto"));
 const LocalLift = lazy(() => import("./pages/LocalLift"));
+const LocalLiftPanel = lazy(() => import("./pages/LocalLiftPanel"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPostDetail = lazy(() => import("./pages/BlogPostDetail"));
 const LegalPage = lazy(() => import("./pages/LegalPage"));
@@ -225,6 +226,7 @@ function AnimatedRoutes() {
             <Route path="/nosotros" element={<About />} />
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/local-lift" element={<LocalLift />} />
+            <Route path="/local-lift/panel" element={<LocalLiftPanel />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<BlogPostDetail />} />
             <Route path="/cotizar" element={<WizardQuote />} />
