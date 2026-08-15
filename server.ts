@@ -1631,6 +1631,19 @@ const PORT = 3000;
     }
   });
 
+  app.post("/api/local-lift-diagnostic", async (req, res) => {
+    try {
+      // Import dinámico -- usa el AI SDK (ESM-only), mismo motivo que
+      // quotebot-chat.ts (ver comentario arriba): un import estático acá
+      // tumbaría la carga de todo server.cjs, no solo esta ruta.
+      const { default: localLiftDiagnosticHandler } = await import("./api/local-lift-diagnostic.js");
+      await localLiftDiagnosticHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in local-lift-diagnostic:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);

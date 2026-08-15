@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  AlertCircle,
   ArrowRight,
   Check,
   ChevronRight,
   Clock3,
   Eye,
+  Loader2,
   MapPin,
   MessageCircle,
   Search,
@@ -15,7 +18,7 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { T } from "../context/LanguageContext";
+import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 const WHATSAPP_NUMBER = "18299200544";
@@ -77,7 +80,64 @@ const tiers = [
   },
 ];
 
+interface DiagnosticProblem {
+  title: string;
+  why: string;
+  fix: string;
+}
+interface DiagnosticPlanDay {
+  day: number;
+  action: string;
+}
+interface DiagnosticResult {
+  summary: string;
+  problems: DiagnosticProblem[];
+  sevenDayPlan: DiagnosticPlanDay[];
+}
+interface PlaceResult {
+  name: string;
+  rating: number | null;
+  reviewCount: number;
+  mapsUri: string | null;
+}
+
 export default function LocalLift() {
+  const { language } = useLanguage();
+  const [businessName, setBusinessName] = useState("");
+  const [city, setCity] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
+  const [place, setPlace] = useState<PlaceResult | null>(null);
+
+  const handleDiagnosticSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!businessName.trim() || !city.trim() || !contactName.trim() || !email.trim()) return;
+    setStatus("loading");
+    setErrorMsg("");
+    try {
+      const res = await fetch("/api/local-lift-diagnostic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ businessName, city, contactName, email, lang: language === "en" ? "en" : "es" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMsg(data.error || (language === "en" ? "Something went wrong." : "Algo salió mal."));
+        setStatus("error");
+        return;
+      }
+      setDiagnostic(data.diagnostic);
+      setPlace(data.place);
+      setStatus("success");
+    } catch {
+      setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
+      setStatus("error");
+    }
+  };
+
   useDocumentTitle(
     "Polaris Local Lift | Más visibilidad y conversaciones en 48 horas",
     "Polaris Local Lift | More local visibility and conversations in 48 hours",
@@ -132,13 +192,11 @@ export default function LocalLift() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <a
-                href={whatsappLink(defaultMessage)}
-                target="_blank"
-                rel="noreferrer"
+                href="#diagnostico"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
               >
-                <MessageCircle size={18} />
-                <T en="Get my 24-hour audit">Quiero mi diagnóstico de 24 horas</T>
+                <Sparkles size={18} />
+                <T en="Get my audit now">Quiero mi diagnóstico ahora</T>
                 <ArrowRight size={17} />
               </a>
               <a
@@ -239,12 +297,122 @@ export default function LocalLift() {
           </div>
         </section>
 
-        <section className="mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 text-center border border-[var(--color-primary-base)]/20">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Ready to be easier to find?">¿Listo para que te encuentren más fácilmente?</T></p>
-          <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Start with a 24-hour diagnosis.">Empieza con un diagnóstico de 24 horas.</T></h2>
-          <p className="mx-auto mt-4 max-w-xl text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Send us your business link and we will tell you what to fix first.">Envíanos el enlace de tu negocio y te diremos qué conviene corregir primero.</T></p>
-          <a href={whatsappLink(defaultMessage)} target="_blank" rel="noreferrer" className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"><MessageCircle size={18} /><T en="Request my audit">Solicitar mi diagnóstico</T><ArrowRight size={17} /></a>
-          <p className="mt-5 text-xs text-[var(--color-text-tertiary)]"><T en="Prefer email? hola@polarisweb.studio">¿Prefieres correo? hola@polarisweb.studio</T></p>
+        <section id="diagnostico" className="mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Ready to be easier to find?">¿Listo para que te encuentren más fácilmente?</T></p>
+            <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Get your diagnosis now.">Genera tu diagnóstico ahora.</T></h2>
+            <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Tell us your business name and city -- we'll pull your real Google listing and email your priority issues in under a minute.">Dinos el nombre de tu negocio y ciudad -- traemos tu ficha real de Google y te enviamos por correo tus problemas prioritarios en menos de un minuto.</T></p>
+          </div>
+
+          {status !== "success" && (
+            <form onSubmit={handleDiagnosticSubmit} className="mt-8 max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                required
+                maxLength={200}
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder={language === "en" ? "Business name" : "Nombre del negocio"}
+                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+              />
+              <input
+                type="text"
+                required
+                maxLength={100}
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder={language === "en" ? "City" : "Ciudad"}
+                className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+              />
+              <input
+                type="text"
+                required
+                maxLength={200}
+                value={contactName}
+                onChange={(e) => setContactName(e.target.value)}
+                placeholder={language === "en" ? "Your name" : "Tu nombre"}
+                className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+              />
+              <input
+                type="email"
+                required
+                maxLength={200}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={language === "en" ? "Your email" : "Tu correo"}
+                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+              />
+
+              {status === "error" && (
+                <div className="sm:col-span-2 flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
+                  <AlertCircle size={15} className="mt-0.5 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={status === "loading"}
+                className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:pointer-events-none"
+              >
+                {status === "loading" ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    <T en="Analyzing your listing...">Analizando tu ficha...</T>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={18} />
+                    <T en="Generate my diagnosis">Generar mi diagnóstico</T>
+                    <ArrowRight size={17} />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {status === "success" && diagnostic && (
+            <div className="mt-8 max-w-2xl mx-auto">
+              <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
+                <Check size={15} />
+                <T en={`Sent to ${email}`}>{`Enviado a ${email}`}</T>
+                {place && <span className="text-[var(--color-text-tertiary)] font-semibold normal-case">· {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}</span>}
+              </div>
+              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]">{diagnostic.summary}</p>
+
+              <div className="mt-6 space-y-3">
+                {diagnostic.problems.map((p, i) => (
+                  <div key={i} className="rounded-xl border border-[var(--color-border-subtle)] p-4">
+                    <p className="font-black text-sm">{i + 1}. {p.title}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{p.why}</p>
+                    <p className="mt-2 text-xs font-bold text-[var(--color-primary-base)]">→ {p.fix}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 rounded-xl bg-[var(--color-surface-elevated)] p-4">
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-3"><T en="7-day plan">Plan de 7 días</T></p>
+                <div className="space-y-1.5">
+                  {diagnostic.sevenDayPlan.map((d) => (
+                    <p key={d.day} className="text-xs text-[var(--color-text-secondary)]"><span className="font-bold text-[var(--color-text-primary)]">{language === "en" ? "Day" : "Día"} {d.day}:</span> {d.action}</p>
+                  ))}
+                </div>
+              </div>
+
+              <a
+                href={whatsappLink(`Hola Polaris, recibí mi diagnóstico de Local Lift para ${businessName} y quiero que implementen los cambios.`)}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 w-full"
+              >
+                <MessageCircle size={18} />
+                <T en="Have Polaris implement this">Que Polaris implemente esto</T>
+                <ArrowRight size={17} />
+              </a>
+            </div>
+          )}
+
+          <p className="mt-6 text-center text-xs text-[var(--color-text-tertiary)]"><T en="Prefer WhatsApp? Write us directly.">¿Prefieres WhatsApp? Escríbenos directo.</T> <a href={whatsappLink(defaultMessage)} target="_blank" rel="noreferrer" className="underline hover:text-[var(--color-primary-base)]"><T en="Chat now">Chatear ahora</T></a></p>
         </section>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--color-text-tertiary)]">
