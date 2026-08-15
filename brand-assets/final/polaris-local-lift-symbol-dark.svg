@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 190" role="img" aria-labelledby="title desc">
+  <title id="title">Polaris Local Lift symbol</title>
+  <desc id="desc">Polaris star symbol with a secondary Local Lift product signal.</desc>
+  <rect width="190" height="190" fill="#020617"/>
+  <g transform="translate(10 10) scale(.1143)">
+    <path fill="#818CF8" d="M 912.917969 849.828125 L 1486.273437 744.0625 L 909.207031 645.71875 L 1066.925781 417.492188 L 846.117188 575.210938 L 742.207031 0 L 643.867187 578.921875 L 417.492188 417.492188 L 573.355469 645.71875 L 0 744.0625 L 573.355469 849.828125 L 417.492188 1068.777344 L 643.867187 912.914063 L 742.207031 1486.269531 L 847.972656 916.625 L 1066.925781 1068.777344 Z"/>
+    <circle cx="744.988281" cy="733.605469" r="109.738281" fill="#020617"/>
+  </g>
+  <g fill="none" stroke="#B8F34A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M69 132h12v-11h12v-14h12V90h12"/>
+  <path d="M108 91l9-1-1 9"/>
+</g>
+</svg>
