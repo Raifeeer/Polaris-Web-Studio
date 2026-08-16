@@ -1397,14 +1397,37 @@ const PORT = 3000;
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
     }
-    const { email, name, packageId, addonIds, businessType, projectName: projectNameInput, language } = req.body || {};
-    if (!email || !name || !packageId) {
+    const {
+      email, name, packageId, addonIds, businessType, projectName: projectNameInput, language,
+      // Productos que no son sitios web (Local Lift, agosto 2026). Cuando
+      // productType es "local_lift" el cliente YA pagó el total por PayPal
+      // antes de llegar acá, así que no aplica nada del pipeline de sitio
+      // web: ni depósito 50/50, ni contrato, ni fases de desarrollo. Se le
+      // registra una factura ya PAGADA por el monto real que pagó.
+      productType, paidAmount, tierLabel, paypalOrderId,
+    } = req.body || {};
+    const isLocalLift = productType === "local_lift";
+    if (!email || !name || (!packageId && !isLocalLift)) {
       return res.status(400).json({ error: "missing_fields" });
+    }
+    // El monto lo manda quien cobró (local-lift-order), nunca se deriva de
+    // PACKAGE_INFO -- Local Lift no es un paquete de sitio web y mapearlo a
+    // uno fue justamente el bug que hacía que un cliente de $29 recibiera
+    // una factura pendiente de $262 por una Constelación que nunca compró.
+    const localLiftAmount = Number(paidAmount);
+    if (isLocalLift && (!Number.isFinite(localLiftAmount) || localLiftAmount <= 0)) {
+      return res.status(400).json({ error: "invalid_paid_amount" });
     }
     const clientLanguage: "es" | "en" = language === "en" ? "en" : "es";
     const emailClean = String(email).trim().toLowerCase();
     const existing = dbInstance.getUsers().find((u) => u.email.trim().toLowerCase() === emailClean);
-    if (existing) {
+    // Para sitios web, un cliente que ya tiene portal no se reprovisiona: su
+    // proyecto se crea al aprobar la propuesta, no acá. Local Lift sí sigue
+    // de largo -- es una compra puntual, y un cliente recurrente igual tiene
+    // que recibir su proyecto y su factura pagada de ESTA compra (si no, una
+    // segunda compra quedaba sin factura ninguna). Lo único que se omite en
+    // ese caso es crear la cuenta de nuevo.
+    if (existing && !isLocalLift) {
       return res.status(200).json({ alreadyExists: true, clientId: existing.id });
     }
 
@@ -1418,11 +1441,14 @@ const PORT = 3000;
     const discountedTotal = provisionOfferActive ? subtotal - Math.round(subtotal * (provisionOfferDiscountPercent / 100)) : subtotal;
     const depositAmount = Math.round(discountedTotal * 0.5 * 100) / 100;
 
-    const tempPassword = crypto.randomBytes(6).toString("hex");
-    const clientId = `usr-${Date.now()}`;
+    // Cliente de Local Lift que ya tenía portal: se reusa su cuenta y su
+    // contraseña real, así que no se genera ni se devuelve una temporal
+    // (quien llama usa eso para decidir si mandar el correo de bienvenida).
+    const tempPassword = existing ? "" : crypto.randomBytes(6).toString("hex");
+    const clientId = existing ? existing.id : `usr-${Date.now()}`;
     const projectId = `proj-${Date.now()}`;
 
-    dbInstance.addUser({
+    if (!existing) dbInstance.addUser({
       id: clientId,
       email: emailClean,
       password: hashPassword(tempPassword),
@@ -1448,11 +1474,56 @@ const PORT = 3000;
       ? `Desarrollo del sitio web (paquete ${pkg.name}) para ${businessTypeClean}.`
       : `Proyecto generado automáticamente al aprobar la propuesta comercial (paquete ${pkg.name}).`;
 
+    // --- Local Lift: proyecto y factura propios, sin pipeline de sitio web ---
+    if (isLocalLift) {
+      const liftLabel = String(tierLabel || "").trim() || "Local Lift";
+      dbInstance.addProject({
+        id: projectId,
+        displayId,
+        clientUserId: clientId,
+        name: projectName,
+        productType: "local_lift",
+        currentPhase: "Preparando tu paquete",
+        progress: 33,
+        description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
+        status: "active",
+        phases: [
+          { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
+          { name: "Preparando tu paquete", status: "active", detail: "Estamos armando el contenido real a partir de tu ficha: descripción, publicaciones y respuestas a reseñas." },
+          { name: "Entrega", status: "pending", detail: "Te enviamos el paquete completo por correo." },
+        ],
+      });
+
+      const liftInvoiceId = `inv-${Date.now()}`;
+      const today = new Date().toISOString().split("T")[0];
+      const liftInvoiceNumber = dbInstance.consumeNextInvoiceCode();
+      dbInstance.addInvoice({
+        id: liftInvoiceId,
+        projectId,
+        invoiceNumber: liftInvoiceNumber,
+        amount: localLiftAmount,
+        currency: "USD",
+        // Ya pagada: el cobro real por PayPal ocurrió antes de llegar acá.
+        status: "paid",
+        date: today,
+        dueDate: today,
+        description: `Local Lift — ${liftLabel} — ${projectName}`,
+        kind: "local_lift",
+        ...(typeof paypalOrderId === "string" && paypalOrderId.trim()
+          ? { paypalCaptureId: paypalOrderId.trim() }
+          : {}),
+      });
+
+      await dbInstance.flush();
+      return res.json({ success: true, clientId, projectId, invoiceId: liftInvoiceId, invoiceNumber: liftInvoiceNumber, tempPassword });
+    }
+
     dbInstance.addProject({
       id: projectId,
       displayId,
       clientUserId: clientId,
       name: projectName,
+      productType: "website",
       currentPhase: "Fase 1: Descubrimiento y Requerimientos",
       progress: 25,
       description: projectDescription,

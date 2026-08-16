@@ -87,6 +87,13 @@ export interface DbProject {
   displayId: string;
   clientUserId: string;
   name: string;
+  // Qué producto compró el cliente. Ausente == "website" -- todos los
+  // proyectos creados antes de que Polaris vendiera algo más que sitios web
+  // (agosto 2026) son sitios web, así que no hace falta migrar nada: el
+  // dashboard trata `undefined` igual que "website". Solo la pestaña de
+  // resumen del portal cambia según este campo; facturas, reuniones, cuenta
+  // y el panel admin son iguales para todos los productos.
+  productType?: "website" | "local_lift";
   currentPhase: string;
   progress: number;
   description: string;
@@ -179,7 +186,7 @@ export interface DbInvoice {
   // /api/portal/billing/run-cycle solo; las demás siguen siendo manuales
   // (depósito/entrega final vía auto-provision-client, o admin ad-hoc).
   // undefined en facturas viejas = manual, comportamiento sin cambios.
-  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee" | "domain_renewal" | "transfer_fee" | "db_connection_fee";
+  kind?: "deposit" | "final" | "recurring" | "manual" | "late_fee" | "domain_renewal" | "transfer_fee" | "db_connection_fee" | "local_lift";
   relatedInvoiceId?: string;   // en una factura kind:"late_fee", la factura vencida que la originó
   lateFeePeriodsCharged?: number; // en la factura original vencida, 0/1 -- si ya se cobró el cargo por mora (único, no recurrente); evita cobrarlo dos veces
   // Suspensión real de addons (Cláusula Novena del contrato): en una

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, Check, Loader2, Mail, MapPin, ShieldCheck, Star, SwitchCamera, Zap } from "lucide-react";
+import { AlertCircle, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, SwitchCamera, Zap } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
@@ -19,7 +19,8 @@ export default function LocalLiftPay() {
   const { language } = useLanguage();
   const [status, setStatus] = useState<"loading" | "ready" | "paid" | "notfound">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null } | null>(null);
+  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean } | null>(null);
+  const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
@@ -41,7 +42,7 @@ export default function LocalLiftPay() {
           setStatus("notfound");
           return;
         }
-        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null });
+        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned });
         // URL ?tier param overrides Firestore tier (so CTAs from the diagnosis page work correctly)
         const urlTier = searchParams.get("tier");
         setSelectedTier(urlTier && TIER_PRICE[urlTier] ? urlTier : (data.tier || "impulso"));
@@ -96,6 +97,74 @@ export default function LocalLiftPay() {
                 <T en="Any questions? Write us">¿Alguna duda? Escríbenos</T>
               </a>
             </div>
+
+            {/* Acceso al portal -- las credenciales van por correo aparte, nunca
+                se muestran en pantalla (esta URL no exige sesión). */}
+            {lead.portalProvisioned && (
+              <div className="mt-4 rounded-xl border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/[0.06] p-5 text-left">
+                <div className="flex items-start gap-3">
+                  <KeyRound size={18} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />
+                  <div>
+                    <p className="text-sm font-black text-[var(--color-text-primary)]">
+                      <T en="Your client portal is ready">Tu portal de cliente está listo</T>
+                    </p>
+                    <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                      <T en="We sent your access credentials to your email. From the portal you can follow your package's progress and download your invoice whenever you need it.">
+                        Te enviamos tus credenciales de acceso por correo. Desde el portal puedes seguir el avance de tu paquete y descargar tu factura cuando la necesites.
+                      </T>
+                    </p>
+                    <Link
+                      to="/login"
+                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white hover:opacity-90 transition-opacity"
+                    >
+                      <T en="Go to my portal">Entrar a mi portal</T>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Descarga directa de la factura, sin necesidad de entrar al portal */}
+            {lead.invoiceNumber && (
+              <button
+                type="button"
+                disabled={invoiceDownloading}
+                onClick={async () => {
+                  setInvoiceDownloading(true);
+                  try {
+                    const res = await fetch("/api/local-lift-order", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ action: "invoice", leadId }),
+                    });
+                    if (!res.ok) throw new Error("download_failed");
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `Factura-${lead.invoiceNumber}.pdf`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  } catch {
+                    setErrorMsg(language === "en" ? "We couldn't generate the invoice — it's also attached to your confirmation email." : "No pudimos generar la factura — también va adjunta en tu correo de confirmación.");
+                  } finally {
+                    setInvoiceDownloading(false);
+                  }
+                }}
+                className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-5 py-3 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors disabled:opacity-60"
+              >
+                {invoiceDownloading
+                  ? <><Loader2 size={14} className="animate-spin" /><T en="Generating…">Generando…</T></>
+                  : <><Download size={14} /><T en={`Download invoice N° ${lead.invoiceNumber}`}>{`Descargar factura N° ${lead.invoiceNumber}`}</T></>
+                }
+              </button>
+            )}
+
+            {errorMsg && (
+              <div className="mt-4 flex items-start gap-2 text-left text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
+                <AlertCircle size={15} className="mt-0.5 shrink-0" /><span>{errorMsg}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -199,6 +268,21 @@ export default function LocalLiftPay() {
                       if (!res.ok || !data.success) {
                         setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente — escríbenos por WhatsApp.");
                         return;
+                      }
+                      // Relee el lead ya pagado para traer el número de factura
+                      // y el estado del portal, que solo existen después de
+                      // confirmar (no estaban en el lookup inicial).
+                      try {
+                        const fresh = await fetch("/api/local-lift-order", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ action: "lookup", leadId }),
+                        }).then((r) => r.json());
+                        if (fresh?.success) {
+                          setLead((prev) => (prev ? { ...prev, invoiceNumber: fresh.invoiceNumber || null, portalProvisioned: !!fresh.portalProvisioned } : prev));
+                        }
+                      } catch {
+                        // No bloquea la confirmación -- la factura igual va por correo.
                       }
                       setStatus("paid");
                     } catch {

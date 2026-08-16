@@ -41,7 +41,8 @@ import {
   Loader2,
   Globe,
   Rocket,
-  PenTool
+  PenTool,
+  MapPin
 } from "lucide-react";
 import AISparkleIcon from "../components/AISparkleIcon";
 import Logo from "../components/Logo";
@@ -1068,6 +1069,11 @@ export default function ClientDashboard() {
   const clientProject = !isAdmin && data?.projects && data.projects.length > 0
     ? (data.projects.find((p: any) => p.id === selectedClientProjectId) || data.projects[0])
     : null;
+
+  // Qué producto compró el cliente. Ausente == sitio web: todos los proyectos
+  // anteriores a que Polaris vendiera algo más (agosto 2026) lo son, así que
+  // este campo se puede leer sin migrar datos viejos.
+  const isLocalLiftProject = (clientProject as any)?.productType === "local_lift";
 
   // Sync client selected project when data loads
   useEffect(() => {
@@ -3767,10 +3773,51 @@ export default function ClientDashboard() {
                           </div>
                         </div>
 
+                        {/* Panel propio de Local Lift. El portal nació vendiendo
+                            solo sitios web; desde que hay más productos, el
+                            resumen se arma según project.productType y el resto
+                            del dashboard (facturas, reuniones, cuenta, admin) se
+                            comparte igual para todos. Un proyecto sin
+                            productType es un sitio web (todos los anteriores a
+                            agosto 2026), así que no hubo que migrar nada. */}
+                        {isLocalLiftProject && (
+                          <div className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 flex items-center justify-center">
+                                <MapPin size={18} className="text-[var(--color-primary-base)]" />
+                              </div>
+                              <div>
+                                <h3 className="font-display font-bold text-base text-[var(--color-text-primary)]">Tu paquete Local Lift</h3>
+                                <p className="text-xs text-[var(--color-text-secondary)]">Optimización de tu perfil de Google</p>
+                              </div>
+                            </div>
+                            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                              {clientProject.description}
+                            </p>
+                            <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">Entrega</p>
+                              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                                Te enviamos el paquete completo por correo. Si ya lo recibiste y tienes dudas, escríbenos por WhatsApp y lo revisamos contigo.
+                              </p>
+                              <a
+                                href="https://wa.me/18299200544"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                              >
+                                Escribir a soporte
+                              </a>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Contrato de servicio -- firma electrónica simple. Vive en
                             Resumen (no en Facturas) porque es un documento único e
                             importante, no algo recurrente como las facturas -- así el
-                            cliente lo ve de inmediato al entrar hasta que lo firme. */}
+                            cliente lo ve de inmediato al entrar hasta que lo firme.
+                            No aplica a Local Lift: se paga completo por
+                            adelantado, sin contrato de desarrollo de por medio. */}
+                        {!isLocalLiftProject && (
                         <div className="p-5 rounded-xl glass-panel border border-[var(--color-border-subtle)] flex items-center justify-between gap-4 flex-wrap">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0">
@@ -3814,6 +3861,7 @@ export default function ClientDashboard() {
                             </div>
                           )}
                         </div>
+                        )}
 
                         {/* Resumen IA */}
                         {(aiSummaryLoading || aiSummary) && (
