@@ -194,11 +194,11 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
   const hiddenProblemCount = Math.max(0, diagnostic.problems.length - PREVIEW_PROBLEM_COUNT);
   const hiddenPlanDayCount = Math.max(0, diagnostic.sevenDayPlan.length - PREVIEW_PLAN_DAY_COUNT);
   const hiddenProblemsNotice = lang === "en"
-    ? `+ ${hiddenProblemCount} more priority issues are reserved for the complete diagnosis.`
-    : `+ ${hiddenProblemCount} problemas prioritarios quedan reservados para el diagnóstico completo.`;
+    ? `+ ${hiddenProblemCount} more problems found — unlock the full diagnosis`
+    : `+ ${hiddenProblemCount} problemas más encontrados — desbloquea el diagnóstico completo`;
   const hiddenPlanNotice = lang === "en"
-    ? `+ ${hiddenPlanDayCount} more days are reserved for the complete plan.`
-    : `+ ${hiddenPlanDayCount} días más quedan reservados para el plan completo.`;
+    ? `+ ${hiddenPlanDayCount} more days — unlock the full plan`
+    : `+ ${hiddenPlanDayCount} días más — desbloquea el plan completo`;
 
   const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${place.name}`)}`;
 
@@ -223,7 +223,18 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
   <div style="padding:28px 40px 8px 40px;text-align:center;">
     <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:${ACCENT};margin-bottom:12px;">${copy.eyebrow}</div>
     <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:30px;line-height:1.2;color:#0f172a;">${copy.title}</div>
-    <div style="font-size:14px;color:#64748b;margin-top:8px;">${place.name}${place.address ? ` · ${place.address}` : ""}</div>
+  </div>
+
+  <div style="padding:14px 40px 0 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #bdeee9;border-radius:12px;background:#f2ffff;overflow:hidden;">
+      <tr><td style="padding:20px 22px;">
+        <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:${ACCENT};margin-bottom:10px;">&#10003;&nbsp; ${lang === "en" ? "Diagnosis ready" : "Diagnóstico listo"}</div>
+        <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:22px;line-height:1.2;color:${DEEP};">${place.name}</div>
+        ${place.address ? `<div style="font-size:13px;line-height:1.5;color:#475569;margin-top:10px;"><span style="color:${ACCENT};font-weight:700;">&#9679;</span>&nbsp; ${place.address}</div>` : ""}
+        ${place.primaryType ? `<div style="font-size:13px;line-height:1.5;color:#475569;margin-top:5px;"><span style="color:${ACCENT};font-weight:700;">&#9632;</span>&nbsp; ${place.primaryType.replace(/_/g, " ")}</div>` : ""}
+        <div style="font-size:13px;line-height:1.5;color:#475569;margin-top:8px;"><span style="color:#f59e0b;font-size:16px;">&#9733;</span> ${place.rating != null ? `${place.rating}/5` : "—"}${place.reviewCount > 0 ? `&nbsp;&nbsp; <span style="color:${ACCENT};font-weight:700;">&#9679;</span>&nbsp; ${place.reviewCount} ${lang === "en" ? "reviews" : "reseñas"}` : ""}</div>
+      </td></tr>
+    </table>
   </div>
 
   <div style="padding:16px 40px 0 40px;text-align:center;">
