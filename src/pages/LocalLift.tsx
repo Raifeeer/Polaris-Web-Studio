@@ -126,7 +126,7 @@ const tiers = [
     icon: "message",
     description: "Ordenamos la información y los mensajes que tus clientes necesitan para decidir y contactarte.",
     enDescription: "We organize the information and messages customers need to decide and contact you.",
-    cta: "Quiero preparar mi negocio",
+    cta: "Preparar mi negocio",
     enCta: "Prepare my business",
     items: [
       ["Revisión completa de tu presencia local", "Complete review of your local presence"],
@@ -148,8 +148,8 @@ const tiers = [
     icon: "trending",
     description: "Te acompañamos a preparar y aplicar los cambios que autorices, sin pedirte contraseñas.",
     enDescription: "We help prepare and apply the changes you approve, without asking for passwords.",
-    cta: "Quiero implementarlo contigo",
-    enCta: "Implement it with me",
+    cta: "Solicitar implementación",
+    enCta: "Request implementation",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
       ["Llevamos el plan a la práctica contigo", "We put the plan into practice with you"],
@@ -644,7 +644,6 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 <motion.a href="#diagnostico" onClick={scrollToSection("diagnostico")} whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-teal-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
                   {tier.icon === "zap" ? <Zap size={16} /> : tier.icon === "message" ? <MessageCircle size={16} /> : <TrendingUp size={16} />}
                   <T en={tier.enCta}>{tier.cta}</T>
-                  <ArrowRight size={15} />
                 </motion.a>
 
               </motion.article>
