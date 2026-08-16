@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Check,
   ChevronRight,
-  Clock3,
   Eye,
   Mail,
   MapPin,
@@ -261,11 +260,18 @@ export default function LocalLift() {
             ? successRef.current
             : null;
     if (!target) return;
-    const timer = window.setTimeout(() => {
+    const alignState = () => {
       const anchor = target.querySelector<HTMLElement>("[data-scroll-anchor]") ?? target;
       scrollElementToCenter(anchor);
-    }, 120);
-    return () => window.clearTimeout(timer);
+    };
+    const timer = window.setTimeout(alignState, 120);
+    // Candidate cards can gain height when their first images finish decoding.
+    // Re-align once after that layout settles so the confirmation block remains visible.
+    const settleTimer = status === "confirm" ? window.setTimeout(alignState, 520) : undefined;
+    return () => {
+      window.clearTimeout(timer);
+      if (settleTimer) window.clearTimeout(settleTimer);
+    };
   }, [status, prefersReducedMotion]);
 
   const switchLookupMode = (mode: "name" | "maps") => {
@@ -279,6 +285,21 @@ export default function LocalLift() {
       scrollElementToCenter(field);
       field?.focus({ preventScroll: true });
     }, 160);
+  };
+
+  const resetCandidateSearch = () => {
+    setCandidates([]);
+    setVisibleCandidateCount(3);
+    setPlace(null);
+    setDiagnosticLeadId(null);
+    setErrorMsg("");
+    setLoadingStage("searching");
+    setStatus("idle");
+    window.setTimeout(() => {
+      const field = lookupMode === "maps" ? mapsFieldRef.current : nameFieldRef.current;
+      scrollElementToCenter(field);
+      field?.focus({ preventScroll: true });
+    }, 180);
   };
 
   const waitForPhotos = (urls: string[]) => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
@@ -478,8 +499,8 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
   const buyFormValid = buyForm.businessName.trim() && buyForm.city.trim() && buyForm.contactName.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyForm.email);
 
   useDocumentTitle(
-    "Polaris Local Lift | Revisa y mejora tu ficha de Google",
-    "Polaris Local Lift | Review and improve your Google listing",
+    "Polaris Local Lift | Mejora tu presencia en Google",
+    "Polaris Local Lift | Improve your local visibility on Google",
     "Revisión de Google Business Profile, Google Maps y rutas de contacto para negocios de República Dominicana.",
     "Google Business Profile, Google Maps, and contact-path review for businesses in the Dominican Republic.",
   );
@@ -526,25 +547,25 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             <img
               src="/brand/local-lift-lockup-horizontal-dark.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-light-text block h-32 sm:h-36 md:h-40 lg:h-44 max-w-[94%] sm:max-w-none w-auto object-contain object-left -mt-2 mb-[-0.5rem]"
+              className="local-lift-logo-light-text -ml-8 sm:-ml-8 md:-ml-4 block h-32 sm:h-36 md:h-40 lg:h-44 max-w-[94%] sm:max-w-none w-auto object-contain object-left -mt-2 mb-[-0.5rem]"
             />
             <img
               src="/brand/local-lift-lockup-horizontal-light.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-dark-text block h-32 sm:h-36 md:h-40 lg:h-44 max-w-[94%] sm:max-w-none w-auto object-contain object-left -mt-2 mb-[-0.5rem]"
+              className="local-lift-logo-dark-text -ml-8 sm:-ml-8 md:-ml-4 block h-32 sm:h-36 md:h-40 lg:h-44 max-w-[94%] sm:max-w-none w-auto object-contain object-left -mt-2 mb-[-0.5rem]"
             />
-            <div className="relative z-10 -mt-1 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
-              <MapPin size={13} />
-              <T en="Local visibility · Dominican Republic">Visibilidad local · República Dominicana</T>
+            <div className="relative z-10 -mt-1 inline-flex w-fit items-center gap-2 whitespace-nowrap rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
+              <Eye size={13} />
+              <T en="Local visibility">Visibilidad local</T>
             </div>
             <h1 className="mt-6 text-4xl md:text-7xl font-display font-black tracking-[-0.05em] leading-[0.98]">
-              <T en="Make your Google listing easier to choose.">
-                Haz que tu ficha de Google ayude a decidir.
+              <T en="Make your business clear before the first message.">
+                Que tu negocio se entienda antes del primer mensaje.
               </T>
             </h1>
             <p className="mt-6 max-w-2xl text-base md:text-xl leading-relaxed text-[var(--color-text-secondary)]">
-              <T en="We review what customers see before they call, message, or book: your details, services, photos, reviews, and contact paths.">
-                Revisamos lo que tus clientes ven antes de llamarte, escribirte o reservar: datos, servicios, fotos, reseñas y formas de contacto.
+              <T en="If your details, services, photos, and reviews tell different stories, people hesitate. We review what they find and show you what to clarify first.">
+                Si tus datos, servicios, fotos y reseñas no cuentan la misma historia, la gente duda. Revisamos lo que encuentran y te mostramos qué conviene aclarar primero.
               </T>
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -556,7 +577,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-shadow hover:shadow-2xl hover:shadow-teal-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
               >
                 <Search size={18} />
-                <T en="Review my listing">Revisar mi ficha</T>
+                <T en="Review my business">Revisar mi negocio</T>
                 <ArrowRight size={17} />
               </motion.a>
               <motion.a
@@ -571,25 +592,25 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               </motion.a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[var(--color-text-tertiary)]">
-              <span className="inline-flex items-center gap-1.5"><Clock3 size={14} /> <T en="Real business data">Datos reales</T></span>
-              <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> <T en="Clear deliverables">Entregables claros</T></span>
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} /> <T en="No ranking promises">Sin promesas de ranking</T></span>
+              <span className="inline-flex items-center gap-1.5"><Eye size={14} /> <T en="Information you can verify">Información que puedes comprobar</T></span>
+              <span className="inline-flex items-center gap-1.5"><Check size={14} /> <T en="Clear priorities">Prioridades claras</T></span>
+              <span className="inline-flex items-center gap-1.5"><ArrowRight size={14} /> <T en="Concrete next steps">Siguientes pasos concretos</T></span>
             </div>
           </div>
         </motion.section>
 
         <motion.section {...motionReveal(0.08)} className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
           {[
-            [Eye, "Que entiendan tu negocio", "Help people understand you", "Descripción, servicios y horarios que no se contradicen."],
-            [Search, "Que encuentren lo correcto", "Help people find the right details", "Una ficha de Google más completa para buscarte y ubicarte."],
-            [MessageCircle, "Que sepan cómo contactarte", "Make the next step obvious", "Enlaces y llamadas a la acción que llevan al siguiente paso."],
+            [Eye, "Que tu negocio se entienda en segundos.", "Help people understand your business in seconds.", "Datos, servicios y horarios que cuentan la misma historia."],
+            [Search, "Que encuentren lo importante sin buscar de más.", "Help people find what matters without digging.", "Información útil para que una persona sepa si eres lo que necesita."],
+            [MessageCircle, "Que cada visita tenga un siguiente paso.", "Give every visit a clear next step.", "Enlaces y llamadas a la acción que facilitan llamar, escribir o reservar."],
           ].map(([Icon, title, enTitle, description], index) => {
             const IconComponent = Icon as typeof Eye;
             return (
               <motion.div key={title as string} {...motionReveal(index * 0.08)} whileHover={prefersReducedMotion ? undefined : { y: -5 }} className="rounded-[var(--radius-bento)] glass-panel p-6 border border-[var(--color-border-subtle)] transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-500/10">
                 <IconComponent size={22} className="text-[var(--color-primary-base)]" />
                 <h2 className="mt-5 text-xl font-display font-black"><T en={enTitle as string}>{title as string}</T></h2>
-                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={description as string}>{description as string}</T></p>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">                  <T en={index === 0 ? "Details, services, and hours that tell the same story." : index === 1 ? "Useful information so people know whether you are what they need." : "Links and calls to action that make it easier to call, message, or book."}>{description as string}</T></p>
               </motion.div>
             );
           })}
@@ -735,13 +756,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             <h2 className="mt-3 text-3xl font-display font-black"><T en="Start with clarity. Review each step.">Empieza con claridad. Revisa cada paso.</T></h2>
             <div className="mt-8 space-y-6">
               {[
-                ["01", "Enter your business or paste your listing link", "Escribe tu negocio y ciudad o pega el enlace de tu ficha.", "Enter your business and city, or paste your listing link."],
-                ["02", "Confirm the right business", "Confirma que encontramos el negocio correcto.", "Confirm that we found the right business."],
-                ["03", "Get priorities you can act on", "Recibe prioridades claras y decide qué quieres implementar.", "Get clear priorities and decide what you want to implement."],
+                ["01", "Tell us what you offer", "Cuéntanos qué ofreces.", "Enter your business and city, or paste your Google Maps link."],
+                ["02", "Confirm we found your business", "Confirma que encontramos tu negocio.", "We’ll show you the most likely options before you continue."],
+                ["03", "Get priorities you can act on", "Recibe prioridades claras.", "You’ll know what to fix first and what can wait."],
               ].map(([number, enTitle, esTitle, enDescription], index) => (
                 <motion.div key={number} {...motionReveal(index * 0.08)} className="flex gap-4">
                   <span className="text-xs font-black font-mono text-[var(--color-primary-base)]">{number}</span>
-                  <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{enDescription === "Enter your business and city, or paste your listing link." ? "Escribe tu negocio y ciudad o pega el enlace de tu ficha." : enDescription === "Confirm that we found the right business." ? "Confirma que encontramos el negocio correcto." : "Recibe prioridades claras y decide qué quieres implementar."}</T></p></div>
+                  <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{enDescription === "Enter your business and city, or paste your Google Maps link." ? "Escribe el nombre y la ciudad de tu negocio o pega el enlace de Google Maps." : enDescription === "We’ll show you the most likely options before you continue." ? "Te mostraremos las opciones más probables antes de continuar." : "Sabrás qué conviene corregir primero y qué puede esperar."}</T></p></div>
                 </motion.div>
               ))}
             </div>
@@ -749,17 +770,28 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <motion.div {...motionReveal(0.1)} className="rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
             <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="Real data · approved changes">Datos reales · cambios autorizados</T></span></div>
             <h2 className="mt-4 text-3xl font-display font-black"><T en="Your business stays yours. We organize the information.">Tu negocio sigue siendo tuyo. Nosotros ordenamos la información.</T></h2>
-            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We work with the information you approve. We don’t invent reviews, fill gaps with guesses, ask for passwords, or promise first place on Google.">Trabajamos con los datos que tú apruebas. No inventamos reseñas, no completamos información con suposiciones, no pedimos contraseñas y no prometemos el primer lugar en Google.</T></p>
+            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We work with real data and recommendations you can review. We don’t promise a specific position on Google; we help you understand what people see and what you can improve.">Trabajamos con datos reales y recomendaciones que puedes revisar. No prometemos una posición concreta en Google; te ayudamos a entender qué ve la gente y qué puedes mejorar.</T></p>
             <div className="mt-8 flex flex-wrap gap-3 text-xs font-bold text-[var(--color-text-tertiary)]"><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2">PayPal</span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Bank transfer">Transferencia</T></span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Cash in DR">Efectivo en RD</T></span></div>
           </motion.div>
         </motion.section>
 
         <motion.section {...motionReveal(0.04)} id="diagnostico" className="scroll-mt-24 mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
-          <div className="text-center max-w-2xl mx-auto">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Review your listing">REVISA TU FICHA</T></p>
-            <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="See what customers find before they contact you.">Descubre qué ven tus clientes antes de contactarte.</T></h2>
-              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Enter your business and city or paste your Google Maps link. We’ll confirm the right listing first, then you can continue to the diagnosis.">Escribe el nombre y la ciudad de tu negocio o pega el enlace de Google Maps. Primero confirmaremos la ficha correcta; después podrás continuar con el diagnóstico.</T></p>
-          </div>
+          <AnimatePresence mode="wait" initial={false}>
+            {status !== "confirm" && (
+              <motion.div
+                key="diagnostic-intro"
+                initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.24, ease: "easeOut" }}
+                className="text-center max-w-2xl mx-auto"
+              >
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Review your presence">REVISA TU PRESENCIA</T></p>
+                <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="See what may be getting in the way of calls, messages, or bookings.">Descubre qué puede estar frenando tus llamadas, mensajes o reservas.</T></h2>
+                <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Enter your business and city or paste your Google Maps link. We’ll first confirm the right place, then you can continue.">Escribe el nombre y la ciudad de tu negocio o pega el enlace de Google Maps. Primero confirmaremos que encontramos el lugar correcto; después podrás continuar.</T></p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {status !== "success" && status !== "queued" && status !== "confirm" && (
             <form onSubmit={handleDiagnosticSubmit} className="mt-8 max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -819,7 +851,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     <div className="rounded-xl border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/5 p-3">
                       <div className="flex items-center gap-2 text-xs font-black text-[var(--color-primary-base)]">
                         <MapPin size={14} />
-                        <T en="Use your direct Google Maps listing link">Usa el enlace directo de tu ficha en Google Maps</T>
+                        <T en="Use your direct Google Maps business link">Usa el enlace directo de tu negocio en Google Maps</T>
                       </div>
                       <input
                         type="url"
@@ -884,13 +916,15 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
                   role="status"
                   className="relative sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
-                  <div className="flex justify-center">
-                    <ThinkingOrb
-                      state="searching"
-                      size={64}
-                      theme="auto"
-                      aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
-                    />
+                  <div className="flex w-full justify-center">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/10 shadow-[0_0_28px_rgba(22,200,193,0.16)]">
+                      <ThinkingOrb
+                        state="searching"
+                        size={64}
+                        theme="auto"
+                        aria-label={language === "en" ? "Searching for your business on Google" : "Buscando tu negocio en Google"}
+                      />
+                    </div>
                   </div>
                   <div aria-live="polite" className="min-h-[1.25rem]">
                     <ShimmerPhrase es={loadingCopy.es} en={loadingCopy.en} lang={language} />
@@ -904,7 +938,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5"
                 >
                   <Search size={18} />
-                  <T en="Review my listing">Revisar mi ficha</T>
+                  <T en="Review my business">Revisar mi negocio</T>
                   <ArrowRight size={17} />
                 </motion.button>
               )}
@@ -927,9 +961,21 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
               className="mt-8 max-w-xl mx-auto">
+              <div className="mb-4 flex justify-end">
+                <motion.button
+                  type="button"
+                  onClick={resetCandidateSearch}
+                  whileHover={prefersReducedMotion ? undefined : { y: -1, x: -1 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/45 bg-[var(--color-primary-base)]/10 px-3 py-2 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                >
+                  <ChevronRight size={14} className="rotate-180" />
+                  <T en="Change search">Cambiar búsqueda</T>
+                </motion.button>
+              </div>
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)] mb-4 text-center">
                 {candidates.length > 1
-                  ? <T en="We found several listings — which one is yours?">Encontramos varias fichas — ¿cuál es la tuya?</T>
+                  ? <T en="We found several similar businesses — which one is yours?">Encontramos varios negocios parecidos — ¿cuál es el tuyo?</T>
                   : <T en="Is this your business?">¿Es tu negocio?</T>
                 }
               </p>
@@ -979,7 +1025,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                           className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white shadow-sm shadow-teal-500/20 transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                         >
                           <Check size={13} />
-                          <T en={confirmingPlaceId === cand.id ? "Confirming listing..." : "This is mine"}>{confirmingPlaceId === cand.id ? "Confirmando ficha..." : "Este es el mío"}</T>
+                          <T en={confirmingPlaceId === cand.id ? "Confirming business..." : "This is my business"}>{confirmingPlaceId === cand.id ? "Confirmando negocio..." : "Este es mi negocio"}</T>
                         </button>
                         {cand.mapsUri && (
                           <a
@@ -1012,14 +1058,17 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <span className="opacity-70">({candidates.length - visibleCandidateCount})</span>
                 </motion.button>
               )}
-              <div className="mt-4 text-center">
-                <button
+              <div className="mt-5 border-t border-[var(--color-border-subtle)]/70 pt-5">
+                <motion.button
                   type="button"
-                  onClick={() => { setCandidates([]); setVisibleCandidateCount(3); setPlace(null); setDiagnosticLeadId(null); setMapsUrl(""); setStatus("idle"); }}
-                  className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"
+                  onClick={resetCandidateSearch}
+                  whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                  className="mx-auto flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[var(--color-primary-base)]/50 bg-[var(--color-primary-base)]/10 px-4 py-3 text-sm font-black text-[var(--color-primary-base)] shadow-sm transition-colors hover:bg-[var(--color-primary-base)]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                 >
-                  <T en="None of these — search again">Ninguna de estas — buscar de nuevo</T>
-                </button>
+                  <Search size={15} />
+                  <T en="None of these — search again">No es ninguna de estas · Buscar otra opción</T>
+                </motion.button>
               </div>
             </motion.div>
           )}
