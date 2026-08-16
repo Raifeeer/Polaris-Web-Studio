@@ -100,7 +100,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
         problemsLabel: "Priority issues",
         planLabel: "7-day action plan",
         dayLabel: "Day",
-        ctaPrimary: "I want you to implement this — $29",
+        ctaPrimary: "I want you to implement this",
         ctaSecondaryTop: "Questions?",
         ctaSecondaryBottom: "Reply to this email",
         footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
@@ -113,7 +113,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
         problemsLabel: "Problemas prioritarios",
         planLabel: "Plan de acción de 7 días",
         dayLabel: "Día",
-        ctaPrimary: "Quiero que lo implementen — $29",
+        ctaPrimary: "Quiero que lo implementen",
         ctaSecondaryTop: "¿Dudas?",
         ctaSecondaryBottom: "Responde este correo",
         footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
@@ -170,7 +170,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
 
   <div style="padding:32px 40px 8px 40px;text-align:center;">
     <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
-      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 22px;">
+      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:8px 14px;">
         <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:100%;height:auto;display:block;">
       </td>
     </tr></table>

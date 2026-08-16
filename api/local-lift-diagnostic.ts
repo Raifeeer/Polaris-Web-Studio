@@ -141,7 +141,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         problemsLabel: "Priority issues preview",
         planLabel: "7-day action plan preview",
         dayLabel: "Day",
-        ctaPrimary: "Unlock the full diagnosis — $29",
+        ctaPrimary: "Unlock the full diagnosis",
         ctaSecondaryTop: "Questions?",
         ctaSecondaryBottom: "Reply to this email",
         footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
@@ -154,7 +154,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         problemsLabel: "Vista previa de problemas prioritarios",
         planLabel: "Vista previa del plan de acción de 7 días",
         dayLabel: "Día",
-        ctaPrimary: "Desbloquear el diagnóstico completo — $29",
+        ctaPrimary: "Desbloquear el diagnóstico completo",
         ctaSecondaryTop: "¿Dudas?",
         ctaSecondaryBottom: "Responde este correo",
         footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
@@ -220,7 +220,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
 
   <div style="padding:32px 40px 8px 40px;text-align:center;">
     <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
-      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 22px;">
+      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:8px 14px;">
         <img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:100%;height:auto;display:block;">
       </td>
     </tr></table>

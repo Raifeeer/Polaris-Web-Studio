@@ -58,7 +58,7 @@ function buildPaymentConfirmedHtml(businessName: string, tier: string, contactNa
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
   <div style="padding:32px 40px 0 40px;text-align:center;">
     <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
-      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 22px;">
+      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:8px 14px;">
         <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:100%;height:auto;display:block;">
       </td>
     </tr></table>
@@ -148,7 +148,7 @@ function buildPortalWelcomeHtml(businessName: string, contactName: string, email
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
   <div style="padding:32px 40px 0 40px;text-align:center;">
     <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
-      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 22px;">
+      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:8px 14px;">
         <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:100%;height:auto;display:block;">
       </td>
     </tr></table>
