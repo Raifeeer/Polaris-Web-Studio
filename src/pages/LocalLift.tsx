@@ -7,6 +7,7 @@ import {
   ChevronDown,
   ChevronRight,
   Eye,
+  Building2,
   Mail,
   MapPin,
   MessageCircle,
@@ -1081,25 +1082,55 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="mt-8 max-w-2xl mx-auto">
-              <div className="rounded-2xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-5 md:px-6">
-                {revealedByAtlas && (
-                  <div className="mb-4 flex justify-center" role="img" aria-label="Atlas Assistant">
-                    <div className="flex items-center gap-2">
-                      <AtlasMark variant="isotipo" className="h-10 w-10" />
-                      <AtlasMark variant="wordmark" className="h-6 w-auto" />
-                    </div>
+              {revealedByAtlas && (
+                <div className="mb-5 flex justify-center" role="img" aria-label="Atlas Assistant">
+                  <div className="flex items-center gap-3">
+                    <AtlasMark variant="isotipo" className="h-14 w-14" />
+                    <AtlasMark variant="wordmark" className="h-8 w-auto" />
                   </div>
-                )}
+                </div>
+              )}
+              <div className="rounded-2xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-5 md:px-6">
                 <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
                   <Check size={15} />
                   <T en="Diagnosis ready">Diagnóstico listo</T>
                 </div>
                 {place && (
-                  <p className="mt-2 truncate text-xs text-[var(--color-text-tertiary)]">
-                    {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}
-                  </p>
+                  <>
+                    <p className="mt-2 truncate text-base font-bold text-[var(--color-text-primary)]">
+                      {place.name}
+                    </p>
+                    <div className="mt-3 space-y-2 text-xs text-[var(--color-text-secondary)]">
+                      {place.address && (
+                        <div className="flex items-start gap-2">
+                          <MapPin size={15} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />
+                          <span className="break-words">{place.address}</span>
+                        </div>
+                      )}
+                      {place.primaryType && (
+                        <div className="flex items-center gap-2">
+                          <Building2 size={15} className="shrink-0 text-[var(--color-primary-base)]" />
+                          <span className="capitalize">{place.primaryType.replace(/_/g, " ")}</span>
+                        </div>
+                      )}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                        {place.rating != null && (
+                          <span className="inline-flex items-center gap-1 font-bold text-amber-500">
+                            <Star size={15} fill="currentColor" />
+                            {place.rating}/5
+                          </span>
+                        )}
+                        {place.reviewCount > 0 && (
+                          <span className="inline-flex items-center gap-1">
+                            <MessageCircle size={15} className="text-[var(--color-primary-base)]" />
+                            {place.reviewCount} {language === "en" ? "reviews" : "reseñas"}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </>
                 )}
-                <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                <p className="mt-4 flex items-start gap-2 border-t border-[var(--color-primary-base)]/15 pt-3 text-xs leading-relaxed text-[var(--color-text-secondary)]">
                   <Mail size={14} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />
                   <span>
                     {revealedByAtlas
