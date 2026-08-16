@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
+import { findPlaceByMapsUrl, findPlaceCandidates, generateFast, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
 import { claimEmailDelivery, commitEmailDelivery, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
@@ -81,7 +81,15 @@ ${placeDataSummary(place)}
 
 Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}. Nunca uses dos guiones seguidos ("--") como signo de puntuación: usa una raya (—), una coma o punto y aparte según corresponda.`;
 
-  return generateWithFallback(diagnosticSchema, prompt);
+  let lastError: unknown;
+  for (const provider of ["deepseek", "grok", "gemini"] as const) {
+    try {
+      return await generateFast(diagnosticSchema, prompt, 0.5, provider);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Los proveedores de Atlas no respondieron a tiempo");
 }
 
 function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string {
@@ -360,8 +368,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
       const transporter = nodemailer.createTransport({
-        host: "smtp.zoho.com", port: 465, secure: true,
+        host: "smtp.zoho.com",
+        port: 465,
+        secure: true,
         auth: { user: "hola@polarisweb.studio", pass: process.env.ZOHO_PASSWORD },
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 10000,
       });
       await transporter.sendMail({
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',

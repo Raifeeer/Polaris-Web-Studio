@@ -603,10 +603,13 @@ const handleRevealNow = async () => {
     if (!diagnosticLeadId || revealNowLoading) return;
     setRevealNowLoading(true);
     setRevealNowError("");
+    const revealController = new AbortController();
+    const revealTimeout = window.setTimeout(() => revealController.abort(), 45000);
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: revealController.signal,
         body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId, lang: language === "en" ? "en" : "es" }),
       });
       const data = await res.json();
@@ -618,10 +621,15 @@ const handleRevealNow = async () => {
       setDiagnostic(data.diagnostic);
       if (data.place) setPlace(data.place);
       setRevealedByAtlas(true);
+      setRevealNowLoading(false);
       setStatus("success");
     } catch {
-      setRevealNowError(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
+      setRevealNowError(revealController.signal.aborted
+        ? (language === "en" ? "The diagnosis took too long. Please try again." : "El diagnóstico tardó demasiado. Intenta de nuevo.")
+        : (language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo."));
       setRevealNowLoading(false);
+    } finally {
+      window.clearTimeout(revealTimeout);
     }
   };
 
