@@ -2797,15 +2797,27 @@ const PORT = 3000;
         const completedPhases = project.phases.filter((p: any) => p.status === "completed").length;
         const totalPhases = project.phases.length;
         const remainingPhases = totalPhases - completedPhases;
-        const weeksEstimate = remainingPhases <= 0 ? 0 : remainingPhases * 2;
+        // "2 semanas por fase" es el ritmo real de un sitio web, no de
+        // cualquier producto: en Local Lift la entrega es por correo en
+        // horas, así que estimar semanas ahí decía "faltan 4 semanas" para
+        // algo que se entrega el mismo día (bug real visto por el usuario).
+        const isLocalLiftProject = project.productType === "local_lift";
+        const weeksEstimate = isLocalLiftProject || remainingPhases <= 0 ? 0 : remainingPhases * 2;
+
+        const plazoLinea = isLocalLiftProject
+          ? "La entrega es por correo en las próximas horas, no en semanas: nunca menciones semanas ni meses."
+          : weeksEstimate > 0
+            ? `Estima que faltan aproximadamente ${weeksEstimate} semanas para completar.`
+            : "El proyecto está casi terminado.";
 
         const generatedPrompt = `Eres el asistente amigable de Polaris Web Studio. Escribe un resumen breve en español
-         (máximo 2 oraciones, tono cercano y positivo, tutéalo) para el cliente dueño del proyecto
-         "${project.name}" que está al ${project.progress}% en la fase "${project.currentPhase}".
-         Tiene ${approved} entregables aprobados${pending > 0 ? `, ${pending} pendiente(s) de revisar` : ""}
+         (máximo 2 oraciones, tono cercano y positivo, tutéalo) para el cliente dueño ${isLocalLiftProject
+           ? `del paquete Local Lift de "${project.name}" (optimización de su perfil de Google, no un sitio web: nunca lo llames "desarrollo" ni "proyecto de sitio web")`
+           : `del proyecto "${project.name}"`} que está al ${project.progress}% en la fase "${project.currentPhase}".
+         ${isLocalLiftProject ? "" : `Tiene ${approved} entregables aprobados${pending > 0 ? `, ${pending} pendiente(s) de revisar` : ""}`}
          ${pendingInvoices > 0 ? ` y ${pendingInvoices} factura(s) por pagar` : ""}.
-         ${weeksEstimate > 0 ? `Estima que faltan aproximadamente ${weeksEstimate} semanas para completar.` : "El proyecto está casi terminado."}
-         Sé específico con los datos, no genérico.`;
+         ${plazoLinea}
+         Sé específico con los datos, no genérico. Nunca uses dos guiones seguidos ("--") como puntuación.`;
 
         const text = await askAI(generatedPrompt);
         return res.json({ text });

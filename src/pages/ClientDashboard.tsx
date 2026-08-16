@@ -3927,7 +3927,7 @@ export default function ClientDashboard() {
                         <div className="lg:col-span-2 p-6 md:p-8 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] space-y-6 bento-glow">
                           <h2 className="text-lg md:text-xl font-display font-black flex items-center gap-2 border-b border-[var(--color-border-subtle)]/30 pb-4">
                             <TrendingUp size={18} className="text-indigo-400" />
-                            Progreso del Desarrollo
+                            {isLocalLiftProject ? "Progreso de tu paquete" : "Progreso del Desarrollo"}
                           </h2>
 
                           <div className="relative pt-4">
@@ -4006,9 +4006,16 @@ export default function ClientDashboard() {
                               <div className="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                                 <Check size={16} />
                               </div>
-                              <h3 className="font-bold text-sm text-[var(--color-text-primary)]">Dispositivos al Día</h3>
+                              {/* El título decía "Dispositivos al Día", que no
+                                  significaba nada (no hay ningún dispositivo en
+                                  juego) y le salía igual a todos los clientes.
+                                  El texto además daba por hecho que el producto
+                                  es un sitio web en desarrollo. */}
+                              <h3 className="font-bold text-sm text-[var(--color-text-primary)]">Sin revisiones pendientes</h3>
                               <p className="text-xs text-[var(--color-text-secondary)]">
-                                No tienes acciones pendientes de revisión. El desarrollo está operando a máxima velocidad sin cuellos de botella.
+                                {isLocalLiftProject
+                                  ? "No hay nada esperando tu revisión. Seguimos preparando tu paquete."
+                                  : "No hay nada esperando tu revisión. Seguimos avanzando con tu proyecto."}
                               </p>
                             </div>
                           )}
