@@ -122,7 +122,7 @@ const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvet
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#16c8c1"; // teal de Local Lift
 const DEEP = "#111936"; // navy de Local Lift
-const LOCAL_LIFT_LOGO_URL = "https://polarisweb.studio/brand/local-lift-stacked-light.png";
+const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v1.png";
 const PREVIEW_PROBLEM_COUNT = 2;
 const PREVIEW_PLAN_DAY_COUNT = 3;
 
@@ -145,7 +145,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         ctaSecondaryTop: "Questions?",
         ctaSecondaryBottom: "Reply to this email",
         footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
-        footerLine2: "This email shows a preview. The complete diagnosis is available through Local Lift.",
+        footerLine2: "You requested this free diagnosis from our website.",
       }
     : {
         preheader: `Tu diagnóstico Local Lift de ${place.name} está listo.`,
@@ -158,7 +158,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         ctaSecondaryTop: "¿Dudas?",
         ctaSecondaryBottom: "Responde este correo",
         footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
-        footerLine2: "Este correo muestra una vista previa. El diagnóstico completo está disponible en Local Lift.",
+        footerLine2: "Solicitaste este diagnóstico gratis desde nuestro sitio.",
       };
 
   const problemRows = diagnostic.problems.slice(0, PREVIEW_PROBLEM_COUNT)
@@ -219,11 +219,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
   <div style="padding:32px 40px 8px 40px;text-align:center;">
-    <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
-      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;padding:8px 14px;">
-        <img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:100%;height:auto;display:block;">
-      </td>
-    </tr></table>
+    <img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="160" style="width:160px;max-width:80%;height:auto;display:block;margin:0 auto;">
   </div>
 
   <div style="padding:20px 40px 8px 40px;text-align:center;">
