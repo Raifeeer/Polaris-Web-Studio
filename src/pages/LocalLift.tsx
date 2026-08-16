@@ -407,16 +407,30 @@ export default function LocalLift() {
   const waitForPhotos = (urls: string[], priority: "high" | "low" = "low") => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
     const image = new Image();
     let settled = false;
+    let loadFallback = 0;
+    const settleAfterDecode = () => {
+      const decodePromise = image.complete && typeof image.decode === "function"
+        ? image.decode().catch(() => undefined)
+        : Promise.resolve();
+      const decodeFallback = new Promise<void>((decodeResolve) => {
+        window.setTimeout(decodeResolve, 1500);
+      });
+      void Promise.race([decodePromise, decodeFallback]).then(() => resolve());
+    };
     const finish = () => {
       if (settled) return;
       settled = true;
-      const decodePromise = image.complete && typeof image.decode === "function" ? image.decode().catch(() => undefined) : Promise.resolve();
-      void decodePromise.then(() => resolve());
+      window.clearTimeout(loadFallback);
+      settleAfterDecode();
     };
     image.decoding = "async";
     image.setAttribute("fetchpriority", priority);
     image.onload = finish;
     image.onerror = finish;
+    // Algunas respuestas de Google pueden quedar pendientes sin emitir load/error.
+    // Este fallback es por recurso, no un timeout global del loader: las fotos
+    // normales siguen bloqueando la apertura hasta cargar y decodificarse.
+    loadFallback = window.setTimeout(finish, 8000);
     image.src = url;
     if (image.complete) finish();
   })));
