@@ -42,7 +42,6 @@ export interface PlaceCandidatesPage {
 function buildPlaceData(place: any, apiKey: string, fallbackName: string): PlaceData {
   const photos = Array.isArray(place.photos) ? place.photos : [];
   const photoUrls = photos
-    .slice(0, 3)
     .map((p: any) =>
       p?.name
         ? `https://places.googleapis.com/v1/${p.name}/media?maxWidthPx=600&key=${apiKey}`
