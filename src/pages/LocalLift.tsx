@@ -707,7 +707,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
         <motion.section {...motionReveal(0.04)} id="diagnostico" className="scroll-mt-24 mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
           <AnimatePresence mode="wait" initial={false}>
-            {status !== "confirm" && (
+            {status !== "confirm" && status !== "queued" && status !== "success" && (
               <motion.div
                 key="diagnostic-intro"
                 initial={prefersReducedMotion ? false : { opacity: 0, y: -8 }}
