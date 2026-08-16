@@ -197,6 +197,7 @@ export default function LocalLift() {
   const [lookupMode, setLookupMode] = useState<"name" | "maps">("name");
   const [confirmingPlaceId, setConfirmingPlaceId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "error">("idle");
+  const [loadingStage, setLoadingStage] = useState<"searching" | "photos" | "verifying">("searching");
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
@@ -225,22 +226,21 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const switchLookupMode = (mode: "name" | "maps") => {
     setLookupMode(mode);
     setErrorMsg("");
+    setLoadingStage("searching");
     setStatus("idle");
     if (mode === "name") setMapsUrl("");
   };
 
-  // Pedido explícito del usuario (16 de agosto): el submit del formulario
-  // solo valida la ficha real en Google (rápido, ~1-2s) y crea el lead --
-  // ya NO genera el diagnóstico con IA acá (esa parte, 30-45s reales,
-  // corre recién cuando el cliente pide "Atlas ahora", ver handleRevealNow
-  // más abajo). Por eso "loading" acá es corto: solo cubre la búsqueda en
-  // Google, no la generación.
+  // Este submit valida la ficha real en Google y prepara sus fotos antes de
+  // abrir la confirmación. La generación del diagnóstico con IA corre después,
+  // cuando el cliente pide "Atlas ahora" en handleRevealNow.
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (lookupMode === "name" && (!businessName.trim() || !city.trim())) return;
     if (lookupMode === "maps" && !mapsUrl.trim()) return;
     if (!contactName.trim() || !email.trim()) return;
     setStatus("loading");
+    setLoadingStage("searching");
     setErrorMsg("");
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
@@ -254,19 +254,47 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
         setStatus("error");
         return;
       }
-      const cands: PlaceResult[] = Array.isArray(data.candidates) && data.candidates.length ? data.candidates : (data.place ? [data.place] : []);
-      await preloadCandidatePhotos(cands);
+            const cands: PlaceResult[] = Array.isArray(data.candidates) && data.candidates.length ? data.candidates : (data.place ? [data.place] : []);
+      // Las fichas se montan mientras el loader sigue visible para que sus
+      // imágenes puedan descargarse y quedar en caché antes de la confirmación.
       setCandidates(cands);
       setVisibleCandidateCount(3);
-      setPlace(cands[0] ?? data.place ?? null);
+      // Esta etapa permanece visible hasta que todas las URLs de fotos recibidas
+      // hayan respondido (éxito o error) y se completa una pausa breve legible.
+      setLoadingStage("photos");
+      const photosStartedAt = Date.now();
+      await preloadCandidatePhotos(cands);
+      await new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, 420 - (Date.now() - photosStartedAt))));
+
+      // Google ya entregó rating, reseñas, dirección y estado; aquí validamos
+      // que cada ficha tenga los datos mínimos antes de abrir el selector.
+      setLoadingStage("verifying");
+      const verifiedCandidates = cands.filter((candidate) => Boolean(candidate.id && candidate.name && candidate.address));
+      await new Promise<void>((resolve) => setTimeout(resolve, 420));
+      if (!verifiedCandidates.length) {
+        setErrorMsg(language === "en" ? "We found no complete business listing to confirm." : "No encontramos una ficha comercial completa para confirmar.");
+        setStatus("error");
+        return;
+      }
+
+      setCandidates(verifiedCandidates);
+      setVisibleCandidateCount(3);
+      setPlace(verifiedCandidates[0] ?? data.place ?? null);
       setDiagnosticLeadId(data.leadId || null);
       setStatus("confirm");
     } catch {
       setPreloadingCandidatePhotos(false);
+      setLoadingStage("searching");
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
       setStatus("error");
     }
   };
+
+  const loadingCopy = loadingStage === "searching"
+    ? { es: "Buscando tu ficha exacta en Google...", en: "Finding your exact Google listing..." }
+    : loadingStage === "photos"
+      ? { es: "Recopilando reseñas, calificaciones y fotos...", en: "Collecting reviews, ratings, and photos..." }
+      : { es: "Verificando reputación y datos de cada sucursal...", en: "Verifying reputation and branch details..." };
 
   const handleConfirmCandidate = async (candidate: PlaceResult) => {
     setPlace(candidate);
@@ -724,7 +752,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               )}
 
               {status === "loading" ? (
-                <div className="sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                <div className="relative sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="searching"
@@ -733,11 +761,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
                     />
                   </div>
-                  <ShimmerPhrase
-                    es={preloadingCandidatePhotos ? "Preparando las fotos de tus fichas..." : "Buscando tu ficha en Google..."}
-                    en={preloadingCandidatePhotos ? "Preparing your listing photos..." : "Searching your Google listing..."}
-                    lang={language}
-                  />
+                  <div aria-live="polite" className="min-h-[1.25rem]">
+                    <ShimmerPhrase es={loadingCopy.es} en={loadingCopy.en} lang={language} />
+                  </div>
+                  {candidates.length > 0 && (
+                    <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-px w-px overflow-hidden opacity-0">
+                      {candidates.flatMap((candidate) => candidate.photoUrls || []).map((url, index) => (
+                        <img key={`${url}-${index}`} src={url} alt="" loading="eager" decoding="sync" />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button
