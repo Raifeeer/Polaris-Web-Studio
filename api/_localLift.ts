@@ -131,18 +131,29 @@ function extractPlaceId(rawUrl: string): string | null {
   return embeddedPlaceId || decoded.match(/(ChIJ[A-Za-z0-9_-]{10,})/)?.[1] || null;
 }
 
-function extractPlaceLabel(rawUrl: string): string | null {
+function extractPlaceLabels(rawUrl: string): string[] {
   const url = new URL(rawUrl);
+  const labels: string[] = [];
+  const addLabel = (value: string | null) => {
+    const normalized = value?.replace(/\+/g, " ").replace(/\s+/g, " ").trim();
+    if (!normalized) return;
+    const withoutPlusCode = normalized.replace(/^[A-Z0-9]{4,8}\s+[A-Z0-9]{2,}\s+/i, "").trim();
+    for (const candidate of [withoutPlusCode, normalized]) {
+      if (candidate && !labels.includes(candidate) && !isCoordinateOnlyLabel(candidate)) labels.push(candidate);
+    }
+  };
+
   const segments = url.pathname.split("/").filter(Boolean);
   const placeIndex = segments.findIndex((segment) => segment === "place");
   if (placeIndex !== -1 && segments[placeIndex + 1]) {
-    return decodeURIComponent(segments[placeIndex + 1]).replace(/\+/g, " ").trim() || null;
+    addLabel(decodeURIComponent(segments[placeIndex + 1]));
+    return labels;
   }
+
   for (const key of ["query", "destination", "q", "daddr"]) {
-    const value = url.searchParams.get(key);
-    if (value?.trim()) return value.replace(/\+/g, " ").trim();
+    addLabel(url.searchParams.get(key));
   }
-  return null;
+  return labels;
 }
 
 async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
@@ -154,7 +165,18 @@ async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
         "X-Goog-FieldMask":
         "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryType,places.primaryTypeDisplayName",
     },
-    body: JSON.stringify({ textQuery, languageCode: "es", includedRegionCodes: ["do"], pageSize: 5 }),
+    body: JSON.stringify({
+      textQuery,
+      languageCode: "es",
+      regionCode: "DO",
+      locationBias: {
+        rectangle: {
+          low: { latitude: 17.45, longitude: -72.05 },
+          high: { latitude: 19.95, longitude: -68.20 },
+        },
+      },
+      pageSize: 5,
+    }),
     signal: AbortSignal.timeout(8000),
   });
 
@@ -185,6 +207,26 @@ export async function findPlace(businessName: string, city: string): Promise<Pla
 
 const PLACE_DETAILS_FIELD_MASK = "id,displayName,formattedAddress,addressComponents,rating,userRatingCount,websiteUri,nationalPhoneNumber,currentOpeningHours,photos,editorialSummary,businessStatus,googleMapsUri,primaryType,primaryTypeDisplayName";
 
+async function resolveGoogleMapsRedirect(rawUrl: string): Promise<string> {
+  let currentUrl = rawUrl;
+  for (let hop = 0; hop < 5; hop += 1) {
+    const response = await fetch(currentUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: { "User-Agent": "Mozilla/5.0 Polaris Local Lift" },
+      signal: AbortSignal.timeout(4000),
+    });
+    const location = response.headers.get("location");
+    if (response.body) void response.body.cancel().catch(() => undefined);
+    if (response.status >= 300 && response.status < 400 && location) {
+      currentUrl = new URL(location, currentUrl).toString();
+      continue;
+    }
+    return currentUrl;
+  }
+  return currentUrl;
+}
+
 async function findPlaceById(placeId: string, apiKey: string): Promise<PlaceData | null> {
   const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
     headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": PLACE_DETAILS_FIELD_MASK },
@@ -205,8 +247,7 @@ export async function findPlaceByMapsUrl(mapsUrl: string): Promise<PlaceData | n
   const mapsHost = new URL(mapsUrl).hostname.toLowerCase().replace(/^www\./, "");
   if (!placeId && (mapsHost === "maps.app.goo.gl" || mapsHost === "goo.gl")) {
     try {
-      const redirect = await fetch(mapsUrl, { redirect: "follow", signal: AbortSignal.timeout(5000) });
-      resolvedUrl = redirect.url || mapsUrl;
+      resolvedUrl = await resolveGoogleMapsRedirect(mapsUrl);
       placeId = extractPlaceId(resolvedUrl);
     } catch (error) {
       console.warn("[_localLift] No se pudo resolver el enlace corto de Maps:", error);
@@ -214,10 +255,12 @@ export async function findPlaceByMapsUrl(mapsUrl: string): Promise<PlaceData | n
   }
 
   if (placeId) return findPlaceById(placeId, apiKey);
-  const label = extractPlaceLabel(resolvedUrl);
-  if (!label || isCoordinateOnlyLabel(label)) return null;
-  const candidates = (await searchPlaces(label, apiKey)).filter(isLikelyBusinessPlace);
-  return candidates[0] ? buildPlaceData(candidates[0], apiKey, label) : null;
+  const labels = extractPlaceLabels(resolvedUrl);
+  for (const label of labels) {
+    const candidates = (await searchPlaces(label, apiKey)).filter(isLikelyBusinessPlace);
+    if (candidates[0]) return buildPlaceData(candidates[0], apiKey, label);
+  }
+  return null;
 }
 
 // Google Places API (New) solo devuelve hasta 5 reseñas reales por ficha,

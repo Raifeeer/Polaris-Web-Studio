@@ -193,6 +193,7 @@ export default function LocalLift() {
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
+  const [lookupMode, setLookupMode] = useState<"name" | "maps">("name");
   const [confirmingPlaceId, setConfirmingPlaceId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -204,6 +205,13 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
 
+  const switchLookupMode = (mode: "name" | "maps") => {
+    setLookupMode(mode);
+    setErrorMsg("");
+    setStatus("idle");
+    if (mode === "name") setMapsUrl("");
+  };
+
   // Pedido explícito del usuario (16 de agosto): el submit del formulario
   // solo valida la ficha real en Google (rápido, ~1-2s) y crea el lead --
   // ya NO genera el diagnóstico con IA acá (esa parte, 30-45s reales,
@@ -212,7 +220,8 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   // Google, no la generación.
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!businessName.trim() || !city.trim()) && !mapsUrl.trim()) return;
+    if (lookupMode === "name" && (!businessName.trim() || !city.trim())) return;
+    if (lookupMode === "maps" && !mapsUrl.trim()) return;
     if (!contactName.trim() || !email.trim()) return;
     setStatus("loading");
     setErrorMsg("");
@@ -220,7 +229,7 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessName, city, contactName, email, mapsUrl: mapsUrl.trim() || undefined, lang: language === "en" ? "en" : "es" }),
+        body: JSON.stringify({ businessName, city, contactName, email, mapsUrl: lookupMode === "maps" ? mapsUrl.trim() : undefined, lang: language === "en" ? "en" : "es" }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -587,35 +596,87 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
           {status !== "success" && status !== "queued" && status !== "confirm" && (
             <form onSubmit={handleDiagnosticSubmit} className="mt-8 max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
-                type="text"
-                maxLength={200}
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder={language === "en" ? "Business name" : "Nombre del negocio"}
-                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
-              />
-              <input
-                type="text"
-                maxLength={100}
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder={language === "en" ? "City" : "Ciudad"}
-                className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
-              />
-              <div className="sm:col-span-2 -mt-1 px-1 text-xs leading-relaxed text-[var(--color-text-tertiary)]">
-                <T en="Or paste your direct Google Maps link below if you prefer not to type the business name or city.">O pega directamente abajo el enlace de Google Maps si prefieres no escribir el nombre ni la ciudad.</T>
-              </div>
-              <input
-                type="url"
-                inputMode="url"
-                maxLength={2000}
-                value={mapsUrl}
-                onChange={(e) => setMapsUrl(e.target.value)}
-                placeholder="https://maps.app.goo.gl/..."
-                aria-label={language === "en" ? "Direct Google Maps link (optional)" : "Enlace directo de Google Maps (opcional)"}
-                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
-              />
+              <AnimatePresence mode="wait" initial={false}>
+                {lookupMode === "name" ? (
+                  <motion.div
+                    key="name-lookup"
+                    id="local-lift-name-lookup"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
+                    className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3"
+                  >
+                    <input
+                      type="text"
+                      required
+                      maxLength={200}
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder={language === "en" ? "Business name" : "Nombre del negocio"}
+                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                    />
+                    <input
+                      type="text"
+                      required
+                      maxLength={100}
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder={language === "en" ? "City" : "Ciudad"}
+                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                    />
+                    <motion.button
+                      type="button"
+                      onClick={() => switchLookupMode("maps")}
+                      whileTap={{ scale: 0.98 }}
+                      className="sm:col-span-2 inline-flex w-fit items-center gap-1.5 px-1 text-left text-xs leading-relaxed text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:text-[var(--color-primary-base)]"
+                      aria-controls="local-lift-maps-lookup"
+                    >
+                      <span className="underline decoration-[var(--color-primary-base)]/40 underline-offset-4">
+                        <T en="Or paste the Google Maps link directly here">O pega directamente aquí el enlace de Google Maps</T>
+                      </span>
+                      <ArrowRight size={13} className="text-[var(--color-primary-base)]" />
+                    </motion.button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="maps-lookup"
+                    id="local-lift-maps-lookup"
+                    initial={{ opacity: 0, y: 10, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: "auto" }}
+                    exit={{ opacity: 0, y: -10, height: 0 }}
+                    transition={{ duration: 0.28, ease: "easeInOut" }}
+                    className="sm:col-span-2 overflow-hidden"
+                  >
+                    <div className="rounded-xl border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/5 p-3">
+                      <div className="flex items-center gap-2 text-xs font-black text-[var(--color-primary-base)]">
+                        <MapPin size={14} />
+                        <T en="Use your direct Google Maps listing link">Usa el enlace directo de tu ficha en Google Maps</T>
+                      </div>
+                      <input
+                        type="url"
+                        required
+                        inputMode="url"
+                        maxLength={2000}
+                        value={mapsUrl}
+                        onChange={(e) => setMapsUrl(e.target.value)}
+                        placeholder="https://maps.app.goo.gl/..."
+                        aria-label={language === "en" ? "Direct Google Maps link" : "Enlace directo de Google Maps"}
+                        className="glass-input mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                      />
+                      <motion.button
+                        type="button"
+                        onClick={() => switchLookupMode("name")}
+                        whileTap={{ scale: 0.98 }}
+                        className="mt-2 inline-flex items-center gap-1.5 px-1 text-xs text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:text-[var(--color-primary-base)]"
+                      >
+                        <ChevronRight size={13} className="rotate-180" />
+                        <T en="Search by business name and city instead">Volver a buscar por nombre y ciudad</T>
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <input
                 type="text"
                 required
