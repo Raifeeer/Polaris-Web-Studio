@@ -211,6 +211,8 @@ export default function LocalLift() {
   const candidatesRef = useRef<HTMLDivElement | null>(null);
   const queuedRef = useRef<HTMLDivElement | null>(null);
   const successRef = useRef<HTMLDivElement | null>(null);
+  const nameFieldRef = useRef<HTMLInputElement | null>(null);
+  const mapsFieldRef = useRef<HTMLInputElement | null>(null);
   const motionReveal = (delay = 0) => prefersReducedMotion
     ? { initial: false }
     : {
@@ -220,11 +222,31 @@ export default function LocalLift() {
         transition: { duration: 0.62, delay, ease: [0.22, 1, 0.36, 1] as const },
       };
 
+  const scrollElementToCenter = (element: HTMLElement | null, behavior: ScrollBehavior = prefersReducedMotion ? "auto" : "smooth") => {
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
+    const centeredTop = window.scrollY + rect.top - Math.max(0, (viewportHeight - rect.height) / 2);
+    window.scrollTo({ top: Math.max(0, centeredTop), behavior });
+  };
+
+  const scrollSectionIntro = (section: HTMLElement | null, behavior: ScrollBehavior = prefersReducedMotion ? "auto" : "smooth") => {
+    if (!section) return;
+    const intro = section.querySelector<HTMLElement>(":scope > div") ?? section;
+    const rect = intro.getBoundingClientRect();
+    const nav = document.querySelector<HTMLElement>("nav");
+    const navBottom = nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
+    const topInset = Math.max(24, navBottom + 16);
+    const visualOffset = window.visualViewport?.offsetTop ?? 0;
+    const alignedTop = window.scrollY + rect.top - topInset - visualOffset;
+    window.scrollTo({ top: Math.max(0, alignedTop), behavior });
+  };
+
   const scrollToSection = (id: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
-    const target = document.getElementById(id);
-    if (!target) return;
+    const section = document.getElementById(id);
+    if (!section) return;
     event.preventDefault();
-    target.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+    scrollSectionIntro(section);
     window.history.replaceState(null, "", `#${id}`);
   };
 
@@ -240,11 +262,9 @@ export default function LocalLift() {
             : null;
     if (!target) return;
     const timer = window.setTimeout(() => {
-      target.scrollIntoView({
-        behavior: prefersReducedMotion ? "auto" : "smooth",
-        block: "center",
-      });
-    }, 90);
+      const anchor = target.querySelector<HTMLElement>("[data-scroll-anchor]") ?? target;
+      scrollElementToCenter(anchor);
+    }, 120);
     return () => window.clearTimeout(timer);
   }, [status, prefersReducedMotion]);
 
@@ -254,6 +274,11 @@ export default function LocalLift() {
     setLoadingStage("searching");
     setStatus("idle");
     if (mode === "name") setMapsUrl("");
+    window.setTimeout(() => {
+      const field = mode === "maps" ? mapsFieldRef.current : nameFieldRef.current;
+      scrollElementToCenter(field);
+      field?.focus({ preventScroll: true });
+    }, 160);
   };
 
   const waitForPhotos = (urls: string[]) => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
@@ -494,19 +519,19 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-16">
-        <motion.section {...motionReveal(0)} className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 py-12 md:px-14 md:py-20 border border-[var(--color-primary-base)]/20">
+        <motion.section {...motionReveal(0)} className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 pt-8 pb-12 md:px-14 md:pt-12 md:pb-20 border border-[var(--color-primary-base)]/20">
           <div className="absolute -top-28 -right-20 w-80 h-80 rounded-full bg-teal-500/15 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-orange-700/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
             <img
               src="/brand/local-lift-lockup-horizontal-dark.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-light-text block h-24 sm:h-28 md:h-32 lg:h-36 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-10"
+              className="local-lift-logo-light-text block h-28 sm:h-32 md:h-36 lg:h-40 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-6"
             />
             <img
               src="/brand/local-lift-lockup-horizontal-light.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-dark-text block h-24 sm:h-28 md:h-32 lg:h-36 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-10"
+              className="local-lift-logo-dark-text block h-28 sm:h-32 md:h-36 lg:h-40 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-6"
             />
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
               <MapPin size={13} />
@@ -753,6 +778,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       type="text"
                       required
                       maxLength={200}
+                      ref={nameFieldRef}
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder={language === "en" ? "Business name" : "Nombre del negocio"}
@@ -800,6 +826,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                         required
                         inputMode="url"
                         maxLength={2000}
+                        ref={mapsFieldRef}
                         value={mapsUrl}
                         onChange={(e) => setMapsUrl(e.target.value)}
                         placeholder="https://maps.app.goo.gl/..."
@@ -851,6 +878,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               {status === "loading" ? (
                 <motion.div
                   ref={loadingRef}
+                  data-scroll-anchor
                   initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
@@ -894,6 +922,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           {status === "confirm" && candidates.length > 0 && (
             <motion.div
               ref={candidatesRef}
+              data-scroll-anchor
               initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
@@ -998,6 +1027,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           {status === "queued" && (
             <motion.div
               ref={queuedRef}
+              data-scroll-anchor
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: "easeOut" }}
@@ -1047,6 +1077,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           {status === "success" && diagnostic && (
             <motion.div
               ref={successRef}
+              data-scroll-anchor
               initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
