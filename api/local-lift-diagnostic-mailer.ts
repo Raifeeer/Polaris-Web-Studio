@@ -59,10 +59,10 @@ const firebaseApp = getApps().length
       }),
     });
 
-const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
+const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v1.png";
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
-const ACCENT = "#4f46e5";
+const ACCENT = "#16C8C1"; // teal, color primario real de Local Lift (palabra "LIFT" del logo)
 
 function renderDiagnosticText(diagnostic: any, lang: "es" | "en"): string {
   const problemsLabel = lang === "en" ? "Priority issues" : "Problemas prioritarios";
@@ -157,7 +157,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
   <div style="padding:40px 40px 0 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+    <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="180" style="width:180px;height:auto;display:block;margin:0 auto;">
   </div>
 
   <div style="padding:32px 40px 8px 40px;text-align:center;">

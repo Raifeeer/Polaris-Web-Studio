@@ -295,6 +295,13 @@ function rateLimited(key: string, max: number, windowMs: number): boolean {
   return false;
 }
 
+// Logo real de Local Lift (variante "stacked-light" -- LOCAL en navy, pensada
+// para un fondo blanco, ver Polaris Product Brand System v1) alojado en
+// Storage, mismo patrón que LOGO_URL en local-lift-order.ts/-followup.ts/
+// -diagnostic-mailer.ts.
+const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v1.png";
+const localLiftLogoHeader = `<p style="text-align:center;margin:0 0 20px 0;"><img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="180" style="width:180px;height:auto;display:inline-block;"></p>`;
+
 // El contenido completo del paquete ahora vive en el PDF adjunto (ver
 // fetchPackagePdf/local-lift-package-pdf) -- este cuerpo del correo queda
 // como un mensaje breve que anuncia el adjunto, en vez de volcar todo el
@@ -302,11 +309,13 @@ function rateLimited(key: string, max: number, windowMs: number): boolean {
 function renderPackageEmailBody(businessName: string, contactName: string | null, lang: "es" | "en"): string {
   if (lang === "en") {
     return `
+      ${localLiftLogoHeader}
       <p>Hi ${contactName || ""},</p>
       <p>Your Local Lift content package for <strong>${businessName}</strong> is ready — you'll find it attached as a PDF, with everything organized and ready to use: your new business description, services to highlight, Google posts, review replies, templates, and WhatsApp follow-up messages.</p>
     `;
   }
   return `
+    ${localLiftLogoHeader}
     <p>Hola ${contactName || ""},</p>
     <p>Tu paquete de contenido Local Lift para <strong>${businessName}</strong> está listo — lo encontrarás adjunto en PDF, con todo organizado y listo para usar: tu nueva descripción del negocio, servicios a destacar, publicaciones para Google, respuestas a reseñas, plantillas y mensajes de WhatsApp de seguimiento.</p>
   `;
@@ -320,6 +329,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
   const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
   if (language === "en") {
     return `
+      ${localLiftLogoHeader}
       <p>Hi,</p>
       <p>We already prepared your <strong>${price.label}</strong> package for <strong>${place.name}</strong> — everything is ready to send, based on your real Google listing:</p>
       <ul>
@@ -329,11 +339,12 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
         <li>${waCount || 10} WhatsApp follow-up messages</li>
       </ul>
       <p>Complete your payment to receive the full package with all the actual content, ready to use:</p>
-      <p><a href="${payUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pay $${price.amount} and get my package</a></p>
+      <p><a href="${payUrl}" style="display:inline-block;background:#16C8C1;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pay $${price.amount} and get my package</a></p>
       <p>Questions? Just reply to this email or write us on WhatsApp: https://wa.me/18299200544</p>
     `;
   }
   return `
+    ${localLiftLogoHeader}
     <p>Hola,</p>
     <p>Ya preparamos tu paquete <strong>${price.label}</strong> para <strong>${place.name}</strong> — todo está listo para enviarte, basado en tu ficha real de Google:</p>
     <ul>
@@ -343,7 +354,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
       <li>${waCount || 10} mensajes de WhatsApp de seguimiento</li>
     </ul>
     <p>Completa tu pago para recibir el paquete completo con todo el contenido real, listo para usar:</p>
-    <p><a href="${payUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pagar $${price.amount} y recibir mi paquete</a></p>
+    <p><a href="${payUrl}" style="display:inline-block;background:#16C8C1;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pagar $${price.amount} y recibir mi paquete</a></p>
     <p>¿Dudas? Responde este correo o escríbenos por WhatsApp: https://wa.me/18299200544</p>
   `;
 }

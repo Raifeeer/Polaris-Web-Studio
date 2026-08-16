@@ -434,6 +434,15 @@ button:not(:disabled),
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
+/* Logo de Local Lift: variante con LOCAL en navy (dark) para fondo blanco
+   -- usada en correos/PDF -- vs. variante con LOCAL en blanco (light) para
+   la web en modo oscuro (default del sitio). Mismo patrón :root/.light ya
+   usado arriba para el resto del tema. */
+.local-lift-logo-dark-text { display: none; }
+.local-lift-logo-light-text { display: block; }
+.light .local-lift-logo-dark-text { display: block; }
+.light .local-lift-logo-light-text { display: none; }
+
 /* === Pulso de los íconos del marquee de tecnologías ===
    CAUSA RAÍZ REAL del freeze, encontrada con perfilado del navegador
    (11 de agosto). Estos íconos eran `motion.div` de framer-motion con

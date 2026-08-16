@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import {
@@ -480,14 +480,34 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
   });
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
+    <div
+      className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]"
+      style={{
+        // Color real de marca de Local Lift (Polaris Product Brand System v1):
+        // teal, el mismo tono de la palabra "LIFT" del logo, reemplazando el
+        // índigo genérico de Polaris solo dentro de esta página.
+        "--color-primary-base": "#16C8C1",
+        "--color-primary-hover": "#12a8a2",
+        "--color-primary-muted": "rgba(22, 200, 193, 0.10)",
+      } as CSSProperties}
+    >
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-16">
         <motion.section {...motionReveal(0)} className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 py-12 md:px-14 md:py-20 border border-[var(--color-primary-base)]/20">
-          <div className="absolute -top-28 -right-20 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -top-28 -right-20 w-80 h-80 rounded-full bg-teal-500/15 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-orange-700/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
+            <img
+              src="/brand/local-lift-stacked-dark.svg"
+              alt="Local Lift by Polaris Web Studio"
+              className="local-lift-logo-light-text h-24 md:h-28 w-auto mb-6"
+            />
+            <img
+              src="/brand/local-lift-stacked-light.svg"
+              alt="Local Lift by Polaris Web Studio"
+              className="local-lift-logo-dark-text h-24 md:h-28 w-auto mb-6"
+            />
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
               <MapPin size={13} />
               <T en="Local visibility · Dominican Republic">Visibilidad local · República Dominicana</T>
@@ -508,7 +528,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 onClick={scrollToSection("diagnostico")}
                 whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.015 }}
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-shadow hover:shadow-2xl hover:shadow-indigo-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-shadow hover:shadow-2xl hover:shadow-teal-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
               >
                 <Search size={18} />
                 <T en="Review my listing">Revisar mi ficha</T>
@@ -541,7 +561,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           ].map(([Icon, title, enTitle, description], index) => {
             const IconComponent = Icon as typeof Eye;
             return (
-              <motion.div key={title as string} {...motionReveal(index * 0.08)} whileHover={prefersReducedMotion ? undefined : { y: -5 }} className="rounded-[var(--radius-bento)] glass-panel p-6 border border-[var(--color-border-subtle)] transition-shadow duration-300 hover:shadow-xl hover:shadow-indigo-500/10">
+              <motion.div key={title as string} {...motionReveal(index * 0.08)} whileHover={prefersReducedMotion ? undefined : { y: -5 }} className="rounded-[var(--radius-bento)] glass-panel p-6 border border-[var(--color-border-subtle)] transition-shadow duration-300 hover:shadow-xl hover:shadow-teal-500/10">
                 <IconComponent size={22} className="text-[var(--color-primary-base)]" />
                 <h2 className="mt-5 text-xl font-display font-black"><T en={enTitle as string}>{title as string}</T></h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={description as string}>{description as string}</T></p>
@@ -559,7 +579,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-10">
             {tiers.map((tier, index) => (
-              <motion.article key={tier.name} {...motionReveal(index * 0.1)} whileHover={prefersReducedMotion ? undefined : { y: -6 }} className={`relative flex flex-col rounded-[var(--radius-bento)] p-7 border transition-shadow duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 ${tier.featured ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/8 shadow-xl shadow-indigo-500/10" : "border-[var(--color-border-subtle)] glass-panel"}`}>
+              <motion.article key={tier.name} {...motionReveal(index * 0.1)} whileHover={prefersReducedMotion ? undefined : { y: -6 }} className={`relative flex flex-col rounded-[var(--radius-bento)] p-7 border transition-shadow duration-300 hover:shadow-2xl hover:shadow-teal-500/10 ${tier.featured ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/8 shadow-xl shadow-teal-500/10" : "border-[var(--color-border-subtle)] glass-panel"}`}>
                 {tier.featured && <div className="absolute -top-3 left-6 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary-base)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white"><Star size={12} fill="currentColor" /> <T en="Recommended">Recomendado</T></div>}
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -581,7 +601,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     </div>
                   ))}
                 </div>
-                <motion.a href={whatsappLink(`Hola Polaris, me interesa el paquete ${tier.name}. Quiero saber qué necesitas para comenzar.`)} target="_blank" rel="noreferrer" whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-indigo-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
+                <motion.a href={whatsappLink(`Hola Polaris, me interesa el paquete ${tier.name}. Quiero saber qué necesitas para comenzar.`)} target="_blank" rel="noreferrer" whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-teal-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
                   <MessageCircle size={16} />
                   <T en="Start with this review">Empezar con esta revisión</T>
                 </motion.a>
@@ -853,7 +873,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   type="submit"
                   whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-                  className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                  className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5"
                 >
                   <Search size={18} />
                   <T en="Review my listing">Revisar mi ficha</T>
@@ -927,7 +947,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                           type="button"
                           onClick={() => handleConfirmCandidate(cand)}
                           disabled={confirmingPlaceId !== null}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white shadow-sm shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white shadow-sm shadow-teal-500/20 transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                         >
                           <Check size={13} />
                           <T en={confirmingPlaceId === cand.id ? "Confirming listing..." : "This is mine"}>{confirmingPlaceId === cand.id ? "Confirmando ficha..." : "Este es el mío"}</T>
@@ -1102,7 +1122,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     </p>
                     <Link
                       to={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 w-full"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5 w-full"
                     >
                       <Zap size={16} />
                       <T en="Continue with Impulso · $29">Continuar con Impulso · $29</T>

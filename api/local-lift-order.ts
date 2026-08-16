@@ -29,10 +29,10 @@ const firebaseApp = getApps().length
 const TIER_PRICE: Record<string, number> = { "impulso": 29, "ascenso": 99 };
 const TIER_LABEL: Record<string, string> = { "impulso": "Impulso", "ascenso": "Ascenso" };
 
-const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
+const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v1.png";
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
-const ACCENT = "#4f46e5";
+const ACCENT = "#16C8C1"; // teal, color primario real de Local Lift (palabra "LIFT" del logo)
 
 // Confirmación real al CLIENTE de que su pago se recibió -- antes esto no
 // existía: solo se mandaba la alerta interna a Cristian, y el cliente solo
@@ -55,7 +55,7 @@ function buildPaymentConfirmedHtml(businessName: string, tier: string, contactNa
 <div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
   <div style="padding:40px 40px 0 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+    <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="180" style="width:180px;height:auto;display:block;margin:0 auto;">
   </div>
   <div style="padding:32px 40px 0 40px;text-align:center;">
     <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">Pago confirmado</div>
@@ -139,7 +139,7 @@ function buildPortalWelcomeHtml(businessName: string, contactName: string, email
 <div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
   <div style="padding:40px 40px 0 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+    <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="180" style="width:180px;height:auto;display:block;margin:0 auto;">
   </div>
   <div style="padding:32px 40px 0 40px;text-align:center;">
     <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">Tu portal de cliente</div>
