@@ -116,16 +116,15 @@ export default function LocalLift() {
   const [city, setCity] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
-  // "queued": el correo ya está en camino (o ya se mandó), pero no se
-  // revela en pantalla -- se ve como si un humano lo estuviera preparando.
-  // "success": el diagnóstico se muestra en pantalla (revelado por Atlas,
-  // instantáneo, o porque el cliente ya esperó). Pedido explícito del
-  // usuario: que no se sienta "generado por IA al toque" por default.
   const [status, setStatus] = useState<"idle" | "loading" | "queued" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
+  // leadId guardado para pasarle al endpoint reveal-now
+  const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
+  // true mientras Atlas genera el diagnóstico tras el clic del usuario
+  const [revealNowLoading, setRevealNowLoading] = useState(false);
 
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,12 +143,36 @@ export default function LocalLift() {
         setStatus("error");
         return;
       }
-      setDiagnostic(data.diagnostic);
+      if (data.leadId) setDiagnosticLeadId(data.leadId);
       setPlace(data.place);
       setStatus("queued");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
       setStatus("error");
+    }
+  };
+
+  const handleRevealNow = async () => {
+    if (!diagnosticLeadId || revealNowLoading) return;
+    setRevealNowLoading(true);
+    try {
+      const res = await fetch("/api/local-lift-diagnostic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId, lang: language === "en" ? "en" : "es" }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        // No bloqueamos al usuario -- volvemos al estado de espera
+        setRevealNowLoading(false);
+        return;
+      }
+      setDiagnostic(data.diagnostic);
+      if (data.place) setPlace(data.place);
+      setRevealedByAtlas(true);
+      setStatus("success");
+    } catch {
+      setRevealNowLoading(false);
     }
   };
 
@@ -457,50 +480,65 @@ export default function LocalLift() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:pointer-events-none"
-              >
-                {status === "loading" ? (
-                  <>
-                    <ThinkingOrb
-                      state="searching"
-                      size={20}
-                      theme="auto"
-                      aria-label={language === "en" ? "Analyzing your listing" : "Analizando tu ficha"}
-                    />
-                    <T en="Analyzing your listing...">Analizando tu ficha...</T>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    <T en="Generate my diagnosis">Generar mi diagnóstico</T>
-                    <ArrowRight size={17} />
-                  </>
-                )}
-              </button>
+              {status === "loading" ? (
+                <div className="sm:col-span-2 mt-1 flex flex-col items-center gap-4 py-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                  <ThinkingOrb
+                    state="searching"
+                    size={64}
+                    theme="auto"
+                    aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
+                  />
+                  <p className="text-sm font-bold text-[var(--color-text-secondary)]">
+                    <T en="Searching for your listing on Google...">Buscando tu ficha en Google...</T>
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                >
+                  <Sparkles size={18} />
+                  <T en="Generate my diagnosis">Generar mi diagnóstico</T>
+                  <ArrowRight size={17} />
+                </button>
+              )}
             </form>
           )}
 
           {status === "queued" && (
             <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
-              <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
-              <h3 className="mt-4 text-lg font-display font-black"><T en="We're preparing your diagnosis.">Estamos preparando tu diagnóstico.</T></h3>
-              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                <T en={`It will arrive at ${email} within the next 5-10 minutes.`}>{`Te llegará a ${email} dentro de los próximos 5 a 10 minutos.`}</T>
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setRevealedByAtlas(true);
-                  setStatus("success");
-                }}
-                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
-              >
-                <ZapFast size={14} />
-                <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
-              </button>
+              {revealNowLoading ? (
+                <>
+                  <ThinkingOrb
+                    state="solving"
+                    size={64}
+                    theme="auto"
+                    aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
+                  />
+                  <h3 className="mt-4 text-lg font-display font-black">
+                    <T en="Atlas is on it.">Atlas está en eso.</T>
+                  </h3>
+                  <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                    <T en="Generating your personalized diagnosis...">Generando tu diagnóstico personalizado...</T>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
+                  <h3 className="mt-4 text-lg font-display font-black"><T en="We're preparing your diagnosis.">Estamos preparando tu diagnóstico.</T></h3>
+                  <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                    <T en={`It will arrive at ${email} within the next 5-10 minutes.`}>{`Te llegará a ${email} dentro de los próximos 5 a 10 minutos.`}</T>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleRevealNow}
+                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
+                  >
+                    <ZapFast size={14} />
+                    <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
+                  </button>
+                </>
+              )}
             </div>
           )}
 
