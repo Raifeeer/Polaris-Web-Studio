@@ -1481,6 +1481,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <p className="text-xs text-[var(--color-text-tertiary)]">
                     <T en={`Atlas has been working for ${revealElapsedSeconds} seconds.`}>{`Atlas lleva ${revealElapsedSeconds} segundos trabajando.`}</T>
                   </p>
+                  <p className="text-xs leading-relaxed text-[var(--color-text-tertiary)]">
+                    <T en="This process usually takes about 30–45 seconds.">Este proceso suele tardar unos 30–45 segundos.</T>
+                  </p>
                 </div>
               ) : revealNowLoading && revealTimedOut ? (
                 <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-5 text-center">
