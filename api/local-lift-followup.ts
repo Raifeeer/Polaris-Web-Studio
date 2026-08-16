@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
+import { buildEmailFooter } from "./_localLift.js";
 
 // Seguimiento real a quien recibió el diagnóstico gratis y nunca pagó --
 // antes no existía ningún recordatorio (a diferencia del cotizador general
@@ -62,7 +63,7 @@ function buildFollowupHtml(businessName: string, contactName: string, problemTit
   </div>
   <div style="padding:0 40px 40px 40px;">
     <div style="height:1px;background:#e2e8f0;margin-bottom:20px;"></div>
-    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Local Lift · República Dominicana · hola@polarisweb.studio</div>
+    ${buildEmailFooter("es", "Recibiste este correo porque solicitaste un diagnóstico gratuito de Local Lift.")}
   </div>
 </div>
 </div>

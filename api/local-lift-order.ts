@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { buildEmailFooter } from "./_localLift.js";
 
 // Confirma pagos directos de Local Lift (cliente compra el paquete pago sin
 // pasar antes por el diagnóstico gratis, o paga desde el correo de
@@ -74,7 +75,7 @@ function buildPaymentConfirmedHtml(businessName: string, tier: string, contactNa
   </div>
   <div style="padding:0 40px 40px 40px;">
     <div style="height:1px;background:#e2e8f0;margin-bottom:20px;"></div>
-    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Local Lift · República Dominicana · hola@polarisweb.studio</div>
+    ${buildEmailFooter("es", "Recibiste este correo porque compraste un paquete Local Lift.")}
   </div>
 </div>
 </div>
@@ -160,7 +161,7 @@ function buildPortalWelcomeHtml(businessName: string, contactName: string, email
   </div>
   <div style="padding:0 40px 40px 40px;">
     <div style="height:1px;background:#e2e8f0;margin-bottom:20px;"></div>
-    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Local Lift · República Dominicana · hola@polarisweb.studio</div>
+    ${buildEmailFooter("es", "Recibiste este correo porque se creó tu cuenta del portal de Polaris.")}
   </div>
 </div>
 </div>

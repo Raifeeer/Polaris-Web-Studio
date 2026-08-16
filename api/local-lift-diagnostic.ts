@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData } from "./_localLift.js";
+import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
 // maxDuration explícito) -- no el techo duro de 10s que asumía la versión
@@ -241,7 +241,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
         <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Contact" : "Contacto"}</a></td>
       </tr>
     </table>
-    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${copy.footerLine1}<br>${copy.footerLine2}</div>
+    ${buildEmailFooter(lang === "en" ? "en" : "es", copy.footerLine2)}
   </div>
 
 </div>

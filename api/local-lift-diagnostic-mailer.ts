@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { generateWithFallback, placeDataSummary } from "./_localLift.js";
+import { generateWithFallback, placeDataSummary , buildEmailFooter } from "./_localLift.js";
 
 // Manda de verdad los correos de diagnóstico gratis que quedaron
 // "programados" con una demora real de 5-10 min (ver
@@ -209,7 +209,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
         <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Contact" : "Contacto"}</a></td>
       </tr>
     </table>
-    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${copy.footerLine1}<br>${copy.footerLine2}</div>
+    ${buildEmailFooter(lang === "en" ? "en" : "es", copy.footerLine2)}
   </div>
 
 </div>

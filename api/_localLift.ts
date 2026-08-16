@@ -426,3 +426,24 @@ Descripción actual: ${place.editorialSummary || "sin descripción"}
 Estado: ${place.isOperational ? "operativo" : "cerrado o no operativo según Google"}
 `.trim();
 }
+
+// Pie legal compartido de los correos de Local Lift. Ninguno de los correos
+// de esta familia lo tenía (ni el diagnóstico, ni el seguimiento, ni los de
+// pago), a diferencia del resto de los correos de la cuenta -- ver
+// monthly-traffic-report-send en Meridian, que es el patrón que se replica
+// acá: sitio web / contacto, después privacidad / términos, y al final la
+// línea de identificación más el motivo por el que la persona lo recibe.
+export function buildEmailFooter(lang: "es" | "en", reasonLine: string): string {
+  const en = lang === "en";
+  const linkWeb = en ? "Website" : "Sitio web";
+  const linkContact = en ? "Contact" : "Contacto";
+  const linkPrivacy = en ? "Privacy" : "Privacidad";
+  const linkTerms = en ? "Terms and conditions" : "Términos y condiciones";
+  const identity = en
+    ? "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio"
+    : "Polaris Local Lift · República Dominicana · hola@polarisweb.studio";
+  return `
+    <div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${linkWeb}</a><span style="font-size:13px;color:#1f2937;">&nbsp;·&nbsp;</span><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${linkContact}</a></div>
+    <div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-size:12px;color:#64748b;">${linkPrivacy}</a><span style="font-size:12px;color:#64748b;">&nbsp;·&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-size:12px;color:#64748b;">${linkTerms}</a></div>
+    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${identity}<br>${reasonLine}</div>`;
+}
