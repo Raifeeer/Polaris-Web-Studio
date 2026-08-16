@@ -519,21 +519,21 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-16">
-        <motion.section {...motionReveal(0)} className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 pt-8 pb-12 md:px-14 md:pt-12 md:pb-20 border border-[var(--color-primary-base)]/20">
+        <motion.section {...motionReveal(0)} className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 pt-4 pb-12 md:px-14 md:pt-8 md:pb-20 border border-[var(--color-primary-base)]/20">
           <div className="absolute -top-28 -right-20 w-80 h-80 rounded-full bg-teal-500/15 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-orange-700/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
             <img
               src="/brand/local-lift-lockup-horizontal-dark.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-light-text block h-28 sm:h-32 md:h-36 lg:h-40 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-6"
+              className="local-lift-logo-light-text block h-32 sm:h-36 md:h-40 lg:h-44 max-w-[94%] sm:max-w-none w-auto object-contain object-left -mt-2 mb-[-0.5rem]"
             />
             <img
               src="/brand/local-lift-lockup-horizontal-light.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-dark-text block h-28 sm:h-32 md:h-36 lg:h-40 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-6"
+              className="local-lift-logo-dark-text block h-32 sm:h-36 md:h-40 lg:h-44 max-w-[94%] sm:max-w-none w-auto object-contain object-left -mt-2 mb-[-0.5rem]"
             />
-            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
+            <div className="relative z-10 -mt-1 inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
               <MapPin size={13} />
               <T en="Local visibility · Dominican Republic">Visibilidad local · República Dominicana</T>
             </div>
