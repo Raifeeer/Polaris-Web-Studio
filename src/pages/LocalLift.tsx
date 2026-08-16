@@ -922,7 +922,17 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           </div>
         </motion.section>
 
-        <motion.section {...motionReveal(0.04)} id="diagnostico" className="scroll-mt-24 mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
+        <motion.section
+          {...motionReveal(0.04)}
+          id="diagnostico"
+          className={`scroll-mt-24 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-primary-base)]/20 ${
+            status === "success"
+              ? "mt-4 px-4 pb-7 pt-2 md:px-6 md:pb-12 md:pt-4"
+              : status === "confirm" || status === "queued"
+                ? "mt-4 p-4 md:p-8"
+                : "mt-24 p-7 md:p-12"
+          }`}
+        >
           <AnimatePresence mode="wait" initial={false}>
             {status !== "confirm" && status !== "queued" && status !== "success" && (
               <motion.div
