@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { createPublicKey, verify as cryptoVerify } from "node:crypto";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_localLift.js";
 
@@ -29,14 +29,49 @@ const ADMIN_EMAIL = "cristian2200299@gmail.com";
 // solo en `npm run dev` local. Confirmado en vivo: un POST real sin ningún
 // header Authorization devolvía 200 con la lista completa de leads (PII de
 // clientes reales) y probablemente podía disparar generate/send también.
-// Verificación real acá, no delegada a nada externo.
+//
+// Verificación manual (RS256 + Node crypto nativo) en vez de
+// firebase-admin/auth: getAuth().verifyIdToken() arrastra `jwks-rsa`, que
+// hace require() de `jose` (paquete ESM-only) -- rompe TODA la función acá
+// (500 real, confirmado en vivo con `vercel logs`: "ERR_REQUIRE_ESM ...
+// jose/dist/webapi/index.js") por el mismo motivo ya documentado en
+// Meridian (Fase 53, `ai` SDK import estático tumbando server.cjs entero).
+// Mismo patrón ya usado y probado en producción en server.ts
+// (verifyFirebaseToken/getGoogleCerts) -- replicado acá tal cual.
+let googleCertsCache: { certs: Record<string, string> | null; exp: number } = { certs: null, exp: 0 };
+async function getGoogleCerts(): Promise<Record<string, string>> {
+  if (googleCertsCache.certs && Date.now() < googleCertsCache.exp) return googleCertsCache.certs;
+  const res = await fetch("https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com");
+  if (!res.ok) throw new Error("No se pudieron obtener los certificados de Google");
+  const certs = (await res.json()) as Record<string, string>;
+  const cacheControl = res.headers.get("cache-control") || "";
+  const maxAge = cacheControl.match(/max-age=(\d+)/);
+  const ttl = maxAge ? parseInt(maxAge[1], 10) * 1000 : 3600 * 1000;
+  googleCertsCache = { certs, exp: Date.now() + ttl };
+  return certs;
+}
 async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   const authHeader = (req.headers.authorization as string) || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
-  if (!token) return false;
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
   try {
-    const decoded = await getAuth(firebaseApp).verifyIdToken(token);
-    return (decoded.email || "").toLowerCase() === ADMIN_EMAIL;
+    const header = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf-8"));
+    if (header.alg !== "RS256" || !header.kid) return false;
+    const certs = await getGoogleCerts();
+    const certPem = certs[header.kid];
+    if (!certPem) return false;
+    const publicKey = createPublicKey(certPem);
+    const signedData = Buffer.from(`${parts[0]}.${parts[1]}`);
+    const signature = Buffer.from(parts[2], "base64url");
+    if (!cryptoVerify("RSA-SHA256", signedData, publicKey, signature)) return false;
+
+    const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf-8"));
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (payload.aud !== process.env.FIREBASE_PROJECT_ID) return false;
+    if (payload.iss !== `https://securetoken.google.com/${process.env.FIREBASE_PROJECT_ID}`) return false;
+    if (!payload.exp || nowSec >= payload.exp) return false;
+    return (payload.email || "").toLowerCase() === ADMIN_EMAIL;
   } catch {
     return false;
   }
