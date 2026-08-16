@@ -4,6 +4,7 @@ import {
   AlertCircle,
   ArrowRight,
   Check,
+  Clock3,
   ChevronDown,
   ChevronRight,
   Eye,
@@ -59,6 +60,7 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
 }
 
 const LOCAL_LIFT_SNAPSHOT_KEY = "polaris-local-lift-diagnostic-snapshot";
+const LOCAL_LIFT_ATLAS_RETRY_KEY = "polaris-local-lift-atlas-retry";
 
 const WISE_PHRASES = [
   { es: "Tus clientes deciden con la información que encuentran.", en: "Customers decide with the information they find." },
@@ -233,6 +235,8 @@ export default function LocalLift() {
   const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
+  const [revealTimedOut, setRevealTimedOut] = useState(false);
+  const [autoRetryPending, setAutoRetryPending] = useState(false);
   const [emailGuardReason, setEmailGuardReason] = useState<"already_used" | "in_progress">("already_used");
   const loadingRef = useRef<HTMLDivElement | null>(null);
   const candidatesRef = useRef<HTMLDivElement | null>(null);
@@ -362,6 +366,11 @@ export default function LocalLift() {
   };
 
   const resetCandidateSearch = () => {
+    try {
+      sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+    } catch {
+      // El formulario sigue funcionando si el navegador bloquea sessionStorage.
+    }
     setCandidates([]);
     setVisibleCandidateCount(3);
     setPlace(null);
@@ -369,6 +378,7 @@ export default function LocalLift() {
     setRevealedByAtlas(false);
     setDiagnosticLeadId(null);
     setRevealNowError("");
+    setRevealTimedOut(false);
     setEmailGuardReason("already_used");
     setErrorMsg("");
     setLoadingStage("searching");
@@ -402,6 +412,27 @@ export default function LocalLift() {
     } catch {
       // El checkout sigue funcionando aunque el navegador bloquee sessionStorage.
     }
+  };
+
+  const persistAtlasRetryAndReload = () => {
+    if (!diagnosticLeadId || !place) return;
+    try {
+      sessionStorage.setItem(LOCAL_LIFT_ATLAS_RETRY_KEY, JSON.stringify({
+        businessName,
+        city,
+        contactName,
+        email,
+        mapsUrl,
+        lookupMode,
+        status: "queued",
+        place,
+        diagnosticLeadId,
+        scrollY: window.scrollY,
+      }));
+    } catch {
+      // La recarga sigue siendo posible aunque el navegador bloquee sessionStorage.
+    }
+    window.location.reload();
   };
 
   const waitForPhotos = (urls: string[], priority: "high" | "low" = "low") => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
@@ -537,6 +568,32 @@ export default function LocalLift() {
     }
   }, []);
   useEffect(() => {
+    try {
+      const rawRetry = sessionStorage.getItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      if (!rawRetry) return;
+      const retry = JSON.parse(rawRetry);
+      if (retry?.status !== "queued" || !retry.diagnosticLeadId || !retry.place) return;
+      restoredScrollYRef.current = Number.isFinite(Number(retry.scrollY)) ? Number(retry.scrollY) : null;
+      setBusinessName(retry.businessName || "");
+      setCity(retry.city || "");
+      setContactName(retry.contactName || "");
+      setEmail(retry.email || "");
+      setMapsUrl(retry.mapsUrl || "");
+      setLookupMode(retry.lookupMode === "maps" ? "maps" : "name");
+      setPlace(retry.place);
+      setCandidates([]);
+      setDiagnosticLeadId(retry.diagnosticLeadId);
+      setRevealTimedOut(false);
+      setRevealNowLoading(false);
+      setStatus("queued");
+      setAutoRetryPending(true);
+      sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+    } catch {
+      sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
     setLoadingCopyIndex(0);
     if (status !== "loading" || prefersReducedMotion) return;
     const phrases = LOADING_PHRASES[loadingStage];
@@ -603,6 +660,7 @@ const handleRevealNow = async () => {
     if (!diagnosticLeadId || revealNowLoading) return;
     setRevealNowLoading(true);
     setRevealNowError("");
+    setRevealTimedOut(false);
     const revealController = new AbortController();
     const revealTimeout = window.setTimeout(() => revealController.abort(), 45000);
     try {
@@ -613,25 +671,52 @@ const handleRevealNow = async () => {
         body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId, lang: language === "en" ? "en" : "es" }),
       });
       const data = await res.json();
+      if (res.status === 409 && data.reason === "email_already_used") {
+        try {
+          sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+        } catch {
+          // No bloqueamos el estado visible si el navegador no permite storage.
+        }
+        setRevealNowError("");
+        setRevealNowLoading(false);
+        setStatus("email_blocked");
+        return;
+      }
       if (!res.ok || !data.success) {
         setRevealNowError(data.error || (language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo."));
         setRevealNowLoading(false);
         return;
       }
+      try {
+        sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      } catch {
+        // El resultado sigue visible si el navegador bloquea sessionStorage.
+      }
+      setRevealTimedOut(false);
       setDiagnostic(data.diagnostic);
       if (data.place) setPlace(data.place);
       setRevealedByAtlas(true);
       setRevealNowLoading(false);
       setStatus("success");
     } catch {
-      setRevealNowError(revealController.signal.aborted
-        ? (language === "en" ? "The diagnosis took too long. Please try again." : "El diagnóstico tardó demasiado. Intenta de nuevo.")
-        : (language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo."));
+      if (revealController.signal.aborted) {
+        setRevealTimedOut(true);
+        setRevealNowError("");
+      } else {
+        setRevealTimedOut(false);
+        setRevealNowError(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
+      }
       setRevealNowLoading(false);
     } finally {
       window.clearTimeout(revealTimeout);
     }
   };
+
+  useEffect(() => {
+    if (!autoRetryPending || !diagnosticLeadId || status !== "queued") return;
+    setAutoRetryPending(false);
+    void handleRevealNow();
+  }, [autoRetryPending, diagnosticLeadId, status]);
 
 const REVEAL_STEPS: Array<{ es: string; en: string }> = [
     { es: "Leyendo la presencia de tu negocio en Google...", en: "Reading your business presence on Google..." },
@@ -1192,6 +1277,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               className="mt-4 max-w-xl mx-auto px-2 text-center">
               {revealNowLoading ? (
                 <div className="flex w-full flex-col items-center gap-3">
+
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="solving"
@@ -1210,6 +1296,26 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <p className="text-xs text-[var(--color-text-tertiary)]">
                     <T en="This usually takes 30–45 seconds.">Esto suele tardar entre 30 y 45 segundos.</T>
                   </p>
+                </div>
+              ) : revealTimedOut ? (
+                <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-5 text-center">
+                  <Clock3 size={25} className="text-[var(--color-primary-base)]" />
+                  <h3 className="text-base font-display font-black">
+                    <T en="This is taking longer than expected.">Esto está tardando más de lo esperado.</T>
+                  </h3>
+                  <p className="max-w-sm text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                    <T en="Your information is still saved. Reload to try generating the diagnosis again without filling out the form.">Tus datos siguen guardados. Recarga para intentar generar el diagnóstico otra vez sin llenar el formulario.</T>
+                  </p>
+                  <a
+                    href="#retry-atlas"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      persistAtlasRetryAndReload();
+                    }}
+                    className="text-xs font-black text-[var(--color-primary-base)] underline underline-offset-4 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                  >
+                    <T en="Reload and try again">Recargar</T>
+                  </a>
                 </div>
               ) : (
                 <>
