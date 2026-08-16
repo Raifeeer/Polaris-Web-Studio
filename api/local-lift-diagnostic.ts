@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlaceCandidates, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
+import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
 // maxDuration explícito) -- no el techo duro de 10s que asumía la versión
@@ -379,7 +379,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento e intenta de nuevo." });
   }
 
-  const { businessName, city, email, contactName, lang } = req.body || {};
+  const { businessName, city, email, contactName, mapsUrl, confirmedPlaceId, lang } = req.body || {};
 
   if (typeof businessName !== "string" || !businessName.trim() || businessName.length > 200) {
     return res.status(400).json({ error: "Falta el nombre del negocio." });
@@ -394,6 +394,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Falta tu nombre." });
   }
   const language: "es" | "en" = lang === "en" ? "en" : "es";
+  const normalizedMapsUrl = typeof mapsUrl === "string" ? mapsUrl.trim() : "";
+  const normalizedConfirmedPlaceId = typeof confirmedPlaceId === "string" ? confirmedPlaceId.trim() : "";
+  if (normalizedMapsUrl.length > 2000 || (normalizedMapsUrl && !isGoogleMapsUrl(normalizedMapsUrl))) {
+    return res.status(400).json({
+      reason: "maps_invalid",
+      error:
+        language === "en"
+          ? "Paste a valid HTTPS Google Maps link, such as https://maps.app.goo.gl/..."
+          : "Pega un enlace HTTPS válido de Google Maps, por ejemplo https://maps.app.goo.gl/...",
+    });
+  }
 
   try {
     // La búsqueda en Google (findPlace) se queda síncrona acá -- es rápida
@@ -406,13 +417,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // "5-10 minutos" que mostraba la pantalla era pura ficción: el
     // diagnóstico ya estaba generado y el correo ya había salido en este
     // mismo request, sin importar qué mostrara la UI.
-    const candidates = await findPlaceCandidates(businessName.trim(), city.trim());
+    const mapsPlace = normalizedMapsUrl ? await findPlaceByMapsUrl(normalizedMapsUrl) : null;
+    const candidates = normalizedMapsUrl
+      ? (mapsPlace ? [mapsPlace] : [])
+      : await findPlaceCandidates(businessName.trim(), city.trim());
     if (!candidates.length) {
       return res.status(404).json({
+        reason: normalizedMapsUrl ? "maps_not_found" : "not_found",
         error:
-          language === "en"
-            ? "We couldn't find that exact listing on Google. Double-check the business name and city, or share the Google Maps link directly with us on WhatsApp."
-            : "No pudimos encontrar esa ficha exacta en Google. Revisa el nombre del negocio y la ciudad, o compártenos el link de Google Maps directo por WhatsApp.",
+          normalizedMapsUrl
+            ? language === "en"
+              ? "We couldn't identify a real business listing from that link. Check the link and paste the direct Google Maps listing URL again."
+              : "No pudimos identificar una ficha comercial real con ese enlace. Revisa el enlace y pega de nuevo la URL directa de Google Maps."
+            : language === "en"
+              ? "We couldn't find that exact listing on Google. Double-check the business name and city, or paste the direct Google Maps link below."
+              : "No pudimos encontrar esa ficha exacta en Google. Revisa el nombre y la ciudad, o pega abajo el enlace directo de Google Maps.",
       });
     }
 
@@ -420,6 +439,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Si hay varios, el cliente elige en la UI antes de que guardemos.
     // En ambos casos devolvemos el array completo para que la UI decida.
     const place = candidates[0];
+
+    if (normalizedMapsUrl && !normalizedConfirmedPlaceId) {
+      return res.json({ success: true, requiresConfirmation: true, candidates, place });
+    }
+
+    if (normalizedConfirmedPlaceId && normalizedConfirmedPlaceId !== place.id) {
+      return res.status(409).json({
+        reason: "maps_changed",
+        error:
+          language === "en"
+            ? "The Google Maps listing changed. Review it again before continuing."
+            : "La ficha de Google Maps cambió. Revísala nuevamente antes de continuar.",
+      });
+    }
 
     const emailScheduledAt = Date.now() + (5 + Math.random() * 5) * 60 * 1000;
 
@@ -434,6 +467,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         placeData: place,
         diagnostic: null,
         lang: language,
+        submittedMapsUrl: normalizedMapsUrl || null,
         source: "free_diagnostic",
         status: "place_found_pending_diagnostic",
         paid: false,

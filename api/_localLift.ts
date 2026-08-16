@@ -61,8 +61,75 @@ function buildPlaceData(place: any, apiKey: string, fallbackName: string): Place
     editorialSummary: place.editorialSummary?.text || null,
     isOperational: place.businessStatus ? place.businessStatus === "OPERATIONAL" : true,
     mapsUri: place.googleMapsUri || null,
-    primaryType: place.primaryTypeDisplayName?.text || null,
+    primaryType: place.primaryTypeDisplayName?.text || place.primaryType || null,
   };
+}
+
+const NON_BUSINESS_PLACE_TYPES = new Set([
+  "administrative_area_level_1",
+  "administrative_area_level_2",
+  "administrative_area_level_3",
+  "administrative_area_level_4",
+  "administrative_area_level_5",
+  "country",
+  "geocode",
+  "locality",
+  "neighborhood",
+  "postal_code",
+  "route",
+  "street_address",
+  "sublocality",
+  "sublocality_level_1",
+]);
+
+function isLikelyBusinessPlace(place: any): boolean {
+  const primaryType = typeof place.primaryType === "string" ? place.primaryType.toLowerCase() : "";
+  return !NON_BUSINESS_PLACE_TYPES.has(primaryType);
+}
+
+function isCoordinateOnlyLabel(label: string): boolean {
+  return /^[+]?\d{1,3}(?:\.\d+)?\s*,\s*[+-]?\d{1,3}(?:\.\d+)?(?:\s*,\s*[+-]?\d+(?:\.\d+)?)?$/.test(label.trim());
+}
+
+function isAllowedMapsHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^www\./, "");
+  return host === "google.com" || host.endsWith(".google.com") || host === "maps.app.goo.gl" || host === "goo.gl";
+}
+
+export function isGoogleMapsUrl(rawUrl: string): boolean {
+  try {
+    const url = new URL(rawUrl);
+    return url.protocol === "https:" && isAllowedMapsHost(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function extractPlaceId(rawUrl: string): string | null {
+  const decoded = decodeURIComponent(rawUrl);
+  const url = new URL(rawUrl);
+  const queryPlaceId = [
+    url.searchParams.get("query_place_id"),
+    url.searchParams.get("place_id"),
+    url.searchParams.get("destination_place_id"),
+  ].find((candidate) => candidate?.startsWith("ChIJ"));
+  if (queryPlaceId) return queryPlaceId;
+  const embeddedPlaceId = decoded.match(/(?:!1s|place_id=|query_place_id=)(ChIJ[A-Za-z0-9_-]+)/)?.[1];
+  return embeddedPlaceId || decoded.match(/(ChIJ[A-Za-z0-9_-]{10,})/)?.[1] || null;
+}
+
+function extractPlaceLabel(rawUrl: string): string | null {
+  const url = new URL(rawUrl);
+  const segments = url.pathname.split("/").filter(Boolean);
+  const placeIndex = segments.findIndex((segment) => segment === "place");
+  if (placeIndex !== -1 && segments[placeIndex + 1]) {
+    return decodeURIComponent(segments[placeIndex + 1]).replace(/\+/g, " ").trim() || null;
+  }
+  for (const key of ["query", "destination", "q", "daddr"]) {
+    const value = url.searchParams.get(key);
+    if (value?.trim()) return value.replace(/\+/g, " ").trim();
+  }
+  return null;
 }
 
 async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
@@ -71,8 +138,8 @@ async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey,
-      "X-Goog-FieldMask":
-        "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryTypeDisplayName",
+        "X-Goog-FieldMask":
+        "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryType,places.primaryTypeDisplayName",
     },
     body: JSON.stringify({ textQuery, languageCode: "es", pageSize: 5 }),
     signal: AbortSignal.timeout(8000),
@@ -95,12 +162,49 @@ export async function findPlaceCandidates(businessName: string, city: string): P
   const places = await searchPlaces(`${businessName} ${city}`, apiKey);
   if (!places.length) return [];
 
-  return places.slice(0, 3).map((p) => buildPlaceData(p, apiKey, businessName));
+  return places.filter(isLikelyBusinessPlace).slice(0, 3).map((p) => buildPlaceData(p, apiKey, businessName));
 }
 
 export async function findPlace(businessName: string, city: string): Promise<PlaceData | null> {
   const candidates = await findPlaceCandidates(businessName, city);
   return candidates[0] ?? null;
+}
+
+const PLACE_DETAILS_FIELD_MASK = "id,displayName,formattedAddress,rating,userRatingCount,websiteUri,nationalPhoneNumber,currentOpeningHours,photos,editorialSummary,businessStatus,googleMapsUri,primaryType,primaryTypeDisplayName";
+
+async function findPlaceById(placeId: string, apiKey: string): Promise<PlaceData | null> {
+  const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
+    headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": PLACE_DETAILS_FIELD_MASK },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) return null;
+  const place = await res.json();
+  return place?.id && isLikelyBusinessPlace(place) ? buildPlaceData(place, apiKey, "Ficha de Google") : null;
+}
+
+export async function findPlaceByMapsUrl(mapsUrl: string): Promise<PlaceData | null> {
+  if (!isGoogleMapsUrl(mapsUrl)) return null;
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY no configurada");
+
+  let resolvedUrl = mapsUrl;
+  let placeId = extractPlaceId(resolvedUrl);
+  const mapsHost = new URL(mapsUrl).hostname.toLowerCase().replace(/^www\./, "");
+  if (!placeId && (mapsHost === "maps.app.goo.gl" || mapsHost === "goo.gl")) {
+    try {
+      const redirect = await fetch(mapsUrl, { redirect: "follow", signal: AbortSignal.timeout(5000) });
+      resolvedUrl = redirect.url || mapsUrl;
+      placeId = extractPlaceId(resolvedUrl);
+    } catch (error) {
+      console.warn("[_localLift] No se pudo resolver el enlace corto de Maps:", error);
+    }
+  }
+
+  if (placeId) return findPlaceById(placeId, apiKey);
+  const label = extractPlaceLabel(resolvedUrl);
+  if (!label || isCoordinateOnlyLabel(label)) return null;
+  const candidates = (await searchPlaces(label, apiKey)).filter(isLikelyBusinessPlace);
+  return candidates[0] ? buildPlaceData(candidates[0], apiKey, label) : null;
 }
 
 // Google Places API (New) solo devuelve hasta 5 reseñas reales por ficha,
