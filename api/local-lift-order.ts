@@ -25,8 +25,8 @@ const firebaseApp = getApps().length
       }),
     });
 
-const TIER_PRICE: Record<string, number> = { "48h": 29, implementado: 99 };
-const TIER_LABEL: Record<string, string> = { "48h": "Impulso", implementado: "Ascenso" };
+const TIER_PRICE: Record<string, number> = { "impulso": 29, "ascenso": 99 };
+const TIER_LABEL: Record<string, string> = { "impulso": "Impulso", "ascenso": "Ascenso" };
 
 const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
@@ -95,7 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         businessName: d.businessName || "",
         city: d.city || "",
-        tier: d.tier || "48h",
+        tier: d.tier || "impulso",
         paid: !!d.paid,
       });
     }
@@ -176,6 +176,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch (mailErr) {
           console.error("[local-lift-order] Error enviando confirmación al cliente:", mailErr);
         }
+      }
+
+      // Auto-provisionar cuenta en el portal del cliente (fire-and-forget --
+      // no bloquea la respuesta al cliente si falla).
+      try {
+        const portalUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
+        const cronSecret = process.env.CRON_SECRET;
+        if (cronSecret && data.email) {
+          await fetch(`${portalUrl}/api/portal/auto-provision-client`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-cron-secret": cronSecret },
+            body: JSON.stringify({
+              email: data.email,
+              name: data.contactName || data.businessName,
+              packageId: tier === "ascenso" ? "constelacion" : "destello",
+              projectName: data.businessName,
+              businessType: "local_lift",
+              language: "es",
+            }),
+          });
+        }
+      } catch (provErr) {
+        console.error("[local-lift-order] Error auto-provisioning portal:", provErr);
       }
 
       return res.json({ success: true, leadId: docRef.id });

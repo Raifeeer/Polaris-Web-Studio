@@ -60,7 +60,7 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
   );
 }
 
-const TIER_PRICE: Record<string, string> = { "48h": "29", implementado: "99" };
+const TIER_PRICE: Record<string, string> = { "impulso": "29", "ascenso": "99" };
 
 const WHATSAPP_NUMBER = "18299200544";
 const whatsappLink = (message: string) =>
@@ -93,7 +93,7 @@ const tiers = [
     enTime: "48 hours",
     accent: "indigo",
     featured: true,
-    tierKey: "48h",
+    tierKey: "impulso",
     description: "La presencia local lista para que tus clientes entiendan, confíen y contacten.",
     enDescription: "A local presence ready to help customers understand, trust, and contact you.",
     items: [
@@ -112,7 +112,7 @@ const tiers = [
     time: "3–5 días",
     enTime: "3–5 days",
     accent: "violet",
-    tierKey: "implementado",
+    tierKey: "ascenso",
     description: "Todo el sistema preparado y aplicado contigo, sin pedirte contraseñas.",
     enDescription: "The complete system prepared and applied with you, without requesting passwords.",
     items: [
@@ -141,6 +141,8 @@ interface DiagnosticResult {
 }
 interface PlaceResult {
   name: string;
+  address: string | null;
+  primaryType: string | null;
   rating: number | null;
   reviewCount: number;
   mapsUri: string | null;
@@ -152,7 +154,7 @@ export default function LocalLift() {
   const [city, setCity] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "queued" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
@@ -186,7 +188,7 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       }
       setPlace(data.place);
       setDiagnosticLeadId(data.leadId || null);
-      setStatus("queued");
+      setStatus("confirm");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
       setStatus("error");
@@ -499,7 +501,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Tell us your business name and city — we'll pull your real Google listing and email your priority issues in under a minute.">Dinos el nombre de tu negocio y ciudad — traemos tu ficha real de Google y te enviamos por correo tus problemas prioritarios en menos de un minuto.</T></p>
           </div>
 
-          {status !== "success" && status !== "queued" && (
+          {status !== "success" && status !== "queued" && status !== "confirm" && (
             <form onSubmit={handleDiagnosticSubmit} className="mt-8 max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="text"
@@ -570,6 +572,42 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             </form>
           )}
 
+          {status === "confirm" && place && (
+            <div className="mt-8 max-w-xl mx-auto rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-6 text-center">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)] mb-3">
+                <T en="Is this your business?">¿Es tu negocio?</T>
+              </p>
+              <p className="text-xl font-display font-black tracking-tight">{place.name}</p>
+              {place.address && <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{place.address}</p>}
+              {place.primaryType && <p className="mt-0.5 text-xs text-[var(--color-text-tertiary)] capitalize">{place.primaryType.replace(/_/g, " ")}</p>}
+              {place.rating && (
+                <p className="mt-1 text-xs text-amber-400 font-bold">★ {place.rating}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}</p>
+              )}
+              {place.mapsUri && (
+                <a href={place.mapsUri} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[10px] underline text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]">
+                  <T en="View on Google Maps">Ver en Google Maps</T>
+                </a>
+              )}
+              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+                <button
+                  type="button"
+                  onClick={() => setStatus("queued")}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-3 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                >
+                  <Check size={16} />
+                  <T en="Yes, that's my business">Sí, es mi negocio</T>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPlace(null); setDiagnosticLeadId(null); setStatus("idle"); }}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-6 py-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/50 transition-colors"
+                >
+                  <T en="No, search again">No, buscar de nuevo</T>
+                </button>
+              </div>
+            </div>
+          )}
+
           {status === "queued" && (
             <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
               {revealNowLoading ? (
@@ -629,34 +667,54 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               <p className="mt-2 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]">{diagnostic.summary}</p>
 
               <div className="mt-6 space-y-3">
-                {diagnostic.problems.map((p, i) => (
+                {diagnostic.problems.slice(0, 2).map((p, i) => (
                   <div key={i} className="rounded-xl border border-[var(--color-border-subtle)] p-4">
                     <p className="font-black text-sm">{i + 1}. {p.title}</p>
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{p.why}</p>
                     <p className="mt-2 text-xs font-bold text-[var(--color-primary-base)]">→ {p.fix}</p>
                   </div>
                 ))}
+                {diagnostic.problems.length > 2 && (
+                  <div className="rounded-xl border border-dashed border-[var(--color-border-subtle)] px-4 py-3 text-center">
+                    <p className="text-xs text-[var(--color-text-tertiary)]">
+                      <T en={`+ ${diagnostic.problems.length - 2} more problems found — unlock the full diagnosis`}>{`+ ${diagnostic.problems.length - 2} problemas más encontrados — desbloquea el diagnóstico completo`}</T>
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 rounded-xl bg-[var(--color-surface-elevated)] p-4">
-                <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-3"><T en="7-day plan">Plan de 7 días</T></p>
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-3"><T en="7-day action plan (preview)">Plan de acción de 7 días (vista previa)</T></p>
                 <div className="space-y-1.5">
-                  {diagnostic.sevenDayPlan.map((d) => (
+                  {diagnostic.sevenDayPlan.slice(0, 3).map((d) => (
                     <p key={d.day} className="text-xs text-[var(--color-text-secondary)]"><span className="font-bold text-[var(--color-text-primary)]">{language === "en" ? "Day" : "Día"} {d.day}:</span> {d.action}</p>
                   ))}
                 </div>
+                {diagnostic.sevenDayPlan.length > 3 && (
+                  <p className="mt-2 text-xs text-[var(--color-text-tertiary)] text-center">
+                    <T en={`+ ${diagnostic.sevenDayPlan.length - 3} more days — unlock the full plan`}>{`+ ${diagnostic.sevenDayPlan.length - 3} días más — desbloquea el plan completo`}</T>
+                  </p>
+                )}
               </div>
 
-              <a
-                href={whatsappLink(`Hola Polaris, recibí mi diagnóstico de Local Lift para ${businessName} y quiero que implementen los cambios.`)}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 w-full"
-              >
-                <MessageCircle size={18} />
-                <T en="Have Polaris implement this">Que Polaris implemente esto</T>
-                <ArrowRight size={17} />
-              </a>
+              {diagnosticLeadId && (
+                <div className="mt-6 space-y-3">
+                  <Link
+                    to={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 w-full"
+                  >
+                    <Sparkles size={18} />
+                    <T en="Get Impulso ($29) — full diagnosis + quick wins">Obtener Impulso ($29) — diagnóstico completo + mejoras rápidas</T>
+                    <ArrowRight size={17} />
+                  </Link>
+                  <Link
+                    to={`/local-lift/pagar/${diagnosticLeadId}?tier=ascenso`}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"
+                  >
+                    <T en="Or go bigger with Ascenso ($99) — full implementation">O escala más con Ascenso ($99) — implementación completa</T>
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 
