@@ -58,12 +58,34 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
 
 const WISE_PHRASES = [
   { es: "Tus clientes deciden con la información que encuentran.", en: "Customers decide with the information they find." },
-  { es: "Una ficha clara responde preguntas antes del primer mensaje.", en: "A clear listing answers questions before the first message." },
+  { es: "Una presencia clara responde preguntas antes del primer mensaje.", en: "A clear presence answers questions before the first message." },
   { es: "Las fotos reales ayudan a mostrar qué puede esperar un cliente.", en: "Real photos help show customers what to expect." },
   { es: "Responder reseñas mantiene abierta la conversación.", en: "Replying to reviews keeps the conversation open." },
   { es: "Horarios y servicios claros evitan pasos innecesarios.", en: "Clear hours and services remove unnecessary steps." },
-  { es: "Tu ficha debe llevar a las personas al siguiente paso.", en: "Your listing should lead people to the next step." },
+  { es: "Tu presencia debe llevar a las personas al siguiente paso.", en: "Your presence should lead people to the next step." },
 ];
+
+const LOADING_PHRASES = {
+  searching: [
+    { es: "Buscando en Google...", en: "Searching Google..." },
+    { es: "Consultando Google Maps...", en: "Checking Google Maps..." },
+    { es: "Comparando el nombre y la ciudad...", en: "Matching the business name and city..." },
+    { es: "Verificando que el lugar sea correcto...", en: "Verifying the place..." },
+  ],
+  photos: [
+    { es: "Recopilando datos del lugar...", en: "Collecting place details..." },
+    { es: "Compilando fotos...", en: "Compiling photos..." },
+    { es: "Preparando las imágenes para comparar...", en: "Preparing images for comparison..." },
+    { es: "Revisando reseñas y calificación disponibles...", en: "Reviewing available reviews and rating..." },
+    { es: "Comprobando horarios y servicios...", en: "Checking hours and services..." },
+  ],
+  verifying: [
+    { es: "Verificando los datos del negocio...", en: "Verifying the business details..." },
+    { es: "Confirmando dirección y categoría...", en: "Confirming the address and category..." },
+    { es: "Revisando que las primeras opciones estén completas...", en: "Checking that the first options are complete..." },
+    { es: "Ordenando las opciones para mostrártelas...", en: "Ordering the options to show you..." },
+  ],
+} as const;
 
 function WisePhrase({ lang }: { lang: string }) {
   const [idx, setIdx] = useState(() => Math.floor(Math.random() * WISE_PHRASES.length));
@@ -197,6 +219,7 @@ export default function LocalLift() {
   const [confirmingPlaceId, setConfirmingPlaceId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "error">("idle");
   const [loadingStage, setLoadingStage] = useState<"searching" | "photos" | "verifying">("searching");
+  const [loadingCopyIndex, setLoadingCopyIndex] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
@@ -304,23 +327,24 @@ export default function LocalLift() {
     }, 180);
   };
 
-  const waitForPhotos = (urls: string[]) => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
+  const waitForPhotos = (urls: string[], priority: "high" | "low" = "low") => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
     const image = new Image();
     let settled = false;
     const finish = () => {
       if (settled) return;
       settled = true;
-      window.clearTimeout(safetyTimer);
-      resolve();
+      const decodePromise = image.complete && typeof image.decode === "function" ? image.decode().catch(() => undefined) : Promise.resolve();
+      void decodePromise.then(() => resolve());
     };
-    const safetyTimer = window.setTimeout(finish, 12000);
+    image.decoding = "async";
+    image.setAttribute("fetchpriority", priority);
     image.onload = finish;
     image.onerror = finish;
     image.src = url;
     if (image.complete) finish();
   })));
 
-  // Este submit valida la ficha real en Google y prepara sus fotos antes de
+  // Este submit valida el negocio real en Google y prepara sus fotos antes de
   // abrir la confirmación. La generación del diagnóstico con IA corre después,
   // cuando el cliente pide "Atlas ahora" en handleRevealNow.
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
@@ -360,20 +384,20 @@ export default function LocalLift() {
       // cualquier candidato incompleto antes de preparar las fotos visibles.
       const verifiedCandidates = cands.filter((candidate) => Boolean(candidate.id && candidate.name && candidate.address));
       if (!verifiedCandidates.length) {
-        setErrorMsg(language === "en" ? "We found no complete business listing to confirm." : "No encontramos una ficha comercial completa para confirmar.");
+        setErrorMsg(language === "en" ? "We found no complete business result to confirm." : "No encontramos un negocio completo para confirmar.");
         setStatus("error");
         return;
       }
 
-      // Montamos todas las fichas mientras el loader sigue visible. Las fotos de
-      // las primeras tres sí bloquean la apertura; las demás empiezan en paralelo.
+      // Preparamos todas las opciones mientras el loader sigue visible. Las fotos de
+      // las primeras tres bloquean la apertura; las demás empiezan en paralelo.
       setCandidates(verifiedCandidates);
       setVisibleCandidateCount(3);
       const firstThreePhotoUrls = [...new Set(verifiedCandidates.slice(0, 3).flatMap((candidate) => candidate.photoUrls || []))];
       const remainingPhotoUrls = [...new Set(verifiedCandidates.slice(3).flatMap((candidate) => candidate.photoUrls || []))];
       setLoadingStage("photos");
-      void waitForPhotos(remainingPhotoUrls);
-      await waitForPhotos(firstThreePhotoUrls);
+      void waitForPhotos(remainingPhotoUrls, "low");
+      await waitForPhotos(firstThreePhotoUrls, "high");
       await new Promise<void>((resolve) => setTimeout(resolve, 300));
 
       // La primera tanda ya tiene todos sus recursos fotográficos resueltos.
@@ -396,11 +420,18 @@ export default function LocalLift() {
     }
   };
 
-  const loadingCopy = loadingStage === "searching"
-    ? { es: "Buscando tu ficha...", en: "Finding your listing..." }
-    : loadingStage === "photos"
-      ? { es: "Preparando las primeras fichas...", en: "Preparing the first listings..." }
-      : { es: "Verificando los datos...", en: "Checking the details..." };
+  useEffect(() => {
+    setLoadingCopyIndex(0);
+    if (status !== "loading" || prefersReducedMotion) return;
+    const phrases = LOADING_PHRASES[loadingStage];
+    const interval = window.setInterval(() => {
+      setLoadingCopyIndex((current) => (current + 1) % phrases.length);
+    }, 1400);
+    return () => window.clearInterval(interval);
+  }, [loadingStage, prefersReducedMotion, status]);
+
+  const loadingPhrases = LOADING_PHRASES[loadingStage];
+  const loadingCopy = loadingPhrases[loadingCopyIndex % loadingPhrases.length];
 
   const handleConfirmCandidate = async (candidate: PlaceResult) => {
     setPlace(candidate);
@@ -471,7 +502,7 @@ const handleRevealNow = async () => {
   };
 
 const REVEAL_STEPS: Array<{ es: string; en: string }> = [
-    { es: "Leyendo tu ficha de Google...", en: "Reading your Google listing..." },
+    { es: "Leyendo la presencia de tu negocio en Google...", en: "Reading your business presence on Google..." },
     { es: "Analizando reseñas y calificación...", en: "Analyzing reviews and rating..." },
     { es: "Revisando fotos y descripción...", en: "Checking photos and description..." },
     { es: "Detectando problemas prioritarios...", en: "Detecting priority issues..." },
@@ -957,16 +988,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <span className="opacity-70">({candidates.length - visibleCandidateCount})</span>
                 </motion.button>
               )}
-              <div className="mt-5 border-t border-[var(--color-border-subtle)]/70 pt-5">
+              <div className="mt-3 border-t border-[var(--color-border-subtle)]/70 pt-3">
                 <motion.button
                   type="button"
                   onClick={resetCandidateSearch}
                   whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                  className="mx-auto flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[var(--color-primary-base)]/50 bg-[var(--color-primary-base)]/10 px-4 py-3 text-sm font-black text-[var(--color-primary-base)] shadow-sm transition-colors hover:bg-[var(--color-primary-base)]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                  className="mx-auto inline-flex max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--color-border-subtle)] px-3 py-2 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                 >
-                  <Search size={15} />
-                  <T en="None of these — search again">No es ninguna de estas · Buscar otra opción</T>
+                  <Search size={14} />
+                  <T en="Search another business">Buscar otro negocio</T>
                 </motion.button>
               </div>
             </motion.div>
