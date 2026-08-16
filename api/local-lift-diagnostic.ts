@@ -207,6 +207,8 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
 <style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
@@ -216,23 +218,27 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
 <div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
-  <div style="padding:24px 40px 16px 40px;text-align:center;background:#f2ffff;border-bottom:1px solid #c8f4f0;border-radius:14px 14px 0 0;">
-    <img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:78%;height:auto;display:block;margin:0 auto;">
+  <div style="padding:32px 40px 8px 40px;text-align:center;">
+    <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin:0 auto;"><tr>
+      <td bgcolor="#ffffff" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:16px;padding:16px 22px;">
+        <img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:100%;height:auto;display:block;">
+      </td>
+    </tr></table>
   </div>
 
-  <div style="padding:28px 40px 8px 40px;text-align:center;">
+  <div style="padding:20px 40px 8px 40px;text-align:center;">
     <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:${ACCENT};margin-bottom:12px;">${copy.eyebrow}</div>
     <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:30px;line-height:1.2;color:#0f172a;">${copy.title}</div>
   </div>
 
   <div style="padding:14px 40px 0 40px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #bdeee9;border-radius:12px;background:#f2ffff;overflow:hidden;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f2ffff" style="border:1px solid #bdeee9;border-radius:12px;background:#f2ffff;overflow:hidden;">
       <tr><td style="padding:20px 22px;">
         <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:${ACCENT};margin-bottom:10px;">&#10003;&nbsp; ${lang === "en" ? "Diagnosis ready" : "Diagnóstico listo"}</div>
         <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:22px;line-height:1.2;color:${DEEP};">${place.name}</div>
-        ${place.address ? `<div style="font-size:13px;line-height:1.5;color:#475569;margin-top:10px;"><span style="color:${ACCENT};font-weight:700;">&#9679;</span>&nbsp; ${place.address}</div>` : ""}
-        ${place.primaryType ? `<div style="font-size:13px;line-height:1.5;color:#475569;margin-top:5px;"><span style="color:${ACCENT};font-weight:700;">&#9632;</span>&nbsp; ${place.primaryType.replace(/_/g, " ")}</div>` : ""}
-        <div style="font-size:13px;line-height:1.5;color:#475569;margin-top:8px;"><span style="color:#f59e0b;font-size:16px;">&#9733;</span> ${place.rating != null ? `${place.rating}/5` : "—"}${place.reviewCount > 0 ? `&nbsp;&nbsp; <span style="color:${ACCENT};font-weight:700;">&#9679;</span>&nbsp; ${place.reviewCount} ${lang === "en" ? "reviews" : "reseñas"}` : ""}</div>
+        ${place.address ? `<div style="font-size:13px;line-height:1.5;color:#475569;margin-top:10px;"><span style="font-weight:700;color:${DEEP};">${lang === "en" ? "Location:" : "Ubicación:"}</span>&nbsp; ${place.address}</div>` : ""}
+        ${place.primaryType ? `<div style="font-size:13px;line-height:1.5;color:#475569;margin-top:5px;"><span style="font-weight:700;color:${DEEP};">${lang === "en" ? "Type:" : "Tipo:"}</span>&nbsp; ${place.primaryType.replace(/_/g, " ")}</div>` : ""}
+        <div style="font-size:13px;line-height:1.5;color:#475569;margin-top:8px;"><span style="font-weight:700;color:${DEEP};">${lang === "en" ? "Rating:" : "Calificación:"}</span>&nbsp; ${place.rating != null ? `${place.rating}/5` : "—"}${place.reviewCount > 0 ? ` (${place.reviewCount} ${lang === "en" ? "reviews" : "reseñas"})` : ""}</div>
       </td></tr>
     </table>
   </div>
@@ -277,12 +283,6 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
   </div>
 
   <div style="padding:24px 40px 40px 40px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;">
-      <tr>
-        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Website" : "Sitio web"}</a></td>
-        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Contact" : "Contacto"}</a></td>
-      </tr>
-    </table>
     ${buildEmailFooter(lang === "en" ? "en" : "es", copy.footerLine2)}
   </div>
 
