@@ -1137,14 +1137,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       </T>
                     </p>
                     <motion.a
-                      href="#diagnostico"
-                      onClick={scrollToSection("diagnostico")}
+                      href={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
                       whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5 w-full"
                     >
                       <MessageCircle size={16} />
-                      <T en="Talk about Impulso">Hablar sobre Impulso</T>
+                      <T en="I want Impulso">Quiero Impulso</T>
                       <ArrowRight size={15} />
                     </motion.a>
                   </div>
@@ -1155,14 +1154,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       </T>
                     </p>
                     <motion.a
-                      href="#diagnostico"
-                      onClick={scrollToSection("diagnostico")}
+                      href={`/local-lift/pagar/${diagnosticLeadId}?tier=ascenso`}
                       whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"
                     >
                       <TrendingUp size={16} />
-                      <T en="Talk about Ascenso">Hablar sobre Ascenso</T>
+                      <T en="I want Ascenso">Quiero Ascenso</T>
                     </motion.a>
                   </div>
                 </div>
