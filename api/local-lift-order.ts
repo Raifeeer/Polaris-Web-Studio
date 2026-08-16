@@ -91,12 +91,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
       if (!doc.exists) return res.status(404).json({ error: "No encontramos ese enlace de pago." });
       const d = doc.data()!;
+      const place = d.place || null;
       return res.json({
         success: true,
         businessName: d.businessName || "",
         city: d.city || "",
         tier: d.tier || "impulso",
         paid: !!d.paid,
+        address: place?.address || null,
+        rating: place?.rating ?? null,
+        reviewCount: place?.reviewCount ?? null,
+        primaryType: place?.primaryType || null,
+        mapsUri: place?.mapsUri || null,
       });
     }
 

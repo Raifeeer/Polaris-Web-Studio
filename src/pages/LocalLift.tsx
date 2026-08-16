@@ -14,8 +14,8 @@ import {
   MessageCircle,
   Search,
   ShieldCheck,
-  Sparkles,
   Star,
+  TrendingUp,
   Zap,
   Zap as ZapFast,
 } from "lucide-react";
@@ -56,6 +56,38 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
           {text}
         </motion.span>
       </motion.span>
+    </AnimatePresence>
+  );
+}
+
+const WISE_PHRASES = [
+  { es: "El 76% de las personas buscan en Google antes de visitar un negocio local.", en: "76% of people search Google before visiting a local business." },
+  { es: "Un perfil de Google optimizado recibe el doble de llamadas.", en: "An optimized Google profile gets twice as many calls." },
+  { es: "Las reseñas son el boca a boca del siglo XXI.", en: "Reviews are the word-of-mouth of the 21st century." },
+  { es: "El 88% confía en las reseñas tanto como en una recomendación personal.", en: "88% trust reviews as much as personal recommendations." },
+  { es: "Responder reseñas aumenta la confianza de nuevos clientes potenciales.", en: "Replying to reviews builds trust with potential new customers." },
+  { es: "Un negocio sin fotos reales pierde clientes antes de que entren.", en: "A business without real photos loses customers before they even arrive." },
+];
+
+function WisePhrase({ lang }: { lang: string }) {
+  const [idx, setIdx] = useState(() => Math.floor(Math.random() * WISE_PHRASES.length));
+  useEffect(() => {
+    const t = setInterval(() => setIdx((i) => (i + 1) % WISE_PHRASES.length), 7000);
+    return () => clearInterval(t);
+  }, []);
+  const phrase = WISE_PHRASES[idx];
+  return (
+    <AnimatePresence mode="wait">
+      <motion.p
+        key={idx}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.6 }}
+        className="mt-6 text-center text-xs text-[var(--color-text-tertiary)] italic"
+      >
+        {lang === "en" ? phrase.en : phrase.es}
+      </motion.p>
     </AnimatePresence>
   );
 }
@@ -222,11 +254,11 @@ const handleRevealNow = async () => {
   };
 
 const REVEAL_STEPS: Array<{ es: string; en: string }> = [
-    { es: "Analizando los datos reales de tu ficha de Google...", en: "Analyzing your real Google listing data..." },
-    { es: "Leyendo tus reseñas y calificación...", en: "Reading your reviews and rating..." },
-    { es: "Revisando fotos, horario y descripción...", en: "Checking photos, hours, and description..." },
-    { es: "Detectando tus problemas prioritarios...", en: "Detecting your priority issues..." },
-    { es: "Redactando tu plan de acción de 7 días...", en: "Drafting your 7-day action plan..." },
+    { es: "Leyendo tu ficha de Google...", en: "Reading your Google listing..." },
+    { es: "Analizando reseñas y calificación...", en: "Analyzing reviews and rating..." },
+    { es: "Revisando fotos y descripción...", en: "Checking photos and description..." },
+    { es: "Detectando problemas prioritarios...", en: "Detecting priority issues..." },
+    { es: "Redactando tu plan de 7 días...", en: "Drafting your 7-day plan..." },
     { es: "Puliendo los últimos detalles...", en: "Polishing the final details..." },
   ];
   const [revealStepIndex, setRevealStepIndex] = useState(0);
@@ -290,7 +322,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
-              <Sparkles size={13} />
+              <MapPin size={13} />
               <T en="Local visibility sprint · Dominican Republic">Sprint de visibilidad local · República Dominicana</T>
             </div>
             <h1 className="mt-6 text-4xl md:text-7xl font-display font-black tracking-[-0.05em] leading-[0.98]">
@@ -308,7 +340,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 href="#diagnostico"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
               >
-                <Sparkles size={18} />
+                <Search size={18} />
                 <T en="Get my audit now">Quiero mi diagnóstico ahora</T>
                 <ArrowRight size={17} />
               </a>
@@ -564,7 +596,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   type="submit"
                   className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
                 >
-                  <Sparkles size={18} />
+                  <Search size={18} />
                   <T en="Generate my diagnosis">Generar mi diagnóstico</T>
                   <ArrowRight size={17} />
                 </button>
@@ -609,9 +641,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           )}
 
           {status === "queued" && (
-            <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
+            <div className="mt-6 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-6">
               {revealNowLoading ? (
-                <div className="flex flex-col items-center gap-3 py-4">
+                <div className="flex flex-col items-center gap-2 py-2">
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="solving"
@@ -620,11 +652,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
                     />
                   </div>
-                  <ShimmerPhrase
-                    es={REVEAL_STEPS[revealStepIndex].es}
-                    en={REVEAL_STEPS[revealStepIndex].en}
-                    lang={language}
-                  />
+                  <div className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full px-2">
+                    <ShimmerPhrase
+                      es={REVEAL_STEPS[revealStepIndex].es}
+                      en={REVEAL_STEPS[revealStepIndex].en}
+                      lang={language}
+                    />
+                  </div>
                   <p className="text-xs text-[var(--color-text-tertiary)]">
                     <T en="This usually takes 30–45 seconds.">Esto suele tardar entre 30 y 45 segundos.</T>
                   </p>
@@ -652,26 +686,33 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
           {status === "success" && diagnostic && (
             <div className="mt-8 max-w-2xl mx-auto">
-              <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
-                <Check size={15} />
-                <T en={`Sent to ${email}`}>{`Enviado a ${email}`}</T>
-                {place && <span className="text-[var(--color-text-tertiary)] font-semibold normal-case">· {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}</span>}
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
+                  <Check size={15} />
+                  <T en={`Sent to ${email}`}>{`Enviado a ${email}`}</T>
+                </div>
+                {place && (
+                  <p className="text-xs text-[var(--color-text-tertiary)] ml-5">
+                    {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}
+                    {place.address ? ` · ${place.address}` : ""}
+                  </p>
+                )}
               </div>
               {revealedByAtlas && (
                 <div className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">
-                  <Sparkles size={11} />
+                  <Zap size={11} />
                   <T en="Generated instantly by Atlas AI">Generado al instante por Atlas IA</T>
                 </div>
               )}
-              <p className="mt-4 text-sm italic leading-relaxed text-[var(--color-text-tertiary)]">{diagnostic.businessIntro}</p>
-              <p className="mt-2 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]">{diagnostic.summary}</p>
+              <p className="mt-4 text-sm italic leading-relaxed text-[var(--color-text-tertiary)] break-words overflow-hidden">{diagnostic.businessIntro}</p>
+              <p className="mt-2 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)] break-words overflow-hidden">{diagnostic.summary}</p>
 
               <div className="mt-6 space-y-3">
                 {diagnostic.problems.slice(0, 2).map((p, i) => (
-                  <div key={i} className="rounded-xl border border-[var(--color-border-subtle)] p-4">
-                    <p className="font-black text-sm">{i + 1}. {p.title}</p>
-                    <p className="mt-1 text-xs text-[var(--color-text-secondary)]">{p.why}</p>
-                    <p className="mt-2 text-xs font-bold text-[var(--color-primary-base)]">→ {p.fix}</p>
+                  <div key={i} className="rounded-xl border border-[var(--color-border-subtle)] p-4 overflow-hidden">
+                    <p className="font-black text-sm break-words">{i + 1}. {p.title}</p>
+                    <p className="mt-1 text-xs text-[var(--color-text-secondary)] break-words">{p.why}</p>
+                    <p className="mt-2 text-xs font-bold text-[var(--color-primary-base)] break-words">→ {p.fix}</p>
                   </div>
                 ))}
                 {diagnostic.problems.length > 2 && (
@@ -699,26 +740,41 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
               {diagnosticLeadId && (
                 <div className="mt-6 space-y-3">
-                  <Link
-                    to={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 w-full"
-                  >
-                    <Sparkles size={18} />
-                    <T en="Get Impulso ($29) — full diagnosis + quick wins">Obtener Impulso ($29) — diagnóstico completo + mejoras rápidas</T>
-                    <ArrowRight size={17} />
-                  </Link>
-                  <Link
-                    to={`/local-lift/pagar/${diagnosticLeadId}?tier=ascenso`}
-                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"
-                  >
-                    <T en="Or go bigger with Ascenso ($99) — full implementation">O escala más con Ascenso ($99) — implementación completa</T>
-                  </Link>
+                  <div>
+                    <p className="text-xs text-[var(--color-text-tertiary)] mb-2 leading-relaxed">
+                      <T en="Impulso: complete audit, 10 posts, 15 review replies, and 10 WhatsApp follow-up messages — delivered in ~2 hours.">
+                        Impulso: auditoría completa, 10 publicaciones, 15 respuestas a reseñas y 10 mensajes de seguimiento — entrega en ~2 horas.
+                      </T>
+                    </p>
+                    <Link
+                      to={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 w-full"
+                    >
+                      <Zap size={16} />
+                      <T en="Continue with Impulso · $29">Continuar con Impulso · $29</T>
+                      <ArrowRight size={15} />
+                    </Link>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[var(--color-text-tertiary)] mb-2 leading-relaxed">
+                      <T en="Ascenso: everything in Impulso + assisted implementation of all changes, without you needing to touch anything.">
+                        Ascenso: todo lo de Impulso + implementación asistida de todos los cambios, sin que tengas que tocar nada.
+                      </T>
+                    </p>
+                    <Link
+                      to={`/local-lift/pagar/${diagnosticLeadId}?tier=ascenso`}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"
+                    >
+                      <TrendingUp size={16} />
+                      <T en="Continue with Ascenso · $99">Continuar con Ascenso · $99</T>
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
           )}
 
-          <p className="mt-6 text-center text-xs text-[var(--color-text-tertiary)]"><T en="Prefer WhatsApp? Write us directly.">¿Prefieres WhatsApp? Escríbenos directo.</T> <a href={whatsappLink(defaultMessage)} target="_blank" rel="noreferrer" className="underline hover:text-[var(--color-primary-base)]"><T en="Chat now">Chatear ahora</T></a></p>
+          <WisePhrase lang={language} />
         </section>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--color-text-tertiary)]">

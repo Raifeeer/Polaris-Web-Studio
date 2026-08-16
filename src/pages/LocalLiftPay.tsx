@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, Check, Loader2, Mail, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertCircle, Check, Loader2, Mail, MapPin, ShieldCheck, Star, SwitchCamera, Zap } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
@@ -19,7 +19,7 @@ export default function LocalLiftPay() {
   const { language } = useLanguage();
   const [status, setStatus] = useState<"loading" | "ready" | "paid" | "notfound">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean } | null>(null);
+  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null } | null>(null);
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
 
@@ -41,7 +41,7 @@ export default function LocalLiftPay() {
           setStatus("notfound");
           return;
         }
-        setLead(data);
+        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null });
         // URL ?tier param overrides Firestore tier (so CTAs from the diagnosis page work correctly)
         const urlTier = searchParams.get("tier");
         setSelectedTier(urlTier && TIER_PRICE[urlTier] ? urlTier : (data.tier || "impulso"));
@@ -102,17 +102,75 @@ export default function LocalLiftPay() {
         {status === "ready" && lead && (
           <div className="rounded-[var(--radius-bento)] glass-panel p-8 border border-[var(--color-primary-base)]/20">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]">
-              <T en={`Local Lift · ${price.enLabel}`}>{`Local Lift · ${price.label}`}</T>
+              <T en="Local Lift">Local Lift</T>
             </p>
             <h1 className="mt-2 text-2xl md:text-3xl font-display font-black tracking-[-0.03em]">{lead.businessName}</h1>
-            <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{lead.city}</p>
 
-            <div className="mt-6 flex items-end gap-2">
+            {/* Ubicación real desde Google Maps (place.address), no la ciudad que el cliente escribió */}
+            <div className="mt-1 flex flex-col gap-0.5">
+              {lead.address ? (
+                <p className="flex items-start gap-1.5 text-sm text-[var(--color-text-tertiary)]">
+                  <MapPin size={14} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]/60" />
+                  <span>{lead.address}</span>
+                </p>
+              ) : lead.city ? (
+                <p className="text-sm text-[var(--color-text-tertiary)]">{lead.city}</p>
+              ) : null}
+              {lead.rating != null && (
+                <p className="flex items-center gap-1 text-xs text-[var(--color-text-tertiary)]">
+                  <Star size={12} className="text-amber-400 fill-amber-400" />
+                  <span className="font-bold text-[var(--color-text-secondary)]">{lead.rating.toFixed(1)}</span>
+                  {lead.reviewCount != null && <span>· {lead.reviewCount} <T en="reviews">reseñas</T></span>}
+                  {lead.primaryType && <span>· {lead.primaryType}</span>}
+                </p>
+              )}
+            </div>
+
+            {/* Detalle de qué incluye el tier elegido */}
+            <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4">
+              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
+                <T en={`What's included in ${price.enLabel}`}>{`Qué incluye ${price.label}`}</T>
+              </p>
+              {tier === "impulso" ? (
+                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
+                  {[
+                    ["Auditoría completa de tu perfil local", "Complete audit of your local profile"],
+                    ["Descripción, servicios y llamadas a la acción optimizados", "Optimized description, services, and CTAs"],
+                    ["10 publicaciones listas para aplicar", "10 posts ready to apply"],
+                    ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
+                    ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
+                    ["Entrega por correo en ~2 horas", "Delivered by email in ~2 hours"],
+                  ].map(([es, en]) => (
+                    <li key={es} className="flex items-start gap-2">
+                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
+                      <T en={en}>{es}</T>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
+                  {[
+                    ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
+                    ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
+                    ["Una ronda de revisión incluida", "One revision round included"],
+                    ["Entrega por correo en 3–5 días hábiles", "Delivered by email in 3–5 business days"],
+                  ].map(([es, en]) => (
+                    <li key={es} className="flex items-start gap-2">
+                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
+                      <T en={en}>{es}</T>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="mt-5 flex items-end gap-2">
               <span className="text-4xl font-display font-black text-[var(--color-primary-base)]">${price.amount}</span>
               <span className="pb-1.5 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-5">
               <PayPalCheckoutProvider>
                 <PayPalButtons
                   style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 48 }}
@@ -167,7 +225,7 @@ export default function LocalLiftPay() {
                 onClick={() => setSelectedTier(otherTier)}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-4 py-2 text-xs font-bold text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/14 transition-colors"
               >
-                <Sparkles size={13} />
+                <SwitchCamera size={13} />
                 {otherTier === "impulso"
                   ? <T en="Switch to Impulso ($29) — quick wins">Cambiar a Impulso ($29) — mejoras rápidas</T>
                   : <T en="Switch to Ascenso ($99) — full implementation">Cambiar a Ascenso ($99) — implementación completa</T>
