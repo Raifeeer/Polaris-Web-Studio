@@ -98,22 +98,31 @@ const html = `<!doctype html>
     <style>
       html { background-color: #020617; }
       html.light { background-color: #f8fafc; }
-      body { margin: 0; background-color: #020617; color: #e2e8f0; font-family: system-ui, sans-serif; }
+      body { margin: 0; background-color: #020617; color: #e2e8f0; font-family: 'Satoshi', system-ui, sans-serif; }
       html.light body { background-color: #f8fafc; color: #0f172a; }
+      .ll-snap h1 { font-family: 'Cabinet Grotesk', system-ui, sans-serif; }
+      .ll-snap li::marker { color: #16C8C1; }
+      .ll-snap .ll-snap-p1 { color: #cbd5e1; }
+      .ll-snap .ll-snap-ul { color: #e2e8f0; }
+      .ll-snap .ll-snap-p2 { color: #94a3b8; }
+      html.light .ll-snap .ll-snap-p1 { color: #374151; }
+      html.light .ll-snap .ll-snap-ul { color: #1f2937; }
+      html.light .ll-snap .ll-snap-p2 { color: #6b7280; }
     </style>
     ${assetTags}
   </head>
   <body>
     <div id="root">
-      <main style="max-width: 720px; margin: 0 auto; padding: 48px 20px;">
-        <h1>Polaris Local Lift</h1>
-        <p>Tus clientes ya te están buscando. Polaris Local Lift organiza tu presencia en Google y WhatsApp en 48 horas para que tus clientes entiendan qué ofreces, dónde estás y cómo contactarte.</p>
-        <ul>
-          <li>Diagnóstico Express (24 horas) -- revisión de tu ficha de Google/Maps y WhatsApp, cinco problemas prioritarios, y un plan de acción de 7 días.</li>
-          <li>Impulso -- auditoría completa, descripción y servicios reescritos, 10 publicaciones listas, respuestas personalizadas a tus reseñas reales, y 10 mensajes de WhatsApp de seguimiento.</li>
-          <li>Ascenso -- todo lo de Impulso, más implementación asistida de los cambios que autorices.</li>
+      <main class="ll-snap" style="max-width: 760px; margin: 0 auto; padding: 56px 24px;">
+        <img src="/brand/local-lift-lockup-horizontal-dark.svg" alt="Local Lift by Polaris Web Studio" style="height: 40px; width: auto; margin-bottom: 32px;" />
+        <h1 style="font-weight: 800; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 20px;">Haz que tu ficha de Google ayude a decidir.</h1>
+        <p class="ll-snap-p1" style="font-size: 17px; line-height: 1.7; margin: 0 0 28px;">Tus clientes ya te están buscando. Polaris Local Lift organiza tu presencia en Google y WhatsApp en 48 horas para que tus clientes entiendan qué ofreces, dónde estás y cómo contactarte.</p>
+        <ul class="ll-snap-ul" style="list-style: disc; padding-left: 20px; margin: 0 0 28px; display: flex; flex-direction: column; gap: 14px; font-size: 15px; line-height: 1.6;">
+          <li><strong style="color: #16C8C1;">Diagnóstico Express</strong> (24 horas) -- revisión de tu ficha de Google/Maps y WhatsApp, cinco problemas prioritarios, y un plan de acción de 7 días.</li>
+          <li><strong style="color: #16C8C1;">Impulso</strong> -- auditoría completa, descripción y servicios reescritos, 10 publicaciones listas, respuestas personalizadas a tus reseñas reales, y 10 mensajes de WhatsApp de seguimiento.</li>
+          <li><strong style="color: #16C8C1;">Ascenso</strong> -- todo lo de Impulso, más implementación asistida de los cambios que autorices.</li>
         </ul>
-        <p>Si conectas tu cuenta de Google Business Profile, con tu autorización explícita en cada caso, publicamos el contenido aprobado directamente en tu ficha o respondemos tus reseñas en tu nombre.</p>
+        <p class="ll-snap-p2" style="font-size: 15px; line-height: 1.7; margin: 0;">Si conectas tu cuenta de Google Business Profile, con tu autorización explícita en cada caso, publicamos el contenido aprobado directamente en tu ficha o respondemos tus reseñas en tu nombre.</p>
       </main>
     </div>
   </body>
