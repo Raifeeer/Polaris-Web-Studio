@@ -1081,26 +1081,32 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
               className="mt-8 max-w-2xl mx-auto">
-              <div className="rounded-2xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-4 md:px-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
-                      <Check size={15} />
-                      <T en="Diagnosis ready">Diagnóstico listo</T>
+              <div className="rounded-2xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-5 md:px-6">
+                {revealedByAtlas && (
+                  <div className="mb-4 flex justify-center" role="img" aria-label="Atlas Assistant">
+                    <div className="flex items-center gap-2">
+                      <AtlasMark variant="isotipo" className="h-10 w-10" />
+                      <AtlasMark variant="wordmark" className="h-6 w-auto" />
                     </div>
-                    {place && (
-                      <p className="mt-2 truncate text-xs text-[var(--color-text-tertiary)]">
-                        {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}
-                      </p>
-                    )}
                   </div>
-                  {revealedByAtlas && (
-                    <div className="flex shrink-0 items-center gap-1.5" role="img" aria-label="Atlas Assistant">
-                      <AtlasMark variant="isotipo" className="h-7 w-7" />
-                      <AtlasMark variant="wordmark" className="h-4 w-auto" />
-                    </div>
-                  )}
+                )}
+                <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
+                  <Check size={15} />
+                  <T en="Diagnosis ready">Diagnóstico listo</T>
                 </div>
+                {place && (
+                  <p className="mt-2 truncate text-xs text-[var(--color-text-tertiary)]">
+                    {place.name}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}
+                  </p>
+                )}
+                <p className="mt-4 flex items-start gap-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                  <Mail size={14} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />
+                  <span>
+                    {revealedByAtlas
+                      ? <T en={`Sent immediately to ${email}.`}>{`Enviado ahora a ${email}.`}</T>
+                      : <T en={`It will be sent to ${email} within 5–10 minutes.`}>{`Se enviará a ${email} en 5–10 minutos.`}</T>}
+                  </span>
+                </p>
               </div>
               <p className="mt-4 text-sm italic leading-relaxed text-[var(--color-text-tertiary)] break-words overflow-hidden">{diagnostic.businessIntro}</p>
               <p className="mt-2 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)] break-words overflow-hidden">{diagnostic.summary}</p>
