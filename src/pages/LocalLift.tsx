@@ -4,13 +4,13 @@ import {
   AlertCircle,
   ArrowRight,
   Check,
+  ChevronDown,
   ChevronRight,
   Eye,
   Mail,
   MapPin,
   MessageCircle,
   Search,
-  ShieldCheck,
   Star,
   TrendingUp,
   Zap,
@@ -240,6 +240,8 @@ export default function LocalLift() {
     const alignedTop = window.scrollY + rect.top - topInset - visualOffset;
     window.scrollTo({ top: Math.max(0, alignedTop), behavior });
   };
+
+  const toggleFaq = (index: number) => setOpenFaqIndex((current) => (current === index ? null : index));
 
   const scrollToSection = (id: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     const section = document.getElementById(id);
@@ -477,6 +479,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
     { es: "Puliendo los últimos detalles...", en: "Polishing the final details..." },
   ];
   const [revealStepIndex, setRevealStepIndex] = useState(0);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(null);
   useEffect(() => {
     if (!revealNowLoading) {
       setRevealStepIndex(0);
@@ -647,31 +650,6 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 </motion.a>
 
               </motion.article>
-            ))}
-          </div>
-        </motion.section>
-
-        <motion.section {...motionReveal(0.04)} className="grid grid-cols-1 lg:grid-cols-[0.82fr_1.18fr] gap-5 pt-24">
-          <div className="rounded-[var(--radius-bento)] glass-panel p-7 md:p-10 border border-[var(--color-border-subtle)]">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Questions before you start">PREGUNTAS FRECUENTES</T></p>
-            <h2 className="mt-3 text-3xl font-display font-black"><T en="Before you start, let’s make it clear.">Antes de empezar, dejemos lo importante claro.</T></h2>
-            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="A few quick answers so you know what to expect from the review and the next step.">Unas respuestas rápidas para que sepas qué esperar de la revisión y del siguiente paso.</T></p>
-          </div>
-          <div className="space-y-3">
-            {[
-              ["What do I need to start?", "¿Qué necesito para empezar?", "Just your business name and city, or its direct Google Maps link.", "Solo el nombre y la ciudad de tu negocio, o su enlace directo de Google Maps."],
-              ["Can I see the result without receiving an email?", "¿Puedo ver el resultado sin recibir un correo?", "Yes. You can view it on screen when it is ready; email is optional.", "Sí. Puedes verlo en pantalla cuando esté listo; el correo es opcional."],
-              ["What is the difference between the packages?", "¿Qué diferencia hay entre los paquetes?", "Express identifies priorities, Impulso prepares the materials, and Ascenso adds personalized 1:1 implementation support.", "Express identifica prioridades, Impulso prepara los materiales y Ascenso añade implementación personalizada 1:1."],
-              ["Will you ask for my passwords?", "¿Me pedirán mis contraseñas?", "No. We work with the information and changes you approve.", "No. Trabajamos con la información y los cambios que tú apruebes."],
-              ["Do you guarantee a position on Google?", "¿Garantizan una posición en Google?", "No. We show what may be creating friction and what is worth improving first.", "No. Mostramos qué puede estar generando dudas y qué conviene mejorar primero."],
-            ].map(([enQuestion, esQuestion, enAnswer, esAnswer], index) => (
-              <motion.details key={enQuestion} {...motionReveal(index * 0.06)} className="group rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] px-5 py-4">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-black [&::-webkit-details-marker]:hidden">
-                  <span><T en={enQuestion}>{esQuestion}</T></span>
-                  <span aria-hidden="true" className="text-xl font-normal text-[var(--color-primary-base)] transition-transform duration-200 group-open:rotate-45">+</span>
-                </summary>
-                <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enAnswer}>{esAnswer}</T></p>
-              </motion.details>
             ))}
           </div>
         </motion.section>
@@ -1158,14 +1136,54 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <WisePhrase lang={language} />
         </motion.section>
 
-        <motion.section {...motionReveal(0.04)} className="mt-24 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
-          <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="No smoke. Real context.">SIN HUMO. CON CONTEXTO.</T></span></div>
-          <h2 className="mt-4 text-3xl font-display font-black"><T en="Make clearer decisions before changing anything.">Toma decisiones claras antes de cambiar nada.</T></h2>
-          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We use real information to show what may be getting in the way of calls, messages, or bookings. You review and approve each change before it moves forward.">Usamos información real para mostrarte qué puede estar frenando llamadas, mensajes o reservas. Tú revisas y autorizas cada cambio antes de avanzar.</T></p>
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold text-[var(--color-text-tertiary)]">
-            {[['Real information', 'Información real'], ['Explained priorities', 'Prioridades explicadas'], ['Your approval', 'Tu autorización']].map(([en, es]) => (
-              <span key={en} className="rounded-xl border border-[var(--color-border-subtle)] px-3 py-2.5"><T en={en}>{es}</T></span>
-            ))}
+        <motion.section {...motionReveal(0.04)} id="preguntas-frecuentes" className="scroll-mt-24 pt-24">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex flex-col items-center text-center gap-4 mb-8">
+              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+                <T en="Common questions">PREGUNTAS FRECUENTES</T>
+              </span>
+              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight"><T en="Questions before you start">Preguntas antes de empezar</T></h2>
+              <p className="max-w-2xl text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="A few clear answers about the review, the packages, and what happens next.">Respuestas claras sobre la revisión, los paquetes y lo que sucede después.</T></p>
+            </div>
+            <div className="space-y-4">
+              {[
+                ["What do I need to start?", "¿Qué necesito para empezar?", "Just your business name and city, or its direct Google Maps link.", "Solo el nombre y la ciudad de tu negocio, o su enlace directo de Google Maps."],
+                ["Can I see the result without receiving an email?", "¿Puedo ver el resultado sin recibir un correo?", "Yes. You can view it on screen when it is ready; email is optional.", "Sí. Puedes verlo en pantalla cuando esté listo; el correo es opcional."],
+                ["What is the difference between the packages?", "¿Qué diferencia hay entre los paquetes?", "Express identifies priorities, Impulso prepares the materials, and Ascenso adds personalized 1:1 implementation support.", "Express identifica prioridades, Impulso prepara los materiales y Ascenso añade implementación personalizada 1:1."],
+                ["Will you ask for my passwords?", "¿Me pedirán mis contraseñas?", "No. We work with the information and changes you approve.", "No. Trabajamos con la información y los cambios que tú apruebes."],
+                ["Do you guarantee a position on Google?", "¿Garantizan una posición en Google?", "No. We show what may be creating friction and what is worth improving first.", "No. Mostramos qué puede estar generando dudas y qué conviene mejorar primero."],
+              ].map(([enQuestion, esQuestion, enAnswer, esAnswer], index) => (
+                <motion.div
+                  key={enQuestion}
+                  onClick={() => toggleFaq(index)}
+                  className={`p-6 rounded-2xl glass-panel transition-colors cursor-pointer ${openFaqIndex === index ? "!border-[var(--color-primary-base)] shadow-lg" : "hover:!border-[var(--color-primary-base)]/50"}`}
+                >
+                  <div className="flex justify-between items-center gap-4">
+                    <h3 className="font-bold text-base md:text-lg"><T en={enQuestion}>{esQuestion}</T></h3>
+                    <motion.div
+                      animate={{ rotate: openFaqIndex === index ? 180 : 0 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3 }}
+                      className="shrink-0"
+                    >
+                      <ChevronDown size={18} className={openFaqIndex === index ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"} />
+                    </motion.div>
+                  </div>
+                  <AnimatePresence initial={false}>
+                    {openFaqIndex === index && (
+                      <motion.div
+                        initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <p className="text-sm text-[var(--color-text-secondary)] pt-4 leading-relaxed"><T en={enAnswer}>{esAnswer}</T></p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.section>
 
