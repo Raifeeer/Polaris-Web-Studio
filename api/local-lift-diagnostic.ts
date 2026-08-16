@@ -511,7 +511,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    return res.json({ success: true, candidates, place, leadId });
+    return res.json({ success: true, place, candidates, leadId });
   } catch (error: any) {
     console.error("[local-lift-diagnostic] Error:", error);
     return res.status(500).json({

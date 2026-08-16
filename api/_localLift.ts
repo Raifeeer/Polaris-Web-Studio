@@ -34,6 +34,11 @@ export interface RealReview {
   text: string;
 }
 
+export interface PlaceCandidatesPage {
+  candidates: PlaceData[];
+  nextPageToken: string | null;
+}
+
 function buildPlaceData(place: any, apiKey: string, fallbackName: string): PlaceData {
   const photos = Array.isArray(place.photos) ? place.photos : [];
   const photoUrls = photos
@@ -156,7 +161,7 @@ function extractPlaceLabels(rawUrl: string): string[] {
   return labels;
 }
 
-async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
+async function searchPlaces(textQuery: string, apiKey: string, pageToken?: string): Promise<{ places: any[]; nextPageToken: string | null }> {
   const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
@@ -175,29 +180,61 @@ async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
           high: { latitude: 19.95, longitude: -68.20 },
         },
       },
-      pageSize: 5,
+      pageSize: 20,
+      ...(pageToken ? { pageToken } : {}),
     }),
     signal: AbortSignal.timeout(8000),
   });
 
   if (!res.ok) {
     console.error("[_localLift] Places API error:", res.status, await res.text().catch(() => ""));
-    return [];
+    return { places: [], nextPageToken: null };
   }
 
   const data = await res.json();
-  return Array.isArray(data?.places) ? data.places : [];
+  return {
+    places: Array.isArray(data?.places) ? data.places : [],
+    nextPageToken: typeof data?.nextPageToken === "string" ? data.nextPageToken : null,
+  };
 }
 
-// Devuelve hasta 3 candidatos para que el cliente elija si hay varias sucursales.
-export async function findPlaceCandidates(businessName: string, city: string): Promise<PlaceData[]> {
+// Devuelve una página amplia de candidatos y conserva el token para mostrar más resultados después.
+export async function findPlaceCandidatePage(
+  businessName: string,
+  city: string,
+  pageToken?: string,
+): Promise<PlaceCandidatesPage> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY no configurada");
 
-  const places = await searchPlaces(`${businessName} ${city}`, apiKey);
-  if (!places.length) return [];
+  const searchResult = await searchPlaces(`${businessName} ${city}`, apiKey, pageToken);
+  const candidates = searchResult.places
+    .filter(isLikelyBusinessPlace)
+    .slice(0, 20)
+    .map((p) => buildPlaceData(p, apiKey, businessName));
+  return { candidates, nextPageToken: searchResult.nextPageToken };
+}
 
-  return places.filter(isLikelyBusinessPlace).slice(0, 3).map((p) => buildPlaceData(p, apiKey, businessName));
+export async function findPlaceCandidates(businessName: string, city: string): Promise<PlaceData[]> {
+  const allCandidates: PlaceData[] = [];
+  const seenIds = new Set<string>();
+  let pageToken: string | undefined;
+
+  // Text Search (New) permite hasta tres páginas de resultados (máximo 60).
+  // Recuperamos todas antes de responder para que la UI pueda precargar sus fotos.
+  for (let page = 0; page < 3; page += 1) {
+    const result = await findPlaceCandidatePage(businessName, city, pageToken);
+    for (const candidate of result.candidates) {
+      if (!seenIds.has(candidate.id)) {
+        seenIds.add(candidate.id);
+        allCandidates.push(candidate);
+      }
+    }
+    if (!result.nextPageToken) break;
+    pageToken = result.nextPageToken;
+  }
+
+  return allCandidates;
 }
 
 export async function findPlace(businessName: string, city: string): Promise<PlaceData | null> {
@@ -257,7 +294,7 @@ export async function findPlaceByMapsUrl(mapsUrl: string): Promise<PlaceData | n
   if (placeId) return findPlaceById(placeId, apiKey);
   const labels = extractPlaceLabels(resolvedUrl);
   for (const label of labels) {
-    const candidates = (await searchPlaces(label, apiKey)).filter(isLikelyBusinessPlace);
+    const candidates = (await searchPlaces(label, apiKey)).places.filter(isLikelyBusinessPlace);
     if (candidates[0]) return buildPlaceData(candidates[0], apiKey, label);
   }
   return null;

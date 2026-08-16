@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
@@ -188,6 +188,7 @@ interface PlaceResult {
 
 export default function LocalLift() {
   const { language } = useLanguage();
+  const prefersReducedMotion = useReducedMotion();
   const [businessName, setBusinessName] = useState("");
   const [city, setCity] = useState("");
   const [contactName, setContactName] = useState("");
@@ -200,10 +201,26 @@ export default function LocalLift() {
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [candidates, setCandidates] = useState<PlaceResult[]>([]);
+  const [visibleCandidateCount, setVisibleCandidateCount] = useState(3);
+  const [preloadingCandidatePhotos, setPreloadingCandidatePhotos] = useState(false);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
 const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
+
+  const preloadCandidatePhotos = async (candidateList: PlaceResult[]) => {
+    const photoUrls = [...new Set(candidateList.flatMap((candidate) => candidate.photoUrls || []))];
+    if (!photoUrls.length) return;
+
+    setPreloadingCandidatePhotos(true);
+    await Promise.all(photoUrls.map((url) => new Promise<void>((resolve) => {
+      const image = new Image();
+      image.onload = () => resolve();
+      image.onerror = () => resolve();
+      image.src = url;
+    })));
+    setPreloadingCandidatePhotos(false);
+  };
 
   const switchLookupMode = (mode: "name" | "maps") => {
     setLookupMode(mode);
@@ -238,11 +255,14 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
         return;
       }
       const cands: PlaceResult[] = Array.isArray(data.candidates) && data.candidates.length ? data.candidates : (data.place ? [data.place] : []);
+      await preloadCandidatePhotos(cands);
       setCandidates(cands);
+      setVisibleCandidateCount(3);
       setPlace(cands[0] ?? data.place ?? null);
       setDiagnosticLeadId(data.leadId || null);
       setStatus("confirm");
     } catch {
+      setPreloadingCandidatePhotos(false);
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
       setStatus("error");
     }
@@ -713,7 +733,11 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
                     />
                   </div>
-                  <ShimmerPhrase es="Buscando tu ficha en Google..." en="Searching your Google listing..." lang={language} />
+                  <ShimmerPhrase
+                    es={preloadingCandidatePhotos ? "Preparando las fotos de tus fichas..." : "Buscando tu ficha en Google..."}
+                    en={preloadingCandidatePhotos ? "Preparing your listing photos..." : "Searching your Google listing..."}
+                    lang={language}
+                  />
                 </div>
               ) : (
                 <button
@@ -737,8 +761,18 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 }
               </p>
               <div className="space-y-3">
-                {candidates.map((cand, i) => (
-                  <div key={i} className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+                <AnimatePresence initial={false}>
+                {candidates.slice(0, visibleCandidateCount).map((cand, i) => (
+                  <motion.div
+                    key={cand.id || `${cand.name}-${i}`}
+                    layout
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+                    transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.34, delay: Math.min(Math.max(i - 2, 0) * 0.08, 0.32), ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.006 }}
+                    className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden will-change-transform"
+                  >
                     {/* Franja de fotos reales del lugar */}
                     {cand.photoUrls && cand.photoUrls.length > 0 && (
                       <div className="flex gap-0.5 h-28">
@@ -748,6 +782,8 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                             src={url}
                             alt={cand.name}
                             className="flex-1 object-cover"
+                            loading="eager"
+                            decoding="sync"
                             style={{ minWidth: 0 }}
                           />
                         ))}
@@ -785,13 +821,28 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                </AnimatePresence>
               </div>
+              {visibleCandidateCount < candidates.length && (
+                <motion.button
+                  type="button"
+                  onClick={() => setVisibleCandidateCount((count) => Math.min(count + 3, candidates.length))}
+                  whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.02 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 26 }}
+                  className="mt-4 mx-auto flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/30 px-4 py-2 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/10 will-change-transform"
+                >
+                  <ChevronRight size={14} className="rotate-90" />
+                  <T en="Show more listings">Mostrar más sucursales</T>
+                  <span className="opacity-70">({candidates.length - visibleCandidateCount})</span>
+                </motion.button>
+              )}
               <div className="mt-4 text-center">
                 <button
                   type="button"
-                  onClick={() => { setCandidates([]); setPlace(null); setDiagnosticLeadId(null); setMapsUrl(""); setStatus("idle"); }}
+                  onClick={() => { setCandidates([]); setVisibleCandidateCount(3); setPlace(null); setDiagnosticLeadId(null); setMapsUrl(""); setStatus("idle"); }}
                   className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"
                 >
                   <T en="None of these — search again">Ninguna de estas — buscar de nuevo</T>
