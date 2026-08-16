@@ -99,19 +99,18 @@ const tiers = [
     isFree: true,
     price: "Gratis",
     enPrice: "Free",
-    rdPrice: "",
-    time: "Resultado inicial por correo",
-    enTime: "Initial result by email",
+    time: "≈ 1 minuto",
+    enTime: "~1 minute",
     accent: "amber",
-    icon: "search",
+    icon: "zap",
     description: "Una revisión breve para saber qué puede estar frenando tus llamadas, mensajes o reservas.",
     enDescription: "A focused review to see what may be getting in the way of calls, messages, or bookings.",
     cta: "Empezar gratis",
     enCta: "Start for free",
     items: [
-      ["Revisión de Google, Maps y rutas de contacto", "Google, Maps, and contact-path review"],
-      ["Cinco prioridades explicadas", "Five explained priorities"],
-      ["Plan de acción para los próximos 7 días", "A 7-day action plan"],
+      ["Lo que tus clientes encuentran al buscarte", "What customers find when they search for you"],
+      ["5 puntos para corregir primero", "5 priorities to fix first"],
+      ["Plan de acción para los próximos 7 días", "7-day action plan"],
     ],
   },
   {
@@ -120,9 +119,8 @@ const tiers = [
     isFree: false,
     price: "29",
     enPrice: "29",
-    rdPrice: "RD$1,800",
-    time: "48 horas",
-    enTime: "48 hours",
+    time: "≈ 2 horas",
+    enTime: "~2 hours",
     accent: "indigo",
     featured: true,
     icon: "message",
@@ -131,11 +129,11 @@ const tiers = [
     cta: "Quiero preparar mi negocio",
     enCta: "Prepare my business",
     items: [
-      ["Auditoría completa de tu presencia local", "Complete local presence audit"],
-      ["Descripción, servicios y llamadas a la acción", "Description, services, and calls to action"],
+      ["Revisión completa de tu presencia local", "Complete review of your local presence"],
+      ["Descripción y servicios listos para publicar", "Description and services ready to publish"],
       ["10 publicaciones listas para adaptar", "10 posts ready to adapt"],
-      ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
-      ["10 mensajes de seguimiento para clientes", "10 customer follow-up messages"],
+      ["15 respuestas personalizadas para tus reseñas", "15 personalized replies to your reviews"],
+      ["10 mensajes de seguimiento listos para enviar", "10 follow-up messages ready to send"],
     ],
   },
   {
@@ -144,9 +142,8 @@ const tiers = [
     isFree: false,
     price: "99",
     enPrice: "99",
-    rdPrice: "RD$5,900",
-    time: "3–5 días",
-    enTime: "3–5 days",
+    time: "Seguimiento personalizado 1:1",
+    enTime: "Personalized 1:1 follow-up",
     accent: "violet",
     icon: "trending",
     description: "Te acompañamos a preparar y aplicar los cambios que autorices, sin pedirte contraseñas.",
@@ -155,9 +152,9 @@ const tiers = [
     enCta: "Implement it with me",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
-      ["Implementación asistida de cambios autorizados", "Assisted implementation of authorized changes"],
-      ["Carga de textos e imágenes proporcionados", "Upload of supplied text and images"],
-      ["Una ronda de revisión", "One revision round"],
+      ["Llevamos el plan a la práctica contigo", "We put the plan into practice with you"],
+      ["Subimos los textos e imágenes que apruebes", "We upload the text and images you approve"],
+      ["Una revisión final contigo", "One final review with you"],
     ],
   },
 ];
@@ -587,18 +584,18 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               </motion.a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[var(--color-text-tertiary)]">
-              <span className="inline-flex items-center gap-1.5"><Eye size={14} /> <T en="See what customers see">Ve lo que ve tu cliente</T></span>
-              <span className="inline-flex items-center gap-1.5"><Check size={14} /> <T en="Fix what gets in the way">Corrige lo que frena</T></span>
-              <span className="inline-flex items-center gap-1.5"><ArrowRight size={14} /> <T en="Turn visits into action">Convierte visitas en acción</T></span>
+              <span className="inline-flex items-center gap-1.5"><Eye size={14} /> <T en="Clarity at a glance">Claridad al primer vistazo</T></span>
+              <span className="inline-flex items-center gap-1.5"><Check size={14} /> <T en="Fewer doubts">Menos dudas</T></span>
+              <span className="inline-flex items-center gap-1.5"><ArrowRight size={14} /> <T en="More action">Más acciones</T></span>
             </div>
           </div>
         </motion.section>
 
         <motion.section {...motionReveal(0.08)} className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
           {[
-            [Eye, "Que tu negocio se entienda en segundos.", "Help people understand your business in seconds.", "Datos, servicios y horarios que cuentan la misma historia."],
-            [Search, "Que encuentren lo importante sin buscar de más.", "Help people find what matters without digging.", "Información útil para que una persona sepa si eres lo que necesita."],
-            [MessageCircle, "Que cada visita tenga un siguiente paso.", "Give every visit a clear next step.", "Enlaces y llamadas a la acción que facilitan llamar, escribir o reservar."],
+            [Eye, "Claridad al primer vistazo.", "Clarity at a glance.", "Datos, servicios y horarios que responden lo esencial."],
+            [Search, "Menos dudas antes de contactarte.", "Fewer doubts before reaching out.", "Información visible para saber si eres lo que necesitan."],
+            [MessageCircle, "Un siguiente paso más fácil.", "An easier next step.", "Llamar, escribir o reservar sin tener que buscar de más."],
           ].map(([Icon, title, enTitle, description], index) => {
             const IconComponent = Icon as typeof Eye;
             return (
@@ -627,7 +624,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     <h3 className="text-2xl font-display font-black"> <T en={tier.enName}>{tier.name}</T></h3>
                     <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={tier.enDescription}>{tier.description}</T></p>
                   </div>
-                  {tier.icon === "search" ? <Search size={22} className="shrink-0 text-[var(--color-primary-base)]" /> : tier.icon === "message" ? <MessageCircle size={22} className="shrink-0 text-[var(--color-primary-base)]" /> : <TrendingUp size={22} className="shrink-0 text-[var(--color-primary-base)]" />}
+                  {tier.icon === "zap" ? <Zap size={22} className="shrink-0 text-[var(--color-primary-base)]" /> : tier.icon === "message" ? <MessageCircle size={22} className="shrink-0 text-[var(--color-primary-base)]" /> : <TrendingUp size={22} className="shrink-0 text-[var(--color-primary-base)]" />}
                 </div>
                 <div className="mt-7 flex items-end gap-2">
                   <span className={`${tier.isFree ? "text-4xl" : "text-5xl"} font-display font-black text-[var(--color-primary-base)]`}>
@@ -635,7 +632,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   </span>
                   {!tier.isFree && <span className="pb-2 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>}
                 </div>
-                <p className="mt-1 text-xs font-bold text-[var(--color-text-tertiary)]"><T en={tier.enTime}>{tier.isFree ? tier.time : `${tier.rdPrice} · ${tier.time}`}</T></p>
+                <p className="mt-1 text-xs font-bold text-[var(--color-text-tertiary)]"><T en={tier.enTime}>{tier.time}</T></p>
                 <div className="mt-7 space-y-3 flex-1">
                   {tier.items.map(([es, en]) => (
                     <div key={es} className="flex items-start gap-2.5 text-sm leading-relaxed">
@@ -645,7 +642,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   ))}
                 </div>
                 <motion.a href="#diagnostico" onClick={scrollToSection("diagnostico")} whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-teal-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
-                  {tier.icon === "search" ? <Search size={16} /> : tier.icon === "message" ? <MessageCircle size={16} /> : <TrendingUp size={16} />}
+                  {tier.icon === "zap" ? <Zap size={16} /> : tier.icon === "message" ? <MessageCircle size={16} /> : <TrendingUp size={16} />}
                   <T en={tier.enCta}>{tier.cta}</T>
                   <ArrowRight size={15} />
                 </motion.a>
