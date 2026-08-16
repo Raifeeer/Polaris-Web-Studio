@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
+import { claimEmailDelivery, commitEmailDelivery, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
 // maxDuration explícito) -- no el techo duro de 10s que asumía la versión
@@ -342,6 +343,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!doc.exists) return res.status(404).json({ error: "No encontramos ese diagnóstico." });
     let v = doc.data()!;
     const lang2: "es" | "en" = v.lang === "en" ? "en" : "es";
+    if (v.emailSent || await hasSentDiagnostic(firestore, v.email)) {
+      return res.status(409).json({ reason: "email_already_used" });
+    }
+    const deliveryClaim = await claimEmailDelivery(firestore, docRef, v.email);
+    if (deliveryClaim === "blocked") return res.status(409).json({ reason: "email_already_used" });
+    if (deliveryClaim === "in_progress") return res.status(409).json({ reason: "email_in_progress" });
 
     try {
       let diagnostic: Diagnostic = v.diagnostic;
@@ -350,25 +357,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await docRef.update({ diagnostic, status: "diagnostic_sent" });
       }
 
-      if (!v.emailSent) {
-        const zohoPassword = process.env.ZOHO_PASSWORD;
-        if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
-        const transporter = nodemailer.createTransport({
-          host: "smtp.zoho.com", port: 465, secure: true,
-          auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
-        });
-        await transporter.sendMail({
-          from: '"Polaris Local Lift" <hola@polarisweb.studio>',
-          to: v.email,
-          subject: lang2 === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
-          text: renderDiagnosticText(diagnostic, lang2),
-          html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName, lang2, leadId.trim()),
-        });
-        await docRef.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "reveal-now" });
-      }
+      const zohoPassword = process.env.ZOHO_PASSWORD;
+      if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
+      const transporter = nodemailer.createTransport({
+        host: "smtp.zoho.com", port: 465, secure: true,
+        auth: { user: "hola@polarisweb.studio", pass: process.env.ZOHO_PASSWORD },
+      });
+      await transporter.sendMail({
+        from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+        to: v.email,
+        subject: lang2 === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
+        text: renderDiagnosticText(diagnostic, lang2),
+        html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName, lang2, leadId.trim()),
+      });
+      await commitEmailDelivery(firestore, docRef, v.email, { leadId: leadId.trim(), via: "reveal-now" });
 
       return res.json({ success: true, diagnostic, place: v.placeData });
     } catch (err: any) {
+      await releaseEmailDelivery(firestore, docRef).catch(() => undefined);
       console.error("[local-lift-diagnostic] Error en reveal-now:", err);
       return res.status(500).json({ error: "No pudimos generar tu diagnóstico en este momento. Intenta de nuevo en un momento." });
     }
@@ -441,23 +447,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Si hay un solo candidato, el cliente confirma directamente.
     // Si hay varios, el cliente elige en la UI antes de que guardemos.
     // En ambos casos devolvemos el array completo para que la UI decida.
-    const place = candidates[0];
-    const leadCity = normalizedCity || place.address || "República Dominicana";
+    const firstPlace = candidates[0];
+    const selectedPlace = normalizedConfirmedPlaceId
+      ? candidates.find((candidate) => candidate.id === normalizedConfirmedPlaceId)
+      : null;
 
     if (normalizedMapsUrl && !normalizedConfirmedPlaceId) {
-      return res.json({ success: true, requiresConfirmation: true, candidates, place });
+      return res.json({ success: true, requiresConfirmation: true, candidates, place: firstPlace });
     }
 
-    if (normalizedConfirmedPlaceId && normalizedConfirmedPlaceId !== place.id) {
+    if (normalizedConfirmedPlaceId && !selectedPlace) {
       return res.status(409).json({
-        reason: "maps_changed",
+        reason: normalizedMapsUrl ? "maps_changed" : "candidate_changed",
         error:
           language === "en"
-            ? "The Google Maps listing changed. Review it again before continuing."
-            : "La ficha de Google Maps cambió. Revísala nuevamente antes de continuar.",
+            ? "The selected business changed. Review the options again before continuing."
+            : "El negocio seleccionado cambió. Revisa las opciones nuevamente antes de continuar.",
       });
     }
 
+    // La búsqueda puede devolver candidatos sin crear leads ni programar correos.
+    // Solo la confirmación explícita del negocio llega a este punto.
+    if (!normalizedConfirmedPlaceId) {
+      return res.json({ success: true, requiresConfirmation: true, candidates, place: firstPlace, leadId: null });
+    }
+
+    const place = selectedPlace || firstPlace;
+    const leadCity = normalizedCity || place.address || "República Dominicana";
+    const firestore = getFirestore(firebaseApp, "polaris-web-studio");
+    if (await hasSentDiagnostic(firestore, email)) {
+      return res.status(409).json({ reason: "email_already_used" });
+    }
+    if (await hasRecentPendingDiagnostic(firestore, email)) {
+      return res.status(409).json({ reason: "email_in_progress" });
+    }
     const emailScheduledAt = Date.now() + (5 + Math.random() * 5) * 60 * 1000;
 
     let leadId: string | null = null;
@@ -468,6 +491,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         city: leadCity,
         contactName,
         email,
+        emailNormalized: email.trim().toLowerCase(),
         placeData: place,
         diagnostic: null,
         lang: language,

@@ -4,6 +4,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { generateWithFallback, placeDataSummary , buildEmailFooter } from "./_localLift.js";
+import { claimEmailDelivery, commitEmailDelivery, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Manda de verdad los correos de diagnóstico gratis que quedaron
 // "programados" con una demora real de 5-10 min (ver
@@ -245,9 +246,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     for (const doc of snap.docs) {
       const v = doc.data();
-      if (!v.email || !v.placeData) continue;
+      if (!v.email || !v.placeData || v.status === "email_blocked") continue;
       const lang: "es" | "en" = v.lang === "en" ? "en" : "es";
       try {
+        if (v.emailSent) continue;
+        if (await hasSentDiagnostic(firestore, v.email)) {
+          await doc.ref.update({ status: "email_blocked", emailScheduledAt: null });
+          continue;
+        }
+        const deliveryClaim = await claimEmailDelivery(firestore, doc.ref, v.email);
+        if (deliveryClaim !== "claimed") continue;
         // Si nadie pidió "Atlas ahora" antes de que se cumpliera la
         // demora, el diagnóstico todavía no existe -- se genera acá recién
         // ahora, con IA (mismo motivo que reveal-now en
@@ -265,9 +273,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           text: renderDiagnosticText(diagnostic, lang),
           html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName || "", lang, doc.id),
         });
-        await doc.ref.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "scheduled" });
+        await commitEmailDelivery(firestore, doc.ref, v.email, { leadId: doc.id, via: "scheduled" });
         sent++;
       } catch (mailErr: any) {
+        await releaseEmailDelivery(firestore, doc.ref).catch(() => undefined);
         errors.push(`${doc.id}: ${String(mailErr?.message || mailErr)}`);
       }
     }

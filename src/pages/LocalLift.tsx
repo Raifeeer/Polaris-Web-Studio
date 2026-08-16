@@ -9,6 +9,7 @@ import {
   Eye,
   Building2,
   Mail,
+  Loader2,
   MapPin,
   MessageCircle,
   Search,
@@ -220,7 +221,7 @@ export default function LocalLift() {
   const [mapsUrl, setMapsUrl] = useState("");
   const [lookupMode, setLookupMode] = useState<"name" | "maps">("name");
   const [confirmingPlaceId, setConfirmingPlaceId] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "email_blocked" | "error">("idle");
   const [loadingStage, setLoadingStage] = useState<"searching" | "photos" | "verifying">("searching");
   const [loadingCopyIndex, setLoadingCopyIndex] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
@@ -232,10 +233,12 @@ export default function LocalLift() {
   const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
+  const [emailGuardReason, setEmailGuardReason] = useState<"already_used" | "in_progress">("already_used");
   const loadingRef = useRef<HTMLDivElement | null>(null);
   const candidatesRef = useRef<HTMLDivElement | null>(null);
   const queuedRef = useRef<HTMLDivElement | null>(null);
   const successRef = useRef<HTMLDivElement | null>(null);
+  const blockedEmailRef = useRef<HTMLDivElement | null>(null);
   const restoredScrollYRef = useRef<number | null>(null);
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
   const mapsFieldRef = useRef<HTMLInputElement | null>(null);
@@ -315,7 +318,9 @@ export default function LocalLift() {
           ? queuedRef.current
           : status === "success"
             ? successRef.current
-            : null;
+            : status === "email_blocked"
+              ? blockedEmailRef.current
+              : null;
     if (!target) return;
     if (status === "success" && restoredScrollYRef.current !== null) {
       const restoredScrollY = restoredScrollYRef.current;
@@ -360,7 +365,11 @@ export default function LocalLift() {
     setCandidates([]);
     setVisibleCandidateCount(3);
     setPlace(null);
+    setDiagnostic(null);
+    setRevealedByAtlas(false);
     setDiagnosticLeadId(null);
+    setRevealNowError("");
+    setEmailGuardReason("already_used");
     setErrorMsg("");
     setLoadingStage("searching");
     setStatus("idle");
@@ -528,13 +537,9 @@ export default function LocalLift() {
 
   const handleConfirmCandidate = async (candidate: PlaceResult) => {
     setPlace(candidate);
-    if (!mapsUrl.trim()) {
-      setStatus("queued");
-      return;
-    }
-
     setConfirmingPlaceId(candidate.id || candidate.name);
     setErrorMsg("");
+    setEmailGuardReason("already_used");
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
@@ -550,6 +555,18 @@ export default function LocalLift() {
         }),
       });
       const data = await res.json();
+      if (res.status === 409 && data.reason === "email_already_used") {
+        setEmailGuardReason("already_used");
+        setCandidates([]);
+        setStatus("email_blocked");
+        return;
+      }
+      if (res.status === 409 && data.reason === "email_in_progress") {
+        setEmailGuardReason("in_progress");
+        setCandidates([]);
+        setStatus("email_blocked");
+        return;
+      }
       if (!res.ok) {
         setErrorMsg(data.error || (language === "en" ? "Something went wrong." : "Algo salió mal."));
         setCandidates([]);
@@ -1002,6 +1019,21 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   : <T en="Is this your business?">¿Es tu negocio?</T>
                 }
               </p>
+              <AnimatePresence>
+                {confirmingPlaceId && (
+                  <motion.div
+                    initial={prefersReducedMotion ? false : { opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={prefersReducedMotion ? undefined : { opacity: 0, y: -4 }}
+                    className="mb-3 flex items-center justify-center gap-2 text-xs font-bold text-[var(--color-primary-base)]"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <Loader2 size={14} className="animate-spin" />
+                    <T en="Checking your email before we continue…">Verificando tu correo antes de continuar…</T>
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div className="space-y-3">
                 <AnimatePresence initial={false}>
                 {candidates.slice(0, visibleCandidateCount).map((cand, i) => (
@@ -1093,6 +1125,38 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <T en="Search another business">Buscar otro negocio</T>
                 </motion.button>
               </div>
+            </motion.div>
+          )}
+
+          {status === "email_blocked" && (
+            <motion.div
+              ref={blockedEmailRef}
+              data-scroll-anchor
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-4 max-w-xl mx-auto rounded-2xl border border-amber-400/30 bg-amber-400/8 px-5 py-7 text-center"
+            >
+              <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
+              <h3 className="mt-4 text-lg font-display font-black">
+                <T en={emailGuardReason === "in_progress" ? "This email is already being checked." : "This email already has a diagnosis."}>
+                  {emailGuardReason === "in_progress" ? "Este correo ya se está verificando." : "Este correo ya tiene un diagnóstico."}
+                </T>
+              </h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">
+                <T en="Check your inbox. If you think this is a mistake, contact us on WhatsApp.">
+                  Revisa tu correo. Si entiendes que es un error, contáctanos por <a href="https://wa.me/18299200544?text=Hola%2C%20necesito%20ayuda%20con%20Local%20Lift" target="_blank" rel="noreferrer" className="font-bold text-[var(--color-primary-base)] underline underline-offset-2">WhatsApp</a>.
+                </T>
+              </p>
+              <motion.button
+                type="button"
+                onClick={resetCandidateSearch}
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                className="mt-5 inline-flex items-center justify-center rounded-lg bg-[var(--color-primary-base)] px-5 py-2.5 text-xs font-black text-white shadow-sm shadow-teal-500/20"
+              >
+                <T en="Back to the form">Volver al formulario</T>
+              </motion.button>
             </motion.div>
           )}
 
@@ -1301,6 +1365,18 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <T en="This analysis was generated by Atlas from the information found on Google.">Este análisis fue generado por Atlas a partir de la información encontrada en Google.</T>
                 </p>
               )}
+              <div className="mt-6 flex justify-center">
+                <motion.button
+                  type="button"
+                  onClick={resetCandidateSearch}
+                  whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                  className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)]"
+                >
+                  <Search size={14} />
+                  <T en="Start another diagnosis">Nuevo diagnóstico</T>
+                </motion.button>
+              </div>
             </motion.div>
           )}
 
