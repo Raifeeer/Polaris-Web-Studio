@@ -312,6 +312,47 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // "Que Atlas te lo genere al instante": antes esto solo cambiaba lo que
+  // se veía en pantalla -- el correo real ya se había mandado de una,
+  // siempre, en el mismo request que generaba el diagnóstico (el "5 a 10
+  // minutos" era pura ficción de UI, sin ninguna demora real detrás). Con
+  // el envío del correo al cliente ahora demorado de verdad (ver más
+  // abajo), este botón dispara el envío real e inmediato -- marca
+  // emailSent para que local-lift-diagnostic-mailer.ts (el job que manda
+  // los correos demorados) nunca lo vuelva a mandar.
+  if (req.body?.action === "reveal-now") {
+    const { leadId } = req.body || {};
+    if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
+    const firestore = getFirestore(firebaseApp, "polaris-web-studio");
+    const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
+    const doc = await docRef.get();
+    if (!doc.exists) return res.status(404).json({ error: "No encontramos ese diagnóstico." });
+    const v = doc.data()!;
+    if (v.emailSent) return res.json({ success: true, alreadySent: true });
+
+    const zohoPassword = process.env.ZOHO_PASSWORD;
+    if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
+    const lang2: "es" | "en" = v.lang === "en" ? "en" : "es";
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.zoho.com", port: 465, secure: true,
+        auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+      });
+      await transporter.sendMail({
+        from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+        to: v.email,
+        subject: lang2 === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
+        text: renderDiagnosticText(v.diagnostic, lang2),
+        html: buildDiagnosticHtml(v.diagnostic, v.placeData, v.contactName, lang2, leadId.trim()),
+      });
+      await docRef.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "reveal-now" });
+      return res.json({ success: true });
+    } catch (mailErr: any) {
+      console.error("[local-lift-diagnostic] Error en reveal-now:", mailErr);
+      return res.status(500).json({ error: "No pudimos enviar el correo. Intenta de nuevo en un momento." });
+    }
+  }
+
   const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";
   if (rateLimited(ip, 10, 15 * 60 * 1000)) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento e intenta de nuevo." });
@@ -353,6 +394,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // resuelto ahí (ver local-lift-order.ts action=confirm). Best-effort:
     // si Firestore falla, igual se manda el correo (sin botón de pago
     // funcional -- degradación aceptable, nunca bloquea la respuesta real).
+    // El correo al CLIENTE ya no se manda acá -- antes salía siempre en
+    // este mismo request, sin importar lo que la UI mostrara ("Estamos
+    // preparando tu diagnóstico... te llegará en 5-10 minutos" era
+    // mentira, el correo real ya había salido). Ahora se guarda con una
+    // demora real y aleatoria (5-10 min) y lo manda
+    // local-lift-diagnostic-mailer.ts (Cloud Scheduler, corre cada 2 min) --
+    // salvo que el cliente pida "generar ahora" (action=reveal-now, más
+    // arriba), que lo manda de inmediato y marca emailSent para que el
+    // job no lo duplique.
+    const emailScheduledAt = Date.now() + (5 + Math.random() * 5) * 60 * 1000;
+
     let leadId: string | null = null;
     try {
       const firestore = getFirestore(firebaseApp, "polaris-web-studio");
@@ -368,6 +420,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         status: "diagnostic_sent",
         paid: false,
         tier: "48h",
+        emailSent: false,
+        emailScheduledAt,
         createdAt: new Date(),
       });
       leadId = docRef.id;
@@ -375,8 +429,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error("[local-lift-diagnostic] Error guardando en Firestore:", dbErr);
     }
 
+    // El aviso INTERNO a Cristian sí sale de inmediato -- no hay motivo
+    // para demorarle a él la notificación de un lead nuevo, solo al correo
+    // que ve el cliente (la demora es parte de la puesta en escena, no
+    // aplica al aviso interno).
     const zohoPassword = process.env.ZOHO_PASSWORD;
-    if (zohoPassword && leadId) {
+    if (zohoPassword) {
       try {
         const transporter = nodemailer.createTransport({
           host: "smtp.zoho.com",
@@ -384,18 +442,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           secure: true,
           auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
         });
-
-        await transporter.sendMail({
-          from: '"Polaris Local Lift" <hola@polarisweb.studio>',
-          to: email,
-          subject:
-            language === "en"
-              ? `Your Local Lift diagnosis for ${place.name}`
-              : `Tu diagnóstico Local Lift de ${place.name}`,
-          text: diagnosticText,
-          html: buildDiagnosticHtml(diagnostic, place, contactName, language, leadId),
-        });
-
         await transporter.sendMail({
           from: '"Local Lift -- Diagnóstico nuevo" <hola@polarisweb.studio>',
           to: "hola@polarisweb.studio",
@@ -405,7 +451,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           html: buildInternalAlertHtml(diagnostic, place, city, contactName, email),
         });
       } catch (mailErr) {
-        console.error("[local-lift-diagnostic] Error enviando correos:", mailErr);
+        console.error("[local-lift-diagnostic] Error enviando alerta interna:", mailErr);
       }
     }
 

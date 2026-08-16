@@ -1,0 +1,229 @@
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import nodemailer from "nodemailer";
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
+
+// Manda de verdad los correos de diagnóstico gratis que quedaron
+// "programados" con una demora real de 5-10 min (ver
+// api/local-lift-diagnostic.ts) -- antes esa demora era pura ficción de
+// UI, el correo real salía siempre de inmediato en el mismo request que
+// generaba el diagnóstico. Corre cada 2 min vía Cloud Scheduler
+// (local-lift-diagnostic-mailer-job) -- ventana de 5-10 min con chequeo
+// cada 2 min da precisión de sobra sin exigir un cron por-segundo.
+export const config = { maxDuration: 60 };
+
+const firebaseApp = getApps().length
+  ? getApps()[0]
+  : initializeApp({
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
+      }),
+    });
+
+const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
+const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
+const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
+const ACCENT = "#4f46e5";
+
+function renderDiagnosticText(diagnostic: any, lang: "es" | "en"): string {
+  const problemsLabel = lang === "en" ? "Priority issues" : "Problemas prioritarios";
+  const planLabel = lang === "en" ? "7-day action plan" : "Plan de acción de 7 días";
+  const dayLabel = lang === "en" ? "Day" : "Día";
+  const problemsText = diagnostic.problems.map((p: any, i: number) => `${i + 1}. ${p.title}\n   ${p.why}\n   → ${p.fix}`).join("\n\n");
+  const planText = diagnostic.sevenDayPlan.map((d: any) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
+  return `${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
+}
+
+// Réplica exacta de buildDiagnosticHtml en local-lift-diagnostic.ts --
+// duplicado a propósito, mismo patrón ya aceptado en la cuenta para
+// constantes/plantillas compartidas entre Cloud Functions (ver
+// PACKAGES/ADDONS en Meridian) -- este archivo es un job aparte, no vale
+// la pena una dependencia cruzada para esto solo.
+function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, lang: "es" | "en", leadId: string): string {
+  const hasName = !!contactName && contactName.trim().length > 0;
+  const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
+  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
+  const copy = lang === "en"
+    ? {
+        preheader: `Your Local Lift diagnosis for ${place.name} is ready.`,
+        eyebrow: "Free diagnosis",
+        title: hasName ? `Here's your diagnosis, ${firstName}!` : "Here's your diagnosis!",
+        problemsLabel: "Priority issues",
+        planLabel: "7-day action plan",
+        dayLabel: "Day",
+        ctaPrimary: "I want you to implement this — $29",
+        ctaSecondaryTop: "Questions?",
+        ctaSecondaryBottom: "Reply to this email",
+        footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
+        footerLine2: "You requested this diagnosis from our website.",
+      }
+    : {
+        preheader: `Tu diagnóstico Local Lift de ${place.name} está listo.`,
+        eyebrow: "Diagnóstico gratis",
+        title: hasName ? `¡Aquí está tu diagnóstico, ${firstName}!` : "¡Aquí está tu diagnóstico!",
+        problemsLabel: "Problemas prioritarios",
+        planLabel: "Plan de acción de 7 días",
+        dayLabel: "Día",
+        ctaPrimary: "Quiero que lo implementen — $29",
+        ctaSecondaryTop: "¿Dudas?",
+        ctaSecondaryBottom: "Responde este correo",
+        footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
+        footerLine2: "Solicitaste este diagnóstico desde nuestro sitio.",
+      };
+
+  const problemRows = diagnostic.problems
+    .map(
+      (p: any, i: number) => `
+      <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 14px 0;">
+        <tr>
+          <td width="28" valign="top" style="padding:2px 0;">
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td width="22" height="22" align="center" valign="middle" style="width:22px;height:22px;border-radius:50%;background:${ACCENT};font-family:${FONT_DISPLAY};font-weight:700;font-size:11px;color:#ffffff;mso-line-height-rule:exactly;">${i + 1}</td>
+            </tr></table>
+          </td>
+          <td valign="top" style="padding:0 0 0 4px;">
+            <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:14px;color:#0f172a;">${p.title}</div>
+            <div style="font-size:13px;line-height:1.5;color:#475569;margin-top:3px;">${p.why}</div>
+            <div style="font-size:13px;line-height:1.5;color:${ACCENT};margin-top:4px;">→ ${p.fix}</div>
+          </td>
+        </tr>
+      </table>`
+    )
+    .join("");
+
+  const planRows = diagnostic.sevenDayPlan
+    .map(
+      (d: any) => `
+      <tr style="border-bottom:1px solid #e2e8f0;">
+        <td style="padding:8px 0;font-family:${FONT_DISPLAY};font-weight:700;font-size:12px;color:${ACCENT};width:60px;border-bottom:1px solid #e2e8f0;">${copy.dayLabel} ${d.day}</td>
+        <td style="padding:8px 0;font-size:13px;color:#1f2937;border-bottom:1px solid #e2e8f0;">${d.action}</td>
+      </tr>`
+    )
+    .join("");
+
+  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift -- ${place.name}`)}`;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
+</head>
+<body>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${copy.preheader}</div>
+<div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
+<div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+
+  <div style="padding:40px 40px 0 40px;text-align:center;">
+    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+  </div>
+
+  <div style="padding:32px 40px 8px 40px;text-align:center;">
+    <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">${copy.eyebrow}</div>
+    <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:30px;line-height:1.2;color:#0f172a;">${copy.title}</div>
+    <div style="font-size:14px;color:#64748b;margin-top:8px;">${place.name}${place.address ? ` · ${place.address}` : ""}</div>
+  </div>
+
+  <div style="padding:16px 40px 0 40px;text-align:center;">
+    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${diagnostic.summary}</p>
+  </div>
+
+  <div style="padding:28px 40px 0 40px;">
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
+      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:14px;">${copy.problemsLabel}</div>
+      ${problemRows}
+    </div>
+  </div>
+
+  <div style="padding:20px 40px 0 40px;">
+    <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
+      <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:12px;">${copy.planLabel}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${planRows}</table>
+    </div>
+  </div>
+
+  <div style="padding:28px 40px 0 40px;text-align:center;">
+    <a href="${payUrl}" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">${copy.ctaPrimary}</a>
+  </div>
+  <div style="padding:14px 40px 0 40px;text-align:center;">
+    <a href="${contactMailto}" style="display:inline-block;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-family:${FONT_DISPLAY};font-weight:700;padding:11px 32px;border-radius:8px;line-height:1.4;">
+      <span style="display:block;font-size:12px;font-weight:700;color:#0f172a;">${copy.ctaSecondaryTop}</span>
+      <span style="display:block;font-size:15px;">${copy.ctaSecondaryBottom}</span>
+    </a>
+  </div>
+
+  <div style="padding:40px 40px 0 40px;">
+    <div style="height:1px;background:#e2e8f0;"></div>
+  </div>
+
+  <div style="padding:24px 40px 40px 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;">
+      <tr>
+        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Website" : "Sitio web"}</a></td>
+        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${lang === "en" ? "Contact" : "Contacto"}</a></td>
+      </tr>
+    </table>
+    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${copy.footerLine1}<br>${copy.footerLine2}</div>
+  </div>
+
+</div>
+</div>
+</body></html>`;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const auth = req.headers.authorization || "";
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) return res.status(403).json({ error: "forbidden" });
+
+  const zohoPassword = process.env.ZOHO_PASSWORD;
+  if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado" });
+
+  const firestore = getFirestore(firebaseApp, "polaris-web-studio");
+  const now = Date.now();
+
+  try {
+    const snap = await firestore
+      .collection("localLiftDiagnostics")
+      .where("emailSent", "==", false)
+      .where("emailScheduledAt", "<=", now)
+      .limit(25)
+      .get();
+
+    const transporter = nodemailer.createTransport({
+      host: "smtp.zoho.com", port: 465, secure: true,
+      auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+    });
+
+    let sent = 0;
+    const errors: string[] = [];
+
+    for (const doc of snap.docs) {
+      const v = doc.data();
+      if (!v.email || !v.diagnostic || !v.placeData) continue;
+      const lang: "es" | "en" = v.lang === "en" ? "en" : "es";
+      try {
+        await transporter.sendMail({
+          from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+          to: v.email,
+          subject: lang === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
+          text: renderDiagnosticText(v.diagnostic, lang),
+          html: buildDiagnosticHtml(v.diagnostic, v.placeData, v.contactName || "", lang, doc.id),
+        });
+        await doc.ref.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "scheduled" });
+        sent++;
+      } catch (mailErr: any) {
+        errors.push(`${doc.id}: ${String(mailErr?.message || mailErr)}`);
+      }
+    }
+
+    return res.json({ success: true, checked: snap.docs.length, sent, errors });
+  } catch (error: any) {
+    console.error("[local-lift-diagnostic-mailer] Error:", error);
+    return res.status(500).json({ error: String(error?.message || error) });
+  }
+}

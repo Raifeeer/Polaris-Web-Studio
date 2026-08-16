@@ -126,6 +126,8 @@ export default function LocalLift() {
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
+  const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
+  const [revealNowLoading, setRevealNowLoading] = useState(false);
 
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,11 +148,40 @@ export default function LocalLift() {
       }
       setDiagnostic(data.diagnostic);
       setPlace(data.place);
+      setDiagnosticLeadId(data.leadId || null);
       setStatus("queued");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
       setStatus("error");
     }
+  };
+
+  // Dispara el envío real e inmediato del correo (antes este botón solo
+  // cambiaba lo que se veía en pantalla, el correo real ya había salido
+  // en el mismo request que generó el diagnóstico -- ver
+  // api/local-lift-diagnostic.ts). Si algo falla, igual revela en
+  // pantalla (ya tenemos el diagnóstico acá) -- el job programado
+  // (local-lift-diagnostic-mailer.ts) lo manda igual más tarde como red
+  // de seguridad real.
+  const handleRevealNow = async () => {
+    if (!diagnosticLeadId) {
+      setRevealedByAtlas(true);
+      setStatus("success");
+      return;
+    }
+    setRevealNowLoading(true);
+    try {
+      await fetch("/api/local-lift-diagnostic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId }),
+      });
+    } catch {
+      // best-effort -- el job programado es la red de seguridad real
+    }
+    setRevealNowLoading(false);
+    setRevealedByAtlas(true);
+    setStatus("success");
   };
 
   // Direct-to-paid: comprar un tier ($99/$179) sin pasar por el diagnóstico
@@ -487,13 +518,11 @@ export default function LocalLift() {
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  setRevealedByAtlas(true);
-                  setStatus("success");
-                }}
-                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
+                onClick={handleRevealNow}
+                disabled={revealNowLoading}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15 disabled:opacity-60"
               >
-                <ZapFast size={14} />
+                {revealNowLoading ? <Loader2 size={14} className="animate-spin" /> : <ZapFast size={14} />}
                 <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
               </button>
             </div>
