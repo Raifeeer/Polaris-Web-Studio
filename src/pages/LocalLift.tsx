@@ -1,7 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
-import { PayPalButtons } from "@paypal/react-paypal-js";
 import {
   AlertCircle,
   ArrowRight,
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
 import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
@@ -95,61 +93,67 @@ function WisePhrase({ lang }: { lang: string }) {
   );
 }
 
-const TIER_PRICE: Record<string, string> = { "impulso": "29", "ascenso": "99" };
-
-const WHATSAPP_NUMBER = "18299200544";
-const whatsappLink = (message: string) =>
-  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-
 const tiers = [
   {
     name: "Diagnóstico Express",
     enName: "Express Audit",
-    price: "29",
-    rdPrice: "RD$1,800",
-    time: "24 horas",
-    enTime: "24 hours",
+    isFree: true,
+    price: "Gratis",
+    enPrice: "Free",
+    rdPrice: "",
+    time: "Resultado inicial por correo",
+    enTime: "Initial result by email",
     accent: "amber",
-    tierKey: undefined as string | undefined,
-    description: "Una revisión breve para saber qué está frenando tus llamadas, mensajes o reservas.",
+    icon: "search",
+    description: "Una revisión breve para saber qué puede estar frenando tus llamadas, mensajes o reservas.",
     enDescription: "A focused review to see what may be getting in the way of calls, messages, or bookings.",
+    cta: "Empezar gratis",
+    enCta: "Start for free",
     items: [
       ["Revisión de Google, Maps y rutas de contacto", "Google, Maps, and contact-path review"],
-      ["Cinco problemas prioritarios", "Five priority issues"],
+      ["Cinco prioridades explicadas", "Five explained priorities"],
       ["Plan de acción para los próximos 7 días", "A 7-day action plan"],
     ],
   },
   {
     name: "Impulso",
     enName: "Impulso",
+    isFree: false,
     price: "29",
+    enPrice: "29",
     rdPrice: "RD$1,800",
     time: "48 horas",
     enTime: "48 hours",
     accent: "indigo",
     featured: true,
-    tierKey: "impulso",
-    description: "Ordenamos tu ficha y tus mensajes para que el negocio se entienda y sea más fácil contactarte.",
-    enDescription: "We organize your listing and customer messages so the business is easier to understand and contact.",
+    icon: "message",
+    description: "Ordenamos la información y los mensajes que tus clientes necesitan para decidir y contactarte.",
+    enDescription: "We organize the information and messages customers need to decide and contact you.",
+    cta: "Quiero preparar mi negocio",
+    enCta: "Prepare my business",
     items: [
-      ["Auditoría completa de tu perfil local", "Complete local profile audit"],
+      ["Auditoría completa de tu presencia local", "Complete local presence audit"],
       ["Descripción, servicios y llamadas a la acción", "Description, services, and calls to action"],
       ["10 publicaciones listas para adaptar", "10 posts ready to adapt"],
       ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
-      ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
+      ["10 mensajes de seguimiento para clientes", "10 customer follow-up messages"],
     ],
   },
   {
     name: "Ascenso",
     enName: "Ascenso",
+    isFree: false,
     price: "99",
+    enPrice: "99",
     rdPrice: "RD$5,900",
     time: "3–5 días",
     enTime: "3–5 days",
     accent: "violet",
-    tierKey: "ascenso",
-    description: "Te acompañamos a preparar y aplicar los cambios autorizados, sin pedirte contraseñas.",
+    icon: "trending",
+    description: "Te acompañamos a preparar y aplicar los cambios que autorices, sin pedirte contraseñas.",
     enDescription: "We help prepare and apply the changes you approve, without asking for passwords.",
+    cta: "Quiero implementarlo contigo",
+    enCta: "Implement it with me",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
       ["Implementación asistida de cambios autorizados", "Assisted implementation of authorized changes"],
@@ -490,14 +494,6 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
   }, [revealNowLoading]);
 
 
-  // Direct-to-paid: comprar un tier ($99/$179) sin pasar por el diagnóstico
-  // gratis. Formulario chico + PayPal, se abre inline en la tarjeta del tier.
-  const [buyOpenTier, setBuyOpenTier] = useState<string | null>(null);
-  const [buyForm, setBuyForm] = useState({ businessName: "", city: "", contactName: "", email: "" });
-  const [buyStatus, setBuyStatus] = useState<"idle" | "paid" | "error">("idle");
-  const [buyError, setBuyError] = useState("");
-  const buyFormValid = buyForm.businessName.trim() && buyForm.city.trim() && buyForm.contactName.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyForm.email);
-
   useDocumentTitle(
     "Polaris Local Lift | Mejora tu presencia en Google",
     "Polaris Local Lift | Improve your local visibility on Google",
@@ -632,13 +628,15 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     <h3 className="text-2xl font-display font-black"> <T en={tier.enName}>{tier.name}</T></h3>
                     <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={tier.enDescription}>{tier.description}</T></p>
                   </div>
-                  <Zap size={20} className="shrink-0 text-[var(--color-primary-base)]" />
+                  {tier.icon === "search" ? <Search size={22} className="shrink-0 text-[var(--color-primary-base)]" /> : tier.icon === "message" ? <MessageCircle size={22} className="shrink-0 text-[var(--color-primary-base)]" /> : <TrendingUp size={22} className="shrink-0 text-[var(--color-primary-base)]" />}
                 </div>
                 <div className="mt-7 flex items-end gap-2">
-                  <span className="text-5xl font-display font-black text-[var(--color-primary-base)]">${tier.price}</span>
-                  <span className="pb-2 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>
+                  <span className={`${tier.isFree ? "text-4xl" : "text-5xl"} font-display font-black text-[var(--color-primary-base)]`}>
+                    <T en={tier.enPrice}>{tier.price}</T>
+                  </span>
+                  {!tier.isFree && <span className="pb-2 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>}
                 </div>
-                <p className="mt-1 text-xs font-bold text-[var(--color-text-tertiary)]">{tier.rdPrice} · <T en={tier.enTime}>{tier.time}</T></p>
+                <p className="mt-1 text-xs font-bold text-[var(--color-text-tertiary)]"><T en={tier.enTime}>{tier.isFree ? tier.time : `${tier.rdPrice} · ${tier.time}`}</T></p>
                 <div className="mt-7 space-y-3 flex-1">
                   {tier.items.map(([es, en]) => (
                     <div key={es} className="flex items-start gap-2.5 text-sm leading-relaxed">
@@ -647,104 +645,12 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     </div>
                   ))}
                 </div>
-                <motion.a href={whatsappLink(`Hola Polaris, me interesa el paquete ${tier.name}. Quiero saber qué necesitas para comenzar.`)} target="_blank" rel="noreferrer" whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-teal-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
-                  <MessageCircle size={16} />
-                  <T en="Start with this review">Empezar con esta revisión</T>
+                <motion.a href="#diagnostico" onClick={scrollToSection("diagnostico")} whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-teal-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
+                  {tier.icon === "search" ? <Search size={16} /> : tier.icon === "message" ? <MessageCircle size={16} /> : <TrendingUp size={16} />}
+                  <T en={tier.enCta}>{tier.cta}</T>
+                  <ArrowRight size={15} />
                 </motion.a>
 
-                {tier.tierKey && (
-                  <>
-                    <motion.button
-                      type="button"
-                      onClick={() => {
-                        setBuyStatus("idle");
-                        setBuyError("");
-                        setBuyOpenTier(buyOpenTier === tier.tierKey ? null : tier.tierKey!);
-                      }}
-                      whileHover={prefersReducedMotion ? undefined : { y: -2 }}
-                      whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-                      className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
-                    >
-                      <Zap size={16} className="text-[var(--color-primary-base)]" />
-                      <T en="Buy now with PayPal">Comprar ahora con PayPal</T>
-                    </motion.button>
-
-                    <AnimatePresence initial={false}>
-                    {buyOpenTier === tier.tierKey && (
-                      <motion.div
-                        key="buy-form"
-                        initial={prefersReducedMotion ? false : { opacity: 0, height: 0, y: -8 }}
-                        animate={{ opacity: 1, height: "auto", y: 0 }}
-                        exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
-                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
-                        className="mt-4 overflow-hidden rounded-xl bg-[var(--color-surface-elevated)] p-4">
-                        {buyStatus === "paid" ? (
-                          <div className="flex items-start gap-2 text-emerald-500 text-xs font-black">
-                            <Check size={16} className="mt-0.5 shrink-0" />
-                            <span><T en="Payment received. We’ll prepare your deliverables and send them to your email within 48 hours.">Pago recibido. Prepararemos tus entregables y te los enviaremos a tu correo en las próximas 48 horas.</T></span>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="grid grid-cols-1 gap-2">
-                              <input type="text" placeholder={language === "en" ? "Business name" : "Nombre del negocio"} value={buyForm.businessName} onChange={(e) => setBuyForm({ ...buyForm, businessName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
-                              <input type="text" placeholder={language === "en" ? "City" : "Ciudad"} value={buyForm.city} onChange={(e) => setBuyForm({ ...buyForm, city: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
-                              <input type="text" placeholder={language === "en" ? "Your name" : "Tu nombre"} value={buyForm.contactName} onChange={(e) => setBuyForm({ ...buyForm, contactName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
-                              <input type="email" placeholder={language === "en" ? "Your email" : "Tu correo"} value={buyForm.email} onChange={(e) => setBuyForm({ ...buyForm, email: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
-                            </div>
-                            {buyFormValid ? (
-                              <div className="mt-3">
-                                <PayPalCheckoutProvider>
-                                  <PayPalButtons
-                                    style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 45 }}
-                                    createOrder={(_data, actions) =>
-                                      actions.order.create({
-                                        intent: "CAPTURE",
-                                        purchase_units: [{ amount: { value: TIER_PRICE[tier.tierKey!], currency_code: "USD" }, description: `Polaris Local Lift — ${tier.name} — ${buyForm.businessName}` }],
-                                      })
-                                    }
-                                    onApprove={async (_data, actions) => {
-                                      if (!actions.order) return;
-                                      const details = await actions.order.capture();
-                                      try {
-                                        const res = await fetch("/api/local-lift-order", {
-                                          method: "POST",
-                                          headers: { "Content-Type": "application/json" },
-                                          body: JSON.stringify({
-                                            action: "confirm",
-                                            ...buyForm,
-                                            tier: tier.tierKey,
-                                            paypalOrderId: details.id,
-                                            paypalPayerEmail: details.payer?.email_address || null,
-                                          }),
-                                        });
-                                        const data = await res.json();
-                                        if (!res.ok || !data.success) {
-                                          setBuyError(language === "en" ? "Payment went through, but we couldn't confirm it — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo — escríbenos por WhatsApp.");
-                                          setBuyStatus("error");
-                                          return;
-                                        }
-                                        setBuyStatus("paid");
-                                      } catch {
-                                        setBuyError(language === "en" ? "Payment went through, but something failed — write us on WhatsApp." : "El pago pasó, pero algo falló — escríbenos por WhatsApp.");
-                                        setBuyStatus("error");
-                                      }
-                                    }}
-                                  />
-                                </PayPalCheckoutProvider>
-                              </div>
-                            ) : (
-                              <p className="mt-3 text-[11px] text-[var(--color-text-tertiary)]"><T en="Fill in all fields to enable payment.">Completa todos los campos para habilitar el pago.</T></p>
-                            )}
-                            {buyStatus === "error" && (
-                              <div className="mt-2 flex items-start gap-2 text-xs text-red-400"><AlertCircle size={14} className="mt-0.5 shrink-0" /><span>{buyError}</span></div>
-                            )}
-                          </>
-                        )}
-                      </motion.div>
-                    )}
-                    </AnimatePresence>
-                  </>
-                )}
               </motion.article>
             ))}
           </div>
@@ -1196,32 +1102,38 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 <div className="mt-6 space-y-3">
                   <div>
                     <p className="text-xs text-[var(--color-text-tertiary)] mb-2 leading-relaxed">
-                      <T en="Impulso: complete audit, 10 posts, 15 review replies, and 10 WhatsApp follow-up messages — delivered in ~2 hours.">
-                        Impulso: auditoría completa, 10 publicaciones, 15 respuestas a reseñas y 10 mensajes de seguimiento — entrega en ~2 horas.
+                      <T en="Impulso organizes the information, content, and follow-up messages your customers need to take the next step.">
+                        Impulso organiza la información, el contenido y los mensajes de seguimiento que tus clientes necesitan para dar el siguiente paso.
                       </T>
                     </p>
-                    <Link
-                      to={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
+                    <motion.a
+                      href="#diagnostico"
+                      onClick={scrollToSection("diagnostico")}
+                      whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5 w-full"
                     >
-                      <Zap size={16} />
-                      <T en="Continue with Impulso · $29">Continuar con Impulso · $29</T>
+                      <MessageCircle size={16} />
+                      <T en="Talk about Impulso">Hablar sobre Impulso</T>
                       <ArrowRight size={15} />
-                    </Link>
+                    </motion.a>
                   </div>
                   <div>
                     <p className="text-xs text-[var(--color-text-tertiary)] mb-2 leading-relaxed">
-                      <T en="Ascenso: everything in Impulso + assisted implementation of all changes, without you needing to touch anything.">
-                        Ascenso: todo lo de Impulso + implementación asistida de todos los cambios, sin que tengas que tocar nada.
+                      <T en="Ascenso adds assisted implementation, so the approved changes move from plan to execution without asking for passwords.">
+                        Ascenso añade implementación asistida para llevar los cambios aprobados del plan a la ejecución, sin pedirte contraseñas.
                       </T>
                     </p>
-                    <Link
-                      to={`/local-lift/pagar/${diagnosticLeadId}?tier=ascenso`}
+                    <motion.a
+                      href="#diagnostico"
+                      onClick={scrollToSection("diagnostico")}
+                      whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"
                     >
                       <TrendingUp size={16} />
-                      <T en="Continue with Ascenso · $99">Continuar con Ascenso · $99</T>
-                    </Link>
+                      <T en="Talk about Ascenso">Hablar sobre Ascenso</T>
+                    </motion.a>
                   </div>
                 </div>
               )}
