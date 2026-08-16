@@ -34,7 +34,7 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative inline-block text-sm font-bold"
+        className="relative block max-w-full whitespace-normal break-words text-sm font-bold leading-relaxed"
       >
         <span className="text-[var(--color-text-tertiary)]">{text}</span>
         <motion.span
@@ -1010,9 +1010,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: "easeOut" }}
-              className="mt-4 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-5">
+              className="mt-4 max-w-xl mx-auto px-2 text-center">
               {revealNowLoading ? (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex w-full flex-col items-center gap-3">
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="solving"
@@ -1021,7 +1021,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
                     />
                   </div>
-                  <div className="whitespace-nowrap overflow-hidden text-ellipsis max-w-full px-2">
+                  <div className="w-full max-w-md px-2 text-center whitespace-normal break-words">
                     <ShimmerPhrase
                       es={REVEAL_STEPS[revealStepIndex].es}
                       en={REVEAL_STEPS[revealStepIndex].en}
