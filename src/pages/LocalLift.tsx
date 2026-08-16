@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Clock3,
   Eye,
-  Loader2,
   Mail,
   MapPin,
   MessageCircle,
@@ -23,6 +22,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
+import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 const TIER_PRICE: Record<string, string> = { "48h": "99", implementado: "179" };
@@ -464,7 +464,12 @@ export default function LocalLift() {
               >
                 {status === "loading" ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
+                    <ThinkingOrb
+                      state="searching"
+                      size={20}
+                      theme="auto"
+                      aria-label={language === "en" ? "Analyzing your listing" : "Analizando tu ficha"}
+                    />
                     <T en="Analyzing your listing...">Analizando tu ficha...</T>
                   </>
                 ) : (
