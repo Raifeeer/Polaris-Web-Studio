@@ -77,6 +77,34 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
   }
 }
 
+const LOCAL_LIFT_PDF_URL = "https://local-lift-package-pdf-wdvfac6mgq-ue.a.run.app";
+
+// Pide el PDF del paquete a la Cloud Function nueva (diseño Claude Design,
+// ver Meridian/cloud-functions/local-lift-package-pdf) -- reemplaza el
+// volcado de HTML en el cuerpo del correo por un adjunto real y descargable.
+async function fetchPackagePdf(params: {
+  businessName: string;
+  tierLabel: string;
+  lang: "es" | "en";
+  pkg: LocalLiftPackage;
+}): Promise<Buffer | null> {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return null;
+  const resp = await fetch(LOCAL_LIFT_PDF_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${cronSecret}` },
+    body: JSON.stringify({
+      lang: params.lang,
+      businessName: params.businessName,
+      tierLabel: params.tierLabel,
+      date: new Date().toLocaleDateString(params.lang === "en" ? "en-US" : "es-DO", { year: "numeric", month: "long", day: "numeric" }),
+      package: params.pkg,
+    }),
+  });
+  if (!resp.ok) throw new Error(`local-lift-package-pdf ${resp.status}`);
+  return Buffer.from(await resp.arrayBuffer());
+}
+
 const TIER_PRICE: Record<string, { amount: string; label: string }> = {
   "impulso": { amount: "29", label: "Impulso" },
   "ascenso": { amount: "99", label: "Ascenso" },
@@ -267,34 +295,20 @@ function rateLimited(key: string, max: number, windowMs: number): boolean {
   return false;
 }
 
-function renderPackageHtml(pkg: LocalLiftPackage, lang: "es" | "en"): string {
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const postsHtml = (pkg.googlePosts || [])
-    .map((p) => `<li><strong>${esc(p.title)}</strong><br/>${esc(p.body)}<br/><em>CTA: ${esc(p.cta)}</em></li>`)
-    .join("");
-  const repliesHtml = (pkg.reviewReplies || [])
-    .map((r) => `<li><strong>${esc(r.author)} (${r.rating}/5):</strong> "${esc(r.originalText)}"<br/>→ ${esc(r.reply)}</li>`)
-    .join("");
-  const templatesHtml = (pkg.reviewReplyTemplates || [])
-    .map((t) => `<li><strong>${t.forRating}/5:</strong> ${esc(t.template)}</li>`)
-    .join("");
-  const waHtml = (pkg.whatsappMessages || [])
-    .map((m) => `<li><strong>${esc(m.scenario)}:</strong> ${esc(m.message)}</li>`)
-    .join("");
-
+// El contenido completo del paquete ahora vive en el PDF adjunto (ver
+// fetchPackagePdf/local-lift-package-pdf) -- este cuerpo del correo queda
+// como un mensaje breve que anuncia el adjunto, en vez de volcar todo el
+// contenido en HTML dentro del correo mismo.
+function renderPackageEmailBody(businessName: string, contactName: string | null, lang: "es" | "en"): string {
+  if (lang === "en") {
+    return `
+      <p>Hi ${contactName || ""},</p>
+      <p>Your Local Lift content package for <strong>${businessName}</strong> is ready — you'll find it attached as a PDF, with everything organized and ready to use: your new business description, services to highlight, Google posts, review replies, templates, and WhatsApp follow-up messages.</p>
+    `;
+  }
   return `
-    <h2>${lang === "en" ? "New description" : "Descripción nueva"}</h2>
-    <p>${pkg.rewrittenDescription ? esc(pkg.rewrittenDescription) : "--"}</p>
-    <h2>${lang === "en" ? "Services to highlight" : "Servicios a destacar"}</h2>
-    <ul>${(pkg.services || []).map((s) => `<li>${esc(s)}</li>`).join("")}</ul>
-    <h2>${lang === "en" ? "Google posts" : "Publicaciones para Google"}</h2>
-    <ol>${postsHtml}</ol>
-    <h2>${lang === "en" ? "Replies to real reviews" : "Respuestas a reseñas reales"}</h2>
-    <ol>${repliesHtml || `<li>${lang === "en" ? "No reviews with text found." : "No se encontraron reseñas con texto."}</li>`}</ol>
-    <h2>${lang === "en" ? "Reply templates by rating" : "Plantillas de respuesta por calificación"}</h2>
-    <ol>${templatesHtml}</ol>
-    <h2>${lang === "en" ? "WhatsApp follow-up messages" : "Mensajes de WhatsApp de seguimiento"}</h2>
-    <ol>${waHtml}</ol>
+    <p>Hola ${contactName || ""},</p>
+    <p>Tu paquete de contenido Local Lift para <strong>${businessName}</strong> está listo — lo encontrarás adjunto en PDF, con todo organizado y listo para usar: tu nueva descripción del negocio, servicios a destacar, publicaciones para Google, respuestas a reseñas, plantillas y mensajes de WhatsApp de seguimiento.</p>
   `;
 }
 
@@ -463,16 +477,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 : `¿Quieres que publiquemos esto directo en tu ficha real de Google? <a href="https://polarisweb.studio/local-lift/conectar/${leadId.trim()}">Conecta tu Google Business Profile</a> (opcional, apruebas todo antes de que publiquemos nada).`
             }</p>`
           : "";
+      const finalTier2 = (docRef ? (await docRef.get()).data()?.tier : tier) || tier || "impulso";
+      const tierLabelForPdf = TIER_PRICE[finalTier2]?.label || TIER_PRICE["impulso"].label;
+      let pdfBuffer: Buffer | null = null;
+      try {
+        pdfBuffer = await fetchPackagePdf({
+          businessName: givenPlace.name,
+          tierLabel: tierLabelForPdf,
+          lang: language,
+          pkg: givenPackage,
+        });
+      } catch (pdfErr) {
+        console.error("[local-lift-package] Error generando PDF, se envía sin adjunto:", pdfErr);
+      }
       await transporter.sendMail({
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
         subject: language === "en" ? `Your Local Lift content package — ${givenPlace.name}` : `Tu paquete de contenido Local Lift — ${givenPlace.name}`,
-        html: `<p>${language === "en" ? "Hi" : "Hola"} ${contactName || ""},</p>${renderPackageHtml(givenPackage, language)}${connectCta}`,
+        html: `${renderPackageEmailBody(givenPlace.name, contactName || null, language)}${connectCta}`,
+        attachments: pdfBuffer
+          ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
+          : [],
       });
       if (docRef) {
-        await docRef.update({ status: "sent", contactName: contactName || null, email, sentAt: new Date() });
+        await docRef.update({
+          status: "sent",
+          contactName: contactName || null,
+          email,
+          sentAt: new Date(),
+          ...(pdfBuffer ? { pdfBase64: pdfBuffer.toString("base64") } : {}),
+        });
       }
       return res.json({ success: true, sent: true });
+    }
+
+    if (action === "download_pdf") {
+      // Descarga del paquete ya enviado -- usado por el portal de cliente
+      // para ofrecer el mismo PDF que recibió por correo, sin regenerarlo
+      // (se guarda en base64 al momento del envío, ver acción "send").
+      if (typeof leadId !== "string" || !leadId.trim()) {
+        return res.status(400).json({ error: "Falta el lead." });
+      }
+      const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
+      if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
+      const lead = doc.data()!;
+      if (!lead.pdfBase64) return res.status(404).json({ error: "Este paquete todavía no tiene un PDF generado." });
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="Local-Lift-${(lead.businessName || "paquete").replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
+      return res.status(200).send(Buffer.from(lead.pdfBase64, "base64"));
     }
 
     // action === "generate" (default)
