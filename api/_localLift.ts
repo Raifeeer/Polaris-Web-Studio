@@ -82,9 +82,22 @@ const NON_BUSINESS_PLACE_TYPES = new Set([
   "sublocality_level_1",
 ]);
 
+export function isDominicanRepublicPlace(place: any): boolean {
+  const components = Array.isArray(place?.addressComponents) ? place.addressComponents : [];
+  const country = components.find((component: any) => Array.isArray(component?.types) && component.types.includes("country"));
+  const shortText = String(country?.shortText || country?.short_name || "").toUpperCase();
+  const longText = String(country?.longText || country?.long_name || "").toLowerCase();
+  if (shortText || longText) {
+    return shortText === "DO" || longText.includes("dominican republic") || longText.includes("república dominicana") || longText.includes("republica dominicana");
+  }
+
+  const address = String(place?.formattedAddress || place?.shortFormattedAddress || "").toLowerCase();
+  return address.includes("dominican republic") || address.includes("república dominicana") || address.includes("republica dominicana") || /(^|[ ,])do($|[ ,])/i.test(address);
+}
+
 function isLikelyBusinessPlace(place: any): boolean {
   const primaryType = typeof place.primaryType === "string" ? place.primaryType.toLowerCase() : "";
-  return !NON_BUSINESS_PLACE_TYPES.has(primaryType);
+  return !NON_BUSINESS_PLACE_TYPES.has(primaryType) && isDominicanRepublicPlace(place);
 }
 
 function isCoordinateOnlyLabel(label: string): boolean {
@@ -139,9 +152,9 @@ async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": apiKey,
         "X-Goog-FieldMask":
-        "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryType,places.primaryTypeDisplayName",
+        "places.id,places.displayName,places.formattedAddress,places.addressComponents,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryType,places.primaryTypeDisplayName",
     },
-    body: JSON.stringify({ textQuery, languageCode: "es", pageSize: 5 }),
+    body: JSON.stringify({ textQuery, languageCode: "es", includedRegionCodes: ["do"], pageSize: 5 }),
     signal: AbortSignal.timeout(8000),
   });
 
@@ -170,7 +183,7 @@ export async function findPlace(businessName: string, city: string): Promise<Pla
   return candidates[0] ?? null;
 }
 
-const PLACE_DETAILS_FIELD_MASK = "id,displayName,formattedAddress,rating,userRatingCount,websiteUri,nationalPhoneNumber,currentOpeningHours,photos,editorialSummary,businessStatus,googleMapsUri,primaryType,primaryTypeDisplayName";
+const PLACE_DETAILS_FIELD_MASK = "id,displayName,formattedAddress,addressComponents,rating,userRatingCount,websiteUri,nationalPhoneNumber,currentOpeningHours,photos,editorialSummary,businessStatus,googleMapsUri,primaryType,primaryTypeDisplayName";
 
 async function findPlaceById(placeId: string, apiKey: string): Promise<PlaceData | null> {
   const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
