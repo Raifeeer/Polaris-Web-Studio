@@ -62,15 +62,6 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
 const LOCAL_LIFT_SNAPSHOT_KEY = "polaris-local-lift-diagnostic-snapshot";
 const LOCAL_LIFT_ATLAS_RETRY_KEY = "polaris-local-lift-atlas-retry";
 
-const WISE_PHRASES = [
-  { es: "Tus clientes deciden con la información que encuentran.", en: "Customers decide with the information they find." },
-  { es: "Una presencia clara responde preguntas antes del primer mensaje.", en: "A clear presence answers questions before the first message." },
-  { es: "Las fotos reales ayudan a mostrar qué puede esperar un cliente.", en: "Real photos help show customers what to expect." },
-  { es: "Responder reseñas mantiene abierta la conversación.", en: "Replying to reviews keeps the conversation open." },
-  { es: "Horarios y servicios claros evitan pasos innecesarios.", en: "Clear hours and services remove unnecessary steps." },
-  { es: "Tu presencia debe llevar a las personas al siguiente paso.", en: "Your presence should lead people to the next step." },
-];
-
 const LOADING_PHRASES = {
   searching: [
     { es: "Buscando en Google...", en: "Searching Google..." },
@@ -93,29 +84,40 @@ const LOADING_PHRASES = {
   ],
 } as const;
 
-function WisePhrase({ lang }: { lang: string }) {
-  const [idx, setIdx] = useState(() => Math.floor(Math.random() * WISE_PHRASES.length));
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % WISE_PHRASES.length), 7000);
-    return () => clearInterval(t);
-  }, []);
-  const phrase = WISE_PHRASES[idx];
-  // Contenedor de altura fija (2 líneas a text-xs ≈ 32px) para que el layout
-  // no salte cuando una frase es más corta o más larga que la anterior.
+type LocalLiftFlowStatus = "idle" | "loading" | "confirm" | "queued" | "success" | "email_blocked" | "error";
+
+type LocalLiftLoadingStage = "searching" | "photos" | "verifying";
+
+function WisePhrase({
+  lang,
+  status,
+  loadingStage,
+}: {
+  lang: string;
+  status: LocalLiftFlowStatus;
+  loadingStage: LocalLiftLoadingStage;
+}) {
+  const phrase = status === "loading"
+    ? loadingStage === "searching"
+      ? { es: "Primero ubicamos el negocio correcto.", en: "First, we locate the right business." }
+      : loadingStage === "photos"
+        ? { es: "Las imágenes completan el contexto del lugar.", en: "Photos complete the context of the place." }
+        : { es: "Verificamos los datos antes de mostrártelos.", en: "We verify the details before showing them." }
+    : status === "confirm"
+      ? { es: "Tú eliges el lugar; nosotros partimos de ahí.", en: "You choose the place; we start from there." }
+      : status === "queued"
+        ? { es: "El diagnóstico seguirá su curso aunque cierres esta ventana.", en: "Your diagnosis will continue even if you close this window." }
+        : status === "success"
+          ? { es: "Un diagnóstico claro te ayuda a decidir qué sigue.", en: "A clear diagnosis helps you decide what comes next." }
+          : status === "email_blocked"
+            ? { es: "Si algo no coincide, puedes volver y pedir ayuda.", en: "If something looks wrong, you can go back and ask for help." }
+            : { es: "Una buena decisión empieza con información clara.", en: "A good decision starts with clear information." };
+
   return (
-    <div className="mt-6 h-8 relative overflow-hidden flex items-center justify-center">
-      <AnimatePresence mode="wait">
-        <motion.p
-          key={idx}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
-          className="absolute inset-0 flex items-center justify-center text-center text-xs text-[var(--color-text-tertiary)] italic px-4"
-        >
-          {lang === "en" ? phrase.en : phrase.es}
-        </motion.p>
-      </AnimatePresence>
+    <div className="mt-6 min-h-8 flex items-center justify-center px-4">
+      <p className="text-center text-xs text-[var(--color-text-tertiary)] italic leading-relaxed">
+        {lang === "en" ? phrase.en : phrase.es}
+      </p>
     </div>
   );
 }
@@ -1619,7 +1621,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             </motion.div>
           )}
 
-          <WisePhrase lang={language} />
+          <WisePhrase lang={language} status={status} loadingStage={loadingStage} />
         </motion.section>
 
         <motion.section {...motionReveal(0.04)} id="preguntas-frecuentes" className="scroll-mt-24 pt-24">
