@@ -264,6 +264,19 @@ export default function LocalLift() {
     window.scrollTo({ top: Math.max(0, alignedTop), behavior });
   };
 
+  // Las opciones pueden ser más altas que el viewport en móvil. Centrar todo el
+  // bloque calcula un top negativo y deja su encabezado detrás del navbar.
+  const scrollElementBelowNav = (element: HTMLElement | null, behavior: ScrollBehavior = prefersReducedMotion ? "auto" : "smooth") => {
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
+    const nav = document.querySelector<HTMLElement>("nav");
+    const navBottom = nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
+    const topInset = Math.max(24, navBottom + 12);
+    const visualOffset = window.visualViewport?.offsetTop ?? 0;
+    const alignedTop = window.scrollY + rect.top - topInset - visualOffset;
+    window.scrollTo({ top: Math.max(0, alignedTop), behavior });
+  };
+
   const toggleFaq = (index: number) => setOpenFaqIndex((current) => (current === index ? null : index));
 
   const scrollToSection = (id: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -287,11 +300,15 @@ export default function LocalLift() {
     if (!target) return;
     const alignState = () => {
       const anchor = target.querySelector<HTMLElement>("[data-scroll-anchor]") ?? target;
-      scrollElementToCenter(anchor);
+      if (status === "confirm" || status === "success") {
+        scrollElementBelowNav(anchor);
+      } else {
+        scrollElementToCenter(anchor);
+      }
     };
     const timer = window.setTimeout(alignState, 120);
     // Candidate cards can gain height when their first images finish decoding.
-    // Re-align once after that layout settles so the confirmation block remains visible.
+    // Re-align once after that layout settles so the confirmation/result header remains visible.
     const settleTimer = status === "confirm" ? window.setTimeout(alignState, 520) : undefined;
     return () => {
       window.clearTimeout(timer);
