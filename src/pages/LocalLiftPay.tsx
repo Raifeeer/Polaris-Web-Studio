@@ -1,7 +1,8 @@
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useState, type ComponentProps } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { FUNDING, PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, ArrowLeft, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, SwitchCamera, Zap } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, Zap } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
@@ -17,12 +18,14 @@ export default function LocalLiftPay() {
   const { leadId } = useParams<{ leadId: string }>();
   const [searchParams] = useSearchParams();
   const { language } = useLanguage();
+  const prefersReducedMotion = useReducedMotion();
   const [status, setStatus] = useState<"loading" | "ready" | "paid" | "notfound">("loading");
   const [errorMsg, setErrorMsg] = useState("");
   const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean } | null>(null);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
+  const [isSwitchingTier, setIsSwitchingTier] = useState(false);
 
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
 
@@ -55,6 +58,15 @@ export default function LocalLiftPay() {
   const price = TIER_PRICE[tier] || TIER_PRICE["impulso"];
   const otherTier = tier === "impulso" ? "ascenso" : "impulso";
   const otherPrice = TIER_PRICE[otherTier];
+
+  const handleTierChange = () => {
+    if (isSwitchingTier) return;
+    setIsSwitchingTier(true);
+    window.setTimeout(() => {
+      setSelectedTier(otherTier);
+      setIsSwitchingTier(false);
+    }, prefersReducedMotion ? 0 : 420);
+  };
 
   const handlePaymentApproval: NonNullable<ComponentProps<typeof PayPalButtons>["onApprove"]> = async (_data, actions) => {
     if (!actions.order) return;
@@ -242,8 +254,16 @@ export default function LocalLiftPay() {
               )}
             </div>
 
-            {/* Detalle de qué incluye el tier elegido */}
-            <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={tier}
+                initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8, scale: 0.99 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {/* Detalle de qué incluye el tier elegido */}
+                <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4">
               <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
                 <T en={`What's included in ${price.enLabel}`}>{`Qué incluye ${price.label}`}</T>
               </p>
@@ -298,11 +318,6 @@ export default function LocalLiftPay() {
                   }
                   onApprove={handlePaymentApproval}
                 />
-                <div className="my-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
-                  <span className="h-px flex-1 bg-[var(--color-border-subtle)]" />
-                  <T en="Or pay by card">O paga con tarjeta</T>
-                  <span className="h-px flex-1 bg-[var(--color-border-subtle)]" />
-                </div>
                 <PayPalButtons
                   fundingSource={FUNDING.CARD}
                   style={{ layout: "vertical", shape: "rect", color: "silver", label: "pay", height: 48 }}
@@ -316,6 +331,8 @@ export default function LocalLiftPay() {
                 />
               </PayPalCheckoutProvider>
             </div>
+              </motion.div>
+            </AnimatePresence>
 
             {errorMsg && (
               <div className="mt-4 flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
@@ -326,18 +343,22 @@ export default function LocalLiftPay() {
             {/* Secondary tier option */}
             <div className="mt-5 rounded-xl border border-dashed border-[var(--color-border-subtle)] px-4 py-3">
               <p className="text-xs text-[var(--color-text-tertiary)] text-center mb-2">
-                <T en={`Or switch to ${otherPrice.enLabel} ($${otherPrice.amount})`}>{`¿Prefieres ${otherPrice.label} ($${otherPrice.amount})?`}</T>
+                <T en="Want to continue with another plan?">¿Quieres seguir con otro plan?</T>
               </p>
               <button
                 type="button"
-                onClick={() => setSelectedTier(otherTier)}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-4 py-2 text-xs font-bold text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/14 transition-colors"
+                onClick={handleTierChange}
+                disabled={isSwitchingTier}
+                className="w-full inline-flex items-center justify-center rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-3 py-2 text-[11px] font-bold leading-none whitespace-nowrap text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 disabled:cursor-wait disabled:opacity-70"
               >
-                <SwitchCamera size={13} />
-                {otherTier === "impulso"
-                  ? <T en="Switch to Impulso ($29) — quick wins">Cambiar a Impulso ($29) — mejoras rápidas</T>
-                  : <T en="Switch to Ascenso ($99) — full implementation">Cambiar a Ascenso ($99) — implementación completa</T>
-                }
+                {isSwitchingTier ? (
+                  <span className="inline-flex items-center gap-2" aria-live="polite">
+                    <Loader2 size={13} className="animate-spin" />
+                    <T en="Changing plan…">Cambiando plan…</T>
+                  </span>
+                ) : (
+                  <T en={`Switch to ${otherPrice.enLabel} ($${otherPrice.amount})`}>{`Cambiar a ${otherPrice.label} ($${otherPrice.amount})`}</T>
+                )}
               </button>
             </div>
 
