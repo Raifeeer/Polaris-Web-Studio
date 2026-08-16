@@ -61,12 +61,12 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
 }
 
 const WISE_PHRASES = [
-  { es: "El 76% de las personas buscan en Google antes de visitar un negocio local.", en: "76% of people search Google before visiting a local business." },
-  { es: "Un perfil de Google optimizado recibe el doble de llamadas.", en: "An optimized Google profile gets twice as many calls." },
-  { es: "Las reseñas son el boca a boca del siglo XXI.", en: "Reviews are the word-of-mouth of the 21st century." },
-  { es: "El 88% confía en las reseñas tanto como en una recomendación personal.", en: "88% trust reviews as much as personal recommendations." },
-  { es: "Responder reseñas aumenta la confianza de nuevos clientes potenciales.", en: "Replying to reviews builds trust with potential new customers." },
-  { es: "Un negocio sin fotos reales pierde clientes antes de que entren.", en: "A business without real photos loses customers before they even arrive." },
+  { es: "Tus clientes deciden con la información que encuentran.", en: "Customers decide with the information they find." },
+  { es: "Una ficha clara responde preguntas antes del primer mensaje.", en: "A clear listing answers questions before the first message." },
+  { es: "Las fotos reales ayudan a mostrar qué puede esperar un cliente.", en: "Real photos help show customers what to expect." },
+  { es: "Responder reseñas mantiene abierta la conversación.", en: "Replying to reviews keeps the conversation open." },
+  { es: "Horarios y servicios claros evitan pasos innecesarios.", en: "Clear hours and services remove unnecessary steps." },
+  { es: "Tu ficha debe llevar a las personas al siguiente paso.", en: "Your listing should lead people to the next step." },
 ];
 
 function WisePhrase({ lang }: { lang: string }) {
@@ -112,10 +112,10 @@ const tiers = [
     enTime: "24 hours",
     accent: "amber",
     tierKey: undefined as string | undefined,
-    description: "Un mapa claro de lo que está frenando tus llamadas, mensajes o reservas.",
-    enDescription: "A clear map of what is blocking calls, messages, or bookings.",
+    description: "Una revisión breve para saber qué está frenando tus llamadas, mensajes o reservas.",
+    enDescription: "A focused review to see what may be getting in the way of calls, messages, or bookings.",
     items: [
-      ["Revisión visual de Google/Maps y WhatsApp", "Google/Maps and WhatsApp review"],
+      ["Revisión de Google, Maps y rutas de contacto", "Google, Maps, and contact-path review"],
       ["Cinco problemas prioritarios", "Five priority issues"],
       ["Plan de acción para los próximos 7 días", "A 7-day action plan"],
     ],
@@ -130,8 +130,8 @@ const tiers = [
     accent: "indigo",
     featured: true,
     tierKey: "impulso",
-    description: "La presencia local lista para que tus clientes entiendan, confíen y contacten.",
-    enDescription: "A local presence ready to help customers understand, trust, and contact you.",
+    description: "Ordenamos tu ficha y tus mensajes para que el negocio se entienda y sea más fácil contactarte.",
+    enDescription: "We organize your listing and customer messages so the business is easier to understand and contact.",
     items: [
       ["Auditoría completa de tu perfil local", "Complete local profile audit"],
       ["Descripción, servicios y llamadas a la acción", "Description, services, and calls to action"],
@@ -149,8 +149,8 @@ const tiers = [
     enTime: "3–5 days",
     accent: "violet",
     tierKey: "ascenso",
-    description: "Todo el sistema preparado y aplicado contigo, sin pedirte contraseñas.",
-    enDescription: "The complete system prepared and applied with you, without requesting passwords.",
+    description: "Te acompañamos a preparar y aplicar los cambios autorizados, sin pedirte contraseñas.",
+    enDescription: "We help prepare and apply the changes you approve, without asking for passwords.",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
       ["Implementación asistida de cambios autorizados", "Assisted implementation of authorized changes"],
@@ -390,10 +390,10 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
   const buyFormValid = buyForm.businessName.trim() && buyForm.city.trim() && buyForm.contactName.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(buyForm.email);
 
   useDocumentTitle(
-    "Polaris Local Lift | Más visibilidad y conversaciones en 48 horas",
-    "Polaris Local Lift | More local visibility and conversations in 48 hours",
-    "Optimización de Google Business Profile, Google Maps y WhatsApp para negocios de República Dominicana y clientes internacionales.",
-    "Google Business Profile, Google Maps, and WhatsApp optimization for businesses in the Dominican Republic and worldwide.",
+    "Polaris Local Lift | Revisa y mejora tu ficha de Google",
+    "Polaris Local Lift | Review and improve your Google listing",
+    "Revisión de Google Business Profile, Google Maps y rutas de contacto para negocios de República Dominicana.",
+    "Google Business Profile, Google Maps, and contact-path review for businesses in the Dominican Republic.",
   );
 
   useJsonLd("jsonld-local-lift", {
@@ -407,7 +407,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
     },
     areaServed: ["Dominican Republic", "Worldwide"],
     description:
-      "Local visibility and WhatsApp conversion optimization delivered in 48 hours.",
+      "Google Business Profile and Google Maps review for businesses in the Dominican Republic.",
     offers: {
       "@type": "Offer",
       priceCurrency: "USD",
@@ -427,16 +427,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <div className="relative z-10 max-w-4xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
               <MapPin size={13} />
-              <T en="Local visibility sprint · Dominican Republic">Sprint de visibilidad local · República Dominicana</T>
+              <T en="Local visibility · Dominican Republic">Visibilidad local · República Dominicana</T>
             </div>
             <h1 className="mt-6 text-4xl md:text-7xl font-display font-black tracking-[-0.05em] leading-[0.98]">
-              <T en="Your customers are already looking for you. Make sure they find the right information.">
-                Tus clientes ya te están buscando. Haz que encuentren la información correcta.
+              <T en="Make your Google listing easier to choose.">
+                Haz que tu ficha de Google ayude a decidir.
               </T>
             </h1>
             <p className="mt-6 max-w-2xl text-base md:text-xl leading-relaxed text-[var(--color-text-secondary)]">
-              <T en="Polaris Local Lift organizes your Google and WhatsApp presence within 48 hours so customers can understand what you offer, where you are, and how to contact you.">
-                Polaris Local Lift organiza tu presencia en Google y WhatsApp en 48 horas para que tus clientes entiendan qué ofreces, dónde estás y cómo contactarte.
+              <T en="We review what customers see before they call, message, or book: your details, services, photos, reviews, and contact paths.">
+                Revisamos lo que tus clientes ven antes de llamarte, escribirte o reservar: datos, servicios, fotos, reseñas y formas de contacto.
               </T>
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -445,20 +445,20 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
               >
                 <Search size={18} />
-                <T en="Get my audit now">Quiero mi diagnóstico ahora</T>
+                <T en="Review my listing">Revisar mi ficha</T>
                 <ArrowRight size={17} />
               </a>
               <a
                 href="#paquetes"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] px-6 py-4 text-sm font-black transition-colors hover:border-[var(--color-primary-base)]"
               >
-                <T en="See packages">Ver paquetes</T>
+                <T en="See what’s included">Ver qué incluye</T>
                 <ChevronRight size={17} />
               </a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[var(--color-text-tertiary)]">
-              <span className="inline-flex items-center gap-1.5"><Clock3 size={14} /> <T en="Fast delivery">Entrega rápida</T></span>
-              <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> <T en="Based in the Dominican Republic">Desde República Dominicana</T></span>
+              <span className="inline-flex items-center gap-1.5"><Clock3 size={14} /> <T en="Real business data">Datos reales</T></span>
+              <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> <T en="Clear deliverables">Entregables claros</T></span>
               <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} /> <T en="No ranking promises">Sin promesas de ranking</T></span>
             </div>
           </div>
@@ -466,9 +466,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
           {[
-            [Eye, "Que te entiendan", "Make your offer clear", "Descripción, servicios y datos sin contradicciones."],
-            [Search, "Que te encuentren", "Help customers find you", "Perfil local más completo, útil y fácil de revisar."],
-            [MessageCircle, "Que te contacten", "Make contact simple", "Rutas directas hacia WhatsApp, llamadas o reservas."],
+            [Eye, "Que entiendan tu negocio", "Help people understand you", "Descripción, servicios y horarios que no se contradicen."],
+            [Search, "Que encuentren lo correcto", "Help people find the right details", "Una ficha de Google más completa para buscarte y ubicarte."],
+            [MessageCircle, "Que sepan cómo contactarte", "Make the next step obvious", "Enlaces y llamadas a la acción que llevan al siguiente paso."],
           ].map(([Icon, title, enTitle, description]) => {
             const IconComponent = Icon as typeof Eye;
             return (
@@ -483,9 +483,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
         <section id="paquetes" className="pt-24">
           <div className="max-w-2xl">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Choose your starting point">Elige tu punto de partida</T></p>
-            <h2 className="mt-3 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="A faster way to improve your digital presence.">Una forma más rápida de mejorar tu presencia digital.</T></h2>
-            <p className="mt-4 text-[var(--color-text-secondary)] leading-relaxed"><T en="Start with a diagnosis or have us prepare the full system with you. No long contracts, no fabricated reviews, and no guarantees we cannot prove.">Empieza con un diagnóstico o deja que preparemos el sistema contigo. Sin contratos largos, reseñas inventadas ni garantías que no podamos demostrar.</T></p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Choose your level of help">Elige el nivel de ayuda que necesitas</T></p>
+            <h2 className="mt-3 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Start with clarity. Implement when you’re ready.">Empieza con claridad. Implementa cuando estés listo.</T></h2>
+            <p className="mt-4 text-[var(--color-text-secondary)] leading-relaxed"><T en="Start with a focused diagnosis, or ask us to prepare and apply the changes you approve.">Puedes comenzar con un diagnóstico puntual o pedirnos que preparemos y apliquemos los cambios que autorices.</T></p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-10">
@@ -514,7 +514,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 </div>
                 <a href={whatsappLink(`Hola Polaris, me interesa el paquete ${tier.name}. Quiero saber qué necesitas para comenzar.`)} target="_blank" rel="noreferrer" className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-transform hover:-translate-y-0.5 ${tier.featured ? "bg-[var(--color-primary-base)] text-white" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
                   <MessageCircle size={16} />
-                  <T en="Start on WhatsApp">Empezar por WhatsApp</T>
+                  <T en="Start with this review">Empezar con esta revisión</T>
                 </a>
 
                 {tier.tierKey && (
@@ -537,7 +537,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                         {buyStatus === "paid" ? (
                           <div className="flex items-start gap-2 text-emerald-500 text-xs font-black">
                             <Check size={16} className="mt-0.5 shrink-0" />
-                            <span><T en="Payment received. Your package will be prepared and sent to your email within 48 hours.">Pago recibido. Tu paquete se prepara y te llega a tu correo en las próximas 48 horas.</T></span>
+                            <span><T en="Payment received. We’ll prepare your deliverables and send them to your email within 48 hours.">Pago recibido. Prepararemos tus entregables y te los enviaremos a tu correo en las próximas 48 horas.</T></span>
                           </div>
                         ) : (
                           <>
@@ -607,34 +607,34 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-24">
           <div className="rounded-[var(--radius-bento)] glass-panel p-7 md:p-10 border border-[var(--color-border-subtle)]">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="The process">El proceso</T></p>
-            <h2 className="mt-3 text-3xl font-display font-black"><T en="Small scope. Visible progress.">Alcance pequeño. Progreso visible.</T></h2>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="A short process you can review">Un proceso corto que puedes revisar</T></p>
+            <h2 className="mt-3 text-3xl font-display font-black"><T en="Start with clarity. Review each step.">Empieza con claridad. Revisa cada paso.</T></h2>
             <div className="mt-8 space-y-6">
               {[
-                ["01", "Send your link", "Envíanos tu enlace y el objetivo principal del negocio."],
-                ["02", "Receive priorities", "Recibes un diagnóstico con acciones ordenadas por impacto y esfuerzo."],
-                ["03", "Implement with confidence", "Aplicamos solo los cambios autorizados y te entregamos todo documentado."],
-              ].map(([number, enTitle, esDescription]) => (
+                ["01", "Enter your business or paste your listing link", "Escribe tu negocio y ciudad o pega el enlace de tu ficha.", "Enter your business and city, or paste your listing link."],
+                ["02", "Confirm the right business", "Confirma que encontramos el negocio correcto.", "Confirm that we found the right business."],
+                ["03", "Get priorities you can act on", "Recibe prioridades claras y decide qué quieres implementar.", "Get clear priorities and decide what you want to implement."],
+              ].map(([number, enTitle, esTitle, enDescription]) => (
                 <div key={number} className="flex gap-4">
                   <span className="text-xs font-black font-mono text-[var(--color-primary-base)]">{number}</span>
-                  <div><h3 className="font-black"><T en={enTitle}>{enTitle === "Send your link" ? "Envíanos tu enlace" : enTitle === "Receive priorities" ? "Recibe prioridades" : "Implementa con confianza"}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]">{esDescription}</p></div>
+                  <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{enDescription === "Enter your business and city, or paste your listing link." ? "Escribe tu negocio y ciudad o pega el enlace de tu ficha." : enDescription === "Confirm that we found the right business." ? "Confirma que encontramos el negocio correcto." : "Recibe prioridades claras y decide qué quieres implementar."}</T></p></div>
                 </div>
               ))}
             </div>
           </div>
           <div className="rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
-            <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="Built on trust">Basado en confianza</T></span></div>
-            <h2 className="mt-4 text-3xl font-display font-black"><T en="Useful, honest, and ready to act.">Útil, honesto y listo para actuar.</T></h2>
-            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We work with the information you approve. We do not create fake reviews, invent business details, request passwords, or promise first place on Google.">Trabajamos con la información que tú apruebas. No creamos reseñas falsas, no inventamos datos del negocio, no pedimos contraseñas y no prometemos el primer lugar en Google.</T></p>
+            <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="Real data · approved changes">Datos reales · cambios autorizados</T></span></div>
+            <h2 className="mt-4 text-3xl font-display font-black"><T en="Your business stays yours. We organize the information.">Tu negocio sigue siendo tuyo. Nosotros ordenamos la información.</T></h2>
+            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We work with the information you approve. We don’t invent reviews, fill gaps with guesses, ask for passwords, or promise first place on Google.">Trabajamos con los datos que tú apruebas. No inventamos reseñas, no completamos información con suposiciones, no pedimos contraseñas y no prometemos el primer lugar en Google.</T></p>
             <div className="mt-8 flex flex-wrap gap-3 text-xs font-bold text-[var(--color-text-tertiary)]"><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2">PayPal</span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Bank transfer">Transferencia</T></span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Cash in DR">Efectivo en RD</T></span></div>
           </div>
         </section>
 
         <section id="diagnostico" className="mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
           <div className="text-center max-w-2xl mx-auto">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Ready to be easier to find?">¿Listo para que te encuentren más fácilmente?</T></p>
-            <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Get your diagnosis now.">Genera tu diagnóstico ahora.</T></h2>
-              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Enter your business name and city, or paste your direct Google Maps link — then confirm the listing before receiving the diagnosis.">Escribe el nombre y la ciudad de tu negocio, o pega directamente el enlace de Google Maps. Después confirmarás la ficha antes de recibir el diagnóstico.</T></p>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Review your listing">REVISA TU FICHA</T></p>
+            <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="See what customers find before they contact you.">Descubre qué ven tus clientes antes de contactarte.</T></h2>
+              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Enter your business and city or paste your Google Maps link. We’ll confirm the right listing first, then you can continue to the diagnosis.">Escribe el nombre y la ciudad de tu negocio o pega el enlace de Google Maps. Primero confirmaremos la ficha correcta; después podrás continuar con el diagnóstico.</T></p>
           </div>
 
           {status !== "success" && status !== "queued" && status !== "confirm" && (
@@ -738,6 +738,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 placeholder={language === "en" ? "Your email" : "Tu correo"}
                 className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
               />
+              <p className="sm:col-span-2 -mt-1 text-center text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">
+                <T en="We use it to send your priorities and follow-up details." >Lo usamos para enviarte tus prioridades y los detalles del siguiente paso.</T>
+              </p>
 
               {status === "error" && (
                 <div className="sm:col-span-2 flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
@@ -766,7 +769,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
                 >
                   <Search size={18} />
-                  <T en="Generate my diagnosis">Generar mi diagnóstico</T>
+                  <T en="Review my listing">Revisar mi ficha</T>
                   <ArrowRight size={17} />
                 </button>
               )}
