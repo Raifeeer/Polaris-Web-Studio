@@ -1156,9 +1156,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-8 max-w-2xl mx-auto">
+              className="mt-1 max-w-2xl mx-auto">
               {revealedByAtlas && (
-                <div className="mb-5 flex justify-center" role="img" aria-label="Atlas Assistant">
+                <div className="mb-3 flex justify-center" role="img" aria-label="Atlas Assistant">
                   <div className="flex items-center gap-3">
                     <AtlasMark variant="isotipo" className="h-14 w-14" />
                     <AtlasMark variant="wordmark" className="h-8 w-auto" />
