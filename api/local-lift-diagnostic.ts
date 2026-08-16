@@ -380,12 +380,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { businessName, city, email, contactName, mapsUrl, confirmedPlaceId, lang } = req.body || {};
+  const normalizedMapsUrl = typeof mapsUrl === "string" ? mapsUrl.trim() : "";
+  const normalizedConfirmedPlaceId = typeof confirmedPlaceId === "string" ? confirmedPlaceId.trim() : "";
+  const hasMapsUrl = Boolean(normalizedMapsUrl);
+  const normalizedBusinessName = typeof businessName === "string" ? businessName.trim() : "";
+  const normalizedCity = typeof city === "string" ? city.trim() : "";
 
-  if (typeof businessName !== "string" || !businessName.trim() || businessName.length > 200) {
-    return res.status(400).json({ error: "Falta el nombre del negocio." });
+  if (!hasMapsUrl && (!normalizedBusinessName || normalizedBusinessName.length > 200)) {
+    return res.status(400).json({ error: "Falta el nombre del negocio o un enlace de Google Maps." });
   }
-  if (typeof city !== "string" || !city.trim() || city.length > 100) {
-    return res.status(400).json({ error: "Falta la ciudad." });
+  if (!hasMapsUrl && (!normalizedCity || normalizedCity.length > 100)) {
+    return res.status(400).json({ error: "Falta la ciudad o un enlace de Google Maps." });
   }
   if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 200) {
     return res.status(400).json({ error: "El correo no es válido." });
@@ -394,8 +399,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Falta tu nombre." });
   }
   const language: "es" | "en" = lang === "en" ? "en" : "es";
-  const normalizedMapsUrl = typeof mapsUrl === "string" ? mapsUrl.trim() : "";
-  const normalizedConfirmedPlaceId = typeof confirmedPlaceId === "string" ? confirmedPlaceId.trim() : "";
   if (normalizedMapsUrl.length > 2000 || (normalizedMapsUrl && !isGoogleMapsUrl(normalizedMapsUrl))) {
     return res.status(400).json({
       reason: "maps_invalid",
@@ -420,7 +423,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const mapsPlace = normalizedMapsUrl ? await findPlaceByMapsUrl(normalizedMapsUrl) : null;
     const candidates = normalizedMapsUrl
       ? (mapsPlace ? [mapsPlace] : [])
-      : await findPlaceCandidates(businessName.trim(), city.trim());
+      : await findPlaceCandidates(normalizedBusinessName, normalizedCity);
     if (!candidates.length) {
       return res.status(404).json({
         reason: normalizedMapsUrl ? "maps_not_found" : "not_found",
@@ -439,6 +442,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Si hay varios, el cliente elige en la UI antes de que guardemos.
     // En ambos casos devolvemos el array completo para que la UI decida.
     const place = candidates[0];
+    const leadCity = normalizedCity || place.address || "República Dominicana";
 
     if (normalizedMapsUrl && !normalizedConfirmedPlaceId) {
       return res.json({ success: true, requiresConfirmation: true, candidates, place });
@@ -461,7 +465,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const firestore = getFirestore(firebaseApp, "polaris-web-studio");
       const docRef = await firestore.collection("localLiftDiagnostics").add({
         businessName: place.name,
-        city,
+        city: leadCity,
         contactName,
         email,
         placeData: place,
@@ -499,8 +503,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           to: "hola@polarisweb.studio",
           replyTo: email,
           subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
-          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\nCandidatos encontrados: ${candidates.length}\n\n(El diagnóstico con IA todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
-          html: buildInternalAlertHtml(null, place, city, contactName, email),
+          text: `Negocio: ${place.name}\nCiudad: ${leadCity}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\nCandidatos encontrados: ${candidates.length}\n\n(El diagnóstico con IA todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
+          html: buildInternalAlertHtml(null, place, leadCity, contactName, email),
         });
       } catch (mailErr) {
         console.error("[local-lift-diagnostic] Error enviando alerta interna:", mailErr);

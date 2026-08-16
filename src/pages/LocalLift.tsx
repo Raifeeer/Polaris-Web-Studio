@@ -193,7 +193,6 @@ export default function LocalLift() {
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
   const [mapsUrl, setMapsUrl] = useState("");
-  const [errorKind, setErrorKind] = useState<"not_found" | "maps_invalid" | "maps_not_found" | null>(null);
   const [confirmingPlaceId, setConfirmingPlaceId] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "confirm" | "queued" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
@@ -213,10 +212,10 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   // Google, no la generación.
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!businessName.trim() || !city.trim() || !contactName.trim() || !email.trim()) return;
+    if ((!businessName.trim() || !city.trim()) && !mapsUrl.trim()) return;
+    if (!contactName.trim() || !email.trim()) return;
     setStatus("loading");
     setErrorMsg("");
-    setErrorKind(null);
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
@@ -226,7 +225,6 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       const data = await res.json();
       if (!res.ok) {
         setErrorMsg(data.error || (language === "en" ? "Something went wrong." : "Algo salió mal."));
-        setErrorKind(data.reason === "maps_invalid" || data.reason === "maps_not_found" ? data.reason : "not_found");
         setStatus("error");
         return;
       }
@@ -237,7 +235,6 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       setStatus("confirm");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
-      setErrorKind("not_found");
       setStatus("error");
     }
   };
@@ -251,7 +248,6 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
 
     setConfirmingPlaceId(candidate.id || candidate.name);
     setErrorMsg("");
-    setErrorKind(null);
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
@@ -269,7 +265,6 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       const data = await res.json();
       if (!res.ok) {
         setErrorMsg(data.error || (language === "en" ? "Something went wrong." : "Algo salió mal."));
-        setErrorKind(data.reason === "maps_invalid" || data.reason === "maps_not_found" ? data.reason : "not_found");
         setCandidates([]);
         setStatus("error");
         return;
@@ -280,7 +275,6 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       setStatus("queued");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
-      setErrorKind("not_found");
       setStatus("error");
     } finally {
       setConfirmingPlaceId(null);
@@ -588,14 +582,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <div className="text-center max-w-2xl mx-auto">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Ready to be easier to find?">¿Listo para que te encuentren más fácilmente?</T></p>
             <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Get your diagnosis now.">Genera tu diagnóstico ahora.</T></h2>
-              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Tell us your business name and city — we'll find your listing first, then you can confirm it before receiving the diagnosis.">Dinos el nombre de tu negocio y ciudad — primero encontraremos tu ficha y podrás confirmarla antes de recibir el diagnóstico.</T></p>
+              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]"><T en="Enter your business name and city, or paste your direct Google Maps link — then confirm the listing before receiving the diagnosis.">Escribe el nombre y la ciudad de tu negocio, o pega directamente el enlace de Google Maps. Después confirmarás la ficha antes de recibir el diagnóstico.</T></p>
           </div>
 
           {status !== "success" && status !== "queued" && status !== "confirm" && (
             <form onSubmit={handleDiagnosticSubmit} className="mt-8 max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
               <input
                 type="text"
-                required
                 maxLength={200}
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
@@ -604,12 +597,24 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               />
               <input
                 type="text"
-                required
                 maxLength={100}
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder={language === "en" ? "City" : "Ciudad"}
                 className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+              />
+              <div className="sm:col-span-2 -mt-1 px-1 text-xs leading-relaxed text-[var(--color-text-tertiary)]">
+                <T en="Or paste your direct Google Maps link below if you prefer not to type the business name or city.">O pega directamente abajo el enlace de Google Maps si prefieres no escribir el nombre ni la ciudad.</T>
+              </div>
+              <input
+                type="url"
+                inputMode="url"
+                maxLength={2000}
+                value={mapsUrl}
+                onChange={(e) => setMapsUrl(e.target.value)}
+                placeholder="https://maps.app.goo.gl/..."
+                aria-label={language === "en" ? "Direct Google Maps link (optional)" : "Enlace directo de Google Maps (opcional)"}
+                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
               />
               <input
                 type="text"
@@ -631,32 +636,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               />
 
               {status === "error" && (
-                <div className="sm:col-span-2 space-y-3">
-                  <div className="flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
-                    <AlertCircle size={15} className="mt-0.5 shrink-0" />
-                    <span>{errorMsg}</span>
-                  </div>
-                  {(errorKind === "not_found" || errorKind === "maps_invalid" || errorKind === "maps_not_found") && (
-                    <div className="rounded-xl border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/5 p-4 text-left">
-                      <div className="flex items-start gap-2">
-                        <MapPin size={16} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />
-                        <div>
-                          <p className="text-sm font-black"><T en="Paste your direct Google Maps link">Pega aquí el enlace directo de Google Maps</T></p>
-                          <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]"><T en="We will identify the exact listing first. No WhatsApp required.">Primero identificaremos la ficha exacta. No necesitas escribirnos por WhatsApp.</T></p>
-                        </div>
-                      </div>
-                      <input
-                        type="url"
-                        inputMode="url"
-                        maxLength={2000}
-                        value={mapsUrl}
-                        onChange={(e) => setMapsUrl(e.target.value)}
-                        placeholder="https://maps.app.goo.gl/..."
-                        aria-label={language === "en" ? "Direct Google Maps link" : "Enlace directo de Google Maps"}
-                        className="glass-input mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
-                      />
-                    </div>
-                  )}
+                <div className="sm:col-span-2 flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
+                  <AlertCircle size={15} className="mt-0.5 shrink-0" />
+                  <span>{errorMsg}</span>
                 </div>
               )}
 
@@ -748,7 +730,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               <div className="mt-4 text-center">
                 <button
                   type="button"
-                  onClick={() => { setCandidates([]); setPlace(null); setDiagnosticLeadId(null); setMapsUrl(""); setErrorKind(null); setStatus("idle"); }}
+                  onClick={() => { setCandidates([]); setPlace(null); setDiagnosticLeadId(null); setMapsUrl(""); setStatus("idle"); }}
                   className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"
                 >
                   <T en="None of these — search again">Ninguna de estas — buscar de nuevo</T>
