@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlace, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
+import { findPlaceCandidates, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
 // maxDuration explícito) -- no el techo duro de 10s que asumía la versión
@@ -406,15 +406,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // "5-10 minutos" que mostraba la pantalla era pura ficción: el
     // diagnóstico ya estaba generado y el correo ya había salido en este
     // mismo request, sin importar qué mostrara la UI.
-    const place = await findPlace(businessName.trim(), city.trim());
-    if (!place) {
+    const candidates = await findPlaceCandidates(businessName.trim(), city.trim());
+    if (!candidates.length) {
       return res.status(404).json({
         error:
           language === "en"
             ? "We couldn't find that exact listing on Google. Double-check the business name and city, or share the Google Maps link directly with us on WhatsApp."
-            : "No pudimos encontrar esa ficha exacta en Google. Revisa el nombre del negocio y la ciudad, o compartinos el link de Google Maps directo por WhatsApp.",
+            : "No pudimos encontrar esa ficha exacta en Google. Revisa el nombre del negocio y la ciudad, o compártenos el link de Google Maps directo por WhatsApp.",
       });
     }
+
+    // Si hay un solo candidato, el cliente confirma directamente.
+    // Si hay varios, el cliente elige en la UI antes de que guardemos.
+    // En ambos casos devolvemos el array completo para que la UI decida.
+    const place = candidates[0];
 
     const emailScheduledAt = Date.now() + (5 + Math.random() * 5) * 60 * 1000;
 
@@ -460,7 +465,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           to: "hola@polarisweb.studio",
           replyTo: email,
           subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
-          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\n\n(El diagnóstico con IA todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
+          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\nCandidatos encontrados: ${candidates.length}\n\n(El diagnóstico con IA todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
           html: buildInternalAlertHtml(null, place, city, contactName, email),
         });
       } catch (mailErr) {
@@ -468,7 +473,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    return res.json({ success: true, place, leadId });
+    return res.json({ success: true, candidates, place, leadId });
   } catch (error: any) {
     console.error("[local-lift-diagnostic] Error:", error);
     return res.status(500).json({

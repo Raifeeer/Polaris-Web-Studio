@@ -76,19 +76,23 @@ function WisePhrase({ lang }: { lang: string }) {
     return () => clearInterval(t);
   }, []);
   const phrase = WISE_PHRASES[idx];
+  // Contenedor de altura fija (2 líneas a text-xs ≈ 32px) para que el layout
+  // no salte cuando una frase es más corta o más larga que la anterior.
   return (
-    <AnimatePresence mode="wait">
-      <motion.p
-        key={idx}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.6 }}
-        className="mt-6 text-center text-xs text-[var(--color-text-tertiary)] italic"
-      >
-        {lang === "en" ? phrase.en : phrase.es}
-      </motion.p>
-    </AnimatePresence>
+    <div className="mt-6 h-8 relative overflow-hidden flex items-center justify-center">
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={idx}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6 }}
+          className="absolute inset-0 flex items-center justify-center text-center text-xs text-[var(--color-text-tertiary)] italic px-4"
+        >
+          {lang === "en" ? phrase.en : phrase.es}
+        </motion.p>
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -178,6 +182,7 @@ interface PlaceResult {
   rating: number | null;
   reviewCount: number;
   mapsUri: string | null;
+  photoUrls?: string[];
 }
 
 export default function LocalLift() {
@@ -190,6 +195,7 @@ export default function LocalLift() {
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
+  const [candidates, setCandidates] = useState<PlaceResult[]>([]);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
 const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
@@ -218,7 +224,9 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
         setStatus("error");
         return;
       }
-      setPlace(data.place);
+      const cands: PlaceResult[] = Array.isArray(data.candidates) && data.candidates.length ? data.candidates : (data.place ? [data.place] : []);
+      setCandidates(cands);
+      setPlace(cands[0] ?? data.place ?? null);
       setDiagnosticLeadId(data.leadId || null);
       setStatus("confirm");
     } catch {
@@ -604,46 +612,81 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             </form>
           )}
 
-          {status === "confirm" && place && (
-            <div className="mt-8 max-w-xl mx-auto rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-6 text-center">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)] mb-3">
-                <T en="Is this your business?">¿Es tu negocio?</T>
+          {status === "confirm" && candidates.length > 0 && (
+            <div className="mt-8 max-w-xl mx-auto">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)] mb-4 text-center">
+                {candidates.length > 1
+                  ? <T en="We found several listings — which one is yours?">Encontramos varias fichas — ¿cuál es la tuya?</T>
+                  : <T en="Is this your business?">¿Es tu negocio?</T>
+                }
               </p>
-              <p className="text-xl font-display font-black tracking-tight">{place.name}</p>
-              {place.address && <p className="mt-1 text-xs text-[var(--color-text-tertiary)]">{place.address}</p>}
-              {place.primaryType && <p className="mt-0.5 text-xs text-[var(--color-text-tertiary)] capitalize">{place.primaryType.replace(/_/g, " ")}</p>}
-              {place.rating && (
-                <p className="mt-1 text-xs text-amber-400 font-bold">★ {place.rating}{place.reviewCount ? ` · ${place.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}</p>
-              )}
-              {place.mapsUri && (
-                <a href={place.mapsUri} target="_blank" rel="noreferrer" className="mt-2 inline-block text-[10px] underline text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]">
-                  <T en="View on Google Maps">Ver en Google Maps</T>
-                </a>
-              )}
-              <div className="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="space-y-3">
+                {candidates.map((cand, i) => (
+                  <div key={i} className="rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] overflow-hidden">
+                    {/* Franja de fotos reales del lugar */}
+                    {cand.photoUrls && cand.photoUrls.length > 0 && (
+                      <div className="flex gap-0.5 h-28">
+                        {cand.photoUrls.slice(0, 3).map((url, pi) => (
+                          <img
+                            key={pi}
+                            src={url}
+                            alt={cand.name}
+                            className="flex-1 object-cover"
+                            style={{ minWidth: 0 }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <p className="font-display font-black text-base tracking-tight">{cand.name}</p>
+                      {cand.address && <p className="mt-0.5 text-xs text-[var(--color-text-tertiary)]">{cand.address}</p>}
+                      {cand.primaryType && <p className="text-xs text-[var(--color-text-tertiary)] capitalize">{cand.primaryType.replace(/_/g, " ")}</p>}
+                      {cand.rating != null && (
+                        <p className="mt-1 text-xs text-amber-400 font-bold">
+                          ★ {cand.rating}{cand.reviewCount ? ` · ${cand.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}
+                        </p>
+                      )}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => { setPlace(cand); setStatus("queued"); }}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white shadow-sm shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                        >
+                          <Check size={13} />
+                          <T en="This is mine">Este es el mío</T>
+                        </button>
+                        {cand.mapsUri && (
+                          <a
+                            href={cand.mapsUri}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border-subtle)] px-3 py-2 text-xs text-[var(--color-text-tertiary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                          >
+                            <MapPin size={12} />
+                            <T en="View on Maps">Ver en Maps</T>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 text-center">
                 <button
                   type="button"
-                  onClick={() => setStatus("queued")}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-3 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                  onClick={() => { setCandidates([]); setPlace(null); setDiagnosticLeadId(null); setStatus("idle"); }}
+                  className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"
                 >
-                  <Check size={16} />
-                  <T en="Yes, that's my business">Sí, es mi negocio</T>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPlace(null); setDiagnosticLeadId(null); setStatus("idle"); }}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-6 py-3 text-sm font-semibold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/50 transition-colors"
-                >
-                  <T en="No, search again">No, buscar de nuevo</T>
+                  <T en="None of these — search again">Ninguna de estas — buscar de nuevo</T>
                 </button>
               </div>
             </div>
           )}
 
           {status === "queued" && (
-            <div className="mt-6 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-6">
+            <div className="mt-4 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-5">
               {revealNowLoading ? (
-                <div className="flex flex-col items-center gap-2 py-2">
+                <div className="flex flex-col items-center gap-2">
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="solving"
@@ -724,17 +767,26 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 )}
               </div>
 
-              <div className="mt-6 rounded-xl bg-[var(--color-surface-elevated)] p-4">
-                <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-3"><T en="7-day action plan (preview)">Plan de acción de 7 días (vista previa)</T></p>
-                <div className="space-y-1.5">
+              <div className="mt-6">
+                <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] mb-3">
+                  <T en="7-day action plan (preview)">Plan de acción de 7 días (vista previa)</T>
+                </p>
+                <div className="space-y-2">
                   {diagnostic.sevenDayPlan.slice(0, 3).map((d) => (
-                    <p key={d.day} className="text-xs text-[var(--color-text-secondary)]"><span className="font-bold text-[var(--color-text-primary)]">{language === "en" ? "Day" : "Día"} {d.day}:</span> {d.action}</p>
+                    <div key={d.day} className="flex items-start gap-3 rounded-xl border border-[var(--color-border-subtle)] p-3">
+                      <span className="shrink-0 w-7 h-7 rounded-full bg-[var(--color-primary-base)] flex items-center justify-center text-[10px] font-black text-white">
+                        {d.day}
+                      </span>
+                      <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed pt-0.5">{d.action}</p>
+                    </div>
                   ))}
                 </div>
                 {diagnostic.sevenDayPlan.length > 3 && (
-                  <p className="mt-2 text-xs text-[var(--color-text-tertiary)] text-center">
-                    <T en={`+ ${diagnostic.sevenDayPlan.length - 3} more days — unlock the full plan`}>{`+ ${diagnostic.sevenDayPlan.length - 3} días más — desbloquea el plan completo`}</T>
-                  </p>
+                  <div className="mt-2 rounded-xl border border-dashed border-[var(--color-border-subtle)] px-4 py-2.5 text-center">
+                    <p className="text-xs text-[var(--color-text-tertiary)]">
+                      <T en={`+ ${diagnostic.sevenDayPlan.length - 3} more days — unlock the full plan`}>{`+ ${diagnostic.sevenDayPlan.length - 3} días más — desbloquea el plan completo`}</T>
+                    </p>
+                  </div>
                 )}
               </div>
 

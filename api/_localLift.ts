@@ -20,6 +20,7 @@ export interface PlaceData {
   hasPhone: boolean;
   hasHours: boolean;
   photoCount: number;
+  photoUrls: string[];
   hasDescription: boolean;
   editorialSummary: string | null;
   isOperational: boolean;
@@ -33,10 +34,38 @@ export interface RealReview {
   text: string;
 }
 
-export async function findPlace(businessName: string, city: string): Promise<PlaceData | null> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
-  if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY no configurada");
+function buildPlaceData(place: any, apiKey: string, fallbackName: string): PlaceData {
+  const photos = Array.isArray(place.photos) ? place.photos : [];
+  const photoUrls = photos
+    .slice(0, 3)
+    .map((p: any) =>
+      p?.name
+        ? `https://places.googleapis.com/v1/${p.name}/media?maxWidthPx=600&key=${apiKey}`
+        : null
+    )
+    .filter(Boolean) as string[];
 
+  return {
+    id: place.id,
+    name: place.displayName?.text || fallbackName,
+    address: place.formattedAddress || null,
+    rating: typeof place.rating === "number" ? place.rating : null,
+    reviewCount: place.userRatingCount || 0,
+    hasWebsite: !!place.websiteUri,
+    websiteUri: place.websiteUri || null,
+    hasPhone: !!place.nationalPhoneNumber,
+    hasHours: !!place.currentOpeningHours,
+    photoCount: photos.length,
+    photoUrls,
+    hasDescription: !!place.editorialSummary?.text,
+    editorialSummary: place.editorialSummary?.text || null,
+    isOperational: place.businessStatus ? place.businessStatus === "OPERATIONAL" : true,
+    mapsUri: place.googleMapsUri || null,
+    primaryType: place.primaryTypeDisplayName?.text || null,
+  };
+}
+
+async function searchPlaces(textQuery: string, apiKey: string): Promise<any[]> {
   const res = await fetch("https://places.googleapis.com/v1/places:searchText", {
     method: "POST",
     headers: {
@@ -45,36 +74,33 @@ export async function findPlace(businessName: string, city: string): Promise<Pla
       "X-Goog-FieldMask":
         "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.websiteUri,places.nationalPhoneNumber,places.currentOpeningHours,places.photos,places.editorialSummary,places.businessStatus,places.googleMapsUri,places.primaryTypeDisplayName",
     },
-    body: JSON.stringify({ textQuery: `${businessName} ${city}`, languageCode: "es" }),
+    body: JSON.stringify({ textQuery, languageCode: "es", pageSize: 5 }),
     signal: AbortSignal.timeout(8000),
   });
 
   if (!res.ok) {
     console.error("[_localLift] Places API error:", res.status, await res.text().catch(() => ""));
-    return null;
+    return [];
   }
 
   const data = await res.json();
-  const place = data?.places?.[0];
-  if (!place) return null;
+  return Array.isArray(data?.places) ? data.places : [];
+}
 
-  return {
-    id: place.id,
-    name: place.displayName?.text || businessName,
-    address: place.formattedAddress || null,
-    rating: typeof place.rating === "number" ? place.rating : null,
-    reviewCount: place.userRatingCount || 0,
-    hasWebsite: !!place.websiteUri,
-    websiteUri: place.websiteUri || null,
-    hasPhone: !!place.nationalPhoneNumber,
-    hasHours: !!place.currentOpeningHours,
-    photoCount: Array.isArray(place.photos) ? place.photos.length : 0,
-    hasDescription: !!place.editorialSummary?.text,
-    editorialSummary: place.editorialSummary?.text || null,
-    isOperational: place.businessStatus ? place.businessStatus === "OPERATIONAL" : true,
-    mapsUri: place.googleMapsUri || null,
-    primaryType: place.primaryTypeDisplayName?.text || null,
-  };
+// Devuelve hasta 3 candidatos para que el cliente elija si hay varias sucursales.
+export async function findPlaceCandidates(businessName: string, city: string): Promise<PlaceData[]> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  if (!apiKey) throw new Error("GOOGLE_PLACES_API_KEY no configurada");
+
+  const places = await searchPlaces(`${businessName} ${city}`, apiKey);
+  if (!places.length) return [];
+
+  return places.slice(0, 3).map((p) => buildPlaceData(p, apiKey, businessName));
+}
+
+export async function findPlace(businessName: string, city: string): Promise<PlaceData | null> {
+  const candidates = await findPlaceCandidates(businessName, city);
+  return candidates[0] ?? null;
 }
 
 // Google Places API (New) solo devuelve hasta 5 reseñas reales por ficha,
@@ -199,7 +225,7 @@ Cantidad de reseñas: ${place.reviewCount}
 Tiene sitio web: ${place.hasWebsite ? `sí (${place.websiteUri})` : "no"}
 Tiene teléfono visible: ${place.hasPhone ? "sí" : "no"}
 Tiene horario cargado: ${place.hasHours ? "sí" : "no"}
-Cantidad de fotos: ${place.photoCount}
+Cantidad de fotos: ${place.photoCount} (${place.photoUrls.length} disponibles para mostrar)
 Descripción actual: ${place.editorialSummary || "sin descripción"}
 Estado: ${place.isOperational ? "operativo" : "cerrado o no operativo según Google"}
 `.trim();
