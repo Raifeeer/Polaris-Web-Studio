@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import {
@@ -204,9 +204,49 @@ export default function LocalLift() {
   const [candidates, setCandidates] = useState<PlaceResult[]>([]);
   const [visibleCandidateCount, setVisibleCandidateCount] = useState(3);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
-const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
+  const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
+  const loadingRef = useRef<HTMLDivElement | null>(null);
+  const candidatesRef = useRef<HTMLDivElement | null>(null);
+  const queuedRef = useRef<HTMLDivElement | null>(null);
+  const successRef = useRef<HTMLDivElement | null>(null);
+  const motionReveal = (delay = 0) => prefersReducedMotion
+    ? { initial: false }
+    : {
+        initial: { opacity: 0, y: 24 },
+        whileInView: { opacity: 1, y: 0 },
+        viewport: { once: true, amount: 0.2 },
+        transition: { duration: 0.62, delay, ease: [0.22, 1, 0.36, 1] as const },
+      };
+
+  const scrollToSection = (id: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const target = document.getElementById(id);
+    if (!target) return;
+    event.preventDefault();
+    target.scrollIntoView({ behavior: prefersReducedMotion ? "auto" : "smooth", block: "start" });
+    window.history.replaceState(null, "", `#${id}`);
+  };
+
+  useEffect(() => {
+    const target = status === "loading"
+      ? loadingRef.current
+      : status === "confirm"
+        ? candidatesRef.current
+        : status === "queued"
+          ? queuedRef.current
+          : status === "success"
+            ? successRef.current
+            : null;
+    if (!target) return;
+    const timer = window.setTimeout(() => {
+      target.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "center",
+      });
+    }, 90);
+    return () => window.clearTimeout(timer);
+  }, [status, prefersReducedMotion]);
 
   const switchLookupMode = (mode: "name" | "maps") => {
     setLookupMode(mode);
@@ -444,7 +484,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-16">
-        <section className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 py-12 md:px-14 md:py-20 border border-[var(--color-primary-base)]/20">
+        <motion.section {...motionReveal(0)} className="relative overflow-hidden rounded-[var(--radius-bento)] glass-panel px-6 py-12 md:px-14 md:py-20 border border-[var(--color-primary-base)]/20">
           <div className="absolute -top-28 -right-20 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-violet-500/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
@@ -463,21 +503,27 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               </T>
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <a
+              <motion.a
                 href="#diagnostico"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                onClick={scrollToSection("diagnostico")}
+                whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.015 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-shadow hover:shadow-2xl hover:shadow-indigo-500/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
               >
                 <Search size={18} />
                 <T en="Review my listing">Revisar mi ficha</T>
                 <ArrowRight size={17} />
-              </a>
-              <a
+              </motion.a>
+              <motion.a
                 href="#paquetes"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] px-6 py-4 text-sm font-black transition-colors hover:border-[var(--color-primary-base)]"
+                onClick={scrollToSection("paquetes")}
+                whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] px-6 py-4 text-sm font-black transition-colors hover:border-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
               >
                 <T en="See what’s included">Ver qué incluye</T>
                 <ChevronRight size={17} />
-              </a>
+              </motion.a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[var(--color-text-tertiary)]">
               <span className="inline-flex items-center gap-1.5"><Clock3 size={14} /> <T en="Real business data">Datos reales</T></span>
@@ -485,26 +531,26 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} /> <T en="No ranking promises">Sin promesas de ranking</T></span>
             </div>
           </div>
-        </section>
+        </motion.section>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
+        <motion.section {...motionReveal(0.08)} className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">
           {[
             [Eye, "Que entiendan tu negocio", "Help people understand you", "Descripción, servicios y horarios que no se contradicen."],
             [Search, "Que encuentren lo correcto", "Help people find the right details", "Una ficha de Google más completa para buscarte y ubicarte."],
             [MessageCircle, "Que sepan cómo contactarte", "Make the next step obvious", "Enlaces y llamadas a la acción que llevan al siguiente paso."],
-          ].map(([Icon, title, enTitle, description]) => {
+          ].map(([Icon, title, enTitle, description], index) => {
             const IconComponent = Icon as typeof Eye;
             return (
-              <div key={title as string} className="rounded-[var(--radius-bento)] glass-panel p-6 border border-[var(--color-border-subtle)]">
+              <motion.div key={title as string} {...motionReveal(index * 0.08)} whileHover={prefersReducedMotion ? undefined : { y: -5 }} className="rounded-[var(--radius-bento)] glass-panel p-6 border border-[var(--color-border-subtle)] transition-shadow duration-300 hover:shadow-xl hover:shadow-indigo-500/10">
                 <IconComponent size={22} className="text-[var(--color-primary-base)]" />
                 <h2 className="mt-5 text-xl font-display font-black"><T en={enTitle as string}>{title as string}</T></h2>
                 <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={description as string}>{description as string}</T></p>
-              </div>
+              </motion.div>
             );
           })}
-        </section>
+        </motion.section>
 
-        <section id="paquetes" className="pt-24">
+        <motion.section {...motionReveal(0.04)} id="paquetes" className="scroll-mt-24 pt-24">
           <div className="max-w-2xl">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Choose your level of help">Elige el nivel de ayuda que necesitas</T></p>
             <h2 className="mt-3 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Start with clarity. Implement when you’re ready.">Empieza con claridad. Implementa cuando estés listo.</T></h2>
@@ -512,8 +558,8 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-10">
-            {tiers.map((tier) => (
-              <article key={tier.name} className={`relative flex flex-col rounded-[var(--radius-bento)] p-7 border ${tier.featured ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/8 shadow-xl shadow-indigo-500/10" : "border-[var(--color-border-subtle)] glass-panel"}`}>
+            {tiers.map((tier, index) => (
+              <motion.article key={tier.name} {...motionReveal(index * 0.1)} whileHover={prefersReducedMotion ? undefined : { y: -6 }} className={`relative flex flex-col rounded-[var(--radius-bento)] p-7 border transition-shadow duration-300 hover:shadow-2xl hover:shadow-indigo-500/10 ${tier.featured ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/8 shadow-xl shadow-indigo-500/10" : "border-[var(--color-border-subtle)] glass-panel"}`}>
                 {tier.featured && <div className="absolute -top-3 left-6 inline-flex items-center gap-1.5 rounded-full bg-[var(--color-primary-base)] px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white"><Star size={12} fill="currentColor" /> <T en="Recommended">Recomendado</T></div>}
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -535,28 +581,37 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     </div>
                   ))}
                 </div>
-                <a href={whatsappLink(`Hola Polaris, me interesa el paquete ${tier.name}. Quiero saber qué necesitas para comenzar.`)} target="_blank" rel="noreferrer" className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-transform hover:-translate-y-0.5 ${tier.featured ? "bg-[var(--color-primary-base)] text-white" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
+                <motion.a href={whatsappLink(`Hola Polaris, me interesa el paquete ${tier.name}. Quiero saber qué necesitas para comenzar.`)} target="_blank" rel="noreferrer" whileHover={prefersReducedMotion ? undefined : { y: -2 }} whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }} className={`mt-8 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black transition-shadow hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2 ${tier.featured ? "bg-[var(--color-primary-base)] text-white shadow-indigo-500/20" : "border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)]"}`}>
                   <MessageCircle size={16} />
                   <T en="Start with this review">Empezar con esta revisión</T>
-                </a>
+                </motion.a>
 
                 {tier.tierKey && (
                   <>
-                    <button
+                    <motion.button
                       type="button"
                       onClick={() => {
                         setBuyStatus("idle");
                         setBuyError("");
                         setBuyOpenTier(buyOpenTier === tier.tierKey ? null : tier.tierKey!);
                       }}
-                      className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] transition-colors"
+                      whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+                      whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
+                      className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-black border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                     >
                       <Zap size={16} className="text-[var(--color-primary-base)]" />
                       <T en="Buy now with PayPal">Comprar ahora con PayPal</T>
-                    </button>
+                    </motion.button>
 
+                    <AnimatePresence initial={false}>
                     {buyOpenTier === tier.tierKey && (
-                      <div className="mt-4 rounded-xl bg-[var(--color-surface-elevated)] p-4">
+                      <motion.div
+                        key="buy-form"
+                        initial={prefersReducedMotion ? false : { opacity: 0, height: 0, y: -8 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={prefersReducedMotion ? undefined : { opacity: 0, height: 0, y: -8 }}
+                        transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
+                        className="mt-4 overflow-hidden rounded-xl bg-[var(--color-surface-elevated)] p-4">
                         {buyStatus === "paid" ? (
                           <div className="flex items-start gap-2 text-emerald-500 text-xs font-black">
                             <Check size={16} className="mt-0.5 shrink-0" />
@@ -565,10 +620,10 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                         ) : (
                           <>
                             <div className="grid grid-cols-1 gap-2">
-                              <input type="text" placeholder={language === "en" ? "Business name" : "Nombre del negocio"} value={buyForm.businessName} onChange={(e) => setBuyForm({ ...buyForm, businessName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
-                              <input type="text" placeholder={language === "en" ? "City" : "Ciudad"} value={buyForm.city} onChange={(e) => setBuyForm({ ...buyForm, city: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
-                              <input type="text" placeholder={language === "en" ? "Your name" : "Tu nombre"} value={buyForm.contactName} onChange={(e) => setBuyForm({ ...buyForm, contactName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
-                              <input type="email" placeholder={language === "en" ? "Your email" : "Tu correo"} value={buyForm.email} onChange={(e) => setBuyForm({ ...buyForm, email: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none" />
+                              <input type="text" placeholder={language === "en" ? "Business name" : "Nombre del negocio"} value={buyForm.businessName} onChange={(e) => setBuyForm({ ...buyForm, businessName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
+                              <input type="text" placeholder={language === "en" ? "City" : "Ciudad"} value={buyForm.city} onChange={(e) => setBuyForm({ ...buyForm, city: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
+                              <input type="text" placeholder={language === "en" ? "Your name" : "Tu nombre"} value={buyForm.contactName} onChange={(e) => setBuyForm({ ...buyForm, contactName: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
+                              <input type="email" placeholder={language === "en" ? "Your email" : "Tu correo"} value={buyForm.email} onChange={(e) => setBuyForm({ ...buyForm, email: e.target.value })} className="glass-input rounded-lg px-3 py-2.5 text-sm border border-[var(--color-border-subtle)] outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30" />
                             </div>
                             {buyFormValid ? (
                               <div className="mt-3">
@@ -619,16 +674,17 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                             )}
                           </>
                         )}
-                      </div>
+                      </motion.div>
                     )}
+                    </AnimatePresence>
                   </>
                 )}
-              </article>
+              </motion.article>
             ))}
           </div>
-        </section>
+        </motion.section>
 
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-24">
+        <motion.section {...motionReveal(0.04)} className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-24">
           <div className="rounded-[var(--radius-bento)] glass-panel p-7 md:p-10 border border-[var(--color-border-subtle)]">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="A short process you can review">Un proceso corto que puedes revisar</T></p>
             <h2 className="mt-3 text-3xl font-display font-black"><T en="Start with clarity. Review each step.">Empieza con claridad. Revisa cada paso.</T></h2>
@@ -637,23 +693,23 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 ["01", "Enter your business or paste your listing link", "Escribe tu negocio y ciudad o pega el enlace de tu ficha.", "Enter your business and city, or paste your listing link."],
                 ["02", "Confirm the right business", "Confirma que encontramos el negocio correcto.", "Confirm that we found the right business."],
                 ["03", "Get priorities you can act on", "Recibe prioridades claras y decide qué quieres implementar.", "Get clear priorities and decide what you want to implement."],
-              ].map(([number, enTitle, esTitle, enDescription]) => (
-                <div key={number} className="flex gap-4">
+              ].map(([number, enTitle, esTitle, enDescription], index) => (
+                <motion.div key={number} {...motionReveal(index * 0.08)} className="flex gap-4">
                   <span className="text-xs font-black font-mono text-[var(--color-primary-base)]">{number}</span>
                   <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{enDescription === "Enter your business and city, or paste your listing link." ? "Escribe tu negocio y ciudad o pega el enlace de tu ficha." : enDescription === "Confirm that we found the right business." ? "Confirma que encontramos el negocio correcto." : "Recibe prioridades claras y decide qué quieres implementar."}</T></p></div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-          <div className="rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
+          <motion.div {...motionReveal(0.1)} className="rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
             <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="Real data · approved changes">Datos reales · cambios autorizados</T></span></div>
             <h2 className="mt-4 text-3xl font-display font-black"><T en="Your business stays yours. We organize the information.">Tu negocio sigue siendo tuyo. Nosotros ordenamos la información.</T></h2>
             <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We work with the information you approve. We don’t invent reviews, fill gaps with guesses, ask for passwords, or promise first place on Google.">Trabajamos con los datos que tú apruebas. No inventamos reseñas, no completamos información con suposiciones, no pedimos contraseñas y no prometemos el primer lugar en Google.</T></p>
             <div className="mt-8 flex flex-wrap gap-3 text-xs font-bold text-[var(--color-text-tertiary)]"><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2">PayPal</span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Bank transfer">Transferencia</T></span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Cash in DR">Efectivo en RD</T></span></div>
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
 
-        <section id="diagnostico" className="mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
+        <motion.section {...motionReveal(0.04)} id="diagnostico" className="scroll-mt-24 mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
           <div className="text-center max-w-2xl mx-auto">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Review your listing">REVISA TU FICHA</T></p>
             <h2 className="mt-4 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="See what customers find before they contact you.">Descubre qué ven tus clientes antes de contactarte.</T></h2>
@@ -680,7 +736,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder={language === "en" ? "Business name" : "Nombre del negocio"}
-                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
                     />
                     <input
                       type="text"
@@ -689,7 +745,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder={language === "en" ? "City" : "Ciudad"}
-                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
                     />
                     <motion.button
                       type="button"
@@ -728,7 +784,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                         onChange={(e) => setMapsUrl(e.target.value)}
                         placeholder="https://maps.app.goo.gl/..."
                         aria-label={language === "en" ? "Direct Google Maps link" : "Enlace directo de Google Maps"}
-                        className="glass-input mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                        className="glass-input mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
                       />
                       <motion.button
                         type="button"
@@ -750,7 +806,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder={language === "en" ? "Your name" : "Tu nombre"}
-                className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
               />
               <input
                 type="email"
@@ -759,7 +815,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={language === "en" ? "Your email" : "Tu correo"}
-                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] focus:border-[var(--color-primary-base)]"
+                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
               />
               <p className="sm:col-span-2 -mt-1 text-center text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">
                 <T en="We use it to send your priorities and follow-up details." >Lo usamos para enviarte tus prioridades y los detalles del siguiente paso.</T>
@@ -773,7 +829,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               )}
 
               {status === "loading" ? (
-                <div className="relative sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                <motion.div
+                  ref={loadingRef}
+                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.35, ease: "easeOut" }}
+                  role="status"
+                  className="relative sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="searching"
@@ -785,16 +847,18 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <div aria-live="polite" className="min-h-[1.25rem]">
                     <ShimmerPhrase es={loadingCopy.es} en={loadingCopy.en} lang={language} />
                   </div>
-                </div>
+                </motion.div>
               ) : (
-                <button
+                <motion.button
                   type="submit"
+                  whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
+                  whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                   className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
                 >
                   <Search size={18} />
                   <T en="Review my listing">Revisar mi ficha</T>
                   <ArrowRight size={17} />
-                </button>
+                </motion.button>
               )}
             </form>
           )}
@@ -808,7 +872,12 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           )}
 
           {status === "confirm" && candidates.length > 0 && (
-            <div className="mt-8 max-w-xl mx-auto">
+            <motion.div
+              ref={candidatesRef}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-8 max-w-xl mx-auto">
               <p className="text-xs font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)] mb-4 text-center">
                 {candidates.length > 1
                   ? <T en="We found several listings — which one is yours?">Encontramos varias fichas — ¿cuál es la tuya?</T>
@@ -858,7 +927,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                           type="button"
                           onClick={() => handleConfirmCandidate(cand)}
                           disabled={confirmingPlaceId !== null}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white shadow-sm shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white shadow-sm shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                         >
                           <Check size={13} />
                           <T en={confirmingPlaceId === cand.id ? "Confirming listing..." : "This is mine"}>{confirmingPlaceId === cand.id ? "Confirmando ficha..." : "Este es el mío"}</T>
@@ -887,7 +956,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.02 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   transition={prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 26 }}
-                  className="mt-4 mx-auto flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/30 px-4 py-2 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/10 will-change-transform"
+                  className="mt-4 mx-auto flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/30 px-4 py-2 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/10 will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                 >
                   <ChevronRight size={14} className="rotate-90" />
                   <T en="Show more listings">Mostrar más sucursales</T>
@@ -903,11 +972,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <T en="None of these — search again">Ninguna de estas — buscar de nuevo</T>
                 </button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {status === "queued" && (
-            <div className="mt-4 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-5">
+            <motion.div
+              ref={queuedRef}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: "easeOut" }}
+              className="mt-4 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-5">
               {revealNowLoading ? (
                 <div className="flex flex-col items-center gap-2">
                   <div className="flex justify-center">
@@ -947,11 +1021,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   {revealNowError && <p className="mt-3 text-xs text-red-400">{revealNowError}</p>}
                 </>
               )}
-            </div>
+            </motion.div>
           )}
 
           {status === "success" && diagnostic && (
-            <div className="mt-8 max-w-2xl mx-auto">
+            <motion.div
+              ref={successRef}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="mt-8 max-w-2xl mx-auto">
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
                   <Check size={15} />
@@ -975,11 +1054,11 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
               <div className="mt-6 space-y-3">
                 {diagnostic.problems.slice(0, 2).map((p, i) => (
-                  <div key={i} className="rounded-xl border border-[var(--color-border-subtle)] p-4 overflow-hidden">
+                  <motion.div key={i} {...motionReveal(i * 0.08)} className="rounded-xl border border-[var(--color-border-subtle)] p-4 overflow-hidden">
                     <p className="font-black text-sm break-words">{i + 1}. {p.title}</p>
                     <p className="mt-1 text-xs text-[var(--color-text-secondary)] break-words">{p.why}</p>
                     <p className="mt-2 text-xs font-bold text-[var(--color-primary-base)] break-words">→ {p.fix}</p>
-                  </div>
+                  </motion.div>
                 ))}
                 {diagnostic.problems.length > 2 && (
                   <div className="rounded-xl border border-dashed border-[var(--color-border-subtle)] px-4 py-3 text-center">
@@ -995,13 +1074,13 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <T en="7-day action plan (preview)">Plan de acción de 7 días (vista previa)</T>
                 </p>
                 <div className="space-y-2">
-                  {diagnostic.sevenDayPlan.slice(0, 3).map((d) => (
-                    <div key={d.day} className="flex items-start gap-3 rounded-xl border border-[var(--color-border-subtle)] p-3">
+                  {diagnostic.sevenDayPlan.slice(0, 3).map((d, i) => (
+                    <motion.div key={d.day} {...motionReveal(i * 0.08)} className="flex items-start gap-3 rounded-xl border border-[var(--color-border-subtle)] p-3">
                       <span className="shrink-0 w-7 h-7 rounded-full bg-[var(--color-primary-base)] flex items-center justify-center text-[10px] font-black text-white">
                         {d.day}
                       </span>
                       <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed pt-0.5">{d.action}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
                 {diagnostic.sevenDayPlan.length > 3 && (
@@ -1046,11 +1125,11 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           <WisePhrase lang={language} />
-        </section>
+        </motion.section>
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--color-text-tertiary)]">
           <Link to="/" className="hover:text-[var(--color-primary-base)]"><T en="Back to Polaris Web Studio">Volver a Polaris Web Studio</T></Link>
