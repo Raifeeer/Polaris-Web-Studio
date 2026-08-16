@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ComponentProps } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, SwitchCamera, Zap } from "lucide-react";
+import { FUNDING, PayPalButtons } from "@paypal/react-paypal-js";
+import { AlertCircle, ArrowLeft, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, SwitchCamera, Zap } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
@@ -56,10 +56,57 @@ export default function LocalLiftPay() {
   const otherTier = tier === "impulso" ? "ascenso" : "impulso";
   const otherPrice = TIER_PRICE[otherTier];
 
+  const handlePaymentApproval: NonNullable<ComponentProps<typeof PayPalButtons>["onApprove"]> = async (_data, actions) => {
+    if (!actions.order) return;
+    const details = await actions.order.capture();
+    try {
+      const res = await fetch("/api/local-lift-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "confirm",
+          leadId,
+          tier,
+          paypalOrderId: details.id,
+          paypalPayerEmail: details.payer?.email_address || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente — escríbenos por WhatsApp.");
+        return;
+      }
+      try {
+        const fresh = await fetch("/api/local-lift-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "lookup", leadId }),
+        }).then((r) => r.json());
+        if (fresh?.success) {
+          setLead((prev) => (prev ? { ...prev, invoiceNumber: fresh.invoiceNumber || null, portalProvisioned: !!fresh.portalProvisioned } : prev));
+        }
+      } catch {
+        // La confirmación no se bloquea: la factura también llega por correo.
+      }
+      setStatus("paid");
+    } catch {
+      setErrorMsg(language === "en" ? "Payment went through, but something failed on our end — write us on WhatsApp." : "El pago pasó, pero algo falló de nuestro lado — escríbenos por WhatsApp.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
       <Navbar />
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-16 md:py-24">
+        {status === "ready" && (
+          <Link
+            to="/local-lift"
+            className="mb-5 inline-flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+          >
+            <ArrowLeft size={14} />
+            <T en="Back to diagnosis">Volver al diagnóstico</T>
+          </Link>
+        )}
         {status === "loading" && (
           <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-[var(--color-primary-base)]" /></div>
         )}
@@ -249,46 +296,23 @@ export default function LocalLiftPay() {
                       purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift — ${price.label} — ${lead.businessName}` }],
                     })
                   }
-                  onApprove={async (_data, actions) => {
-                    if (!actions.order) return;
-                    const details = await actions.order.capture();
-                    try {
-                      const res = await fetch("/api/local-lift-order", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          action: "confirm",
-                          leadId,
-                          tier,
-                          paypalOrderId: details.id,
-                          paypalPayerEmail: details.payer?.email_address || null,
-                        }),
-                      });
-                      const data = await res.json();
-                      if (!res.ok || !data.success) {
-                        setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente — escríbenos por WhatsApp.");
-                        return;
-                      }
-                      // Relee el lead ya pagado para traer el número de factura
-                      // y el estado del portal, que solo existen después de
-                      // confirmar (no estaban en el lookup inicial).
-                      try {
-                        const fresh = await fetch("/api/local-lift-order", {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ action: "lookup", leadId }),
-                        }).then((r) => r.json());
-                        if (fresh?.success) {
-                          setLead((prev) => (prev ? { ...prev, invoiceNumber: fresh.invoiceNumber || null, portalProvisioned: !!fresh.portalProvisioned } : prev));
-                        }
-                      } catch {
-                        // No bloquea la confirmación -- la factura igual va por correo.
-                      }
-                      setStatus("paid");
-                    } catch {
-                      setErrorMsg(language === "en" ? "Payment went through, but something failed on our end — write us on WhatsApp." : "El pago pasó, pero algo falló de nuestro lado — escríbenos por WhatsApp.");
-                    }
-                  }}
+                  onApprove={handlePaymentApproval}
+                />
+                <div className="my-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  <span className="h-px flex-1 bg-[var(--color-border-subtle)]" />
+                  <T en="Or pay by card">O paga con tarjeta</T>
+                  <span className="h-px flex-1 bg-[var(--color-border-subtle)]" />
+                </div>
+                <PayPalButtons
+                  fundingSource={FUNDING.CARD}
+                  style={{ layout: "vertical", shape: "rect", color: "silver", label: "pay", height: 48 }}
+                  createOrder={(_data, actions) =>
+                    actions.order.create({
+                      intent: "CAPTURE",
+                      purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift — ${price.label} — ${lead.businessName}` }],
+                    })
+                  }
+                  onApprove={handlePaymentApproval}
                 />
               </PayPalCheckoutProvider>
             </div>

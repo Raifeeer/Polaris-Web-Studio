@@ -57,6 +57,8 @@ function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string 
   );
 }
 
+const LOCAL_LIFT_SNAPSHOT_KEY = "polaris-local-lift-diagnostic-snapshot";
+
 const WISE_PHRASES = [
   { es: "Tus clientes deciden con la información que encuentran.", en: "Customers decide with the information they find." },
   { es: "Una presencia clara responde preguntas antes del primer mensaje.", en: "A clear presence answers questions before the first message." },
@@ -234,6 +236,7 @@ export default function LocalLift() {
   const candidatesRef = useRef<HTMLDivElement | null>(null);
   const queuedRef = useRef<HTMLDivElement | null>(null);
   const successRef = useRef<HTMLDivElement | null>(null);
+  const restoredScrollYRef = useRef<number | null>(null);
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
   const mapsFieldRef = useRef<HTMLInputElement | null>(null);
   const motionReveal = (delay = 0) => prefersReducedMotion
@@ -299,6 +302,14 @@ export default function LocalLift() {
             ? successRef.current
             : null;
     if (!target) return;
+    if (status === "success" && restoredScrollYRef.current !== null) {
+      const restoredScrollY = restoredScrollYRef.current;
+      restoredScrollYRef.current = null;
+      const restoreTimer = window.setTimeout(() => {
+        window.scrollTo({ top: Math.max(0, restoredScrollY), behavior: "auto" });
+      }, 180);
+      return () => window.clearTimeout(restoreTimer);
+    }
     const alignState = () => {
       const anchor = target.querySelector<HTMLElement>("[data-scroll-anchor]") ?? target;
       if (status === "confirm" || status === "success") {
@@ -343,6 +354,30 @@ export default function LocalLift() {
       scrollElementToCenter(field);
       field?.focus({ preventScroll: true });
     }, 180);
+  };
+
+  const persistDiagnosticForReturn = () => {
+    if (status !== "success" || !diagnostic || !place || !diagnosticLeadId) return;
+    try {
+      sessionStorage.setItem(LOCAL_LIFT_SNAPSHOT_KEY, JSON.stringify({
+        businessName,
+        city,
+        contactName,
+        email,
+        mapsUrl,
+        lookupMode,
+        status: "success",
+        diagnostic,
+        place,
+        candidates: [],
+        visibleCandidateCount,
+        revealedByAtlas,
+        diagnosticLeadId,
+        scrollY: window.scrollY,
+      }));
+    } catch {
+      // El checkout sigue funcionando aunque el navegador bloquee sessionStorage.
+    }
   };
 
   const waitForPhotos = (urls: string[], priority: "high" | "low" = "low") => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
@@ -438,6 +473,31 @@ export default function LocalLift() {
     }
   };
 
+  useEffect(() => {
+    try {
+      const rawSnapshot = sessionStorage.getItem(LOCAL_LIFT_SNAPSHOT_KEY);
+      if (!rawSnapshot) return;
+      const snapshot = JSON.parse(rawSnapshot);
+      if (snapshot?.status !== "success" || !snapshot.diagnostic || !snapshot.place) return;
+      restoredScrollYRef.current = Number.isFinite(Number(snapshot.scrollY)) ? Number(snapshot.scrollY) : 0;
+      setBusinessName(snapshot.businessName || "");
+      setCity(snapshot.city || "");
+      setContactName(snapshot.contactName || "");
+      setEmail(snapshot.email || "");
+      setMapsUrl(snapshot.mapsUrl || "");
+      setLookupMode(snapshot.lookupMode === "maps" ? "maps" : "name");
+      setDiagnostic(snapshot.diagnostic);
+      setPlace(snapshot.place);
+      setCandidates(Array.isArray(snapshot.candidates) ? snapshot.candidates : []);
+      setVisibleCandidateCount(Number(snapshot.visibleCandidateCount) || 3);
+      setRevealedByAtlas(Boolean(snapshot.revealedByAtlas));
+      setDiagnosticLeadId(snapshot.diagnosticLeadId || null);
+      setStatus("success");
+      sessionStorage.removeItem(LOCAL_LIFT_SNAPSHOT_KEY);
+    } catch {
+      sessionStorage.removeItem(LOCAL_LIFT_SNAPSHOT_KEY);
+    }
+  }, []);
   useEffect(() => {
     setLoadingCopyIndex(0);
     if (status !== "loading" || prefersReducedMotion) return;
@@ -1192,6 +1252,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     </p>
                     <motion.a
                       href={`/local-lift/pagar/${diagnosticLeadId}?tier=impulso`}
+                      onClick={persistDiagnosticForReturn}
                       whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5 w-full"
@@ -1209,6 +1270,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     </p>
                     <motion.a
                       href={`/local-lift/pagar/${diagnosticLeadId}?tier=ascenso`}
+                      onClick={persistDiagnosticForReturn}
                       whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                       whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"

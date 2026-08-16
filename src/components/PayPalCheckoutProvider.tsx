@@ -8,7 +8,8 @@ const paypalOptions = {
   clientId: finalClientId,
   currency: "USD",
   intent: "capture",
-  "disable-funding": "credit,card,paylater,venmo",
+  "disable-funding": "credit,paylater,venmo",
+  "enable-funding": "card",
 };
 
 // Solo envuelve las páginas que realmente usan <PayPalButtons> (compra
