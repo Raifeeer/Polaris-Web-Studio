@@ -252,33 +252,48 @@ export default function LocalLift() {
     if (!element) return;
     const rect = element.getBoundingClientRect();
     const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-    const centeredTop = window.scrollY + rect.top - Math.max(0, (viewportHeight - rect.height) / 2);
+    const topInset = getNavbarSafeInset();
+    const usableHeight = Math.max(0, viewportHeight - topInset);
+    const centeredTop = window.scrollY + rect.top - topInset - Math.max(0, (usableHeight - rect.height) / 2);
     window.scrollTo({ top: Math.max(0, centeredTop), behavior });
+  };
+
+  const getNavbarSafeInset = () => {
+    const viewportHeight = window.innerHeight;
+    const nav = document.querySelector<HTMLElement>("[data-navbar-fixed]");
+    const spacer = document.querySelector<HTMLElement>("[data-navbar-spacer]");
+    const navRect = nav?.getBoundingClientRect();
+    const visibleNavBottom = navRect && navRect.bottom > 0 && navRect.top < viewportHeight
+      ? navRect.bottom
+      : 0;
+    const layoutSpacerHeight = spacer?.getBoundingClientRect().height ?? 0;
+    return Math.max(40, visibleNavBottom, layoutSpacerHeight) + 20;
   };
 
   const scrollSectionIntro = (section: HTMLElement | null, behavior: ScrollBehavior = prefersReducedMotion ? "auto" : "smooth") => {
     if (!section) return;
     const intro = section.querySelector<HTMLElement>(":scope > div") ?? section;
     const rect = intro.getBoundingClientRect();
-    const nav = document.querySelector<HTMLElement>("nav");
-    const navBottom = nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
-    const topInset = Math.max(24, navBottom + 16);
-    const visualOffset = window.visualViewport?.offsetTop ?? 0;
-    const alignedTop = window.scrollY + rect.top - topInset - visualOffset;
+    const alignedTop = window.scrollY + rect.top - getNavbarSafeInset();
     window.scrollTo({ top: Math.max(0, alignedTop), behavior });
   };
 
-  // Las opciones pueden ser más altas que el viewport en móvil. Centrar todo el
-  // bloque calcula un top negativo y deja su encabezado detrás del navbar.
+  // Coloca siempre el inicio del bloque debajo del navbar fijo. El segundo
+  // ajuste corrige el desplazamiento después de que termine el scroll suave y
+  // después de que el navbar termine su propia transición de ocultar/mostrar.
   const scrollElementBelowNav = (element: HTMLElement | null, behavior: ScrollBehavior = prefersReducedMotion ? "auto" : "smooth") => {
     if (!element) return;
     const rect = element.getBoundingClientRect();
-    const nav = document.querySelector<HTMLElement>("nav");
-    const navBottom = nav ? Math.max(0, nav.getBoundingClientRect().bottom) : 0;
-    const topInset = Math.max(24, navBottom + 12);
-    const visualOffset = window.visualViewport?.offsetTop ?? 0;
-    const alignedTop = window.scrollY + rect.top - topInset - visualOffset;
-    window.scrollTo({ top: Math.max(0, alignedTop), behavior });
+    const targetTop = window.scrollY + rect.top - getNavbarSafeInset();
+    const safeTop = Math.max(0, targetTop);
+    window.scrollTo({ top: safeTop, behavior });
+    if (behavior === "smooth") {
+      window.setTimeout(() => {
+        const settledRect = element.getBoundingClientRect();
+        const correction = settledRect.top - getNavbarSafeInset();
+        if (Math.abs(correction) > 2) window.scrollBy({ top: correction, behavior: "auto" });
+      }, 420);
+    }
   };
 
   const toggleFaq = (index: number) => setOpenFaqIndex((current) => (current === index ? null : index));

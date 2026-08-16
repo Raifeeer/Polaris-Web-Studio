@@ -115,8 +115,9 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="h-16 w-full shrink-0" aria-hidden="true" />
+      <div data-navbar-spacer className="h-16 w-full shrink-0" aria-hidden="true" />
       <nav
+        data-navbar-fixed
         ref={navRef}
         className={`fixed left-0 right-0 top-0 z-50 w-full transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
