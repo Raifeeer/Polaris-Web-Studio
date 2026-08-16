@@ -744,7 +744,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
                       placeholder={language === "en" ? "Business name" : "Nombre del negocio"}
-                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+                      className="glass-input local-lift-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
                     />
                     <input
                       type="text"
@@ -753,7 +753,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                       placeholder={language === "en" ? "City" : "Ciudad"}
-                      className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+                      className="glass-input local-lift-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
                     />
                     <motion.button
                       type="button"
@@ -793,7 +793,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                         onChange={(e) => setMapsUrl(e.target.value)}
                         placeholder="https://maps.app.goo.gl/..."
                         aria-label={language === "en" ? "Direct Google Maps link" : "Enlace directo de Google Maps"}
-                        className="glass-input mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+                        className="glass-input local-lift-input mt-3 w-full rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
                       />
                       <motion.button
                         type="button"
@@ -815,7 +815,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder={language === "en" ? "Your name" : "Tu nombre"}
-                className="glass-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+                className="glass-input local-lift-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
               />
               <input
                 type="email"
@@ -824,10 +824,10 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={language === "en" ? "Your email" : "Tu correo"}
-                className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+                className="glass-input local-lift-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
               />
               <p className="sm:col-span-2 -mt-1 text-center text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">
-                <T en="We use it to send your priorities and follow-up details." >Lo usamos para enviarte tus prioridades y los detalles del siguiente paso.</T>
+                <T en="We’ll send your priorities and next steps.">Recibirás prioridades y próximos pasos.</T>
               </p>
 
               {status === "error" && (
@@ -994,7 +994,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   onClick={resetCandidateSearch}
                   whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.01 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                  className="mx-auto inline-flex max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--color-border-subtle)] px-3 py-2 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                  className="mx-auto flex w-fit max-w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-[var(--color-border-subtle)] px-3 py-2 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                 >
                   <Search size={14} />
                   <T en="Search another business">Buscar otro negocio</T>

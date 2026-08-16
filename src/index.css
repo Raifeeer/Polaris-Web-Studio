@@ -369,6 +369,30 @@ button:not(:disabled),
   outline: none;
 }
 
+/* Local Lift usa teal en sus campos, con feedback semántico por estado. */
+.local-lift-input:focus,
+.local-lift-input:focus-visible {
+  border-color: #16c8c1 !important;
+  box-shadow: 0 0 0 3px rgba(22, 200, 193, 0.18) !important;
+  outline: none;
+}
+
+.local-lift-input:user-invalid,
+.local-lift-input[aria-invalid="true"] {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14) !important;
+}
+
+.local-lift-input:user-valid {
+  border-color: #34d399 !important;
+}
+
+.local-lift-input:focus:not(:user-invalid),
+.local-lift-input:focus-visible:not(:user-invalid) {
+  border-color: #16c8c1 !important;
+  box-shadow: 0 0 0 3px rgba(22, 200, 193, 0.18) !important;
+}
+
 .glass-badge {
   background: rgba(99, 102, 241, 0.1);
   backdrop-filter: blur(8px);
