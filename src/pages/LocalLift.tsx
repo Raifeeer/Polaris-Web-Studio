@@ -203,25 +203,10 @@ export default function LocalLift() {
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [candidates, setCandidates] = useState<PlaceResult[]>([]);
   const [visibleCandidateCount, setVisibleCandidateCount] = useState(3);
-  const [preloadingCandidatePhotos, setPreloadingCandidatePhotos] = useState(false);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
 const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
-
-  const preloadCandidatePhotos = async (candidateList: PlaceResult[]) => {
-    const photoUrls = [...new Set(candidateList.flatMap((candidate) => candidate.photoUrls || []))];
-    if (!photoUrls.length) return;
-
-    setPreloadingCandidatePhotos(true);
-    await Promise.all(photoUrls.map((url) => new Promise<void>((resolve) => {
-      const image = new Image();
-      image.onload = () => resolve();
-      image.onerror = () => resolve();
-      image.src = url;
-    })));
-    setPreloadingCandidatePhotos(false);
-  };
 
   const switchLookupMode = (mode: "name" | "maps") => {
     setLookupMode(mode);
@@ -242,35 +227,43 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
     setStatus("loading");
     setLoadingStage("searching");
     setErrorMsg("");
+    const lookupController = new AbortController();
+    let lookupTimeout = 0;
+    const lookupDeadline = new Promise<never>((_, reject) => {
+      lookupTimeout = window.setTimeout(() => {
+        lookupController.abort();
+        reject(new Error("LOOKUP_TIMEOUT"));
+      }, 3600);
+    });
     try {
-      const res = await fetch("/api/local-lift-diagnostic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ businessName, city, contactName, email, mapsUrl: lookupMode === "maps" ? mapsUrl.trim() : undefined, lang: language === "en" ? "en" : "es" }),
-      });
-      const data = await res.json();
+      const { res, data } = await Promise.race([
+        fetch("/api/local-lift-diagnostic", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: lookupController.signal,
+          body: JSON.stringify({ businessName, city, contactName, email, mapsUrl: lookupMode === "maps" ? mapsUrl.trim() : undefined, lang: language === "en" ? "en" : "es" }),
+        }).then(async (response) => ({ res: response, data: await response.json() })),
+        lookupDeadline,
+      ]);
+      window.clearTimeout(lookupTimeout);
       if (!res.ok) {
         setErrorMsg(data.error || (language === "en" ? "Something went wrong." : "Algo salió mal."));
         setStatus("error");
         return;
       }
             const cands: PlaceResult[] = Array.isArray(data.candidates) && data.candidates.length ? data.candidates : (data.place ? [data.place] : []);
-      // Las fichas se montan mientras el loader sigue visible para que sus
-      // imágenes puedan descargarse y quedar en caché antes de la confirmación.
+      // Montamos todas las fichas mientras el loader sigue visible. Sus imágenes
+      // continúan descargándose en segundo plano, pero nunca bloquean la apertura.
       setCandidates(cands);
       setVisibleCandidateCount(3);
-      // Esta etapa permanece visible hasta que todas las URLs de fotos recibidas
-      // hayan respondido (éxito o error) y se completa una pausa breve legible.
       setLoadingStage("photos");
-      const photosStartedAt = Date.now();
-      await preloadCandidatePhotos(cands);
-      await new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, 420 - (Date.now() - photosStartedAt))));
+      await new Promise<void>((resolve) => setTimeout(resolve, 500));
 
       // Google ya entregó rating, reseñas, dirección y estado; aquí validamos
       // que cada ficha tenga los datos mínimos antes de abrir el selector.
       setLoadingStage("verifying");
       const verifiedCandidates = cands.filter((candidate) => Boolean(candidate.id && candidate.name && candidate.address));
-      await new Promise<void>((resolve) => setTimeout(resolve, 420));
+      await new Promise<void>((resolve) => setTimeout(resolve, 500));
       if (!verifiedCandidates.length) {
         setErrorMsg(language === "en" ? "We found no complete business listing to confirm." : "No encontramos una ficha comercial completa para confirmar.");
         setStatus("error");
@@ -283,18 +276,20 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       setDiagnosticLeadId(data.leadId || null);
       setStatus("confirm");
     } catch {
-      setPreloadingCandidatePhotos(false);
+      window.clearTimeout(lookupTimeout);
       setLoadingStage("searching");
-      setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
+      setErrorMsg(lookupController.signal.aborted
+        ? (language === "en" ? "The search took too long. Please try again." : "La búsqueda tardó demasiado. Intenta de nuevo.")
+        : (language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo."));
       setStatus("error");
     }
   };
 
   const loadingCopy = loadingStage === "searching"
-    ? { es: "Buscando tu ficha exacta en Google...", en: "Finding your exact Google listing..." }
+    ? { es: "Buscando coincidencias en Google...", en: "Finding matches on Google..." }
     : loadingStage === "photos"
-      ? { es: "Recopilando reseñas, calificaciones y fotos...", en: "Collecting reviews, ratings, and photos..." }
-      : { es: "Verificando reputación y datos de cada sucursal...", en: "Verifying reputation and branch details..." };
+      ? { es: "Preparando fotos y reseñas de las fichas...", en: "Preparing listing photos and reviews..." }
+      : { es: "Comprobando que encontramos los negocios correctos...", en: "Checking that we found the right businesses..." };
 
   const handleConfirmCandidate = async (candidate: PlaceResult) => {
     setPlace(candidate);
@@ -764,13 +759,6 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <div aria-live="polite" className="min-h-[1.25rem]">
                     <ShimmerPhrase es={loadingCopy.es} en={loadingCopy.en} lang={language} />
                   </div>
-                  {candidates.length > 0 && (
-                    <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 h-px w-px overflow-hidden opacity-0">
-                      {candidates.flatMap((candidate) => candidate.photoUrls || []).map((url, index) => (
-                        <img key={`${url}-${index}`} src={url} alt="" loading="eager" decoding="sync" />
-                      ))}
-                    </div>
-                  )}
                 </div>
               ) : (
                 <button
@@ -783,6 +771,14 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 </button>
               )}
             </form>
+          )}
+
+          {candidates.length > 0 && (
+            <div aria-hidden="true" className="pointer-events-none fixed left-0 top-0 h-px w-px overflow-hidden opacity-0">
+              {candidates.flatMap((candidate) => candidate.photoUrls || []).map((url, index) => (
+                <img key={`${url}-${index}`} src={url} alt="" loading="eager" decoding="async" />
+              ))}
+            </div>
           )}
 
           {status === "confirm" && candidates.length > 0 && (
