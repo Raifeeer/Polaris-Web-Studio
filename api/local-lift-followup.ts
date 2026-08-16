@@ -55,7 +55,7 @@ function buildFollowupHtml(businessName: string, contactName: string, problemTit
   <div style="padding:16px 40px 0 40px;text-align:center;">
     <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">Hace unos días te enviamos el diagnóstico real de <strong>${businessName}</strong>. El primero de los problemas que encontramos:</p>
     <p style="font-size:15px;line-height:1.7;color:${ACCENT};font-weight:700;margin:10px 0 0 0;">${problemTitle}</p>
-    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:14px 0 0 0;">Por $29 lo implementamos por ti -- descripción reescrita, publicaciones listas, respuestas a tus reseñas reales y mensajes de WhatsApp de seguimiento.</p>
+    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:14px 0 0 0;">Por $29 lo implementamos por ti — descripción reescrita, publicaciones listas, respuestas a tus reseñas reales y mensajes de WhatsApp de seguimiento.</p>
   </div>
   <div style="padding:24px 40px 32px 40px;text-align:center;">
     <a href="${payUrl}" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">Activar Impulso — $29</a>

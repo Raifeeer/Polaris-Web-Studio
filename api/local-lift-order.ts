@@ -62,7 +62,7 @@ function buildPaymentConfirmedHtml(businessName: string, tier: string, contactNa
     <div style="font-size:14px;color:#64748b;margin-top:8px;">${label} para ${businessName}</div>
   </div>
   <div style="padding:20px 40px 0 40px;text-align:center;">
-    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">Recibimos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas horas.</p>
+    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">Recibimos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google — lo vas a recibir por este mismo correo en las próximas horas.</p>
   </div>
   ${hasInvoicePdf && invoiceNumber ? `<div style="padding:20px 40px 0 40px;">
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;text-align:center;">
@@ -356,7 +356,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         try {
           await transporter.sendMail({
-            from: '"Local Lift -- Pago confirmado" <hola@polarisweb.studio>',
+            from: '"Local Lift — Pago confirmado" <hola@polarisweb.studio>',
             to: "hola@polarisweb.studio",
             replyTo: data.email,
             subject: `💰 Pago Local Lift confirmado: ${data.businessName} ($${TIER_PRICE[tier]})`,

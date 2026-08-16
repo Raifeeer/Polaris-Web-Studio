@@ -36,14 +36,14 @@ const firebaseApp = getApps().length
     });
 
 const diagnosticSchema = z.object({
-  businessIntro: z.string().describe("1-2 frases presentando qué es y a qué se dedica el negocio (rubro/categoría, tipo de servicio) -- grounded en su nombre, categoría real y descripción de Google si la tiene. Nunca inventes datos que no estén en la ficha (ni cantidad de sucursales, años en el mercado, premios, etc.) -- si hay poca info, quedate en algo genérico pero real (ej. 'agencia de viajes en Punta Cana')."),
-  summary: z.string().describe("1-2 frases, en español, honestas pero alentadoras, resumiendo el estado general del negocio en Google -- sin prometer posiciones ni resultados."),
+  businessIntro: z.string().describe("1-2 frases presentando qué es y a qué se dedica el negocio (rubro/categoría, tipo de servicio) — grounded en su nombre, categoría real y descripción de Google si la tiene. Nunca inventes datos que no estén en la ficha (ni cantidad de sucursales, años en el mercado, premios, etc.) — si hay poca info, quedate en algo genérico pero real (ej. 'agencia de viajes en Punta Cana')."),
+  summary: z.string().describe("1-2 frases, en español, honestas pero alentadoras, resumiendo el estado general del negocio en Google — sin prometer posiciones ni resultados."),
   problems: z
     .array(
       z.object({
         title: z.string().describe("Nombre corto del problema (máximo 8 palabras)."),
-        why: z.string().describe("Por qué importa este problema para conseguir más llamadas/mensajes/reservas -- 1-2 frases."),
-        fix: z.string().describe("Acción concreta y específica para resolverlo -- 1 frase, accionable ya."),
+        why: z.string().describe("Por qué importa este problema para conseguir más llamadas/mensajes/reservas — 1-2 frases."),
+        fix: z.string().describe("Acción concreta y específica para resolverlo — 1 frase, accionable ya."),
       })
     )
     .length(5)
@@ -78,7 +78,7 @@ async function generateDiagnostic(place: PlaceData, lang: "es" | "en"): Promise<
 
 ${placeDataSummary(place)}
 
-Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
+Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}. Nunca uses dos guiones seguidos ("--") como signo de puntuación: usa una raya (—), una coma o punto y aparte según corresponda.`;
 
   return generateWithFallback(diagnosticSchema, prompt);
 }
@@ -172,7 +172,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
     )
     .join("");
 
-  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift -- ${place.name}`)}`;
+  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${place.name}`)}`;
 
   return `<!DOCTYPE html>
 <html>
@@ -265,7 +265,7 @@ function buildInternalAlertHtml(diagnostic: Diagnostic | null, place: PlaceData,
     ? diagnostic.problems
         .map((p, i) => `<div style="font-size:13px;line-height:1.6;color:#1f2937;margin-bottom:6px;"><strong>${i + 1}. ${p.title}</strong><br>${p.why} → ${p.fix}</div>`)
         .join("")
-    : `<div style="font-size:13px;color:#94a3b8;">Todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado (5-10 min).</div>`;
+    : `<div style="font-size:13px;color:#94a3b8;">Todavía no se generó — se genera cuando el cliente pide "Atlas ahora" o con el envío programado (5-10 min).</div>`;
 
   const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(`Tu diagnóstico Local Lift de ${place.name}`)}&body=${encodeURIComponent(`Hola ${contactName || ""},\n\nSoy Cristian de Polaris Web Studio, vi tu diagnóstico de Local Lift.`.trim())}`;
 
@@ -499,11 +499,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
         });
         await transporter.sendMail({
-          from: '"Local Lift -- Diagnóstico nuevo" <hola@polarisweb.studio>',
+          from: '"Local Lift — Diagnóstico nuevo" <hola@polarisweb.studio>',
           to: "hola@polarisweb.studio",
           replyTo: email,
           subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
-          text: `Negocio: ${place.name}\nCiudad: ${leadCity}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\nCandidatos encontrados: ${candidates.length}\n\n(El diagnóstico con IA todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
+          text: `Negocio: ${place.name}\nCiudad: ${leadCity}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\nCandidatos encontrados: ${candidates.length}\n\n(El diagnóstico con IA todavía no se generó — se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
           html: buildInternalAlertHtml(null, place, leadCity, contactName, email),
         });
       } catch (mailErr) {
