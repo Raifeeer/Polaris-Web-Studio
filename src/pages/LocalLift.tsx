@@ -501,12 +501,12 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             <img
               src="/brand/local-lift-lockup-horizontal-dark.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-light-text h-14 md:h-16 w-auto mb-8"
+              className="local-lift-logo-light-text block h-24 sm:h-28 md:h-32 lg:h-36 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-10"
             />
             <img
               src="/brand/local-lift-lockup-horizontal-light.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-dark-text h-14 md:h-16 w-auto mb-8"
+              className="local-lift-logo-dark-text block h-24 sm:h-28 md:h-32 lg:h-36 max-w-[88%] sm:max-w-none w-auto object-contain object-left mb-10"
             />
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
               <MapPin size={13} />
