@@ -651,33 +651,49 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           </div>
         </motion.section>
 
-        <motion.section {...motionReveal(0.04)} className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-24">
+        <motion.section {...motionReveal(0.04)} className="grid grid-cols-1 lg:grid-cols-[0.82fr_1.18fr] gap-5 pt-24">
           <div className="rounded-[var(--radius-bento)] glass-panel p-7 md:p-10 border border-[var(--color-border-subtle)]">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Questions before you start">PREGUNTAS FRECUENTES</T></p>
+            <h2 className="mt-3 text-3xl font-display font-black"><T en="Before you start, let’s make it clear.">Antes de empezar, dejemos lo importante claro.</T></h2>
+            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="A few quick answers so you know what to expect from the review and the next step.">Unas respuestas rápidas para que sepas qué esperar de la revisión y del siguiente paso.</T></p>
+          </div>
+          <div className="space-y-3">
+            {[
+              ["What do I need to start?", "¿Qué necesito para empezar?", "Just your business name and city, or its direct Google Maps link.", "Solo el nombre y la ciudad de tu negocio, o su enlace directo de Google Maps."],
+              ["Can I see the result without receiving an email?", "¿Puedo ver el resultado sin recibir un correo?", "Yes. You can view it on screen when it is ready; email is optional.", "Sí. Puedes verlo en pantalla cuando esté listo; el correo es opcional."],
+              ["What is the difference between the packages?", "¿Qué diferencia hay entre los paquetes?", "Express identifies priorities, Impulso prepares the materials, and Ascenso adds personalized 1:1 implementation support.", "Express identifica prioridades, Impulso prepara los materiales y Ascenso añade implementación personalizada 1:1."],
+              ["Will you ask for my passwords?", "¿Me pedirán mis contraseñas?", "No. We work with the information and changes you approve.", "No. Trabajamos con la información y los cambios que tú apruebes."],
+              ["Do you guarantee a position on Google?", "¿Garantizan una posición en Google?", "No. We show what may be creating friction and what is worth improving first.", "No. Mostramos qué puede estar generando dudas y qué conviene mejorar primero."],
+            ].map(([enQuestion, esQuestion, enAnswer, esAnswer], index) => (
+              <motion.details key={enQuestion} {...motionReveal(index * 0.06)} className="group rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] px-5 py-4">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-black [&::-webkit-details-marker]:hidden">
+                  <span><T en={enQuestion}>{esQuestion}</T></span>
+                  <span aria-hidden="true" className="text-xl font-normal text-[var(--color-primary-base)] transition-transform duration-200 group-open:rotate-45">+</span>
+                </summary>
+                <p className="mt-3 max-w-2xl pr-8 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enAnswer}>{esAnswer}</T></p>
+              </motion.details>
+            ))}
+          </div>
+        </motion.section>
+
+        <motion.section {...motionReveal(0.04)} id="proceso-local" className="scroll-mt-24 pt-24">
+          <div className="max-w-2xl">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="From first search to clear action">DEL PRIMER VISTAZO A LA ACCIÓN</T></p>
             <h2 className="mt-3 text-3xl font-display font-black"><T en="Know what to do next.">Sabe qué hacer después.</T></h2>
-            <div className="mt-8 space-y-6">
-              {[
-                ["01", "Find your business", "Encontramos tu negocio.", "Use the name and city or paste your Google Maps link.", "Usa el nombre y la ciudad o pega tu enlace de Google Maps."],
-                ["02", "Confirm the right place", "Confirma el lugar correcto.", "We show you the options so the review starts from the right business.", "Te mostramos las opciones para empezar sobre el negocio correcto."],
-                ["03", "Get a plan you can use", "Recibe un plan que puedas usar.", "You’ll know what to fix first and what can wait.", "Sabrás qué corregir primero y qué puede esperar."],
-              ].map(([number, enTitle, esTitle, enDescription, esDescription], index) => (
-                <motion.div key={number} {...motionReveal(index * 0.08)} className="flex gap-4">
-                  <span className="text-xs font-black font-mono text-[var(--color-primary-base)]">{number}</span>
-                  <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{esDescription}</T></p></div>
-                </motion.div>
-              ))}
-            </div>
           </div>
-          <motion.div {...motionReveal(0.1)} className="rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
-            <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="No smoke. Real context.">SIN HUMO. CON CONTEXTO.</T></span></div>
-            <h2 className="mt-4 text-3xl font-display font-black"><T en="Make clearer decisions before changing anything.">Toma decisiones claras antes de cambiar nada.</T></h2>
-            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We use real information to show what may be getting in the way of calls, messages, or bookings. You review and approve each change before it moves forward.">Usamos información real para mostrarte qué puede estar frenando llamadas, mensajes o reservas. Tú revisas y autorizas cada cambio antes de avanzar.</T></p>
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold text-[var(--color-text-tertiary)]">
-              {[["Real information", "Información real"], ["Explained priorities", "Prioridades explicadas"], ["Your approval", "Tu autorización"]].map(([en, es]) => (
-                <span key={en} className="rounded-xl border border-[var(--color-border-subtle)] px-3 py-2.5"><T en={en}>{es}</T></span>
-              ))}
-            </div>
-          </motion.div>
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              ["01", "Find your business", "Encontramos tu negocio.", "Use the name and city or paste your Google Maps link.", "Usa el nombre y la ciudad o pega tu enlace de Google Maps."],
+              ["02", "Confirm the right place", "Confirma el lugar correcto.", "We show you the options so the review starts from the right business.", "Te mostramos las opciones para empezar sobre el negocio correcto."],
+              ["03", "Get a plan you can use", "Recibe un plan que puedas usar.", "You’ll know what to fix first and what can wait.", "Sabrás qué corregir primero y qué puede esperar."],
+            ].map(([number, enTitle, esTitle, enDescription, esDescription], index) => (
+              <motion.div key={number} {...motionReveal(index * 0.08)} className="rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] p-6">
+                <span className="text-xs font-black font-mono text-[var(--color-primary-base)]">{number}</span>
+                <h3 className="mt-4 font-black"><T en={enTitle}>{esTitle}</T></h3>
+                <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{esDescription}</T></p>
+              </motion.div>
+            ))}
+          </div>
         </motion.section>
 
         <motion.section {...motionReveal(0.04)} id="diagnostico" className="scroll-mt-24 mt-24 rounded-[var(--radius-bento)] glass-panel p-7 md:p-12 border border-[var(--color-primary-base)]/20">
@@ -1140,6 +1156,17 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           )}
 
           <WisePhrase lang={language} />
+        </motion.section>
+
+        <motion.section {...motionReveal(0.04)} className="mt-24 rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
+          <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="No smoke. Real context.">SIN HUMO. CON CONTEXTO.</T></span></div>
+          <h2 className="mt-4 text-3xl font-display font-black"><T en="Make clearer decisions before changing anything.">Toma decisiones claras antes de cambiar nada.</T></h2>
+          <p className="mt-4 max-w-3xl text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We use real information to show what may be getting in the way of calls, messages, or bookings. You review and approve each change before it moves forward.">Usamos información real para mostrarte qué puede estar frenando llamadas, mensajes o reservas. Tú revisas y autorizas cada cambio antes de avanzar.</T></p>
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold text-[var(--color-text-tertiary)]">
+            {[['Real information', 'Información real'], ['Explained priorities', 'Prioridades explicadas'], ['Your approval', 'Tu autorización']].map(([en, es]) => (
+              <span key={en} className="rounded-xl border border-[var(--color-border-subtle)] px-3 py-2.5"><T en={en}>{es}</T></span>
+            ))}
+          </div>
         </motion.section>
 
       </main>
