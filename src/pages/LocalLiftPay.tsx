@@ -110,7 +110,7 @@ export default function LocalLiftPay() {
     <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
       <Navbar />
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-16 md:py-24">
-        {status === "ready" && (
+        {status !== "loading" && (
           <Link
             to="/local-lift"
             className="mb-5 inline-flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
@@ -366,7 +366,6 @@ export default function LocalLiftPay() {
           </div>
         )}
 
-        <div className="mt-8 text-center"><Link to="/local-lift" className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><T en="Back to Local Lift">Volver a Local Lift</T></Link></div>
       </main>
       <Footer />
     </div>
