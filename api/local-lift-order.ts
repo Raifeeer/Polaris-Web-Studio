@@ -95,6 +95,7 @@ async function fetchInvoicePdf(params: {
   description: string;
   amount: number;
   paypalOrderId: string;
+  exchangeRate?: number;
 }): Promise<Buffer | null> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return null;
@@ -113,6 +114,7 @@ async function fetchInvoicePdf(params: {
       amount: params.amount,
       paymentLabel: "PayPal",
       paymentDetail: `Ref: ${params.paypalOrderId}`,
+      exchangeRate: params.exchangeRate,
     }),
   });
   if (!resp.ok) throw new Error(`invoice-pdf ${resp.status}`);
@@ -219,6 +221,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         description: `Local Lift — ${TIER_LABEL[d.tier] || "Local Lift"} — ${d.businessName || ""}`,
         amount: TIER_PRICE[d.tier] || 0,
         paypalOrderId: d.paypalOrderId || "",
+        // La tasa del día en que se emitió, no la de hoy: si no, una factura
+        // vieja se descargaría con un monto en pesos distinto al original.
+        exchangeRate: typeof d.exchangeRate === "number" ? d.exchangeRate : undefined,
       });
       if (!pdf) return res.status(500).json({ error: "No pudimos generar la factura." });
 
@@ -283,6 +288,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let portalProvisioned = false;
       let tempPassword = "";
       let invoiceNumber = "";
+      let exchangeRate: number | undefined;
       try {
         const portalUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
         const cronSecret = process.env.CRON_SECRET;
@@ -306,6 +312,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             portalProvisioned = true;
             tempPassword = prov.tempPassword || "";
             invoiceNumber = prov.invoiceNumber || "";
+            exchangeRate = typeof prov.exchangeRate === "number" ? prov.exchangeRate : undefined;
           } else if (prov?.alreadyExists) {
             // Cliente que ya tenía portal (compró antes): no se le manda
             // bienvenida ni contraseña nueva, su cuenta sigue siendo la misma.
@@ -322,6 +329,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         try {
           await docRef.update({
             ...(invoiceNumber ? { invoiceNumber } : {}),
+            ...(exchangeRate ? { exchangeRate } : {}),
             portalProvisioned,
           });
         } catch (updErr) {
@@ -343,6 +351,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             description: `Local Lift — ${TIER_LABEL[tier]} — ${data.businessName}`,
             amount: TIER_PRICE[tier],
             paypalOrderId,
+            exchangeRate,
           });
         } catch (pdfErr) {
           console.error("[local-lift-order] Error generando PDF de factura:", pdfErr);

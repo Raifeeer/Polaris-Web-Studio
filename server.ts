@@ -1497,6 +1497,20 @@ const PORT = 3000;
       const liftInvoiceId = `inv-${Date.now()}`;
       const today = new Date().toISOString().split("T")[0];
       const liftInvoiceNumber = dbInstance.consumeNextInvoiceCode();
+
+      // Tasa USD->DOP del día, congelada en la factura -- misma idea que las
+      // facturas de sitio web, donde el admin la carga a mano al emitirlas
+      // (ver POST /api/portal/invoices). Acá no hay nadie que la escriba,
+      // así que se consulta al vuelo. Si falla, la factura sale igual solo
+      // en USD: el monto en pesos es informativo, el cobro real es en USD.
+      let liftExchangeRate: number | undefined;
+      try {
+        const rateRes = await fetch("https://open.er-api.com/v6/latest/USD");
+        const rateData: any = rateRes.ok ? await rateRes.json() : null;
+        if (typeof rateData?.rates?.DOP === "number") liftExchangeRate = rateData.rates.DOP;
+      } catch (rateErr) {
+        console.error("[auto-provision-client] No se pudo obtener la tasa USD/DOP:", rateErr);
+      }
       dbInstance.addInvoice({
         id: liftInvoiceId,
         projectId,
@@ -1509,13 +1523,14 @@ const PORT = 3000;
         dueDate: today,
         description: `Local Lift — ${liftLabel} — ${projectName}`,
         kind: "local_lift",
+        ...(liftExchangeRate ? { exchangeRate: liftExchangeRate } : {}),
         ...(typeof paypalOrderId === "string" && paypalOrderId.trim()
           ? { paypalCaptureId: paypalOrderId.trim() }
           : {}),
       });
 
       await dbInstance.flush();
-      return res.json({ success: true, clientId, projectId, invoiceId: liftInvoiceId, invoiceNumber: liftInvoiceNumber, tempPassword });
+      return res.json({ success: true, clientId, projectId, invoiceId: liftInvoiceId, invoiceNumber: liftInvoiceNumber, exchangeRate: liftExchangeRate, tempPassword });
     }
 
     dbInstance.addProject({
