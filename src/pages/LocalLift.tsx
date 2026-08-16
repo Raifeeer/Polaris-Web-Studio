@@ -14,10 +14,10 @@ import {
   Star,
   TrendingUp,
   Zap,
-  Zap as ZapFast,
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AtlasMark from "../components/AtlasMark";
 import { T, useLanguage } from "../context/LanguageContext";
 import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
@@ -1039,14 +1039,17 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
                     <T en={`It will arrive at ${email} within the next 5-10 minutes.`}>{`Te llegará a ${email} dentro de los próximos 5 a 10 minutos.`}</T>
                   </p>
-                  <button
-                    type="button"
-                    onClick={handleRevealNow}
-                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
-                  >
-                    <ZapFast size={14} />
-                    <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
-                  </button>
+                  <div className="mt-6 flex flex-col items-center gap-2">
+                    <p className="text-xs font-bold text-[var(--color-text-tertiary)]"><T en="Prefer it right now?">¿Lo prefieres ya?</T></p>
+                    <button
+                      type="button"
+                      onClick={handleRevealNow}
+                      className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
+                    >
+                      <AtlasMark variant="isotipo" label="Atlas Assistant" className="h-5 w-5 shrink-0" />
+                      <T en="Generate with Atlas instantly">Generar con Atlas al instante</T>
+                    </button>
+                  </div>
                   {revealNowError && <p className="mt-3 text-xs text-red-400">{revealNowError}</p>}
                 </>
               )}
