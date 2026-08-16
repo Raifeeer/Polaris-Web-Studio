@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { waitUntil } from "@vercel/functions";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
@@ -325,6 +326,61 @@ function buildInternalAlertHtml(diagnostic: Diagnostic | null, place: PlaceData,
 </html>`;
 }
 
+async function runRevealNowJob(firestore: any, docRef: any, leadId: string): Promise<void> {
+  try {
+    const current = await docRef.get();
+    if (!current.exists) throw new Error("No encontramos ese diagnóstico.");
+    const v = current.data() || {};
+    const lang: "es" | "en" = v.lang === "en" ? "en" : "es";
+    let diagnostic: Diagnostic = v.diagnostic;
+    if (!diagnostic) {
+      diagnostic = await generateDiagnostic(v.placeData, lang);
+      await docRef.update({
+        diagnostic,
+        status: "diagnostic_generated",
+        atlasGeneratedAt: new Date(),
+      });
+    }
+
+    const zohoPassword = process.env.ZOHO_PASSWORD;
+    if (!zohoPassword) throw new Error("ZOHO_PASSWORD no configurado.");
+    const transporter = nodemailer.createTransport({
+      host: "smtp.zoho.com",
+      port: 465,
+      secure: true,
+      auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
+    });
+    await transporter.sendMail({
+      from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+      to: v.email,
+      subject: lang === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
+      text: renderDiagnosticText(diagnostic, lang),
+      html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName, lang, leadId),
+    });
+    await commitEmailDelivery(firestore, docRef, v.email, { leadId, via: "reveal-now" });
+  } catch (err) {
+    await releaseEmailDelivery(firestore, docRef).catch(() => undefined);
+    await docRef.update({
+      status: "diagnostic_error",
+      atlasError: "No pudimos completar la generación en este intento.",
+      atlasCompletedAt: new Date(),
+    }).catch(() => undefined);
+    console.error("[local-lift-diagnostic] Error en job reveal-now:", err);
+  }
+}
+
+function getTimestampMillis(value: unknown): number | null {
+  if (value && typeof (value as { toMillis?: () => number }).toMillis === "function") {
+    return (value as { toMillis: () => number }).toMillis();
+  }
+  if (value instanceof Date) return value.getTime();
+  if (typeof value === "number") return value;
+  return null;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST");
@@ -333,15 +389,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // "Que Atlas te lo genere al instante": pedido explícito del usuario (16
-  // de agosto) -- antes esto solo cambiaba lo que se veía en pantalla, el
-  // diagnóstico YA estaba generado (la parte lenta, 30-45s con IA, corría
-  // siempre en el submit inicial) y el correo ya se había mandado de una.
-  // Ahora la generación real con IA se DIFIERE hasta acá (o hasta el envío
-  // programado, ver el job) -- este botón dispara la generación real
-  // (findPlace ya se hizo en el submit, rápido; esto es solo la parte
-  // lenta) y el envío inmediato del correo, marcando emailSent para que
-  // local-lift-diagnostic-mailer.ts no lo vuelva a mandar.
+  if (req.body?.action === "atlas-status") {
+    const { leadId } = req.body || {};
+    if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
+    const firestore = getFirestore(firebaseApp, "polaris-web-studio");
+    const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
+    if (!doc.exists) return res.status(404).json({ error: "No encontramos ese diagnóstico." });
+    const v = doc.data() || {};
+    const startedAt = getTimestampMillis(v.atlasStartedAt) || getTimestampMillis(v.emailDeliveryClaimedAt);
+    if (v.emailSent && v.diagnostic) {
+      return res.json({ success: true, status: "success", diagnostic: v.diagnostic, place: v.placeData, startedAt });
+    }
+    if (v.status === "diagnostic_error") {
+      return res.json({ success: false, status: "error", error: v.atlasError || "No pudimos completar la generación.", startedAt });
+    }
+    if (v.status === "diagnostic_generating" || v.status === "diagnostic_generated" || v.emailDeliveryInProgress) {
+      return res.json({ success: true, status: "processing", startedAt, place: v.placeData });
+    }
+    return res.json({ success: true, status: "pending", startedAt, place: v.placeData });
+  }
+
+  // "Que Atlas te lo genere al instante" inicia un job durable y responde
+  // inmediatamente. La UI consulta el mismo lead, así una recarga retoma el
+  // progreso real en lugar de lanzar otra generación desde cero.
   if (req.body?.action === "reveal-now") {
     const { leadId } = req.body || {};
     if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
@@ -349,48 +419,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
     const doc = await docRef.get();
     if (!doc.exists) return res.status(404).json({ error: "No encontramos ese diagnóstico." });
-    let v = doc.data()!;
+    const v = doc.data() || {};
     const lang2: "es" | "en" = v.lang === "en" ? "en" : "es";
+    const startedAt = getTimestampMillis(v.atlasStartedAt) || getTimestampMillis(v.emailDeliveryClaimedAt);
+    if (v.emailSent && v.diagnostic) {
+      return res.json({ success: true, status: "success", diagnostic: v.diagnostic, place: v.placeData, startedAt });
+    }
+    if (v.status === "diagnostic_generating" || v.status === "diagnostic_generated" || v.emailDeliveryInProgress) {
+      return res.status(202).json({ success: true, status: "processing", startedAt, place: v.placeData });
+    }
     if (v.emailSent || await hasSentDiagnostic(firestore, v.email)) {
       return res.status(409).json({ reason: "email_already_used" });
     }
     const deliveryClaim = await claimEmailDelivery(firestore, docRef, v.email);
     if (deliveryClaim === "blocked") return res.status(409).json({ reason: "email_already_used" });
-    if (deliveryClaim === "in_progress") return res.status(409).json({ reason: "email_in_progress" });
-
-    try {
-      let diagnostic: Diagnostic = v.diagnostic;
-      if (!diagnostic) {
-        diagnostic = await generateDiagnostic(v.placeData, lang2);
-        await docRef.update({ diagnostic, status: "diagnostic_sent" });
-      }
-
-      const zohoPassword = process.env.ZOHO_PASSWORD;
-      if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
-      const transporter = nodemailer.createTransport({
-        host: "smtp.zoho.com",
-        port: 465,
-        secure: true,
-        auth: { user: "hola@polarisweb.studio", pass: process.env.ZOHO_PASSWORD },
-        connectionTimeout: 8000,
-        greetingTimeout: 8000,
-        socketTimeout: 10000,
+    if (deliveryClaim === "in_progress") {
+      const claimed = await docRef.get();
+      const claimedData = claimed.data() || {};
+      return res.status(202).json({
+        success: true,
+        status: "processing",
+        startedAt: getTimestampMillis(claimedData.atlasStartedAt) || getTimestampMillis(claimedData.emailDeliveryClaimedAt),
+        place: claimedData.placeData || v.placeData,
       });
-      await transporter.sendMail({
-        from: '"Polaris Local Lift" <hola@polarisweb.studio>',
-        to: v.email,
-        subject: lang2 === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
-        text: renderDiagnosticText(diagnostic, lang2),
-        html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName, lang2, leadId.trim()),
-      });
-      await commitEmailDelivery(firestore, docRef, v.email, { leadId: leadId.trim(), via: "reveal-now" });
-
-      return res.json({ success: true, diagnostic, place: v.placeData });
-    } catch (err: any) {
-      await releaseEmailDelivery(firestore, docRef).catch(() => undefined);
-      console.error("[local-lift-diagnostic] Error en reveal-now:", err);
-      return res.status(500).json({ error: "No pudimos generar tu diagnóstico en este momento. Intenta de nuevo en un momento." });
     }
+
+    const atlasStartedAt = new Date();
+    await docRef.update({
+      status: "diagnostic_generating",
+      atlasStartedAt,
+      atlasCompletedAt: null,
+      atlasError: null,
+    });
+    const job = runRevealNowJob(firestore, docRef, leadId.trim());
+    try {
+      waitUntil(job);
+    } catch {
+      void job;
+    }
+    return res.status(202).json({ success: true, status: "processing", startedAt: atlasStartedAt.getTime(), place: v.placeData });
   }
 
   const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";

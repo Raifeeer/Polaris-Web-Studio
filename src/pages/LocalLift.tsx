@@ -106,7 +106,7 @@ function WisePhrase({
     : status === "confirm"
       ? { es: "Tú eliges el lugar; nosotros partimos de ahí.", en: "You choose the place; we start from there." }
       : status === "queued"
-        ? { es: "El diagnóstico seguirá su curso aunque cierres esta ventana.", en: "Your diagnosis will continue even if you close this window." }
+        ? { es: "El proceso sigue en curso aunque recargues la página.", en: "The process continues even if you reload the page." }
         : status === "success"
           ? { es: "Un diagnóstico claro te ayuda a decidir qué sigue.", en: "A clear diagnosis helps you decide what comes next." }
           : status === "email_blocked"
@@ -239,6 +239,8 @@ export default function LocalLift() {
   const [revealNowError, setRevealNowError] = useState("");
   const [revealTimedOut, setRevealTimedOut] = useState(false);
   const [revealRequested, setRevealRequested] = useState(false);
+  const [atlasStartedAt, setAtlasStartedAt] = useState<number | null>(null);
+  const [revealElapsedSeconds, setRevealElapsedSeconds] = useState(0);
   const [autoRetryPending, setAutoRetryPending] = useState(false);
   const [emailGuardReason, setEmailGuardReason] = useState<"already_used" | "in_progress">("already_used");
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -250,6 +252,7 @@ export default function LocalLift() {
   const flowHydratedRef = useRef(false);
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
   const mapsFieldRef = useRef<HTMLInputElement | null>(null);
+  const atlasPollInFlightRef = useRef(false);
   const motionReveal = (delay = 0) => prefersReducedMotion
     ? { initial: false }
     : {
@@ -416,6 +419,7 @@ export default function LocalLift() {
         emailGuardReason,
         revealTimedOut,
         revealRequested,
+        atlasStartedAt,
         savedAt: Date.now(),
         scrollY: window.scrollY,
         ...overrides,
@@ -443,7 +447,7 @@ export default function LocalLift() {
     if (!hasProgress) return;
     const timer = window.setTimeout(() => persistFlowSnapshot(), 120);
     return () => window.clearTimeout(timer);
-  }, [businessName, city, contactName, email, mapsUrl, lookupMode, status, diagnostic, place, candidates, visibleCandidateCount, revealedByAtlas, diagnosticLeadId, emailGuardReason, revealTimedOut, revealRequested]);
+  }, [businessName, city, contactName, email, mapsUrl, lookupMode, status, diagnostic, place, candidates, visibleCandidateCount, revealedByAtlas, diagnosticLeadId, emailGuardReason, revealTimedOut, revealRequested, atlasStartedAt]);
 
   const persistAtlasRetryAndReload = () => {
     if (!diagnosticLeadId || !place) return;
@@ -455,6 +459,7 @@ export default function LocalLift() {
       diagnosticLeadId,
       revealRequested: true,
       revealTimedOut: false,
+      atlasStartedAt,
     });
     try {
       sessionStorage.setItem(LOCAL_LIFT_ATLAS_RETRY_KEY, JSON.stringify({
@@ -468,6 +473,7 @@ export default function LocalLift() {
         place,
         diagnosticLeadId,
         revealRequested: true,
+        atlasStartedAt,
         savedAt: Date.now(),
         scrollY: window.scrollY,
       }));
@@ -638,6 +644,8 @@ export default function LocalLift() {
       setEmailGuardReason(saved.emailGuardReason === "in_progress" ? "in_progress" : "already_used");
       setRevealTimedOut(Boolean(saved.revealTimedOut));
       setRevealRequested(Boolean(saved.revealRequested));
+      setAtlasStartedAt(Number(saved.atlasStartedAt) || null);
+      setRevealElapsedSeconds(saved.atlasStartedAt ? Math.max(0, Math.floor((Date.now() - Number(saved.atlasStartedAt)) / 1000)) : 0);
       setStatus(savedStatus);
 
       if (["confirm", "queued", "success"].includes(savedStatus) && Number.isFinite(Number(saved.scrollY))) {
@@ -727,12 +735,45 @@ export default function LocalLift() {
     }
   };
 
-const handleRevealNow = async () => {
+  const applyAtlasSuccess = (data: { diagnostic?: DiagnosticResult; place?: PlaceResult }) => {
+    if (!data.diagnostic) return;
+    try {
+      sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+    } catch {
+      // El resultado sigue visible si el navegador bloquea sessionStorage.
+    }
+    const generatedPlace = data.place || place;
+    persistFlowSnapshot({
+      status: "success",
+      diagnostic: data.diagnostic,
+      place: generatedPlace,
+      candidates: [],
+      revealedByAtlas: true,
+      diagnosticLeadId,
+      revealRequested: false,
+      revealTimedOut: false,
+      atlasStartedAt: null,
+    });
+    setRevealTimedOut(false);
+    setRevealRequested(false);
+    setDiagnostic(data.diagnostic);
+    if (data.place) setPlace(data.place);
+    setRevealedByAtlas(true);
+    setRevealNowLoading(false);
+    setAtlasStartedAt(null);
+    setRevealElapsedSeconds(0);
+    setStatus("success");
+  };
+
+  const handleRevealNow = async () => {
     if (!diagnosticLeadId || revealNowLoading) return;
+    const requestedAt = atlasStartedAt || Date.now();
     setRevealNowLoading(true);
     setRevealNowError("");
     setRevealTimedOut(false);
     setRevealRequested(true);
+    setAtlasStartedAt(requestedAt);
+    setRevealElapsedSeconds(Math.max(0, Math.floor((Date.now() - requestedAt) / 1000)));
     persistFlowSnapshot({
       status: "queued",
       diagnostic: null,
@@ -741,14 +782,15 @@ const handleRevealNow = async () => {
       diagnosticLeadId,
       revealRequested: true,
       revealTimedOut: false,
+      atlasStartedAt: requestedAt,
     });
-    const revealController = new AbortController();
-    const revealTimeout = window.setTimeout(() => revealController.abort(), 45000);
+    const controller = new AbortController();
+    const requestTimeout = window.setTimeout(() => controller.abort(), 12000);
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        signal: revealController.signal,
+        signal: controller.signal,
         body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId, lang: language === "en" ? "en" : "es" }),
       });
       const data = await res.json();
@@ -768,52 +810,79 @@ const handleRevealNow = async () => {
         setRevealNowLoading(false);
         return;
       }
-      try {
-        sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
-      } catch {
-        // El resultado sigue visible si el navegador bloquea sessionStorage.
+      const serverStartedAt = Number(data.startedAt) || requestedAt;
+      setAtlasStartedAt(serverStartedAt);
+      setRevealElapsedSeconds(Math.max(0, Math.floor((Date.now() - serverStartedAt) / 1000)));
+      if (data.status === "success" && data.diagnostic) {
+        applyAtlasSuccess(data);
       }
-      const generatedPlace = data.place || place;
-      persistFlowSnapshot({
-        status: "success",
-        diagnostic: data.diagnostic,
-        place: generatedPlace,
-        candidates: [],
-        revealedByAtlas: true,
-        diagnosticLeadId,
-        revealRequested: false,
-        revealTimedOut: false,
-      });
-      setRevealTimedOut(false);
-      setRevealRequested(false);
-      setDiagnostic(data.diagnostic);
-      if (data.place) setPlace(data.place);
-      setRevealedByAtlas(true);
-      setRevealNowLoading(false);
-      setStatus("success");
     } catch {
-      if (revealController.signal.aborted) {
-        persistFlowSnapshot({
-          status: "queued",
-          diagnostic: null,
-          place,
-          candidates: [],
-          diagnosticLeadId,
-          revealRequested: true,
-          revealTimedOut: true,
-        });
-        setRevealTimedOut(true);
-        setRevealRequested(true);
-        setRevealNowError("");
-      } else {
-        setRevealTimedOut(false);
-        setRevealNowError(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
-      }
       setRevealNowLoading(false);
+      setRevealNowError(language === "en" ? "We couldn't start Atlas. Please try again." : "No pudimos iniciar Atlas. Intenta de nuevo.");
     } finally {
-      window.clearTimeout(revealTimeout);
+      window.clearTimeout(requestTimeout);
     }
   };
+
+  useEffect(() => {
+    if (!revealNowLoading || !diagnosticLeadId) return;
+    const poll = async () => {
+      if (atlasPollInFlightRef.current) return;
+      atlasPollInFlightRef.current = true;
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 10000);
+      try {
+        const res = await fetch("/api/local-lift-diagnostic", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({ action: "atlas-status", leadId: diagnosticLeadId }),
+        });
+        const data = await res.json();
+        if (res.status === 409 && data.reason === "email_already_used") {
+          setRevealNowLoading(false);
+          setStatus("email_blocked");
+          return;
+        }
+        if (!res.ok) return;
+        if (data.startedAt) {
+          const started = Number(data.startedAt);
+          setAtlasStartedAt(started);
+          setRevealElapsedSeconds(Math.max(0, Math.floor((Date.now() - started) / 1000)));
+        }
+        if (data.status === "success" && data.diagnostic) {
+          applyAtlasSuccess(data);
+        } else if (data.status === "error") {
+          setRevealNowLoading(false);
+          setRevealRequested(false);
+          setRevealTimedOut(false);
+          setAtlasStartedAt(null);
+          setRevealNowError(data.error || (language === "en" ? "Atlas couldn't finish this attempt." : "Atlas no pudo completar este intento."));
+          persistFlowSnapshot({ status: "queued", revealRequested: false, revealTimedOut: false, atlasStartedAt: null });
+        }
+      } catch {
+        // Un fallo puntual de polling no cancela el job; la siguiente consulta continúa.
+      } finally {
+        window.clearTimeout(timeout);
+        atlasPollInFlightRef.current = false;
+      }
+    };
+    void poll();
+    const interval = window.setInterval(() => void poll(), 1800);
+    return () => window.clearInterval(interval);
+  }, [revealNowLoading, diagnosticLeadId, language]);
+
+  useEffect(() => {
+    if (!revealNowLoading || !atlasStartedAt) return;
+    const updateElapsed = () => {
+      const elapsed = Math.max(0, Math.floor((Date.now() - atlasStartedAt) / 1000));
+      setRevealElapsedSeconds(elapsed);
+      setRevealTimedOut(elapsed >= 45);
+    };
+    updateElapsed();
+    const interval = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(interval);
+  }, [revealNowLoading, atlasStartedAt]);
 
   useEffect(() => {
     if (!autoRetryPending || !diagnosticLeadId || status !== "queued") return;
@@ -836,12 +905,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
       setRevealStepIndex(0);
       return;
     }
-    const interval = setInterval(() => {
-      setRevealStepIndex((i) => (i + 1 < REVEAL_STEPS.length ? i + 1 : i));
-    }, 6000);
-    return () => clearInterval(interval);
+    const started = atlasStartedAt || Date.now();
+    const updateStep = () => {
+      const elapsed = Math.max(0, Date.now() - started);
+      setRevealStepIndex(Math.min(REVEAL_STEPS.length - 1, Math.floor(elapsed / 6000)));
+    };
+    updateStep();
+    const interval = window.setInterval(updateStep, 1000);
+    return () => window.clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revealNowLoading]);
+  }, [revealNowLoading, atlasStartedAt]);
 
 
   useDocumentTitle(
@@ -1388,9 +1461,8 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.45, ease: "easeOut" }}
               className="mt-4 max-w-xl mx-auto px-2 text-center">
-              {revealNowLoading ? (
+              {revealNowLoading && !revealTimedOut ? (
                 <div className="flex w-full flex-col items-center gap-3">
-
                   <div className="flex justify-center">
                     <ThinkingOrb
                       state="solving"
@@ -1407,17 +1479,20 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     />
                   </div>
                   <p className="text-xs text-[var(--color-text-tertiary)]">
-                    <T en="This usually takes 30–45 seconds.">Esto suele tardar entre 30 y 45 segundos.</T>
+                    <T en={`Atlas has been working for ${revealElapsedSeconds} seconds.`}>{`Atlas lleva ${revealElapsedSeconds} segundos trabajando.`}</T>
                   </p>
                 </div>
-              ) : revealTimedOut ? (
+              ) : revealNowLoading && revealTimedOut ? (
                 <div className="flex w-full flex-col items-center gap-3 rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/5 px-4 py-5 text-center">
                   <Clock3 size={25} className="text-[var(--color-primary-base)]" />
                   <h3 className="text-base font-display font-black">
-                    <T en="This is taking longer than expected.">Esto está tardando más de lo esperado.</T>
+                    <T en="Atlas is still working on your diagnosis.">Atlas todavía está trabajando en tu diagnóstico.</T>
                   </h3>
                   <p className="max-w-sm text-xs leading-relaxed text-[var(--color-text-secondary)]">
-                    <T en="Your information is still saved. Reload to try generating the diagnosis again without filling out the form.">Tus datos siguen guardados. Recarga para intentar generar el diagnóstico otra vez sin llenar el formulario.</T>
+                    <T en="You can reload now. We’ll return you to the same process and keep checking this diagnosis instead of starting over.">Puedes recargar ahora. Volveremos al mismo proceso y seguiremos comprobando este diagnóstico, sin empezar de nuevo.</T>
+                  </p>
+                  <p className="text-xs text-[var(--color-text-tertiary)]">
+                    <T en={`${revealElapsedSeconds} seconds have elapsed.`}>{`Han pasado ${revealElapsedSeconds} segundos.`}</T>
                   </p>
                   <a
                     href="#retry-atlas"
@@ -1427,7 +1502,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     }}
                     className="text-xs font-black text-[var(--color-primary-base)] underline underline-offset-4 transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                   >
-                    <T en="Reload and try again">Recargar</T>
+                    <T en="Reload and return to this process">Recargar y volver al proceso</T>
                   </a>
                 </div>
               ) : (
