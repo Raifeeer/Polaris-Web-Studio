@@ -890,16 +890,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="mt-8 max-w-xl mx-auto">
-              <div className="mb-4 flex justify-end">
+              className="mt-3 max-w-xl mx-auto">
+              <div className="mb-2 flex justify-start">
                 <motion.button
                   type="button"
                   onClick={resetCandidateSearch}
-                  whileHover={prefersReducedMotion ? undefined : { y: -1, x: -1 }}
+                  whileHover={prefersReducedMotion ? undefined : { x: -1 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/45 bg-[var(--color-primary-base)]/10 px-3 py-2 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                  className="inline-flex items-center gap-1 rounded-md px-1 py-1 text-xs font-medium text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                 >
-                  <ChevronRight size={14} className="rotate-180" />
+                  <ChevronRight size={13} className="rotate-180" />
                   <T en="Change search">Cambiar búsqueda</T>
                 </motion.button>
               </div>
