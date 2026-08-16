@@ -216,6 +216,22 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
     if (mode === "name") setMapsUrl("");
   };
 
+  const waitForPhotos = (urls: string[]) => Promise.all(urls.map((url) => new Promise<void>((resolve) => {
+    const image = new Image();
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(safetyTimer);
+      resolve();
+    };
+    const safetyTimer = window.setTimeout(finish, 12000);
+    image.onload = finish;
+    image.onerror = finish;
+    image.src = url;
+    if (image.complete) finish();
+  })));
+
   // Este submit valida la ficha real en Google y prepara sus fotos antes de
   // abrir la confirmación. La generación del diagnóstico con IA corre después,
   // cuando el cliente pide "Atlas ahora" en handleRevealNow.
@@ -233,7 +249,7 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
       lookupTimeout = window.setTimeout(() => {
         lookupController.abort();
         reject(new Error("LOOKUP_TIMEOUT"));
-      }, 3600);
+      }, 10000);
     });
     try {
       const { res, data } = await Promise.race([
@@ -252,23 +268,30 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
         return;
       }
             const cands: PlaceResult[] = Array.isArray(data.candidates) && data.candidates.length ? data.candidates : (data.place ? [data.place] : []);
-      // Montamos todas las fichas mientras el loader sigue visible. Sus imágenes
-      // continúan descargándose en segundo plano, pero nunca bloquean la apertura.
-      setCandidates(cands);
-      setVisibleCandidateCount(3);
-      setLoadingStage("photos");
-      await new Promise<void>((resolve) => setTimeout(resolve, 500));
-
-      // Google ya entregó rating, reseñas, dirección y estado; aquí validamos
-      // que cada ficha tenga los datos mínimos antes de abrir el selector.
-      setLoadingStage("verifying");
+      // Google ya entregó rating, reseñas, dirección y estado; primero descartamos
+      // cualquier candidato incompleto antes de preparar las fotos visibles.
       const verifiedCandidates = cands.filter((candidate) => Boolean(candidate.id && candidate.name && candidate.address));
-      await new Promise<void>((resolve) => setTimeout(resolve, 500));
       if (!verifiedCandidates.length) {
         setErrorMsg(language === "en" ? "We found no complete business listing to confirm." : "No encontramos una ficha comercial completa para confirmar.");
         setStatus("error");
         return;
       }
+
+      // Montamos todas las fichas mientras el loader sigue visible. Las fotos de
+      // las primeras tres sí bloquean la apertura; las demás empiezan en paralelo.
+      setCandidates(verifiedCandidates);
+      setVisibleCandidateCount(3);
+      const firstThreePhotoUrls = [...new Set(verifiedCandidates.slice(0, 3).flatMap((candidate) => candidate.photoUrls || []))];
+      const remainingPhotoUrls = [...new Set(verifiedCandidates.slice(3).flatMap((candidate) => candidate.photoUrls || []))];
+      setLoadingStage("photos");
+      void waitForPhotos(remainingPhotoUrls);
+      await waitForPhotos(firstThreePhotoUrls);
+      await new Promise<void>((resolve) => setTimeout(resolve, 300));
+
+      // La primera tanda ya tiene todos sus recursos fotográficos resueltos.
+      // Esta etapa confirma que los datos mínimos siguen presentes antes de abrirla.
+      setLoadingStage("verifying");
+      await new Promise<void>((resolve) => setTimeout(resolve, 300));
 
       setCandidates(verifiedCandidates);
       setVisibleCandidateCount(3);
@@ -286,10 +309,10 @@ const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   };
 
   const loadingCopy = loadingStage === "searching"
-    ? { es: "Buscando coincidencias en Google...", en: "Finding matches on Google..." }
+    ? { es: "Buscando tu ficha...", en: "Finding your listing..." }
     : loadingStage === "photos"
-      ? { es: "Preparando fotos y reseñas de las fichas...", en: "Preparing listing photos and reviews..." }
-      : { es: "Comprobando que encontramos los negocios correctos...", en: "Checking that we found the right businesses..." };
+      ? { es: "Preparando las primeras fichas...", en: "Preparing the first listings..." }
+      : { es: "Verificando los datos...", en: "Checking the details..." };
 
   const handleConfirmCandidate = async (candidate: PlaceResult) => {
     setPlace(candidate);
