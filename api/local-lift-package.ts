@@ -78,8 +78,8 @@ async function verifyAdmin(req: VercelRequest): Promise<boolean> {
 }
 
 const TIER_PRICE: Record<string, { amount: string; label: string }> = {
-  "48h": { amount: "29", label: "Impulso" },
-  implementado: { amount: "99", label: "Ascenso" },
+  "impulso": { amount: "29", label: "Impulso" },
+  "ascenso": { amount: "99", label: "Ascenso" },
 };
 
 // Genera el paquete completo del tier "Impulso" ($29) / "Ascenso"
@@ -299,7 +299,7 @@ function renderPackageHtml(pkg: LocalLiftPackage, lang: "es" | "en"): string {
 }
 
 function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: string, leadId: string, language: "es" | "en"): string {
-  const price = TIER_PRICE[tier] || TIER_PRICE["48h"];
+  const price = TIER_PRICE[tier] || TIER_PRICE["impulso"];
   const postsCount = pkg.googlePosts?.length || 0;
   const repliesCount = pkg.reviewReplies?.length || 0;
   const waCount = pkg.whatsappMessages?.length || 0;
@@ -372,7 +372,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           city: v.city || "",
           contactName: v.contactName || "",
           email: v.email || "",
-          tier: v.tier || "48h",
+          tier: v.tier || "impulso",
           status: v.status || "diagnostic_sent",
           paid: !!v.paid,
           source: v.source || "free_diagnostic",
@@ -404,7 +404,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
-      const finalTier = lead.tier || tier || "48h";
+      const finalTier = lead.tier || tier || "impulso";
       const transporter = nodemailer.createTransport({
         host: "smtp.zoho.com", port: 465, secure: true,
         auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
@@ -506,7 +506,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (existing.exists) {
           const v = existing.data()!;
           finalPaid = !!v.paid;
-          await docRef.update({ place, package: pkg, tier: tier || v.tier || "48h", status: "package_ready", businessName: place.name, city });
+          await docRef.update({ place, package: pkg, tier: tier || v.tier || "impulso", status: "package_ready", businessName: place.name, city });
         } else {
           finalLeadId = null; // lead inválido/borrado — cae al branch de creación abajo
         }
@@ -519,7 +519,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           email: email || null,
           place,
           package: pkg,
-          tier: tier || "48h",
+          tier: tier || "impulso",
           status: "package_ready",
           paid: false,
           source: "admin_manual",

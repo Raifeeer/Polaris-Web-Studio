@@ -432,7 +432,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         source: "free_diagnostic",
         status: "place_found_pending_diagnostic",
         paid: false,
-        tier: "48h",
+        tier: "impulso",
         emailSent: false,
         emailScheduledAt,
         createdAt: new Date(),
