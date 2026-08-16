@@ -5,12 +5,15 @@ import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
 // Panel interno para generar y enviar el paquete completo del tier
-// "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido
-// tanto acá (redirect si no hay sesión admin) como en el backend
-// (authenticateToken + requireAdmin en server.ts, la protección real).
-// A diferencia de /local-lift (gratis, público), esto es el entregable
-// del tier pago: la "implementación" real en la ficha del cliente sigue
-// siendo trabajo manual -- este panel solo genera y manda el contenido.
+// "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido tanto acá
+// (redirect si no hay sesión admin) como en el backend (verificación real
+// dentro de cada archivo api/local-lift-package.ts / gbp-publish.ts, ver
+// el comentario ahí -- el middleware de server.ts NO corre en producción
+// para estas rutas). A diferencia de /local-lift (gratis, público), esto
+// es el entregable del tier pago -- "Impulso" entrega el contenido para
+// que el cliente lo implemente; "Ascenso" además lo publica directo en su
+// ficha real (sección "Publicar en Google" más abajo, si el lead conectó
+// su cuenta).
 //
 // Cada generación queda rastreada como un "lead" en Firestore (mismo doc
 // tanto si vino del diagnóstico gratis, de un pago directo, o de una
@@ -79,6 +82,13 @@ export default function LocalLiftPanel() {
   const [sendError, setSendError] = useState("");
   const [teaserStatus, setTeaserStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [teaserError, setTeaserError] = useState("");
+
+  const [gbpLocations, setGbpLocations] = useState<{ accountLocationPath: string; title: string }[] | null>(null);
+  const [gbpLocationsStatus, setGbpLocationsStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [gbpLocationsError, setGbpLocationsError] = useState("");
+  const [gbpPublishingIndex, setGbpPublishingIndex] = useState<number | null>(null);
+  const [gbpPublishedIndexes, setGbpPublishedIndexes] = useState<Set<number>>(new Set());
+  const [gbpPublishError, setGbpPublishError] = useState("");
 
   const loadLeads = () => {
     if (!token) return;
@@ -171,6 +181,54 @@ export default function LocalLiftPanel() {
     } catch {
       setTeaserError("Algo salió mal al enviar. Intenta de nuevo.");
       setTeaserStatus("error");
+    }
+  };
+
+  const loadGbpLocations = async () => {
+    if (!leadId) return;
+    setGbpLocationsStatus("loading");
+    setGbpLocationsError("");
+    try {
+      const res = await fetch("/api/gbp-publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "list-locations", leadId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setGbpLocationsError(data.error || "No se pudieron listar las ubicaciones.");
+        setGbpLocationsStatus("error");
+        return;
+      }
+      setGbpLocations(data.locations || []);
+      setGbpLocationsStatus("idle");
+    } catch {
+      setGbpLocationsError("Algo salió mal consultando Google.");
+      setGbpLocationsStatus("error");
+    }
+  };
+
+  const publishPost = async (accountLocationPath: string, index: number) => {
+    if (!pkg?.googlePosts?.[index] || !leadId) return;
+    setGbpPublishingIndex(index);
+    setGbpPublishError("");
+    try {
+      const res = await fetch("/api/gbp-publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "publish-post", leadId, accountLocationPath, post: pkg.googlePosts[index] }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setGbpPublishError(data.error || "Google rechazó la publicación.");
+        setGbpPublishingIndex(null);
+        return;
+      }
+      setGbpPublishedIndexes((prev) => new Set(prev).add(index));
+      setGbpPublishingIndex(null);
+    } catch {
+      setGbpPublishError("Algo salió mal publicando en Google.");
+      setGbpPublishingIndex(null);
     }
   };
 
@@ -363,6 +421,52 @@ export default function LocalLiftPanel() {
               </>
             )}
           </section>
+
+          {leadGbpConnected && (
+            <section className="rounded-xl bg-[var(--color-surface-elevated)] p-5 max-w-xl border border-indigo-500/20">
+              <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><Link2 size={14} /> Publicar en Google (Ascenso)</h2>
+              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">Este lead conectó su cuenta real de Google. Publicar acá va directo a su ficha pública -- revisa cada post antes de mandarlo.</p>
+
+              {!gbpLocations && (
+                <button onClick={loadGbpLocations} disabled={gbpLocationsStatus === "loading"} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 px-4 py-2 text-xs font-bold text-indigo-400 disabled:opacity-50">
+                  {gbpLocationsStatus === "loading" ? <Loader2 size={13} className="animate-spin" /> : null} Ver ubicaciones conectadas
+                </button>
+              )}
+              {gbpLocationsStatus === "error" && <p className="mt-2 text-xs text-red-400">{gbpLocationsError}</p>}
+
+              {gbpLocations && gbpLocations.length === 0 && (
+                <p className="mt-3 text-xs text-[var(--color-text-tertiary)]">No encontramos ninguna ubicación real en esta cuenta de Google.</p>
+              )}
+
+              {gbpLocations && gbpLocations.length > 0 && pkg?.googlePosts && (
+                <div className="mt-4 space-y-3">
+                  {gbpLocations.map((loc) => (
+                    <div key={loc.accountLocationPath}>
+                      <div className="text-xs font-bold text-[var(--color-text-primary)]">{loc.title}</div>
+                      <div className="mt-2 space-y-2">
+                        {pkg.googlePosts!.map((p, i) => (
+                          <div key={i} className="flex items-start justify-between gap-3 rounded-lg bg-[var(--color-surface-base)] px-3 py-2">
+                            <div className="text-xs">
+                              <div className="font-bold text-[var(--color-text-primary)]">{p.title}</div>
+                              <div className="text-[var(--color-text-tertiary)] mt-0.5">{p.body.slice(0, 90)}{p.body.length > 90 ? "…" : ""}</div>
+                            </div>
+                            <button
+                              onClick={() => publishPost(loc.accountLocationPath, i)}
+                              disabled={gbpPublishingIndex === i || gbpPublishedIndexes.has(i)}
+                              className="shrink-0 rounded-lg bg-indigo-500 px-3 py-1.5 text-[11px] font-black text-white disabled:opacity-50"
+                            >
+                              {gbpPublishedIndexes.has(i) ? "Publicado" : gbpPublishingIndex === i ? "Publicando..." : "Publicar"}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {gbpPublishError && <p className="mt-3 text-xs text-red-400">{gbpPublishError}</p>}
+            </section>
+          )}
         </div>
       )}
     </div>

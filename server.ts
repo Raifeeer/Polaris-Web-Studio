@@ -1684,6 +1684,30 @@ const PORT = 3000;
     }
   });
 
+  app.post("/api/gbp-oauth-callback", async (req, res) => {
+    try {
+      const { default: gbpOauthCallbackHandler } = await import("./api/gbp-oauth-callback.js");
+      await gbpOauthCallbackHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in gbp-oauth-callback:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
+  // Publicación real en Google Business Profile -- admin-only. La
+  // verificación real vive DENTRO del propio archivo (mismo motivo que
+  // local-lift-package.ts: en Vercel esta ruta se resuelve directo al
+  // archivo, este middleware es solo para `npm run dev` local).
+  app.post("/api/gbp-publish", authenticateToken, requireAdmin, async (req, res) => {
+    try {
+      const { default: gbpPublishHandler } = await import("./api/gbp-publish.js");
+      await gbpPublishHandler(req as any, res as any);
+    } catch (error: any) {
+      console.error("Error in gbp-publish:", error);
+      res.status(500).json({ error: error?.message || "Internal server error" });
+    }
+  });
+
   app.post("/api/suggest-domains", async (req, res) => {
     try {
       await suggestDomainsHandler(req as any, res as any);
