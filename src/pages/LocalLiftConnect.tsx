@@ -25,6 +25,7 @@ export default function LocalLiftConnect() {
   const [connected, setConnected] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [connecting, setConnecting] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState("");
 
   useDocumentTitle("Conectar Google Business Profile | Polaris", "Connect Google Business Profile | Polaris", "", "");
@@ -62,6 +63,30 @@ export default function LocalLiftConnect() {
       setError(language === "en" ? "Something went wrong connecting your account. Please try again." : "Algo salió mal al conectar tu cuenta. Intenta de nuevo.");
     }
   }, [gbpParam, language]);
+
+  const handleDisconnect = async () => {
+    if (!leadId) return;
+    setDisconnecting(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/gbp-oauth-callback?action=disconnect`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ leadId }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setError(data.error || (language === "en" ? "Couldn't disconnect. Please try again." : "No pudimos desconectar. Intenta de nuevo."));
+        setDisconnecting(false);
+        return;
+      }
+      setConnected(false);
+      setDisconnecting(false);
+    } catch {
+      setError(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
+      setDisconnecting(false);
+    }
+  };
 
   const handleConnect = async () => {
     if (!leadId) return;
@@ -112,8 +137,18 @@ export default function LocalLiftConnect() {
             </p>
 
             {connected ? (
-              <div className="mt-7 flex items-center gap-2 text-emerald-500 text-sm font-black">
-                <Check size={18} /> <T en="Connected. We'll only publish or reply to something after you approve it.">Conectado. Solo publicamos o respondemos algo después de que tú lo apruebes.</T>
+              <div className="mt-7">
+                <div className="flex items-center gap-2 text-emerald-500 text-sm font-black">
+                  <Check size={18} /> <T en="Connected. We'll only publish or reply to something after you approve it.">Conectado. Solo publicamos o respondemos algo después de que tú lo apruebes.</T>
+                </div>
+                <button
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2 text-xs font-bold text-[var(--color-text-secondary)] hover:text-red-400 hover:border-red-400/40 transition-colors disabled:opacity-60"
+                >
+                  {disconnecting ? <Loader2 size={13} className="animate-spin" /> : null}
+                  <T en="Disconnect Google account">Desconectar cuenta de Google</T>
+                </button>
               </div>
             ) : (
               <button

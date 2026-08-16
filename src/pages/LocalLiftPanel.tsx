@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Check, CreditCard, Loader2, Mail, Send, Sparkles } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, CreditCard, Link2, Loader2, Mail, Send, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
@@ -43,6 +43,7 @@ interface Lead {
   status: string;
   paid: boolean;
   source: string;
+  gbpConnected: boolean;
   createdAt: string | null;
 }
 
@@ -62,6 +63,7 @@ export default function LocalLiftPanel() {
   const [leadsLoading, setLeadsLoading] = useState(true);
   const [leadId, setLeadId] = useState<string | null>(null);
   const [leadPaid, setLeadPaid] = useState(false);
+  const [leadGbpConnected, setLeadGbpConnected] = useState(false);
 
   const [businessName, setBusinessName] = useState("");
   const [city, setCity] = useState("");
@@ -102,6 +104,7 @@ export default function LocalLiftPanel() {
   const loadLead = (lead: Lead) => {
     setLeadId(lead.id);
     setLeadPaid(lead.paid);
+    setLeadGbpConnected(lead.gbpConnected);
     setBusinessName(lead.businessName);
     setCity(lead.city);
     setContactName(lead.contactName || "");
@@ -223,7 +226,10 @@ export default function LocalLiftPanel() {
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-black">{l.businessName || "(sin nombre)"} <span className="font-normal text-[var(--color-text-tertiary)]">· {l.city}</span></span>
-                  {l.paid && <span className="inline-flex items-center gap-1 text-emerald-500 font-bold"><CreditCard size={11} /> Pagado</span>}
+                  <span className="flex items-center gap-2">
+                    {l.gbpConnected && <span className="inline-flex items-center gap-1 text-indigo-500 font-bold"><Link2 size={11} /> Google conectado</span>}
+                    {l.paid && <span className="inline-flex items-center gap-1 text-emerald-500 font-bold"><CreditCard size={11} /> Pagado</span>}
+                  </span>
                 </div>
                 <div className="mt-0.5 text-[var(--color-text-tertiary)]">{l.contactName} {l.email && `· ${l.email}`} · {STATUS_LABEL[l.status] || l.status}</div>
               </button>
@@ -261,6 +267,7 @@ export default function LocalLiftPanel() {
           <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
             <Check size={15} /> {place.name} {place.reviewCount ? `· ${place.reviewCount} reseñas` : ""}
             {leadPaid && <span className="inline-flex items-center gap-1 text-[var(--color-text-tertiary)] font-normal normal-case"><CreditCard size={12} /> Ya pagado</span>}
+            {leadGbpConnected && <span className="inline-flex items-center gap-1 text-[var(--color-text-tertiary)] font-normal normal-case"><Link2 size={12} /> Google conectado</span>}
           </div>
 
           {missingParts.length > 0 && (

@@ -26,6 +26,55 @@ const firebaseApp = getApps().length
     });
 
 const TIER_PRICE: Record<string, number> = { "48h": 29, implementado: 99 };
+const TIER_LABEL: Record<string, string> = { "48h": "Impulso", implementado: "Ascenso" };
+
+const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
+const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
+const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
+const ACCENT = "#4f46e5";
+
+// Confirmación real al CLIENTE de que su pago se recibió -- antes esto no
+// existía: solo se mandaba la alerta interna a Cristian, y el cliente solo
+// veía un mensaje en pantalla (LocalLiftPay.tsx) que se pierde si cierra la
+// pestaña. Mismo template "Familia A" que local-lift-diagnostic.ts.
+function buildPaymentConfirmedHtml(businessName: string, tier: string, contactName: string): string {
+  const hasName = !!contactName && contactName.trim().length > 0;
+  const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
+  const label = TIER_LABEL[tier] || "Local Lift";
+  return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+<style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
+</head>
+<body>
+<div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
+<div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+  <div style="padding:40px 40px 0 40px;text-align:center;">
+    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+  </div>
+  <div style="padding:32px 40px 0 40px;text-align:center;">
+    <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">Pago confirmado</div>
+    <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:28px;line-height:1.2;color:#0f172a;">${hasName ? `¡Gracias, ${firstName}!` : "¡Gracias!"}</div>
+    <div style="font-size:14px;color:#64748b;margin-top:8px;">${label} para ${businessName}</div>
+  </div>
+  <div style="padding:20px 40px 0 40px;text-align:center;">
+    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">Recibimos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas horas.</p>
+  </div>
+  <div style="padding:24px 40px 32px 40px;text-align:center;">
+    <a href="https://wa.me/18299200544" target="_blank" style="display:inline-block;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-family:${FONT_DISPLAY};font-weight:700;font-size:13px;padding:11px 24px;border-radius:8px;">¿Dudas? Escríbenos por WhatsApp</a>
+  </div>
+  <div style="padding:0 40px 40px 40px;">
+    <div style="height:1px;background:#e2e8f0;margin-bottom:20px;"></div>
+    <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Local Lift · República Dominicana · hola@polarisweb.studio</div>
+  </div>
+</div>
+</div>
+</body></html>`;
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -101,11 +150,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (zohoPassword) {
+        const transporter = nodemailer.createTransport({
+          host: "smtp.zoho.com", port: 465, secure: true,
+          auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+        });
         try {
-          const transporter = nodemailer.createTransport({
-            host: "smtp.zoho.com", port: 465, secure: true,
-            auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
-          });
           await transporter.sendMail({
             from: '"Local Lift -- Pago confirmado" <hola@polarisweb.studio>',
             to: "hola@polarisweb.studio",
@@ -114,7 +163,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             text: `Negocio: ${data.businessName}\nCiudad: ${data.city}\nContacto: ${data.contactName} <${data.email}>\nTier: ${tier}\nPayPal Order: ${paypalOrderId}\n\nGenera y envía el paquete completo desde el panel: https://polarisweb.studio/local-lift/panel?lead=${docRef.id}`,
           });
         } catch (mailErr) {
-          console.error("[local-lift-order] Error enviando alerta:", mailErr);
+          console.error("[local-lift-order] Error enviando alerta interna:", mailErr);
+        }
+        try {
+          await transporter.sendMail({
+            from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+            to: data.email,
+            subject: `Pago confirmado — ${data.businessName}`,
+            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. Ya estamos preparando tu paquete real, lo recibís por este mismo correo en las próximas horas.`,
+            html: buildPaymentConfirmedHtml(data.businessName, tier, data.contactName || ""),
+          });
+        } catch (mailErr) {
+          console.error("[local-lift-order] Error enviando confirmación al cliente:", mailErr);
         }
       }
 

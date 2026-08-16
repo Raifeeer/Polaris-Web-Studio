@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_localLift.js";
 
@@ -14,6 +15,32 @@ const firebaseApp = getApps().length
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
       }),
     });
+
+// Único email admin real del portal (mismo patrón ya usado en Chroma
+// Tech Store/VELVET Admin.tsx para gating por email exacto).
+const ADMIN_EMAIL = "cristian2200299@gmail.com";
+
+// FIX DE SEGURIDAD REAL (15 de agosto): este archivo asumía que el
+// middleware authenticateToken+requireAdmin de server.ts protegía esta
+// ruta -- FALSO en producción. Vercel resuelve /api/local-lift-package
+// directo a ESTE archivo (coincidencia exacta de nombre de archivo le gana
+// al rewrite genérico /api/(.*) -> /api/index.ts que carga server.ts), así
+// que el Express de server.ts NUNCA se ejecuta para este path en Vercel --
+// solo en `npm run dev` local. Confirmado en vivo: un POST real sin ningún
+// header Authorization devolvía 200 con la lista completa de leads (PII de
+// clientes reales) y probablemente podía disparar generate/send también.
+// Verificación real acá, no delegada a nada externo.
+async function verifyAdmin(req: VercelRequest): Promise<boolean> {
+  const authHeader = (req.headers.authorization as string) || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+  if (!token) return false;
+  try {
+    const decoded = await getAuth(firebaseApp).verifyIdToken(token);
+    return (decoded.email || "").toLowerCase() === ADMIN_EMAIL;
+  } catch {
+    return false;
+  }
+}
 
 const TIER_PRICE: Record<string, { amount: string; label: string }> = {
   "48h": { amount: "29", label: "Impulso" },
@@ -280,6 +307,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!(await verifyAdmin(req))) {
+    return res.status(403).json({ error: "Acceso denegado." });
+  }
+
   const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";
   if (rateLimited(ip, 30, 15 * 60 * 1000)) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
@@ -310,6 +341,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           status: v.status || "diagnostic_sent",
           paid: !!v.paid,
           source: v.source || "free_diagnostic",
+          gbpConnected: !!v.gbp?.refreshToken,
           createdAt: v.createdAt?.toDate?.() || null,
         };
       });

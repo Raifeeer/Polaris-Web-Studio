@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createHmac, timingSafeEqual } from "node:crypto";
+import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -82,6 +83,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ success: true, connected: !!gbp?.refreshToken, connectedAt: gbp?.connectedAt || null });
     }
 
+    // Desconectar: revoca el token real en Google (no solo lo borra acá --
+    // si solo lo borráramos de Firestore, el refresh token seguiría activo
+    // del lado de Google, dándole a Local Lift acceso silencioso e
+    // indefinido) y limpia el campo gbp del lead. POST únicamente, lo
+    // dispara el propio cliente desde /local-lift/conectar/:leadId.
+    if (req.method === "POST" && action === "disconnect") {
+      const body = req.body || {};
+      const targetLeadId = typeof body.leadId === "string" ? body.leadId.trim() : "";
+      if (!targetLeadId) return res.status(400).json({ error: "Falta el lead." });
+      const doc = await firestore.collection("localLiftDiagnostics").doc(targetLeadId).get();
+      if (!doc.exists) return res.status(404).json({ error: "No encontramos ese lead." });
+      const gbp = doc.data()!.gbp;
+      if (gbp?.refreshToken) {
+        try {
+          await fetch("https://oauth2.googleapis.com/revoke", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ token: gbp.refreshToken }),
+          });
+        } catch (revokeErr) {
+          console.error("[gbp-oauth-callback] Error revocando token en Google:", revokeErr);
+        }
+      }
+      await firestore.collection("localLiftDiagnostics").doc(targetLeadId).update({ gbp: null });
+      return res.json({ success: true });
+    }
+
     // Paso 3: el redirect real que manda Google con ?code=&state= tras el consentimiento.
     if (code && state) {
       const verifiedLeadId = verifyState(state);
@@ -120,6 +148,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         { merge: true }
       );
+
+      // Aviso real al admin -- antes esto pasaba en silencio, sin ninguna
+      // notificación, así que solo se sabía que un cliente conectó su
+      // cuenta si alguien entraba al panel a revisar Firestore a mano.
+      const zohoPassword = process.env.ZOHO_PASSWORD;
+      if (zohoPassword) {
+        try {
+          const leadDoc = await firestore.collection("localLiftDiagnostics").doc(verifiedLeadId).get();
+          const leadData = leadDoc.data() || {};
+          const transporter = nodemailer.createTransport({
+            host: "smtp.zoho.com", port: 465, secure: true,
+            auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+          });
+          await transporter.sendMail({
+            from: '"Local Lift -- Google conectado" <hola@polarisweb.studio>',
+            to: "hola@polarisweb.studio",
+            subject: `🔗 ${leadData.businessName || "Un cliente"} conectó su Google Business Profile`,
+            text: `${leadData.businessName || "(sin nombre)"} conectó su cuenta de Google Business Profile en Local Lift.\n\nContacto: ${leadData.contactName || ""} <${leadData.email || ""}>\nPanel: https://polarisweb.studio/local-lift/panel`,
+          });
+        } catch (mailErr) {
+          console.error("[gbp-oauth-callback] Error enviando aviso de conexión:", mailErr);
+        }
+      }
 
       return res.redirect(302, `https://polarisweb.studio/local-lift/conectar/${verifiedLeadId}?gbp=ok`);
     }
