@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { generateWithFallback, placeDataSummary } from "./_localLift.js";
 
 // Manda de verdad los correos de diagnóstico gratis que quedaron
 // "programados" con una demora real de 5-10 min (ver
@@ -10,7 +12,42 @@ import { getFirestore } from "firebase-admin/firestore";
 // generaba el diagnóstico. Corre cada 2 min vía Cloud Scheduler
 // (local-lift-diagnostic-mailer-job) -- ventana de 5-10 min con chequeo
 // cada 2 min da precisión de sobra sin exigir un cron por-segundo.
+//
+// También corre la generación real con IA acá (no solo el envío) -- desde
+// que se difirió la generación misma hasta "Atlas ahora" o este job (16 de
+// agosto), un lead que nunca toca el botón llega acá sin diagnóstico
+// todavía. Por eso el batch por corrida es chico (5, no 25): cada item
+// puede tardar 15-45s reales de generación, y la función tiene 60s de
+// presupuesto total.
 export const config = { maxDuration: 60 };
+
+// Mismo schema que api/local-lift-diagnostic.ts -- duplicado a propósito,
+// mismo patrón ya aceptado en la cuenta (ver PACKAGES/ADDONS en Meridian),
+// este job corre aparte y no vale la pena una dependencia cruzada solo
+// para esto.
+const diagnosticSchema = z.object({
+  businessIntro: z.string().describe("1-2 frases presentando qué es y a qué se dedica el negocio (rubro/categoría, tipo de servicio) -- grounded en su nombre, categoría real y descripción de Google si la tiene. Nunca inventes datos que no estén en la ficha (ni cantidad de sucursales, años en el mercado, premios, etc.) -- si hay poca info, quedate en algo genérico pero real (ej. 'agencia de viajes en Punta Cana')."),
+  summary: z.string().describe("1-2 frases, en español, honestas pero alentadoras, resumiendo el estado general del negocio en Google -- sin prometer posiciones ni resultados."),
+  problems: z
+    .array(
+      z.object({
+        title: z.string().describe("Nombre corto del problema (máximo 8 palabras)."),
+        why: z.string().describe("Por qué importa este problema para conseguir más llamadas/mensajes/reservas -- 1-2 frases."),
+        fix: z.string().describe("Acción concreta y específica para resolverlo -- 1 frase, accionable ya."),
+      })
+    )
+    .length(5),
+  sevenDayPlan: z.array(z.object({ day: z.number().int().min(1).max(7), action: z.string() })).length(7),
+});
+
+async function generateDiagnostic(place: any, lang: "es" | "en") {
+  const prompt = `Sos un consultor de Polaris Local Lift analizando la ficha real de Google de este negocio (Punta Cana / República Dominicana o similar). Estos son los datos REALES de su ficha de Google, obtenidos vía Google Places API -- no inventes ningún dato adicional, cifra, reseña ni promesa de ranking:
+
+${placeDataSummary(place)}
+
+Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
+  return generateWithFallback(diagnosticSchema, prompt);
+}
 
 const firebaseApp = getApps().length
   ? getApps()[0]
@@ -33,7 +70,7 @@ function renderDiagnosticText(diagnostic: any, lang: "es" | "en"): string {
   const dayLabel = lang === "en" ? "Day" : "Día";
   const problemsText = diagnostic.problems.map((p: any, i: number) => `${i + 1}. ${p.title}\n   ${p.why}\n   → ${p.fix}`).join("\n\n");
   const planText = diagnostic.sevenDayPlan.map((d: any) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
-  return `${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
+  return `${diagnostic.businessIntro}\n\n${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
 }
 
 // Réplica exacta de buildDiagnosticHtml en local-lift-diagnostic.ts --
@@ -130,6 +167,10 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
   </div>
 
   <div style="padding:16px 40px 0 40px;text-align:center;">
+    <p style="font-size:14px;line-height:1.65;color:#475569;margin:0;font-style:italic;">${diagnostic.businessIntro}</p>
+  </div>
+
+  <div style="padding:14px 40px 0 40px;text-align:center;">
     <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${diagnostic.summary}</p>
   </div>
 
@@ -191,7 +232,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .collection("localLiftDiagnostics")
       .where("emailSent", "==", false)
       .where("emailScheduledAt", "<=", now)
-      .limit(25)
+      .limit(5)
       .get();
 
     const transporter = nodemailer.createTransport({
@@ -204,15 +245,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     for (const doc of snap.docs) {
       const v = doc.data();
-      if (!v.email || !v.diagnostic || !v.placeData) continue;
+      if (!v.email || !v.placeData) continue;
       const lang: "es" | "en" = v.lang === "en" ? "en" : "es";
       try {
+        // Si nadie pidió "Atlas ahora" antes de que se cumpliera la
+        // demora, el diagnóstico todavía no existe -- se genera acá recién
+        // ahora, con IA (mismo motivo que reveal-now en
+        // local-lift-diagnostic.ts, no duplicado ahí porque este job corre
+        // aparte).
+        let diagnostic = v.diagnostic;
+        if (!diagnostic) {
+          diagnostic = await generateDiagnostic(v.placeData, lang);
+          await doc.ref.update({ diagnostic, status: "diagnostic_sent" });
+        }
         await transporter.sendMail({
           from: '"Polaris Local Lift" <hola@polarisweb.studio>',
           to: v.email,
           subject: lang === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
-          text: renderDiagnosticText(v.diagnostic, lang),
-          html: buildDiagnosticHtml(v.diagnostic, v.placeData, v.contactName || "", lang, doc.id),
+          text: renderDiagnosticText(diagnostic, lang),
+          html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName || "", lang, doc.id),
         });
         await doc.ref.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "scheduled" });
         sent++;

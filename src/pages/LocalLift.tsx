@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import {
@@ -99,6 +99,7 @@ interface DiagnosticPlanDay {
   action: string;
 }
 interface DiagnosticResult {
+  businessIntro: string;
   summary: string;
   problems: DiagnosticProblem[];
   sevenDayPlan: DiagnosticPlanDay[];
@@ -128,7 +129,14 @@ export default function LocalLift() {
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
   const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
+  const [revealNowError, setRevealNowError] = useState("");
 
+  // Pedido explícito del usuario (16 de agosto): el submit del formulario
+  // solo valida la ficha real en Google (rápido, ~1-2s) y crea el lead --
+  // ya NO genera el diagnóstico con IA acá (esa parte, 30-45s reales,
+  // corre recién cuando el cliente pide "Atlas ahora", ver handleRevealNow
+  // más abajo). Por eso "loading" acá es corto: solo cubre la búsqueda en
+  // Google, no la generación.
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!businessName.trim() || !city.trim() || !contactName.trim() || !email.trim()) return;
@@ -146,7 +154,6 @@ export default function LocalLift() {
         setStatus("error");
         return;
       }
-      setDiagnostic(data.diagnostic);
       setPlace(data.place);
       setDiagnosticLeadId(data.leadId || null);
       setStatus("queued");
@@ -156,33 +163,63 @@ export default function LocalLift() {
     }
   };
 
-  // Dispara el envío real e inmediato del correo (antes este botón solo
-  // cambiaba lo que se veía en pantalla, el correo real ya había salido
-  // en el mismo request que generó el diagnóstico -- ver
-  // api/local-lift-diagnostic.ts). Si algo falla, igual revela en
-  // pantalla (ya tenemos el diagnóstico acá) -- el job programado
-  // (local-lift-diagnostic-mailer.ts) lo manda igual más tarde como red
-  // de seguridad real.
+  // "Atlas, generá ahora": ESTE es el momento real en que corre la
+  // generación con IA (findPlace ya se hizo en el submit) -- antes corría
+  // siempre en el submit, sin importar qué mostrara la pantalla. El texto
+  // dinámico de abajo (useRevealStepMessage) rota mientras esta llamada
+  // real está en vuelo, no es un timer prefijado sin relación con el
+  // backend -- simplemente no tenemos progreso real paso-a-paso del
+  // backend (una sola llamada a IA, no streaming), así que rota a un ritmo
+  // pensado para cubrir la duración real típica (30-45s).
   const handleRevealNow = async () => {
-    if (!diagnosticLeadId) {
-      setRevealedByAtlas(true);
-      setStatus("success");
-      return;
-    }
+    if (!diagnosticLeadId) return;
     setRevealNowLoading(true);
+    setRevealNowError("");
     try {
-      await fetch("/api/local-lift-diagnostic", {
+      const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId }),
       });
+      const data = await res.json();
+      if (!res.ok || !data.diagnostic) {
+        setRevealNowError(data.error || (language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo."));
+        setRevealNowLoading(false);
+        return;
+      }
+      setDiagnostic(data.diagnostic);
+      setRevealNowLoading(false);
+      setRevealedByAtlas(true);
+      setStatus("success");
     } catch {
-      // best-effort -- el job programado es la red de seguridad real
+      setRevealNowError(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
+      setRevealNowLoading(false);
     }
-    setRevealNowLoading(false);
-    setRevealedByAtlas(true);
-    setStatus("success");
   };
+
+  // Texto dinámico durante la generación real (30-45s) -- pedido explícito
+  // del usuario para que no se sienta como "mirar un botón cargando sin
+  // saber qué está pasando".
+  const REVEAL_STEPS: Array<{ es: string; en: string }> = [
+    { es: "Analizando los datos reales de tu ficha de Google...", en: "Analyzing your real Google listing data..." },
+    { es: "Leyendo tus reseñas y calificación...", en: "Reading your reviews and rating..." },
+    { es: "Revisando fotos, horario y descripción...", en: "Checking photos, hours, and description..." },
+    { es: "Detectando tus problemas prioritarios...", en: "Detecting your priority issues..." },
+    { es: "Redactando tu plan de acción de 7 días...", en: "Drafting your 7-day action plan..." },
+    { es: "Puliendo los últimos detalles...", en: "Polishing the final details..." },
+  ];
+  const [revealStepIndex, setRevealStepIndex] = useState(0);
+  useEffect(() => {
+    if (!revealNowLoading) {
+      setRevealStepIndex(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setRevealStepIndex((i) => (i + 1 < REVEAL_STEPS.length ? i + 1 : i));
+    }, 6000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revealNowLoading]);
 
   // Direct-to-paid: comprar un tier ($99/$179) sin pasar por el diagnóstico
   // gratis. Formulario chico + PayPal, se abre inline en la tarjeta del tier.
@@ -511,20 +548,34 @@ export default function LocalLift() {
 
           {status === "queued" && (
             <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
-              <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
-              <h3 className="mt-4 text-lg font-display font-black"><T en="We're preparing your diagnosis.">Estamos preparando tu diagnóstico.</T></h3>
-              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                <T en={`It will arrive at ${email} within the next 5-10 minutes.`}>{`Te llegará a ${email} dentro de los próximos 5 a 10 minutos.`}</T>
-              </p>
-              <button
-                type="button"
-                onClick={handleRevealNow}
-                disabled={revealNowLoading}
-                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15 disabled:opacity-60"
-              >
-                {revealNowLoading ? <Loader2 size={14} className="animate-spin" /> : <ZapFast size={14} />}
-                <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
-              </button>
+              {revealNowLoading ? (
+                <>
+                  <Loader2 size={28} className="mx-auto text-[var(--color-primary-base)] animate-spin" />
+                  <h3 className="mt-4 text-lg font-display font-black">
+                    <T en={REVEAL_STEPS[revealStepIndex].en}>{REVEAL_STEPS[revealStepIndex].es}</T>
+                  </h3>
+                  <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">
+                    <T en="This usually takes 30-45 seconds.">Esto suele tardar entre 30 y 45 segundos.</T>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
+                  <h3 className="mt-4 text-lg font-display font-black"><T en="We're preparing your diagnosis.">Estamos preparando tu diagnóstico.</T></h3>
+                  <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                    <T en={`It will arrive at ${email} within the next 5-10 minutes.`}>{`Te llegará a ${email} dentro de los próximos 5 a 10 minutos.`}</T>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleRevealNow}
+                    className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
+                  >
+                    <ZapFast size={14} />
+                    <T en="Prefer it right now? Let Atlas generate it instantly">¿Lo prefieres ya? Que Atlas te lo genere al instante</T>
+                  </button>
+                  {revealNowError && <p className="mt-3 text-xs text-red-400">{revealNowError}</p>}
+                </>
+              )}
             </div>
           )}
 
@@ -541,7 +592,8 @@ export default function LocalLift() {
                   <T en="Generated instantly by Atlas AI">Generado al instante por Atlas IA</T>
                 </div>
               )}
-              <p className="mt-4 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]">{diagnostic.summary}</p>
+              <p className="mt-4 text-sm italic leading-relaxed text-[var(--color-text-tertiary)]">{diagnostic.businessIntro}</p>
+              <p className="mt-2 text-sm md:text-base leading-relaxed text-[var(--color-text-secondary)]">{diagnostic.summary}</p>
 
               <div className="mt-6 space-y-3">
                 {diagnostic.problems.map((p, i) => (

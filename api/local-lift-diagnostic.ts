@@ -36,6 +36,7 @@ const firebaseApp = getApps().length
     });
 
 const diagnosticSchema = z.object({
+  businessIntro: z.string().describe("1-2 frases presentando qué es y a qué se dedica el negocio (rubro/categoría, tipo de servicio) -- grounded en su nombre, categoría real y descripción de Google si la tiene. Nunca inventes datos que no estén en la ficha (ni cantidad de sucursales, años en el mercado, premios, etc.) -- si hay poca info, quedate en algo genérico pero real (ej. 'agencia de viajes en Punta Cana')."),
   summary: z.string().describe("1-2 frases, en español, honestas pero alentadoras, resumiendo el estado general del negocio en Google -- sin prometer posiciones ni resultados."),
   problems: z
     .array(
@@ -77,7 +78,7 @@ async function generateDiagnostic(place: PlaceData, lang: "es" | "en"): Promise<
 
 ${placeDataSummary(place)}
 
-Con base ÚNICAMENTE en estos datos reales, generá exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
+Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}.`;
 
   return generateWithFallback(diagnosticSchema, prompt);
 }
@@ -92,7 +93,7 @@ function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string
     .join("\n\n");
   const planText = diagnostic.sevenDayPlan.map((d) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
 
-  return `${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
+  return `${diagnostic.businessIntro}\n\n${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
 }
 
 // Plantilla HTML real (Familia A de Polaris, misma que usa
@@ -198,6 +199,10 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
   </div>
 
   <div style="padding:16px 40px 0 40px;text-align:center;">
+    <p style="font-size:14px;line-height:1.65;color:#475569;margin:0;font-style:italic;">${diagnostic.businessIntro}</p>
+  </div>
+
+  <div style="padding:14px 40px 0 40px;text-align:center;">
     <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${diagnostic.summary}</p>
   </div>
 
@@ -244,16 +249,23 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
 </body></html>`;
 }
 
-// Aviso interno a Cristian con el diagnóstico completo -- misma "Familia A"
-// que buildInternalAlertHtml de quote-confirmation-send (Meridian), franja
-// superior de color + tabla de datos + CTA de contacto directo con el lead.
-function buildInternalAlertHtml(diagnostic: Diagnostic, place: PlaceData, city: string, contactName: string, email: string): string {
+// Aviso interno a Cristian -- misma "Familia A" que buildInternalAlertHtml
+// de quote-confirmation-send (Meridian), franja superior de color + tabla
+// de datos + CTA de contacto directo con el lead. `diagnostic` es opcional
+// a propósito: este aviso sale de inmediato al llegar el lead (la ficha de
+// Google ya se validó, pero el diagnóstico con IA todavía no se generó --
+// eso se difiere hasta que el cliente pida "Atlas ahora" o hasta el envío
+// programado, ver el flujo real en el handler más abajo), así que la
+// sección de problemas detectados se omite si todavía no existe.
+function buildInternalAlertHtml(diagnostic: Diagnostic | null, place: PlaceData, city: string, contactName: string, email: string): string {
   const row = (label: string, value: string) => `
       <tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:9px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:110px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:9px 0;font-size:13px;font-family:'Courier New',Courier,monospace;color:#0f172a;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
 
-  const problemsList = diagnostic.problems
-    .map((p, i) => `<div style="font-size:13px;line-height:1.6;color:#1f2937;margin-bottom:6px;"><strong>${i + 1}. ${p.title}</strong><br>${p.why} → ${p.fix}</div>`)
-    .join("");
+  const problemsList = diagnostic
+    ? diagnostic.problems
+        .map((p, i) => `<div style="font-size:13px;line-height:1.6;color:#1f2937;margin-bottom:6px;"><strong>${i + 1}. ${p.title}</strong><br>${p.why} → ${p.fix}</div>`)
+        .join("")
+    : `<div style="font-size:13px;color:#94a3b8;">Todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado (5-10 min).</div>`;
 
   const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(`Tu diagnóstico Local Lift de ${place.name}`)}&body=${encodeURIComponent(`Hola ${contactName || ""},\n\nSoy Cristian de Polaris Web Studio, vi tu diagnóstico de Local Lift.`.trim())}`;
 
@@ -312,14 +324,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // "Que Atlas te lo genere al instante": antes esto solo cambiaba lo que
-  // se veía en pantalla -- el correo real ya se había mandado de una,
-  // siempre, en el mismo request que generaba el diagnóstico (el "5 a 10
-  // minutos" era pura ficción de UI, sin ninguna demora real detrás). Con
-  // el envío del correo al cliente ahora demorado de verdad (ver más
-  // abajo), este botón dispara el envío real e inmediato -- marca
-  // emailSent para que local-lift-diagnostic-mailer.ts (el job que manda
-  // los correos demorados) nunca lo vuelva a mandar.
+  // "Que Atlas te lo genere al instante": pedido explícito del usuario (16
+  // de agosto) -- antes esto solo cambiaba lo que se veía en pantalla, el
+  // diagnóstico YA estaba generado (la parte lenta, 30-45s con IA, corría
+  // siempre en el submit inicial) y el correo ya se había mandado de una.
+  // Ahora la generación real con IA se DIFIERE hasta acá (o hasta el envío
+  // programado, ver el job) -- este botón dispara la generación real
+  // (findPlace ya se hizo en el submit, rápido; esto es solo la parte
+  // lenta) y el envío inmediato del correo, marcando emailSent para que
+  // local-lift-diagnostic-mailer.ts no lo vuelva a mandar.
   if (req.body?.action === "reveal-now") {
     const { leadId } = req.body || {};
     if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
@@ -327,29 +340,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
     const doc = await docRef.get();
     if (!doc.exists) return res.status(404).json({ error: "No encontramos ese diagnóstico." });
-    const v = doc.data()!;
-    if (v.emailSent) return res.json({ success: true, alreadySent: true });
-
-    const zohoPassword = process.env.ZOHO_PASSWORD;
-    if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
+    let v = doc.data()!;
     const lang2: "es" | "en" = v.lang === "en" ? "en" : "es";
+
     try {
-      const transporter = nodemailer.createTransport({
-        host: "smtp.zoho.com", port: 465, secure: true,
-        auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
-      });
-      await transporter.sendMail({
-        from: '"Polaris Local Lift" <hola@polarisweb.studio>',
-        to: v.email,
-        subject: lang2 === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
-        text: renderDiagnosticText(v.diagnostic, lang2),
-        html: buildDiagnosticHtml(v.diagnostic, v.placeData, v.contactName, lang2, leadId.trim()),
-      });
-      await docRef.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "reveal-now" });
-      return res.json({ success: true });
-    } catch (mailErr: any) {
-      console.error("[local-lift-diagnostic] Error en reveal-now:", mailErr);
-      return res.status(500).json({ error: "No pudimos enviar el correo. Intenta de nuevo en un momento." });
+      let diagnostic: Diagnostic = v.diagnostic;
+      if (!diagnostic) {
+        diagnostic = await generateDiagnostic(v.placeData, lang2);
+        await docRef.update({ diagnostic, status: "diagnostic_sent" });
+      }
+
+      if (!v.emailSent) {
+        const zohoPassword = process.env.ZOHO_PASSWORD;
+        if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
+        const transporter = nodemailer.createTransport({
+          host: "smtp.zoho.com", port: 465, secure: true,
+          auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
+        });
+        await transporter.sendMail({
+          from: '"Polaris Local Lift" <hola@polarisweb.studio>',
+          to: v.email,
+          subject: lang2 === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
+          text: renderDiagnosticText(diagnostic, lang2),
+          html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName, lang2, leadId.trim()),
+        });
+        await docRef.update({ emailSent: true, emailSentAt: new Date(), emailSentVia: "reveal-now" });
+      }
+
+      return res.json({ success: true, diagnostic, place: v.placeData });
+    } catch (err: any) {
+      console.error("[local-lift-diagnostic] Error en reveal-now:", err);
+      return res.status(500).json({ error: "No pudimos generar tu diagnóstico en este momento. Intenta de nuevo en un momento." });
     }
   }
 
@@ -375,6 +396,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const language: "es" | "en" = lang === "en" ? "en" : "es";
 
   try {
+    // La búsqueda en Google (findPlace) se queda síncrona acá -- es rápida
+    // (~1-2s) y necesaria para poder avisarle YA al cliente si no
+    // encontramos su ficha exacta. Lo que se DIFIERE (pedido explícito del
+    // usuario, 16 de agosto) es la parte lenta: generar el diagnóstico con
+    // IA (30-45s reales) ya no corre acá -- corre recién cuando el cliente
+    // pide "Atlas ahora" (action=reveal-now, más arriba) o con el envío
+    // programado (local-lift-diagnostic-mailer.ts). Antes esa demora de
+    // "5-10 minutos" que mostraba la pantalla era pura ficción: el
+    // diagnóstico ya estaba generado y el correo ya había salido en este
+    // mismo request, sin importar qué mostrara la UI.
     const place = await findPlace(businessName.trim(), city.trim());
     if (!place) {
       return res.status(404).json({
@@ -385,24 +416,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const diagnostic = await generateDiagnostic(place, language);
-    const diagnosticText = renderDiagnosticText(diagnostic, language);
-
-    // El lead se crea ANTES de mandar el correo (no después, como antes) --
-    // el botón de pago del correo necesita el leadId real para llevar
-    // directo a /local-lift/pagar/:leadId, con el flujo de PayPal ya
-    // resuelto ahí (ver local-lift-order.ts action=confirm). Best-effort:
-    // si Firestore falla, igual se manda el correo (sin botón de pago
-    // funcional -- degradación aceptable, nunca bloquea la respuesta real).
-    // El correo al CLIENTE ya no se manda acá -- antes salía siempre en
-    // este mismo request, sin importar lo que la UI mostrara ("Estamos
-    // preparando tu diagnóstico... te llegará en 5-10 minutos" era
-    // mentira, el correo real ya había salido). Ahora se guarda con una
-    // demora real y aleatoria (5-10 min) y lo manda
-    // local-lift-diagnostic-mailer.ts (Cloud Scheduler, corre cada 2 min) --
-    // salvo que el cliente pida "generar ahora" (action=reveal-now, más
-    // arriba), que lo manda de inmediato y marca emailSent para que el
-    // job no lo duplique.
     const emailScheduledAt = Date.now() + (5 + Math.random() * 5) * 60 * 1000;
 
     let leadId: string | null = null;
@@ -414,10 +427,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         contactName,
         email,
         placeData: place,
-        diagnostic,
+        diagnostic: null,
         lang: language,
         source: "free_diagnostic",
-        status: "diagnostic_sent",
+        status: "place_found_pending_diagnostic",
         paid: false,
         tier: "48h",
         emailSent: false,
@@ -429,10 +442,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error("[local-lift-diagnostic] Error guardando en Firestore:", dbErr);
     }
 
-    // El aviso INTERNO a Cristian sí sale de inmediato -- no hay motivo
-    // para demorarle a él la notificación de un lead nuevo, solo al correo
-    // que ve el cliente (la demora es parte de la puesta en escena, no
-    // aplica al aviso interno).
+    // El aviso INTERNO a Cristian sí sale de inmediato con lo que ya
+    // tenemos (la ficha real ya está validada) -- no tiene sentido
+    // demorarle a él la notificación de un lead nuevo solo porque el
+    // diagnóstico con IA todavía no corrió.
     const zohoPassword = process.env.ZOHO_PASSWORD;
     if (zohoPassword) {
       try {
@@ -447,15 +460,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           to: "hola@polarisweb.studio",
           replyTo: email,
           subject: `Nuevo diagnóstico Local Lift: ${place.name} (${contactName})`,
-          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\n\n${diagnosticText}`,
-          html: buildInternalAlertHtml(diagnostic, place, city, contactName, email),
+          text: `Negocio: ${place.name}\nCiudad: ${city}\nContacto: ${contactName} <${email}>\nFicha: ${place.mapsUri || "no disponible"}\nReseñas: ${place.reviewCount} (${place.rating ?? "s/calificación"})\n\n(El diagnóstico con IA todavía no se generó -- se genera cuando el cliente pide "Atlas ahora" o con el envío programado.)`,
+          html: buildInternalAlertHtml(null, place, city, contactName, email),
         });
       } catch (mailErr) {
         console.error("[local-lift-diagnostic] Error enviando alerta interna:", mailErr);
       }
     }
 
-    return res.json({ success: true, place, diagnostic, leadId });
+    return res.json({ success: true, place, leadId });
   } catch (error: any) {
     console.error("[local-lift-diagnostic] Error:", error);
     return res.status(500).json({
