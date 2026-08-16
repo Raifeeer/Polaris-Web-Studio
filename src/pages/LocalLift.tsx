@@ -499,14 +499,14 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <div className="absolute -bottom-36 -left-24 w-96 h-96 rounded-full bg-orange-700/10 blur-3xl pointer-events-none" />
           <div className="relative z-10 max-w-4xl">
             <img
-              src="/brand/local-lift-stacked-dark.svg"
+              src="/brand/local-lift-lockup-horizontal-dark.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-light-text h-24 md:h-28 w-auto mb-6"
+              className="local-lift-logo-light-text h-14 md:h-16 w-auto mb-8"
             />
             <img
-              src="/brand/local-lift-stacked-light.svg"
+              src="/brand/local-lift-lockup-horizontal-light.svg"
               alt="Local Lift by Polaris Web Studio"
-              className="local-lift-logo-dark-text h-24 md:h-28 w-auto mb-6"
+              className="local-lift-logo-dark-text h-14 md:h-16 w-auto mb-8"
             />
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
               <MapPin size={13} />
