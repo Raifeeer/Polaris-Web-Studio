@@ -771,7 +771,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       type="button"
                       onClick={() => switchLookupMode("maps")}
                       whileTap={{ scale: 0.98 }}
-                      className="sm:col-span-2 inline-flex w-fit items-center gap-1.5 px-1 text-left text-xs leading-relaxed text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:text-[var(--color-primary-base)]"
+                      className="sm:col-span-2 inline-flex w-fit items-center gap-1.5 px-1 text-left text-xs font-bold leading-relaxed text-[var(--color-primary-base)] transition-colors hover:text-[var(--color-primary-hover)] focus:outline-none focus-visible:text-[var(--color-primary-hover)]"
                       aria-controls="local-lift-maps-lookup"
                     >
                       <span className="underline decoration-[var(--color-primary-base)]/40 underline-offset-4">
