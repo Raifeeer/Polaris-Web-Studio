@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     return res.json({ success: true });
   } catch (err: any) {
-    console.error("[_test-send-email] Error:", err);
+    console.error("[test-send-email-temp] Error:", err);
     return res.status(500).json({ error: String(err?.message || err) });
   }
 }
