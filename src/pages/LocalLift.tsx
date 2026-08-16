@@ -236,6 +236,7 @@ export default function LocalLift() {
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
   const [revealTimedOut, setRevealTimedOut] = useState(false);
+  const [revealRequested, setRevealRequested] = useState(false);
   const [autoRetryPending, setAutoRetryPending] = useState(false);
   const [emailGuardReason, setEmailGuardReason] = useState<"already_used" | "in_progress">("already_used");
   const loadingRef = useRef<HTMLDivElement | null>(null);
@@ -244,6 +245,7 @@ export default function LocalLift() {
   const successRef = useRef<HTMLDivElement | null>(null);
   const blockedEmailRef = useRef<HTMLDivElement | null>(null);
   const restoredScrollYRef = useRef<number | null>(null);
+  const flowHydratedRef = useRef(false);
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
   const mapsFieldRef = useRef<HTMLInputElement | null>(null);
   const motionReveal = (delay = 0) => prefersReducedMotion
@@ -368,6 +370,7 @@ export default function LocalLift() {
   const resetCandidateSearch = () => {
     try {
       sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      sessionStorage.removeItem(LOCAL_LIFT_SNAPSHOT_KEY);
     } catch {
       // El formulario sigue funcionando si el navegador bloquea sessionStorage.
     }
@@ -379,6 +382,7 @@ export default function LocalLift() {
     setDiagnosticLeadId(null);
     setRevealNowError("");
     setRevealTimedOut(false);
+    setRevealRequested(false);
     setEmailGuardReason("already_used");
     setErrorMsg("");
     setLoadingStage("searching");
@@ -390,8 +394,8 @@ export default function LocalLift() {
     }, 180);
   };
 
-  const persistDiagnosticForReturn = () => {
-    if (status !== "success" || !diagnostic || !place || !diagnosticLeadId) return;
+  const persistFlowSnapshot = (overrides: Record<string, unknown> = {}) => {
+    const persistableStatus = ["confirm", "queued", "success", "email_blocked"].includes(status) ? status : "idle";
     try {
       sessionStorage.setItem(LOCAL_LIFT_SNAPSHOT_KEY, JSON.stringify({
         businessName,
@@ -400,22 +404,56 @@ export default function LocalLift() {
         email,
         mapsUrl,
         lookupMode,
-        status: "success",
+        status: persistableStatus,
         diagnostic,
         place,
-        candidates: [],
+        candidates,
         visibleCandidateCount,
         revealedByAtlas,
         diagnosticLeadId,
+        emailGuardReason,
+        revealTimedOut,
+        revealRequested,
+        savedAt: Date.now(),
         scrollY: window.scrollY,
+        ...overrides,
       }));
     } catch {
-      // El checkout sigue funcionando aunque el navegador bloquee sessionStorage.
+      // El formulario sigue funcionando aunque el navegador bloquee sessionStorage.
     }
   };
 
+  const persistDiagnosticForReturn = () => {
+    if (status !== "success" || !diagnostic || !place || !diagnosticLeadId) return;
+    persistFlowSnapshot({
+      status: "success",
+      diagnostic,
+      place,
+      candidates: [],
+      revealedByAtlas,
+      diagnosticLeadId,
+    });
+  };
+
+  useEffect(() => {
+    if (!flowHydratedRef.current) return;
+    const hasProgress = Boolean(businessName || city || contactName || email || mapsUrl || candidates.length || place || diagnostic || status !== "idle");
+    if (!hasProgress) return;
+    const timer = window.setTimeout(() => persistFlowSnapshot(), 120);
+    return () => window.clearTimeout(timer);
+  }, [businessName, city, contactName, email, mapsUrl, lookupMode, status, diagnostic, place, candidates, visibleCandidateCount, revealedByAtlas, diagnosticLeadId, emailGuardReason, revealTimedOut, revealRequested]);
+
   const persistAtlasRetryAndReload = () => {
     if (!diagnosticLeadId || !place) return;
+    persistFlowSnapshot({
+      status: "queued",
+      diagnostic: null,
+      place,
+      candidates: [],
+      diagnosticLeadId,
+      revealRequested: true,
+      revealTimedOut: false,
+    });
     try {
       sessionStorage.setItem(LOCAL_LIFT_ATLAS_RETRY_KEY, JSON.stringify({
         businessName,
@@ -427,6 +465,8 @@ export default function LocalLift() {
         status: "queued",
         place,
         diagnosticLeadId,
+        revealRequested: true,
+        savedAt: Date.now(),
         scrollY: window.scrollY,
       }));
     } catch {
@@ -527,10 +567,20 @@ export default function LocalLift() {
       setLoadingStage("verifying");
       await new Promise<void>((resolve) => setTimeout(resolve, 300));
 
+      const firstPlace = verifiedCandidates[0] ?? data.place ?? null;
       setCandidates(verifiedCandidates);
       setVisibleCandidateCount(3);
-      setPlace(verifiedCandidates[0] ?? data.place ?? null);
+      setPlace(firstPlace);
       setDiagnosticLeadId(data.leadId || null);
+      persistFlowSnapshot({
+        status: "confirm",
+        candidates: verifiedCandidates,
+        visibleCandidateCount: 3,
+        place: firstPlace,
+        diagnostic: null,
+        diagnosticLeadId: data.leadId || null,
+        revealRequested: false,
+      });
       setStatus("confirm");
     } catch {
       window.clearTimeout(lookupTimeout);
@@ -544,52 +594,61 @@ export default function LocalLift() {
 
   useEffect(() => {
     try {
-      const rawSnapshot = sessionStorage.getItem(LOCAL_LIFT_SNAPSHOT_KEY);
-      if (!rawSnapshot) return;
-      const snapshot = JSON.parse(rawSnapshot);
-      if (snapshot?.status !== "success" || !snapshot.diagnostic || !snapshot.place) return;
-      restoredScrollYRef.current = Number.isFinite(Number(snapshot.scrollY)) ? Number(snapshot.scrollY) : 0;
-      setBusinessName(snapshot.businessName || "");
-      setCity(snapshot.city || "");
-      setContactName(snapshot.contactName || "");
-      setEmail(snapshot.email || "");
-      setMapsUrl(snapshot.mapsUrl || "");
-      setLookupMode(snapshot.lookupMode === "maps" ? "maps" : "name");
-      setDiagnostic(snapshot.diagnostic);
-      setPlace(snapshot.place);
-      setCandidates(Array.isArray(snapshot.candidates) ? snapshot.candidates : []);
-      setVisibleCandidateCount(Number(snapshot.visibleCandidateCount) || 3);
-      setRevealedByAtlas(Boolean(snapshot.revealedByAtlas));
-      setDiagnosticLeadId(snapshot.diagnosticLeadId || null);
-      setStatus("success");
-      sessionStorage.removeItem(LOCAL_LIFT_SNAPSHOT_KEY);
-    } catch {
-      sessionStorage.removeItem(LOCAL_LIFT_SNAPSHOT_KEY);
-    }
-  }, []);
-  useEffect(() => {
-    try {
       const rawRetry = sessionStorage.getItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
-      if (!rawRetry) return;
-      const retry = JSON.parse(rawRetry);
-      if (retry?.status !== "queued" || !retry.diagnosticLeadId || !retry.place) return;
-      restoredScrollYRef.current = Number.isFinite(Number(retry.scrollY)) ? Number(retry.scrollY) : null;
-      setBusinessName(retry.businessName || "");
-      setCity(retry.city || "");
-      setContactName(retry.contactName || "");
-      setEmail(retry.email || "");
-      setMapsUrl(retry.mapsUrl || "");
-      setLookupMode(retry.lookupMode === "maps" ? "maps" : "name");
-      setPlace(retry.place);
-      setCandidates([]);
-      setDiagnosticLeadId(retry.diagnosticLeadId);
-      setRevealTimedOut(false);
-      setRevealNowLoading(false);
-      setStatus("queued");
-      setAutoRetryPending(true);
-      sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      const rawFlow = sessionStorage.getItem(LOCAL_LIFT_SNAPSHOT_KEY);
+      const retry = rawRetry ? JSON.parse(rawRetry) : null;
+      const snapshot = rawFlow ? JSON.parse(rawFlow) : null;
+      const saved = retry || snapshot;
+      const savedAt = Number(saved?.savedAt);
+      if (savedAt && Date.now() - savedAt > 24 * 60 * 60 * 1000) {
+        sessionStorage.removeItem(LOCAL_LIFT_SNAPSHOT_KEY);
+        sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+        flowHydratedRef.current = true;
+        return;
+      }
+      if (!saved) {
+        flowHydratedRef.current = true;
+        return;
+      }
+
+      const savedStatus = saved.status === "success" && saved.diagnostic && saved.place
+        ? "success"
+        : saved.status === "confirm" && Array.isArray(saved.candidates) && saved.candidates.length
+          ? "confirm"
+          : saved.status === "queued" && saved.place && saved.diagnosticLeadId
+            ? "queued"
+            : saved.status === "email_blocked"
+              ? "email_blocked"
+              : "idle";
+
+      setBusinessName(saved.businessName || "");
+      setCity(saved.city || "");
+      setContactName(saved.contactName || "");
+      setEmail(saved.email || "");
+      setMapsUrl(saved.mapsUrl || "");
+      setLookupMode(saved.lookupMode === "maps" ? "maps" : "name");
+      setDiagnostic(saved.diagnostic || null);
+      setPlace(saved.place || null);
+      setCandidates(Array.isArray(saved.candidates) ? saved.candidates : []);
+      setVisibleCandidateCount(Number(saved.visibleCandidateCount) || 3);
+      setRevealedByAtlas(Boolean(saved.revealedByAtlas));
+      setDiagnosticLeadId(saved.diagnosticLeadId || null);
+      setEmailGuardReason(saved.emailGuardReason === "in_progress" ? "in_progress" : "already_used");
+      setRevealTimedOut(Boolean(saved.revealTimedOut));
+      setRevealRequested(Boolean(saved.revealRequested));
+      setStatus(savedStatus);
+
+      if (["confirm", "queued", "success"].includes(savedStatus) && Number.isFinite(Number(saved.scrollY))) {
+        restoredScrollYRef.current = Number(saved.scrollY);
+      }
+      if (savedStatus === "queued" && (Boolean(retry) || Boolean(saved.revealRequested))) {
+        setAutoRetryPending(true);
+      }
+      if (rawRetry) sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      flowHydratedRef.current = true;
     } catch {
       sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      flowHydratedRef.current = true;
     }
   }, []);
 
@@ -644,9 +703,19 @@ export default function LocalLift() {
         setStatus("error");
         return;
       }
-      setPlace(data.place || candidate);
-      setDiagnosticLeadId(data.leadId || null);
+      const confirmedPlace = data.place || candidate;
+      const confirmedLeadId = data.leadId || null;
+      setPlace(confirmedPlace);
+      setDiagnosticLeadId(confirmedLeadId);
       setCandidates([]);
+      persistFlowSnapshot({
+        status: "queued",
+        place: confirmedPlace,
+        candidates: [],
+        diagnostic: null,
+        diagnosticLeadId: confirmedLeadId,
+        revealRequested: false,
+      });
       setStatus("queued");
     } catch {
       setErrorMsg(language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo.");
@@ -661,6 +730,16 @@ const handleRevealNow = async () => {
     setRevealNowLoading(true);
     setRevealNowError("");
     setRevealTimedOut(false);
+    setRevealRequested(true);
+    persistFlowSnapshot({
+      status: "queued",
+      diagnostic: null,
+      place,
+      candidates: [],
+      diagnosticLeadId,
+      revealRequested: true,
+      revealTimedOut: false,
+    });
     const revealController = new AbortController();
     const revealTimeout = window.setTimeout(() => revealController.abort(), 45000);
     try {
@@ -692,7 +771,19 @@ const handleRevealNow = async () => {
       } catch {
         // El resultado sigue visible si el navegador bloquea sessionStorage.
       }
+      const generatedPlace = data.place || place;
+      persistFlowSnapshot({
+        status: "success",
+        diagnostic: data.diagnostic,
+        place: generatedPlace,
+        candidates: [],
+        revealedByAtlas: true,
+        diagnosticLeadId,
+        revealRequested: false,
+        revealTimedOut: false,
+      });
       setRevealTimedOut(false);
+      setRevealRequested(false);
       setDiagnostic(data.diagnostic);
       if (data.place) setPlace(data.place);
       setRevealedByAtlas(true);
@@ -700,7 +791,17 @@ const handleRevealNow = async () => {
       setStatus("success");
     } catch {
       if (revealController.signal.aborted) {
+        persistFlowSnapshot({
+          status: "queued",
+          diagnostic: null,
+          place,
+          candidates: [],
+          diagnosticLeadId,
+          revealRequested: true,
+          revealTimedOut: true,
+        });
         setRevealTimedOut(true);
+        setRevealRequested(true);
         setRevealNowError("");
       } else {
         setRevealTimedOut(false);
