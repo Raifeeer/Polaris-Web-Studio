@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
@@ -24,6 +25,40 @@ import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
 import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
+
+// Efecto shimmer de reflejo para frases de carga -- mismo mecanismo que
+// ThinkingText del chat de Atlas (dos capas superpuestas + máscara en movimiento).
+function ShimmerPhrase({ es, en, lang }: { es: string; en: string; lang: string }) {
+  const text = lang === "en" ? en : es;
+  return (
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={text}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative inline-block text-sm font-bold"
+      >
+        <span className="text-[var(--color-text-tertiary)]">{text}</span>
+        <motion.span
+          aria-hidden="true"
+          className="absolute inset-0 text-[var(--color-text-primary)]"
+          style={{
+            WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 50%, transparent 100%)",
+            maskImage: "linear-gradient(90deg, transparent 0%, black 50%, transparent 100%)",
+            WebkitMaskSize: "200% 100%",
+            maskSize: "200% 100%",
+          }}
+          animate={{ WebkitMaskPosition: ["150% 0%", "-50% 0%"], maskPosition: ["150% 0%", "-50% 0%"] } as any}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+        >
+          {text}
+        </motion.span>
+      </motion.span>
+    </AnimatePresence>
+  );
+}
 
 const TIER_PRICE: Record<string, string> = { "48h": "29", implementado: "99" };
 
@@ -511,16 +546,16 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               )}
 
               {status === "loading" ? (
-                <div className="sm:col-span-2 mt-1 flex flex-col items-center gap-4 py-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
-                  <ThinkingOrb
-                    state="searching"
-                    size={64}
-                    theme="auto"
-                    aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
-                  />
-                  <p className="text-sm font-bold text-[var(--color-text-secondary)]">
-                    <T en="Searching for your listing on Google...">Buscando tu ficha en Google...</T>
-                  </p>
+                <div className="sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                  <div className="flex justify-center">
+                    <ThinkingOrb
+                      state="searching"
+                      size={64}
+                      theme="auto"
+                      aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
+                    />
+                  </div>
+                  <ShimmerPhrase es="Buscando tu ficha en Google..." en="Searching your Google listing..." lang={language} />
                 </div>
               ) : (
                 <button
@@ -538,20 +573,24 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           {status === "queued" && (
             <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
               {revealNowLoading ? (
-                <>
-<ThinkingOrb
-                    state="solving"
-                    size={64}
-                    theme="auto"
-                    aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <div className="flex justify-center">
+                    <ThinkingOrb
+                      state="solving"
+                      size={64}
+                      theme="auto"
+                      aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
+                    />
+                  </div>
+                  <ShimmerPhrase
+                    es={REVEAL_STEPS[revealStepIndex].es}
+                    en={REVEAL_STEPS[revealStepIndex].en}
+                    lang={language}
                   />
-                  <h3 className="mt-4 text-lg font-display font-black">
-                    <T en={REVEAL_STEPS[revealStepIndex].en}>{REVEAL_STEPS[revealStepIndex].es}</T>
-                  </h3>
-                  <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">
-                    <T en="This usually takes 30-45 seconds.">Esto suele tardar entre 30 y 45 segundos.</T>
+                  <p className="text-xs text-[var(--color-text-tertiary)]">
+                    <T en="This usually takes 30–45 seconds.">Esto suele tardar entre 30 y 45 segundos.</T>
                   </p>
-                </>
+                </div>
               ) : (
                 <>
                   <Mail size={28} className="mx-auto text-[var(--color-primary-base)]" />
