@@ -1,6 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { Link } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRight,
@@ -588,9 +587,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               </motion.a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[var(--color-text-tertiary)]">
-              <span className="inline-flex items-center gap-1.5"><Eye size={14} /> <T en="Information you can verify">Información que puedes comprobar</T></span>
-              <span className="inline-flex items-center gap-1.5"><Check size={14} /> <T en="Clear priorities">Prioridades claras</T></span>
-              <span className="inline-flex items-center gap-1.5"><ArrowRight size={14} /> <T en="Concrete next steps">Siguientes pasos concretos</T></span>
+              <span className="inline-flex items-center gap-1.5"><Eye size={14} /> <T en="See what customers see">Ve lo que ve tu cliente</T></span>
+              <span className="inline-flex items-center gap-1.5"><Check size={14} /> <T en="Fix what gets in the way">Corrige lo que frena</T></span>
+              <span className="inline-flex items-center gap-1.5"><ArrowRight size={14} /> <T en="Turn visits into action">Convierte visitas en acción</T></span>
             </div>
           </div>
         </motion.section>
@@ -658,26 +657,30 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
         <motion.section {...motionReveal(0.04)} className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-24">
           <div className="rounded-[var(--radius-bento)] glass-panel p-7 md:p-10 border border-[var(--color-border-subtle)]">
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="A short process you can review">Un proceso corto que puedes revisar</T></p>
-            <h2 className="mt-3 text-3xl font-display font-black"><T en="Start with clarity. Review each step.">Empieza con claridad. Revisa cada paso.</T></h2>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="From first search to clear action">DEL PRIMER VISTAZO A LA ACCIÓN</T></p>
+            <h2 className="mt-3 text-3xl font-display font-black"><T en="Know what to do next.">Sabe qué hacer después.</T></h2>
             <div className="mt-8 space-y-6">
               {[
-                ["01", "Tell us what you offer", "Cuéntanos qué ofreces.", "Enter your business and city, or paste your Google Maps link."],
-                ["02", "Confirm we found your business", "Confirma que encontramos tu negocio.", "We’ll show you the most likely options before you continue."],
-                ["03", "Get priorities you can act on", "Recibe prioridades claras.", "You’ll know what to fix first and what can wait."],
-              ].map(([number, enTitle, esTitle, enDescription], index) => (
+                ["01", "Find your business", "Encontramos tu negocio.", "Use the name and city or paste your Google Maps link.", "Usa el nombre y la ciudad o pega tu enlace de Google Maps."],
+                ["02", "Confirm the right place", "Confirma el lugar correcto.", "We show you the options so the review starts from the right business.", "Te mostramos las opciones para empezar sobre el negocio correcto."],
+                ["03", "Get a plan you can use", "Recibe un plan que puedas usar.", "You’ll know what to fix first and what can wait.", "Sabrás qué corregir primero y qué puede esperar."],
+              ].map(([number, enTitle, esTitle, enDescription, esDescription], index) => (
                 <motion.div key={number} {...motionReveal(index * 0.08)} className="flex gap-4">
                   <span className="text-xs font-black font-mono text-[var(--color-primary-base)]">{number}</span>
-                  <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{enDescription === "Enter your business and city, or paste your Google Maps link." ? "Escribe el nombre y la ciudad de tu negocio o pega el enlace de Google Maps." : enDescription === "We’ll show you the most likely options before you continue." ? "Te mostraremos las opciones más probables antes de continuar." : "Sabrás qué conviene corregir primero y qué puede esperar."}</T></p></div>
+                  <div><h3 className="font-black"><T en={enTitle}>{esTitle}</T></h3><p className="mt-1 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en={enDescription}>{esDescription}</T></p></div>
                 </motion.div>
               ))}
             </div>
           </div>
           <motion.div {...motionReveal(0.1)} className="rounded-[var(--radius-bento)] bg-[var(--color-surface-elevated)] p-7 md:p-10 border border-[var(--color-primary-base)]/20">
-            <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="Real data · approved changes">Datos reales · cambios autorizados</T></span></div>
-            <h2 className="mt-4 text-3xl font-display font-black"><T en="Your business stays yours. We organize the information.">Tu negocio sigue siendo tuyo. Nosotros ordenamos la información.</T></h2>
-            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We work with real data and recommendations you can review. We don’t promise a specific position on Google; we help you understand what people see and what you can improve.">Trabajamos con datos reales y recomendaciones que puedes revisar. No prometemos una posición concreta en Google; te ayudamos a entender qué ve la gente y qué puedes mejorar.</T></p>
-            <div className="mt-8 flex flex-wrap gap-3 text-xs font-bold text-[var(--color-text-tertiary)]"><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2">PayPal</span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Bank transfer">Transferencia</T></span><span className="rounded-full border border-[var(--color-border-subtle)] px-3 py-2"><T en="Cash in DR">Efectivo en RD</T></span></div>
+            <div className="flex items-center gap-2 text-[var(--color-primary-base)]"><ShieldCheck size={20} /><span className="text-xs font-black uppercase tracking-[0.2em]"><T en="No smoke. Real context.">SIN HUMO. CON CONTEXTO.</T></span></div>
+            <h2 className="mt-4 text-3xl font-display font-black"><T en="Make clearer decisions before changing anything.">Toma decisiones claras antes de cambiar nada.</T></h2>
+            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="We use real information to show what may be getting in the way of calls, messages, or bookings. You review and approve each change before it moves forward.">Usamos información real para mostrarte qué puede estar frenando llamadas, mensajes o reservas. Tú revisas y autorizas cada cambio antes de avanzar.</T></p>
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-bold text-[var(--color-text-tertiary)]">
+              {[["Real information", "Información real"], ["Explained priorities", "Prioridades explicadas"], ["Your approval", "Tu autorización"]].map(([en, es]) => (
+                <span key={en} className="rounded-xl border border-[var(--color-border-subtle)] px-3 py-2.5"><T en={en}>{es}</T></span>
+              ))}
+            </div>
           </motion.div>
         </motion.section>
 
@@ -1143,13 +1146,6 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <WisePhrase lang={language} />
         </motion.section>
 
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--color-text-tertiary)]">
-          <Link to="/" className="hover:text-[var(--color-primary-base)]"><T en="Back to Polaris Web Studio">Volver a Polaris Web Studio</T></Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/terminos" className="hover:text-[var(--color-primary-base)]"><T en="Terms">Términos</T></Link>
-          <span aria-hidden="true">·</span>
-          <Link to="/privacidad" className="hover:text-[var(--color-primary-base)]"><T en="Privacy">Privacidad</T></Link>
-        </div>
       </main>
       <Footer />
     </div>
