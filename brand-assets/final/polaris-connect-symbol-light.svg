@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 190" role="img" aria-labelledby="title desc">
+  <title id="title">Polaris Connect symbol</title>
+  <desc id="desc">Polaris star symbol with a secondary Connect product signal.</desc>
+  <rect width="190" height="190" fill="#FFFFFF"/>
+  <g transform="translate(10 10) scale(.1143)">
+    <path fill="#4F46E5" d="M 912.917969 849.828125 L 1486.273437 744.0625 L 909.207031 645.71875 L 1066.925781 417.492188 L 846.117188 575.210938 L 742.207031 0 L 643.867187 578.921875 L 417.492188 417.492188 L 573.355469 645.71875 L 0 744.0625 L 573.355469 849.828125 L 417.492188 1068.777344 L 643.867187 912.914063 L 742.207031 1486.269531 L 847.972656 916.625 L 1066.925781 1068.777344 Z"/>
+    <circle cx="744.988281" cy="733.605469" r="109.738281" fill="#FFFFFF"/>
+  </g>
+  <g fill="none" stroke="#25D366" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M38 63h25M107 63h25M38 107h25M107 107h25"/>
+  <circle cx="34" cy="63" r="6" fill="#25D366" stroke="none"/><circle cx="136" cy="63" r="6" fill="#25D366" stroke="none"/>
+  <circle cx="34" cy="107" r="6" fill="#25D366" stroke="none"/><circle cx="136" cy="107" r="6" fill="#25D366" stroke="none"/>
+</g>
+</svg>

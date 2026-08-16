@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Clock3,
   Eye,
-  Loader2,
   Mail,
   MapPin,
   MessageCircle,
@@ -23,6 +22,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
+import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
 
 const TIER_PRICE: Record<string, string> = { "48h": "29", implementado: "99" };
@@ -117,17 +117,12 @@ export default function LocalLift() {
   const [city, setCity] = useState("");
   const [contactName, setContactName] = useState("");
   const [email, setEmail] = useState("");
-  // "queued": el correo ya está en camino (o ya se mandó), pero no se
-  // revela en pantalla -- se ve como si un humano lo estuviera preparando.
-  // "success": el diagnóstico se muestra en pantalla (revelado por Atlas,
-  // instantáneo, o porque el cliente ya esperó). Pedido explícito del
-  // usuario: que no se sienta "generado por IA al toque" por default.
   const [status, setStatus] = useState<"idle" | "loading" | "queued" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [diagnostic, setDiagnostic] = useState<DiagnosticResult | null>(null);
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
-  const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
+const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
   const [revealNowError, setRevealNowError] = useState("");
 
@@ -163,32 +158,24 @@ export default function LocalLift() {
     }
   };
 
-  // "Atlas, generá ahora": ESTE es el momento real en que corre la
-  // generación con IA (findPlace ya se hizo en el submit) -- antes corría
-  // siempre en el submit, sin importar qué mostrara la pantalla. El texto
-  // dinámico de abajo (useRevealStepMessage) rota mientras esta llamada
-  // real está en vuelo, no es un timer prefijado sin relación con el
-  // backend -- simplemente no tenemos progreso real paso-a-paso del
-  // backend (una sola llamada a IA, no streaming), así que rota a un ritmo
-  // pensado para cubrir la duración real típica (30-45s).
-  const handleRevealNow = async () => {
-    if (!diagnosticLeadId) return;
+const handleRevealNow = async () => {
+    if (!diagnosticLeadId || revealNowLoading) return;
     setRevealNowLoading(true);
     setRevealNowError("");
     try {
       const res = await fetch("/api/local-lift-diagnostic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId }),
+        body: JSON.stringify({ action: "reveal-now", leadId: diagnosticLeadId, lang: language === "en" ? "en" : "es" }),
       });
       const data = await res.json();
-      if (!res.ok || !data.diagnostic) {
+      if (!res.ok || !data.success) {
         setRevealNowError(data.error || (language === "en" ? "Something went wrong. Please try again." : "Algo salió mal. Intenta de nuevo."));
         setRevealNowLoading(false);
         return;
       }
       setDiagnostic(data.diagnostic);
-      setRevealNowLoading(false);
+      if (data.place) setPlace(data.place);
       setRevealedByAtlas(true);
       setStatus("success");
     } catch {
@@ -197,10 +184,7 @@ export default function LocalLift() {
     }
   };
 
-  // Texto dinámico durante la generación real (30-45s) -- pedido explícito
-  // del usuario para que no se sienta como "mirar un botón cargando sin
-  // saber qué está pasando".
-  const REVEAL_STEPS: Array<{ es: string; en: string }> = [
+const REVEAL_STEPS: Array<{ es: string; en: string }> = [
     { es: "Analizando los datos reales de tu ficha de Google...", en: "Analyzing your real Google listing data..." },
     { es: "Leyendo tus reseñas y calificación...", en: "Reading your reviews and rating..." },
     { es: "Revisando fotos, horario y descripción...", en: "Checking photos, hours, and description..." },
@@ -220,6 +204,7 @@ export default function LocalLift() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealNowLoading]);
+
 
   // Direct-to-paid: comprar un tier ($99/$179) sin pasar por el diagnóstico
   // gratis. Formulario chico + PayPal, se abre inline en la tarjeta del tier.
@@ -525,24 +510,28 @@ export default function LocalLift() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={status === "loading"}
-                className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5 disabled:opacity-60 disabled:pointer-events-none"
-              >
-                {status === "loading" ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <T en="Analyzing your listing...">Analizando tu ficha...</T>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    <T en="Generate my diagnosis">Generar mi diagnóstico</T>
-                    <ArrowRight size={17} />
-                  </>
-                )}
-              </button>
+              {status === "loading" ? (
+                <div className="sm:col-span-2 mt-1 flex flex-col items-center gap-4 py-8 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)]">
+                  <ThinkingOrb
+                    state="searching"
+                    size={64}
+                    theme="auto"
+                    aria-label={language === "en" ? "Searching for your listing on Google" : "Buscando tu ficha en Google"}
+                  />
+                  <p className="text-sm font-bold text-[var(--color-text-secondary)]">
+                    <T en="Searching for your listing on Google...">Buscando tu ficha en Google...</T>
+                  </p>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  className="sm:col-span-2 mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-7 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-transform hover:-translate-y-0.5"
+                >
+                  <Sparkles size={18} />
+                  <T en="Generate my diagnosis">Generar mi diagnóstico</T>
+                  <ArrowRight size={17} />
+                </button>
+              )}
             </form>
           )}
 
@@ -550,7 +539,12 @@ export default function LocalLift() {
             <div className="mt-8 max-w-xl mx-auto text-center rounded-xl bg-[var(--color-surface-elevated)] p-8">
               {revealNowLoading ? (
                 <>
-                  <Loader2 size={28} className="mx-auto text-[var(--color-primary-base)] animate-spin" />
+<ThinkingOrb
+                    state="solving"
+                    size={64}
+                    theme="auto"
+                    aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
+                  />
                   <h3 className="mt-4 text-lg font-display font-black">
                     <T en={REVEAL_STEPS[revealStepIndex].en}>{REVEAL_STEPS[revealStepIndex].es}</T>
                   </h3>

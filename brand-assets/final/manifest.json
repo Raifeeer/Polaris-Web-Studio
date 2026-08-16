@@ -1,0 +1,125 @@
+{
+  "version": "0.1.0",
+  "products": [
+    {
+      "slug": "local-lift",
+      "name": "Polaris Local Lift",
+      "accent": "#B8F34A",
+      "family": "growth",
+      "assets": {
+        "symbol_light": "polaris-local-lift-symbol-light.svg",
+        "symbol_dark": "polaris-local-lift-symbol-dark.svg",
+        "lockup_light": "polaris-local-lift-lockup-light.svg",
+        "lockup_dark": "polaris-local-lift-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "reputation",
+      "name": "Polaris Reputation",
+      "accent": "#FB7185",
+      "family": "reputation",
+      "assets": {
+        "symbol_light": "polaris-reputation-symbol-light.svg",
+        "symbol_dark": "polaris-reputation-symbol-dark.svg",
+        "lockup_light": "polaris-reputation-lockup-light.svg",
+        "lockup_dark": "polaris-reputation-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "flow",
+      "name": "Polaris Flow",
+      "accent": "#2DD4BF",
+      "family": "flow",
+      "assets": {
+        "symbol_light": "polaris-flow-symbol-light.svg",
+        "symbol_dark": "polaris-flow-symbol-dark.svg",
+        "lockup_light": "polaris-flow-lockup-light.svg",
+        "lockup_dark": "polaris-flow-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "connect",
+      "name": "Polaris Connect",
+      "accent": "#25D366",
+      "family": "connect",
+      "assets": {
+        "symbol_light": "polaris-connect-symbol-light.svg",
+        "symbol_dark": "polaris-connect-symbol-dark.svg",
+        "lockup_light": "polaris-connect-lockup-light.svg",
+        "lockup_dark": "polaris-connect-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "stay",
+      "name": "Polaris Stay",
+      "accent": "#34D399",
+      "family": "stay",
+      "assets": {
+        "symbol_light": "polaris-stay-symbol-light.svg",
+        "symbol_dark": "polaris-stay-symbol-dark.svg",
+        "lockup_light": "polaris-stay-lockup-light.svg",
+        "lockup_dark": "polaris-stay-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "knowledge",
+      "name": "Polaris Knowledge",
+      "accent": "#F59E0B",
+      "family": "knowledge",
+      "assets": {
+        "symbol_light": "polaris-knowledge-symbol-light.svg",
+        "symbol_dark": "polaris-knowledge-symbol-dark.svg",
+        "lockup_light": "polaris-knowledge-lockup-light.svg",
+        "lockup_dark": "polaris-knowledge-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "welcome",
+      "name": "Polaris Welcome",
+      "accent": "#F97360",
+      "family": "welcome",
+      "assets": {
+        "symbol_light": "polaris-welcome-symbol-light.svg",
+        "symbol_dark": "polaris-welcome-symbol-dark.svg",
+        "lockup_light": "polaris-welcome-lockup-light.svg",
+        "lockup_dark": "polaris-welcome-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "stories",
+      "name": "Polaris Stories",
+      "accent": "#14B8A6",
+      "family": "stories",
+      "assets": {
+        "symbol_light": "polaris-stories-symbol-light.svg",
+        "symbol_dark": "polaris-stories-symbol-dark.svg",
+        "lockup_light": "polaris-stories-lockup-light.svg",
+        "lockup_dark": "polaris-stories-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "demand",
+      "name": "Polaris Demand",
+      "accent": "#FBBF24",
+      "family": "demand",
+      "assets": {
+        "symbol_light": "polaris-demand-symbol-light.svg",
+        "symbol_dark": "polaris-demand-symbol-dark.svg",
+        "lockup_light": "polaris-demand-lockup-light.svg",
+        "lockup_dark": "polaris-demand-lockup-dark.svg"
+      }
+    },
+    {
+      "slug": "trade",
+      "name": "Polaris Trade",
+      "accent": "#0FBAA5",
+      "family": "trade",
+      "assets": {
+        "symbol_light": "polaris-trade-symbol-light.svg",
+        "symbol_dark": "polaris-trade-symbol-dark.svg",
+        "lockup_light": "polaris-trade-lockup-light.svg",
+        "lockup_dark": "polaris-trade-lockup-dark.svg"
+      }
+    }
+  ]
+}
