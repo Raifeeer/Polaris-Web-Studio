@@ -95,15 +95,21 @@ Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducci
 
 function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string {
   const problemsLabel = lang === "en" ? "Priority issues" : "Problemas prioritarios";
-  const planLabel = lang === "en" ? "7-day action plan" : "Plan de acción de 7 días";
+  const planLabel = lang === "en" ? "7-day action plan preview" : "Vista previa del plan de acción de 7 días";
   const dayLabel = lang === "en" ? "Day" : "Día";
-
-  const problemsText = diagnostic.problems
+  const previewProblems = diagnostic.problems.slice(0, PREVIEW_PROBLEM_COUNT);
+  const previewPlan = diagnostic.sevenDayPlan.slice(0, PREVIEW_PLAN_DAY_COUNT);
+  const problemsText = previewProblems
     .map((p, i) => `${i + 1}. ${p.title}\n   ${p.why}\n   → ${p.fix}`)
     .join("\n\n");
-  const planText = diagnostic.sevenDayPlan.map((d) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
+  const planText = previewPlan.map((d) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
+  const hiddenProblems = Math.max(0, diagnostic.problems.length - PREVIEW_PROBLEM_COUNT);
+  const hiddenDays = Math.max(0, diagnostic.sevenDayPlan.length - PREVIEW_PLAN_DAY_COUNT);
+  const teaser = lang === "en"
+    ? `\n\n+ ${hiddenProblems} more priority issues and ${hiddenDays} more plan days are available in the full diagnosis. Unlock the complete Local Lift plan here: https://polarisweb.studio/local-lift`
+    : `\n\n+ ${hiddenProblems} problemas prioritarios y ${hiddenDays} días más del plan están disponibles en el diagnóstico completo. Desbloquea el plan completo de Local Lift aquí: https://polarisweb.studio/local-lift`;
 
-  return `${diagnostic.businessIntro}\n\n${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
+  return `${diagnostic.businessIntro}\n\n${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}${teaser}`;
 }
 
 // Plantilla HTML real (Familia A de Polaris, misma que usa
@@ -112,47 +118,50 @@ function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string
 // de texto plano que salía antes. Pedido explícito del usuario (15 de
 // agosto) tras recibir el diagnóstico y notar que no seguía la plantilla
 // de marca ya usada en el resto de los correos de Polaris.
-const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/polaris-logo-badge-v2.png";
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
-const ACCENT = "#4f46e5"; // mismo indigo que "Impulso", color primario de marca
+const ACCENT = "#16c8c1"; // teal de Local Lift
+const DEEP = "#111936"; // navy de Local Lift
+const LOCAL_LIFT_LOGO_URL = "https://polarisweb.studio/brand/local-lift-stacked-light.png";
+const PREVIEW_PROBLEM_COUNT = 2;
+const PREVIEW_PLAN_DAY_COUNT = 3;
 
 function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactName: string, lang: "es" | "en", leadId: string): string {
   const hasName = !!contactName && contactName.trim().length > 0;
   const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
   // Tier "Impulso" ($29) -- mismo tier con el que se crea el lead del
   // diagnóstico gratis (ver TIER_PRICE de local-lift-order.ts/LocalLift.tsx).
-  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
+  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}?tier=impulso`;
 
   const copy = lang === "en"
     ? {
         preheader: `Your Local Lift diagnosis for ${place.name} is ready.`,
         eyebrow: "Free diagnosis",
         title: hasName ? `Here's your diagnosis, ${firstName}!` : "Here's your diagnosis!",
-        problemsLabel: "Priority issues",
-        planLabel: "7-day action plan",
+        problemsLabel: "Priority issues preview",
+        planLabel: "7-day action plan preview",
         dayLabel: "Day",
-        ctaPrimary: "I want you to implement this — $29",
+        ctaPrimary: "Unlock the full diagnosis — $29",
         ctaSecondaryTop: "Questions?",
         ctaSecondaryBottom: "Reply to this email",
         footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
-        footerLine2: "You requested this diagnosis from our website.",
+        footerLine2: "This email shows a preview. The complete diagnosis is available through Local Lift.",
       }
     : {
         preheader: `Tu diagnóstico Local Lift de ${place.name} está listo.`,
         eyebrow: "Diagnóstico gratis",
         title: hasName ? `¡Aquí está tu diagnóstico, ${firstName}!` : "¡Aquí está tu diagnóstico!",
-        problemsLabel: "Problemas prioritarios",
-        planLabel: "Plan de acción de 7 días",
+        problemsLabel: "Vista previa de problemas prioritarios",
+        planLabel: "Vista previa del plan de acción de 7 días",
         dayLabel: "Día",
-        ctaPrimary: "Quiero que lo implementen — $29",
+        ctaPrimary: "Desbloquear el diagnóstico completo — $29",
         ctaSecondaryTop: "¿Dudas?",
         ctaSecondaryBottom: "Responde este correo",
         footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
-        footerLine2: "Solicitaste este diagnóstico desde nuestro sitio.",
+        footerLine2: "Este correo muestra una vista previa. El diagnóstico completo está disponible en Local Lift.",
       };
 
-  const problemRows = diagnostic.problems
+  const problemRows = diagnostic.problems.slice(0, PREVIEW_PROBLEM_COUNT)
     .map(
       (p, i) => `
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 14px 0;">
@@ -173,6 +182,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
     .join("");
 
   const planRows = diagnostic.sevenDayPlan
+    .slice(0, PREVIEW_PLAN_DAY_COUNT)
     .map(
       (d) => `
       <tr style="border-bottom:1px solid #e2e8f0;">
@@ -181,6 +191,14 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
       </tr>`
     )
     .join("");
+  const hiddenProblemCount = Math.max(0, diagnostic.problems.length - PREVIEW_PROBLEM_COUNT);
+  const hiddenPlanDayCount = Math.max(0, diagnostic.sevenDayPlan.length - PREVIEW_PLAN_DAY_COUNT);
+  const hiddenProblemsNotice = lang === "en"
+    ? `+ ${hiddenProblemCount} more priority issues are reserved for the complete diagnosis.`
+    : `+ ${hiddenProblemCount} problemas prioritarios quedan reservados para el diagnóstico completo.`;
+  const hiddenPlanNotice = lang === "en"
+    ? `+ ${hiddenPlanDayCount} more days are reserved for the complete plan.`
+    : `+ ${hiddenPlanDayCount} días más quedan reservados para el plan completo.`;
 
   const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${place.name}`)}`;
 
@@ -198,12 +216,12 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
 <div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
-  <div style="padding:40px 40px 0 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="Polaris Web Studio" width="140" style="width:140px;height:auto;display:block;margin:0 auto;">
+  <div style="padding:24px 40px 16px 40px;text-align:center;background:#f2ffff;border-bottom:1px solid #c8f4f0;border-radius:14px 14px 0 0;">
+    <img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="156" style="width:156px;max-width:78%;height:auto;display:block;margin:0 auto;">
   </div>
 
-  <div style="padding:32px 40px 8px 40px;text-align:center;">
-    <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">${copy.eyebrow}</div>
+  <div style="padding:28px 40px 8px 40px;text-align:center;">
+    <div style="font-family:${FONT_DISPLAY};font-weight:700;font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:${ACCENT};margin-bottom:12px;">${copy.eyebrow}</div>
     <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:30px;line-height:1.2;color:#0f172a;">${copy.title}</div>
     <div style="font-size:14px;color:#64748b;margin-top:8px;">${place.name}${place.address ? ` · ${place.address}` : ""}</div>
   </div>
@@ -220,6 +238,7 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
     <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
       <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:14px;">${copy.problemsLabel}</div>
       ${problemRows}
+      <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:12px;line-height:1.5;color:#64748b;text-align:center;">${hiddenProblemsNotice}</div>
     </div>
   </div>
 
@@ -227,11 +246,13 @@ function buildDiagnosticHtml(diagnostic: Diagnostic, place: PlaceData, contactNa
     <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
       <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:12px;">${copy.planLabel}</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${planRows}</table>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #cbd5e1;font-size:12px;line-height:1.5;color:#64748b;text-align:center;">${hiddenPlanNotice}</div>
     </div>
   </div>
 
   <div style="padding:28px 40px 0 40px;text-align:center;">
-    <a href="${payUrl}" target="_blank" style="display:inline-block;background:${ACCENT};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">${copy.ctaPrimary}</a>
+    <a href="${payUrl}" target="_blank" style="display:inline-block;background:${DEEP};color:#ffffff;font-family:${FONT_DISPLAY};font-weight:700;font-size:15px;padding:14px 32px;border-radius:8px;">${copy.ctaPrimary}</a>
+    <div style="font-size:11px;line-height:1.5;color:#64748b;margin-top:9px;">${lang === "en" ? "Unlock the remaining priorities and the full 7-day plan." : "Desbloquea las prioridades restantes y el plan completo de 7 días."}</div>
   </div>
   <div style="padding:14px 40px 0 40px;text-align:center;">
     <a href="${contactMailto}" style="display:inline-block;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-family:${FONT_DISPLAY};font-weight:700;padding:11px 32px;border-radius:8px;line-height:1.4;">
