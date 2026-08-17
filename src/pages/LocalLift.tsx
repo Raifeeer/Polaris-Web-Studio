@@ -9,10 +9,12 @@ import {
   ChevronRight,
   Eye,
   Building2,
+  Globe,
   Mail,
   Loader2,
   MapPin,
   MessageCircle,
+  Phone,
   Search,
   Star,
   TrendingUp,
@@ -213,6 +215,9 @@ interface PlaceResult {
   reviewCount: number;
   mapsUri: string | null;
   photoUrls?: string[];
+  hasPhone?: boolean;
+  phone?: string | null;
+  websiteUri?: string | null;
 }
 
 export default function LocalLift() {
@@ -1585,6 +1590,20 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                           </span>
                         )}
                       </div>
+                      {place.phone && (
+                        <div className="flex items-center gap-2">
+                          <Phone size={15} className="shrink-0 text-[var(--color-primary-base)]" />
+                          <span>{place.phone}</span>
+                        </div>
+                      )}
+                      {place.websiteUri && (
+                        <div className="flex items-center gap-2">
+                          <Globe size={15} className="shrink-0 text-[var(--color-primary-base)]" />
+                          <a href={place.websiteUri} target="_blank" rel="noreferrer" className="font-bold text-[var(--color-primary-base)] underline">
+                            <T en="View website">Ver página web</T>
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

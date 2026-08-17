@@ -18,6 +18,7 @@ export interface PlaceData {
   hasWebsite: boolean;
   websiteUri: string | null;
   hasPhone: boolean;
+  phone: string | null;
   hasHours: boolean;
   photoCount: number;
   photoUrls: string[];
@@ -58,6 +59,7 @@ function buildPlaceData(place: any, apiKey: string, fallbackName: string): Place
     hasWebsite: !!place.websiteUri,
     websiteUri: place.websiteUri || null,
     hasPhone: !!place.nationalPhoneNumber,
+    phone: place.nationalPhoneNumber || null,
     hasHours: !!place.currentOpeningHours,
     photoCount: photos.length,
     photoUrls,

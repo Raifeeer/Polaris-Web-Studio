@@ -42,6 +42,7 @@ interface PlaceInfo {
   reviewCount: number;
   websiteUri: string | null;
   hasPhone: boolean;
+  phone: string | null;
   hasHours: boolean;
   editorialSummary: string | null;
   mapsUri: string | null;
@@ -358,7 +359,7 @@ export default function LocalLiftPanel() {
             {selectedLeadPlace.websiteUri && (
               <p className="flex items-center gap-1.5"><Globe size={13} className="shrink-0 text-[var(--color-primary-base)]" /> <a href={selectedLeadPlace.websiteUri} target="_blank" rel="noreferrer" className="underline text-[var(--color-primary-base)] font-bold">Sitio web</a></p>
             )}
-            <p className="flex items-center gap-1.5"><Phone size={13} className={selectedLeadPlace.hasPhone ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"} /> {selectedLeadPlace.hasPhone ? "Tiene teléfono público" : "Sin teléfono público"}</p>
+            <p className="flex items-center gap-1.5"><Phone size={13} className={selectedLeadPlace.hasPhone ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"} /> {selectedLeadPlace.phone || "Sin teléfono público"}</p>
             {selectedLeadPlace.primaryType && <p>Tipo: {selectedLeadPlace.primaryType}</p>}
             {selectedLeadPlace.editorialSummary && <p className="italic">"{selectedLeadPlace.editorialSummary}"</p>}
             {selectedLeadPlace.mapsUri && (
