@@ -23,6 +23,7 @@ import {
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AtlasMark from "../components/AtlasMark";
+import ImageLightbox from "../components/ImageLightbox";
 import { T, useLanguage } from "../context/LanguageContext";
 import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
@@ -238,6 +239,7 @@ export default function LocalLift() {
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [candidates, setCandidates] = useState<PlaceResult[]>([]);
   const [visibleCandidateCount, setVisibleCandidateCount] = useState(3);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
   const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
   const [revealNowLoading, setRevealNowLoading] = useState(false);
@@ -1349,15 +1351,22 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                     {cand.photoUrls && cand.photoUrls.length > 0 && (
                       <div className="flex gap-0.5 h-28">
                         {cand.photoUrls.slice(0, 3).map((url, pi) => (
-                          <img
+                          <button
                             key={pi}
-                            src={url}
-                            alt={cand.name}
-                            className="flex-1 object-cover"
-                            loading="eager"
-                            decoding="sync"
+                            type="button"
+                            onClick={() => setLightboxUrl(url)}
+                            className="flex-1 cursor-zoom-in"
                             style={{ minWidth: 0 }}
-                          />
+                            aria-label={language === "en" ? "View larger photo" : "Ver foto más grande"}
+                          >
+                            <img
+                              src={url}
+                              alt={cand.name}
+                              className="h-full w-full object-cover"
+                              loading="eager"
+                              decoding="sync"
+                            />
+                          </button>
                         ))}
                       </div>
                     )}
@@ -1774,6 +1783,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
       </main>
       <Footer />
+      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </div>
   );
 }

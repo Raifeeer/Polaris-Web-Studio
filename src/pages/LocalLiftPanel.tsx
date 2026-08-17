@@ -3,6 +3,7 @@ import { Navigate, Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, Check, Eye, Globe, Link2, Loader2, MapPin, Phone, Send, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import ImageLightbox from "../components/ImageLightbox";
 
 // Panel interno para generar y enviar el paquete completo del tier
 // "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido tanto acá
@@ -88,6 +89,7 @@ export default function LocalLiftPanel() {
   const [leadPaid, setLeadPaid] = useState(false);
   const [leadGbpConnected, setLeadGbpConnected] = useState(false);
   const [selectedLeadPlace, setSelectedLeadPlace] = useState<PlaceInfo | null>(null);
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const [businessName, setBusinessName] = useState("");
   const [city, setCity] = useState("");
@@ -291,18 +293,27 @@ export default function LocalLiftPanel() {
     <button
       key={l.id}
       onClick={() => loadLead(l)}
-      className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[var(--color-surface-elevated)] transition-colors ${leadId === l.id ? "bg-[var(--color-primary-base)]/10" : ""}`}
+      className={`w-full text-left px-4 py-3 text-xs hover:bg-[var(--color-surface-elevated)] transition-colors ${leadId === l.id ? "bg-[var(--color-primary-base)]/10" : ""}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-black">{l.businessName || "(sin nombre)"} <span className="font-normal text-[var(--color-text-tertiary)]">· {l.city}</span></span>
-        {l.gbpConnected && <span className="inline-flex items-center gap-1 text-indigo-500 font-bold shrink-0"><Link2 size={11} /> Google conectado</span>}
+        <span className="font-black text-sm">{l.businessName || "(sin nombre)"}</span>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
+          l.status === "sent" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
+        }`}>
+          {STATUS_LABEL[l.status] || l.status}
+        </span>
       </div>
-      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[var(--color-text-tertiary)]">
-        <span>{l.contactName}</span>
-        {l.email && <span>· {l.email}</span>}
-        <span>· {STATUS_LABEL[l.status] || l.status}</span>
+      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-0.5 text-[var(--color-text-tertiary)]">{l.city}</span>
+        {l.contactName && <span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-0.5 text-[var(--color-text-tertiary)]">{l.contactName}</span>}
+        {l.gbpConnected && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 font-bold text-indigo-500">
+            <Link2 size={10} /> Google conectado
+          </span>
+        )}
       </div>
-      <div className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">
+      {l.email && <div className="mt-1 text-[var(--color-text-tertiary)]">{l.email}</div>}
+      <div className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">
         Recibido {formatDateTime(l.createdAt)}
         {l.sentAt && <> · Enviado {formatDateTime(l.sentAt)}</>}
       </div>
@@ -345,7 +356,9 @@ export default function LocalLiftPanel() {
           {selectedLeadPlace.photoUrls.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
               {selectedLeadPlace.photoUrls.slice(0, 6).map((url) => (
-                <img key={url} src={url} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[var(--color-border-subtle)]" />
+                <button key={url} type="button" onClick={() => setLightboxUrl(url)} className="shrink-0 cursor-zoom-in">
+                  <img src={url} alt="" className="h-20 w-20 rounded-lg object-cover border border-[var(--color-border-subtle)]" />
+                </button>
               ))}
             </div>
           )}
@@ -544,6 +557,7 @@ export default function LocalLiftPanel() {
           )}
         </div>
       )}
+      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
     </div>
   );
 }
