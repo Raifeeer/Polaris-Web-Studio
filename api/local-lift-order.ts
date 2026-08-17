@@ -61,7 +61,6 @@ function buildPaymentConfirmedHtml(params: {
   const dateLabel = paidAt.toLocaleDateString("es-DO", { year: "numeric", month: "long", day: "numeric" });
   const waMsg = encodeURIComponent(`Hola Polaris, tengo una pregunta sobre mi pago de Local Lift (${businessName}).`);
   const whatsappUrl = `https://wa.me/18299200544?text=${waMsg}`;
-  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift: ${businessName}`)}`;
 
   const row = (label: string, value: string, strong?: boolean) => `
     <tr><td style="padding:10px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:10px 0;font-size:${strong ? "16px" : "13px"};font-family:'Courier New',Courier,monospace;color:${strong ? "#16a34a" : "#0f172a"};font-weight:700;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
@@ -129,13 +128,7 @@ function buildPaymentConfirmedHtml(params: {
   </div>
 
   <div style="padding:24px 40px 40px 40px;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;">
-      <tr>
-        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">Sitio web</a></td>
-        <td width="34%" style="text-align:center;white-space:nowrap;"><a href="${whatsappUrl}" target="_blank" style="font-size:13px;color:#1f2937;">WhatsApp</a></td>
-        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="${contactMailto}" style="font-size:13px;color:#1f2937;">Contacto</a></td>
-      </tr>
-    </table>
+    <div style="text-align:center;margin-bottom:16px;"><a href="${whatsappUrl}" target="_blank" style="font-size:13px;color:#1f2937;">WhatsApp</a></div>
     ${buildEmailFooter("es", "Recibiste este correo porque compraste un paquete Local Lift.")}
   </div>
 
