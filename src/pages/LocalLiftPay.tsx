@@ -21,7 +21,7 @@ export default function LocalLiftPay() {
   const prefersReducedMotion = useReducedMotion();
   const [status, setStatus] = useState<"loading" | "ready" | "paid" | "notfound">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean } | null>(null);
+  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean; paypalOrderId: string | null; paypalPayerEmail: string | null; paidAt: string | null; contactName: string; email: string } | null>(null);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function LocalLiftPay() {
           setStatus("notfound");
           return;
         }
-        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned });
+        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
         // URL ?tier param overrides Firestore tier (so CTAs from the diagnosis page work correctly)
         const urlTier = searchParams.get("tier");
         setSelectedTier(urlTier && TIER_PRICE[urlTier] ? urlTier : (data.tier || "impulso"));
@@ -143,18 +143,134 @@ export default function LocalLiftPay() {
             <div className="mt-5 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-5">
               <Mail size={22} className="mx-auto text-[var(--color-primary-base)] mb-3" />
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                <T en="We're already working on your full Local Lift report. You'll receive it at your email within the next 2 hours. If you don't hear from us, write us on WhatsApp.">
-                  Ya estamos trabajando en tu informe completo de Local Lift. Lo recibirás en tu correo en las próximas 2 horas. Si no recibes nada, escríbenos por WhatsApp.
+                {lead.tier === "ascenso" ? (
+                  <T en="A specialist is already reviewing your Google listing personally. Since this is an assisted implementation, we'll coordinate the next steps with you by WhatsApp or email — it's not an instant, automatic delivery, so it may take a bit longer than a standard report.">
+                    Uno de nuestros especialistas ya está revisando tu ficha de Google personalmente. Al ser una implementación asistida, vamos a coordinar los próximos pasos contigo por WhatsApp o correo — no es una entrega automática instantánea, así que puede tomar un poco más que un informe estándar.
+                  </T>
+                ) : (
+                  <T en="We're already working on your full Local Lift report. You'll receive it at your email within the next 2 hours. If you don't hear from us, write us on WhatsApp.">
+                    Ya estamos trabajando en tu informe completo de Local Lift. Lo recibirás en tu correo en las próximas 2 horas. Si no recibes nada, escríbenos por WhatsApp.
+                  </T>
+                )}
+              </p>
+              <p className="mt-3 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
+                <T en="We also sent you a separate email with access to your client portal.">
+                  Además, te enviamos un correo aparte con el acceso a tu portal de cliente.
                 </T>
               </p>
-              <a
-                href="https://wa.me/18299200544"
-                target="_blank"
-                rel="noreferrer"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-5 py-2.5 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-              >
-                <T en="Any questions? Write us">¿Alguna duda? Escríbenos</T>
-              </a>
+              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
+                <a
+                  href="https://wa.me/18299200544"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: "#25D366" }}
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
+                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.92 0-2.65-1.03-5.14-2.91-7.01A9.85 9.85 0 0 0 12.04 2Zm0 18.15h-.01a8.24 8.24 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.55 3.71-8.26 8.27-8.26a8.2 8.2 0 0 1 5.84 2.42 8.19 8.19 0 0 1 2.42 5.83c0 4.56-3.71 8.25-8.27 8.25Zm4.53-6.19c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.24-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.16.04-.31-.02-.43-.06-.13-.56-1.34-.77-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01a.92.92 0 0 0-.67.31c-.23.25-.87.85-.87 2.07 0 1.23.89 2.41 1.02 2.58.12.16 1.75 2.67 4.24 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.14-1.18-.06-.1-.22-.16-.47-.28Z" />
+                  </svg>
+                  <T en="Chat on WhatsApp">Escribir por WhatsApp</T>
+                </a>
+                <a
+                  href={`mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${lead.businessName}`)}`}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-5 py-2.5 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                >
+                  <Mail size={14} />
+                  <T en="Write us by email">Escribir por correo</T>
+                </a>
+              </div>
+            </div>
+
+            {/* Detalle real del pago -- PayPal, monto, tier, negocio */}
+            <div className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 text-left">
+              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
+                <T en="Payment details">Detalle del pago</T>
+              </p>
+              <dl className="space-y-2 text-xs">
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-[var(--color-text-tertiary)]"><T en="Business">Negocio</T></dt>
+                  <dd className="font-bold text-[var(--color-text-primary)] text-right">{lead.businessName}</dd>
+                </div>
+                {lead.city && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-[var(--color-text-tertiary)]"><T en="City">Ciudad</T></dt>
+                    <dd className="font-bold text-[var(--color-text-primary)] text-right">{lead.city}</dd>
+                  </div>
+                )}
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-[var(--color-text-tertiary)]"><T en="Package">Paquete</T></dt>
+                  <dd className="font-bold text-[var(--color-text-primary)] text-right">{TIER_PRICE[lead.tier]?.label || lead.tier}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-[var(--color-text-tertiary)]"><T en="Amount">Monto</T></dt>
+                  <dd className="font-bold text-emerald-500 text-right">${TIER_PRICE[lead.tier]?.amount || "—"} USD</dd>
+                </div>
+                {lead.invoiceNumber && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-[var(--color-text-tertiary)]"><T en="Polaris payment N°">N.° de pago Polaris</T></dt>
+                    <dd className="font-bold text-[var(--color-text-primary)] text-right font-mono">{lead.invoiceNumber}</dd>
+                  </div>
+                )}
+                {lead.paypalOrderId && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-[var(--color-text-tertiary)]"><T en="PayPal reference">Referencia PayPal</T></dt>
+                    <dd className="font-bold text-[var(--color-text-primary)] text-right font-mono break-all">{lead.paypalOrderId}</dd>
+                  </div>
+                )}
+                {lead.paypalPayerEmail && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-[var(--color-text-tertiary)]"><T en="Payer email">Correo del pagador</T></dt>
+                    <dd className="font-bold text-[var(--color-text-primary)] text-right break-all">{lead.paypalPayerEmail}</dd>
+                  </div>
+                )}
+                {lead.paidAt && (
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-[var(--color-text-tertiary)]"><T en="Paid on">Pagado el</T></dt>
+                    <dd className="font-bold text-[var(--color-text-primary)] text-right">
+                      {new Date(lead.paidAt).toLocaleDateString(language === "en" ? "en-US" : "es-DO", { year: "numeric", month: "long", day: "numeric" })}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+
+            {/* Qué incluye el plan comprado -- mismo detalle que la pantalla de checkout */}
+            <div className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 text-left">
+              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
+                <T en={`What's included in ${TIER_PRICE[lead.tier]?.enLabel || "Local Lift"}`}>{`Qué incluye ${TIER_PRICE[lead.tier]?.label || "tu paquete"}`}</T>
+              </p>
+              {lead.tier === "ascenso" ? (
+                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
+                  {[
+                    ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
+                    ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
+                    ["Una ronda de revisión incluida", "One revision round included"],
+                    ["Entrega por correo en 3–5 días hábiles", "Delivered by email in 3–5 business days"],
+                  ].map(([es, en]) => (
+                    <li key={es} className="flex items-start gap-2">
+                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
+                      <T en={en}>{es}</T>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
+                  {[
+                    ["Auditoría completa de tu perfil local", "Complete audit of your local profile"],
+                    ["Descripción, servicios y llamadas a la acción optimizados", "Optimized description, services, and CTAs"],
+                    ["10 publicaciones listas para aplicar", "10 posts ready to apply"],
+                    ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
+                    ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
+                    ["Entrega por correo en ~2 horas", "Delivered by email in ~2 hours"],
+                  ].map(([es, en]) => (
+                    <li key={es} className="flex items-start gap-2">
+                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
+                      <T en={en}>{es}</T>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
 
             {/* Acceso al portal -- las credenciales van por correo aparte, nunca

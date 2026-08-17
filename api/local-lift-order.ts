@@ -34,14 +34,37 @@ const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvet
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#16C8C1"; // teal, color primario real de Local Lift (palabra "LIFT" del logo)
 
-// Confirmación real al CLIENTE de que su pago se recibió -- antes esto no
-// existía: solo se mandaba la alerta interna a Cristian, y el cliente solo
-// veía un mensaje en pantalla (LocalLiftPay.tsx) que se pierde si cierra la
-// pestaña. Mismo template "Familia A" que local-lift-diagnostic.ts.
-function buildPaymentConfirmedHtml(businessName: string, tier: string, contactName: string, invoiceNumber?: string, hasInvoicePdf?: boolean): string {
+// Confirmación real al CLIENTE de que su pago se recibió. Antes usaba el
+// mismo template "Familia A" (logo grande centrado) que el diagnóstico y la
+// bienvenida al portal -- pedido explícito del usuario: que este correo se
+// vea distinto a esos, siguiendo en cambio la "Familia de facturas" real de
+// Polaris (ver invoice-notify-send en Meridian -- franja de color arriba,
+// logo chico + fecha en la misma fila, tabla de detalle del pago). Mismo
+// esqueleto, colores de Local Lift.
+function buildPaymentConfirmedHtml(params: {
+  businessName: string;
+  city: string;
+  tier: string;
+  contactName: string;
+  amount: number;
+  paypalOrderId: string;
+  paypalPayerEmail: string;
+  paidAt: Date;
+  invoiceNumber?: string;
+  hasInvoicePdf?: boolean;
+}): string {
+  const { businessName, city, tier, contactName, amount, paypalOrderId, paypalPayerEmail, paidAt, invoiceNumber, hasInvoicePdf } = params;
   const hasName = !!contactName && contactName.trim().length > 0;
   const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
   const label = TIER_LABEL[tier] || "Local Lift";
+  const dateLabel = paidAt.toLocaleDateString("es-DO", { year: "numeric", month: "long", day: "numeric" });
+  const waMsg = encodeURIComponent(`Hola Polaris, tengo una pregunta sobre mi pago de Local Lift (${businessName}).`);
+  const whatsappUrl = `https://wa.me/18299200544?text=${waMsg}`;
+  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${businessName}`)}`;
+
+  const row = (label: string, value: string, strong?: boolean) => `
+    <tr><td style="padding:10px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:10px 0;font-size:${strong ? "16px" : "13px"};font-family:'Courier New',Courier,monospace;color:${strong ? "#16a34a" : "#0f172a"};font-weight:700;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -54,31 +77,67 @@ function buildPaymentConfirmedHtml(businessName: string, tier: string, contactNa
 <style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
 </head>
 <body>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">Confirmamos tu pago de $${amount} para ${businessName} — esto es lo que sigue.</div>
 <div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-  <div style="padding:32px 40px 0 40px;text-align:center;">
-    <img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="160" style="width:160px;max-width:80%;height:auto;display:block;margin:0 auto;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td height="6" style="font-size:0;line-height:0;background:#16a34a;" bgcolor="#16a34a">&nbsp;</td>
+  </tr></table>
+
+  <div style="padding:28px 32px 0 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td valign="middle"><img src="${LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="48" style="width:48px;height:auto;display:block;border-radius:10px;"></td>
+      <td valign="middle" align="right" style="font-family:'Courier New',Courier,monospace;font-size:11px;letter-spacing:0.5px;color:#94a3b8;">Pagado el: ${dateLabel}</td>
+    </tr></table>
   </div>
-  <div style="padding:32px 40px 0 40px;text-align:center;">
-    <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:${ACCENT};margin-bottom:14px;">Pago confirmado</div>
-    <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:28px;line-height:1.2;color:#0f172a;">${hasName ? `¡Gracias, ${firstName}!` : "¡Gracias!"}</div>
-    <div style="font-size:14px;color:#64748b;margin-top:8px;">${label} para ${businessName}</div>
+
+  <div style="padding:20px 32px 0 32px;">
+    <div style="font-family:${FONT_DISPLAY};font-weight:500;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#16a34a;margin-bottom:8px;">Pago confirmado</div>
+    <div style="font-family:${FONT_DISPLAY};font-weight:800;font-size:24px;line-height:1.25;color:#0f172a;">${hasName ? `¡Gracias, ${firstName}!` : "¡Gracias!"}</div>
   </div>
-  <div style="padding:20px 40px 0 40px;text-align:center;">
-    <p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0;">Recibimos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google — lo vas a recibir por este mismo correo en las próximas horas.</p>
+
+  <div style="padding:12px 32px 0 32px;">
+    <p style="font-size:14px;line-height:1.6;color:#475569;margin:0;">${
+      tier === "ascenso"
+        ? "Recibimos y confirmamos tu pago. Al ser un paquete Ascenso, uno de nuestros especialistas va a revisar tu ficha de Google personalmente y coordinar contigo por WhatsApp o correo los próximos pasos -- no es un envío automático, así que puede tomar un poco más que un diagnóstico estándar. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
+        : "Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas horas. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
+    }</p>
   </div>
-  ${hasInvoicePdf && invoiceNumber ? `<div style="padding:20px 40px 0 40px;">
+
+  <div style="padding:24px 32px 0 32px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e8f0;">
+      ${row("Negocio", businessName)}
+      ${row("Ciudad", city || "—")}
+      ${row("Paquete", label)}
+      ${row("Monto", `$${amount.toFixed(2)}`, true)}
+      ${row("N.° de pago Polaris", invoiceNumber || "—")}
+      ${row("Referencia PayPal", paypalOrderId || "—")}
+      ${paypalPayerEmail ? row("Correo del pagador", paypalPayerEmail) : ""}
+    </table>
+  </div>
+
+  ${hasInvoicePdf && invoiceNumber ? `<div style="padding:20px 32px 0 32px;">
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;text-align:center;">
       <div style="font-size:13px;color:#1f2937;line-height:1.6;">Adjuntamos tu factura <strong>N° ${invoiceNumber}</strong> en PDF. También queda disponible en tu portal cuando la necesites.</div>
     </div>
   </div>` : ""}
-  <div style="padding:24px 40px 32px 40px;text-align:center;">
-    <a href="https://wa.me/18299200544" target="_blank" style="display:inline-block;background:#ffffff;color:#0f172a;border:1px solid #cbd5e1;font-family:${FONT_DISPLAY};font-weight:700;font-size:13px;padding:11px 24px;border-radius:8px;">¿Dudas? Escríbenos por WhatsApp</a>
+
+  <div style="padding:32px 40px 0 40px;">
+    <div style="height:1px;background:#e2e8f0;"></div>
   </div>
-  <div style="padding:0 40px 40px 40px;">
-    <div style="height:1px;background:#e2e8f0;margin-bottom:20px;"></div>
+
+  <div style="padding:24px 40px 40px 40px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;">
+      <tr>
+        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">Sitio web</a></td>
+        <td width="34%" style="text-align:center;white-space:nowrap;"><a href="${whatsappUrl}" target="_blank" style="font-size:13px;color:#1f2937;">WhatsApp</a></td>
+        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="${contactMailto}" style="font-size:13px;color:#1f2937;">Contacto</a></td>
+      </tr>
+    </table>
     ${buildEmailFooter("es", "Recibiste este correo porque compraste un paquete Local Lift.")}
   </div>
+
 </div>
 </div>
 </body></html>`;
@@ -203,6 +262,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         mapsUri: place?.mapsUri || null,
         invoiceNumber: d.invoiceNumber || null,
         portalProvisioned: !!d.portalProvisioned,
+        // Detalle real del pago -- para que la pantalla de confirmación
+        // (LocalLiftPay.tsx) pueda mostrar más que un mensaje genérico:
+        // referencia real de PayPal, correo del pagador y fecha real.
+        paypalOrderId: d.paypalOrderId || null,
+        paypalPayerEmail: d.paypalPayerEmail || null,
+        paidAt: d.paidAt?.toDate?.()?.toISOString?.() || null,
+        contactName: d.contactName || "",
+        email: d.email || "",
       });
     }
 
@@ -385,8 +452,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             from: '"Polaris Local Lift" <hola@polarisweb.studio>',
             to: data.email,
             subject: `Pago confirmado — ${data.businessName}`,
-            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. Ya estamos preparando tu paquete real, lo recibirás por este mismo correo en las próximas horas.`,
-            html: buildPaymentConfirmedHtml(data.businessName, tier, data.contactName || "", invoiceNumber, !!invoicePdf),
+            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Uno de nuestros especialistas va a coordinar contigo los próximos pasos." : "Ya estamos preparando tu paquete real, lo recibirás por este mismo correo en las próximas horas."}`,
+            html: buildPaymentConfirmedHtml({
+              businessName: data.businessName,
+              city: data.city,
+              tier,
+              contactName: data.contactName || "",
+              amount: TIER_PRICE[tier],
+              paypalOrderId,
+              paypalPayerEmail: paypalPayerEmail || "",
+              paidAt: new Date(),
+              invoiceNumber,
+              hasInvoicePdf: !!invoicePdf,
+            }),
             ...(invoicePdf
               ? { attachments: [{ filename: `Factura-${invoiceNumber}.pdf`, content: invoicePdf, contentType: "application/pdf" }] }
               : {}),
