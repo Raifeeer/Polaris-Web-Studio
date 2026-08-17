@@ -16,6 +16,8 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
+import { cert as firebaseCert, getApps as getFirebaseApps, initializeApp as initFirebaseApp } from "firebase-admin/app";
+import { getFirestore as getFirebaseFirestore } from "firebase-admin/firestore";
 import { getOfferConfig } from "./remote-config.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 import suggestDomainsHandler from "./api/suggest-domains.js";
@@ -1404,7 +1406,7 @@ const PORT = 3000;
       // antes de llegar acá, así que no aplica nada del pipeline de sitio
       // web: ni depósito 50/50, ni contrato, ni fases de desarrollo. Se le
       // registra una factura ya PAGADA por el monto real que pagó.
-      productType, paidAmount, tierLabel, paypalOrderId,
+      productType, paidAmount, tierLabel, paypalOrderId, localLiftLeadId,
     } = req.body || {};
     const isLocalLift = productType === "local_lift";
     if (!email || !name || (!packageId && !isLocalLift)) {
@@ -1485,6 +1487,7 @@ const PORT = 3000;
         name: projectName,
         productType: "local_lift",
         localLiftTier: isAscenso ? "ascenso" : "impulso",
+        ...(typeof localLiftLeadId === "string" && localLiftLeadId.trim() ? { localLiftLeadId: localLiftLeadId.trim() } : {}),
         currentPhase: isAscenso ? "Agenda tu reunión" : "Preparando tu paquete",
         progress: isAscenso ? 20 : 33,
         description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
@@ -1612,6 +1615,72 @@ const PORT = 3000;
     // contract-sign-notify (Meridian) es quien la encola vía Cloud Tasks.
 
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
+  });
+
+  // Marca real de que el paquete de contenido Local Lift ya se envió por
+  // correo -- disparada server-to-server desde local-lift-package.ts (acción
+  // "send") justo después de que el correo real sale, para que el portal deje
+  // de mostrar "te enviamos el paquete" antes de que sea verdad.
+  app.post("/api/portal/local-lift/package-sent", async (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const { leadId } = req.body || {};
+    if (typeof leadId !== "string" || !leadId.trim()) {
+      return res.status(400).json({ error: "missing_leadId" });
+    }
+    const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === leadId.trim());
+    if (!project) return res.json({ success: true, matched: false });
+
+    dbInstance.updateProject(project.id, {
+      currentPhase: "Entrega",
+      progress: 100,
+      phases: project.phases.map((ph) =>
+        ph.name === "Entrega" || ph.name === "Preparando tu paquete"
+          ? { ...ph, status: "completed" as const }
+          : ph
+      ),
+    });
+    await dbInstance.flush();
+    res.json({ success: true, matched: true, projectId: project.id });
+  });
+
+  // Descarga real del PDF del paquete ya enviado, desde el portal del cliente
+  // (mismo PDF que recibió por correo, guardado en base64 al momento del
+  // envío -- ver "send" en local-lift-package.ts). Acotado al proyecto propio
+  // del cliente (o admin), nunca expone el leadId de Firestore al navegador.
+  app.get("/api/portal/local-lift/download-package/:projectId", authenticateToken, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.projectId);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado." });
+    }
+    if (!project.localLiftLeadId) return res.status(404).json({ error: "Este proyecto no tiene un paquete Local Lift asociado." });
+
+    try {
+      const app = getFirebaseApps().length
+        ? getFirebaseApps()[0]
+        : initFirebaseApp({
+            credential: firebaseCert({
+              projectId: process.env.FIREBASE_PROJECT_ID,
+              clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+              privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
+            }),
+          });
+      const firestore = getFirebaseFirestore(app, "polaris-web-studio");
+      const doc = await firestore.collection("localLiftDiagnostics").doc(project.localLiftLeadId).get();
+      const pdfBase64 = doc.exists ? doc.data()?.pdfBase64 : null;
+      if (!pdfBase64) return res.status(404).json({ error: "El paquete todavía no está listo para descargar." });
+
+      const pdf = Buffer.from(pdfBase64, "base64");
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="Local-Lift-${project.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
+      return res.status(200).send(pdf);
+    } catch (err) {
+      console.error("[local-lift/download-package] Error:", err);
+      return res.status(500).json({ error: "No pudimos descargar el paquete." });
+    }
   });
 
   /**
@@ -2865,14 +2934,23 @@ const PORT = 3000;
             ? `Estima que faltan aproximadamente ${weeksEstimate} semanas para completar.`
             : "El proyecto está casi terminado.";
 
+        // El detalle real de la fase actual (ej. "Estamos armando el
+        // contenido real a partir de tu ficha: descripción, publicaciones y
+        // respuestas a reseñas") es lo único que hace que el resumen hable de
+        // lo que de verdad está pasando -- sin esto, el modelo solo tenía el
+        // nombre de la fase y el % y rellenaba con frases genéricas
+        // ("con todo el entusiasmo") sin decir nada real.
+        const currentPhaseDetail = project.phases.find((p: any) => p.name === project.currentPhase)?.detail || "";
+
         const generatedPrompt = `Eres el asistente amigable de Polaris Web Studio. Escribe un resumen breve en español
          (máximo 2 oraciones, tono cercano y positivo, tutéalo) para el cliente dueño ${isLocalLiftProject
            ? `del paquete Local Lift de "${project.name}" (optimización de su perfil de Google, no un sitio web: nunca lo llames "desarrollo" ni "proyecto de sitio web")`
            : `del proyecto "${project.name}"`} que está al ${project.progress}% en la fase "${project.currentPhase}".
+         ${currentPhaseDetail ? `Lo que de verdad se está haciendo en esta fase, ahora mismo: "${currentPhaseDetail}". Usa esta información real, no inventes otra cosa.` : ""}
          ${isLocalLiftProject ? "" : `Tiene ${approved} entregables aprobados${pending > 0 ? `, ${pending} pendiente(s) de revisar` : ""}`}
          ${pendingInvoices > 0 ? ` y ${pendingInvoices} factura(s) por pagar` : ""}.
          ${plazoLinea}
-         Sé específico con los datos, no genérico. Nunca uses dos guiones seguidos ("--") como puntuación.`;
+         Sé específico con los datos y con lo que de verdad se está haciendo, no genérico. Nunca uses dos guiones seguidos ("--") como puntuación.`;
 
         const text = await askAI(generatedPrompt);
         return res.json({ text });

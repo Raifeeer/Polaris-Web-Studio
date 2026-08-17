@@ -518,6 +518,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           sentAt: new Date(),
           ...(pdfBuffer ? { pdfBase64: pdfBuffer.toString("base64") } : {}),
         });
+        // Avisa al portal (si el proyecto de este cliente ya está vinculado a
+        // este lead) para que deje de mostrar "preparando tu paquete" y
+        // muestre el paquete real como entregado. Nunca bloquea la respuesta
+        // real al admin si el portal no responde.
+        try {
+          const cronSecret = process.env.CRON_SECRET;
+          const portalUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
+          if (cronSecret) {
+            await fetch(`${portalUrl}/api/portal/local-lift/package-sent`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-cron-secret": cronSecret },
+              body: JSON.stringify({ leadId: leadId.trim() }),
+            });
+          }
+        } catch (notifyErr) {
+          console.error("[local-lift-package] Error avisando al portal que el paquete se envió:", notifyErr);
+        }
       }
       return res.json({ success: true, sent: true });
     }

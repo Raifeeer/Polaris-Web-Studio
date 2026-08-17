@@ -371,6 +371,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               tierLabel: TIER_LABEL[tier],
               paypalOrderId,
               language: "es",
+              localLiftLeadId: docRef.id,
             }),
           });
           const prov = await provRes.json().catch(() => null);

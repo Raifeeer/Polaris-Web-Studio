@@ -1075,6 +1075,11 @@ export default function ClientDashboard() {
   // anteriores a que Polaris vendiera algo más (agosto 2026) lo son, así que
   // este campo se puede leer sin migrar datos viejos.
   const isLocalLiftProject = (clientProject as any)?.productType === "local_lift";
+  // "Entrega" solo queda "completed" cuando el admin de verdad manda el
+  // paquete (ver /api/portal/local-lift/package-sent) -- antes de eso no hay
+  // que decirle al cliente que ya se lo enviamos.
+  const localLiftPackageDelivered = isLocalLiftProject && clientProject?.phases?.some((ph: any) => ph.name === "Entrega" && ph.status === "completed");
+  const [packageDownloading, setPackageDownloading] = useState(false);
   // Autoagendamiento de la sesión de bienvenida 1:1 -- solo aplica a
   // Ascenso (implementación asistida), y solo hasta que ya exista una
   // reunión real registrada para este proyecto.
@@ -3807,16 +3812,51 @@ export default function ClientDashboard() {
                             <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4">
                               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">Entrega</p>
                               <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                                Te enviamos el paquete completo por correo. Si ya lo recibiste y tienes dudas, escríbenos por WhatsApp y lo revisamos contigo.
+                                {localLiftPackageDelivered
+                                  ? "Te enviamos el paquete completo por correo. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo."
+                                  : "Estamos preparando tu paquete. Te va a llegar por correo apenas esté listo."}
                               </p>
-                              <a
-                                href="https://wa.me/18299200544"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-                              >
-                                Escribir a soporte
-                              </a>
+                              <div className="mt-3 flex items-center gap-2">
+                                {localLiftPackageDelivered && (
+                                  <button
+                                    type="button"
+                                    disabled={packageDownloading}
+                                    onClick={async () => {
+                                      setPackageDownloading(true);
+                                      try {
+                                        const res = await fetch(`/api/portal/local-lift/download-package/${clientProject.id}`, {
+                                          headers: { Authorization: `Bearer ${token}` },
+                                        });
+                                        if (!res.ok) throw new Error("download_failed");
+                                        const blob = await res.blob();
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement("a");
+                                        a.href = url;
+                                        a.download = `Local-Lift-${clientProject.name}.pdf`;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                      } catch {
+                                        setErrorMsg(language === "en" ? "We couldn't download the report right now." : "No pudimos descargar el informe en este momento.");
+                                      } finally {
+                                        setPackageDownloading(false);
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors disabled:opacity-60"
+                                  >
+                                    {packageDownloading
+                                      ? <><Loader2 size={13} className="animate-spin" /> Descargando…</>
+                                      : <><Download size={13} /> Descargar informe</>}
+                                  </button>
+                                )}
+                                <a
+                                  href="https://wa.me/18299200544"
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                                >
+                                  Escribir a soporte
+                                </a>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -4061,7 +4101,7 @@ export default function ClientDashboard() {
                                   onClick={() => setActiveTab("invoices")}
                                   className="w-full py-2 bg-[var(--color-surface-highlight)] text-[var(--color-text-primary)] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 hover:bg-[var(--color-border-subtle)] transition"
                                 >
-                                  <Download size={13} /> Ver Detalle de Facturas
+                                  Ver Detalle de Facturas <ArrowRight size={13} />
                                 </button>
                               </div>
                             ) : (
