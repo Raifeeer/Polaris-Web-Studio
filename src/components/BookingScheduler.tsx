@@ -31,13 +31,17 @@ export default function BookingScheduler({
   initialName?: string;
   initialEmail?: string;
   phone?: string;
-  type?: "consultoria" | "alineacion" | "reporte";
+  type?: "consultoria" | "alineacion" | "reporte" | "ascenso";
   // Recibe el nombre/correo con el que el cliente terminó confirmando la
   // reserva -- puede diferir de initialName/initialEmail si lo corrigió acá
   // mismo (caso real: typo en el nombre al enviar la cotización, arreglado
   // recién al agendar). El wizard usa esto para sincronizar el lead ya
   // guardado en Firestore, en vez de dejarlo con el dato viejo para siempre.
-  onBooked: (name: string, email: string) => void;
+  // El tercer argumento (opcional) trae los datos reales de la reserva en
+  // Cal.com -- necesario para superficies (como el portal de Ascenso) que
+  // deben registrar la reunión con su horario y link reales, no solo saber
+  // que se agendó algo.
+  onBooked: (name: string, email: string, booking?: { start: string; end: string; meetUrl: string }) => void;
 }) {
   const { language, translate } = useLanguage();
   const locale = language === "en" ? "en-US" : "es-DO";
@@ -114,7 +118,7 @@ export default function BookingScheduler({
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
-        onBooked(name.trim(), email.trim());
+        onBooked(name.trim(), email.trim(), { start: data.start, end: data.end, meetUrl: data.meetUrl });
         return;
       }
       if (res.status === 409) {

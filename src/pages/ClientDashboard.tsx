@@ -45,6 +45,7 @@ import {
   MapPin
 } from "lucide-react";
 import AISparkleIcon from "../components/AISparkleIcon";
+import BookingScheduler from "../components/BookingScheduler";
 import Logo from "../components/Logo";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 import { T, useLanguage } from "../context/LanguageContext";
@@ -1074,6 +1075,15 @@ export default function ClientDashboard() {
   // anteriores a que Polaris vendiera algo más (agosto 2026) lo son, así que
   // este campo se puede leer sin migrar datos viejos.
   const isLocalLiftProject = (clientProject as any)?.productType === "local_lift";
+  // Autoagendamiento de la sesión de bienvenida 1:1 -- solo aplica a
+  // Ascenso (implementación asistida), y solo hasta que ya exista una
+  // reunión real registrada para este proyecto.
+  const needsAscensoBooking =
+    !isAdmin &&
+    isLocalLiftProject &&
+    (clientProject as any)?.localLiftTier === "ascenso" &&
+    !(data?.meetings || []).some((m: any) => m.projectId === clientProject?.id);
+  const [ascensoBookingDone, setAscensoBookingDone] = useState(false);
 
   // Sync client selected project when data loads
   useEffect(() => {
@@ -5136,6 +5146,58 @@ export default function ClientDashboard() {
                     Agenda de Reuniones
                   </h2>
                 </div>
+
+                {/* Autoagendamiento del cliente: sesión de bienvenida 1:1 de Ascenso */}
+                {needsAscensoBooking && (
+                  <div className="rounded-[var(--radius-bento)] glass-panel border border-[var(--color-primary-base)]/20 p-5 space-y-4">
+                    {ascensoBookingDone ? (
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center shrink-0">
+                          <Check size={18} className="text-emerald-500" />
+                        </div>
+                        <p className="text-sm font-bold text-[var(--color-text-primary)]">
+                          <T en="Your welcome session is scheduled. We'll see you there.">Tu sesión de bienvenida quedó agendada. Nos vemos ahí.</T>
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <h3 className="text-sm font-black text-[var(--color-text-primary)]">
+                            <T en="Schedule your welcome session">Agenda tu sesión de bienvenida</T>
+                          </h3>
+                          <p className="mt-1 text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                            <T en="Your Ascenso package includes a 1:1 call to review your Google listing and plan the changes we'll implement. Pick a time that works for you.">
+                              Tu paquete Ascenso incluye una llamada 1:1 para revisar tu ficha de Google y planificar los cambios que vamos a implementar. Elige el horario que te convenga.
+                            </T>
+                          </p>
+                        </div>
+                        <BookingScheduler
+                          type="ascenso"
+                          notes={`Sesión de bienvenida Ascenso — ${clientProject?.name || ""}`}
+                          initialName={user?.name || ""}
+                          initialEmail={user?.email || ""}
+                          onBooked={async (_name, _email, booking) => {
+                            if (!booking || !clientProject) return;
+                            const start = new Date(booking.start);
+                            const dateStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+                            const timeStr = `${String(start.getHours()).padStart(2, "0")}:${String(start.getMinutes()).padStart(2, "0")}`;
+                            try {
+                              await fetch("/api/portal/local-lift/meeting-booked", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                                body: JSON.stringify({ projectId: clientProject.id, date: dateStr, time: timeStr, meetLink: booking.meetUrl }),
+                              });
+                              setAscensoBookingDone(true);
+                              setRefreshTrigger((prev) => prev + 1);
+                            } catch (err) {
+                              console.error(err);
+                            }
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                )}
 
                 {/* MANAGER ONLY: Form to schedule meetings */}
                 {isAdmin && (

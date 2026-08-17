@@ -144,8 +144,8 @@ export default function LocalLiftPay() {
               <Mail size={22} className="mx-auto text-[var(--color-primary-base)] mb-3" />
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
                 {lead.tier === "ascenso" ? (
-                  <T en="A specialist is already reviewing your Google listing personally. Since this is an assisted implementation, we'll coordinate the next steps with you by WhatsApp or email — it's not an instant, automatic delivery, so it may take a bit longer than a standard report.">
-                    Uno de nuestros especialistas ya está revisando tu ficha de Google personalmente. Al ser una implementación asistida, vamos a coordinar los próximos pasos contigo por WhatsApp o correo — no es una entrega automática instantánea, así que puede tomar un poco más que un informe estándar.
+                  <T en="Your Ascenso package includes a 1:1 welcome session to review your Google listing and plan the changes we'll implement together. Go to your client portal to schedule your session at a time that works for you.">
+                    Tu paquete Ascenso incluye una sesión de bienvenida 1:1 para revisar tu ficha de Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu sesión en el horario que prefieras.
                   </T>
                 ) : (
                   <T en="We're already working on your full Local Lift report. You'll receive it at your email within the next 2 hours. If you don't hear from us, write us on WhatsApp.">
@@ -284,15 +284,25 @@ export default function LocalLiftPay() {
                       <T en="Your client portal is ready">Tu portal de cliente está listo</T>
                     </p>
                     <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                      <T en="We sent your access credentials to your email. From the portal you can follow your package's progress and download your invoice whenever you need it.">
-                        Te enviamos tus credenciales de acceso por correo. Desde el portal puedes seguir el avance de tu paquete y descargar tu factura cuando la necesites.
-                      </T>
+                      {lead.tier === "ascenso" ? (
+                        <T en="We sent your access credentials to your email. Go to your portal to schedule your welcome session and follow your package's progress.">
+                          Te enviamos tus credenciales de acceso por correo. Entra a tu portal para agendar tu sesión de bienvenida y seguir el avance de tu paquete.
+                        </T>
+                      ) : (
+                        <T en="We sent your access credentials to your email. From the portal you can follow your package's progress and download your invoice whenever you need it.">
+                          Te enviamos tus credenciales de acceso por correo. Desde el portal puedes seguir el avance de tu paquete y descargar tu factura cuando la necesites.
+                        </T>
+                      )}
                     </p>
                     <Link
                       to="/login"
                       className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white hover:opacity-90 transition-opacity"
                     >
-                      <T en="Go to my portal">Entrar a mi portal</T>
+                      {lead.tier === "ascenso" ? (
+                        <T en="Schedule my session">Agendar mi sesión</T>
+                      ) : (
+                        <T en="Go to my portal">Entrar a mi portal</T>
+                      )}
                     </Link>
                   </div>
                 </div>

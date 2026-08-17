@@ -1477,21 +1477,30 @@ const PORT = 3000;
     // --- Local Lift: proyecto y factura propios, sin pipeline de sitio web ---
     if (isLocalLift) {
       const liftLabel = String(tierLabel || "").trim() || "Local Lift";
+      const isAscenso = liftLabel.toLowerCase().includes("ascenso");
       dbInstance.addProject({
         id: projectId,
         displayId,
         clientUserId: clientId,
         name: projectName,
         productType: "local_lift",
-        currentPhase: "Preparando tu paquete",
-        progress: 33,
+        localLiftTier: isAscenso ? "ascenso" : "impulso",
+        currentPhase: isAscenso ? "Agenda tu reunión" : "Preparando tu paquete",
+        progress: isAscenso ? 20 : 33,
         description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
         status: "active",
-        phases: [
-          { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-          { name: "Preparando tu paquete", status: "active", detail: "Estamos armando el contenido real a partir de tu ficha: descripción, publicaciones y respuestas a reseñas." },
-          { name: "Entrega", status: "pending", detail: "Te enviamos el paquete completo por correo." },
-        ],
+        phases: isAscenso
+          ? [
+              { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
+              { name: "Agenda tu reunión", status: "active", detail: "Agenda tu sesión de bienvenida 1:1 desde la pestaña de Reuniones de este portal para coordinar la implementación." },
+              { name: "Implementación asistida", status: "pending", detail: "Aplicamos en tu ficha los cambios que autorices en la reunión." },
+              { name: "Entrega", status: "pending", detail: "Te avisamos por correo cuando todo quede aplicado." },
+            ]
+          : [
+              { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
+              { name: "Preparando tu paquete", status: "active", detail: "Estamos armando el contenido real a partir de tu ficha: descripción, publicaciones y respuestas a reseñas." },
+              { name: "Entrega", status: "pending", detail: "Te enviamos el paquete completo por correo." },
+            ],
       });
 
       const liftInvoiceId = `inv-${Date.now()}`;
@@ -2547,6 +2556,52 @@ const PORT = 3000;
 
   app.delete("/api/portal/meetings/:id", authenticateToken, requireAdmin, async (req, res) => {
     dbInstance.deleteMeeting(req.params.id);
+    await dbInstance.flush();
+    res.json({ success: true });
+  });
+
+  // Autoagendamiento real del cliente para Local Lift Ascenso -- la reserva
+  // en Cal.com ya ocurrió (BookingScheduler habla directo con calcom-booking,
+  // tipo de evento "ascenso"), este endpoint solo registra esa reunión real
+  // en el proyecto del cliente y avanza su fase. Nunca crea la reunión en
+  // Cal.com, solo la refleja acá.
+  app.post("/api/portal/local-lift/meeting-booked", authenticateToken, async (req: any, res) => {
+    const { projectId, date, time, meetLink } = req.body;
+    if (!projectId || !date || !time || !meetLink) {
+      return res.status(400).json({ error: "Faltan datos de la reunión." });
+    }
+
+    const project = dbInstance.getProjects().find((p) => p.id === projectId);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado. No tiene permisos sobre este proyecto." });
+    }
+    if (project.productType !== "local_lift" || project.localLiftTier !== "ascenso") {
+      return res.status(400).json({ error: "Este proyecto no es un paquete Local Lift Ascenso." });
+    }
+
+    dbInstance.addMeeting({
+      id: `meet-${Date.now()}`,
+      projectId,
+      title: "Ascenso — Sesión de bienvenida",
+      date,
+      time,
+      meetLink,
+      status: "upcoming",
+    });
+
+    dbInstance.updateProject(projectId, {
+      currentPhase: "Implementación asistida",
+      progress: 55,
+      phases: project.phases.map((ph) =>
+        ph.name === "Agenda tu reunión"
+          ? { ...ph, status: "completed" as const }
+          : ph.name === "Implementación asistida"
+            ? { ...ph, status: "active" as const }
+            : ph
+      ),
+    });
+
     await dbInstance.flush();
     res.json({ success: true });
   });

@@ -94,6 +94,7 @@ export interface DbProject {
   // resumen del portal cambia según este campo; facturas, reuniones, cuenta
   // y el panel admin son iguales para todos los productos.
   productType?: "website" | "local_lift";
+  localLiftTier?: "impulso" | "ascenso"; // solo con productType "local_lift" -- gatea la tarjeta de autoagendamiento de la reunión de bienvenida de Ascenso
   currentPhase: string;
   progress: number;
   description: string;

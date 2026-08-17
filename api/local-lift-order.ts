@@ -100,7 +100,7 @@ function buildPaymentConfirmedHtml(params: {
   <div style="padding:12px 32px 0 32px;">
     <p style="font-size:14px;line-height:1.6;color:#475569;margin:0;">${
       tier === "ascenso"
-        ? "Recibimos y confirmamos tu pago. Al ser un paquete Ascenso, uno de nuestros especialistas va a revisar tu ficha de Google personalmente y coordinar contigo por WhatsApp o correo los próximos pasos -- no es un envío automático, así que puede tomar un poco más que un diagnóstico estándar. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
+        ? "Recibimos y confirmamos tu pago. Tu paquete Ascenso incluye una sesión de bienvenida 1:1 para revisar tu ficha de Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu reunión en el horario que prefieras. Por separado, te enviamos otro correo con las credenciales de acceso a ese portal."
         : "Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas 2 horas. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
     }</p>
   </div>
@@ -452,7 +452,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             from: '"Polaris Local Lift" <hola@polarisweb.studio>',
             to: data.email,
             subject: `Pago confirmado — ${data.businessName}`,
-            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Uno de nuestros especialistas va a coordinar contigo los próximos pasos." : "Ya estamos preparando tu paquete real, lo recibirás por este mismo correo en las próximas horas."}`,
+            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Entra a tu portal de cliente para agendar tu sesión de bienvenida 1:1." : "Ya estamos preparando tu paquete real, lo recibirás por este mismo correo en las próximas 2 horas."}`,
             html: buildPaymentConfirmedHtml({
               businessName: data.businessName,
               city: data.city,
