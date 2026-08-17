@@ -434,7 +434,7 @@ export default function LocalLiftPanel() {
           {missingParts.length > 0 && (
             <div className="flex items-start gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />
-              <span>No se pudieron generar estas partes (probá "Generar paquete" de nuevo, solo suele fallar por saturación momentánea del modelo): {missingParts.join(", ")}</span>
+              <span>No se pudieron generar estas partes (intenta "Generar paquete" de nuevo, solo suele fallar por saturación momentánea del modelo): {missingParts.join(", ")}</span>
             </div>
           )}
 
