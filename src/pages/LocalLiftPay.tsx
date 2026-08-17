@@ -14,6 +14,10 @@ const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: strin
   ascenso: { amount: "99", label: "Ascenso", enLabel: "Ascenso" },
 };
 
+function normalizeLocalLiftTier(value: unknown): "impulso" | "ascenso" {
+  return value === "ascenso" || value === "implementado" ? "ascenso" : "impulso";
+}
+
 export default function LocalLiftPay() {
   const { leadId } = useParams<{ leadId: string }>();
   const [searchParams] = useSearchParams();
@@ -45,10 +49,11 @@ export default function LocalLiftPay() {
           setStatus("notfound");
           return;
         }
-        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
+        const normalizedTier = normalizeLocalLiftTier(data.tier);
+        setLead({ ...data, tier: normalizedTier, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
         // URL ?tier param overrides Firestore tier (so CTAs from the diagnosis page work correctly)
         const urlTier = searchParams.get("tier");
-        setSelectedTier(urlTier && TIER_PRICE[urlTier] ? urlTier : (data.tier || "impulso"));
+        setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : normalizedTier);
         setStatus(data.paid ? "paid" : "ready");
       })
       .catch(() => setStatus("notfound"));
@@ -238,6 +243,7 @@ export default function LocalLiftPay() {
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
                     ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
                     ["Una ronda de revisión incluida", "One revision round included"],
@@ -418,6 +424,7 @@ export default function LocalLiftPay() {
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
                     ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
                     ["Una ronda de revisión incluida", "One revision round included"],

@@ -33,6 +33,8 @@ export interface RealReview {
   author: string;
   rating: number;
   text: string;
+  publishTime: string | null;
+  relativePublishTimeDescription: string | null;
 }
 
 export interface PlaceCandidatesPage {
@@ -302,31 +304,45 @@ export async function findPlaceByMapsUrl(mapsUrl: string): Promise<PlaceData | n
   return null;
 }
 
-// Google Places API (New) solo devuelve hasta 5 reseñas reales por ficha,
-// sin importar cuántas tenga el negocio en total -- límite real de la API,
-// no un recorte nuestro. Documentado en el endpoint que lo consume para que
-// no se prometa "15 respuestas a reseñas reales".
-export async function findPlaceReviews(placeId: string, lang: "es" | "en"): Promise<RealReview[]> {
+// Google Places API (New) solo devuelve hasta 5 reseñas por ficha,
+// sin importar cuántas tenga el negocio en total. El parámetro reviews_sort
+// permite solicitar la muestra más reciente; si el endpoint o la cuenta no lo
+// acepta, se conserva un fallback a la respuesta estándar de Google para no
+// romper la generación del paquete.
+export async function findPlaceReviews(
+  placeId: string,
+  lang: "es" | "en",
+  options: { newest?: boolean } = {},
+): Promise<RealReview[]> {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) return [];
 
-  const res = await fetch(
-    `https://places.googleapis.com/v1/places/${placeId}?languageCode=${lang}`,
-    {
-      headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "reviews" },
-      signal: AbortSignal.timeout(8000),
-    }
-  );
-  if (!res.ok) return [];
-  const data = await res.json();
-  const reviews = Array.isArray(data.reviews) ? data.reviews : [];
-  return reviews
+  const baseUrl = `https://places.googleapis.com/v1/places/${placeId}`;
+  const headers = { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": "reviews" };
+  const fetchReviews = async (newest: boolean): Promise<any[] | null> => {
+    const url = new URL(baseUrl);
+    url.searchParams.set("languageCode", lang);
+    if (newest) url.searchParams.set("reviews_sort", "newest");
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data?.reviews) ? data.reviews : [];
+  };
+
+  const rawReviews = await fetchReviews(Boolean(options.newest)) ?? (options.newest ? await fetchReviews(false) : null) ?? [];
+  return rawReviews
     .filter((r: any) => r?.text?.text)
     .map((r: any) => ({
       author: r.authorAttribution?.displayName || "Cliente",
-      rating: r.rating || 0,
+      rating: typeof r.rating === "number" ? r.rating : 0,
       text: String(r.text.text).slice(0, 800),
-    }));
+      publishTime: typeof r.publishTime === "string" ? r.publishTime : null,
+      relativePublishTimeDescription: typeof r.relativePublishTimeDescription === "string" ? r.relativePublishTimeDescription : null,
+    }))
+    .sort((a, b) => {
+      if (!a.publishTime || !b.publishTime) return 0;
+      return new Date(b.publishTime).getTime() - new Date(a.publishTime).getTime();
+    });
 }
 
 // Variante de un solo intento (sin cadena de fallback), pensada para

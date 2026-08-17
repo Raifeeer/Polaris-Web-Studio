@@ -190,11 +190,35 @@ const whatsappHalfSchema = z.object({
     .length(5),
 });
 
+const reviewAnalysisSchema = z.object({
+  headline: z.string().describe("Titular breve que resuma la lectura de la muestra de reseñas, sin prometer resultados."),
+  overview: z.string().describe("Resumen de 2-3 frases sobre lo que expresa la muestra y cómo puede afectar la decisión de futuros clientes."),
+  recurringThemes: z.array(z.object({
+    theme: z.string().describe("Tema recurrente identificado en las reseñas."),
+    evidence: z.string().describe("Evidencia breve basada únicamente en las reseñas proporcionadas."),
+    impact: z.string().describe("Por qué este tema importa para la experiencia o la conversión."),
+  })).min(1).max(4),
+  strengths: z.array(z.string()).min(1).max(4).describe("Fortalezas que conviene conservar y reforzar."),
+  frictionPoints: z.array(z.string()).min(1).max(4).describe("Fricciones o riesgos que conviene atender, sin inventar problemas."),
+  bestPractices: z.array(z.object({
+    title: z.string().describe("Nombre corto de la buena práctica."),
+    action: z.string().describe("Acción concreta y personalizada que el negocio puede aplicar."),
+    why: z.string().describe("Por qué esta acción responde a la evidencia encontrada."),
+  })).min(3).max(5),
+  responseGuidance: z.array(z.string()).min(1).max(4).describe("Orientaciones personalizadas para responder futuras reseñas con coherencia."),
+});
+
 type DescPart = z.infer<typeof descriptionSchema>;
 type PostsHalfPart = z.infer<typeof postsHalfSchema>;
 type RepliesPart = z.infer<typeof repliesSchema>;
 type TemplatesPart = z.infer<typeof templatesSchema>;
 type WhatsappHalfPart = z.infer<typeof whatsappHalfSchema>;
+type ReviewAnalysisPart = z.infer<typeof reviewAnalysisSchema>;
+type PackageTier = "impulso" | "ascenso";
+
+function normalizeTier(value: unknown): PackageTier {
+  return value === "ascenso" || value === "implementado" ? "ascenso" : "impulso";
+}
 
 interface LocalLiftPackage {
   rewrittenDescription: string | null;
@@ -202,15 +226,18 @@ interface LocalLiftPackage {
   googlePosts: PostsHalfPart["googlePosts"] | null;
   reviewReplies: RepliesPart["reviewReplies"] | null;
   reviewReplyTemplates: TemplatesPart["reviewReplyTemplates"] | null;
+  reviewAnalysis: ReviewAnalysisPart | null;
+  reviewAnalysisNote: string | null;
   whatsappMessages: WhatsappHalfPart["whatsappMessages"] | null;
   partialFailure: boolean;
-  errors: Record<"description" | "posts1" | "posts2" | "replies" | "templates" | "whatsapp1" | "whatsapp2", string | null>;
+  errors: Record<"description" | "posts1" | "posts2" | "replies" | "templates" | "reviewAnalysis" | "whatsapp1" | "whatsapp2", string | null>;
 }
 
 async function generatePackage(
   place: NonNullable<Awaited<ReturnType<typeof findPlace>>>,
   reviews: Awaited<ReturnType<typeof findPlaceReviews>>,
   lang: "es" | "en",
+  tier: PackageTier,
   onlyKeys?: Array<keyof LocalLiftPackage["errors"]>
 ): Promise<LocalLiftPackage> {
   const dataBlock = placeDataSummary(place);
@@ -237,6 +264,7 @@ async function generatePackage(
     templates: `${baseHeader}Escribe 5 plantillas breves y genéricas de respuesta a reseñas, una por calificación (1 a 5 estrellas), para reseñas futuras. Todo en ${langInstruction}.`,
     whatsapp1: `${baseHeader}Escribe 5 mensajes breves de WhatsApp de seguimiento para: consulta sin respuesta en 24h, confirmación de reserva/pedido, recordatorio previo a la visita, agradecimiento post-visita, y pedido de reseña. Todo en ${langInstruction}.`,
     whatsapp2: `${baseHeader}Escribe otros 5 mensajes breves de WhatsApp para: reactivación de cliente inactivo, promoción puntual, respuesta a consulta de horario/ubicación, respuesta a consulta de precio, y mensaje de bienvenida a cliente nuevo. No repitas los escenarios de otra tanda (consulta sin respuesta, confirmación, recordatorio, agradecimiento, pedido de reseña). Todo en ${langInstruction}.`,
+    reviewAnalysis: `${baseHeader}Reseñas reales disponibles, ordenadas por fecha cuando Google lo permite (hasta 5, no son el historial completo):\n${reviewsBlock}\n\nRealiza un análisis profundo y honesto de esta muestra para un paquete Ascenso. Identifica temas recurrentes, fortalezas, fricciones y buenas prácticas personalizadas. Basa cada observación únicamente en el texto y la calificación recibidos. Si la muestra es pequeña, dilo con claridad. No inventes problemas, contexto, clientes, fechas, resultados ni promesas de ranking. Las recomendaciones deben ser concretas para este negocio y útiles para mejorar la experiencia y la forma de responder futuras reseñas. Todo en ${langInstruction}.`,
   };
 
   // DeepSeek queda afuera de este endpoint -- probado en vivo varias
@@ -252,6 +280,9 @@ async function generatePackage(
     ["whatsapp1", () => generateFast(whatsappHalfSchema, prompts.whatsapp1, 0.6, "grok")],
     ["whatsapp2", () => generateFast(whatsappHalfSchema, prompts.whatsapp2, 0.6, "gemini")],
   ];
+  if (tier === "ascenso" && reviews.length > 0) {
+    allCalls.push(["reviewAnalysis", () => generateFast(reviewAnalysisSchema, prompts.reviewAnalysis, 0.6, "gemini")]);
+  }
 
   // `onlyKeys` (usado en el reintento automático de piezas fallidas): con
   // muchas menos llamadas corriendo en paralelo hay mucha menos contención
@@ -268,6 +299,7 @@ async function generatePackage(
     templates: templatesSchema,
     whatsapp1: whatsappHalfSchema,
     whatsapp2: whatsappHalfSchema,
+    reviewAnalysis: reviewAnalysisSchema,
   };
   const calls = onlyKeys
     ? onlyKeys.map((key) => [key, () => generateWithFallback(retrySchemas[key], (prompts as any)[key], 0.6)] as [keyof LocalLiftPackage["errors"], () => Promise<any>])
@@ -296,6 +328,8 @@ async function generatePackage(
   const templates = values.templates as TemplatesPart | null;
   const wa1 = values.whatsapp1 as WhatsappHalfPart | null;
   const wa2 = values.whatsapp2 as WhatsappHalfPart | null;
+  const reviewAnalysis = values.reviewAnalysis as ReviewAnalysisPart | null;
+  errors.reviewAnalysis = errors.reviewAnalysis ?? null;
 
   const googlePosts = [...(posts1?.googlePosts || []), ...(posts2?.googlePosts || [])];
   const whatsappMessages = [...(wa1?.whatsappMessages || []), ...(wa2?.whatsappMessages || [])];
@@ -306,6 +340,12 @@ async function generatePackage(
     googlePosts: googlePosts.length > 0 ? googlePosts : null,
     reviewReplies: repliesPart?.reviewReplies ?? null,
     reviewReplyTemplates: templates?.reviewReplyTemplates ?? null,
+    reviewAnalysis: tier === "ascenso" ? reviewAnalysis ?? null : null,
+    reviewAnalysisNote: tier === "ascenso"
+      ? reviews.length > 0
+        ? "Análisis basado en una muestra de hasta cinco reseñas disponibles; no representa el historial completo del negocio."
+        : "Google no devolvió reseñas con texto analizables para este negocio en esta consulta."
+      : null,
     whatsappMessages: whatsappMessages.length > 0 ? whatsappMessages : null,
     partialFailure: Object.values(errors).some((e) => e !== null),
     errors,
@@ -336,18 +376,29 @@ const localLiftLogoHeader = `<p style="text-align:center;margin:0 0 20px 0;"><im
 // fetchPackagePdf/local-lift-package-pdf) -- este cuerpo del correo queda
 // como un mensaje breve que anuncia el adjunto, en vez de volcar todo el
 // contenido en HTML dentro del correo mismo.
-function renderPackageEmailBody(businessName: string, contactName: string | null, lang: "es" | "en"): string {
+function renderPackageEmailBody(
+  businessName: string,
+  contactName: string | null,
+  lang: "es" | "en",
+  tier: PackageTier,
+  pkg: LocalLiftPackage,
+): string {
+  const reviewLine = tier === "ascenso" && pkg.reviewAnalysis
+    ? lang === "en"
+      ? "a recent review reading with personalized best practices"
+      : "una lectura de reseñas recientes con buenas prácticas personalizadas"
+    : "";
   if (lang === "en") {
     return `
       ${localLiftLogoHeader}
       <p>Hi ${contactName || ""},</p>
-      <p>Your Local Lift content package for <strong>${businessName}</strong> is ready — you'll find it attached as a PDF, with everything organized and ready to use: your new business description, services to highlight, Google posts, review replies, templates, and WhatsApp follow-up messages.</p>
+      <p>Your Local Lift content package for <strong>${businessName}</strong> is ready — you'll find it attached as a PDF, with everything organized and ready to use: your new business description, services to highlight, Google posts, review replies, templates, and WhatsApp follow-up messages${reviewLine ? `, plus ${reviewLine}` : ""}.</p>
     `;
   }
   return `
     ${localLiftLogoHeader}
     <p>Hola ${contactName || ""},</p>
-    <p>Tu paquete de contenido Local Lift para <strong>${businessName}</strong> está listo — lo encontrarás adjunto en PDF, con todo organizado y listo para usar: tu nueva descripción del negocio, servicios a destacar, publicaciones para Google, respuestas a reseñas, plantillas y mensajes de WhatsApp de seguimiento.</p>
+    <p>Tu paquete de contenido Local Lift para <strong>${businessName}</strong> está listo — lo encontrarás adjunto en PDF, con todo organizado y listo para usar: tu nueva descripción del negocio, servicios a destacar, publicaciones para Google, respuestas a reseñas, plantillas y mensajes de WhatsApp de seguimiento${reviewLine ? `, además de ${reviewLine}` : ""}.</p>
   `;
 }
 
@@ -356,6 +407,11 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
   const postsCount = pkg.googlePosts?.length || 0;
   const repliesCount = pkg.reviewReplies?.length || 0;
   const waCount = pkg.whatsappMessages?.length || 0;
+  const reviewAnalysisLine = tier === "ascenso" && pkg.reviewAnalysis
+    ? language === "en"
+      ? "A reading of recent available reviews with personalized best practices"
+      : "Lectura de reseñas recientes disponibles con buenas prácticas personalizadas"
+    : "";
   const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
   if (language === "en") {
     return `
@@ -367,6 +423,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
         <li>${postsCount || 10} Google posts ready to publish</li>
         <li>${repliesCount || "Your"} personalized replies to your real reviews</li>
         <li>${waCount || 10} WhatsApp follow-up messages</li>
+        ${reviewAnalysisLine ? `<li>${reviewAnalysisLine}</li>` : ""}
       </ul>
       <p>Complete your payment to receive the full package with all the actual content, ready to use:</p>
       <p><a href="${payUrl}" style="display:inline-block;background:#16C8C1;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pay $${price.amount} and get my package</a></p>
@@ -382,6 +439,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
       <li>${postsCount || 10} publicaciones listas para tu perfil de Google</li>
       <li>${repliesCount || "Tus"} respuestas personalizadas a tus reseñas reales</li>
       <li>${waCount || 10} mensajes de WhatsApp de seguimiento</li>
+      ${reviewAnalysisLine ? `<li>${reviewAnalysisLine}</li>` : ""}
     </ul>
     <p>Completa tu pago para recibir el paquete completo con todo el contenido real, listo para usar:</p>
     <p><a href="${payUrl}" style="display:inline-block;background:#16C8C1;color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:bold;">Pagar $${price.amount} y recibir mi paquete</a></p>
@@ -408,6 +466,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { action, businessName, city, lang, email, contactName, tier, leadId, place: givenPlace, package: givenPackage } = req.body || {};
   const language: "es" | "en" = lang === "en" ? "en" : "es";
+  const requestedTier = normalizeTier(tier);
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
 
   try {
@@ -431,7 +490,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           city: v.city || "",
           contactName: v.contactName || "",
           email: v.email || "",
-          tier: v.tier || "impulso",
+          tier: normalizeTier(v.tier),
           status: v.status || "awaiting_generation",
           paid: !!v.paid,
           source: v.source || "free_diagnostic",
@@ -465,7 +524,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) return res.status(500).json({ error: "ZOHO_PASSWORD no configurado." });
-      const finalTier = lead.tier || tier || "impulso";
+      const finalTier = normalizeTier(lead.tier || tier);
       const transporter = nodemailer.createTransport({
         host: "smtp.zoho.com", port: 465, secure: true,
         auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
@@ -524,7 +583,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 : `¿Quieres que publiquemos esto directo en tu ficha real de Google? <a href="https://polarisweb.studio/local-lift/conectar/${leadId.trim()}">Conecta tu Google Business Profile</a> (opcional, apruebas todo antes de que publiquemos nada).`
             }</p>`
           : "";
-      const finalTier2 = (docRef ? (await docRef.get()).data()?.tier : tier) || tier || "impulso";
+      const finalTier2 = normalizeTier(docRef ? (await docRef.get()).data()?.tier : tier);
       const tierLabelForPdf = TIER_PRICE[finalTier2]?.label || TIER_PRICE["impulso"].label;
       let pdfBuffer: Buffer | null = null;
       try {
@@ -542,7 +601,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
         subject: language === "en" ? `Your Local Lift content package — ${givenPlace.name}` : `Tu paquete de contenido Local Lift — ${givenPlace.name}`,
-        html: `${renderPackageEmailBody(givenPlace.name, contactName || null, language)}${connectCta}`,
+        html: `${renderPackageEmailBody(givenPlace.name, contactName || null, language, finalTier2, givenPackage)}${connectCta}`,
         attachments: pdfBuffer
           ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
           : [],
@@ -583,7 +642,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!givenPlace || !givenPackage) {
         return res.status(400).json({ error: "Falta 'place' o 'package' para la vista previa." });
       }
-      const finalTierPreview = (typeof leadId === "string" && leadId.trim() ? (await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get()).data()?.tier : tier) || tier || "impulso";
+      const finalTierPreview = normalizeTier(typeof leadId === "string" && leadId.trim() ? (await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get()).data()?.tier : tier);
       const tierLabelPreview = TIER_PRICE[finalTierPreview]?.label || TIER_PRICE["impulso"].label;
       let previewPdf: Buffer | null = null;
       try {
@@ -627,8 +686,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       try {
         const place = givenPlace as PlaceData;
-        const reviews = await findPlaceReviews(place.id, language);
-        const retried = await generatePackage(place, reviews, language, failedKeys);
+        const reviews = await findPlaceReviews(place.id, language, { newest: requestedTier === "ascenso" });
+        const retried = await generatePackage(place, reviews, language, requestedTier, failedKeys);
 
         const merged: LocalLiftPackage = {
           ...existingPackage,
@@ -644,6 +703,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             merged.reviewReplies = retried.reviewReplies;
           } else if (key === "templates") {
             merged.reviewReplyTemplates = retried.reviewReplyTemplates;
+          } else if (key === "reviewAnalysis") {
+            merged.reviewAnalysis = retried.reviewAnalysis;
           } else if (key === "posts1" || key === "posts2") {
             const existingPosts = [...(merged.googlePosts || [])];
             while (existingPosts.length < 10) existingPosts.push(null as any);
@@ -766,8 +827,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(404).json({ error: "No se encontró esa ficha en Google. Revisa el nombre y la ciudad." });
     }
 
-    const reviews = await findPlaceReviews(place.id, language);
-    const pkg = await generatePackage(place, reviews, language);
+    const reviews = await findPlaceReviews(place.id, language, { newest: requestedTier === "ascenso" });
+    const pkg = await generatePackage(place, reviews, language, requestedTier);
 
     // Cada generación queda rastreada como un lead -- si viene un leadId
     // existente (lead ya originado por el diagnóstico gratis o un pago
@@ -784,7 +845,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (existing.exists) {
           const v = existing.data()!;
           finalPaid = !!v.paid;
-          await docRef.update({ place, package: pkg, tier: tier || v.tier || "impulso", status: "package_ready", businessName: place.name, city });
+          await docRef.update({ place, package: pkg, tier: requestedTier, status: "package_ready", businessName: place.name, city });
         } else {
           finalLeadId = null; // lead inválido/borrado — cae al branch de creación abajo
         }
@@ -797,7 +858,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           email: email || null,
           place,
           package: pkg,
-          tier: tier || "impulso",
+          tier: requestedTier,
           status: "package_ready",
           paid: false,
           source: "admin_manual",
@@ -809,7 +870,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       console.error("[local-lift-package] Error guardando lead:", dbErr);
     }
 
-    return res.json({ success: true, place, reviews, package: pkg, leadId: finalLeadId, status: finalStatus, paid: finalPaid });
+    return res.json({ success: true, place, reviews, package: pkg, tier: requestedTier, leadId: finalLeadId, status: finalStatus, paid: finalPaid });
   } catch (error: any) {
     console.error("[local-lift-package] Error:", error);
     return res.status(500).json({ error: error?.message || "No se pudo generar/enviar el paquete." });

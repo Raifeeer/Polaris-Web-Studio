@@ -26,12 +26,23 @@ interface GooglePost { title: string; body: string; cta: string; }
 interface ReviewReply { author: string; rating: number; originalText: string; reply: string; }
 interface ReplyTemplate { forRating: number; template: string; }
 interface WhatsappMessage { scenario: string; message: string; }
+interface ReviewAnalysis {
+  headline: string;
+  overview: string;
+  recurringThemes: { theme: string; evidence: string; impact: string }[];
+  strengths: string[];
+  frictionPoints: string[];
+  bestPractices: { title: string; action: string; why: string }[];
+  responseGuidance: string[];
+}
 interface LocalLiftPackage {
   rewrittenDescription: string | null;
   services: string[] | null;
   googlePosts: GooglePost[] | null;
   reviewReplies: ReviewReply[] | null;
   reviewReplyTemplates: ReplyTemplate[] | null;
+  reviewAnalysis: ReviewAnalysis | null;
+  reviewAnalysisNote: string | null;
   whatsappMessages: WhatsappMessage[] | null;
   partialFailure: boolean;
   errors: Record<string, string | null>;
@@ -235,7 +246,7 @@ export default function LocalLiftPanel() {
 
   const [businessName, setBusinessName] = useState("");
   const [city, setCity] = useState("");
-  const [tier, setTier] = useState<"48h" | "implementado">("48h");
+  const [tier, setTier] = useState<"impulso" | "ascenso">("impulso");
   const [genStatus, setGenStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [genError, setGenError] = useState("");
   const [place, setPlace] = useState<PlaceInfo | null>(null);
@@ -301,7 +312,7 @@ export default function LocalLiftPanel() {
     setCity(lead.city);
     setContactName(lead.contactName || "");
     setEmail(lead.email || "");
-    setTier((lead.tier as "48h" | "implementado") || "48h");
+    setTier(lead.tier === "ascenso" || lead.tier === "implementado" ? "ascenso" : "impulso");
     setSelectedLeadPlace(lead.place || null);
     setPlace(null);
     setPkg(null);
@@ -357,7 +368,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "retry_failed_parts", place: currentPlace, existingPackage: currentPkg, leadId: currentLeadId, lang: "es" }),
+        body: JSON.stringify({ action: "retry_failed_parts", place: currentPlace, existingPackage: currentPkg, leadId: currentLeadId, tier, lang: "es" }),
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -584,9 +595,9 @@ export default function LocalLiftPanel() {
         )}
         <input type="text" required placeholder="Nombre del negocio" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]" />
         <input type="text" required placeholder="Ciudad" value={city} onChange={(e) => setCity(e.target.value)} className="glass-input rounded-xl px-4 py-3 text-sm border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]" />
-        <select value={tier} onChange={(e) => setTier(e.target.value as "48h" | "implementado")} className="glass-input rounded-xl px-4 py-3 text-sm border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]">
-          <option value="48h">Impulso ($29)</option>
-          <option value="implementado">Ascenso ($99)</option>
+        <select value={tier} onChange={(e) => setTier(e.target.value as "impulso" | "ascenso")} className="glass-input rounded-xl px-4 py-3 text-sm border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]">
+          <option value="impulso">Impulso ($29)</option>
+          <option value="ascenso">Ascenso ($99)</option>
         </select>
         <button type="submit" disabled={genStatus === "loading"} className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-4 py-3 text-sm font-black text-white disabled:opacity-60">
           {genStatus === "loading" ? (
@@ -679,6 +690,63 @@ export default function LocalLiftPanel() {
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {tier === "ascenso" && pkg.reviewAnalysisNote && !pkg.reviewAnalysis && (
+            <div className="rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-4 text-xs text-[var(--color-text-secondary)]">
+              <p className="font-black text-amber-500">Análisis de reseñas no disponible</p>
+              <p className="mt-1">{pkg.reviewAnalysisNote}</p>
+            </div>
+          )}
+
+          {pkg.reviewAnalysis && (
+            <section className="rounded-xl border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/[0.05] p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">Análisis de reseñas recientes · Ascenso</h2>
+                  <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">Muestra de hasta cinco reseñas disponibles, ordenada por fecha cuando Google lo permite. No representa el historial completo.</p>
+                </div>
+                <Star size={16} className="shrink-0 text-amber-500" fill="currentColor" />
+              </div>
+              <h3 className="mt-4 text-base font-black">{pkg.reviewAnalysis.headline}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{pkg.reviewAnalysis.overview}</p>
+              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-emerald-500">Fortalezas</p>
+                  <ul className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">{pkg.reviewAnalysis.strengths.map((item, i) => <li key={i} className="flex items-start gap-2"><Check size={13} className="mt-0.5 shrink-0 text-emerald-500" />{item}</li>)}</ul>
+                </div>
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-amber-500">Fricciones a atender</p>
+                  <ul className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">{pkg.reviewAnalysis.frictionPoints.map((item, i) => <li key={i} className="flex items-start gap-2"><AlertCircle size={13} className="mt-0.5 shrink-0 text-amber-500" />{item}</li>)}</ul>
+                </div>
+              </div>
+              <div className="mt-5 space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Temas encontrados</p>
+                {pkg.reviewAnalysis.recurringThemes.map((theme, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-3 text-xs">
+                    <p className="font-black">{theme.theme}</p>
+                    <p className="mt-1 text-[var(--color-text-tertiary)]">{theme.evidence}</p>
+                    <p className="mt-1 text-[var(--color-text-secondary)]">{theme.impact}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-5 space-y-2">
+                <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Buenas prácticas personalizadas</p>
+                {pkg.reviewAnalysis.bestPractices.map((practice, i) => (
+                  <div key={i} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-3 text-xs">
+                    <p className="font-black">{i + 1}. {practice.title}</p>
+                    <p className="mt-1 text-[var(--color-text-secondary)]">{practice.action}</p>
+                    <p className="mt-1 italic text-[var(--color-text-tertiary)]">{practice.why}</p>
+                  </div>
+                ))}
+              </div>
+              {pkg.reviewAnalysis.responseGuidance.length > 0 && (
+                <div className="mt-5">
+                  <p className="text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Guía para futuras respuestas</p>
+                  <ul className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">{pkg.reviewAnalysis.responseGuidance.map((item, i) => <li key={i} className="flex items-start gap-2"><ArrowRight size={13} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />{item}</li>)}</ul>
+                </div>
+              )}
             </section>
           )}
 

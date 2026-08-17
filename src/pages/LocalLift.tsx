@@ -185,6 +185,7 @@ const tiers = [
     enCta: "Request implementation",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
+      ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
       ["Llevamos el plan a la práctica contigo", "We put the plan into practice with you"],
       ["Subimos los textos e imágenes que apruebes", "We upload the text and images you approve"],
       ["Una revisión final contigo", "One final review with you"],
