@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Check, CreditCard, Link2, Loader2, Mail, Send, Sparkles } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, Eye, Globe, Link2, Loader2, MapPin, Phone, Send, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import AtlasMark from "../components/AtlasMark";
 
 // Panel interno para generar y enviar el paquete completo del tier
 // "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido tanto acá
@@ -15,11 +16,11 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 // ficha real (sección "Publicar en Google" más abajo, si el lead conectó
 // su cuenta).
 //
-// Cada generación queda rastreada como un "lead" en Firestore (mismo doc
-// tanto si vino del diagnóstico gratis, de un pago directo, o de una
-// búsqueda manual acá). El botón de envío correcto (propuesta con pago vs.
-// paquete completo) depende de si ese lead ya pagó -- gateado server-side,
-// no solo en la UI.
+// Solo aparecen acá leads YA PAGADOS (pedido explícito del usuario, 16 de
+// agosto): el correo gratis de diagnóstico ya invita a pagar por su cuenta,
+// este panel es únicamente para generar/enviar el contenido de quien ya
+// pagó -- un sistema de recordatorios para quien recibió el diagnóstico
+// pero no ha pagado todavía queda como pendiente aparte, no vive acá.
 
 interface GooglePost { title: string; body: string; cta: string; }
 interface ReviewReply { author: string; rating: number; originalText: string; reply: string; }
@@ -35,7 +36,19 @@ interface LocalLiftPackage {
   partialFailure: boolean;
   errors: Record<string, string | null>;
 }
-interface PlaceInfo { name: string; rating: number | null; reviewCount: number; mapsUri: string | null; }
+interface PlaceInfo {
+  name: string;
+  address: string | null;
+  rating: number | null;
+  reviewCount: number;
+  websiteUri: string | null;
+  hasPhone: boolean;
+  hasHours: boolean;
+  editorialSummary: string | null;
+  mapsUri: string | null;
+  primaryType: string | null;
+  photoUrls: string[];
+}
 interface Lead {
   id: string;
   businessName: string;
@@ -48,15 +61,22 @@ interface Lead {
   source: string;
   gbpConnected: boolean;
   createdAt: string | null;
+  sentAt: string | null;
+  place: PlaceInfo | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  diagnostic_sent: "Diagnóstico gratis enviado",
-  awaiting_generation: "Pagado — falta generar",
+  awaiting_generation: "Pagado -- falta generar",
   package_ready: "Paquete generado",
-  teaser_sent: "Propuesta enviada",
   sent: "Paquete completo enviado",
 };
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleString("es-DO", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+}
 
 export default function LocalLiftPanel() {
   const { user, token } = useAuth();
@@ -67,6 +87,7 @@ export default function LocalLiftPanel() {
   const [leadId, setLeadId] = useState<string | null>(null);
   const [leadPaid, setLeadPaid] = useState(false);
   const [leadGbpConnected, setLeadGbpConnected] = useState(false);
+  const [selectedLeadPlace, setSelectedLeadPlace] = useState<PlaceInfo | null>(null);
 
   const [businessName, setBusinessName] = useState("");
   const [city, setCity] = useState("");
@@ -80,8 +101,8 @@ export default function LocalLiftPanel() {
   const [contactName, setContactName] = useState("");
   const [sendStatus, setSendStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [sendError, setSendError] = useState("");
-  const [teaserStatus, setTeaserStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [teaserError, setTeaserError] = useState("");
+  const [previewStatus, setPreviewStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [previewError, setPreviewError] = useState("");
 
   const [gbpLocations, setGbpLocations] = useState<{ accountLocationPath: string; title: string }[] | null>(null);
   const [gbpLocationsStatus, setGbpLocationsStatus] = useState<"idle" | "loading" | "error">("idle");
@@ -111,6 +132,9 @@ export default function LocalLiftPanel() {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
 
+  const pendingLeads = leads.filter((l) => l.status !== "sent");
+  const sentLeads = leads.filter((l) => l.status === "sent");
+
   const loadLead = (lead: Lead) => {
     setLeadId(lead.id);
     setLeadPaid(lead.paid);
@@ -120,11 +144,11 @@ export default function LocalLiftPanel() {
     setContactName(lead.contactName || "");
     setEmail(lead.email || "");
     setTier((lead.tier as "48h" | "implementado") || "48h");
+    setSelectedLeadPlace(lead.place || null);
     setPlace(null);
     setPkg(null);
     setGenStatus("idle");
     setSendStatus("idle");
-    setTeaserStatus("idle");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -135,7 +159,6 @@ export default function LocalLiftPanel() {
     setGenError("");
     setPkg(null);
     setSendStatus("idle");
-    setTeaserStatus("idle");
     try {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
@@ -160,27 +183,29 @@ export default function LocalLiftPanel() {
     }
   };
 
-  const handleSendTeaser = async () => {
-    if (!leadId) return;
-    setTeaserStatus("loading");
-    setTeaserError("");
+  const handlePreviewPdf = async () => {
+    if (!place || !pkg) return;
+    setPreviewStatus("loading");
+    setPreviewError("");
     try {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "send_teaser", leadId, email, contactName, tier, lang: "es" }),
+        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: pkg, tier, lang: "es" }),
       });
-      const data = await res.json();
       if (!res.ok) {
-        setTeaserError(data.error || "No se pudo enviar la propuesta.");
-        setTeaserStatus("error");
+        const data = await res.json().catch(() => ({}));
+        setPreviewError(data.error || "No se pudo generar la vista previa.");
+        setPreviewStatus("error");
         return;
       }
-      setTeaserStatus("done");
-      loadLeads();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setPreviewStatus("idle");
     } catch {
-      setTeaserError("Algo salió mal al enviar. Intenta de nuevo.");
-      setTeaserStatus("error");
+      setPreviewError("Algo salió mal generando la vista previa.");
+      setPreviewStatus("error");
     }
   };
 
@@ -262,45 +287,93 @@ export default function LocalLiftPanel() {
         .map(([k]) => k)
     : [];
 
+  const renderLeadRow = (l: Lead) => (
+    <button
+      key={l.id}
+      onClick={() => loadLead(l)}
+      className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[var(--color-surface-elevated)] transition-colors ${leadId === l.id ? "bg-[var(--color-primary-base)]/10" : ""}`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-black">{l.businessName || "(sin nombre)"} <span className="font-normal text-[var(--color-text-tertiary)]">· {l.city}</span></span>
+        {l.gbpConnected && <span className="inline-flex items-center gap-1 text-indigo-500 font-bold shrink-0"><Link2 size={11} /> Google conectado</span>}
+      </div>
+      <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 text-[var(--color-text-tertiary)]">
+        <span>{l.contactName}</span>
+        {l.email && <span>· {l.email}</span>}
+        <span>· {STATUS_LABEL[l.status] || l.status}</span>
+      </div>
+      <div className="mt-0.5 text-[10px] text-[var(--color-text-tertiary)]">
+        Recibido {formatDateTime(l.createdAt)}
+        {l.sentAt && <> · Enviado {formatDateTime(l.sentAt)}</>}
+      </div>
+    </button>
+  );
+
   return (
     <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)] px-4 sm:px-8 py-10 max-w-4xl mx-auto">
       <Link to="/dashboard" className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]">← Volver al portal</Link>
       <h1 className="mt-3 text-2xl md:text-4xl font-display font-black tracking-[-0.03em]">Panel Local Lift</h1>
-      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido del tier pago y envíalo — primero como propuesta (sin el contenido exacto, con botón de pago) si el cliente todavía no pagó, o directo como paquete completo si ya pagó.</p>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido real del paquete que compró cada cliente (revisa la ficha de su negocio, previsualiza el PDF) y envíaselo por correo. Solo aparecen acá los leads que ya pagaron.</p>
 
-      <section className="mt-8">
-        <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Leads recientes</h2>
-        {leadsLoading ? (
-          <div className="mt-3 flex items-center gap-2 text-xs text-[var(--color-text-tertiary)]"><Loader2 size={14} className="animate-spin" /> Cargando...</div>
-        ) : leads.length === 0 ? (
-          <p className="mt-3 text-xs text-[var(--color-text-tertiary)]">Sin leads todavía.</p>
-        ) : (
-          <div className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border-subtle)] divide-y divide-[var(--color-border-subtle)]">
-            {leads.map((l) => (
-              <button
-                key={l.id}
-                onClick={() => loadLead(l)}
-                className={`w-full text-left px-4 py-2.5 text-xs hover:bg-[var(--color-surface-elevated)] transition-colors ${leadId === l.id ? "bg-[var(--color-primary-base)]/10" : ""}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-black">{l.businessName || "(sin nombre)"} <span className="font-normal text-[var(--color-text-tertiary)]">· {l.city}</span></span>
-                  <span className="flex items-center gap-2">
-                    {l.gbpConnected && <span className="inline-flex items-center gap-1 text-indigo-500 font-bold"><Link2 size={11} /> Google conectado</span>}
-                    {l.paid && <span className="inline-flex items-center gap-1 text-emerald-500 font-bold"><CreditCard size={11} /> Pagado</span>}
-                  </span>
-                </div>
-                <div className="mt-0.5 text-[var(--color-text-tertiary)]">{l.contactName} {l.email && `· ${l.email}`} · {STATUS_LABEL[l.status] || l.status}</div>
-              </button>
-            ))}
+      <section className="mt-8 space-y-6">
+        <div>
+          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Por enviar</h2>
+          {leadsLoading ? (
+            <div className="mt-3 flex items-center gap-2 text-xs text-[var(--color-text-tertiary)]"><Loader2 size={14} className="animate-spin" /> Cargando...</div>
+          ) : pendingLeads.length === 0 ? (
+            <p className="mt-3 text-xs text-[var(--color-text-tertiary)]">Nada pendiente de enviar.</p>
+          ) : (
+            <div className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border-subtle)] divide-y divide-[var(--color-border-subtle)]">
+              {pendingLeads.map(renderLeadRow)}
+            </div>
+          )}
+        </div>
+
+        {sentLeads.length > 0 && (
+          <div>
+            <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Ya enviados</h2>
+            <div className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border-subtle)] divide-y divide-[var(--color-border-subtle)]">
+              {sentLeads.map(renderLeadRow)}
+            </div>
           </div>
         )}
       </section>
 
+      {selectedLeadPlace && (
+        <div className="mt-8 max-w-xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5">
+          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Ficha real del negocio</h2>
+          {selectedLeadPlace.photoUrls.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
+              {selectedLeadPlace.photoUrls.slice(0, 6).map((url) => (
+                <img key={url} src={url} alt="" className="h-20 w-20 rounded-lg object-cover shrink-0 border border-[var(--color-border-subtle)]" />
+              ))}
+            </div>
+          )}
+          <div className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
+            {selectedLeadPlace.address && (
+              <p className="flex items-start gap-1.5"><MapPin size={13} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" /> {selectedLeadPlace.address}</p>
+            )}
+            {selectedLeadPlace.rating != null && (
+              <p className="flex items-center gap-1.5"><Star size={13} className="text-amber-400 fill-amber-400" /> {selectedLeadPlace.rating.toFixed(1)} · {selectedLeadPlace.reviewCount} reseñas</p>
+            )}
+            {selectedLeadPlace.websiteUri && (
+              <p className="flex items-center gap-1.5"><Globe size={13} className="text-[var(--color-primary-base)]" /> <a href={selectedLeadPlace.websiteUri} target="_blank" rel="noreferrer" className="underline">{selectedLeadPlace.websiteUri}</a></p>
+            )}
+            <p className="flex items-center gap-1.5"><Phone size={13} className={selectedLeadPlace.hasPhone ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"} /> {selectedLeadPlace.hasPhone ? "Tiene teléfono público" : "Sin teléfono público"}</p>
+            {selectedLeadPlace.primaryType && <p>Tipo: {selectedLeadPlace.primaryType}</p>}
+            {selectedLeadPlace.editorialSummary && <p className="italic">"{selectedLeadPlace.editorialSummary}"</p>}
+            {selectedLeadPlace.mapsUri && (
+              <a href={selectedLeadPlace.mapsUri} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 mt-1 text-[var(--color-primary-base)] font-bold">Ver en Google Maps <ArrowRight size={12} /></a>
+            )}
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleGenerate} className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
         {leadId && (
           <div className="sm:col-span-2 flex items-center justify-between text-xs text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] rounded-lg px-3 py-2">
-            <span>Lead cargado — puedes corregir cualquier campo antes de generar.</span>
-            <button type="button" onClick={() => { setLeadId(null); setLeadPaid(false); setBusinessName(""); setCity(""); setContactName(""); setEmail(""); setPlace(null); setPkg(null); }} className="font-bold text-[var(--color-primary-base)]">Nuevo</button>
+            <span>Lead cargado -- puedes corregir cualquier campo antes de generar.</span>
+            <button type="button" onClick={() => { setLeadId(null); setLeadPaid(false); setBusinessName(""); setCity(""); setContactName(""); setEmail(""); setPlace(null); setPkg(null); setSelectedLeadPlace(null); }} className="font-bold text-[var(--color-primary-base)]">Nuevo</button>
           </div>
         )}
         <input type="text" required placeholder="Nombre del negocio" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]" />
@@ -310,7 +383,7 @@ export default function LocalLiftPanel() {
           <option value="implementado">Ascenso ($99)</option>
         </select>
         <button type="submit" disabled={genStatus === "loading"} className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-4 py-3 text-sm font-black text-white disabled:opacity-60">
-          {genStatus === "loading" ? <><Loader2 size={16} className="animate-spin" />Generando...</> : <><Sparkles size={16} />Generar paquete</>}
+          {genStatus === "loading" ? <><Loader2 size={16} className="animate-spin" />Generando...</> : <><AtlasMark variant="isotipo" label="Atlas" className="h-4 w-4" />Generar paquete</>}
         </button>
       </form>
 
@@ -324,7 +397,6 @@ export default function LocalLiftPanel() {
         <div className="mt-10 space-y-8">
           <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
             <Check size={15} /> {place.name} {place.reviewCount ? `· ${place.reviewCount} reseñas` : ""}
-            {leadPaid && <span className="inline-flex items-center gap-1 text-[var(--color-text-tertiary)] font-normal normal-case"><CreditCard size={12} /> Ya pagado</span>}
             {leadGbpConnected && <span className="inline-flex items-center gap-1 text-[var(--color-text-tertiary)] font-normal normal-case"><Link2 size={12} /> Google conectado</span>}
           </div>
 
@@ -402,24 +474,18 @@ export default function LocalLiftPanel() {
               <input type="email" placeholder="Correo del cliente" value={email} onChange={(e) => setEmail(e.target.value)} className="glass-input rounded-lg px-3 py-2 text-sm border border-[var(--color-border-subtle)] outline-none" />
             </div>
 
-            {!leadPaid ? (
-              <>
-                <button onClick={handleSendTeaser} disabled={teaserStatus === "loading" || !email.trim() || !leadId} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">
-                  {teaserStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando propuesta...</> : <><Mail size={15} />Enviar propuesta (con botón de pago)<ArrowRight size={15} /></>}
-                </button>
-                <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">El cliente recibe los highlights del paquete y un enlace de pago — el contenido exacto solo se manda después de que pague.</p>
-                {teaserStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Propuesta enviada a {email}.</p>}
-                {teaserStatus === "error" && <p className="mt-2 text-xs text-red-400">{teaserError}</p>}
-              </>
-            ) : (
-              <>
-                <button onClick={handleSend} disabled={sendStatus === "loading" || !email.trim()} className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">
-                  {sendStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando...</> : <><Send size={15} />Enviar paquete completo<ArrowRight size={15} /></>}
-                </button>
-                {sendStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Enviado a {email}.</p>}
-                {sendStatus === "error" && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
-              </>
-            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button onClick={handlePreviewPdf} disabled={previewStatus === "loading"} className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 disabled:opacity-50">
+                {previewStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Generando vista previa...</> : <><Eye size={15} />Vista previa PDF</>}
+              </button>
+              <button onClick={handleSend} disabled={sendStatus === "loading" || !email.trim()} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">
+                {sendStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando...</> : <><Send size={15} />Enviar paquete completo<ArrowRight size={15} /></>}
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">Revisa la vista previa antes de mandarlo. Si no te convence, corrige y vuelve a "Generar paquete" -- cada vista previa usa el contenido más reciente.</p>
+            {previewStatus === "error" && <p className="mt-2 text-xs text-red-400">{previewError}</p>}
+            {sendStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Enviado a {email}.</p>}
+            {sendStatus === "error" && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
           </section>
 
           {leadGbpConnected && (

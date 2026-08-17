@@ -382,10 +382,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (action === "leads") {
-      // Lista de leads recientes (gratis + pagos directos) para el panel --
-      // el mismo middleware admin de server.ts ya protege esta ruta entera.
+      // Solo leads YA PAGADOS -- pedido explícito del usuario (16 de agosto):
+      // el correo gratis de diagnóstico ya invita a pagar por su cuenta, este
+      // panel es únicamente para generar/enviar el contenido de quien ya
+      // pagó, no para "proponerle" nada a quien todavía no lo hizo (eso
+      // sería un sistema de recordatorios aparte, no implementado todavía).
       const snap = await firestore
         .collection("localLiftDiagnostics")
+        .where("paid", "==", true)
         .orderBy("createdAt", "desc")
         .limit(50)
         .get();
@@ -398,11 +402,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           contactName: v.contactName || "",
           email: v.email || "",
           tier: v.tier || "impulso",
-          status: v.status || "diagnostic_sent",
+          status: v.status || "awaiting_generation",
           paid: !!v.paid,
           source: v.source || "free_diagnostic",
           gbpConnected: !!v.gbp?.refreshToken,
           createdAt: v.createdAt?.toDate?.() || null,
+          sentAt: v.sentAt?.toDate?.() || null,
+          place: v.placeData || null,
         };
       });
       return res.json({ success: true, leads });
@@ -537,6 +543,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
       }
       return res.json({ success: true, sent: true });
+    }
+
+    if (action === "preview_pdf") {
+      // Genera el PDF real con el contenido actual, para que el admin lo vea
+      // ANTES de decidir enviarlo -- nunca manda correo ni toca el lead.
+      // Si no le gusta, vuelve a "Generar paquete" y pide otra vista previa.
+      if (!givenPlace || !givenPackage) {
+        return res.status(400).json({ error: "Falta 'place' o 'package' para la vista previa." });
+      }
+      const finalTierPreview = (typeof leadId === "string" && leadId.trim() ? (await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get()).data()?.tier : tier) || tier || "impulso";
+      const tierLabelPreview = TIER_PRICE[finalTierPreview]?.label || TIER_PRICE["impulso"].label;
+      let previewPdf: Buffer | null = null;
+      try {
+        previewPdf = await fetchPackagePdf({
+          businessName: givenPlace.name,
+          tierLabel: tierLabelPreview,
+          lang: language,
+          pkg: givenPackage,
+        });
+      } catch (pdfErr) {
+        console.error("[local-lift-package] Error generando vista previa del PDF:", pdfErr);
+      }
+      if (!previewPdf) return res.status(500).json({ error: "No pudimos generar la vista previa." });
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "inline; filename=\"vista-previa.pdf\"");
+      return res.status(200).send(previewPdf);
     }
 
     if (action === "download_pdf") {
