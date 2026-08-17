@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Link2, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Send, Star, User, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Link2, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Send, Star, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import ImageLightbox from "../components/ImageLightbox";
@@ -238,6 +238,7 @@ export default function LocalLiftPanel() {
 
   const [leads, setLeads] = useState<Lead[]>([]);
   const [leadsLoading, setLeadsLoading] = useState(true);
+  const [leadSearch, setLeadSearch] = useState("");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [leadPaid, setLeadPaid] = useState(false);
   const [leadGbpConnected, setLeadGbpConnected] = useState(false);
@@ -301,8 +302,26 @@ export default function LocalLiftPanel() {
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/dashboard" replace />;
 
-  const pendingLeads = leads.filter((l) => l.status !== "sent");
-  const sentLeads = leads.filter((l) => l.status === "sent");
+  const normalizedLeadSearch = leadSearch.trim().toLocaleLowerCase();
+  const sortedLeads = [...leads].sort((a, b) => {
+    const aTime = Date.parse(a.createdAt || "");
+    const bTime = Date.parse(b.createdAt || "");
+    return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+  });
+  const filteredLeads = sortedLeads.filter((lead) => {
+    if (!normalizedLeadSearch) return true;
+    const searchable = [
+      lead.businessName,
+      lead.city,
+      lead.contactName,
+      lead.email,
+      lead.tier,
+      lead.place?.primaryType,
+    ].filter(Boolean).join(" ").toLocaleLowerCase();
+    return searchable.includes(normalizedLeadSearch);
+  });
+  const pendingLeads = filteredLeads.filter((l) => l.status !== "sent");
+  const sentLeads = filteredLeads.filter((l) => l.status === "sent");
 
   const loadLead = (lead: Lead) => {
     setLeadId(lead.id);
@@ -531,12 +550,40 @@ export default function LocalLiftPanel() {
       <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido real del paquete que compró cada cliente (revisa la ficha de su negocio, previsualiza el PDF) y envíaselo por correo. Solo aparecen acá los leads que ya pagaron.</p>
 
       <section className="mt-8 space-y-6">
+        <div className="max-w-xl">
+          <label htmlFor="local-lift-lead-search" className="sr-only">Buscar leads</label>
+          <div className="relative">
+            <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
+            <input
+              id="local-lift-lead-search"
+              type="search"
+              value={leadSearch}
+              onChange={(e) => setLeadSearch(e.target.value)}
+              placeholder="Buscar por negocio, ciudad, contacto o correo"
+              className="glass-input w-full rounded-xl border border-[var(--color-border-subtle)] py-3 pl-11 pr-10 text-sm outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+            />
+            {leadSearch && (
+              <button
+                type="button"
+                onClick={() => setLeadSearch("")}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)]"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+          <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">
+            {normalizedLeadSearch ? `Mostrando ${filteredLeads.length} de ${leads.length} leads` : `${leads.length} leads · los más recientes aparecen primero`}
+          </p>
+        </div>
+
         <div>
-          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Por enviar</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Por enviar{pendingLeads.length > 0 ? ` (${pendingLeads.length})` : ""}</h2>
           {leadsLoading ? (
             <div className="mt-3 flex items-center gap-2 text-xs text-[var(--color-text-tertiary)]"><Loader2 size={14} className="animate-spin" /> Cargando...</div>
           ) : pendingLeads.length === 0 ? (
-            <p className="mt-3 text-xs text-[var(--color-text-tertiary)]">Nada pendiente de enviar.</p>
+            <p className="mt-3 text-xs text-[var(--color-text-tertiary)]">{normalizedLeadSearch ? "No hay leads que coincidan con la búsqueda." : "Nada pendiente de enviar."}</p>
           ) : (
             <div className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border-subtle)] divide-y divide-[var(--color-border-subtle)]">
               {pendingLeads.map(renderLeadRow)}
@@ -546,7 +593,7 @@ export default function LocalLiftPanel() {
 
         {sentLeads.length > 0 && (
           <div>
-            <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Ya enviados</h2>
+            <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Ya enviados ({sentLeads.length})</h2>
             <div className="mt-3 max-h-64 overflow-y-auto rounded-xl border border-[var(--color-border-subtle)] divide-y divide-[var(--color-border-subtle)]">
               {sentLeads.map(renderLeadRow)}
             </div>
