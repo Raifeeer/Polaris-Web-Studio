@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Check, Eye, Globe, Link2, Loader2, MapPin, Phone, Send, Star } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Link2, Loader2, Mail, MapPin, Phone, Send, Star, User } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import ImageLightbox from "../components/ImageLightbox";
@@ -293,29 +293,38 @@ export default function LocalLiftPanel() {
     <button
       key={l.id}
       onClick={() => loadLead(l)}
-      className={`w-full text-left px-4 py-3 text-xs hover:bg-[var(--color-surface-elevated)] transition-colors ${leadId === l.id ? "bg-[var(--color-primary-base)]/10" : ""}`}
+      className={`w-full text-left px-4 py-3.5 text-xs hover:bg-[var(--color-surface-elevated)] transition-colors ${leadId === l.id ? "bg-[var(--color-primary-base)]/10" : ""}`}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-black text-sm">{l.businessName || "(sin nombre)"}</span>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide ${
-          l.status === "sent" ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"
-        }`}>
-          {STATUS_LABEL[l.status] || l.status}
-        </span>
-      </div>
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-0.5 text-[var(--color-text-tertiary)]">{l.city}</span>
-        {l.contactName && <span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-0.5 text-[var(--color-text-tertiary)]">{l.contactName}</span>}
-        {l.gbpConnected && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-0.5 font-bold text-indigo-500">
-            <Link2 size={10} /> Google conectado
+        {l.status === "sent" ? (
+          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-emerald-500">
+            <CheckCircle2 size={12} /> Enviado
+          </span>
+        ) : (
+          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-amber-500">
+            <Clock size={12} /> Por enviar
           </span>
         )}
       </div>
-      {l.email && <div className="mt-1 text-[var(--color-text-tertiary)]">{l.email}</div>}
-      <div className="mt-1 text-[10px] text-[var(--color-text-tertiary)]">
-        Recibido {formatDateTime(l.createdAt)}
-        {l.sentAt && <> · Enviado {formatDateTime(l.sentAt)}</>}
+      <div className="mt-2 space-y-1 text-[var(--color-text-tertiary)]">
+        <div className="flex items-center gap-1.5"><MapPin size={12} className="shrink-0 text-[var(--color-primary-base)]" /> {l.city}</div>
+        {l.place?.primaryType && (
+          <div className="flex items-center gap-1.5"><Building2 size={12} className="shrink-0 text-[var(--color-primary-base)]" /> {l.place.primaryType}</div>
+        )}
+        {l.contactName && (
+          <div className="flex items-center gap-1.5"><User size={12} className="shrink-0 text-[var(--color-primary-base)]" /> {l.contactName}</div>
+        )}
+        {l.email && (
+          <div className="flex items-center gap-1.5 break-all"><Mail size={12} className="shrink-0 text-[var(--color-primary-base)]" /> {l.email}</div>
+        )}
+        {l.gbpConnected && (
+          <div className="flex items-center gap-1.5 font-bold text-indigo-500"><Link2 size={12} className="shrink-0" /> Google conectado</div>
+        )}
+        <div className="flex items-center gap-1.5"><Clock size={12} className="shrink-0" /> Recibido {formatDateTime(l.createdAt)}</div>
+        {l.sentAt && (
+          <div className="flex items-center gap-1.5"><Send size={12} className="shrink-0" /> Enviado {formatDateTime(l.sentAt)}</div>
+        )}
       </div>
     </button>
   );
