@@ -413,14 +413,32 @@ export async function generateWithFallback<S extends z.ZodTypeAny>(
   throw lastError instanceof Error ? lastError : new Error("Los 3 modelos fallaron");
 }
 
+// Versión corta del sitio web real (sin query string/UTMs ni hash) -- el
+// sitio web real de un negocio suele venir con parámetros de tracking
+// larguísimos (ej. "?src=corp_lclb_google_seo_drecc&utm_source=google&...")
+// que, pegados tal cual en un mensaje de WhatsApp, se ven rotos y espantan
+// al cliente. El modelo recibe esta versión limpia para usar cuando de
+// verdad hace falta un link clickeable (encontrado en vivo, 16 de agosto).
+export function shortWebsiteUri(websiteUri: string | null): string | null {
+  if (!websiteUri) return null;
+  try {
+    const u = new URL(websiteUri);
+    const path = u.pathname === "/" ? "" : u.pathname.replace(/\/$/, "");
+    return `${u.origin}${path}`;
+  } catch {
+    return websiteUri;
+  }
+}
+
 export function placeDataSummary(place: PlaceData): string {
+  const shortUrl = shortWebsiteUri(place.websiteUri);
   return `
 Nombre real: ${place.name}
 Dirección: ${place.address || "no disponible"}
 Categoría: ${place.primaryType || "no especificada"}
 Calificación: ${place.rating !== null ? `${place.rating}/5` : "sin calificación"}
 Cantidad de reseñas: ${place.reviewCount}
-Tiene sitio web: ${place.hasWebsite ? `sí (${place.websiteUri})` : "no"}
+Tiene sitio web: ${place.hasWebsite ? `sí (link corto para usar si hace falta: ${shortUrl})` : "no"}
 Tiene teléfono visible: ${place.hasPhone ? "sí" : "no"}
 Tiene horario cargado: ${place.hasHours ? "sí" : "no"}
 Cantidad de fotos: ${place.photoCount} (${place.photoUrls.length} disponibles para mostrar)

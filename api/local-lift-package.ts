@@ -218,7 +218,7 @@ async function generatePackage(
   // cientos de caracteres en un mensaje que se manda por WhatsApp real. El
   // campo `cta` de las publicaciones ya cubre la acción real, y un mensaje
   // de WhatsApp no necesita un link con tracking pegado.
-  const noUrlsInstruction = "Nunca pegues una URL/enlace completo dentro del texto -- si hace falta mencionar el sitio web, dilo en palabras ('visita nuestro sitio web', 'escríbenos'), sin pegar el link real.";
+  const noUrlsInstruction = "Si un mensaje de WhatsApp necesita un link clickeable (ej. para que el cliente lo reenvíe), usa ÚNICAMENTE el 'link corto' de la ficha de arriba, tal cual, nunca inventes uno ni le agregues parámetros. Para publicaciones de Google no hace falta pegar ningún link -- ya tienen su propio botón de acción (cta).";
   const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n${noUrlsInstruction}\n\n`;
 
   const reviewsBlock =
@@ -591,7 +591,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const place = givenPlace as PlaceData;
       const dataBlock = placeDataSummary(place);
       const langInstruction = language === "en" ? "inglés" : "español neutro, sin voseo";
-      const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\nNunca pegues una URL/enlace completo dentro del texto -- si hace falta mencionar el sitio web, dilo en palabras ('visita nuestro sitio web', 'escríbenos'), sin pegar el link real.\n\n`;
+      const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\nSi un mensaje de WhatsApp necesita un link clickeable (ej. para que el cliente lo reenvíe), usa ÚNICAMENTE el 'link corto' de la ficha de arriba, tal cual, nunca inventes uno ni le agregues parámetros. Para publicaciones de Google no hace falta pegar ningún link, ya tienen su propio botón de acción (cta).\n\n`;
       const instructionLine = typeof instruction === "string" && instruction.trim()
         ? `Instrucción real del admin sobre qué cambiar: "${instruction.trim()}". Aplícala tal cual, sin ignorarla.`
         : "No hay instrucción puntual: genera una alternativa igual de buena, distinta a la actual.";
