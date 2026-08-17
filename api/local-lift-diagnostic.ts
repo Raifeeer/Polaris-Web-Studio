@@ -122,7 +122,7 @@ const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvet
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#16c8c1"; // teal de Local Lift
 const DEEP = "#111936"; // navy de Local Lift
-const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v1.png";
+const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v2.png";
 const PREVIEW_PROBLEM_COUNT = 2;
 const PREVIEW_PLAN_DAY_COUNT = 3;
 
