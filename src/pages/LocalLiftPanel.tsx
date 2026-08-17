@@ -3,7 +3,6 @@ import { Navigate, Link } from "react-router-dom";
 import { AlertCircle, ArrowRight, Check, Eye, Globe, Link2, Loader2, MapPin, Phone, Send, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import AtlasMark from "../components/AtlasMark";
 
 // Panel interno para generar y enviar el paquete completo del tier
 // "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido tanto acá
@@ -66,7 +65,7 @@ interface Lead {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  awaiting_generation: "Pagado -- falta generar",
+  awaiting_generation: "Pagado, falta generar",
   package_ready: "Paquete generado",
   sent: "Paquete completo enviado",
 };
@@ -372,7 +371,7 @@ export default function LocalLiftPanel() {
       <form onSubmit={handleGenerate} className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
         {leadId && (
           <div className="sm:col-span-2 flex items-center justify-between text-xs text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] rounded-lg px-3 py-2">
-            <span>Lead cargado -- puedes corregir cualquier campo antes de generar.</span>
+            <span>Lead cargado, puedes corregir cualquier campo antes de generar.</span>
             <button type="button" onClick={() => { setLeadId(null); setLeadPaid(false); setBusinessName(""); setCity(""); setContactName(""); setEmail(""); setPlace(null); setPkg(null); setSelectedLeadPlace(null); }} className="font-bold text-[var(--color-primary-base)]">Nuevo</button>
           </div>
         )}
@@ -383,7 +382,16 @@ export default function LocalLiftPanel() {
           <option value="implementado">Ascenso ($99)</option>
         </select>
         <button type="submit" disabled={genStatus === "loading"} className="sm:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-4 py-3 text-sm font-black text-white disabled:opacity-60">
-          {genStatus === "loading" ? <><Loader2 size={16} className="animate-spin" />Generando...</> : <><AtlasMark variant="isotipo" label="Atlas" className="h-4 w-4" />Generar paquete</>}
+          {genStatus === "loading" ? (
+            <><Loader2 size={16} className="animate-spin" />Generando...</>
+          ) : (
+            <>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white shrink-0">
+                <img src="/brand/atlas-isotipo-black.svg" alt="" aria-hidden="true" className="h-3.5 w-3.5" />
+              </span>
+              Generar paquete
+            </>
+          )}
         </button>
       </form>
 
@@ -482,7 +490,7 @@ export default function LocalLiftPanel() {
                 {sendStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando...</> : <><Send size={15} />Enviar paquete completo<ArrowRight size={15} /></>}
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">Revisa la vista previa antes de mandarlo. Si no te convence, corrige y vuelve a "Generar paquete" -- cada vista previa usa el contenido más reciente.</p>
+            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">Revisa la vista previa antes de mandarlo. Si no te convence, corrige y vuelve a "Generar paquete": cada vista previa usa el contenido más reciente.</p>
             {previewStatus === "error" && <p className="mt-2 text-xs text-red-400">{previewError}</p>}
             {sendStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Enviado a {email}.</p>}
             {sendStatus === "error" && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
@@ -491,7 +499,7 @@ export default function LocalLiftPanel() {
           {leadGbpConnected && (
             <section className="rounded-xl bg-[var(--color-surface-elevated)] p-5 max-w-xl border border-indigo-500/20">
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><Link2 size={14} /> Publicar en Google (Ascenso)</h2>
-              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">Este lead conectó su cuenta real de Google. Publicar acá va directo a su ficha pública -- revisa cada post antes de mandarlo.</p>
+              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">Este lead conectó su cuenta real de Google. Publicar acá va directo a su ficha pública, revisa cada post antes de mandarlo.</p>
 
               {!gbpLocations && (
                 <button onClick={loadGbpLocations} disabled={gbpLocationsStatus === "loading"} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 px-4 py-2 text-xs font-bold text-indigo-400 disabled:opacity-50">
