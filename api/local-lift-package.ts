@@ -210,7 +210,8 @@ interface LocalLiftPackage {
 async function generatePackage(
   place: NonNullable<Awaited<ReturnType<typeof findPlace>>>,
   reviews: Awaited<ReturnType<typeof findPlaceReviews>>,
-  lang: "es" | "en"
+  lang: "es" | "en",
+  onlyKeys?: Array<keyof LocalLiftPackage["errors"]>
 ): Promise<LocalLiftPackage> {
   const dataBlock = placeDataSummary(place);
   const langInstruction = lang === "en" ? "inglés" : "español neutro, sin voseo";
@@ -242,7 +243,7 @@ async function generatePackage(
   // rondas: falló la enorme mayoría de las veces que se usó acá (con o sin
   // concurrencia), mientras Grok y Gemini toleraron bien 3-4 llamados
   // paralelos cada uno. Repartido entre esos dos únicamente.
-  const calls: Array<[keyof LocalLiftPackage["errors"], () => Promise<any>]> = [
+  const allCalls: Array<[keyof LocalLiftPackage["errors"], () => Promise<any>]> = [
     ["description", () => generateFast(descriptionSchema, prompts.description, 0.6, "gemini")],
     ["posts1", () => generateFast(postsHalfSchema, prompts.posts1, 0.6, "grok")],
     ["posts2", () => generateFast(postsHalfSchema, prompts.posts2, 0.6, "gemini")],
@@ -251,6 +252,26 @@ async function generatePackage(
     ["whatsapp1", () => generateFast(whatsappHalfSchema, prompts.whatsapp1, 0.6, "grok")],
     ["whatsapp2", () => generateFast(whatsappHalfSchema, prompts.whatsapp2, 0.6, "gemini")],
   ];
+
+  // `onlyKeys` (usado en el reintento automático de piezas fallidas): con
+  // muchas menos llamadas corriendo en paralelo hay mucha menos contención
+  // real por proveedor, así que se usa `generateWithFallback` (encadena los
+  // 3 proveedores en serie, hasta 25s cada uno) en vez de `generateFast` --
+  // el presupuesto de 10s de Vercel Hobby ya no aplica igual porque esta
+  // ronda corre en una invocación aparte de la función, con 1-2 piezas
+  // nada más, así que sí cabe encadenar reintentos reales entre proveedores.
+  const retrySchemas: Record<keyof LocalLiftPackage["errors"], any> = {
+    description: descriptionSchema,
+    posts1: postsHalfSchema,
+    posts2: postsHalfSchema,
+    replies: repliesSchema,
+    templates: templatesSchema,
+    whatsapp1: whatsappHalfSchema,
+    whatsapp2: whatsappHalfSchema,
+  };
+  const calls = onlyKeys
+    ? onlyKeys.map((key) => [key, () => generateWithFallback(retrySchemas[key], (prompts as any)[key], 0.6)] as [keyof LocalLiftPackage["errors"], () => Promise<any>])
+    : allCalls;
 
   const results = await Promise.allSettled(calls.map(([, fn]) => fn()));
 
@@ -580,6 +601,77 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", "inline; filename=\"vista-previa.pdf\"");
       return res.status(200).send(previewPdf);
+    }
+
+    if (action === "retry_failed_parts") {
+      // Reintenta SOLO las piezas que fallaron en la generación original
+      // (ver 'errors' del paquete) -- pedido explícito del usuario tras ver
+      // que el aviso de "no se pudieron generar estas partes" salía muy
+      // seguido. La generación normal manda 7 llamados en paralelo repartidos
+      // entre Grok/Gemini con un presupuesto de 9.2s cada uno (límite duro de
+      // 10s de Vercel Hobby) -- con esa concurrencia, alguno falla por
+      // saturación momentánea con más frecuencia de la deseada. Este
+      // reintento corre en una invocación aparte, con muchas menos piezas en
+      // paralelo (normalmente 1), así que hay margen real para usar
+      // generateWithFallback (encadena los 3 proveedores en serie) en vez de
+      // un único intento -- baja mucho la probabilidad de fallar de nuevo.
+      const { existingPackage } = req.body || {};
+      if (!givenPlace || !existingPackage || !existingPackage.errors) {
+        return res.status(400).json({ error: "Falta 'place' o 'existingPackage'." });
+      }
+      const failedKeys = (Object.entries(existingPackage.errors) as Array<[string, string | null]>)
+        .filter(([, err]) => err !== null)
+        .map(([key]) => key) as Array<keyof LocalLiftPackage["errors"]>;
+      if (failedKeys.length === 0) {
+        return res.json({ success: true, package: existingPackage });
+      }
+      try {
+        const place = givenPlace as PlaceData;
+        const reviews = await findPlaceReviews(place.id, language);
+        const retried = await generatePackage(place, reviews, language, failedKeys);
+
+        const merged: LocalLiftPackage = {
+          ...existingPackage,
+          errors: { ...existingPackage.errors },
+        };
+        for (const key of failedKeys) {
+          if (retried.errors[key] !== null) continue; // sigue fallando, se deja el error tal cual
+          merged.errors[key] = null;
+          if (key === "description") {
+            merged.rewrittenDescription = retried.rewrittenDescription;
+            merged.services = retried.services;
+          } else if (key === "replies") {
+            merged.reviewReplies = retried.reviewReplies;
+          } else if (key === "templates") {
+            merged.reviewReplyTemplates = retried.reviewReplyTemplates;
+          } else if (key === "posts1" || key === "posts2") {
+            const existingPosts = [...(merged.googlePosts || [])];
+            while (existingPosts.length < 10) existingPosts.push(null as any);
+            const offset = key === "posts1" ? 0 : 5;
+            (retried.googlePosts || []).forEach((p, i) => { existingPosts[offset + i] = p; });
+            merged.googlePosts = existingPosts.filter(Boolean);
+          } else if (key === "whatsapp1" || key === "whatsapp2") {
+            const existingWa = [...(merged.whatsappMessages || [])];
+            while (existingWa.length < 10) existingWa.push(null as any);
+            const offset = key === "whatsapp1" ? 0 : 5;
+            (retried.whatsappMessages || []).forEach((m, i) => { existingWa[offset + i] = m; });
+            merged.whatsappMessages = existingWa.filter(Boolean);
+          }
+        }
+        merged.partialFailure = Object.values(merged.errors).some((e) => e !== null);
+
+        if (typeof leadId === "string" && leadId.trim()) {
+          try {
+            await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).update({ package: merged });
+          } catch (dbErr) {
+            console.error("[local-lift-package] Error guardando reintento:", dbErr);
+          }
+        }
+        return res.json({ success: true, package: merged });
+      } catch (retryErr) {
+        console.error("[local-lift-package] Error reintentando piezas fallidas:", retryErr);
+        return res.status(500).json({ error: "No pudimos reintentar las partes fallidas." });
+      }
     }
 
     if (action === "regenerate_snippet") {

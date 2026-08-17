@@ -240,6 +240,7 @@ export default function LocalLiftPanel() {
   const [genError, setGenError] = useState("");
   const [place, setPlace] = useState<PlaceInfo | null>(null);
   const [pkg, setPkg] = useState<LocalLiftPackage | null>(null);
+  const [retryingParts, setRetryingParts] = useState(false);
 
   const [email, setEmail] = useState("");
   const [contactName, setContactName] = useState("");
@@ -334,9 +335,37 @@ export default function LocalLiftPanel() {
       setLeadPaid(!!data.paid);
       setGenStatus("done");
       loadLeads();
+      if (data.package?.partialFailure) {
+        retryFailedParts(data.package, data.place, data.leadId || leadId);
+      }
     } catch {
       setGenError("Algo salió mal. Intenta de nuevo.");
       setGenStatus("error");
+    }
+  };
+
+  // Reintento automático y silencioso de las piezas que fallaron en la
+  // generación original -- pedido explícito del usuario tras ver que el
+  // aviso "no se pudieron generar estas partes" salía muy seguido. Corre en
+  // una invocación aparte del servidor, con muchas menos piezas en paralelo,
+  // así que tiene mucho más margen para reintentar de verdad entre
+  // proveedores (ver comentario en el backend). Si vuelve a fallar, se deja
+  // el aviso normal para que el admin reintente a mano con "Generar paquete".
+  const retryFailedParts = async (currentPkg: LocalLiftPackage, currentPlace: PlaceInfo, currentLeadId: string | null) => {
+    setRetryingParts(true);
+    try {
+      const res = await fetch("/api/local-lift-package", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "retry_failed_parts", place: currentPlace, existingPackage: currentPkg, leadId: currentLeadId, lang: "es" }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.package) setPkg(data.package);
+    } catch {
+      // silencioso -- si falla, el admin ve el aviso normal de piezas faltantes
+    } finally {
+      setRetryingParts(false);
     }
   };
 
@@ -586,10 +615,17 @@ export default function LocalLiftPanel() {
             {leadGbpConnected && <span className="inline-flex items-center gap-1 text-[var(--color-text-tertiary)] font-normal normal-case"><Link2 size={12} /> Google conectado</span>}
           </div>
 
-          {missingParts.length > 0 && (
+          {retryingParts && (
+            <div className="flex items-center gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-lg px-3 py-2.5">
+              <Loader2 size={15} className="animate-spin shrink-0" />
+              <span>Reintentando automáticamente las partes que fallaron...</span>
+            </div>
+          )}
+
+          {!retryingParts && missingParts.length > 0 && (
             <div className="flex items-start gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />
-              <span>No se pudieron generar estas partes (intenta "Generar paquete" de nuevo, solo suele fallar por saturación momentánea del modelo): {missingParts.join(", ")}</span>
+              <span>No se pudieron generar estas partes tras reintentar automáticamente (intenta "Generar paquete" de nuevo): {missingParts.join(", ")}</span>
             </div>
           )}
 
