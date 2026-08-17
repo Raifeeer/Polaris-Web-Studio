@@ -101,7 +101,7 @@ function buildPaymentConfirmedHtml(params: {
     <p style="font-size:14px;line-height:1.6;color:#475569;margin:0;">${
       tier === "ascenso"
         ? "Recibimos y confirmamos tu pago. Al ser un paquete Ascenso, uno de nuestros especialistas va a revisar tu ficha de Google personalmente y coordinar contigo por WhatsApp o correo los próximos pasos -- no es un envío automático, así que puede tomar un poco más que un diagnóstico estándar. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
-        : "Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas horas. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
+        : "Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas 2 horas. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
     }</p>
   </div>
 

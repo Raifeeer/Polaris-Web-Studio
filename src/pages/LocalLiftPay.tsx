@@ -246,7 +246,7 @@ export default function LocalLiftPay() {
                     ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
                     ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
                     ["Una ronda de revisión incluida", "One revision round included"],
-                    ["Entrega por correo en 3–5 días hábiles", "Delivered by email in 3–5 business days"],
+                    ["Seguimiento personalizado 1:1 para planificar la implementación", "Personalized 1:1 follow-up to plan the implementation"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
@@ -262,7 +262,7 @@ export default function LocalLiftPay() {
                     ["10 publicaciones listas para aplicar", "10 posts ready to apply"],
                     ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
                     ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
-                    ["Entrega por correo en ~2 horas", "Delivered by email in ~2 hours"],
+                    ["Entrega por correo en 2 horas", "Delivered by email in 2 hours"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
@@ -391,7 +391,7 @@ export default function LocalLiftPay() {
                     ["10 publicaciones listas para aplicar", "10 posts ready to apply"],
                     ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
                     ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
-                    ["Entrega por correo en ~2 horas", "Delivered by email in ~2 hours"],
+                    ["Entrega por correo en 2 horas", "Delivered by email in 2 hours"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
@@ -406,7 +406,7 @@ export default function LocalLiftPay() {
                     ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
                     ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
                     ["Una ronda de revisión incluida", "One revision round included"],
-                    ["Entrega por correo en 3–5 días hábiles", "Delivered by email in 3–5 business days"],
+                    ["Seguimiento personalizado 1:1 para planificar la implementación", "Personalized 1:1 follow-up to plan the implementation"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
