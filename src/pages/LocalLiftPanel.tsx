@@ -601,7 +601,7 @@ export default function LocalLiftPanel() {
                   <Pencil size={12} /> Editar
                 </button>
               </div>
-              <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{pkg.rewrittenDescription}</p>
+              <p className="mt-2 break-words text-sm text-[var(--color-text-secondary)]">{pkg.rewrittenDescription}</p>
               {pkg.services && (
                 <ul className="mt-2 flex flex-wrap gap-2">
                   {pkg.services.map((s) => <li key={s} className="text-xs rounded-full border border-[var(--color-border-subtle)] px-3 py-1">{s}</li>)}
@@ -615,13 +615,13 @@ export default function LocalLiftPanel() {
               <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">{pkg.googlePosts.length} publicaciones para Google</h2>
               <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                 {pkg.googlePosts.map((p, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--color-border-subtle)] p-3 text-xs">
+                  <div key={i} className="min-w-0 rounded-lg border border-[var(--color-border-subtle)] p-3 text-xs">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-black">{p.title}</p>
+                      <p className="min-w-0 break-words font-black">{p.title}</p>
                       <button type="button" onClick={() => setEditingSnippet({ kind: "post", index: i, current: p })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
                     </div>
-                    <p className="mt-1 text-[var(--color-text-secondary)]">{p.body}</p>
-                    <p className="mt-1 font-bold text-[var(--color-primary-base)]">CTA: {p.cta}</p>
+                    <p className="mt-1 break-words text-[var(--color-text-secondary)]">{p.body}</p>
+                    <p className="mt-1 break-words font-bold text-[var(--color-primary-base)]">CTA: {p.cta}</p>
                   </div>
                 ))}
               </div>
@@ -633,13 +633,13 @@ export default function LocalLiftPanel() {
               <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">Respuestas a reseñas reales</h2>
               <div className="mt-2 space-y-2">
                 {pkg.reviewReplies.map((r, i) => (
-                  <div key={i} className="rounded-lg border border-[var(--color-border-subtle)] p-3 text-xs">
+                  <div key={i} className="min-w-0 rounded-lg border border-[var(--color-border-subtle)] p-3 text-xs">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-black">{r.author} ({r.rating}/5)</p>
+                      <p className="min-w-0 break-words font-black">{r.author} ({r.rating}/5)</p>
                       <button type="button" onClick={() => setEditingSnippet({ kind: "reply", index: i, current: r })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
                     </div>
-                    <p className="mt-1 italic text-[var(--color-text-tertiary)]">"{r.originalText}"</p>
-                    <p className="mt-1 text-[var(--color-text-secondary)]">→ {r.reply}</p>
+                    <p className="mt-1 break-words italic text-[var(--color-text-tertiary)]">"{r.originalText}"</p>
+                    <p className="mt-1 break-words text-[var(--color-text-secondary)]">→ {r.reply}</p>
                   </div>
                 ))}
               </div>
@@ -652,7 +652,7 @@ export default function LocalLiftPanel() {
               <div className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                 {pkg.reviewReplyTemplates.map((t, i) => (
                   <div key={i} className="flex items-start justify-between gap-2">
-                    <p><span className="font-bold text-[var(--color-text-primary)]">{t.forRating}/5:</span> {t.template}</p>
+                    <p className="min-w-0 break-words"><span className="font-bold text-[var(--color-text-primary)]">{t.forRating}/5:</span> {t.template}</p>
                     <button type="button" onClick={() => setEditingSnippet({ kind: "template", index: i, current: t })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
                   </div>
                 ))}
@@ -666,7 +666,7 @@ export default function LocalLiftPanel() {
               <div className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                 {pkg.whatsappMessages.map((m, i) => (
                   <div key={i} className="flex items-start justify-between gap-2">
-                    <p><span className="font-bold text-[var(--color-text-primary)]">{m.scenario}:</span> {m.message}</p>
+                    <p className="min-w-0 break-words"><span className="font-bold text-[var(--color-text-primary)]">{m.scenario}:</span> {m.message}</p>
                     <button type="button" onClick={() => setEditingSnippet({ kind: "whatsapp", index: i, current: m })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
                   </div>
                 ))}
