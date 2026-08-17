@@ -21,7 +21,7 @@ export default function LocalLiftPay() {
   const prefersReducedMotion = useReducedMotion();
   const [status, setStatus] = useState<"loading" | "ready" | "paid" | "notfound">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean; paypalOrderId: string | null; paypalPayerEmail: string | null; paidAt: string | null; contactName: string; email: string } | null>(null);
+  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean; sentPortalWelcomeEmail: boolean; paypalOrderId: string | null; paypalPayerEmail: string | null; paidAt: string | null; contactName: string; email: string } | null>(null);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export default function LocalLiftPay() {
           setStatus("notfound");
           return;
         }
-        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
+        setLead({ ...data, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
         // URL ?tier param overrides Firestore tier (so CTAs from the diagnosis page work correctly)
         const urlTier = searchParams.get("tier");
         setSelectedTier(urlTier && TIER_PRICE[urlTier] ? urlTier : (data.tier || "impulso"));
@@ -95,7 +95,7 @@ export default function LocalLiftPay() {
           body: JSON.stringify({ action: "lookup", leadId }),
         }).then((r) => r.json());
         if (fresh?.success) {
-          setLead((prev) => (prev ? { ...prev, invoiceNumber: fresh.invoiceNumber || null, portalProvisioned: !!fresh.portalProvisioned } : prev));
+          setLead((prev) => (prev ? { ...prev, invoiceNumber: fresh.invoiceNumber || null, portalProvisioned: !!fresh.portalProvisioned, sentPortalWelcomeEmail: !!fresh.sentPortalWelcomeEmail } : prev));
         }
       } catch {
         // La confirmación no se bloquea: la factura también llega por correo.
@@ -152,11 +152,6 @@ export default function LocalLiftPay() {
                     Ya estamos trabajando en tu informe completo de Local Lift. Lo recibirás en tu correo en las próximas 2 horas. Si no recibes nada, escríbenos por WhatsApp.
                   </T>
                 )}
-              </p>
-              <p className="mt-3 text-xs text-[var(--color-text-tertiary)] leading-relaxed">
-                <T en="We also sent you a separate email with access to your client portal.">
-                  Además, te enviamos un correo aparte con el acceso a tu portal de cliente.
-                </T>
               </p>
               <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
                 <a
@@ -285,12 +280,22 @@ export default function LocalLiftPay() {
                     </p>
                     <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">
                       {lead.tier === "ascenso" ? (
-                        <T en="We sent your access credentials to your email. Go to your portal to schedule your welcome session and follow your package's progress.">
-                          Te enviamos tus credenciales de acceso por correo. Entra a tu portal para agendar tu sesión de bienvenida y seguir el avance de tu paquete.
-                        </T>
-                      ) : (
+                        lead.sentPortalWelcomeEmail ? (
+                          <T en="We sent your access credentials to your email. Go to your portal to schedule your welcome session and follow your package's progress.">
+                            Te enviamos tus credenciales de acceso por correo. Entra a tu portal para agendar tu sesión de bienvenida y seguir el avance de tu paquete.
+                          </T>
+                        ) : (
+                          <T en="Sign in with your existing account to schedule your welcome session and follow your package's progress.">
+                            Entra con tu cuenta de siempre para agendar tu sesión de bienvenida y seguir el avance de tu paquete.
+                          </T>
+                        )
+                      ) : lead.sentPortalWelcomeEmail ? (
                         <T en="We sent your access credentials to your email. From the portal you can follow your package's progress and download your invoice whenever you need it.">
                           Te enviamos tus credenciales de acceso por correo. Desde el portal puedes seguir el avance de tu paquete y descargar tu factura cuando la necesites.
+                        </T>
+                      ) : (
+                        <T en="Sign in with your existing account to follow your package's progress and download your invoice whenever you need it.">
+                          Entra con tu cuenta de siempre para seguir el avance de tu paquete y descargar tu factura cuando la necesites.
                         </T>
                       )}
                     </p>

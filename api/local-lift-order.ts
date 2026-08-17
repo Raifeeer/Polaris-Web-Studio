@@ -63,7 +63,7 @@ function buildPaymentConfirmedHtml(params: {
   const whatsappUrl = `https://wa.me/18299200544?text=${waMsg}`;
 
   const row = (label: string, value: string, strong?: boolean) => `
-    <tr><td style="padding:10px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:10px 0;font-size:${strong ? "16px" : "13px"};font-family:'Courier New',Courier,monospace;color:${strong ? "#16a34a" : "#0f172a"};font-weight:700;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
+    <tr><td style="padding:10px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:10px 0;text-align:right;font-size:${strong ? "16px" : "13px"};font-family:'Courier New',Courier,monospace;color:${strong ? "#16a34a" : "#0f172a"};font-weight:700;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
 
   return `<!DOCTYPE html>
 <html>
@@ -256,6 +256,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         mapsUri: place?.mapsUri || null,
         invoiceNumber: d.invoiceNumber || null,
         portalProvisioned: !!d.portalProvisioned,
+        sentPortalWelcomeEmail: !!d.sentPortalWelcomeEmail,
         // Detalle real del pago -- para que la pantalla de confirmación
         // (LocalLiftPay.tsx) pueda mostrar más que un mensaje genérico:
         // referencia real de PayPal, correo del pagador y fecha real.
@@ -396,6 +397,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ...(invoiceNumber ? { invoiceNumber } : {}),
             ...(exchangeRate ? { exchangeRate } : {}),
             portalProvisioned,
+            sentPortalWelcomeEmail: !!tempPassword,
           });
         } catch (updErr) {
           console.error("[local-lift-order] Error guardando datos de portal en el lead:", updErr);
