@@ -5173,7 +5173,7 @@ export default function ClientDashboard() {
                         </div>
                         <BookingScheduler
                           type="ascenso"
-                          notes={`Sesión de bienvenida Ascenso — ${clientProject?.name || ""}`}
+                          notes={`Sesión de bienvenida Ascenso, ${clientProject?.name || ""}`}
                           initialName={user?.name || ""}
                           initialEmail={user?.email || ""}
                           onBooked={async (_name, _email, booking) => {

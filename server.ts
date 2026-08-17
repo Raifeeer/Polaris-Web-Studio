@@ -2583,7 +2583,7 @@ const PORT = 3000;
     dbInstance.addMeeting({
       id: `meet-${Date.now()}`,
       projectId,
-      title: "Ascenso — Sesión de bienvenida",
+      title: "Ascenso: Sesión de bienvenida",
       date,
       time,
       meetLink,

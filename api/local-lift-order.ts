@@ -52,15 +52,16 @@ function buildPaymentConfirmedHtml(params: {
   paidAt: Date;
   invoiceNumber?: string;
   hasInvoicePdf?: boolean;
+  sentPortalWelcomeEmail?: boolean;
 }): string {
-  const { businessName, city, tier, contactName, amount, paypalOrderId, paypalPayerEmail, paidAt, invoiceNumber, hasInvoicePdf } = params;
+  const { businessName, city, tier, contactName, amount, paypalOrderId, paypalPayerEmail, paidAt, invoiceNumber, hasInvoicePdf, sentPortalWelcomeEmail } = params;
   const hasName = !!contactName && contactName.trim().length > 0;
   const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
   const label = TIER_LABEL[tier] || "Local Lift";
   const dateLabel = paidAt.toLocaleDateString("es-DO", { year: "numeric", month: "long", day: "numeric" });
   const waMsg = encodeURIComponent(`Hola Polaris, tengo una pregunta sobre mi pago de Local Lift (${businessName}).`);
   const whatsappUrl = `https://wa.me/18299200544?text=${waMsg}`;
-  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${businessName}`)}`;
+  const contactMailto = `mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift: ${businessName}`)}`;
 
   const row = (label: string, value: string, strong?: boolean) => `
     <tr><td style="padding:10px 0;font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;width:130px;border-bottom:1px solid #e2e8f0;">${label}</td><td style="padding:10px 0;font-size:${strong ? "16px" : "13px"};font-family:'Courier New',Courier,monospace;color:${strong ? "#16a34a" : "#0f172a"};font-weight:700;border-bottom:1px solid #e2e8f0;">${value}</td></tr>`;
@@ -77,7 +78,7 @@ function buildPaymentConfirmedHtml(params: {
 <style>body{margin:0;}a{text-decoration:none;color:${ACCENT};}</style>
 </head>
 <body>
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">Confirmamos tu pago de $${amount} para ${businessName} — esto es lo que sigue.</div>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">Confirmamos tu pago de $${amount} para ${businessName}. Esto es lo que sigue.</div>
 <div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:${FONT_BODY};">
 <div style="width:600px;max-width:100%;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
 
@@ -100,19 +101,19 @@ function buildPaymentConfirmedHtml(params: {
   <div style="padding:12px 32px 0 32px;">
     <p style="font-size:14px;line-height:1.6;color:#475569;margin:0;">${
       tier === "ascenso"
-        ? "Recibimos y confirmamos tu pago. Tu paquete Ascenso incluye una sesión de bienvenida 1:1 para revisar tu ficha de Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu reunión en el horario que prefieras. Por separado, te enviamos otro correo con las credenciales de acceso a ese portal."
-        : "Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google -- lo vas a recibir por este mismo correo en las próximas 2 horas. Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente."
+        ? `Recibimos y confirmamos tu pago. Tu paquete Ascenso incluye una sesión de bienvenida 1:1 para revisar tu ficha de Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu reunión en el horario que prefieras.${sentPortalWelcomeEmail ? " Por separado, te enviamos otro correo con las credenciales de acceso a ese portal." : ""}`
+        : `Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google. Lo vas a recibir por este mismo correo en las próximas 2 horas.${sentPortalWelcomeEmail ? " Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente." : ""}`
     }</p>
   </div>
 
   <div style="padding:24px 32px 0 32px;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e2e8f0;">
       ${row("Negocio", businessName)}
-      ${row("Ciudad", city || "—")}
+      ${row("Ciudad", city || "N/D")}
       ${row("Paquete", label)}
       ${row("Monto", `$${amount.toFixed(2)}`, true)}
-      ${row("N.° de pago Polaris", invoiceNumber || "—")}
-      ${row("Referencia PayPal", paypalOrderId || "—")}
+      ${row("N.° de pago Polaris", invoiceNumber || "N/D")}
+      ${row("Referencia PayPal", paypalOrderId || "N/D")}
       ${paypalPayerEmail ? row("Correo del pagador", paypalPayerEmail) : ""}
     </table>
   </div>
@@ -289,7 +290,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         invoiceNumber: d.invoiceNumber,
         clientName: d.contactName || d.businessName || "",
         clientEmail: d.email || "",
-        description: `Local Lift — ${TIER_LABEL[d.tier] || "Local Lift"} — ${d.businessName || ""}`,
+        description: `Local Lift: ${TIER_LABEL[d.tier] || "Local Lift"}, ${d.businessName || ""}`,
         amount: TIER_PRICE[d.tier] || 0,
         paypalOrderId: d.paypalOrderId || "",
         // La tasa del día en que se emitió, no la de hoy: si no, una factura
@@ -419,7 +420,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             invoiceNumber,
             clientName: data.contactName || data.businessName,
             clientEmail: data.email,
-            description: `Local Lift — ${TIER_LABEL[tier]} — ${data.businessName}`,
+            description: `Local Lift: ${TIER_LABEL[tier]}, ${data.businessName}`,
             amount: TIER_PRICE[tier],
             paypalOrderId,
             exchangeRate,
@@ -437,7 +438,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         try {
           await transporter.sendMail({
-            from: '"Local Lift — Pago confirmado" <hola@polarisweb.studio>',
+            from: '"Local Lift: Pago confirmado" <hola@polarisweb.studio>',
             to: "hola@polarisweb.studio",
             replyTo: data.email,
             subject: `💰 Pago Local Lift confirmado: ${data.businessName} ($${TIER_PRICE[tier]})`,
@@ -451,7 +452,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           await transporter.sendMail({
             from: '"Polaris Local Lift" <hola@polarisweb.studio>',
             to: data.email,
-            subject: `Pago confirmado — ${data.businessName}`,
+            subject: `Pago confirmado: ${data.businessName}`,
             text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Entra a tu portal de cliente para agendar tu sesión de bienvenida 1:1." : "Ya estamos preparando tu paquete real, lo recibirás por este mismo correo en las próximas 2 horas."}`,
             html: buildPaymentConfirmedHtml({
               businessName: data.businessName,
@@ -464,6 +465,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               paidAt: new Date(),
               invoiceNumber,
               hasInvoicePdf: !!invoicePdf,
+              sentPortalWelcomeEmail: !!tempPassword,
             }),
             ...(invoicePdf
               ? { attachments: [{ filename: `Factura-${invoiceNumber}.pdf`, content: invoicePdf, contentType: "application/pdf" }] }
@@ -481,7 +483,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             await transporter.sendMail({
               from: '"Polaris Web Studio" <hola@polarisweb.studio>',
               to: data.email,
-              subject: `Tu acceso al portal — ${data.businessName}`,
+              subject: `Tu acceso al portal: ${data.businessName}`,
               text: `Bienvenido. Entra a https://polarisweb.studio/login con tu correo ${data.email} y la contraseña temporal ${tempPassword}. Te pediremos cambiarla la primera vez.`,
               html: buildPortalWelcomeHtml(data.businessName, data.contactName || "", data.email, tempPassword),
             });
