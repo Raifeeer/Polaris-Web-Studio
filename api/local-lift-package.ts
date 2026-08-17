@@ -365,41 +365,108 @@ function rateLimited(key: string, max: number, windowMs: number): boolean {
   return false;
 }
 
-// Logo real de Local Lift (variante "stacked-light" -- LOCAL en navy, pensada
-// para un fondo blanco, ver Polaris Product Brand System v1) alojado en
-// Storage, mismo patrón que LOGO_URL en local-lift-order.ts/-followup.ts/
-// -diagnostic-mailer.ts.
+// Plantilla de entrega de Local Lift. Se mantiene deliberadamente en HTML
+// autocontenido: muchos clientes de correo bloquean hojas de estilo externas,
+// por eso la estructura usa tablas y estilos inline. El PDF sigue siendo la
+// entrega completa; este mensaje funciona como una portada visual y guía de
+// siguientes pasos.
 const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v7.png";
+const LOCAL_LIFT_ACCENT = "#16C8C1";
+const LOCAL_LIFT_NAVY = "#111936";
+const LOCAL_LIFT_MIST = "#F2FFFF";
 const localLiftLogoHeader = `<p style="text-align:center;margin:0 0 20px 0;"><img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="180" style="width:180px;height:auto;display:inline-block;"></p>`;
 
-// El contenido completo del paquete ahora vive en el PDF adjunto (ver
-// fetchPackagePdf/local-lift-package-pdf) -- este cuerpo del correo queda
-// como un mensaje breve que anuncia el adjunto, en vez de volcar todo el
-// contenido en HTML dentro del correo mismo.
+function escapeHtml(value: string | null | undefined): string {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function renderPackageEmailBody(
   businessName: string,
   contactName: string | null,
   lang: "es" | "en",
   tier: PackageTier,
   pkg: LocalLiftPackage,
+  connectUrl?: string,
 ): string {
+  const safeBusinessName = escapeHtml(businessName);
+  const safeContactName = escapeHtml(contactName);
+  const greeting = safeContactName ? (lang === "en" ? `Hi ${safeContactName},` : `Hola ${safeContactName},`) : lang === "en" ? "Hi," : "Hola,";
+  const isEnglish = lang === "en";
   const reviewLine = tier === "ascenso" && pkg.reviewAnalysis
-    ? lang === "en"
-      ? "a recent review reading with personalized best practices"
-      : "una lectura de reseñas recientes con buenas prácticas personalizadas"
+    ? isEnglish
+      ? "Recent review analysis with personalized best practices"
+      : "Análisis de reseñas recientes con buenas prácticas personalizadas"
     : "";
-  if (lang === "en") {
-    return `
-      ${localLiftLogoHeader}
-      <p>Hi ${contactName || ""},</p>
-      <p>Your Local Lift content package for <strong>${businessName}</strong> is ready — you'll find it attached as a PDF, with everything organized and ready to use: your new business description, services to highlight, Google posts, review replies, templates, and WhatsApp follow-up messages${reviewLine ? `, plus ${reviewLine}` : ""}.</p>
-    `;
-  }
-  return `
-    ${localLiftLogoHeader}
-    <p>Hola ${contactName || ""},</p>
-    <p>Tu paquete de contenido Local Lift para <strong>${businessName}</strong> está listo — lo encontrarás adjunto en PDF, con todo organizado y listo para usar: tu nueva descripción del negocio, servicios a destacar, publicaciones para Google, respuestas a reseñas, plantillas y mensajes de WhatsApp de seguimiento${reviewLine ? `, además de ${reviewLine}` : ""}.</p>
-  `;
+  const connectButton = connectUrl
+    ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center"><a href="${connectUrl}" style="display:inline-block;background:${LOCAL_LIFT_ACCENT};color:#073b3a;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;line-height:1;padding:15px 24px;border-radius:9px;">${isEnglish ? "Connect my Google Business Profile" : "Conectar mi Perfil de Empresa de Google"}</a></td></tr></table>`
+    : "";
+  const connectNote = connectUrl
+    ? isEnglish
+      ? "Optional: you approve everything before anything is published."
+      : "Opcional: apruebas todo antes de que publiquemos cualquier cosa."
+    : "";
+
+  const content = isEnglish
+    ? {
+        eyebrow: "YOUR PACKAGE IS READY",
+        title: "Your Local Lift package is ready",
+        intro: "Your complete PDF is attached with the content prepared for your business. Open it when you have a moment and start applying the changes in the order that makes the most sense for you.",
+        cardTitle: "Inside your package",
+        items: ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", "A clear set of next steps"],
+        ctaTitle: "Want us to help put it into motion?",
+        ctaBody: "Connect your Google Business Profile and we can review the prepared content with you before anything is published.",
+        footer: "Your PDF contains the complete package. This email is a visual summary to help you get started.",
+        signature: "The Polaris Local Lift team",
+      }
+    : {
+        eyebrow: "TU PAQUETE ESTÁ LISTO",
+        title: "Tu paquete Local Lift está listo",
+        intro: "Adjuntamos tu PDF completo con el contenido preparado para tu negocio. Ábrelo cuando tengas un momento y empieza a aplicar los cambios en el orden que más sentido tenga para ti.",
+        cardTitle: "Qué encontrarás dentro",
+        items: ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", "Siguientes pasos claros para avanzar"],
+        ctaTitle: "¿Quieres que te ayudemos a ponerlo en marcha?",
+        ctaBody: "Conecta tu Perfil de Empresa de Google y revisamos contigo el contenido preparado antes de publicar cualquier cosa.",
+        footer: "Tu PDF contiene el paquete completo. Este correo es un resumen visual para ayudarte a empezar.",
+        signature: "El equipo de Polaris Local Lift",
+      };
+
+  const items = reviewLine
+    ? [...content.items.slice(0, 5), reviewLine, content.items[5]]
+    : content.items;
+  const itemRows = items
+    .map((item) => `<tr><td valign="top" style="padding:0 0 10px 0;width:24px;"><span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:${LOCAL_LIFT_MIST};color:${LOCAL_LIFT_ACCENT};font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;text-align:center;font-weight:700;">✓</span></td><td style="padding:0 0 10px 8px;color:#24324a;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45;">${item}</td></tr>`)
+    .join("");
+
+  return `<!doctype html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${content.title}</title></head><body style="margin:0;padding:0;background:#eef5f5;color:${LOCAL_LIFT_NAVY};"><div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${content.title} — ${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef5f5;"><tr><td align="center" style="padding:28px 12px;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #dbe8e8;border-radius:18px;overflow:hidden;"><tr><td style="height:7px;background:${LOCAL_LIFT_ACCENT};font-size:0;line-height:0;">&nbsp;</td></tr><tr><td style="padding:28px 32px 18px;background:${LOCAL_LIFT_MIST};"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="left"><img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="154" style="display:block;width:154px;max-width:70%;height:auto;"></td><td align="right" valign="middle" style="font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:1.3;letter-spacing:1.5px;color:#557174;font-weight:700;">LOCAL<br>LIFT</td></tr></table></td></tr><tr><td style="padding:34px 32px 0;"><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.2;letter-spacing:1.8px;color:#0b9d98;font-weight:700;">${content.eyebrow}</div><h1 style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:29px;line-height:1.15;letter-spacing:-.6px;color:${LOCAL_LIFT_NAVY};">${content.title}</h1><p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.65;color:#526174;">${greeting}<br>${content.intro}</p></td></tr><tr><td style="padding:24px 32px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbfefe;border:1px solid #dceeed;border-radius:13px;"><tr><td style="padding:22px 22px 18px;"><div style="font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.2;letter-spacing:1.4px;text-transform:uppercase;color:#557174;font-weight:700;">${content.cardTitle}</div><div style="margin-top:15px;padding:13px 14px;background:${LOCAL_LIFT_MIST};border-radius:9px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.35;font-weight:700;color:${LOCAL_LIFT_NAVY};">${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:18px;">${itemRows}</table></td></tr></table></td></tr><tr><td style="padding:24px 32px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${LOCAL_LIFT_NAVY};border-radius:13px;"><tr><td style="padding:23px 22px 22px;"><div style="font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.3;font-weight:700;color:#ffffff;">${content.ctaTitle}</div><p style="margin:9px 0 18px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.55;color:#cbd8e5;">${content.ctaBody}<br><span style="font-size:11px;color:#9fb3c2;">${connectNote}</span></p>${connectButton}</td></tr></table></td></tr><tr><td style="padding:28px 32px 30px;"><div style="height:1px;background:#e3eded;"></div><p style="margin:18px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.55;color:#758694;">${content.footer}</p><p style="margin:15px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.45;color:#24324a;font-weight:700;">${content.signature}</p><p style="margin:4px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.4;color:#8a9aa3;">BY POLARIS WEB STUDIO · República Dominicana</p></td></tr></table></td></tr></table></body></html>`;
+}
+
+function renderPackageEmailText(businessName: string, contactName: string | null, lang: "es" | "en", connectUrl?: string): string {
+  const safeBusinessName = businessName;
+  const greeting = contactName ? (lang === "en" ? `Hi ${contactName},` : `Hola ${contactName},`) : lang === "en" ? "Hi," : "Hola,";
+  const isEnglish = lang === "en";
+  const items = isEnglish
+    ? ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", "Clear next steps"]
+    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", "Siguientes pasos claros"];
+  const lines = [
+    isEnglish ? "YOUR PACKAGE IS READY" : "TU PAQUETE ESTÁ LISTO",
+    isEnglish ? "Your Local Lift package is ready" : "Tu paquete Local Lift está listo",
+    "",
+    greeting,
+    isEnglish ? `Your complete PDF for ${safeBusinessName} is attached with the content prepared for your business.` : `Tu PDF completo para ${safeBusinessName} está adjunto con el contenido preparado para tu negocio.`,
+    "",
+    isEnglish ? "Inside your package:" : "Qué encontrarás dentro:",
+    ...items.map((item) => `- ${item}`),
+    "",
+    isEnglish ? "The PDF contains the complete package. This email is a visual summary to help you get started." : "El PDF contiene el paquete completo. Este correo es un resumen para ayudarte a empezar.",
+  ];
+  if (connectUrl) lines.push("", isEnglish ? `Connect your Google Business Profile: ${connectUrl}` : `Conecta tu Perfil de Empresa de Google: ${connectUrl}`);
+  lines.push("", isEnglish ? "The Polaris Local Lift team" : "El equipo de Polaris Local Lift");
+  return lines.join("\n");
 }
 
 function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: string, leadId: string, language: "es" | "en"): string {
@@ -575,14 +642,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         secure: true,
         auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
       });
-      const connectCta =
+      const connectUrl =
         typeof leadId === "string" && leadId.trim()
-          ? `<p style="margin-top:24px;">${
-              language === "en"
-                ? `Want us to publish this directly on your real Google listing? <a href="https://polarisweb.studio/local-lift/conectar/${leadId.trim()}">Connect your Google Business Profile</a> (optional, you approve everything before we publish anything).`
-                : `¿Quieres que publiquemos esto directo en tu ficha real de Google? <a href="https://polarisweb.studio/local-lift/conectar/${leadId.trim()}">Conecta tu Google Business Profile</a> (opcional, apruebas todo antes de que publiquemos nada).`
-            }</p>`
-          : "";
+          ? `https://polarisweb.studio/local-lift/conectar/${leadId.trim()}`
+          : undefined;
       const finalTier2 = normalizeTier(docRef ? (await docRef.get()).data()?.tier : tier);
       const tierLabelForPdf = TIER_PRICE[finalTier2]?.label || TIER_PRICE["impulso"].label;
       let pdfBuffer: Buffer | null = null;
@@ -601,7 +664,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
         subject: language === "en" ? `Your Local Lift content package — ${givenPlace.name}` : `Tu paquete de contenido Local Lift — ${givenPlace.name}`,
-        html: `${renderPackageEmailBody(givenPlace.name, contactName || null, language, finalTier2, givenPackage)}${connectCta}`,
+text: renderPackageEmailText(givenPlace.name, contactName || null, language, connectUrl),
+        html: renderPackageEmailBody(givenPlace.name, contactName || null, language, finalTier2, givenPackage, connectUrl),
         attachments: pdfBuffer
           ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
           : [],
