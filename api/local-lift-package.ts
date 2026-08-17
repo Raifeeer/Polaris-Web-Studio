@@ -212,7 +212,14 @@ async function generatePackage(
 ): Promise<LocalLiftPackage> {
   const dataBlock = placeDataSummary(place);
   const langInstruction = lang === "en" ? "inglés" : "español neutro, sin voseo";
-  const baseHeader = `Sos un consultor de Polaris Local Lift preparando contenido para este negocio. Datos REALES de su ficha de Google (Places API) — no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n`;
+  // "No pegues URLs completas" -- encontrado en vivo (16 de agosto): el
+  // modelo copiaba el sitio web real del negocio (con parámetros UTM largos)
+  // tal cual dentro del texto de posts/WhatsApp, dejando un enlace de
+  // cientos de caracteres en un mensaje que se manda por WhatsApp real. El
+  // campo `cta` de las publicaciones ya cubre la acción real, y un mensaje
+  // de WhatsApp no necesita un link con tracking pegado.
+  const noUrlsInstruction = "Nunca pegues una URL/enlace completo dentro del texto -- si hace falta mencionar el sitio web, dilo en palabras ('visita nuestro sitio web', 'escríbenos'), sin pegar el link real.";
+  const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n${noUrlsInstruction}\n\n`;
 
   const reviewsBlock =
     reviews.length > 0
@@ -220,13 +227,13 @@ async function generatePackage(
       : "No hay reseñas con texto disponibles en la ficha.";
 
   const prompts = {
-    description: `${baseHeader}Generá una descripción reescrita del negocio y una lista de sus servicios/productos reales. Grounded en los datos de arriba. Todo en ${langInstruction}.`,
-    posts1: `${baseHeader}Generá 5 publicaciones breves para Google Business Profile, enfocadas en: ofertas/promociones, novedades, y servicios destacados. Todo en ${langInstruction}.`,
-    posts2: `${baseHeader}Generá otras 5 publicaciones breves para Google Business Profile, enfocadas en: testimonios/reseñas, fechas especiales o temporada, detrás de escena, preguntas frecuentes, y un llamado a la acción directo. No repitas el enfoque de ofertas/novedades/servicios (ya cubierto en otra tanda). Todo en ${langInstruction}.`,
-    replies: `${baseHeader}Reseñas reales disponibles (máximo 5, límite real de la API):\n${reviewsBlock}\n\nGenerá una respuesta breve y personalizada a cada reseña real de arriba. Todo en ${langInstruction}.`,
-    templates: `${baseHeader}Generá 5 plantillas breves y genéricas de respuesta a reseñas, una por calificación (1 a 5 estrellas), para reseñas futuras. Todo en ${langInstruction}.`,
-    whatsapp1: `${baseHeader}Generá 5 mensajes breves de WhatsApp de seguimiento para: consulta sin respuesta en 24h, confirmación de reserva/pedido, recordatorio previo a la visita, agradecimiento post-visita, y pedido de reseña. Todo en ${langInstruction}.`,
-    whatsapp2: `${baseHeader}Generá otros 5 mensajes breves de WhatsApp para: reactivación de cliente inactivo, promoción puntual, respuesta a consulta de horario/ubicación, respuesta a consulta de precio, y mensaje de bienvenida a cliente nuevo. No repitas los escenarios de otra tanda (consulta sin respuesta, confirmación, recordatorio, agradecimiento, pedido de reseña). Todo en ${langInstruction}.`,
+    description: `${baseHeader}Escribe una descripción reescrita del negocio y una lista de sus servicios/productos reales. Grounded en los datos de arriba. Todo en ${langInstruction}.`,
+    posts1: `${baseHeader}Escribe 5 publicaciones breves para Google Business Profile, enfocadas en: ofertas/promociones, novedades, y servicios destacados. Todo en ${langInstruction}.`,
+    posts2: `${baseHeader}Escribe otras 5 publicaciones breves para Google Business Profile, enfocadas en: testimonios/reseñas, fechas especiales o temporada, detrás de escena, preguntas frecuentes, y un llamado a la acción directo. No repitas el enfoque de ofertas/novedades/servicios (ya cubierto en otra tanda). Todo en ${langInstruction}.`,
+    replies: `${baseHeader}Reseñas reales disponibles (máximo 5, límite real de la API):\n${reviewsBlock}\n\nEscribe una respuesta breve y personalizada a cada reseña real de arriba. Todo en ${langInstruction}.`,
+    templates: `${baseHeader}Escribe 5 plantillas breves y genéricas de respuesta a reseñas, una por calificación (1 a 5 estrellas), para reseñas futuras. Todo en ${langInstruction}.`,
+    whatsapp1: `${baseHeader}Escribe 5 mensajes breves de WhatsApp de seguimiento para: consulta sin respuesta en 24h, confirmación de reserva/pedido, recordatorio previo a la visita, agradecimiento post-visita, y pedido de reseña. Todo en ${langInstruction}.`,
+    whatsapp2: `${baseHeader}Escribe otros 5 mensajes breves de WhatsApp para: reactivación de cliente inactivo, promoción puntual, respuesta a consulta de horario/ubicación, respuesta a consulta de precio, y mensaje de bienvenida a cliente nuevo. No repitas los escenarios de otra tanda (consulta sin respuesta, confirmación, recordatorio, agradecimiento, pedido de reseña). Todo en ${langInstruction}.`,
   };
 
   // DeepSeek queda afuera de este endpoint -- probado en vivo varias
@@ -584,7 +591,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const place = givenPlace as PlaceData;
       const dataBlock = placeDataSummary(place);
       const langInstruction = language === "en" ? "inglés" : "español neutro, sin voseo";
-      const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n`;
+      const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\nNunca pegues una URL/enlace completo dentro del texto -- si hace falta mencionar el sitio web, dilo en palabras ('visita nuestro sitio web', 'escríbenos'), sin pegar el link real.\n\n`;
       const instructionLine = typeof instruction === "string" && instruction.trim()
         ? `Instrucción real del admin sobre qué cambiar: "${instruction.trim()}". Aplícala tal cual, sin ignorarla.`
         : "No hay instrucción puntual: genera una alternativa igual de buena, distinta a la actual.";
