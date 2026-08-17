@@ -42,12 +42,13 @@ export interface PlaceCandidatesPage {
 
 function buildPlaceData(place: any, apiKey: string, fallbackName: string): PlaceData {
   const photos = Array.isArray(place.photos) ? place.photos : [];
+  // Vía el proxy propio (api/local-lift-photo.ts) en vez de la URL cruda de
+  // Google -- esa URL llevaba la API key real en el query string, expuesta
+  // directo en el HTML/PDF, y además fallaba con 403 al cargarse desde el
+  // navegador del cliente por las restricciones reales de esa key (pensada
+  // para tráfico server-to-server, no para un <img> del navegador).
   const photoUrls = photos
-    .map((p: any) =>
-      p?.name
-        ? `https://places.googleapis.com/v1/${p.name}/media?maxWidthPx=600&key=${apiKey}`
-        : null
-    )
+    .map((p: any) => (p?.name ? `https://polarisweb.studio/api/local-lift-photo?ref=${encodeURIComponent(p.name)}` : null))
     .filter(Boolean) as string[];
 
   return {
