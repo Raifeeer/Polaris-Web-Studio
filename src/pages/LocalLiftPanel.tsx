@@ -356,7 +356,7 @@ export default function LocalLiftPanel() {
               <p className="flex items-center gap-1.5"><Star size={13} className="text-amber-400 fill-amber-400" /> {selectedLeadPlace.rating.toFixed(1)} · {selectedLeadPlace.reviewCount} reseñas</p>
             )}
             {selectedLeadPlace.websiteUri && (
-              <p className="flex items-center gap-1.5"><Globe size={13} className="text-[var(--color-primary-base)]" /> <a href={selectedLeadPlace.websiteUri} target="_blank" rel="noreferrer" className="underline">{selectedLeadPlace.websiteUri}</a></p>
+              <p className="flex items-center gap-1.5"><Globe size={13} className="shrink-0 text-[var(--color-primary-base)]" /> <a href={selectedLeadPlace.websiteUri} target="_blank" rel="noreferrer" className="underline text-[var(--color-primary-base)] font-bold">Sitio web</a></p>
             )}
             <p className="flex items-center gap-1.5"><Phone size={13} className={selectedLeadPlace.hasPhone ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"} /> {selectedLeadPlace.hasPhone ? "Tiene teléfono público" : "Sin teléfono público"}</p>
             {selectedLeadPlace.primaryType && <p>Tipo: {selectedLeadPlace.primaryType}</p>}
