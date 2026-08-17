@@ -1167,6 +1167,43 @@ const PORT = 3000;
   });
 
   /**
+   * Proxy real de fotos de Google Places (New) para Polaris Local Lift --
+   * pedido explícito del usuario tras ver íconos de imagen rota en la
+   * "Ficha real del negocio" del panel admin: la URL cruda de Google
+   * (`places.googleapis.com/v1/{name}/media?key=...`) lleva la
+   * GOOGLE_PLACES_API_KEY real pegada en el query string, expuesta directo
+   * en el HTML/PDF, y esa key está restringida para tráfico server-to-server
+   * -- un <img> cargándola desde el navegador del cliente recibía 403 de
+   * Google. Vive acá (Express, no un archivo aparte en api/) para no sumar
+   * una función serverless más al límite real de 12 del plan Hobby --
+   * confirmado en vivo, un archivo standalone hizo fallar el deploy con
+   * "No more than 12 Serverless Functions can be added".
+   * Format: GET /api/local-lift-photo?ref=places/{placeId}/photos/{photoRef}
+   */
+  app.get("/api/local-lift-photo", async (req, res) => {
+    const ref = (req.query.ref as string) || "";
+    if (!/^places\/[^/]+\/photos\/[^/]+$/.test(ref)) {
+      return res.status(400).json({ error: "Referencia de foto inválida." });
+    }
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: "GOOGLE_PLACES_API_KEY no configurada" });
+    try {
+      const googleRes = await fetch(`https://places.googleapis.com/v1/${ref}/media?maxWidthPx=800&key=${apiKey}`);
+      if (!googleRes.ok) {
+        return res.status(googleRes.status).json({ error: "No se pudo obtener la foto de Google." });
+      }
+      const contentType = googleRes.headers.get("content-type") || "image/jpeg";
+      const buffer = Buffer.from(await googleRes.arrayBuffer());
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Cache-Control", "public, max-age=86400, s-maxage=86400");
+      return res.status(200).send(buffer);
+    } catch (err) {
+      console.error("[local-lift-photo] Error obteniendo foto:", err);
+      return res.status(500).json({ error: "Error obteniendo la foto." });
+    }
+  });
+
+  /**
    * Consultado por la Cloud Function lead-drip-send (Meridian) para excluir
    * de la secuencia de nutrición a los leads que ya son clientes reales del
    * portal. Protegido por un secreto compartido, no por sesión -- quien lo
