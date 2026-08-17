@@ -87,6 +87,7 @@ async function fetchPackagePdf(params: {
   tierLabel: string;
   lang: "es" | "en";
   pkg: LocalLiftPackage;
+  place?: PlaceData | null;
 }): Promise<Buffer | null> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return null;
@@ -99,6 +100,7 @@ async function fetchPackagePdf(params: {
       tierLabel: params.tierLabel,
       date: new Date().toLocaleDateString(params.lang === "en" ? "en-US" : "es-DO", { year: "numeric", month: "long", day: "numeric" }),
       package: params.pkg,
+      place: params.place || null,
     }),
   });
   if (!resp.ok) throw new Error(`local-lift-package-pdf ${resp.status}`);
@@ -510,6 +512,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tierLabel: tierLabelForPdf,
           lang: language,
           pkg: givenPackage,
+          place: givenPlace,
         });
       } catch (pdfErr) {
         console.error("[local-lift-package] Error generando PDF, se envía sin adjunto:", pdfErr);
@@ -568,6 +571,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           tierLabel: tierLabelPreview,
           lang: language,
           pkg: givenPackage,
+          place: givenPlace,
         });
       } catch (pdfErr) {
         console.error("[local-lift-package] Error generando vista previa del PDF:", pdfErr);
