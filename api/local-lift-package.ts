@@ -299,7 +299,7 @@ function rateLimited(key: string, max: number, windowMs: number): boolean {
 // para un fondo blanco, ver Polaris Product Brand System v1) alojado en
 // Storage, mismo patrón que LOGO_URL en local-lift-order.ts/-followup.ts/
 // -diagnostic-mailer.ts.
-const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v6.png";
+const LOCAL_LIFT_LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v7.png";
 const localLiftLogoHeader = `<p style="text-align:center;margin:0 0 20px 0;"><img src="${LOCAL_LIFT_LOGO_URL}" alt="Local Lift by Polaris Web Studio" width="180" style="width:180px;height:auto;display:inline-block;"></p>`;
 
 // El contenido completo del paquete ahora vive en el PDF adjunto (ver
