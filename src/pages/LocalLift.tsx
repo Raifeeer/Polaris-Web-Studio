@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type CSSProperties } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -22,11 +22,12 @@ import {
 } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import AtlasMark from "../components/AtlasMark";
-import ImageLightbox from "../components/ImageLightbox";
 import { T, useLanguage } from "../context/LanguageContext";
-import { ThinkingOrb } from "thinking-orbs";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
+
+const AtlasMark = lazy(() => import("../components/AtlasMark"));
+const ImageLightbox = lazy(() => import("../components/ImageLightbox"));
+const ThinkingOrb = lazy(() => import("thinking-orbs").then(({ ThinkingOrb: Orb }) => ({ default: Orb })));
 
 // Efecto shimmer de reflejo para frases de carga -- mismo mecanismo que
 // ThinkingText del chat de Atlas (dos capas superpuestas + máscara en movimiento).
@@ -1259,12 +1260,14 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   className="relative sm:col-span-2 mt-1 flex flex-col items-center gap-3 py-10 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] overflow-hidden">
                   <div className="flex w-full justify-center">
                     <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/10 shadow-[0_0_28px_rgba(22,200,193,0.16)]">
-                      <ThinkingOrb
-                        state="searching"
-                        size={64}
-                        theme="auto"
-                        aria-label={language === "en" ? "Searching for your business on Google" : "Buscando tu negocio en Google"}
-                      />
+                      <Suspense fallback={<div className="h-16 w-16 rounded-full border-2 border-[var(--color-primary-base)]/30 border-t-[var(--color-primary-base)] animate-spin" aria-label={language === "en" ? "Loading search indicator" : "Cargando indicador de búsqueda"} />}>
+                        <ThinkingOrb
+                          state="searching"
+                          size={64}
+                          theme="auto"
+                          aria-label={language === "en" ? "Searching for your business on Google" : "Buscando tu negocio en Google"}
+                        />
+                      </Suspense>
                     </div>
                   </div>
                   <div aria-live="polite" className="min-h-[1.25rem]">
@@ -1380,6 +1383,22 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                           ★ {cand.rating}{cand.reviewCount ? ` · ${cand.reviewCount} ${language === "en" ? "reviews" : "reseñas"}` : ""}
                         </p>
                       )}
+                      {(cand.phone || cand.websiteUri) && (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--color-text-secondary)]">
+                          {cand.phone && (
+                            <a href={`tel:${cand.phone}`} className="inline-flex items-center gap-1.5 hover:text-[var(--color-primary-base)] transition-colors" aria-label={language === "en" ? `Call ${cand.name}` : `Llamar a ${cand.name}`}>
+                              <Phone size={13} className="shrink-0 text-[var(--color-primary-base)]" />
+                              <span>{cand.phone}</span>
+                            </a>
+                          )}
+                          {cand.websiteUri && (
+                            <a href={cand.websiteUri} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 hover:text-[var(--color-primary-base)] transition-colors" aria-label={language === "en" ? `Open ${cand.name} website` : `Abrir sitio web de ${cand.name}`}>
+                              <Globe size={13} className="shrink-0 text-[var(--color-primary-base)]" />
+                              <T en="Website">Sitio web</T>
+                            </a>
+                          )}
+                        </div>
+                      )}
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
                           type="button"
@@ -1479,12 +1498,14 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               {revealNowLoading && !revealTimedOut ? (
                 <div className="flex w-full flex-col items-center gap-3">
                   <div className="flex justify-center">
-                    <ThinkingOrb
-                      state="solving"
-                      size={64}
-                      theme="auto"
-                      aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
-                    />
+                    <Suspense fallback={<div className="h-16 w-16 rounded-full border-2 border-[var(--color-primary-base)]/30 border-t-[var(--color-primary-base)] animate-spin" aria-label={language === "en" ? "Loading Atlas indicator" : "Cargando indicador de Atlas"} />}>
+                      <ThinkingOrb
+                        state="solving"
+                        size={64}
+                        theme="auto"
+                        aria-label={language === "en" ? "Atlas is generating your diagnosis" : "Atlas está generando tu diagnóstico"}
+                      />
+                    </Suspense>
                   </div>
                   <div className="w-full max-w-md px-2 text-center whitespace-normal break-words">
                     <ShimmerPhrase
@@ -1537,7 +1558,9 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       onClick={handleRevealNow}
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/10 px-5 py-3 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/15"
                     >
-                      <AtlasMark variant="isotipo" label="Atlas Assistant" className="h-5 w-5 shrink-0" />
+                      <Suspense fallback={<span className="h-5 w-5 shrink-0" aria-hidden="true" />}>
+                        <AtlasMark variant="isotipo" label="Atlas Assistant" className="h-5 w-5 shrink-0" />
+                      </Suspense>
                       <T en="Generate with Atlas instantly">Generar con Atlas al instante</T>
                     </button>
                   </div>
@@ -1558,8 +1581,12 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               {revealedByAtlas && (
                 <div className="mb-3 flex justify-center" role="img" aria-label="Atlas Assistant">
                   <div className="flex items-center gap-3">
-                    <AtlasMark variant="isotipo" className="h-14 w-14" />
-                    <AtlasMark variant="wordmark" className="h-8 w-auto" />
+                    <Suspense fallback={<span className="h-14 w-14" aria-hidden="true" />}>
+                      <AtlasMark variant="isotipo" className="h-14 w-14" />
+                    </Suspense>
+                    <Suspense fallback={<span className="h-8 w-24" aria-hidden="true" />}>
+                      <AtlasMark variant="wordmark" className="h-8 w-auto" />
+                    </Suspense>
                   </div>
                 </div>
               )}
@@ -1784,7 +1811,11 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
 
       </main>
       <Footer />
-      {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
+      {lightboxUrl && (
+        <Suspense fallback={null}>
+          <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />
+        </Suspense>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Gem,
@@ -50,6 +50,8 @@ const LUMINA_IMG = {
 };
 const LUMINA_NAV_ES = ["SUITES", "GASTRONOMÍA", "SPA", "EXPERIENCIAS", "A MEDIDA", "JOURNAL", "CONTACTO"];
 const LUMINA_NAV_EN = ["SUITES", "DINING", "SPA", "EXPERIENCES", "BESPOKE", "JOURNAL", "CONTACT"];
+const MOCKUP_FONTS_ID = "polaris-mockup-fonts";
+const MOCKUP_FONTS_HREF = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap";
 
 function LuminaLogo({ size = "lg" }: { size?: "lg" | "sm" }) {
   const big = size === "lg";
@@ -821,6 +823,17 @@ export default function MockupFrame({
   children,
   chrome = true,
 }: MockupFrameProps) {
+  useEffect(() => {
+    if (document.getElementById(MOCKUP_FONTS_ID)) return;
+    const link = document.createElement("link");
+    link.id = MOCKUP_FONTS_ID;
+    link.rel = "stylesheet";
+    link.href = MOCKUP_FONTS_HREF;
+    link.media = "print";
+    link.onload = () => { link.media = "all"; };
+    document.head.appendChild(link);
+  }, []);
+
   const customContent = projectSlug
     ? MOCKUP_CONTENT[projectSlug]?.[type]
     : null;

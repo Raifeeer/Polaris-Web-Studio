@@ -12,7 +12,6 @@ import {
 } from "react-router-dom";
 import { useEffect, useLayoutEffect, lazy, Suspense, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import { useTheme } from "./hooks/useTheme";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
@@ -20,7 +19,6 @@ import { ToastProvider } from "./context/ToastContext";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import Logo from "./components/Logo";
 import { initNavPerfDebug } from "./lib/navPerfDebug";
-import EasterEgg from "./components/EasterEgg";
 import CookieConsent from "./components/CookieConsent";
 import { getCookieConsent, onCookieConsentChange } from "./lib/cookieConsent";
 import RouteErrorBoundary from "./components/RouteErrorBoundary";
@@ -47,55 +45,32 @@ const Gracias = lazy(() => import("./pages/Gracias"));
 const Schedule = lazy(() => import("./pages/Schedule"));
 const AtlasChat = lazy(() => import("./pages/AtlasChat"));
 const QuoteBot = lazy(() => import("./components/QuoteBot"));
+const DeferredEasterEgg = lazy(() => import("./components/EasterEgg"));
 
 const GA_ID = import.meta.env.VITE_GA4_ID;
 
-// Simple, beautiful high-fidelity micro-loader -- se muestra en cada
-// transición de ruta (el Suspense que envuelve <AnimatedRoutes /> lo
-// dispara mientras se descarga el chunk lazy de la página siguiente).
-// Se renderiza en un portal a document.body porque su ancestro directo
-// (el motion.div de la transición de página en AnimatedRoutes) anima con
-// transform -- eso crea un nuevo "containing block" para position:fixed,
-// así que sin el portal el loader queda posicionado relativo a ese
-// ancestro en movimiento en vez del viewport real, y "salta" mientras la
-// página entra/sale.
-// "Destello": la estrella pasa la mayor parte del ciclo en reposo (escala y
-// brillo normales) y cada tanto hace un pulso rápido, como una estrella real
-// titilando -- a diferencia de un giro infinito, que nunca tiene un punto de
-// reposo natural y siempre se corta a mitad de vuelta quede como quede la
-// carga real de la página, esto casi siempre se corta viéndose "quieto".
-const TWINKLE_TIMES = [0, 0.55, 0.65, 0.78, 1];
-const TWINKLE_TRANSITION = {
-  duration: 2.4,
-  times: TWINKLE_TIMES,
-  repeat: Infinity,
-  ease: "easeInOut" as const,
-};
+// Micro-loader de ruta: el shell global usa transiciones CSS ligeras para no
+// precargar ni ejecutar Framer Motion antes de que la página real lo necesite.
 
 function RouteLoader() {
   return createPortal(
-    <div className="fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
-      <div className="relative flex items-center justify-center">
+    <div className="route-loader fixed inset-0 bg-[var(--color-surface-base)] flex items-center justify-center z-50">
+      <div className="route-loader-mark relative flex items-center justify-center">
         {/* Brillo con radial-gradient en vez de filter:blur -- blur() combinado
             con una animación de scale a veces renderiza con un borde
             cuadrado visible (bug de compositing de Safari/WebKit en iOS,
             intermitente). El gradiente radial da el mismo efecto de
             resplandor difuso sin usar filter, así que no tiene ese problema. */}
-        <motion.div
-          className="absolute -inset-8 rounded-full"
+        <div
+          className="route-loader-glow absolute -inset-8 rounded-full"
           style={{
             background:
               "radial-gradient(circle, var(--color-primary-base) 0%, transparent 70%)",
           }}
-          animate={{ opacity: [0.15, 0.15, 0.55, 0.55, 0.15], scale: [1, 1, 1.35, 1.35, 1] }}
-          transition={TWINKLE_TRANSITION}
         />
-        <motion.div
-          animate={{ scale: [1, 1, 1.15, 1.15, 1], rotate: [0, 0, 12, -8, 0] }}
-          transition={TWINKLE_TRANSITION}
-        >
+        <div className="route-loader-logo">
           <Logo size={160} showText={false} />
-        </motion.div>
+        </div>
       </div>
     </div>,
     document.body,
@@ -184,41 +159,13 @@ function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      {/* Este motion.div solo se usa para la animación de SALIDA de la
-          página anterior (exit) -- no tiene initial/animate porque, al
-          envolver también el Suspense, su "entrada" se disparaba en cuanto
-          cambiaba la ruta (mientras se mostraba el RouteLoader), no cuando
-          la página real terminaba de cargar. El fade-in real de la página
-          vive en el motion.div de más abajo, DENTRO del Suspense, así que
-          React recién lo monta (y dispara su propio `initial`) cuando el
-          contenido de verdad está listo para mostrarse -- antes la página
-          aparecía de golpe porque la animación de entrada ya se había
-          consumido entera sobre el loader. */}
-      <motion.div
+      <div
         key={location.pathname}
-        // Sin "y" en exit -- esta transición envuelve TODAS las páginas de
-        // la app, incluida cualquier mockup en video/imagen con
-        // overflow-hidden + border-radius muchos niveles más abajo en el
-        // árbol. Bug real encontrado el mismo día: Framer Motion deja un
-        // transform inline permanente (incluso en reposo) que, como
-        // ancestro de un descendiente con overflow-hidden + border-radius,
-        // rompe el redondeo de esquinas en WebKit/iOS real -- sin importar
-        // cuántos niveles de distancia haya. Ya se había corregido este
-        // mismo bug en varios wrappers locales (Portfolio.tsx,
-        // ProjectDetail.tsx) sin efecto porque la causa real estaba acá,
-        // en el wrapper global de transición de página que ningún fix
-        // local podía evitar.
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.22, ease: "easeInOut" }}
+        className="route-transition-shell"
       >
         <RouteErrorBoundary>
         <Suspense fallback={<RouteLoader />}>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.35, ease: "easeOut" }}
-          >
+          <div key={`${location.pathname}${location.search}${location.hash}`} className="route-page-content">
           <Routes location={location}>
             <Route path="/" element={<LandingPage />} />
             <Route path="/servicios" element={<Services />} />
@@ -252,11 +199,10 @@ function AnimatedRoutes() {
               element={<LegalPage page="cookies" />}
             />
           </Routes>
-          </motion.div>
+          </div>
         </Suspense>
         </RouteErrorBoundary>
-      </motion.div>
-    </AnimatePresence>
+      </div>
   );
 }
 
@@ -292,21 +238,11 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
   const language = navigator.language.startsWith("es") ? "es" : "en";
 
   return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 0.98, filter: "blur(8px)" }}
-      transition={{ duration: 0.5, ease: "easeInOut" }}
-      className="fixed inset-0 z-[99999] bg-[var(--color-surface-base)] flex flex-col items-center justify-center gap-6 select-none"
-    >
+    <div className="app-loader fixed inset-0 z-[99999] bg-[var(--color-surface-base)] flex flex-col items-center justify-center gap-6 select-none">
       {/* Logo real -- misma imagen combinada (estrella + letras juntas) que
           el portal de clientes, en vez de la estrella y el texto como
           elementos separados. */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4 }}
-        className="text-center space-y-2"
-      >
+      <div className="app-loader-logo text-center space-y-2">
         <img
           src="/brand/lockup-vertical-blanco.svg"
           alt="Polaris Web Studio"
@@ -317,40 +253,36 @@ function PolarisLoader({ onComplete }: { onComplete: () => void }) {
           alt="Polaris Web Studio"
           className="h-72 w-auto mx-auto hidden [.light_&]:block"
         />
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: phase >= 1 ? 0.4 : 0 }}
-          className="text-[10px] font-mono tracking-widest text-[var(--color-text-tertiary)] uppercase"
+        <p
+          style={{ opacity: phase >= 1 ? 0.4 : 0 }}
+          className="text-[10px] font-mono tracking-widest text-[var(--color-text-tertiary)] uppercase transition-opacity duration-300"
         >
           v1.0
-        </motion.p>
-      </motion.div>
+        </p>
+      </div>
 
       {/* Progress bar */}
       <div className="w-48">
         <div className="h-[2px] w-full bg-[var(--color-border-subtle)] rounded-full overflow-hidden">
-          <motion.div
-            className="h-full bg-[var(--color-primary-base)] rounded-full"
-            initial={{ width: "0%" }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 0.1 }}
+          <div
+            className="h-full bg-[var(--color-primary-base)] rounded-full transition-[width] duration-100 ease-linear"
+            style={{ width: `${progress}%` }}
           />
         </div>
         <div className="flex justify-between mt-2">
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: phase >= 2 ? 0.3 : 0 }}
-            className="text-[9px] font-mono text-[var(--color-text-tertiary)]"
+          <span
+            style={{ opacity: phase >= 2 ? 0.3 : 0 }}
+            className="text-[9px] font-mono text-[var(--color-text-tertiary)] transition-opacity duration-300"
           >
             {phase === 2 && (language === "es" ? "Iniciando sistema..." : "Initializing...")}
             {phase === 3 && (language === "es" ? "Punta Cana, RD" : "Punta Cana, DR")}
-          </motion.span>
+          </span>
           <span className="text-[9px] font-mono text-[var(--color-text-tertiary)] opacity-30">
             {progress}%
           </span>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -410,7 +342,7 @@ export default function App() {
     // 1. Defer chatbot to save initial bundles & execution cycles
     const botTimer = setTimeout(() => {
       setShowBot(true);
-    }, 4500);
+    }, 8000);
 
     // 2. Initialize analytics trackers on first real interaction, or timing
     // fallback -- pero SOLO si hay consentimiento de cookies analíticas (ver
@@ -517,8 +449,9 @@ export default function App() {
       window.addEventListener(event, initTrackers, { passive: true, once: true });
     });
 
-    // Fallback: load trackers after 6 seconds anyway if user remains idle
-    const fallbackTimer = setTimeout(initTrackers, 6000);
+    // Fallback: load trackers only after a longer idle window. La interacción
+    // real sigue activándolos inmediatamente cuando existe consentimiento.
+    const fallbackTimer = setTimeout(initTrackers, 15000);
 
     // Reacciona en caliente a cualquier cambio de preferencia, venga del
     // banner o del panel "Configurar mis cookies" en /cookies.
@@ -540,24 +473,10 @@ export default function App() {
 
   return (
     <>
-      <AnimatePresence mode="wait">
-        {showLoader && <PolarisLoader onComplete={handleLoaderComplete} />}
-      </AnimatePresence>
+      {showLoader && <PolarisLoader onComplete={handleLoaderComplete} />}
 
       {!showLoader && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {/* reducedMotion="user" hace que TODA animación de Framer Motion del
-              sitio (los cientos de usos de motion y AnimatePresence en las
-              páginas) respete prefers-reduced-motion del sistema operativo
-              automáticamente -- en vez de tener que gatear cada instancia a
-              mano. Reduce a fade-only (mantiene opacity, tira transform/
-              posición), no las elimina del todo -- exactamente el
-              comportamiento que pide la categoría de accesibilidad de motion. */}
-          <MotionConfig reducedMotion="user">
+        <div className="app-route-shell">
             <AuthProvider>
               <LanguageProvider>
                 <ToastProvider>
@@ -568,14 +487,17 @@ export default function App() {
                       <AnimatedRoutes />
                       <ConditionalQuoteBot showBot={showBot} />
                       <CookieConsent />
-                      <EasterEgg />
+                      {showBot && (
+                        <Suspense fallback={null}>
+                          <DeferredEasterEgg />
+                        </Suspense>
+                      )}
                     </div>
                   </Router>
                 </ToastProvider>
               </LanguageProvider>
             </AuthProvider>
-          </MotionConfig>
-        </motion.div>
+        </div>
       )}
     </>
   );

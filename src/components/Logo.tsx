@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 
 interface LogoProps {
   size?: number;
@@ -81,12 +80,10 @@ export default function Logo({
             </linearGradient>
           </defs>
 
-          <motion.path
+          <path
             d="M 912.917969 849.828125 L 1486.273437 744.0625 L 909.207031 645.71875 L 1066.925781 417.492188 L 846.117187 575.210938 L 742.207031 0 L 643.867187 578.921875 L 417.492187 417.492188 L 573.355469 645.71875 L 0 744.0625 L 573.355469 849.828125 L 417.492187 1068.777344 L 643.867187 912.914063 L 742.207031 1486.269531 L 847.972656 916.625 L 1066.925781 1068.777344 Z"
             fill="url(#logo-gradient)"
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5, ease: "circOut" }}
+            className="polaris-logo-mark"
           />
 
           {/* Precision Core */}

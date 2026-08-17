@@ -59,19 +59,13 @@
     <!-- Preconnect to external font origins for optimized PageSpeed -->
     <link rel="preconnect" href="https://api.fontshare.com" />
     <link rel="preconnect" href="https://cdn.fontshare.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <!-- Performance font loading (non-blocking via media trick + noscript fallbacks) -->
     <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&f[]=satoshi@900,700,500,300,400&display=swap" media="print" onload="this.media='all'" />
-    <!-- Playfair Display + Inter: solo para el mockup interactivo de Lúmina Sky
-         (MockupFrame.tsx), que replica la tipografía real de ese proyecto de
-         cliente -- no es la fuente de marca de Polaris (esa es Cormorant
-         Garamond, arriba). Mismo patrón non-blocking. -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'" />
+    <!-- Las fuentes específicas de mockups se cargan bajo demanda desde
+         MockupFrame.tsx; no deben bloquear ni competir con el primer viewport. -->
     <noscript>
       <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,500,700,400,900&f[]=satoshi@900,700,500,300,400&display=swap" />
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" />
     </noscript>
 
     <!-- Canonical: sin valor estático acá a propósito. Como vercel.json

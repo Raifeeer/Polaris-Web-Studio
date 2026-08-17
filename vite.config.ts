@@ -15,6 +15,10 @@ export default defineConfig(({mode: _mode}) => {
       dedupe: ['react', 'react-dom'],
     },
     build: {
+      // Las rutas son lazy; precargar sus dependencias en cada entrada SPA
+      // descargaba Framer Motion antes de que la ruta real terminara de
+      // montar, elevando el trabajo del hilo principal en móvil.
+      modulePreload: false,
       minify: 'esbuild',
       target: 'es2015',
       rollupOptions: {
