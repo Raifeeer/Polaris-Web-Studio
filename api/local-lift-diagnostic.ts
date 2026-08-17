@@ -4,7 +4,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlaceByMapsUrl, findPlaceCandidates, generateFast, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
+import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
 import { claimEmailDelivery, commitEmailDelivery, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
@@ -82,15 +82,15 @@ ${placeDataSummary(place)}
 
 Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}. Nunca uses dos guiones seguidos ("--") como signo de puntuación: usa una raya (—), una coma o punto y aparte según corresponda.`;
 
-  let lastError: unknown;
-  for (const provider of ["deepseek", "grok", "gemini"] as const) {
-    try {
-      return await generateFast(diagnosticSchema, prompt, 0.5, provider);
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error("Los proveedores de Atlas no respondieron a tiempo");
+  // generateFast() usa un timeout fijo de 9.2s -- pensado para los llamados
+  // chicos y en paralelo de local-lift-package.ts (5 items por schema), no
+  // para esta generación más grande (5 problemas + plan de 7 días). Bug
+  // real encontrado en vivo (16 de agosto): con generateFast, los 3
+  // proveedores agotaban el timeout de 9.2s consistentemente en esta
+  // llamada, sin margen real para completar. generateWithFallback (25s por
+  // intento, mismo orden deepseek -> grok -> gemini) es la función correcta
+  // para generaciones de este tamaño.
+  return generateWithFallback(diagnosticSchema, prompt, 0.5);
 }
 
 function renderDiagnosticText(diagnostic: Diagnostic, lang: "es" | "en"): string {

@@ -3,7 +3,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { generateFast, placeDataSummary , buildEmailFooter } from "./_localLift.js";
+import { generateWithFallback, placeDataSummary , buildEmailFooter } from "./_localLift.js";
 import { claimEmailDelivery, commitEmailDelivery, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Manda de verdad los correos de diagnóstico gratis que quedaron
@@ -47,15 +47,12 @@ async function generateDiagnostic(place: any, lang: "es" | "en") {
 ${placeDataSummary(place)}
 
 Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}. Nunca uses dos guiones seguidos ("--") como signo de puntuación: usa una raya (—), una coma o punto y aparte según corresponda.`;
-  let lastError: unknown;
-  for (const provider of ["deepseek", "grok", "gemini"] as const) {
-    try {
-      return await generateFast(diagnosticSchema, prompt, 0.5, provider);
-    } catch (error) {
-      lastError = error;
-    }
-  }
-  throw lastError instanceof Error ? lastError : new Error("Los proveedores de Atlas no respondieron a tiempo");
+  // Mismo bug real que local-lift-diagnostic.ts: generateFast() tiene un
+  // timeout fijo de 9.2s (pensado para los llamados chicos de
+  // local-lift-package.ts), insuficiente para esta generación más grande
+  // (5 problemas + plan de 7 días) -- los 3 proveedores lo agotaban
+  // consistentemente. generateWithFallback (25s por intento) es correcto acá.
+  return generateWithFallback(diagnosticSchema, prompt, 0.5);
 }
 
 const firebaseApp = getApps().length
