@@ -3095,6 +3095,21 @@ export default function ClientDashboard() {
             </button>
 
             {isAdmin && (
+              <div className="mt-3 border-t border-[var(--color-border-subtle)]/30 pt-3">
+                <p className="px-3.5 pb-1 text-[9px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                  <T en="Services">Servicios</T>
+                </p>
+                <a
+                  href="/local-lift/panel"
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] transition-all"
+                >
+                  <Sparkles size={16} className="text-[var(--color-primary-base)]" />
+                  <T en="Local Lift Panel">Panel de Local Lift</T>
+                </a>
+              </div>
+            )}
+
+            {isAdmin && (
               <button
                 onClick={() => setActiveTab("admin-clients")}
                 className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-xs font-bold transition-all border border-indigo-500/20 ${
