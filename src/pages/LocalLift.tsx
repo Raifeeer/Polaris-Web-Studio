@@ -1227,7 +1227,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 value={contactName}
                 onChange={(e) => setContactName(e.target.value)}
                 placeholder={language === "en" ? "Your name" : "Tu nombre"}
-                className="glass-input local-lift-input rounded-xl px-4 py-3 text-sm outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+                className="glass-input local-lift-input rounded-xl px-4 py-3 text-sm sm:col-span-2 outline-none border border-[var(--color-border-subtle)] transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
               />
               <input
                 type="email"
