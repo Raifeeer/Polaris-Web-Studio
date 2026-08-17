@@ -1063,7 +1063,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 </div>
                 <div className="mt-7 flex items-end gap-2">
                   <span className={`${tier.isFree ? "text-4xl" : "text-5xl"} font-display font-black text-[var(--color-primary-base)]`}>
-                    <T en={tier.enPrice}>{tier.price}</T>
+                    <T en={tier.enPrice}>{tier.isFree ? tier.price : `$${tier.price}`}</T>
                   </span>
                   {!tier.isFree && <span className="pb-2 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>}
                 </div>
