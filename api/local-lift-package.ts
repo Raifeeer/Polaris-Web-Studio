@@ -4,7 +4,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlace, findPlaceReviews, generateFast, placeDataSummary } from "./_localLift.js";
+import { findPlace, findPlaceReviews, generateFast, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 const firebaseApp = getApps().length
   ? getApps()[0]
@@ -569,6 +569,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", "inline; filename=\"vista-previa.pdf\"");
       return res.status(200).send(previewPdf);
+    }
+
+    if (action === "regenerate_snippet") {
+      // Regenera UNA sola pieza del paquete (una publicación, una respuesta,
+      // una plantilla, un mensaje, o la descripción) -- pedido explícito del
+      // usuario: poder corregir un solo párrafo sin tener que rehacer el
+      // paquete completo ni editar el PDF a mano. Nunca toca el resto del
+      // contenido, el cliente decide qué reemplazar en su propio estado.
+      const { kind, current, instruction } = req.body || {};
+      if (!givenPlace || !kind || !current) {
+        return res.status(400).json({ error: "Falta 'place', 'kind' o 'current'." });
+      }
+      const place = givenPlace as PlaceData;
+      const dataBlock = placeDataSummary(place);
+      const langInstruction = language === "en" ? "inglés" : "español neutro, sin voseo";
+      const baseHeader = `Eres un consultor de Polaris Local Lift preparando contenido para este negocio. Datos reales de su ficha de Google (Places API), no inventes cifras ni datos que no estén acá:\n\n${dataBlock}\n\n`;
+      const instructionLine = typeof instruction === "string" && instruction.trim()
+        ? `Instrucción real del admin sobre qué cambiar: "${instruction.trim()}". Aplícala tal cual, sin ignorarla.`
+        : "No hay instrucción puntual: genera una alternativa igual de buena, distinta a la actual.";
+
+      try {
+        if (kind === "description") {
+          const schema = z.object({ rewrittenDescription: z.string().describe("Descripción reescrita de la ficha de Google (máx. 750 caracteres).") });
+          const prompt = `${baseHeader}Descripción actual: "${current.rewrittenDescription || ""}"\n\nReescribe SOLO la descripción del negocio. ${instructionLine} Todo en ${langInstruction}.`;
+          const result = await generateWithFallback(schema, prompt, 0.65);
+          return res.json({ success: true, result });
+        }
+        if (kind === "post") {
+          const schema = z.object({
+            title: z.string().describe("Título corto de la publicación (máx. 10 palabras)."),
+            body: z.string().describe("Texto de la publicación para Google Business Profile, máx. 800 caracteres."),
+            cta: z.enum(["Reservar", "Llamar ahora", "Ver más", "Comprar", "Cómo llegar", "Ninguno"]),
+          });
+          const prompt = `${baseHeader}Publicación actual:\nTítulo: "${current.title || ""}"\nTexto: "${current.body || ""}"\nCTA: "${current.cta || ""}"\n\nReescribe SOLO esta publicación para Google Business Profile. ${instructionLine} Todo en ${langInstruction}.`;
+          const result = await generateWithFallback(schema, prompt, 0.65);
+          return res.json({ success: true, result });
+        }
+        if (kind === "reply") {
+          const schema = z.object({ reply: z.string().describe("Respuesta breve y personalizada a esa reseña real.") });
+          const prompt = `${baseHeader}Reseña real: [${current.rating}/5] ${current.author}: "${current.originalText}"\n\nRespuesta actual: "${current.reply || ""}"\n\nReescribe SOLO la respuesta a esta reseña real (nunca inventes datos de la reseña misma). ${instructionLine} Todo en ${langInstruction}.`;
+          const result = await generateWithFallback(schema, prompt, 0.65);
+          return res.json({ success: true, result: { ...result, author: current.author, rating: current.rating, originalText: current.originalText } });
+        }
+        if (kind === "template") {
+          const schema = z.object({ template: z.string().describe("Plantilla breve y genérica de respuesta, con [corchetes] donde el cliente personaliza.") });
+          const prompt = `${baseHeader}Plantilla actual (para calificación ${current.forRating}/5): "${current.template || ""}"\n\nReescribe SOLO esta plantilla genérica. ${instructionLine} Todo en ${langInstruction}.`;
+          const result = await generateWithFallback(schema, prompt, 0.65);
+          return res.json({ success: true, result: { ...result, forRating: current.forRating } });
+        }
+        if (kind === "whatsapp") {
+          const schema = z.object({
+            scenario: z.string().describe("Escenario breve (ej. 'Consulta sin respuesta en 24h')."),
+            message: z.string().describe("Mensaje breve de WhatsApp listo para adaptar."),
+          });
+          const prompt = `${baseHeader}Mensaje actual:\nEscenario: "${current.scenario || ""}"\nMensaje: "${current.message || ""}"\n\nReescribe SOLO este mensaje de WhatsApp. ${instructionLine} Todo en ${langInstruction}.`;
+          const result = await generateWithFallback(schema, prompt, 0.65);
+          return res.json({ success: true, result });
+        }
+        return res.status(400).json({ error: "Tipo de pieza inválido." });
+      } catch (regenErr) {
+        console.error("[local-lift-package] Error regenerando pieza:", regenErr);
+        return res.status(500).json({ error: "No pudimos regenerar esta parte. Intenta de nuevo." });
+      }
     }
 
     if (action === "download_pdf") {

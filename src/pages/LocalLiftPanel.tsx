@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Link2, Loader2, Mail, MapPin, Phone, Send, Star, User } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Link2, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Send, Star, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import ImageLightbox from "../components/ImageLightbox";
@@ -72,6 +72,148 @@ const STATUS_LABEL: Record<string, string> = {
   sent: "Paquete completo enviado",
 };
 
+type SnippetKind = "description" | "post" | "reply" | "template" | "whatsapp";
+interface EditingSnippet {
+  kind: SnippetKind;
+  index: number | null; // null solo para "description" -- es única, no vive en un array
+  current: any;
+}
+
+// Modal para editar/regenerar UNA sola pieza del paquete (una publicación, una
+// respuesta, una plantilla, un mensaje, o la descripción) -- pedido explícito
+// del usuario: corregir un párrafo puntual sin rehacer todo el paquete ni
+// editar el PDF a mano.
+function SnippetEditModal({
+  token,
+  place,
+  leadId,
+  tier,
+  editing,
+  onClose,
+  onSave,
+}: {
+  token: string | null;
+  place: PlaceInfo;
+  leadId: string | null;
+  tier: string;
+  editing: EditingSnippet;
+  onClose: () => void;
+  onSave: (newValue: any) => void;
+}) {
+  const [fields, setFields] = useState<any>(editing.current);
+  const [instruction, setInstruction] = useState("");
+  const [regenStatus, setRegenStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [regenError, setRegenError] = useState("");
+
+  const regenerate = async (withInstruction: boolean) => {
+    setRegenStatus("loading");
+    setRegenError("");
+    try {
+      const res = await fetch("/api/local-lift-package", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          action: "regenerate_snippet",
+          place,
+          leadId,
+          tier,
+          kind: editing.kind,
+          current: fields,
+          instruction: withInstruction ? instruction : undefined,
+          lang: "es",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setRegenError(data.error || "No se pudo regenerar.");
+        setRegenStatus("error");
+        return;
+      }
+      setFields(data.result);
+      setRegenStatus("idle");
+    } catch {
+      setRegenError("Algo salió mal regenerando. Intenta de nuevo.");
+      setRegenStatus("error");
+    }
+  };
+
+  return (
+    <div role="dialog" aria-modal="true" onClick={onClose} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+      <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-2xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">Editar pieza</h3>
+          <button type="button" onClick={onClose} className="rounded-full p-1.5 hover:bg-[var(--color-surface-elevated)]"><X size={18} /></button>
+        </div>
+
+        <div className="space-y-3">
+          {editing.kind === "description" && (
+            <textarea
+              value={fields.rewrittenDescription || ""}
+              onChange={(e) => setFields({ ...fields, rewrittenDescription: e.target.value })}
+              rows={6}
+              className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 text-sm outline-none focus:border-[var(--color-primary-base)]"
+            />
+          )}
+
+          {editing.kind === "post" && (
+            <>
+              <input value={fields.title || ""} onChange={(e) => setFields({ ...fields, title: e.target.value })} placeholder="Título" className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-2.5 text-sm outline-none focus:border-[var(--color-primary-base)]" />
+              <textarea value={fields.body || ""} onChange={(e) => setFields({ ...fields, body: e.target.value })} rows={5} placeholder="Texto" className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 text-sm outline-none focus:border-[var(--color-primary-base)]" />
+              <select value={fields.cta || "Ninguno"} onChange={(e) => setFields({ ...fields, cta: e.target.value })} className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-2.5 text-sm outline-none focus:border-[var(--color-primary-base)]">
+                {["Reservar", "Llamar ahora", "Ver más", "Comprar", "Cómo llegar", "Ninguno"].map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            </>
+          )}
+
+          {editing.kind === "reply" && (
+            <>
+              <p className="text-xs text-[var(--color-text-tertiary)]">Reseña real de <span className="font-bold">{fields.author}</span> ({fields.rating}/5): "<span className="italic">{fields.originalText}</span>"</p>
+              <textarea value={fields.reply || ""} onChange={(e) => setFields({ ...fields, reply: e.target.value })} rows={4} className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 text-sm outline-none focus:border-[var(--color-primary-base)]" />
+            </>
+          )}
+
+          {editing.kind === "template" && (
+            <>
+              <p className="text-xs text-[var(--color-text-tertiary)]">Plantilla para calificación {fields.forRating}/5</p>
+              <textarea value={fields.template || ""} onChange={(e) => setFields({ ...fields, template: e.target.value })} rows={4} className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 text-sm outline-none focus:border-[var(--color-primary-base)]" />
+            </>
+          )}
+
+          {editing.kind === "whatsapp" && (
+            <>
+              <input value={fields.scenario || ""} onChange={(e) => setFields({ ...fields, scenario: e.target.value })} placeholder="Escenario" className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-2.5 text-sm outline-none focus:border-[var(--color-primary-base)]" />
+              <textarea value={fields.message || ""} onChange={(e) => setFields({ ...fields, message: e.target.value })} rows={4} className="w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-3 text-sm outline-none focus:border-[var(--color-primary-base)]" />
+            </>
+          )}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-[var(--color-border-subtle)] space-y-2">
+          <button type="button" onClick={() => regenerate(false)} disabled={regenStatus === "loading"} className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2.5 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 disabled:opacity-50">
+            {regenStatus === "loading" ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />} Regenerar con IA
+          </button>
+          <div className="flex gap-2">
+            <input
+              value={instruction}
+              onChange={(e) => setInstruction(e.target.value)}
+              placeholder="Ej: menciona el horario, cambia el tono a más formal…"
+              className="flex-1 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs outline-none focus:border-[var(--color-primary-base)]"
+            />
+            <button type="button" onClick={() => regenerate(true)} disabled={regenStatus === "loading" || !instruction.trim()} className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-primary-base)] px-3 py-2 text-xs font-black text-white disabled:opacity-50">
+              {regenStatus === "loading" ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Regenerar con esto
+            </button>
+          </div>
+          {regenStatus === "error" && <p className="text-xs text-red-400">{regenError}</p>}
+        </div>
+
+        <div className="mt-4 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-xs font-bold text-[var(--color-text-tertiary)]">Cancelar</button>
+          <button type="button" onClick={() => { onSave(fields); onClose(); }} className="rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white">Guardar cambios</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function formatDateTime(iso: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -112,6 +254,19 @@ export default function LocalLiftPanel() {
   const [gbpPublishingIndex, setGbpPublishingIndex] = useState<number | null>(null);
   const [gbpPublishedIndexes, setGbpPublishedIndexes] = useState<Set<number>>(new Set());
   const [gbpPublishError, setGbpPublishError] = useState("");
+  const [editingSnippet, setEditingSnippet] = useState<EditingSnippet | null>(null);
+
+  const handleSaveSnippet = (kind: SnippetKind, index: number | null, newValue: any) => {
+    setPkg((prev) => {
+      if (!prev) return prev;
+      if (kind === "description") return { ...prev, rewrittenDescription: newValue.rewrittenDescription };
+      if (kind === "post" && index != null) { const arr = [...(prev.googlePosts || [])]; arr[index] = newValue; return { ...prev, googlePosts: arr }; }
+      if (kind === "reply" && index != null) { const arr = [...(prev.reviewReplies || [])]; arr[index] = newValue; return { ...prev, reviewReplies: arr }; }
+      if (kind === "template" && index != null) { const arr = [...(prev.reviewReplyTemplates || [])]; arr[index] = newValue; return { ...prev, reviewReplyTemplates: arr }; }
+      if (kind === "whatsapp" && index != null) { const arr = [...(prev.whatsappMessages || [])]; arr[index] = newValue; return { ...prev, whatsappMessages: arr }; }
+      return prev;
+    });
+  };
 
   const loadLeads = () => {
     if (!token) return;
@@ -440,7 +595,12 @@ export default function LocalLiftPanel() {
 
           {pkg.rewrittenDescription && (
             <section>
-              <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">Descripción nueva</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">Descripción nueva</h2>
+                <button type="button" onClick={() => setEditingSnippet({ kind: "description", index: null, current: { rewrittenDescription: pkg.rewrittenDescription } })} className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]">
+                  <Pencil size={12} /> Editar
+                </button>
+              </div>
               <p className="mt-2 text-sm text-[var(--color-text-secondary)]">{pkg.rewrittenDescription}</p>
               {pkg.services && (
                 <ul className="mt-2 flex flex-wrap gap-2">
@@ -456,7 +616,10 @@ export default function LocalLiftPanel() {
               <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                 {pkg.googlePosts.map((p, i) => (
                   <div key={i} className="rounded-lg border border-[var(--color-border-subtle)] p-3 text-xs">
-                    <p className="font-black">{p.title}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-black">{p.title}</p>
+                      <button type="button" onClick={() => setEditingSnippet({ kind: "post", index: i, current: p })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
+                    </div>
                     <p className="mt-1 text-[var(--color-text-secondary)]">{p.body}</p>
                     <p className="mt-1 font-bold text-[var(--color-primary-base)]">CTA: {p.cta}</p>
                   </div>
@@ -471,7 +634,10 @@ export default function LocalLiftPanel() {
               <div className="mt-2 space-y-2">
                 {pkg.reviewReplies.map((r, i) => (
                   <div key={i} className="rounded-lg border border-[var(--color-border-subtle)] p-3 text-xs">
-                    <p className="font-black">{r.author} ({r.rating}/5)</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-black">{r.author} ({r.rating}/5)</p>
+                      <button type="button" onClick={() => setEditingSnippet({ kind: "reply", index: i, current: r })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
+                    </div>
                     <p className="mt-1 italic text-[var(--color-text-tertiary)]">"{r.originalText}"</p>
                     <p className="mt-1 text-[var(--color-text-secondary)]">→ {r.reply}</p>
                   </div>
@@ -484,7 +650,12 @@ export default function LocalLiftPanel() {
             <section>
               <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">Plantillas por calificación</h2>
               <div className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">
-                {pkg.reviewReplyTemplates.map((t, i) => <p key={i}><span className="font-bold text-[var(--color-text-primary)]">{t.forRating}/5:</span> {t.template}</p>)}
+                {pkg.reviewReplyTemplates.map((t, i) => (
+                  <div key={i} className="flex items-start justify-between gap-2">
+                    <p><span className="font-bold text-[var(--color-text-primary)]">{t.forRating}/5:</span> {t.template}</p>
+                    <button type="button" onClick={() => setEditingSnippet({ kind: "template", index: i, current: t })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
+                  </div>
+                ))}
               </div>
             </section>
           )}
@@ -493,7 +664,12 @@ export default function LocalLiftPanel() {
             <section>
               <h2 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)]">{pkg.whatsappMessages.length} mensajes de WhatsApp</h2>
               <div className="mt-2 space-y-1.5 text-xs text-[var(--color-text-secondary)]">
-                {pkg.whatsappMessages.map((m, i) => <p key={i}><span className="font-bold text-[var(--color-text-primary)]">{m.scenario}:</span> {m.message}</p>)}
+                {pkg.whatsappMessages.map((m, i) => (
+                  <div key={i} className="flex items-start justify-between gap-2">
+                    <p><span className="font-bold text-[var(--color-text-primary)]">{m.scenario}:</span> {m.message}</p>
+                    <button type="button" onClick={() => setEditingSnippet({ kind: "whatsapp", index: i, current: m })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
+                  </div>
+                ))}
               </div>
             </section>
           )}
@@ -567,6 +743,17 @@ export default function LocalLiftPanel() {
         </div>
       )}
       {lightboxUrl && <ImageLightbox url={lightboxUrl} onClose={() => setLightboxUrl(null)} />}
+      {editingSnippet && place && (
+        <SnippetEditModal
+          token={token}
+          place={place}
+          leadId={leadId}
+          tier={tier}
+          editing={editingSnippet}
+          onClose={() => setEditingSnippet(null)}
+          onSave={(newValue) => handleSaveSnippet(editingSnippet.kind, editingSnippet.index, newValue)}
+        />
+      )}
     </div>
   );
 }
