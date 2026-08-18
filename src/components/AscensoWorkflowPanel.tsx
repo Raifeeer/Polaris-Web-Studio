@@ -21,14 +21,14 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const GUIDE_ASSET_BY_TITLE: Record<string, string> = {
-  "Descripción del negocio": "description-route.svg",
-  "Servicios y llamadas a la acción": "services-route.svg",
-  "Publicaciones y novedades": "posts-route.svg",
-  "Fotos del negocio": "photos-route.svg",
-  "Lectura de reseñas y buenas prácticas": "review-analysis-route.svg",
-  "Respuestas a reseñas": "review-replies-route.svg",
-  "Mensajes de seguimiento": "messages-route.svg",
-  "Verificación final": "final-check-route.svg",
+  "Descripción del negocio": "description-reference.jpg",
+  "Servicios y llamadas a la acción": "services-reference.png",
+  "Publicaciones y novedades": "posts-reference.jpg",
+  "Fotos del negocio": "photos-reference.jpg",
+  "Lectura de reseñas y buenas prácticas": "review-analysis-reference.png",
+  "Respuestas a reseñas": "review-replies-reference.jpg",
+  "Mensajes de seguimiento": "messages-reference.svg",
+  "Verificación final": "final-check-reference.png",
 };
 
 const requestStatus: Record<string, string> = {
@@ -75,8 +75,8 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
   const quickGuide = (title: string) => {
     const step = guideSteps.find((item: any) => item.title === title || item.titleEn === title);
     if (!step?.quickStart) return null;
-    const asset = step.visualAsset || GUIDE_ASSET_BY_TITLE[step.title] || GUIDE_ASSET_BY_TITLE[step.titleEn];
-    return <div className="space-y-3"><div className="rounded-lg border border-teal-500/20 bg-teal-500/[0.05] p-3 text-xs leading-relaxed text-[var(--color-text-secondary)]"><p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Cómo aplicar esta sección</p><p className="mt-1">{step.quickStart}</p></div>{asset && <figure className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]"><img src={`/ascenso-guide/${asset}`} alt={step.visualAlt || "Mapa visual de ruta creado por Polaris"} loading="lazy" decoding="async" className="block h-auto w-full" /><figcaption className="px-3 py-2 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Mapa visual de orientación creado por Polaris. La interfaz puede variar.</figcaption></figure>}</div>;
+    const asset = GUIDE_ASSET_BY_TITLE[step.title] || GUIDE_ASSET_BY_TITLE[step.titleEn] || step.visualAsset;
+    return <div className="space-y-3"><div className="rounded-lg border border-teal-500/20 bg-teal-500/[0.05] p-3 text-xs leading-relaxed text-[var(--color-text-secondary)]"><p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Cómo aplicar esta sección</p><p className="mt-1">{step.quickStart}</p></div>{asset && <figure className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]"><img src={`/ascenso-guide/${asset}`} alt={step.visualAlt || "Referencia visual del paso de implementación"} loading="lazy" decoding="async" className="block h-auto max-h-[360px] w-full object-contain bg-white" /><figcaption className="px-3 py-2 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Referencia visual. La interfaz puede variar según la cuenta.</figcaption></figure>}</div>;
   };
 
   const mutate = async (action: string, extra: Record<string, unknown> = {}) => {
@@ -150,7 +150,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
                   </div>
                   <div><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Instrucciones</p><ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed text-[var(--color-text-secondary)]">{(step.steps || []).map((item: string, itemIndex: number) => <li key={itemIndex} className="pl-1">{item}</li>)}</ol></div>
                   <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3"><p className="text-[10px] font-black uppercase tracking-widest text-amber-300">Evita estos errores</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-amber-100/80">{(step.avoid || []).map((item: string, itemIndex: number) => <li key={itemIndex}>{item}</li>)}</ul></div>
-                  {index === guideSteps.length - 1 && (step.visualAsset || GUIDE_ASSET_BY_TITLE[step.title]) && <figure className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]"><img src={`/ascenso-guide/${step.visualAsset || GUIDE_ASSET_BY_TITLE[step.title]}`} alt={step.visualAlt || "Mapa visual de ruta creado por Polaris"} loading="lazy" decoding="async" className="block h-auto w-full" /><figcaption className="px-3 py-2 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Mapa visual de orientación creado por Polaris. La interfaz puede variar.</figcaption></figure>}
+                  {index === guideSteps.length - 1 && (GUIDE_ASSET_BY_TITLE[step.title] || step.visualAsset) && <figure className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]"><img src={`/ascenso-guide/${GUIDE_ASSET_BY_TITLE[step.title] || step.visualAsset}`} alt={step.visualAlt || "Referencia visual del paso de implementación"} loading="lazy" decoding="async" className="block h-auto max-h-[360px] w-full object-contain bg-white" /><figcaption className="px-3 py-2 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Referencia visual. La interfaz puede variar según la cuenta.</figcaption></figure>}
                 </div>
               </details>
             ))}
