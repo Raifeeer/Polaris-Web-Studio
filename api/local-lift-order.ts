@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { buildEmailFooter } from "./_localLift.js";
-import { paypalCaptureId, paypalCaptureOrder, paypalCreateOrder, paypalGetOrder, paypalOrderAmount, paypalReferenceId, paypalRefundCapture } from "./_paypal.js";
+import { paypalCaptureId, paypalCaptureOrder, paypalCreateOrder, paypalGetOrder, paypalOrderAmount, paypalPayerEmail as getPayPalPayerEmail, paypalReferenceId, paypalRefundCapture } from "./_paypal.js";
 
 // Confirma pagos directos de Local Lift (cliente compra el paquete pago sin
 // pasar antes por el diagnóstico gratis, o paga desde el correo de
@@ -49,9 +49,13 @@ function paymentAlreadyCompletedResponse(res: VercelResponse, leadId: string) {
   return res.status(409).json({ success: false, alreadyPaid: true, reason: "already_paid", leadId });
 }
 
-async function refundCompletedOrderIfNeeded(orderId: string, expectedReference: string): Promise<boolean> {
+async function refundCompletedOrderIfNeeded(orderId: string, expectedReference: string, submittedPayerEmail?: string | null): Promise<boolean> {
   const order = await paypalGetOrder(orderId).catch(() => null);
-  if (order?.status !== "COMPLETED" || paypalReferenceId(order) !== expectedReference) return false;
+  if (order?.status !== "COMPLETED") return false;
+  const reference = paypalReferenceId(order);
+  const orderPayerEmail = getPayPalPayerEmail(order);
+  const legacyMatches = !reference && !!submittedPayerEmail && !!orderPayerEmail && orderPayerEmail === submittedPayerEmail.trim().toLowerCase();
+  if ((reference && reference !== expectedReference) || (!reference && !legacyMatches)) return false;
   const captureId = paypalCaptureId(order);
   if (!captureId) return false;
   await paypalRefundCapture(captureId);
@@ -392,16 +396,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const initial = existing.data() || {};
       if (initial.paid) {
         if (initial.paypalOrderId !== paypalOrderId) {
-          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`, paypalPayerEmail).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
         }
         return paymentAlreadyCompletedResponse(res, docRef.id);
       }
 
       const expectedAmount = TIER_PRICE[tier];
       const expectedReference = `local-lift:${docRef.id}`;
+      const submittedPayerEmail = typeof paypalPayerEmail === "string" && paypalPayerEmail.trim() ? paypalPayerEmail.trim().toLowerCase() : null;
       const orderBeforeCapture = await paypalGetOrder(paypalOrderId);
-      if (paypalReferenceId(orderBeforeCapture) !== expectedReference) {
+      const orderReference = paypalReferenceId(orderBeforeCapture);
+      const isLegacyOrder = !orderReference;
+      if (!isLegacyOrder && orderReference !== expectedReference) {
         return res.status(400).json({ error: "La orden de PayPal no pertenece a este checkout." });
+      }
+      if (isLegacyOrder) {
+        const orderPayerEmail = getPayPalPayerEmail(orderBeforeCapture);
+        if (orderBeforeCapture.status !== "COMPLETED" || !submittedPayerEmail || !orderPayerEmail || orderPayerEmail !== submittedPayerEmail) {
+          return res.status(400).json({ error: "No pudimos verificar esta orden antigua de PayPal. Recarga el checkout e inténtalo de nuevo." });
+        }
       }
       const orderAmount = paypalOrderAmount(orderBeforeCapture);
       if (!orderAmount || orderAmount.currency !== "USD" || Math.abs(orderAmount.value - expectedAmount) > 0.01) {
@@ -440,13 +453,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       if (captureAlreadyPaid) {
         if (duplicateCaptureBlocked) {
-          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`, paypalPayerEmail).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
         }
         return paymentAlreadyCompletedResponse(res, docRef.id);
       }
       if (captureInProgress || !captureClaimed) {
         if (duplicateCaptureBlocked) {
-          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`, paypalPayerEmail).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
         }
         return res.status(409).json({ success: false, reason: "payment_in_progress" });
       }
@@ -473,7 +486,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await docRef.update({ paypalCaptureInProgress: null, paypalCaptureStartedAt: null }).catch(() => undefined);
         return res.status(402).json({ error: "El pago no se completó o el monto no coincide." });
       }
-      if (paypalReferenceId(capture) !== expectedReference) {
+      if (!isLegacyOrder && paypalReferenceId(capture) !== expectedReference) {
         await docRef.update({ paypalCaptureInProgress: null, paypalCaptureStartedAt: null }).catch(() => undefined);
         return res.status(400).json({ error: "La captura de PayPal no pertenece a este checkout." });
       }
@@ -481,13 +494,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       let data: { businessName: string; city: string; contactName: string; email: string };
       let paymentClaimed = false;
       let paymentAlreadyPaid = false;
-      const payerEmail = capture?.payer?.email_address || orderBeforeCapture?.payer?.email_address || null;
+      let paymentAlreadyPaidOrderId = "";
+      const payerEmail = getPayPalPayerEmail(capture) || getPayPalPayerEmail(orderBeforeCapture) || submittedPayerEmail || null;
       await firestore.runTransaction(async (transaction) => {
         const latest = await transaction.get(docRef);
         if (!latest.exists) throw new Error("Lead no encontrado.");
         const v = latest.data() || {};
         if (v.paid) {
           paymentAlreadyPaid = true;
+          paymentAlreadyPaidOrderId = String(v.paypalOrderId || "");
           return;
         }
         data = { businessName: String(v.businessName || ""), city: String(v.city || ""), contactName: String(v.contactName || ""), email: String(v.email || "") };
@@ -507,7 +522,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         paymentClaimed = true;
       });
-      if (paymentAlreadyPaid || !paymentClaimed) return paymentAlreadyCompletedResponse(res, docRef.id);
+      if (paymentAlreadyPaid || !paymentClaimed) {
+        if (paymentAlreadyPaid && paymentAlreadyPaidOrderId !== paypalOrderId) {
+          await refundCompletedOrderIfNeeded(paypalOrderId, expectedReference, submittedPayerEmail).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+        }
+        return paymentAlreadyCompletedResponse(res, docRef.id);
+      }
 
       // Auto-provisionar la cuenta del portal ANTES de mandar los correos --
       // el correo de bienvenida necesita la contraseña temporal real, y el de

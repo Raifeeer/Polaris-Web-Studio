@@ -105,6 +105,11 @@ export function paypalReferenceId(order: any): string {
   return String(order?.purchase_units?.[0]?.reference_id || "");
 }
 
+export function paypalPayerEmail(order: any): string | null {
+  const email = order?.payer?.email_address;
+  return typeof email === "string" && email.trim() ? email.trim().toLowerCase() : null;
+}
+
 export function paypalOrderAmount(order: any): { value: number; currency: string } | null {
   const capture = order?.purchase_units?.[0]?.payments?.captures?.[0];
   const amount = capture?.amount || order?.purchase_units?.[0]?.amount;
