@@ -74,6 +74,9 @@ interface Lead {
   gbpConnected: boolean;
   createdAt: string | null;
   sentAt: string | null;
+  portalSyncStatus?: "pending" | "synced" | "failed" | "unmatched" | null;
+  portalSyncAttempts?: number;
+  portalSyncLastError?: string;
   place: PlaceInfo | null;
 }
 
@@ -258,6 +261,8 @@ export default function LocalLiftPanel() {
   const [contactName, setContactName] = useState("");
   const [sendStatus, setSendStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [sendError, setSendError] = useState("");
+  const [portalSyncStatus, setPortalSyncStatus] = useState<"idle" | "loading" | "synced" | "failed" | "unknown">("idle");
+  const [portalSyncError, setPortalSyncError] = useState("");
   const [previewStatus, setPreviewStatus] = useState<"idle" | "loading" | "error">("idle");
   const [previewError, setPreviewError] = useState("");
 
@@ -337,6 +342,8 @@ export default function LocalLiftPanel() {
     setPkg(null);
     setGenStatus("idle");
     setSendStatus("idle");
+    setPortalSyncStatus(lead.portalSyncStatus === "synced" ? "synced" : lead.portalSyncStatus === "failed" || lead.portalSyncStatus === "unmatched" || lead.portalSyncStatus === "pending" ? "failed" : "unknown");
+    setPortalSyncError(lead.portalSyncLastError || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -490,12 +497,41 @@ export default function LocalLiftPanel() {
         return;
       }
       setSendStatus("done");
+      setPortalSyncStatus(data.portalSynced ? "synced" : "failed");
+      setPortalSyncError(data.portalSyncError || "");
       loadLeads();
     } catch {
       setSendError("Algo salió mal al enviar. Intenta de nuevo.");
       setSendStatus("error");
     }
   };
+
+  const handleRetryPortalSync = async () => {
+    if (!leadId) return;
+    setPortalSyncStatus("loading");
+    setPortalSyncError("");
+    try {
+      const res = await fetch("/api/local-lift-package", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: "retry_portal_sync", leadId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.synced) {
+        setPortalSyncStatus("failed");
+        setPortalSyncError(data.error || "El portal todavía no confirmó la entrega.");
+        return;
+      }
+      setPortalSyncStatus("synced");
+      setPortalSyncError("");
+      loadLeads();
+    } catch {
+      setPortalSyncStatus("failed");
+      setPortalSyncError("No se pudo contactar el portal. Puedes reintentarlo de nuevo.");
+    }
+  };
+
+  const needsPortalSync = leadId && portalSyncStatus !== "synced" && (sendStatus === "done" || leads.some((lead) => lead.id === leadId && lead.status === "sent"));
 
   const missingParts = pkg
     ? Object.entries(pkg.errors)
@@ -600,6 +636,22 @@ export default function LocalLiftPanel() {
           </div>
         )}
       </section>
+
+      {needsPortalSync && (
+        <section className="mt-8 max-w-xl rounded-xl border border-amber-500/25 bg-amber-500/[0.06] p-5">
+          <div className="flex items-start gap-3">
+            <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-500" />
+            <div className="min-w-0">
+              <h2 className="text-sm font-black text-amber-500">El portal todavía no confirmó la entrega</h2>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">El correo y el PDF ya pueden haberse enviado. Reintentar aquí solo actualiza el estado del portal; no vuelve a enviar el correo ni genera otro PDF.</p>
+              {portalSyncError && <p className="mt-2 break-words text-[11px] text-amber-500/90">{portalSyncError}</p>}
+              <button type="button" onClick={handleRetryPortalSync} disabled={portalSyncStatus === "loading"} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-black text-amber-500 transition-colors hover:bg-amber-500/10 disabled:opacity-50">
+                {portalSyncStatus === "loading" ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />} Reintentar sincronización
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
 
       {selectedLeadPlace && (
         <div className="mt-8 max-w-xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5">

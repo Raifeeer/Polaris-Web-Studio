@@ -16,6 +16,7 @@ import crypto from "crypto";
 import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
+import { transitionLocalLiftAfterPackageSent } from "./local-lift-state.js";
 import { cert as firebaseCert, getApps as getFirebaseApps, initializeApp as initFirebaseApp } from "firebase-admin/app";
 import { getFirestore as getFirebaseFirestore } from "firebase-admin/firestore";
 import { getOfferConfig } from "./remote-config.js";
@@ -1654,10 +1655,9 @@ const PORT = 3000;
     res.json({ success: true, clientId, projectId, invoiceId, tempPassword });
   });
 
-  // Marca real de que el paquete de contenido Local Lift ya se envió por
-  // correo -- disparada server-to-server desde local-lift-package.ts (acción
-  // "send") justo después de que el correo real sale, para que el portal deje
-  // de mostrar "te enviamos el paquete" antes de que sea verdad.
+  // Sincroniza de forma idempotente el envío real del paquete Local Lift con
+  // el portal. Puede llamarse varias veces: nunca reenvía correo ni regenera
+  // PDF, y conserva reunión/implementación como fases activas en Ascenso.
   app.post("/api/portal/local-lift/package-sent", async (req, res) => {
     const secret = req.headers["x-cron-secret"];
     if (!secret || secret !== process.env.CRON_SECRET) {
@@ -1668,19 +1668,21 @@ const PORT = 3000;
       return res.status(400).json({ error: "missing_leadId" });
     }
     const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === leadId.trim());
-    if (!project) return res.json({ success: true, matched: false });
+    if (!project) return res.status(404).json({ success: false, matched: false, retryable: true, error: "project_not_found" });
 
+    const now = new Date().toISOString();
+    const transition = transitionLocalLiftAfterPackageSent(project);
+    const attempts = Math.max(0, Number(project.localLiftPortalSyncAttempts || 0)) + 1;
     dbInstance.updateProject(project.id, {
-      currentPhase: "Entrega",
-      progress: 100,
-      phases: project.phases.map((ph) =>
-        ph.name === "Entrega" || ph.name === "Preparando tu paquete"
-          ? { ...ph, status: "completed" as const }
-          : ph
-      ),
+      ...transition,
+      localLiftPackageSentAt: project.localLiftPackageSentAt || now,
+      localLiftPortalSyncStatus: "synced",
+      localLiftPortalSyncAttempts: attempts,
+      localLiftPortalSyncLastAttemptAt: now,
+      localLiftPortalSyncLastError: "",
     });
     await dbInstance.flush();
-    res.json({ success: true, matched: true, projectId: project.id });
+    return res.json({ success: true, matched: true, synced: true, alreadySynced: project.localLiftPortalSyncStatus === "synced", projectId: project.id, currentPhase: transition.currentPhase, progress: transition.progress });
   });
 
   // Descarga real del PDF del paquete ya enviado, desde el portal del cliente

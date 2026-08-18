@@ -446,6 +446,31 @@ function renderPackageEmailBody(
   return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet"><title>${content.title}</title><style>body{margin:0;}a{text-decoration:none;color:#4f46e5;}.email-card{width:100% !important;max-width:600px !important;box-sizing:border-box !important;}.email-pad{padding-left:24px !important;padding-right:24px !important;}.email-item-card{box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;}</style></head><body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${content.title} — ${safeBusinessName}</div><div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;"><table class="email-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><tr><td class="email-pad" style="padding:40px 40px 0;text-align:center;">${localLiftLogoHeader}</td></tr><tr><td class="email-pad" style="padding:8px 40px 8px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#0284c7;margin-bottom:14px;">${content.eyebrow}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.3;color:#0f172a;">${content.title}</div></td></tr><tr><td class="email-pad" style="padding:16px 40px 0;text-align:center;"><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${greeting}<br>${content.intro}</p></td></tr><tr><td class="email-pad" style="padding:24px 40px 0;"><div class="email-item-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;color:#0f172a;margin-bottom:16px;">${content.cardTitle}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;line-height:1.4;color:#0f172a;margin-bottom:18px;">${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table></div></td></tr>${connectBlock}<tr><td class="email-pad" style="padding:40px 40px 0;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px auto;"><tr><td style="padding:0 10px;"><a href="https://www.instagram.com/polariswebstudio/" target="_blank" rel="noopener noreferrer"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-instagram.png" width="22" height="22" alt="Instagram" style="width:22px;height:22px;display:block;"></a></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-facebook.png" width="22" height="22" alt="Facebook" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-x.png" width="22" height="22" alt="X" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-linkedin.png" width="22" height="22" alt="LinkedIn" style="width:22px;height:22px;display:block;"></td></tr></table></td></tr><tr><td class="email-pad" style="padding:0 40px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:24px 40px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;"><tr><td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Sitio web</a></td><td width="34%" style="text-align:center;white-space:nowrap;"><a href="https://wa.me/18299200544" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">WhatsApp</a></td><td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Contacto</a></td></tr></table><div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Privacidad</a><span style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">&nbsp;&middot;&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Términos y condiciones</a></div><div style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Web Studio · República Dominicana · <a href="mailto:hola@polarisweb.studio" style="color:#64748b;text-decoration:underline;">hola@polarisweb.studio</a><br>Recibiste este correo porque adquiriste un paquete de contenido de Local Lift.</div></td></tr></table></div></body></html>`;
 }
 
+async function syncPortalPackageSent(leadId: string): Promise<{ synced: boolean; matched: boolean; error?: string }> {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return { synced: false, matched: false, error: "CRON_SECRET no configurado." };
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8_000);
+  try {
+    const portalUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
+    const response = await fetch(`${portalUrl}/api/portal/local-lift/package-sent`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-cron-secret": cronSecret },
+      body: JSON.stringify({ leadId: leadId.trim() }),
+      signal: controller.signal,
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.matched === false) {
+      return { synced: false, matched: data.matched === true, error: String(data.error || `Portal respondió ${response.status}.`) };
+    }
+    return { synced: true, matched: true };
+  } catch (error: any) {
+    return { synced: false, matched: false, error: error?.name === "AbortError" ? "Timeout sincronizando el portal." : String(error?.message || "No se pudo sincronizar el portal.") };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function renderPackageEmailText(businessName: string, contactName: string | null, lang: "es" | "en", connectUrl?: string): string {
   const safeBusinessName = businessName;
   const greeting = contactName ? (lang === "en" ? `Hi ${contactName},` : `Hola ${contactName},`) : lang === "en" ? "Hi," : "Hola,";
@@ -564,6 +589,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           gbpConnected: !!v.gbp?.refreshToken,
           createdAt: v.createdAt?.toDate?.() || null,
           sentAt: v.sentAt?.toDate?.() || null,
+          portalSyncStatus: v.portalSyncStatus || null,
+          portalSyncAttempts: Number(v.portalSyncAttempts || 0),
+          portalSyncLastError: v.portalSyncLastError || "",
           place: v.placeData || null,
         };
       });
@@ -612,6 +640,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ success: true, sent: true });
     }
 
+    if (action === "retry_portal_sync") {
+      if (typeof leadId !== "string" || !leadId.trim()) {
+        return res.status(400).json({ error: "Falta el lead para reintentar la sincronización." });
+      }
+      const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
+      const doc = await docRef.get();
+      if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
+      const lead = doc.data()!;
+      if (!lead.paid) return res.status(400).json({ error: "El lead todavía no está pagado." });
+      if (!lead.pdfBase64) return res.status(400).json({ error: "Este lead todavía no tiene un PDF enviado." });
+      const sync = await syncPortalPackageSent(leadId.trim());
+      const attempts = Math.max(0, Number(lead.portalSyncAttempts || 0)) + 1;
+      await docRef.update({
+        portalSyncStatus: sync.synced ? "synced" : sync.matched ? "failed" : "unmatched",
+        portalSyncAttempts: attempts,
+        portalSyncLastAttemptAt: new Date(),
+        portalSyncLastError: sync.synced ? "" : (sync.error || "No se pudo sincronizar el portal."),
+      });
+      if (!sync.synced) {
+        return res.status(502).json({ success: false, synced: false, error: sync.error || "No se pudo sincronizar el portal." });
+      }
+      return res.json({ success: true, synced: true, retried: true });
+    }
+
     if (action === "send") {
       // Envía el paquete COMPLETO -- exige que el lead ya esté pagado
       // (cuando se rastrea con leadId) para nunca regalar el contenido real
@@ -624,13 +676,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "El correo no es válido." });
       }
       let docRef = null;
+      let previousPortalSyncAttempts = 0;
       if (typeof leadId === "string" && leadId.trim()) {
         docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
         const doc = await docRef.get();
         if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
-        if (!doc.data()!.paid) {
+        const leadData = doc.data()!;
+        if (!leadData.paid) {
           return res.status(400).json({ error: "Este lead todavía no ha pagado. Envía la propuesta primero (botón 'Enviar propuesta')." });
         }
+        previousPortalSyncAttempts = Math.max(0, Number(leadData.portalSyncAttempts || 0));
       }
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) {
@@ -670,33 +725,39 @@ text: renderPackageEmailText(givenPlace.name, contactName || null, language, con
           ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
           : [],
       });
+      let portalSyncResult: { synced: boolean; matched: boolean; error?: string } = { synced: false, matched: false, error: pdfBuffer ? "No se intentó sincronizar el portal." : "No se pudo generar el PDF." };
       if (docRef) {
         await docRef.update({
           status: "sent",
           contactName: contactName || null,
           email,
           sentAt: new Date(),
+          portalSyncStatus: pdfBuffer ? "pending" : "failed",
+          portalSyncAttempts: previousPortalSyncAttempts,
+          portalSyncLastError: pdfBuffer ? "" : "No se pudo generar el PDF; el portal permanece en preparación.",
           ...(pdfBuffer ? { pdfBase64: pdfBuffer.toString("base64") } : {}),
         });
-        // Avisa al portal (si el proyecto de este cliente ya está vinculado a
-        // este lead) para que deje de mostrar "preparando tu paquete" y
-        // muestre el paquete real como entregado. Nunca bloquea la respuesta
-        // real al admin si el portal no responde.
-        try {
-          const cronSecret = process.env.CRON_SECRET;
-          const portalUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
-          if (cronSecret) {
-            await fetch(`${portalUrl}/api/portal/local-lift/package-sent`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-cron-secret": cronSecret },
-              body: JSON.stringify({ leadId: leadId.trim() }),
-            });
+        if (pdfBuffer) {
+          const firstSync = await syncPortalPackageSent(leadId!.trim());
+          portalSyncResult = firstSync;
+          let syncAttempts = 1;
+          if (!firstSync.synced) {
+            await new Promise((resolve) => setTimeout(resolve, 350));
+            portalSyncResult = await syncPortalPackageSent(leadId!.trim());
+            syncAttempts = 2;
           }
-        } catch (notifyErr) {
-          console.error("[local-lift-package] Error avisando al portal que el paquete se envió:", notifyErr);
+          await docRef.update({
+            portalSyncStatus: portalSyncResult.synced ? "synced" : portalSyncResult.matched ? "failed" : "unmatched",
+            portalSyncAttempts: previousPortalSyncAttempts + syncAttempts,
+            portalSyncLastAttemptAt: new Date(),
+            portalSyncLastError: portalSyncResult.synced ? "" : (portalSyncResult.error || "No se pudo sincronizar el portal."),
+          });
+          if (!portalSyncResult.synced) {
+            console.error("[local-lift-package] La entrega fue enviada, pero la sincronización del portal quedó pendiente:", portalSyncResult.error);
+          }
         }
       }
-      return res.json({ success: true, sent: true });
+      return res.json({ success: true, sent: true, pdfStored: !!pdfBuffer, portalSynced: portalSyncResult.synced, portalSyncError: portalSyncResult.synced ? undefined : portalSyncResult.error });
     }
 
     if (action === "preview_pdf") {

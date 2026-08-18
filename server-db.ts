@@ -96,6 +96,11 @@ export interface DbProject {
   productType?: "website" | "local_lift";
   localLiftTier?: "impulso" | "ascenso"; // solo con productType "local_lift" -- gatea la tarjeta de autoagendamiento de la reunión de bienvenida de Ascenso
   localLiftLeadId?: string; // id real del doc en localLiftDiagnostics (Firestore, base polaris-web-studio) -- une este proyecto con el PDF real que se le mandó por correo, para poder ofrecerlo de nuevo desde el portal
+  localLiftPackageSentAt?: string;
+  localLiftPortalSyncStatus?: "pending" | "synced" | "failed" | "unmatched";
+  localLiftPortalSyncAttempts?: number;
+  localLiftPortalSyncLastAttemptAt?: string;
+  localLiftPortalSyncLastError?: string;
   currentPhase: string;
   progress: number;
   description: string;
