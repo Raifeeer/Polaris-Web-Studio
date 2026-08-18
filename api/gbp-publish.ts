@@ -134,10 +134,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const leadDoc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
     if (!leadDoc.exists) return res.status(404).json({ error: "Lead no encontrado." });
-    const leadTier = leadDoc.data()?.tier;
+    const leadData = leadDoc.data() || {};
+    const leadTier = leadData.tier;
     if (leadTier !== "ascenso" && leadTier !== "implementado") {
       return res.status(403).json({ error: "La implementación directa en Google está incluida únicamente en Ascenso." });
     }
+
+    // Fixture controlado para validar el panel sin una cuenta real de Google.
+    // Solo funciona para IDs TEST-* marcados explícitamente con gbp.demo en
+    // Firestore y responde datos ficticios; jamás contacta ni modifica Google.
+    const isDemo = leadId.trim().startsWith("TEST-") && leadData.gbp?.demo === true;
+    if (isDemo) {
+      const demoLocation = {
+        accountName: "accounts/demo",
+        locationName: "accounts/demo/locations/cakes-by-vale-demo",
+        accountLocationPath: "accounts/demo/locations/cakes-by-vale-demo",
+        title: "DEMO · Cakes by Vale Punta Cana",
+      };
+      const demoReviews = [
+        { name: "accounts/demo/locations/cakes-by-vale-demo/reviews/demo-1", reviewer: { displayName: "María Santos" }, starRating: "FIVE", comment: "El sabor y la presentación fueron excelentes. Volveremos pronto.", createTime: "2026-08-10T14:00:00Z" },
+        { name: "accounts/demo/locations/cakes-by-vale-demo/reviews/demo-2", reviewer: { displayName: "José Ramírez" }, starRating: "FOUR", comment: "Muy buen servicio y un pastel precioso. La entrega se retrasó un poco.", createTime: "2026-08-05T16:30:00Z" },
+        { name: "accounts/demo/locations/cakes-by-vale/reviews/demo-3", reviewer: { displayName: "Laura Méndez" }, starRating: "THREE", comment: "El producto estuvo bien, pero nos costó encontrar información sobre los horarios.", createTime: "2026-07-28T11:15:00Z" },
+      ];
+      if (action === "list-locations") return res.json({ success: true, demo: true, locations: [demoLocation] });
+      if (action === "list-reviews") return res.json({ success: true, demo: true, reviews: demoReviews });
+      if (action === "publish-post") {
+        if (!post || typeof post.body !== "string") return res.status(400).json({ error: "Falta el contenido del post." });
+        return res.json({ success: true, demo: true, post: { name: "accounts/demo/locations/cakes-by-vale-demo/localPosts/demo-post", summary: post.body, state: "SIMULATED" } });
+      }
+      if (action === "reply-review") {
+        if (typeof reviewName !== "string" || typeof replyText !== "string" || !replyText.trim()) return res.status(400).json({ error: "Faltan los datos de la respuesta." });
+        return res.json({ success: true, demo: true, reply: { review: reviewName, comment: replyText, state: "SIMULATED" } });
+      }
+    }
+
     const accessToken = await getValidAccessToken(firestore, leadId.trim());
     if (!accessToken) return res.status(400).json({ error: "Este lead no tiene una cuenta de Google conectada (o hay que reconectarla)." });
     const authHeader = { Authorization: `Bearer ${accessToken}` };
@@ -173,7 +203,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
       }
-      return res.json({ success: true, locations });
+      return res.json({ success: true, demo: false, locations });
     }
 
     // Paso 2: reseñas reales de esa ubicación (vía la API legacy v4 -- la
@@ -189,7 +219,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           detail: revData,
         });
       }
-      return res.json({ success: true, reviews: revData.reviews || [] });
+      return res.json({ success: true, demo: false, reviews: revData.reviews || [] });
     }
 
     // Paso 3: publicar UN post real -- siempre disparado a mano por el
