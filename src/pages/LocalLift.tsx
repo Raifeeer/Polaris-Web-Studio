@@ -176,20 +176,20 @@ const tiers = [
     isFree: false,
     price: "99",
     enPrice: "99",
-    time: "Seguimiento personalizado 1:1",
-    enTime: "Personalized 1:1 follow-up",
+    time: "Acompañamiento personalizado 1:1",
+    enTime: "Personalized 1:1 accompaniment",
     accent: "violet",
     icon: "trending",
-    description: "Te acompañamos a preparar y aplicar los cambios que autorices, sin pedirte contraseñas.",
-    enDescription: "We help prepare and apply the changes you approve, without asking for passwords.",
-    cta: "Solicitar implementación",
-    enCta: "Request implementation",
+    description: "Preparamos el contenido, te mostramos dónde aplicarlo y te guiamos paso a paso, sin pedirte contraseñas.",
+    enDescription: "We prepare the content, show you where to apply it, and guide you step by step without asking for passwords.",
+    cta: "Solicitar acompañamiento",
+    enCta: "Request guided support",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
       ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
-      ["Llevamos el plan a la práctica contigo", "We put the plan into practice with you"],
-      ["Subimos los textos e imágenes que apruebes", "We upload the text and images you approve"],
-      ["Una revisión final contigo", "One final review with you"],
+      ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
+      ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
+      ["Hasta tres rondas agrupadas de revisión", "Up to three grouped review rounds"],
     ],
   },
 ];
@@ -1048,7 +1048,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
           <div className="max-w-2xl">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]"><T en="Choose your level of help">Elige el nivel de ayuda que necesitas</T></p>
             <h2 className="mt-3 text-3xl md:text-5xl font-display font-black tracking-[-0.04em]"><T en="Start with clarity. Implement when you’re ready.">Empieza con claridad. Implementa cuando estés listo.</T></h2>
-            <p className="mt-4 text-[var(--color-text-secondary)] leading-relaxed"><T en="Start with a focused diagnosis, or ask us to prepare and apply the changes you approve.">Puedes comenzar con un diagnóstico puntual o pedirnos que preparemos y apliquemos los cambios que autorices.</T></p>
+            <p className="mt-4 text-[var(--color-text-secondary)] leading-relaxed"><T en="Start with a focused diagnosis, or choose guided support: we prepare the material and show you where to apply each approved change.">Puedes comenzar con un diagnóstico puntual o elegir acompañamiento guiado: preparamos el material y te mostramos dónde aplicar cada cambio aprobado.</T></p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mt-10">
