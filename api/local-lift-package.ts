@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createPublicKey, verify as cryptoVerify } from "node:crypto";
+import { createPublicKey, timingSafeEqual, verify as cryptoVerify } from "node:crypto";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
@@ -50,7 +50,17 @@ async function getGoogleCerts(): Promise<Record<string, string>> {
   googleCertsCache = { certs, exp: Date.now() + ttl };
   return certs;
 }
+function hasServerAdminSecret(req: VercelRequest): boolean {
+  const provided = String(req.headers["x-portal-admin-secret"] || "");
+  const expected = process.env.PORTAL_ADMIN_SECRET || "";
+  if (!provided || !expected) return false;
+  const providedBuffer = Buffer.from(provided);
+  const expectedBuffer = Buffer.from(expected);
+  return providedBuffer.length === expectedBuffer.length && timingSafeEqual(providedBuffer, expectedBuffer);
+}
+
 async function verifyAdmin(req: VercelRequest): Promise<boolean> {
+  if (hasServerAdminSecret(req)) return true;
   const authHeader = (req.headers.authorization as string) || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
   const parts = token.split(".");
