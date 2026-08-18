@@ -61,6 +61,11 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
   const packageData = data?.package;
   const guideSteps = Array.isArray(packageData?.implementationGuide) ? packageData.implementationGuide : [];
   const canRequest = !!workflow?.status && data?.canRequestNewRound && !activeRequest;
+  const quickGuide = (title: string) => {
+    const step = guideSteps.find((item: any) => item.title === title);
+    if (!step?.quickStart) return null;
+    return <div className="rounded-lg border border-teal-500/20 bg-teal-500/[0.05] p-3 text-xs leading-relaxed text-[var(--color-text-secondary)]"><p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Cómo aplicar esta sección</p><p className="mt-1">{step.quickStart}</p></div>;
+  };
 
   const mutate = async (action: string, extra: Record<string, unknown> = {}) => {
     setBusy(action);
@@ -104,19 +109,27 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       </div>
 
       {packageData && (
-        <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-4">
+        <div className="space-y-4">
+          {packageData.rewrittenDescription && <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-3"><div><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Descripción preparada</p><p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-[var(--color-text-secondary)]">{packageData.rewrittenDescription}</p></div>{quickGuide("Descripción del negocio")}</article>}
+          {Array.isArray(packageData.services) && packageData.services.length > 0 && <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-3"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Servicios a destacar</p><div className="flex flex-wrap gap-2">{packageData.services.map((service: string) => <span key={service} className="rounded-full border border-[var(--color-border-subtle)] px-3 py-1 text-xs text-[var(--color-text-secondary)]">{service}</span>)}</div>{quickGuide("Servicios y llamadas a la acción")}</article>}
+          {Array.isArray(packageData.googlePosts) && packageData.googlePosts.length > 0 && <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-3"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">{packageData.googlePosts.length} publicaciones preparadas</p><p className="text-xs text-[var(--color-text-secondary)]">El paquete contiene los textos para revisar y aplicar cuando corresponda.</p>{quickGuide("Publicaciones y novedades")}</article>}
+          {Array.isArray(packageData.reviewAnalysis?.recurringThemes) && <article className="rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/[0.04] p-4 sm:p-5 space-y-3"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Lectura de reseñas y buenas prácticas</p><p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">El análisis resume patrones de una muestra reciente y los convierte en prioridades para trabajar.</p>{quickGuide("Lectura de reseñas y buenas prácticas")}</article>}
+          {Array.isArray(packageData.reviewReplies) && packageData.reviewReplies.length > 0 && <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-3"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Respuestas preparadas</p><p className="text-xs text-[var(--color-text-secondary)]">Revisa cada respuesta y personalízala con el contexto real antes de enviarla.</p>{quickGuide("Respuestas a reseñas")}</article>}
+          {Array.isArray(packageData.whatsappMessages) && packageData.whatsappMessages.length > 0 && <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-3"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Mensajes de seguimiento</p><p className="text-xs text-[var(--color-text-secondary)]">Usa cada mensaje solo cuando el escenario corresponda y revisa sus datos variables.</p>{quickGuide("Mensajes de seguimiento")}</article>}
+
+          <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-4">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/10"><FileText size={17} className="text-[var(--color-primary-base)]" /></div>
-            <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Documento de implementación Ascenso</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Cómo aplicar cada cambio, paso a paso</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Polaris prepara el contenido. Tú aplicas los cambios en tu perfil y este documento te indica exactamente dónde hacerlo, qué revisar y cuándo pedirnos ayuda.</p></div>
+            <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Guía completa de implementación Ascenso</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Consulta todos los pasos al final del paquete</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Aquí encontrarás el detalle completo de cada proceso. Las instrucciones breves de arriba sirven para avanzar en contexto; esta guía queda como referencia.</p></div>
           </div>
 
-          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y marca tus dudas para la sesión de acompañamiento. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
+          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y marca tus dudas para la sesión de acompañamiento. Las rutas se contrastaron con la ayuda oficial de Google en agosto de 2026, pero los nombres y botones pueden variar. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
           <div className="flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-secondary)]"><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{guideSteps.length} secciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.googlePosts?.length || 0} publicaciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.reviewReplies?.length || 0} respuestas</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.services?.length || 0} servicios</span></div>
 
           <div className="space-y-3">
             {guideSteps.map((step: any, index: number) => (
               <details key={`${step.title}-${index}`} open={index === 0} className="group rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4">
-                <summary className="cursor-pointer list-none pr-5 text-sm font-black text-[var(--color-text-primary)] marker:hidden"><span className="mr-2 text-[var(--color-primary-base)]">{String(index + 1).padStart(2, "0")}</span>{step.title}<span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">Dónde hacerlo: {step.where}</span></summary>
+                <summary className="cursor-pointer list-none pr-5 text-sm font-black text-[var(--color-text-primary)] marker:hidden"><span className="mr-2 text-[var(--color-primary-base)]">{String(index + 1).padStart(2, "0")}</span>{step.title}<span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">Ruta orientativa: {step.where}</span></summary>
                 <div className="mt-4 space-y-4 border-t border-[var(--color-border-subtle)] pt-4">
                   <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">{step.summary}</p>
                   <div className="grid gap-4 md:grid-cols-2">
@@ -129,7 +142,8 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
               </details>
             ))}
           </div>
-        </article>
+          </article>
+        </div>
       )}
 
       {activeRequest && (
