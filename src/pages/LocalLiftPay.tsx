@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useState, type ComponentProps } from "react";
+import { useCallback, useEffect, useState, type ComponentProps } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { FUNDING, PayPalButtons } from "@paypal/react-paypal-js";
 import { AlertCircle, ArrowLeft, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, Zap } from "lucide-react";
@@ -33,31 +33,49 @@ export default function LocalLiftPay() {
 
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
 
-  useEffect(() => {
+  const refreshLead = useCallback(async (initialLoad = false) => {
     if (!leadId) {
-      setStatus("notfound");
+      if (initialLoad) setStatus("notfound");
       return;
     }
-    fetch("/api/local-lift-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "lookup", leadId }),
-    })
-      .then((r) => r.json())
-      .then((data) => {
-        if (!data.success) {
-          setStatus("notfound");
-          return;
-        }
-        const normalizedTier = normalizeLocalLiftTier(data.tier);
-        setLead({ ...data, tier: normalizedTier, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
-        // URL ?tier param overrides Firestore tier (so CTAs from the diagnosis page work correctly)
-        const urlTier = searchParams.get("tier");
-        setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : normalizedTier);
-        setStatus(data.paid ? "paid" : "ready");
-      })
-      .catch(() => setStatus("notfound"));
+    try {
+      const response = await fetch("/api/local-lift-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "lookup", leadId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        if (initialLoad) setStatus("notfound");
+        return;
+      }
+      const normalizedTier = normalizeLocalLiftTier(data.tier);
+      setLead({ ...data, tier: normalizedTier, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
+      const urlTier = searchParams.get("tier");
+      if (initialLoad) setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : normalizedTier);
+      setStatus(data.paid ? "paid" : "ready");
+    } catch {
+      if (initialLoad) setStatus("notfound");
+    }
   }, [leadId, searchParams]);
+
+  useEffect(() => {
+    void refreshLead(true);
+  }, [refreshLead]);
+
+  // Otra pestaña puede completar el pago mientras esta sigue abierta. Al
+  // volver al checkout, el backend es la autoridad y los botones desaparecen.
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void refreshLead(false);
+    };
+    window.addEventListener("focus", refreshWhenVisible);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.removeEventListener("focus", refreshWhenVisible);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, [refreshLead]);
 
   const tier = selectedTier || lead?.tier || "impulso";
   const price = TIER_PRICE[tier] || TIER_PRICE["impulso"];
@@ -73,41 +91,44 @@ export default function LocalLiftPay() {
     }, prefersReducedMotion ? 0 : 420);
   };
 
-  const handlePaymentApproval: NonNullable<ComponentProps<typeof PayPalButtons>["onApprove"]> = async (_data, actions) => {
-    if (!actions.order) return;
-    const details = await actions.order.capture();
+  const handleCreateOrder: NonNullable<ComponentProps<typeof PayPalButtons>["createOrder"]> = async () => {
+    setErrorMsg("");
+    const res = await fetch("/api/local-lift-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "create-order", leadId, tier }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data?.alreadyPaid) {
+      await refreshLead(false);
+      throw new Error("already_paid");
+    }
+    if (!res.ok || !data.success || typeof data.orderId !== "string") {
+      throw new Error(data?.error || "No se pudo iniciar el pago.");
+    }
+    return data.orderId;
+  };
+
+  const handlePaymentApproval: NonNullable<ComponentProps<typeof PayPalButtons>["onApprove"]> = async (data) => {
+    if (!data.orderID) return;
     try {
       const res = await fetch("/api/local-lift-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "confirm",
-          leadId,
-          tier,
-          paypalOrderId: details.id,
-          paypalPayerEmail: details.payer?.email_address || null,
-        }),
+        body: JSON.stringify({ action: "confirm", leadId, tier, paypalOrderId: data.orderID }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente — escríbenos por WhatsApp.");
+      const result = await res.json().catch(() => ({}));
+      if (result?.alreadyPaid) {
+        await refreshLead(false);
         return;
       }
-      try {
-        const fresh = await fetch("/api/local-lift-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "lookup", leadId }),
-        }).then((r) => r.json());
-        if (fresh?.success) {
-          setLead((prev) => (prev ? { ...prev, invoiceNumber: fresh.invoiceNumber || null, portalProvisioned: !!fresh.portalProvisioned, sentPortalWelcomeEmail: !!fresh.sentPortalWelcomeEmail } : prev));
-        }
-      } catch {
-        // La confirmación no se bloquea: la factura también llega por correo.
+      if (!res.ok || !result.success) {
+        setErrorMsg(language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp.");
+        return;
       }
-      setStatus("paid");
+      await refreshLead(false);
     } catch {
-      setErrorMsg(language === "en" ? "Payment went through, but something failed on our end — write us on WhatsApp." : "El pago pasó, pero algo falló de nuestro lado — escríbenos por WhatsApp.");
+      setErrorMsg(language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp.");
     }
   };
 
@@ -448,23 +469,13 @@ export default function LocalLiftPay() {
               <PayPalCheckoutProvider>
                 <PayPalButtons
                   style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 48 }}
-                  createOrder={(_data, actions) =>
-                    actions.order.create({
-                      intent: "CAPTURE",
-                      purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift — ${price.label} — ${lead.businessName}` }],
-                    })
-                  }
+                  createOrder={handleCreateOrder}
                   onApprove={handlePaymentApproval}
                 />
                 <PayPalButtons
                   fundingSource={FUNDING.CARD}
                   style={{ layout: "vertical", shape: "rect", color: "silver", label: "pay", height: 48 }}
-                  createOrder={(_data, actions) =>
-                    actions.order.create({
-                      intent: "CAPTURE",
-                      purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift — ${price.label} — ${lead.businessName}` }],
-                    })
-                  }
+                  createOrder={handleCreateOrder}
                   onApprove={handlePaymentApproval}
                 />
               </PayPalCheckoutProvider>

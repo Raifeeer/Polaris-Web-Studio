@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { buildEmailFooter } from "./_localLift.js";
+import { paypalCaptureId, paypalCaptureOrder, paypalCreateOrder, paypalGetOrder, paypalOrderAmount, paypalReferenceId } from "./_paypal.js";
 
 // Confirma pagos directos de Local Lift (cliente compra el paquete pago sin
 // pasar antes por el diagnóstico gratis, o paga desde el correo de
@@ -10,11 +11,11 @@ import { buildEmailFooter } from "./_localLift.js";
 // /local-lift/pagar/:leadId. Público a propósito -- ambas acciones las
 // dispara el navegador del cliente, nunca requieren sesión admin.
 //
-// La captura real del pago ocurre client-side vía el SDK de PayPal (mismo
-// patrón de confianza ya usado en Tano-Excursions/Checkout.tsx: sin
-// verificación server-side del order contra la API de PayPal). Este
-// endpoint solo registra el resultado que el cliente ya capturó y dispara
-// la alerta interna para que el admin genere/revise el paquete.
+// La orden se crea y se captura a través de PayPal server-side. El navegador
+// solo solicita la orden y notifica la aprobación; este endpoint verifica el
+// estado, monto, moneda y referencia antes de confirmar el lead. Firestore
+// funciona como candado idempotente para que dos pestañas no puedan confirmar
+// dos pagos ni repetir los efectos secundarios del primer pago.
 
 const firebaseApp = getApps().length
   ? getApps()[0]
@@ -33,6 +34,20 @@ const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.fire
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#16C8C1"; // teal, color primario real de Local Lift (palabra "LIFT" del logo)
+
+type LocalLiftTier = "impulso" | "ascenso";
+function isLocalLiftTier(value: unknown): value is LocalLiftTier {
+  return value === "impulso" || value === "ascenso";
+}
+
+function pendingOrderIsFresh(value: unknown, maxAgeMs = 15 * 60 * 1000): boolean {
+  const millis = typeof (value as any)?.toMillis === "function" ? (value as any).toMillis() : new Date(String(value || "")).getTime();
+  return Number.isFinite(millis) && Date.now() - millis < maxAgeMs;
+}
+
+function paymentAlreadyCompletedResponse(res: VercelResponse, leadId: string) {
+  return res.status(409).json({ success: false, alreadyPaid: true, reason: "already_paid", leadId });
+}
 
 // Confirmación real al CLIENTE de que su pago se recibió. Antes usaba el
 // mismo template "Familia A" (logo grande centrado) que el diagnóstico y la
@@ -237,6 +252,61 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
 
   try {
+    if (action === "create-order") {
+      if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el id." });
+      if (!isLocalLiftTier(tier)) return res.status(400).json({ error: "Tier inválido." });
+      const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
+      let reusableOrderId: string | null = null;
+      let creatingInProgress = false;
+      let alreadyPaid = false;
+      let canCreate = false;
+      await firestore.runTransaction(async (transaction) => {
+        const currentSnapshot = await transaction.get(docRef);
+        if (!currentSnapshot.exists) throw new Error("Lead no encontrado.");
+        const current = currentSnapshot.data() || {};
+        if (current.paid) {
+          alreadyPaid = true;
+          return;
+        }
+        if (typeof current.paypalOrderId === "string" && pendingOrderIsFresh(current.paypalOrderCreatedAt)) {
+          if (current.paypalPendingTier === tier) reusableOrderId = current.paypalOrderId;
+          else creatingInProgress = true;
+          return;
+        }
+        if (pendingOrderIsFresh(current.paypalOrderCreatingAt, 2 * 60 * 1000)) {
+          creatingInProgress = true;
+          return;
+        }
+        transaction.update(docRef, {
+          paypalPendingTier: tier,
+          paypalOrderCreatingAt: new Date(),
+        });
+        canCreate = true;
+      });
+      if (alreadyPaid) return paymentAlreadyCompletedResponse(res, docRef.id);
+      if (reusableOrderId) return res.json({ success: true, orderId: reusableOrderId, reused: true });
+      if (creatingInProgress || !canCreate) return res.status(409).json({ success: false, reason: "order_in_progress" });
+
+      try {
+        const current = (await docRef.get()).data() || {};
+        const order = await paypalCreateOrder({
+          amount: TIER_PRICE[tier],
+          referenceId: `local-lift:${docRef.id}`,
+          description: `Polaris Local Lift — ${TIER_LABEL[tier]} — ${String(current.businessName || "Local Lift")}`,
+        });
+        await docRef.update({
+          paypalOrderId: order.id,
+          paypalPendingTier: tier,
+          paypalOrderCreatedAt: new Date(),
+          paypalOrderCreatingAt: null,
+        });
+        return res.json({ success: true, orderId: order.id, reused: false });
+      } catch (error) {
+        await docRef.update({ paypalOrderCreatingAt: null }).catch(() => undefined);
+        throw error;
+      }
+    }
+
     if (action === "lookup") {
       if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el id." });
       const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
@@ -299,52 +369,118 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (action === "confirm") {
-      if (!TIER_PRICE[tier]) return res.status(400).json({ error: "Tier inválido." });
+      if (!isLocalLiftTier(tier)) return res.status(400).json({ error: "Tier inválido." });
       if (typeof paypalOrderId !== "string" || !paypalOrderId.trim()) {
         return res.status(400).json({ error: "Falta la confirmación de pago." });
       }
-
-      let docRef;
-      let data: { businessName: string; city: string; contactName: string; email: string };
-
-      if (typeof leadId === "string" && leadId.trim()) {
-        docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
-        const existing = await docRef.get();
-        if (!existing.exists) return res.status(404).json({ error: "Lead no encontrado." });
-        const v = existing.data()!;
-        data = { businessName: v.businessName, city: v.city, contactName: v.contactName, email: v.email };
-        // "awaiting_generation" -- antes se dejaba el status viejo tal cual
-        // (ej. "diagnostic_sent"), así que un lead que pagó desde el botón
-        // del correo de diagnóstico gratis seguía apareciendo en el panel
-        // como si todavía no hubiera pagado nada. Con esto el panel lo
-        // muestra de una como "Pagado -- falta generar" (mismo estado que
-        // ya usa una compra directa nueva, ver la rama de abajo).
-        await docRef.update({
-          paid: true,
-          tier,
-          status: "awaiting_generation",
-          paypalOrderId,
-          paypalPayerEmail: paypalPayerEmail || null,
-          paidAt: new Date(),
-        });
-      } else {
-        if (typeof businessName !== "string" || !businessName.trim()) return res.status(400).json({ error: "Falta el nombre del negocio." });
-        if (typeof city !== "string" || !city.trim()) return res.status(400).json({ error: "Falta la ciudad." });
-        if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Correo inválido." });
-        if (typeof contactName !== "string" || !contactName.trim()) return res.status(400).json({ error: "Falta tu nombre." });
-        data = { businessName: businessName.trim(), city: city.trim(), contactName: contactName.trim(), email };
-        docRef = await firestore.collection("localLiftDiagnostics").add({
-          ...data,
-          source: "direct_paid",
-          status: "awaiting_generation",
-          paid: true,
-          tier,
-          paypalOrderId,
-          paypalPayerEmail: paypalPayerEmail || null,
-          paidAt: new Date(),
-          createdAt: new Date(),
-        });
+      if (typeof leadId !== "string" || !leadId.trim()) {
+        return res.status(400).json({ error: "Falta el lead del checkout." });
       }
+
+      const docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
+      const existing = await docRef.get();
+      if (!existing.exists) return res.status(404).json({ error: "Lead no encontrado." });
+      const initial = existing.data() || {};
+      if (initial.paid) return paymentAlreadyCompletedResponse(res, docRef.id);
+
+      const expectedAmount = TIER_PRICE[tier];
+      const expectedReference = `local-lift:${docRef.id}`;
+      const orderBeforeCapture = await paypalGetOrder(paypalOrderId);
+      if (paypalReferenceId(orderBeforeCapture) !== expectedReference) {
+        return res.status(400).json({ error: "La orden de PayPal no pertenece a este checkout." });
+      }
+      const orderAmount = paypalOrderAmount(orderBeforeCapture);
+      if (!orderAmount || orderAmount.currency !== "USD" || Math.abs(orderAmount.value - expectedAmount) > 0.01) {
+        return res.status(402).json({ error: "El monto de PayPal no coincide con el paquete seleccionado." });
+      }
+
+      let captureAlreadyPaid = false;
+      let captureInProgress = false;
+      let captureClaimed = false;
+      await firestore.runTransaction(async (transaction) => {
+        const latest = await transaction.get(docRef);
+        if (!latest.exists) throw new Error("Lead no encontrado.");
+        const v = latest.data() || {};
+        if (v.paid) {
+          captureAlreadyPaid = true;
+          return;
+        }
+        if (v.paypalOrderId && v.paypalOrderId !== paypalOrderId) {
+          captureInProgress = true;
+          return;
+        }
+        if (v.paypalCaptureInProgress && pendingOrderIsFresh(v.paypalCaptureStartedAt, 2 * 60 * 1000)) {
+          captureInProgress = true;
+          return;
+        }
+        transaction.update(docRef, {
+          paypalOrderId,
+          paypalPendingTier: tier,
+          paypalCaptureInProgress: true,
+          paypalCaptureStartedAt: new Date(),
+        });
+        captureClaimed = true;
+      });
+      if (captureAlreadyPaid) return paymentAlreadyCompletedResponse(res, docRef.id);
+      if (captureInProgress || !captureClaimed) return res.status(409).json({ success: false, reason: "payment_in_progress" });
+
+      let capture: any;
+      try {
+        capture = orderBeforeCapture.status === "COMPLETED"
+          ? orderBeforeCapture
+          : await paypalCaptureOrder(paypalOrderId);
+      } catch (captureError) {
+        // Si dos callbacks alcanzan PayPal a la vez, el segundo puede recibir
+        // un error aunque la primera captura ya haya terminado. Releer la
+        // orden convierte ese caso en un retry idempotente.
+        const recovered = await paypalGetOrder(paypalOrderId).catch(() => null);
+        if (recovered?.status === "COMPLETED") capture = recovered;
+        else {
+          await docRef.update({ paypalCaptureInProgress: null, paypalCaptureStartedAt: null }).catch(() => undefined);
+          throw captureError;
+        }
+      }
+      const captureAmount = paypalOrderAmount(capture);
+      const captureId = paypalCaptureId(capture);
+      if (capture.status !== "COMPLETED" || !captureId || !captureAmount || captureAmount.currency !== "USD" || Math.abs(captureAmount.value - expectedAmount) > 0.01) {
+        await docRef.update({ paypalCaptureInProgress: null, paypalCaptureStartedAt: null }).catch(() => undefined);
+        return res.status(402).json({ error: "El pago no se completó o el monto no coincide." });
+      }
+      if (paypalReferenceId(capture) !== expectedReference) {
+        await docRef.update({ paypalCaptureInProgress: null, paypalCaptureStartedAt: null }).catch(() => undefined);
+        return res.status(400).json({ error: "La captura de PayPal no pertenece a este checkout." });
+      }
+
+      let data: { businessName: string; city: string; contactName: string; email: string };
+      let paymentClaimed = false;
+      let paymentAlreadyPaid = false;
+      const payerEmail = capture?.payer?.email_address || orderBeforeCapture?.payer?.email_address || null;
+      await firestore.runTransaction(async (transaction) => {
+        const latest = await transaction.get(docRef);
+        if (!latest.exists) throw new Error("Lead no encontrado.");
+        const v = latest.data() || {};
+        if (v.paid) {
+          paymentAlreadyPaid = true;
+          return;
+        }
+        data = { businessName: String(v.businessName || ""), city: String(v.city || ""), contactName: String(v.contactName || ""), email: String(v.email || "") };
+        transaction.update(docRef, {
+          paid: true,
+          tier,
+          status: "awaiting_generation",
+          paypalOrderId,
+          paypalCaptureId: captureId,
+          paypalPayerEmail: payerEmail,
+          paidAt: new Date(),
+          paypalPendingTier: null,
+          paypalOrderCreatedAt: null,
+          paypalOrderCreatingAt: null,
+          paypalCaptureInProgress: null,
+          paypalCaptureStartedAt: null,
+        });
+        paymentClaimed = true;
+      });
+      if (paymentAlreadyPaid || !paymentClaimed) return paymentAlreadyCompletedResponse(res, docRef.id);
 
       // Auto-provisionar la cuenta del portal ANTES de mandar los correos --
       // el correo de bienvenida necesita la contraseña temporal real, y el de
