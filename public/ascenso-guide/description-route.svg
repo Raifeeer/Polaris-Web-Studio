@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+      <rect width="1280" height="720" rx="32" fill="#F8FAFC"/>
+      <rect x="26" y="26" width="1228" height="668" rx="24" fill="#FFFFFF" stroke="#DCE4F0" stroke-width="3"/>
+      <circle cx="72" cy="92" r="20" fill="#4F46E5"/>
+      <path d="M64 92h16M72 84v16" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+      <text x="112" y="88" class="eyebrow">ASCENSO · MAPA VISUAL</text>
+      <text x="112" y="132" class="title">DESCRIPCIÓN DEL NEGOCIO</text>
+      <text x="112" y="166" class="sub">Polaris prepara el contenido; tú aplicas el cambio con acompañamiento.</text>
+      
+        <g>
+          <rect x="58.0" y="214" width="369.3" height="224" rx="22" class="card"/>
+          <circle cx="94.0" cy="250" r="18" class="numcircle"/>
+          <text x="94.0" y="257" text-anchor="middle" class="num">1</text>
+          <text x="82.0" y="380.0" class="cardtext">Perfil de Empresa</text>
+        </g><path d="M 433.3 326 H 449.3" class="arrow"/><path d="M 439.3 318 L 451.3 326 L 439.3 334" class="arrow"/>
+        <g>
+          <rect x="455.3" y="214" width="369.3" height="224" rx="22" class="card"/>
+          <circle cx="491.3" cy="250" r="18" class="numcircle"/>
+          <text x="491.3" y="257" text-anchor="middle" class="num">2</text>
+          <text x="479.3" y="380.0" class="cardtext">Editar perfil</text>
+        </g><path d="M 830.7 326 H 846.7" class="arrow"/><path d="M 836.7 318 L 848.7 326 L 836.7 334" class="arrow"/>
+        <g>
+          <rect x="852.7" y="214" width="369.3" height="224" rx="22" class="card"/>
+          <circle cx="888.7" cy="250" r="18" class="numcircle"/>
+          <text x="888.7" y="257" text-anchor="middle" class="num">3</text>
+          <text x="876.7" y="380.0" class="cardtext">Descripción</text><text x="876.7" y="410.0" class="cardtext">Guardar</text>
+        </g>
+      <rect x="58" y="510" width="1164" height="104" rx="18" fill="#EEF2FF"/>
+      <circle cx="94" cy="562" r="17" fill="#16C8C1"/>
+      <text x="94" y="568" text-anchor="middle" class="check">✓</text>
+      <text x="130" y="555" class="notehead">Antes de cerrar</text>
+      <text x="130" y="583" class="note">Revisa la vista pública después de guardar.</text>
+      <style>
+        .eyebrow{font:700 18px Arial,sans-serif;letter-spacing:3px;fill:#6366F1}
+        .title{font:800 31px Arial,sans-serif;letter-spacing:.4px;fill:#0F172A}
+        .sub{font:400 20px Arial,sans-serif;fill:#475569}
+        .card{fill:#FFFFFF;stroke:#C7D2FE;stroke-width:3}
+        .numcircle{fill:#4F46E5}
+        .num{font:700 18px Arial,sans-serif;fill:#FFFFFF}
+        .cardtext{font:700 22px Arial,sans-serif;fill:#111827}
+        .arrow{fill:none;stroke:#16C8C1;stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+        .check{font:800 23px Arial,sans-serif;fill:#FFFFFF}
+        .notehead{font:800 18px Arial,sans-serif;fill:#3730A3}
+        .note{font:400 20px Arial,sans-serif;fill:#334155}
+        .foot{font:400 15px Arial,sans-serif;fill:#64748B}
+      </style>
+    </svg>

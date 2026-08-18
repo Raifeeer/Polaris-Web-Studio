@@ -20,6 +20,17 @@ const STATUS_LABEL: Record<string, string> = {
   closed: "Servicio cerrado",
 };
 
+const GUIDE_ASSET_BY_TITLE: Record<string, string> = {
+  "Descripción del negocio": "description-route.svg",
+  "Servicios y llamadas a la acción": "services-route.svg",
+  "Publicaciones y novedades": "posts-route.svg",
+  "Fotos del negocio": "photos-route.svg",
+  "Lectura de reseñas y buenas prácticas": "review-analysis-route.svg",
+  "Respuestas a reseñas": "review-replies-route.svg",
+  "Mensajes de seguimiento": "messages-route.svg",
+  "Verificación final": "final-check-route.svg",
+};
+
 const requestStatus: Record<string, string> = {
   submitted: "Recibida",
   in_progress: "En revisión",
@@ -62,9 +73,10 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
   const guideSteps = Array.isArray(packageData?.implementationGuide) ? packageData.implementationGuide : [];
   const canRequest = !!workflow?.status && data?.canRequestNewRound && !activeRequest;
   const quickGuide = (title: string) => {
-    const step = guideSteps.find((item: any) => item.title === title);
+    const step = guideSteps.find((item: any) => item.title === title || item.titleEn === title);
     if (!step?.quickStart) return null;
-    return <div className="rounded-lg border border-teal-500/20 bg-teal-500/[0.05] p-3 text-xs leading-relaxed text-[var(--color-text-secondary)]"><p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Cómo aplicar esta sección</p><p className="mt-1">{step.quickStart}</p></div>;
+    const asset = step.visualAsset || GUIDE_ASSET_BY_TITLE[step.title] || GUIDE_ASSET_BY_TITLE[step.titleEn];
+    return <div className="space-y-3"><div className="rounded-lg border border-teal-500/20 bg-teal-500/[0.05] p-3 text-xs leading-relaxed text-[var(--color-text-secondary)]"><p className="text-[10px] font-black uppercase tracking-widest text-teal-500">Cómo aplicar esta sección</p><p className="mt-1">{step.quickStart}</p></div>{asset && <figure className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]"><img src={`/ascenso-guide/${asset}`} alt={step.visualAlt || "Mapa visual de ruta creado por Polaris"} loading="lazy" decoding="async" className="block h-auto w-full" /><figcaption className="px-3 py-2 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Mapa visual de orientación creado por Polaris. La interfaz puede variar.</figcaption></figure>}</div>;
   };
 
   const mutate = async (action: string, extra: Record<string, unknown> = {}) => {
@@ -138,6 +150,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
                   </div>
                   <div><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Instrucciones</p><ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed text-[var(--color-text-secondary)]">{(step.steps || []).map((item: string, itemIndex: number) => <li key={itemIndex} className="pl-1">{item}</li>)}</ol></div>
                   <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3"><p className="text-[10px] font-black uppercase tracking-widest text-amber-300">Evita estos errores</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-amber-100/80">{(step.avoid || []).map((item: string, itemIndex: number) => <li key={itemIndex}>{item}</li>)}</ul></div>
+                  {index === guideSteps.length - 1 && (step.visualAsset || GUIDE_ASSET_BY_TITLE[step.title]) && <figure className="overflow-hidden rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]"><img src={`/ascenso-guide/${step.visualAsset || GUIDE_ASSET_BY_TITLE[step.title]}`} alt={step.visualAlt || "Mapa visual de ruta creado por Polaris"} loading="lazy" decoding="async" className="block h-auto w-full" /><figcaption className="px-3 py-2 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Mapa visual de orientación creado por Polaris. La interfaz puede variar.</figcaption></figure>}
                 </div>
               </details>
             ))}

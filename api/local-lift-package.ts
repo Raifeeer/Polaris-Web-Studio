@@ -233,6 +233,8 @@ type PackageTier = "impulso" | "ascenso";
 type ImplementationGuideStep = {
   title: string;
   titleEn: string;
+  visualAsset: string;
+  visualAlt: string;
   summary: string;
   summaryEn: string;
   quickStart: string;
@@ -253,6 +255,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Descripción del negocio",
     titleEn: "Business description",
+    visualAsset: "description-route.svg",
+    visualAlt: "Mapa visual de tres pasos para aplicar la descripción del negocio",
     summary: "Coloca la descripción preparada para explicar con claridad qué ofrece tu negocio y por qué alguien debería contactarte.",
     summaryEn: "Use the prepared description to explain clearly what your business offers and why someone should contact you.",
     quickStart: "Abre el editor de tu Perfil de Empresa desde Google Search o Maps, localiza la sección de descripción, pega el texto preparado y guarda. Google puede mostrar nombres distintos y revisar el cambio; si no ves la opción, guarda una captura para la sesión.",
@@ -271,6 +275,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Servicios y llamadas a la acción",
     titleEn: "Services and calls to action",
+    visualAsset: "services-route.svg",
+    visualAlt: "Mapa visual de tres pasos para revisar y guardar servicios",
     summary: "Organiza lo que ofreces para que el cliente entienda rápidamente qué puede solicitar y cuál es el siguiente paso.",
     summaryEn: "Organize what you offer so customers quickly understand what they can request and what to do next.",
     quickStart: "En el editor de servicios, agrega solo lo que realmente ofreces y revisa el nombre, la descripción y el precio si aplica antes de guardar. Si no ves el editor, la categoría o la región pueden no ser elegibles.",
@@ -289,6 +295,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Publicaciones y novedades",
     titleEn: "Posts and updates",
+    visualAsset: "posts-route.svg",
+    visualAlt: "Mapa visual de tres pasos para revisar y publicar una novedad",
     summary: "Convierte cada publicación preparada en una actualización real, revisada y adaptada al momento en que la vas a publicar.",
     summaryEn: "Turn each prepared post into a real update, reviewed and adapted to the moment you publish it.",
     quickStart: "En tu Perfil de Empresa, abre Publicaciones y Agregar publicación, elige el tipo disponible y revisa fechas, enlaces y vigencia antes de publicar. Si el menú no aparece, consúltalo durante la sesión; no todas las cuentas muestran programación o los mismos tipos.",
@@ -307,6 +315,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Fotos del negocio",
     titleEn: "Business photos",
+    visualAsset: "photos-route.svg",
+    visualAlt: "Mapa visual de tres pasos para añadir y revisar fotos",
     summary: "Aplica las imágenes aprobadas para que la presencia visual del negocio esté actualizada y sea coherente con lo que ofreces.",
     summaryEn: "Apply the approved images so the business presence stays current and matches what you offer.",
     quickStart: "Desde Fotos y Añadir fotos —o la ruta equivalente en Maps móvil— selecciona imágenes reales y aprobadas, revisa el recorte y confirma el estado después de subirlas. Google puede tardar entre 24 y 48 horas en mostrarlas.",
@@ -325,6 +335,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Lectura de reseñas y buenas prácticas",
     titleEn: "Review insights and best practices",
+    visualAsset: "review-analysis-route.svg",
+    visualAlt: "Mapa visual para convertir patrones de reseñas en prioridades y acciones",
     summary: "Convierte el análisis preparado por Polaris en decisiones concretas: identifica patrones, prioriza acciones y llévalas a las secciones correspondientes del perfil.",
     summaryEn: "Turn Polaris's prepared analysis into concrete decisions: identify patterns, prioritize actions, and carry them into the relevant profile sections.",
     quickStart: "Lee primero los temas repetidos, separa fortalezas de fricciones y elige las acciones que puedes aplicar ahora. Usa las secciones de descripción, servicios, publicaciones, fotos y respuestas para ejecutar esas acciones; las dudas se revisan durante el acompañamiento.",
@@ -343,6 +355,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Respuestas a reseñas",
     titleEn: "Review replies",
+    visualAsset: "review-replies-route.svg",
+    visualAlt: "Mapa visual de lectura, personalización y envío de una respuesta",
     summary: "Usa las respuestas preparadas como base, pero personalízalas después de leer la reseña y su contexto completo.",
     summaryEn: "Use the prepared replies as a starting point, but personalize them after reading the full review and context.",
     quickStart: "En Leer reseñas, abre la reseña correspondiente y selecciona Responder. Usa el texto preparado como base, personaliza el contexto y envíalo; si no aparece la opción, verifica el perfil y guarda una captura para la sesión.",
@@ -361,6 +375,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Mensajes de seguimiento",
     titleEn: "Follow-up messages",
+    visualAsset: "messages-route.svg",
+    visualAlt: "Mapa visual para elegir, adaptar y enviar un mensaje de seguimiento",
     summary: "Adapta los mensajes preparados para WhatsApp u otros canales y envíalos solo cuando el escenario realmente corresponda.",
     summaryEn: "Adapt the prepared messages for WhatsApp or other channels and send them only when the situation truly applies.",
     quickStart: "Elige el escenario correcto, reemplaza las variables y comprueba que el enlace o canal funcione antes de enviar. No dependas del chat interno de Google: WhatsApp o SMS solo aparecen en perfiles y regiones elegibles.",
@@ -379,6 +395,8 @@ const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
   {
     title: "Verificación final",
     titleEn: "Final verification",
+    visualAsset: "final-check-route.svg",
+    visualAlt: "Mapa visual de verificación final en búsqueda, Maps y estados",
     summary: "Comprueba que los cambios aplicados se vean bien desde la perspectiva de un cliente y reúne tus dudas para la sesión.",
     summaryEn: "Check that the applied changes look right from a customer's perspective and collect questions for the session.",
     quickStart: "Compara la vista del negocio en Search y Maps, revisa si el cambio aparece como Aceptado, Pendiente o No aprobado y espera los plazos de revisión de Google antes de concluir que algo falló.",
