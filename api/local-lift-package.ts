@@ -127,11 +127,11 @@ const TIER_PRICE: Record<string, { amount: string; label: string }> = {
 // Profile, respuestas a reseñas reales (hasta 5 -- límite real de Places API,
 // nunca 15, ver nota en el schema) + plantillas por calificación, y 10
 // mensajes de WhatsApp de seguimiento. Impulso recibe el contenido para
-// aplicarlo por su cuenta; Ascenso puede autorizar la implementación directa
-// en Google mediante OAuth, siempre con aprobación manual del administrador.
+// aplicarlo por su cuenta; Ascenso además incluye una guía paso a paso,
+// rondas agrupadas de revisión y acompañamiento 1:1.
 //
 // Admin-only a propósito: a diferencia de local-lift-diagnostic.ts (gratis,
-// público, gancho de venta), esto es el entregable del tier PAGO -- no debe
+// público, gancho de venta), esto es el paquete del tier PAGO -- no debe
 // ser gatillable por cualquier visitante. La autenticación real (verificar
 // que quien llama es un admin del portal) la hace el middleware
 // authenticateToken+requireAdmin ya existente, aplicado en server.ts ANTES
@@ -226,6 +226,20 @@ type WhatsappHalfPart = z.infer<typeof whatsappHalfSchema>;
 type ReviewAnalysisPart = z.infer<typeof reviewAnalysisSchema>;
 type PackageTier = "impulso" | "ascenso";
 
+type ImplementationGuideStep = {
+  title: string;
+  where: string;
+  steps: string[];
+};
+
+const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
+  { title: "Descripción del negocio", where: "Información del negocio", steps: ["Abre la sección de información del negocio.", "Sustituye la descripción actual por la versión preparada y revisa que el tono represente tu negocio.", "Guarda el cambio y verifica cómo se muestra en la vista pública."] },
+  { title: "Servicios y llamadas a la acción", where: "Servicios", steps: ["Entra en la sección de servicios o productos.", "Añade o ajusta cada servicio con el nombre y detalle sugeridos.", "Revisa que la llamada a la acción lleve al siguiente paso que realmente puedes atender."] },
+  { title: "Publicaciones", where: "Publicaciones o novedades", steps: ["Crea una publicación nueva y elige el formato más cercano al objetivo.", "Copia el texto preparado, adapta fechas, precios o disponibilidad y añade una imagen propia si corresponde.", "Revisa la vista previa y publica solo cuando todo esté correcto."] },
+  { title: "Respuestas a reseñas", where: "Reseñas", steps: ["Abre la reseña correspondiente y lee el contexto completo.", "Usa la respuesta preparada como base, personaliza el saludo y corrige cualquier dato antes de enviarla.", "En casos sensibles, pausa y consulta a Polaris durante el acompañamiento."] },
+  { title: "Verificación final", where: "Vista pública del negocio", steps: ["Comprueba que la información guardada se vea coherente desde la vista pública.", "Anota cualquier diferencia o duda para revisarla en la sesión.", "Usa las rondas incluidas solo para solicitar cambios al material preparado, no para abrir un servicio indefinido."] },
+];
+
 function normalizeTier(value: unknown): PackageTier {
   return value === "ascenso" || value === "implementado" ? "ascenso" : "impulso";
 }
@@ -238,6 +252,7 @@ interface LocalLiftPackage {
   reviewReplyTemplates: TemplatesPart["reviewReplyTemplates"] | null;
   reviewAnalysis: ReviewAnalysisPart | null;
   reviewAnalysisNote: string | null;
+  implementationGuide?: ImplementationGuideStep[] | null;
   whatsappMessages: WhatsappHalfPart["whatsappMessages"] | null;
   partialFailure: boolean;
   errors: Record<"description" | "posts1" | "posts2" | "replies" | "templates" | "reviewAnalysis" | "whatsapp1" | "whatsapp2", string | null>;
@@ -353,9 +368,10 @@ async function generatePackage(
     reviewAnalysis: tier === "ascenso" ? reviewAnalysis ?? null : null,
     reviewAnalysisNote: tier === "ascenso"
       ? reviews.length > 0
-        ? "Análisis basado en una muestra de hasta cinco reseñas disponibles; no representa el historial completo del negocio."
+        ? "Análisis basado en una muestra de hasta cinco reseñas disponibles; no representa el historial completo."
         : "Google no devolvió reseñas con texto analizables para este negocio en esta consulta."
       : null,
+    implementationGuide: tier === "ascenso" ? ASCENSO_IMPLEMENTATION_GUIDE : null,
     whatsappMessages: whatsappMessages.length > 0 ? whatsappMessages : null,
     partialFailure: Object.values(errors).some((e) => e !== null),
     errors,
@@ -401,7 +417,6 @@ function renderPackageEmailBody(
   lang: "es" | "en",
   tier: PackageTier,
   pkg: LocalLiftPackage,
-  connectUrl?: string,
   portalUrl?: string,
 ): string {
   const safeBusinessName = escapeHtml(businessName);
@@ -416,15 +431,6 @@ function renderPackageEmailBody(
   const portalButton = portalUrl
     ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 10px auto;"><tr><td align="center"><a href="${portalUrl}" target="_blank" style="display:inline-block;background:#111936;color:#ffffff;text-decoration:none;font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;line-height:1.2;padding:14px 24px;border-radius:8px;">${isEnglish ? "Review my package" : "Revisar mi paquete"}</a></td></tr></table>`
     : "";
-  const connectButton = connectUrl
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr><td align="center"><a href="${connectUrl}" target="_blank" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:700;line-height:1.2;padding:14px 24px;border-radius:8px;">${isEnglish ? "Connect my Google Business Profile" : "Conectar mi Perfil de Empresa de Google"}</a></td></tr></table>`
-    : "";
-  const connectNote = connectUrl
-    ? isEnglish
-      ? "Optional: you approve everything before anything is published."
-      : "Opcional: apruebas todo antes de que publiquemos cualquier cosa."
-    : "";
-
   const content = isEnglish
     ? {
         eyebrow: "YOUR PACKAGE IS READY",
@@ -432,8 +438,8 @@ function renderPackageEmailBody(
         intro: "Your complete PDF is attached with the content prepared for your business. Open it when you have a moment and start applying the changes in the order that makes the most sense for you.",
         cardTitle: "Inside your package",
         items: ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", "A clear set of next steps"],
-        ctaTitle: "Want us to help put it into motion?",
-        ctaBody: "Connect your Google Business Profile and we can review the prepared content with you before anything is published.",
+        ctaTitle: "Your implementation guide is ready",
+        ctaBody: "Use the client portal to follow the steps, review the material and request changes if needed. The guide shows you what to do and where to do it.",
         signature: "The Polaris Local Lift team",
       }
     : {
@@ -442,19 +448,22 @@ function renderPackageEmailBody(
         intro: "Adjuntamos tu PDF completo con el contenido preparado para tu negocio. Ábrelo cuando tengas un momento y empieza a aplicar los cambios en el orden que más sentido tenga para ti.",
         cardTitle: "Qué encontrarás dentro",
         items: ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", "Siguientes pasos claros para avanzar"],
-        ctaTitle: "¿Quieres que te ayudemos a ponerlo en marcha?",
-        ctaBody: "Conecta tu Perfil de Empresa de Google y revisamos contigo el contenido preparado antes de publicar cualquier cosa.",
+        ctaTitle: "Tu guía de implementación está lista",
+        ctaBody: "Entra al portal para seguir el paso a paso, revisar el material y solicitar cambios si los necesitas. La guía te muestra qué hacer y dónde hacerlo.",
         signature: "El equipo de Polaris Local Lift",
       };
 
+  const tierItems = tier === "ascenso"
+    ? (isEnglish ? ["Step-by-step implementation guide", "Up to three grouped review rounds"] : ["Guía paso a paso para implementar los cambios", "Hasta tres rondas agrupadas de revisión"])
+    : [];
   const items = reviewLine
-    ? [...content.items.slice(0, 5), reviewLine, content.items[5]]
-    : content.items;
+    ? [...content.items.slice(0, 5), reviewLine, ...tierItems, content.items[5]]
+    : [...content.items.slice(0, 5), ...tierItems, content.items[5]];
   const itemRows = items
     .map((item) => `<tr><td width="36" valign="middle" style="padding:0 0 14px 0;"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td width="30" height="30" align="center" valign="middle" style="width:30px;height:30px;border-radius:50%;background:#E8FBFA;color:#16C8C1;font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:13px;">&#10003;</td></tr></table></td><td valign="middle" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;color:#1f2937;padding:0 0 14px 12px;">${item}</td></tr>`)
     .join("");
-  const connectBlock = connectUrl || portalUrl
-    ? `<tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:16px;line-height:1.35;color:#0f172a;margin-bottom:9px;">${content.ctaTitle}</div><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#1f2937;margin:0 0 18px;">${content.ctaBody}<br><span style="font-size:12px;color:#64748b;">${connectNote}</span></p>${portalButton}${connectButton}</div></td></tr>`
+  const connectBlock = portalUrl
+    ? `<tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:16px;line-height:1.35;color:#0f172a;margin-bottom:9px;">${content.ctaTitle}</div><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#1f2937;margin:0 0 18px;">${content.ctaBody}</p>${portalButton}</div></td></tr>`
     : "";
 
   return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet"><title>${content.title}</title><style>body{margin:0;}a{text-decoration:none;color:#4f46e5;}.email-card{width:100% !important;max-width:600px !important;box-sizing:border-box !important;}.email-pad{padding-left:24px !important;padding-right:24px !important;}.email-item-card{box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;}</style></head><body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${content.title} — ${safeBusinessName}</div><div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;"><table class="email-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><tr><td class="email-pad" style="padding:40px 40px 0;text-align:center;">${localLiftLogoHeader}</td></tr><tr><td class="email-pad" style="padding:8px 40px 8px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#0284c7;margin-bottom:14px;">${content.eyebrow}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.3;color:#0f172a;">${content.title}</div></td></tr><tr><td class="email-pad" style="padding:16px 40px 0;text-align:center;"><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${greeting}<br>${content.intro}</p></td></tr><tr><td class="email-pad" style="padding:24px 40px 0;"><div class="email-item-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;color:#0f172a;margin-bottom:16px;">${content.cardTitle}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;line-height:1.4;color:#0f172a;margin-bottom:18px;">${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table></div></td></tr>${connectBlock}<tr><td class="email-pad" style="padding:40px 40px 0;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px auto;"><tr><td style="padding:0 10px;"><a href="https://www.instagram.com/polariswebstudio/" target="_blank" rel="noopener noreferrer"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-instagram.png" width="22" height="22" alt="Instagram" style="width:22px;height:22px;display:block;"></a></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-facebook.png" width="22" height="22" alt="Facebook" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-x.png" width="22" height="22" alt="X" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-linkedin.png" width="22" height="22" alt="LinkedIn" style="width:22px;height:22px;display:block;"></td></tr></table></td></tr><tr><td class="email-pad" style="padding:0 40px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:24px 40px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;"><tr><td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Sitio web</a></td><td width="34%" style="text-align:center;white-space:nowrap;"><a href="https://wa.me/18299200544" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">WhatsApp</a></td><td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Contacto</a></td></tr></table><div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Privacidad</a><span style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">&nbsp;&middot;&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Términos y condiciones</a></div><div style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Web Studio · República Dominicana · <a href="mailto:hola@polarisweb.studio" style="color:#64748b;text-decoration:underline;">hola@polarisweb.studio</a><br>Recibiste este correo porque adquiriste un paquete de contenido de Local Lift.</div></td></tr></table></div></body></html>`;
@@ -485,13 +494,13 @@ async function syncPortalPackageSent(leadId: string): Promise<{ synced: boolean;
   }
 }
 
-function renderPackageEmailText(businessName: string, contactName: string | null, lang: "es" | "en", connectUrl?: string, portalUrl?: string): string {
+function renderPackageEmailText(businessName: string, contactName: string | null, lang: "es" | "en", tier: PackageTier, portalUrl?: string): string {
   const safeBusinessName = businessName;
   const greeting = contactName ? (lang === "en" ? `Hi ${contactName},` : `Hola ${contactName},`) : lang === "en" ? "Hi," : "Hola,";
   const isEnglish = lang === "en";
   const items = isEnglish
-    ? ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", "Clear next steps"]
-    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", "Siguientes pasos claros"];
+    ? ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", ...(tier === "ascenso" ? ["Step-by-step implementation guide", "Up to three grouped review rounds"] : []), "Clear next steps"]
+    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", ...(tier === "ascenso" ? ["Guía paso a paso para implementar los cambios", "Hasta tres rondas agrupadas de revisión"] : []), "Siguientes pasos claros"];
   const lines = [
     isEnglish ? "YOUR PACKAGE IS READY" : "TU PAQUETE ESTÁ LISTO",
     isEnglish ? "Your Local Lift package is ready" : "Tu paquete Local Lift está listo",
@@ -504,7 +513,7 @@ function renderPackageEmailText(businessName: string, contactName: string | null
     "",
   ];
   if (portalUrl) lines.push("", isEnglish ? `Review your Ascenso package in the client portal: ${portalUrl}` : `Revisa tu paquete Ascenso en el portal de cliente: ${portalUrl}`);
-  if (connectUrl) lines.push("", isEnglish ? `Connect your Google Business Profile: ${connectUrl}` : `Conecta tu Perfil de Empresa de Google: ${connectUrl}`);
+  if (tier === "ascenso") lines.push("", isEnglish ? "Your Ascenso package includes up to three grouped review rounds." : "Tu paquete Ascenso incluye hasta tres rondas agrupadas de revisión.");
   lines.push("", isEnglish ? "The Polaris Local Lift team" : "El equipo de Polaris Local Lift");
   return lines.join("\n");
 }
@@ -716,10 +725,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
       });
       const finalTier2 = normalizeTier(docRef ? (await docRef.get()).data()?.tier : tier);
-      const connectUrl =
-        finalTier2 === "ascenso" && typeof leadId === "string" && leadId.trim()
-          ? `https://polarisweb.studio/local-lift/conectar/${leadId.trim()}`
-          : undefined;
       const portalUrl =
         finalTier2 === "ascenso"
           ? `${process.env.PORTAL_BASE_URL || "https://polarisweb.studio"}/dashboard`
@@ -741,8 +746,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
         subject: language === "en" ? `Your Local Lift content package — ${givenPlace.name}` : `Tu paquete de contenido Local Lift — ${givenPlace.name}`,
-        text: renderPackageEmailText(givenPlace.name, contactName || null, language, connectUrl, portalUrl),
-        html: renderPackageEmailBody(givenPlace.name, contactName || null, language, finalTier2, givenPackage, connectUrl, portalUrl),
+        text: renderPackageEmailText(givenPlace.name, contactName || null, language, finalTier2, portalUrl),
+        html: renderPackageEmailBody(givenPlace.name, contactName || null, language, finalTier2, givenPackage, portalUrl),
 
         attachments: pdfBuffer
           ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]

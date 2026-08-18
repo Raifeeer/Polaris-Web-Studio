@@ -265,10 +265,10 @@ export default function LocalLiftPay() {
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
-                    ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
-                    ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
-                    ["Una ronda de revisión incluida", "One revision round included"],
-                    ["Seguimiento personalizado 1:1 para planificar la implementación", "Personalized 1:1 follow-up to plan the implementation"],
+                    ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
+                    ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
+                    ["Hasta tres rondas agrupadas de revisión", "Up to three grouped review rounds"],
+                    ["Acompañamiento personalizado 1:1 para avanzar con claridad", "Personalized 1:1 accompaniment to move forward with clarity"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
@@ -446,10 +446,10 @@ export default function LocalLiftPay() {
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
-                    ["Implementación asistida de todos los cambios autorizados", "Assisted implementation of all authorized changes"],
-                    ["Carga de textos e imágenes que nos proporciones", "Upload of text and images you provide"],
-                    ["Una ronda de revisión incluida", "One revision round included"],
-                    ["Seguimiento personalizado 1:1 para planificar la implementación", "Personalized 1:1 follow-up to plan the implementation"],
+                    ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
+                    ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
+                    ["Hasta tres rondas agrupadas de revisión", "Up to three grouped review rounds"],
+                    ["Acompañamiento personalizado 1:1 para avanzar con claridad", "Personalized 1:1 accompaniment to move forward with clarity"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />

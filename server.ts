@@ -1547,7 +1547,7 @@ const PORT = 3000;
         productType: "local_lift",
         localLiftTier: isAscenso ? "ascenso" : "impulso",
         ...(typeof localLiftLeadId === "string" && localLiftLeadId.trim() ? { localLiftLeadId: localLiftLeadId.trim() } : {}),
-        ...(isAscenso ? { ascensoWorkflow: createAscensoWorkflow("awaiting_connection") } : {}),
+        ...(isAscenso ? { ascensoWorkflow: createAscensoWorkflow("awaiting_client_review") } : {}),
         currentPhase: isAscenso ? "Agenda tu reunión" : "Preparando tu paquete",
         progress: isAscenso ? 20 : 33,
         description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
@@ -1555,9 +1555,9 @@ const PORT = 3000;
         phases: isAscenso
           ? [
               { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-              { name: "Agenda tu reunión", status: "active", detail: "Agenda tu sesión de bienvenida 1:1 desde la pestaña de Reuniones de este portal para coordinar la implementación." },
-              { name: "Implementación asistida", status: "pending", detail: "Aplicamos en tu ficha los cambios que autorices en la reunión." },
-              { name: "Entrega", status: "pending", detail: "Te avisamos por correo cuando todo quede aplicado." },
+              { name: "Agenda tu reunión", status: "active", detail: "Agenda tu sesión de bienvenida 1:1 desde la pestaña de Reuniones de este portal para coordinar el acompañamiento." },
+              { name: "Acompañamiento guiado", status: "pending", detail: "Te mostramos paso a paso cómo aplicar los cambios y revisamos tus dudas durante la sesión." },
+              { name: "Entrega", status: "pending", detail: "Te avisamos por correo cuando el acompañamiento quede completado." },
             ]
           : [
               { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
@@ -1696,17 +1696,9 @@ const PORT = 3000;
     const wasAlreadySent = !!project.localLiftPackageSentAt;
     const transition = transitionLocalLiftAfterPackageSent(project);
     const attempts = Math.max(0, Number(project.localLiftPortalSyncAttempts || 0)) + 1;
-    let ascensoWorkflow = project.localLiftTier === "ascenso" ? ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_connection") : undefined;
+    let ascensoWorkflow = project.localLiftTier === "ascenso" ? ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review") : undefined;
     if (ascensoWorkflow) {
-      let connected = false;
-      try {
-        const leadDoc = project.localLiftLeadId ? await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).get() : null;
-        const leadValue = leadDoc?.exists ? leadDoc.data() || {} : {};
-        connected = !!leadValue.gbp?.refreshToken || leadValue.gbp?.demo === true;
-      } catch (error: any) {
-        console.error("[package-sent] No se pudo leer conexión GBP:", error?.message || error);
-      }
-      const nextStatus = connected ? "awaiting_client_review" : "awaiting_connection";
+      const nextStatus = "awaiting_client_review";
       ascensoWorkflow = {
         ...ascensoWorkflow,
         status: ["approved", "pending_admin_review", "publishing", "implementation_completed", "closed"].includes(ascensoWorkflow.status) ? ascensoWorkflow.status : nextStatus,
@@ -2157,7 +2149,7 @@ const PORT = 3000;
   app.get("/api/portal/local-lift/workflow/by-lead/:leadId", authenticateToken, requireAdmin, async (req: any, res) => {
     const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === req.params.leadId && !p.deletedAt);
     if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
-    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, project.localLiftPackageSentAt ? "awaiting_client_review" : "awaiting_connection");
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review");
     let lead: any = null;
     try {
       const doc = await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId!).get();
@@ -2182,7 +2174,7 @@ const PORT = 3000;
     const project = dbInstance.getProjects().find((p) => p.id === req.params.projectId && !p.deletedAt);
     if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
     if (req.user.role !== "admin" && project.clientUserId !== req.user.id) return res.status(403).json({ error: "Acceso denegado." });
-    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, project.localLiftPackageSentAt ? "awaiting_client_review" : "awaiting_connection");
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review");
     let lead: any = null;
     if (project.localLiftLeadId) {
       try {
@@ -2212,7 +2204,7 @@ const PORT = 3000;
     if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
     const isAdmin = req.user.role === "admin";
     if (!isAdmin && project.clientUserId !== req.user.id) return res.status(403).json({ error: "Acceso denegado." });
-    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, project.localLiftPackageSentAt ? "awaiting_client_review" : "awaiting_connection");
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review");
     const now = new Date().toISOString();
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     const adminEmail = "cristian2200299@gmail.com";
@@ -2238,7 +2230,7 @@ const PORT = 3000;
         }
         dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
         await dbInstance.flush();
-        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu revisión de Ascenso está lista · ${project.name}`, replyTo: adminEmail, text: `Hola ${client.name || ""}.\n\nYa preparamos la revisión solicitada para ${project.name}. Entra a tu portal para revisar el material y elegir entre “Aprobar implementación” o “Solicitar aclaraciones”.\n\nEsta respuesta corresponde a la ronda ${workflow.requests.find((r) => r.id === requestId)?.round || "actual"}; pedir aclaraciones sobre esta misma revisión no consume una ronda nueva.` });
+        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu revisión de Ascenso está lista · ${project.name}`, replyTo: adminEmail, text: `Hola ${client.name || ""}.\n\nYa preparamos la revisión solicitada para ${project.name}. Entra a tu portal para revisar el material y elegir entre “Aprobar esta versión” o “Solicitar aclaraciones”. Si necesitas cambios adicionales, inicia la siguiente ronda antes de aprobar.\n\nEsta respuesta corresponde a la ronda ${workflow.requests.find((r) => r.id === requestId)?.round || "actual"}; pedir aclaraciones sobre esta misma revisión no consume una ronda nueva.` });
         return res.json({ success: true, workflow });
       }
 
@@ -2258,7 +2250,7 @@ const PORT = 3000;
         workflow = clientApproveRevision(workflow, requestId, now);
         dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
         await dbInstance.flush();
-        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Ascenso aprobado para publicar · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó la revisión ${requestId} de ${project.name}. Revisa el paquete en el panel y publica la implementación aprobada.` });
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Versión Ascenso aprobada · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó la revisión ${requestId} de ${project.name}. Revisa el paquete y prepara el acompañamiento final desde el panel.` });
         return res.json({ success: true, workflow });
       }
 
@@ -2274,23 +2266,23 @@ const PORT = 3000;
 
       if (action === "admin_close_service") {
         if (!isAdmin) return res.status(403).json({ error: "Solo administración puede cerrar el servicio." });
-        if (!["implementation_completed", "approved"].includes(workflow.status)) return res.status(409).json({ error: "La implementación todavía no está lista para cerrar." });
+        if (!["implementation_completed", "approved"].includes(workflow.status)) return res.status(409).json({ error: "El acompañamiento todavía no está listo para cerrar." });
         workflow = { ...workflow, status: "closed", closedAt: now, history: [...workflow.history, { id: `ascenso-closed-${Date.now()}`, type: "service_closed", actor: "admin", at: now, version: workflow.currentVersion }] };
         dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
         await dbInstance.flush();
-        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Implementación Ascenso cerrada · ${project.name}`, text: `La implementación incluida para ${project.name} ha quedado cerrada. Puedes seguir consultando el historial en tu portal. Los cambios posteriores se cotizan como un servicio nuevo.` });
+        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Acompañamiento Ascenso cerrado · ${project.name}`, text: `El acompañamiento incluido para ${project.name} ha quedado cerrado. Puedes seguir consultando el historial en tu portal. Los cambios posteriores se cotizan como un servicio nuevo.` });
         return res.json({ success: true, workflow });
       }
 
       if (action === "admin_mark_published") {
-        if (!isAdmin) return res.status(403).json({ error: "Solo administración puede cerrar la publicación." });
+        if (!isAdmin) return res.status(403).json({ error: "Solo administración puede confirmar el acompañamiento." });
         if (workflow.status !== "pending_admin_review") return res.status(409).json({ error: "El cliente todavía no ha aprobado una revisión." });
-        const phases = (project.phases || []).map((phase) => phase.name === "Implementación asistida" || phase.name === "Entrega" ? { ...phase, status: "completed" as const } : phase);
+        const phases = (project.phases || []).map((phase) => phase.name === "Acompañamiento guiado" || phase.name === "Implementación asistida" || phase.name === "Entrega" ? { ...phase, status: "completed" as const } : phase);
         const completed = transitionLocalLiftAfterPackageSent({ ...project, phases, localLiftTier: "ascenso" });
         workflow = markImplementationCompleted(workflow, workflow.activeRequestId, now);
         dbInstance.updateProject(project.id, { ...completed, ascensoWorkflow: workflow });
         await dbInstance.flush();
-        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu implementación de Ascenso está completada · ${project.name}`, text: `La implementación aprobada para ${project.name} ya fue marcada como completada. Puedes consultar el paquete y el historial en tu portal.` });
+        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu acompañamiento de Ascenso está completado · ${project.name}`, text: `El acompañamiento guiado para ${project.name} ya fue marcado como completado. Puedes consultar la guía, el paquete y el historial en tu portal.` });
         return res.json({ success: true, workflow, currentPhase: completed.currentPhase, progress: completed.progress });
       }
 
@@ -2890,13 +2882,13 @@ const PORT = 3000;
     });
 
     dbInstance.updateProject(projectId, {
-      currentPhase: "Implementación asistida",
+      currentPhase: "Acompañamiento guiado",
       progress: 55,
       phases: project.phases.map((ph) =>
         ph.name === "Agenda tu reunión"
           ? { ...ph, status: "completed" as const }
-          : ph.name === "Implementación asistida"
-            ? { ...ph, status: "active" as const }
+          : ph.name === "Acompañamiento guiado" || ph.name === "Implementación asistida"
+            ? { ...ph, name: "Acompañamiento guiado", detail: "Te mostramos paso a paso cómo aplicar los cambios y revisamos tus dudas durante la sesión.", status: "active" as const }
             : ph
       ),
     });

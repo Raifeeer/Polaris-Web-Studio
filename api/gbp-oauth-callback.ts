@@ -57,13 +57,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     // Paso 1: arrancar el flujo -- devuelve la URL real de consentimiento de Google.
     if (action === "start") {
+      return res.status(410).json({ error: "La conexión externa no forma parte del Ascenso actual. Usa la guía y el acompañamiento del portal." });
       if (!clientId) return res.status(500).json({ error: "GBP_OAUTH_CLIENT_ID no configurado." });
       if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
       const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
       if (!doc.exists) return res.status(404).json({ error: "No encontramos ese lead." });
       const leadTier = doc.data()?.tier;
       if (leadTier !== "ascenso" && leadTier !== "implementado") {
-        return res.status(403).json({ error: "La implementación directa en Google está incluida únicamente en Ascenso." });
+        return res.status(410).json({ error: "La ejecución directa en Google no forma parte de la oferta actual de Local Lift." });
       }
 
       const params = new URLSearchParams({
@@ -172,10 +173,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
           });
           await transporter.sendMail({
-            from: '"Local Lift -- Google conectado" <hola@polarisweb.studio>',
+            from: '"Local Lift -- conexión heredada detectada" <hola@polarisweb.studio>',
             to: "hola@polarisweb.studio",
-            subject: `🔗 ${leadData.businessName || "Un cliente"} conectó su Google Business Profile`,
-            text: `${leadData.businessName || "(sin nombre)"} conectó su cuenta de Google Business Profile en Local Lift.\n\nContacto: ${leadData.contactName || ""} <${leadData.email || ""}>\nPanel: https://polarisweb.studio/local-lift/panel`,
+            subject: `Conexión heredada de Google detectada · ${leadData.businessName || "Un cliente"}`,
+            text: `Se detectó una conexión heredada de Google para ${leadData.businessName || "(sin nombre)"}.\n\nContacto: ${leadData.contactName || ""} <${leadData.email || ""}>\nPanel: https://polarisweb.studio/local-lift/panel\n\nEl Ascenso actual funciona con guía y acompañamiento; revisa este registro solo si necesitas revocar un acceso anterior.`,
           });
         } catch (mailErr) {
           console.error("[gbp-oauth-callback] Error enviando aviso de conexión:", mailErr);

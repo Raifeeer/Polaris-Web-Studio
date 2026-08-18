@@ -2,7 +2,7 @@ import type { DbAscensoReviewRequest, DbAscensoWorkflow } from "./server-db.js";
 
 export const ASCENSO_MAX_ROUNDS = 3;
 
-export function createAscensoWorkflow(status: DbAscensoWorkflow["status"] = "awaiting_connection"): DbAscensoWorkflow {
+export function createAscensoWorkflow(status: DbAscensoWorkflow["status"] = "awaiting_client_review"): DbAscensoWorkflow {
   return {
     status,
     maxRounds: ASCENSO_MAX_ROUNDS,
@@ -14,12 +14,14 @@ export function createAscensoWorkflow(status: DbAscensoWorkflow["status"] = "awa
   };
 }
 
-export function ensureAscensoWorkflow(value?: Partial<DbAscensoWorkflow> | null, fallbackStatus: DbAscensoWorkflow["status"] = "awaiting_connection"): DbAscensoWorkflow {
+export function ensureAscensoWorkflow(value?: Partial<DbAscensoWorkflow> | null, fallbackStatus: DbAscensoWorkflow["status"] = "awaiting_client_review"): DbAscensoWorkflow {
   const base = createAscensoWorkflow(fallbackStatus);
   if (!value) return base;
+  const normalizedStatus = value.status === "awaiting_connection" ? "awaiting_client_review" : value.status;
   return {
     ...base,
     ...value,
+    status: normalizedStatus || base.status,
     maxRounds: Math.max(1, Math.min(3, Number(value.maxRounds || ASCENSO_MAX_ROUNDS))),
     roundsUsed: Math.max(0, Math.min(3, Number(value.roundsUsed || 0))),
     packageVersion: Math.max(1, Number(value.packageVersion || 1)),
@@ -103,7 +105,7 @@ export function startAdditionalRound(workflow: DbAscensoWorkflow, requestId: str
       roundsUsed: round,
       activeRequestId: id,
       lastClientActionAt: now,
-      requests: workflow.requests.map((r) => r.id === requestId ? { ...r, status: "closed", closedAt: now, updatedAt: now } : r).concat(request),
+      requests: workflow.requests.map((r) => r.id === requestId ? { ...r, status: "closed" as const, closedAt: now, updatedAt: now } : r).concat(request),
       history: [...workflow.history, { id: `${id}-event`, type: "client_additional_round_submitted", actor: "client", at: now, round, version: workflow.currentVersion }],
     },
   };

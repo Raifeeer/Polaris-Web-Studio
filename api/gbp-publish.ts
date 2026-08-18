@@ -3,12 +3,9 @@ import { createPublicKey, timingSafeEqual, verify as cryptoVerify } from "node:c
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
-// Publicación REAL en Google Business Profile usando los tokens guardados
-// por gbp-oauth-callback.ts -- cierra el pendiente explícitamente diferido
-// desde que se construyó el flujo de conexión: hasta ahora "conectar la
-// cuenta" no hacía nada útil, solo guardaba un token sin usar. Esto es
-// también lo que separa de verdad "Impulso" (contenido, el cliente lo
-// implementa) de "Ascenso" (Polaris lo implementa directo en su ficha).
+// Endpoint legado reservado para una futura integración con Google Business Profile.
+// El servicio Ascenso actual no publica ni responde reseñas directamente: entrega
+// contenido, guía y acompañamiento para que el cliente aplique los cambios.
 //
 // LIMITACIÓN REAL DE GOOGLE, documentada acá para que quede claro si algo
 // falla: crear publicaciones (Local Posts) y responder reseñas vía API
@@ -137,8 +134,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const leadData = leadDoc.data() || {};
     const leadTier = leadData.tier;
     if (leadTier !== "ascenso" && leadTier !== "implementado") {
-      return res.status(403).json({ error: "La implementación directa en Google está incluida únicamente en Ascenso." });
+      return res.status(403).json({ error: "La ejecución directa en Google no está disponible para este paquete." });
     }
+    return res.status(410).json({ error: "La ejecución directa en Google no forma parte del Ascenso actual. Usa la guía y el acompañamiento del portal." });
 
     // Fixture controlado para validar el panel sin una cuenta real de Google.
     // Solo funciona para IDs TEST-* marcados explícitamente con gbp.demo en

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Link2, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Send, Star, User, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Send, ShieldCheck, Star, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import ImageLightbox from "../components/ImageLightbox";
@@ -12,10 +12,9 @@ import AscensoAdminWorkflowPanel from "../components/AscensoAdminWorkflowPanel";
 // dentro de cada archivo api/local-lift-package.ts / gbp-publish.ts, ver
 // el comentario ahí -- el middleware de server.ts NO corre en producción
 // para estas rutas). A diferencia de /local-lift (gratis, público), esto
-// es el entregable del tier pago -- "Impulso" entrega el contenido para
-// que el cliente lo implemente; "Ascenso" además lo publica directo en su
-// ficha real (sección "Publicar en Google" más abajo, si el lead conectó
-// su cuenta).
+// es el paquete del tier pago -- "Impulso" entrega el contenido para
+// que el cliente lo implemente; "Ascenso" además incluye guía, revisiones y
+// acompañamiento paso a paso.
 //
 // Solo aparecen acá leads YA PAGADOS (pedido explícito del usuario, 16 de
 // agosto): el correo gratis de diagnóstico ya invita a pagar por su cuenta,
@@ -55,13 +54,6 @@ interface SourceReview {
   publishTime?: string | null;
   relativePublishTimeDescription?: string | null;
 }
-interface GbpReview {
-  name: string;
-  reviewer?: { displayName?: string };
-  starRating?: string;
-  comment?: string;
-  createTime?: string;
-}
 interface PlaceInfo {
   name: string;
   address: string | null;
@@ -86,8 +78,6 @@ interface Lead {
   status: string;
   paid: boolean;
   source: string;
-  gbpConnected: boolean;
-  gbpDemo?: boolean;
   place: PlaceInfo | null;
   reviews?: SourceReview[];
   package?: LocalLiftPackage | null;
@@ -262,8 +252,6 @@ export default function LocalLiftPanel() {
   const [leadSearch, setLeadSearch] = useState("");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [leadPaid, setLeadPaid] = useState(false);
-  const [leadGbpConnected, setLeadGbpConnected] = useState(false);
-  const [leadGbpDemo, setLeadGbpDemo] = useState(false);
   const [ascensoWorkflowStatus, setAscensoWorkflowStatus] = useState<string | null>(null);
   const [selectedLeadPlace, setSelectedLeadPlace] = useState<PlaceInfo | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
@@ -279,6 +267,7 @@ export default function LocalLiftPanel() {
 
   const [email, setEmail] = useState("");
   const [contactName, setContactName] = useState("");
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [sendStatus, setSendStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [sendError, setSendError] = useState("");
   const [portalSyncStatus, setPortalSyncStatus] = useState<"idle" | "loading" | "synced" | "failed" | "unknown">("idle");
@@ -286,18 +275,6 @@ export default function LocalLiftPanel() {
   const [previewStatus, setPreviewStatus] = useState<"idle" | "loading" | "error">("idle");
   const [previewError, setPreviewError] = useState("");
 
-  const [gbpLocations, setGbpLocations] = useState<{ accountLocationPath: string; title: string }[] | null>(null);
-  const [gbpLocationsStatus, setGbpLocationsStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [gbpLocationsError, setGbpLocationsError] = useState("");
-  const [gbpReviews, setGbpReviews] = useState<GbpReview[] | null>(null);
-  const [gbpReviewsStatus, setGbpReviewsStatus] = useState<"idle" | "loading" | "error">("idle");
-  const [gbpReviewsError, setGbpReviewsError] = useState("");
-  const [gbpReplyingReview, setGbpReplyingReview] = useState<string | null>(null);
-  const [gbpReplyDrafts, setGbpReplyDrafts] = useState<Record<string, string>>({});
-  const [gbpReplyNotice, setGbpReplyNotice] = useState("");
-  const [gbpPublishingIndex, setGbpPublishingIndex] = useState<number | null>(null);
-  const [gbpPublishedIndexes, setGbpPublishedIndexes] = useState<Set<number>>(new Set());
-  const [gbpPublishError, setGbpPublishError] = useState("");
   const [editingSnippet, setEditingSnippet] = useState<EditingSnippet | null>(null);
 
   const handleSaveSnippet = (kind: SnippetKind, index: number | null, newValue: any) => {
@@ -354,19 +331,10 @@ export default function LocalLiftPanel() {
   const pendingLeads = filteredLeads.filter((l) => l.status !== "sent");
   const sentLeads = filteredLeads.filter((l) => l.status === "sent");
 
-  const packageReplyForReview = (review: GbpReview, index: number, packageValue: LocalLiftPackage | null = pkg): string => {
-    const replies = packageValue?.reviewReplies || [];
-    const author = review.reviewer?.displayName || "";
-    const rating = ({ ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 } as Record<string, number>)[review.starRating || ""];
-    const matched = replies.find((reply) => reply.author === author && (rating == null || Math.round(reply.rating) === rating) && (!review.comment || reply.originalText === review.comment || reply.originalText.includes(review.comment.slice(0, 40))));
-    return matched?.reply || replies[index]?.reply || "";
-  };
 
   const loadLead = (lead: Lead) => {
     setLeadId(lead.id);
     setLeadPaid(lead.paid);
-    setLeadGbpConnected(lead.gbpConnected);
-    setLeadGbpDemo(!!lead.gbpDemo);
     setAscensoWorkflowStatus(null);
     setBusinessName(lead.businessName);
     setCity(lead.city);
@@ -377,25 +345,11 @@ export default function LocalLiftPanel() {
     setPlace(lead.place || null);
     setPkg(lead.package || null);
     setGenStatus(lead.package && lead.place ? "done" : "idle");
-    setGbpLocations(null);
-    setGbpReviewsStatus("idle");
-    setGbpReviewsError("");
-    const storedGbpReviews = (lead.reviews || []).map((review, index) => ({
-      name: `stored-review-${lead.id}-${index}`,
-      reviewer: { displayName: review.author },
-      starRating: ({ 1: "ONE", 2: "TWO", 3: "THREE", 4: "FOUR", 5: "FIVE" } as Record<number, string>)[Math.round(review.rating)] || String(review.rating),
-      comment: review.text,
-      createTime: review.publishTime || undefined,
-    }));
-    setGbpReviews(storedGbpReviews);
-    setGbpReplyDrafts(Object.fromEntries(storedGbpReviews.map((review, index) => [review.name, packageReplyForReview(review, index, lead.package || null)])));
-    setGbpReplyNotice("");
     setGenStatus(lead.package && lead.place ? "done" : "idle");
     setSendStatus("idle");
     setPortalSyncStatus(lead.portalSyncStatus === "synced" ? "synced" : lead.portalSyncStatus === "failed" || lead.portalSyncStatus === "unmatched" || lead.portalSyncStatus === "pending" ? "failed" : "unknown");
     setPortalSyncError(lead.portalSyncLastError || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
-    if (lead.gbpConnected) void loadGbpLocations(lead.id);
   };
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -420,15 +374,6 @@ export default function LocalLiftPanel() {
       setPlace(data.place);
       setSelectedLeadPlace(data.place);
       setPkg(data.package);
-      const generatedReviews: GbpReview[] = (data.reviews || []).map((review: SourceReview, index: number) => ({
-        name: `generated-review-${data.leadId || leadId || "new"}-${index}`,
-        reviewer: { displayName: review.author },
-        starRating: ({ 1: "ONE", 2: "TWO", 3: "THREE", 4: "FOUR", 5: "FIVE" } as Record<number, string>)[Math.round(review.rating)] || String(review.rating),
-        comment: review.text,
-        createTime: review.publishTime || undefined,
-      }));
-      setGbpReviews(generatedReviews);
-      setGbpReplyDrafts(Object.fromEntries(generatedReviews.map((review, index) => [review.name, packageReplyForReview(review, index, data.package)])));
       setLeadId(data.leadId || leadId);
       setLeadPaid(!!data.paid);
       setGenStatus("done");
@@ -493,112 +438,6 @@ export default function LocalLiftPanel() {
     }
   };
 
-  const loadGbpLocations = async (targetLeadId?: string | null) => {
-    const effectiveLeadId = targetLeadId || leadId;
-    if (!effectiveLeadId) return;
-    setGbpLocationsStatus("loading");
-    setGbpLocationsError("");
-    try {
-      const res = await fetch("/api/gbp-publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "list-locations", leadId: effectiveLeadId }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setGbpLocationsError(data.error || "No se pudieron listar las ubicaciones.");
-        setGbpLocationsStatus("error");
-        return;
-      }
-      const loadedLocations = data.locations || [];
-      setGbpLocations(loadedLocations);
-      setLeadGbpDemo(!!data.demo || leadGbpDemo);
-      setGbpLocationsStatus("idle");
-      if (loadedLocations[0]?.accountLocationPath) void loadGbpReviews(loadedLocations[0].accountLocationPath, effectiveLeadId);
-    } catch {
-      setGbpLocationsError("Algo salió mal consultando Google.");
-      setGbpLocationsStatus("error");
-    }
-  };
-
-  const loadGbpReviews = async (accountLocationPath: string, targetLeadId?: string | null) => {
-    const effectiveLeadId = targetLeadId || leadId;
-    if (!effectiveLeadId) return;
-    setGbpReviewsStatus("loading");
-    setGbpReviewsError("");
-    setGbpReplyNotice("");
-    try {
-      const res = await fetch("/api/gbp-publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "list-reviews", leadId: effectiveLeadId, accountLocationPath }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setGbpReviewsError(data.error || "No se pudieron listar las reseñas.");
-        setGbpReviewsStatus("error");
-        return;
-      }
-      const loadedReviews: GbpReview[] = data.reviews || [];
-      setGbpReviews(loadedReviews);
-      setGbpReplyDrafts((previous) => ({
-        ...previous,
-        ...Object.fromEntries(loadedReviews.map((review, index) => [review.name, packageReplyForReview(review, index)])),
-      }));
-      setLeadGbpDemo(!!data.demo || leadGbpDemo);
-      setGbpReviewsStatus("idle");
-    } catch {
-      setGbpReviewsError("Algo salió mal consultando las reseñas.");
-      setGbpReviewsStatus("error");
-    }
-  };
-
-  const replyReview = async (review: GbpReview) => {
-    if (!leadId || !review.name || !gbpReplyDrafts[review.name]?.trim()) return;
-    setGbpReplyingReview(review.name);
-    setGbpReplyNotice("");
-    try {
-      const res = await fetch("/api/gbp-publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "reply-review", leadId, reviewName: review.name, replyText: gbpReplyDrafts[review.name] }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setGbpReviewsError(data.error || "No se pudo enviar la respuesta.");
-        return;
-      }
-      setGbpReplyNotice(data.demo ? "Modo demo: respuesta simulada, no se envió a Google." : "Respuesta enviada a Google.");
-    } catch {
-      setGbpReviewsError("Algo salió mal enviando la respuesta.");
-    } finally {
-      setGbpReplyingReview(null);
-    }
-  };
-
-  const publishPost = async (accountLocationPath: string, index: number) => {
-    if (!pkg?.googlePosts?.[index] || !leadId) return;
-    setGbpPublishingIndex(index);
-    setGbpPublishError("");
-    try {
-      const res = await fetch("/api/gbp-publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "publish-post", leadId, accountLocationPath, post: pkg.googlePosts[index] }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setGbpPublishError(data.error || "Google rechazó la publicación.");
-        setGbpPublishingIndex(null);
-        return;
-      }
-      setGbpPublishedIndexes((prev) => new Set(prev).add(index));
-      setGbpPublishingIndex(null);
-    } catch {
-      setGbpPublishError("Algo salió mal publicando en Google.");
-      setGbpPublishingIndex(null);
-    }
-  };
 
   const handleSend = async () => {
     if (!place || !pkg || !email.trim()) return;
@@ -688,9 +527,6 @@ export default function LocalLiftPanel() {
         {l.email && (
           <div className="flex items-center gap-1.5 break-all"><Mail size={12} className="shrink-0 text-[var(--color-primary-base)]" /> {l.email}</div>
         )}
-        {l.gbpConnected && (
-          <div className="flex items-center gap-1.5 font-bold text-indigo-500"><Link2 size={12} className="shrink-0" /> Google conectado</div>
-        )}
         <div className="flex items-center gap-1.5"><Clock size={12} className="shrink-0" /> Recibido {formatDateTime(l.createdAt)}</div>
         {l.sentAt && (
           <div className="flex items-center gap-1.5"><Send size={12} className="shrink-0" /> Enviado {formatDateTime(l.sentAt)}</div>
@@ -703,7 +539,7 @@ export default function LocalLiftPanel() {
     <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)] px-4 sm:px-8 py-10 max-w-4xl mx-auto">
       <Link to="/dashboard" className="text-xs text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]">← Volver al portal</Link>
       <h1 className="mt-3 text-2xl md:text-4xl font-display font-black tracking-[-0.03em]">Panel Local Lift</h1>
-      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido real del paquete que compró cada cliente (revisa la ficha de su negocio, previsualiza el PDF) y envíaselo por correo. Solo aparecen acá los leads que ya pagaron.</p>
+      <p className="mt-2 text-sm text-[var(--color-text-secondary)]">Genera el contenido real del paquete que compró cada cliente (revisa la información de su negocio, previsualiza el PDF) y envíaselo por correo. Solo aparecen acá los leads que ya pagaron.</p>
 
       <section className="mt-8 space-y-6">
         <div className="max-w-xl">
@@ -775,7 +611,7 @@ export default function LocalLiftPanel() {
 
       {selectedLeadPlace && (
         <div className="mt-8 max-w-xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5">
-          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Ficha real del negocio</h2>
+          <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Información actual del negocio</h2>
           {selectedLeadPlace.photoUrls.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
               {selectedLeadPlace.photoUrls.slice(0, 6).map((url) => (
@@ -842,7 +678,6 @@ export default function LocalLiftPanel() {
         <div className="mt-10 space-y-8">
           <div className="flex items-center gap-2 text-emerald-500 text-xs font-black uppercase tracking-widest">
             <Check size={15} /> {place.name} {place.reviewCount ? `· ${place.reviewCount} reseñas` : ""}
-            {leadGbpConnected && <span className="inline-flex items-center gap-1 text-[var(--color-text-tertiary)] font-normal normal-case"><Link2 size={12} /> Google conectado</span>}
           </div>
 
           {retryingParts && (
@@ -905,8 +740,8 @@ export default function LocalLiftPanel() {
                       <button type="button" onClick={() => setEditingSnippet({ kind: "reply", index: i, current: r })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
                     </div>
                     <p className="mt-1 break-words italic text-[var(--color-text-tertiary)]">"{r.originalText}"</p>
-                    <label className="mt-2 block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Respuesta preparada para Google</label>
-                    <textarea value={gbpReplyDrafts[`package-${i}`] ?? r.reply} onChange={(e) => setGbpReplyDrafts((prev) => ({ ...prev, [`package-${i}`]: e.target.value }))} rows={3} className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-3 py-2 text-xs leading-relaxed outline-none focus:border-[var(--color-primary-base)]" />
+                    <label className="mt-2 block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Respuesta preparada para tu perfil</label>
+                    <textarea value={replyDrafts[`package-${i}`] ?? r.reply} onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [`package-${i}`]: e.target.value }))} rows={3} className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-3 py-2 text-xs leading-relaxed outline-none focus:border-[var(--color-primary-base)]" />
                   </div>
                 ))}
               </div>
@@ -1023,78 +858,16 @@ export default function LocalLiftPanel() {
             <AscensoAdminWorkflowPanel leadId={leadId} token={token} packageSnapshot={pkg || undefined} onWorkflowChange={(workflow) => setAscensoWorkflowStatus(workflow?.status || null)} />
           )}
 
-          {tier === "ascenso" && leadGbpConnected && (
+          {tier === "ascenso" && (
             <section className="rounded-xl bg-[var(--color-surface-elevated)] p-5 max-w-xl border border-indigo-500/20">
-              <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><Link2 size={14} /> Implementación en Google · Ascenso</h2>
-              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{leadGbpDemo ? "Modo demo: estas ubicaciones y reseñas son ficticias. Las acciones se simulan y nunca llegan a Google." : ascensoWorkflowStatus === "pending_admin_review" ? "El cliente aprobó esta versión. Puedes publicar únicamente el contenido aprobado." : "Este lead conectó su cuenta real de Google. La publicación quedará bloqueada hasta que el cliente apruebe una revisión."}</p>
-              {leadGbpDemo && <span className="mt-2 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300">Entorno demo · sin cambios reales</span>}
-
-              {!gbpLocations && (
-                <button onClick={loadGbpLocations} disabled={gbpLocationsStatus === "loading"} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 px-4 py-2 text-xs font-bold text-indigo-400 disabled:opacity-50">
-                  {gbpLocationsStatus === "loading" ? <Loader2 size={13} className="animate-spin" /> : null} {leadGbpDemo ? "Ver ubicaciones demo" : "Ver ubicaciones conectadas"}
-                </button>
-              )}
-              {gbpLocationsStatus === "error" && <p className="mt-2 text-xs text-red-400">{gbpLocationsError}</p>}
-
-              {gbpLocations && gbpLocations.length === 0 && (
-                <p className="mt-3 text-xs text-[var(--color-text-tertiary)]">No encontramos ninguna ubicación real en esta cuenta de Google.</p>
-              )}
-
-              {gbpLocations && gbpLocations.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {gbpLocations.map((loc) => (
-                    <div key={loc.accountLocationPath}>
-                      <div className="text-xs font-bold text-[var(--color-text-primary)]">{loc.title}</div>
-                      <button onClick={() => loadGbpReviews(loc.accountLocationPath)} disabled={gbpReviewsStatus === "loading"} className="mt-2 inline-flex items-center gap-2 rounded-lg border border-indigo-500/30 px-3 py-1.5 text-[11px] font-bold text-indigo-300 disabled:opacity-50">
-                        {gbpReviewsStatus === "loading" ? <Loader2 size={12} className="animate-spin" /> : null} {leadGbpDemo ? "Ver reseñas demo" : "Ver reseñas"}
-                      </button>
-                      {pkg?.googlePosts ? (
-                        <div className="mt-2 space-y-2">
-                          {pkg.googlePosts.map((p, i) => (
-                            <div key={i} className="flex items-start justify-between gap-3 rounded-lg bg-[var(--color-surface-base)] px-3 py-2">
-                              <div className="text-xs">
-                                <div className="font-bold text-[var(--color-text-primary)]">{p.title}</div>
-                                <div className="text-[var(--color-text-tertiary)] mt-0.5">{p.body.slice(0, 90)}{p.body.length > 90 ? "…" : ""}</div>
-                              </div>
-                              <button
-                                onClick={() => publishPost(loc.accountLocationPath, i)}
-                                disabled={(!leadGbpDemo && ascensoWorkflowStatus !== "pending_admin_review") || gbpPublishingIndex === i || gbpPublishedIndexes.has(i)}
-                                className="shrink-0 rounded-lg bg-indigo-500 px-3 py-1.5 text-[11px] font-black text-white disabled:opacity-50"
-                              >
-                                {gbpPublishedIndexes.has(i) ? (leadGbpDemo ? "Simulado" : "Publicado") : gbpPublishingIndex === i ? "Publicando..." : (leadGbpDemo ? "Simular" : ascensoWorkflowStatus === "pending_admin_review" ? "Publicar" : "Esperando aprobación")}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      ) : <p className="mt-2 text-xs text-[var(--color-text-tertiary)]">Genera el paquete para ver las publicaciones preparadas.</p>}
-                      {gbpReviews && gbpLocations[0]?.accountLocationPath === loc.accountLocationPath && (
-                        <div className="mt-4 space-y-2 rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="text-xs font-black text-[var(--color-text-primary)]">{leadGbpDemo ? "Reseñas ficticias" : "Reseñas de Google"}</div>
-                            <span className="text-[10px] text-[var(--color-text-tertiary)]">{gbpReviews.length} encontradas</span>
-                          </div>
-                          {gbpReviews.map((review) => (
-                            <div key={review.name} className="rounded-lg border border-[var(--color-border-subtle)] p-3">
-                              <div className="flex items-center justify-between gap-2 text-[11px]">
-                                <span className="font-bold text-[var(--color-text-primary)]">{review.reviewer?.displayName || "Cliente"}</span>
-                                <span className="font-black text-amber-300">★ {({ FIVE: "5", FOUR: "4", THREE: "3", TWO: "2", ONE: "1" } as Record<string, string>)[review.starRating || ""] || review.starRating || "—"}</span>
-                              </div>
-                              <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-tertiary)]">{review.comment || "Sin comentario"}</p>
-                              <textarea value={gbpReplyDrafts[review.name] || ""} onChange={(e) => setGbpReplyDrafts((prev) => ({ ...prev, [review.name]: e.target.value }))} placeholder="Escribe una respuesta..." rows={2} className="mt-2 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs outline-none focus:border-indigo-400" />
-                              <button onClick={() => replyReview(review)} disabled={(!leadGbpDemo && ascensoWorkflowStatus !== "pending_admin_review") || gbpReplyingReview === review.name || !gbpReplyDrafts[review.name]?.trim()} className="mt-2 rounded-lg bg-indigo-500 px-3 py-1.5 text-[11px] font-black text-white disabled:opacity-50">
-                                {gbpReplyingReview === review.name ? "Enviando..." : leadGbpDemo ? "Simular respuesta" : ascensoWorkflowStatus === "pending_admin_review" ? "Responder reseña" : "Esperando aprobación"}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              {gbpReviewsStatus === "error" && <p className="mt-3 text-xs text-red-400">{gbpReviewsError}</p>}
-              {gbpReplyNotice && <p className="mt-3 text-xs text-emerald-400">{gbpReplyNotice}</p>}
-              {gbpPublishError && <p className="mt-3 text-xs text-red-400">{gbpPublishError}</p>}
+              <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><ShieldCheck size={14} /> Guía de acompañamiento Ascenso</h2>
+              <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">Este servicio no publica directamente en Google. Polaris prepara el contenido, explica cómo aplicarlo y acompaña al cliente paso a paso durante la sesión.</p>
+              <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/50 p-3"><p className="text-[10px] font-black uppercase tracking-wider text-indigo-300">1. Preparar</p><p className="mt-1 text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">Revisa el paquete y la guía antes de la reunión.</p></div>
+                <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/50 p-3"><p className="text-[10px] font-black uppercase tracking-wider text-indigo-300">2. Acompañar</p><p className="mt-1 text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">Explica al cliente qué hacer y dónde hacerlo.</p></div>
+                <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/50 p-3"><p className="text-[10px] font-black uppercase tracking-wider text-indigo-300">3. Cerrar</p><p className="mt-1 text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">Confirma el acompañamiento cuando la sesión termine.</p></div>
+              </div>
+              <p className="mt-3 text-[10px] leading-relaxed text-[var(--color-text-tertiary)]">Las solicitudes de cambios se gestionan arriba. Enviar una solicitud consume una ronda; una aclaración sobre la misma revisión no consume otra.</p>
             </section>
           )}
         </div>
