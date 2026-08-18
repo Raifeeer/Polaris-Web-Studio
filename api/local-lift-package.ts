@@ -6,6 +6,10 @@ import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { findPlace, findPlaceReviews, generateFast, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
+// Ascenso incluye análisis profundo de reseñas; necesita margen para el
+// fallback entre proveedores sin caer en el timeout por defecto.
+export const config = { maxDuration: 60 };
+
 const firebaseApp = getApps().length
   ? getApps()[0]
   : initializeApp({
@@ -424,7 +428,9 @@ async function generatePackage(
     ["whatsapp2", () => generateFast(whatsappHalfSchema, prompts.whatsapp2, 0.6, "gemini")],
   ];
   if (tier === "ascenso" && reviews.length > 0) {
-    allCalls.push(["reviewAnalysis", () => generateFast(reviewAnalysisSchema, prompts.reviewAnalysis, 0.6, "gemini")]);
+    // El análisis profundo tarda más que las piezas cortas: usa fallback de
+    // 25s por proveedor para que una respuesta lenta no deje el paquete parcial.
+    allCalls.push(["reviewAnalysis", () => generateWithFallback(reviewAnalysisSchema, prompts.reviewAnalysis, 0.6)]);
   }
 
   // `onlyKeys` (usado en el reintento automático de piezas fallidas): con
