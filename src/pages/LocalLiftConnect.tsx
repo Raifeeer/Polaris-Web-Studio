@@ -21,7 +21,7 @@ export default function LocalLiftConnect() {
   const { language } = useLanguage();
   const gbpParam = searchParams.get("gbp");
 
-  const [status, setStatus] = useState<"loading" | "ready" | "notfound">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "notfound" | "notincluded">("loading");
   const [connected, setConnected] = useState(false);
   const [businessName, setBusinessName] = useState("");
   const [connecting, setConnecting] = useState(false);
@@ -47,6 +47,10 @@ export default function LocalLiftConnect() {
         }
         setBusinessName(leadData.businessName);
         setConnected(!!statusData.connected);
+        if (leadData.tier !== "ascenso" && leadData.tier !== "implementado") {
+          setStatus("notincluded");
+          return;
+        }
         setStatus("ready");
       })
       .catch(() => setStatus("notfound"));
@@ -119,6 +123,19 @@ export default function LocalLiftConnect() {
           <div className="text-center rounded-[var(--radius-bento)] glass-panel p-10 border border-[var(--color-border-subtle)]">
             <AlertCircle size={28} className="mx-auto text-red-400" />
             <p className="mt-4 text-sm text-[var(--color-text-secondary)]"><T en="We couldn't find this link. Write us on WhatsApp and we'll help you directly.">No pudimos encontrar este enlace. Escríbenos por WhatsApp y te ayudamos directo.</T></p>
+          </div>
+        )}
+
+        {status === "notincluded" && (
+          <div className="text-center rounded-[var(--radius-bento)] glass-panel p-10 border border-[var(--color-border-subtle)]">
+            <ShieldCheck size={28} className="mx-auto text-[var(--color-primary-base)]" />
+            <p className="mt-4 text-sm leading-relaxed text-[var(--color-text-secondary)]"><T en="Direct Google implementation is included in Ascenso. Impulso includes the prepared content for you to apply yourself.">La implementación directa en Google está incluida en Ascenso. Impulso incluye el contenido preparado para que tú lo apliques.</T></p>
+            {connected && (
+              <button onClick={handleDisconnect} disabled={disconnecting} className="mt-5 inline-flex items-center gap-2 rounded-lg border border-red-400/30 px-4 py-2 text-xs font-bold text-red-400 hover:border-red-400/60 disabled:opacity-60">
+                {disconnecting ? <Loader2 size={13} className="animate-spin" /> : null}
+                <T en="Disconnect Google account">Desconectar cuenta de Google</T>
+              </button>
+            )}
           </div>
         )}
 

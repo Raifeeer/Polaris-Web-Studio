@@ -898,9 +898,9 @@ export default function LocalLiftPanel() {
             {sendStatus === "error" && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
           </section>
 
-          {leadGbpConnected && (
+          {tier === "ascenso" && leadGbpConnected && (
             <section className="rounded-xl bg-[var(--color-surface-elevated)] p-5 max-w-xl border border-indigo-500/20">
-              <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><Link2 size={14} /> Publicar en Google (Ascenso)</h2>
+              <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><Link2 size={14} /> Implementación en Google · Ascenso</h2>
               <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">Este lead conectó su cuenta real de Google. Publicar acá va directo a su ficha pública, revisa cada post antes de mandarlo.</p>
 
               {!gbpLocations && (

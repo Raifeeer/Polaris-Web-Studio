@@ -61,6 +61,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
       const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
       if (!doc.exists) return res.status(404).json({ error: "No encontramos ese lead." });
+      const leadTier = doc.data()?.tier;
+      if (leadTier !== "ascenso" && leadTier !== "implementado") {
+        return res.status(403).json({ error: "La implementación directa en Google está incluida únicamente en Ascenso." });
+      }
 
       const params = new URLSearchParams({
         client_id: clientId,
@@ -79,8 +83,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (typeof leadId !== "string" || !leadId.trim()) return res.status(400).json({ error: "Falta el lead." });
       const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
       if (!doc.exists) return res.status(404).json({ error: "No encontramos ese lead." });
-      const gbp = doc.data()!.gbp;
-      return res.json({ success: true, connected: !!gbp?.refreshToken, connectedAt: gbp?.connectedAt || null });
+      const data = doc.data()!;
+      const gbp = data.gbp;
+      return res.json({ success: true, tier: data.tier || "impulso", connected: !!gbp?.refreshToken, connectedAt: gbp?.connectedAt || null });
     }
 
     // Desconectar: revoca el token real en Google (no solo lo borra acá --
@@ -118,6 +123,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       if (!clientId || !clientSecret) {
         return res.redirect(302, "https://polarisweb.studio/local-lift?gbp=not_configured");
+      }
+      const leadDoc = await firestore.collection("localLiftDiagnostics").doc(verifiedLeadId).get();
+      const leadTier = leadDoc.data()?.tier;
+      if (!leadDoc.exists || (leadTier !== "ascenso" && leadTier !== "implementado")) {
+        return res.redirect(302, "https://polarisweb.studio/local-lift?gbp=not_included");
       }
 
       const tokenRes = await fetch("https://oauth2.googleapis.com/token", {

@@ -122,6 +122,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
 
   try {
+    const leadDoc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
+    if (!leadDoc.exists) return res.status(404).json({ error: "Lead no encontrado." });
+    const leadTier = leadDoc.data()?.tier;
+    if (leadTier !== "ascenso" && leadTier !== "implementado") {
+      return res.status(403).json({ error: "La implementación directa en Google está incluida únicamente en Ascenso." });
+    }
     const accessToken = await getValidAccessToken(firestore, leadId.trim());
     if (!accessToken) return res.status(400).json({ error: "Este lead no tiene una cuenta de Google conectada (o hay que reconectarla)." });
     const authHeader = { Authorization: `Bearer ${accessToken}` };

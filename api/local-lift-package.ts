@@ -116,9 +116,9 @@ const TIER_PRICE: Record<string, { amount: string; label: string }> = {
 // ($99): descripción reescrita, 10 publicaciones para Google Business
 // Profile, respuestas a reseñas reales (hasta 5 -- límite real de Places API,
 // nunca 15, ver nota en el schema) + plantillas por calificación, y 10
-// mensajes de WhatsApp de seguimiento. Solo contenido -- la "implementación"
-// real en la ficha del cliente sigue siendo trabajo manual (requeriría
-// Business Profile API + OAuth del cliente, fuera de alcance por ahora).
+// mensajes de WhatsApp de seguimiento. Impulso recibe el contenido para
+// aplicarlo por su cuenta; Ascenso puede autorizar la implementación directa
+// en Google mediante OAuth, siempre con aprobación manual del administrador.
 //
 // Admin-only a propósito: a diferencia de local-lift-diagnostic.ts (gratis,
 // público, gancho de venta), esto es el entregable del tier PAGO -- no debe
@@ -697,11 +697,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         secure: true,
         auth: { user: "hola@polarisweb.studio", pass: zohoPassword },
       });
+      const finalTier2 = normalizeTier(docRef ? (await docRef.get()).data()?.tier : tier);
       const connectUrl =
-        typeof leadId === "string" && leadId.trim()
+        finalTier2 === "ascenso" && typeof leadId === "string" && leadId.trim()
           ? `https://polarisweb.studio/local-lift/conectar/${leadId.trim()}`
           : undefined;
-      const finalTier2 = normalizeTier(docRef ? (await docRef.get()).data()?.tier : tier);
       const tierLabelForPdf = TIER_PRICE[finalTier2]?.label || TIER_PRICE["impulso"].label;
       let pdfBuffer: Buffer | null = null;
       try {
