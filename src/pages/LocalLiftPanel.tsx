@@ -4,6 +4,7 @@ import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Gl
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import ImageLightbox from "../components/ImageLightbox";
+import AscensoAdminWorkflowPanel from "../components/AscensoAdminWorkflowPanel";
 
 // Panel interno para generar y enviar el paquete completo del tier
 // "Impulso" ($29) / "Ascenso" ($99) -- admin-only, protegido tanto acá
@@ -263,6 +264,7 @@ export default function LocalLiftPanel() {
   const [leadPaid, setLeadPaid] = useState(false);
   const [leadGbpConnected, setLeadGbpConnected] = useState(false);
   const [leadGbpDemo, setLeadGbpDemo] = useState(false);
+  const [ascensoWorkflowStatus, setAscensoWorkflowStatus] = useState<string | null>(null);
   const [selectedLeadPlace, setSelectedLeadPlace] = useState<PlaceInfo | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
@@ -365,6 +367,7 @@ export default function LocalLiftPanel() {
     setLeadPaid(lead.paid);
     setLeadGbpConnected(lead.gbpConnected);
     setLeadGbpDemo(!!lead.gbpDemo);
+    setAscensoWorkflowStatus(null);
     setBusinessName(lead.businessName);
     setCity(lead.city);
     setContactName(lead.contactName || "");
@@ -1016,10 +1019,14 @@ export default function LocalLiftPanel() {
             {sendStatus === "error" && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
           </section>
 
+          {tier === "ascenso" && leadId && (
+            <AscensoAdminWorkflowPanel leadId={leadId} token={token} packageSnapshot={pkg || undefined} onWorkflowChange={(workflow) => setAscensoWorkflowStatus(workflow?.status || null)} />
+          )}
+
           {tier === "ascenso" && leadGbpConnected && (
             <section className="rounded-xl bg-[var(--color-surface-elevated)] p-5 max-w-xl border border-indigo-500/20">
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><Link2 size={14} /> Implementación en Google · Ascenso</h2>
-              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{leadGbpDemo ? "Modo demo: estas ubicaciones y reseñas son ficticias. Las acciones se simulan y nunca llegan a Google." : "Este lead conectó su cuenta real de Google. Publicar acá va directo a su ficha pública, revisa cada post antes de mandarlo."}</p>
+              <p className="mt-1 text-[11px] text-[var(--color-text-tertiary)]">{leadGbpDemo ? "Modo demo: estas ubicaciones y reseñas son ficticias. Las acciones se simulan y nunca llegan a Google." : ascensoWorkflowStatus === "pending_admin_review" ? "El cliente aprobó esta versión. Puedes publicar únicamente el contenido aprobado." : "Este lead conectó su cuenta real de Google. La publicación quedará bloqueada hasta que el cliente apruebe una revisión."}</p>
               {leadGbpDemo && <span className="mt-2 inline-flex rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-amber-300">Entorno demo · sin cambios reales</span>}
 
               {!gbpLocations && (
@@ -1051,10 +1058,10 @@ export default function LocalLiftPanel() {
                               </div>
                               <button
                                 onClick={() => publishPost(loc.accountLocationPath, i)}
-                                disabled={gbpPublishingIndex === i || gbpPublishedIndexes.has(i)}
+                                disabled={(!leadGbpDemo && ascensoWorkflowStatus !== "pending_admin_review") || gbpPublishingIndex === i || gbpPublishedIndexes.has(i)}
                                 className="shrink-0 rounded-lg bg-indigo-500 px-3 py-1.5 text-[11px] font-black text-white disabled:opacity-50"
                               >
-                                {gbpPublishedIndexes.has(i) ? (leadGbpDemo ? "Simulado" : "Publicado") : gbpPublishingIndex === i ? "Publicando..." : (leadGbpDemo ? "Simular" : "Publicar")}
+                                {gbpPublishedIndexes.has(i) ? (leadGbpDemo ? "Simulado" : "Publicado") : gbpPublishingIndex === i ? "Publicando..." : (leadGbpDemo ? "Simular" : ascensoWorkflowStatus === "pending_admin_review" ? "Publicar" : "Esperando aprobación")}
                               </button>
                             </div>
                           ))}
@@ -1074,8 +1081,8 @@ export default function LocalLiftPanel() {
                               </div>
                               <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-tertiary)]">{review.comment || "Sin comentario"}</p>
                               <textarea value={gbpReplyDrafts[review.name] || ""} onChange={(e) => setGbpReplyDrafts((prev) => ({ ...prev, [review.name]: e.target.value }))} placeholder="Escribe una respuesta..." rows={2} className="mt-2 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-3 py-2 text-xs outline-none focus:border-indigo-400" />
-                              <button onClick={() => replyReview(review)} disabled={gbpReplyingReview === review.name || !gbpReplyDrafts[review.name]?.trim()} className="mt-2 rounded-lg bg-indigo-500 px-3 py-1.5 text-[11px] font-black text-white disabled:opacity-50">
-                                {gbpReplyingReview === review.name ? "Enviando..." : leadGbpDemo ? "Simular respuesta" : "Responder reseña"}
+                              <button onClick={() => replyReview(review)} disabled={(!leadGbpDemo && ascensoWorkflowStatus !== "pending_admin_review") || gbpReplyingReview === review.name || !gbpReplyDrafts[review.name]?.trim()} className="mt-2 rounded-lg bg-indigo-500 px-3 py-1.5 text-[11px] font-black text-white disabled:opacity-50">
+                                {gbpReplyingReview === review.name ? "Enviando..." : leadGbpDemo ? "Simular respuesta" : ascensoWorkflowStatus === "pending_admin_review" ? "Responder reseña" : "Esperando aprobación"}
                               </button>
                             </div>
                           ))}

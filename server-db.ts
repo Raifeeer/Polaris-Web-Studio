@@ -82,6 +82,64 @@ export interface DbProjectPhase {
   eta?: string;
 }
 
+export type AscensoWorkflowStatus =
+  | "package_ready"
+  | "awaiting_connection"
+  | "awaiting_client_review"
+  | "changes_requested"
+  | "revision_ready"
+  | "approved"
+  | "pending_admin_review"
+  | "publishing"
+  | "implementation_completed"
+  | "closed";
+
+export type AscensoReviewStatus =
+  | "submitted"
+  | "in_progress"
+  | "revision_ready"
+  | "approved"
+  | "changes_requested"
+  | "closed";
+
+export interface DbAscensoReviewRequest {
+  id: string;
+  round: number;
+  maxRounds: number;
+  status: AscensoReviewStatus;
+  requestText: string;
+  adminResponse?: string;
+  adminVersion?: number;
+  createdAt: string;
+  updatedAt: string;
+  approvedAt?: string;
+  closedAt?: string;
+}
+
+export interface DbAscensoWorkflow {
+  status: AscensoWorkflowStatus;
+  maxRounds: number;
+  roundsUsed: number;
+  packageVersion: number;
+  currentVersion: number;
+  activeRequestId?: string;
+  connectedAt?: string;
+  lastClientActionAt?: string;
+  approvedAt?: string;
+  publishedAt?: string;
+  closedAt?: string;
+  history: Array<{
+    id: string;
+    type: string;
+    actor: "client" | "admin" | "system";
+    at: string;
+    note?: string;
+    version?: number;
+    round?: number;
+  }>;
+  requests: DbAscensoReviewRequest[];
+}
+
 export interface DbProject {
   id: string;
   displayId: string;
@@ -101,6 +159,7 @@ export interface DbProject {
   localLiftPortalSyncAttempts?: number;
   localLiftPortalSyncLastAttemptAt?: string;
   localLiftPortalSyncLastError?: string;
+  ascensoWorkflow?: DbAscensoWorkflow;
   currentPhase: string;
   progress: number;
   description: string;

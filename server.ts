@@ -17,6 +17,7 @@ import nodemailer from "nodemailer";
 import { createServer as createViteServer } from "vite";
 import { dbInstance, hashPassword, verifyPassword } from "./server-db.js";
 import { transitionLocalLiftAfterPackageSent } from "./local-lift-state.js";
+import { canStartNewRound, clientApproveRevision, clientRequestChangesOnRevision, createAscensoWorkflow, ensureAscensoWorkflow, markAdminRevisionReady, markImplementationCompleted, startAdditionalRound, startClientRound } from "./ascenso-workflow.js";
 import { cert as firebaseCert, getApps as getFirebaseApps, initializeApp as initFirebaseApp } from "firebase-admin/app";
 import { getFirestore as getFirebaseFirestore } from "firebase-admin/firestore";
 import { getOfferConfig } from "./remote-config.js";
@@ -38,6 +39,26 @@ const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
 // Secreto de servicio para la integración con Meridian (pestaña "Polaris",
 // comanda el portal de admin sin login humano) -- ver authenticateToken.
 const PORTAL_ADMIN_SECRET = process.env.PORTAL_ADMIN_SECRET || "";
+
+async function sendAscensoWorkflowEmail(params: { to: string; subject: string; text: string; replyTo?: string }): Promise<boolean> {
+  const password = process.env.ZOHO_PASSWORD;
+  if (!password || !params.to) return false;
+  try {
+    const transporter = nodemailer.createTransport({ host: "smtp.zoho.com", port: 465, secure: true, auth: { user: "hola@polarisweb.studio", pass: password } });
+    await transporter.sendMail({ from: '"Polaris Web Studio" <hola@polarisweb.studio>', to: params.to, replyTo: params.replyTo, subject: params.subject, text: params.text });
+    return true;
+  } catch (error: any) {
+    console.error("[ascenso-workflow-email] error:", error?.message || error);
+    return false;
+  }
+}
+
+function getLocalLiftFirestore() {
+  const app = getFirebaseApps().length
+    ? getFirebaseApps()[0]
+    : initFirebaseApp({ credential: firebaseCert({ projectId: process.env.FIREBASE_PROJECT_ID, clientEmail: process.env.FIREBASE_CLIENT_EMAIL, privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n") }) });
+  return getFirebaseFirestore(app, "polaris-web-studio");
+}
 
 // Hash scrypt de un valor aleatorio, usado para igualar el coste de verificación
 // cuando el email no existe (evita distinguir usuarios válidos por temporización).
@@ -1526,6 +1547,7 @@ const PORT = 3000;
         productType: "local_lift",
         localLiftTier: isAscenso ? "ascenso" : "impulso",
         ...(typeof localLiftLeadId === "string" && localLiftLeadId.trim() ? { localLiftLeadId: localLiftLeadId.trim() } : {}),
+        ...(isAscenso ? { ascensoWorkflow: createAscensoWorkflow("awaiting_connection") } : {}),
         currentPhase: isAscenso ? "Agenda tu reunión" : "Preparando tu paquete",
         progress: isAscenso ? 20 : 33,
         description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
@@ -1671,10 +1693,29 @@ const PORT = 3000;
     if (!project) return res.status(404).json({ success: false, matched: false, retryable: true, error: "project_not_found" });
 
     const now = new Date().toISOString();
+    const wasAlreadySent = !!project.localLiftPackageSentAt;
     const transition = transitionLocalLiftAfterPackageSent(project);
     const attempts = Math.max(0, Number(project.localLiftPortalSyncAttempts || 0)) + 1;
+    let ascensoWorkflow = project.localLiftTier === "ascenso" ? ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_connection") : undefined;
+    if (ascensoWorkflow) {
+      let connected = false;
+      try {
+        const leadDoc = project.localLiftLeadId ? await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).get() : null;
+        const leadValue = leadDoc?.exists ? leadDoc.data() || {} : {};
+        connected = !!leadValue.gbp?.refreshToken || leadValue.gbp?.demo === true;
+      } catch (error: any) {
+        console.error("[package-sent] No se pudo leer conexión GBP:", error?.message || error);
+      }
+      const nextStatus = connected ? "awaiting_client_review" : "awaiting_connection";
+      ascensoWorkflow = {
+        ...ascensoWorkflow,
+        status: ["approved", "pending_admin_review", "publishing", "implementation_completed", "closed"].includes(ascensoWorkflow.status) ? ascensoWorkflow.status : nextStatus,
+        history: wasAlreadySent ? ascensoWorkflow.history : [...ascensoWorkflow.history, { id: `ascenso-package-sent-${Date.now()}`, type: "package_sent", actor: "system", at: now, version: ascensoWorkflow.currentVersion }],
+      };
+    }
     dbInstance.updateProject(project.id, {
       ...transition,
+      ...(ascensoWorkflow ? { ascensoWorkflow } : {}),
       localLiftPackageSentAt: project.localLiftPackageSentAt || now,
       localLiftPortalSyncStatus: "synced",
       localLiftPortalSyncAttempts: attempts,
@@ -2107,6 +2148,156 @@ const PORT = 3000;
     }
     dbInstance.updateUser(req.user.id, { password: hashPassword(newPassword), mustChangePassword: false });
     res.json({ success: true });
+  });
+
+  // --- Ascenso workflow: paquete, rondas, revisión, aprobación y cierre ---
+  // El paquete vive en localLiftDiagnostics; el workflow vive en el proyecto del portal.
+  // Así el cliente puede volver a abrir el mismo paquete sin regenerarlo y cada
+  // mutación se verifica contra el propietario del proyecto en el servidor.
+  app.get("/api/portal/local-lift/workflow/by-lead/:leadId", authenticateToken, requireAdmin, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === req.params.leadId && !p.deletedAt);
+    if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, project.localLiftPackageSentAt ? "awaiting_client_review" : "awaiting_connection");
+    let lead: any = null;
+    try {
+      const doc = await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId!).get();
+      if (doc.exists) {
+        const value = doc.data() || {};
+        const connected = !!value.gbp?.refreshToken || value.gbp?.demo === true;
+        lead = { place: value.place || null, reviews: value.reviews || [], package: value.package || null, packageReady: !!value.package, packageSent: !!value.pdfBase64, connected };
+        if (connected && workflow.status === "awaiting_connection") {
+          const connectedAt = new Date().toISOString();
+          workflow = { ...workflow, status: "awaiting_client_review", connectedAt, history: [...workflow.history, { id: `ascenso-connected-${Date.now()}`, type: "google_connected", actor: "system", at: connectedAt, version: workflow.currentVersion }] };
+          dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+          await dbInstance.flush();
+        }
+      }
+    } catch (error: any) {
+      console.error("[ascenso-workflow:by-lead] error:", error?.message || error);
+    }
+    return res.json({ success: true, projectId: project.id, projectName: project.name, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent });
+  });
+
+  app.get("/api/portal/local-lift/workflow/:projectId", authenticateToken, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.projectId && !p.deletedAt);
+    if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) return res.status(403).json({ error: "Acceso denegado." });
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, project.localLiftPackageSentAt ? "awaiting_client_review" : "awaiting_connection");
+    let lead: any = null;
+    if (project.localLiftLeadId) {
+      try {
+        const doc = await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).get();
+        if (doc.exists) {
+          const value = doc.data() || {};
+          const connected = !!value.gbp?.refreshToken || value.gbp?.demo === true;
+          lead = { place: value.place || null, reviews: value.reviews || [], package: value.package || null, tier: value.tier || project.localLiftTier, packageReady: !!value.package, packageSent: !!value.pdfBase64, connected };
+          if (connected && workflow.status === "awaiting_connection") {
+            const connectedAt = new Date().toISOString();
+            workflow = { ...workflow, status: "awaiting_client_review", connectedAt, history: [...workflow.history, { id: `ascenso-connected-${Date.now()}`, type: "google_connected", actor: "system", at: connectedAt, version: workflow.currentVersion }] };
+            dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+            await dbInstance.flush();
+          }
+        }
+      } catch (error: any) {
+        console.error("[ascenso-workflow:get] error:", error?.message || error);
+      }
+    }
+    return res.json({ success: true, projectId: project.id, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), canRequestNewRound: canStartNewRound(workflow), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent });
+  });
+
+  app.post("/api/portal/local-lift/workflow", authenticateToken, async (req: any, res) => {
+    const { action, projectId, requestId, text, adminResponse, packageSnapshot } = req.body || {};
+    if (typeof projectId !== "string" || projectId.length > 120) return res.status(400).json({ error: "Falta el proyecto." });
+    const project = dbInstance.getProjects().find((p) => p.id === projectId && !p.deletedAt);
+    if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
+    const isAdmin = req.user.role === "admin";
+    if (!isAdmin && project.clientUserId !== req.user.id) return res.status(403).json({ error: "Acceso denegado." });
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, project.localLiftPackageSentAt ? "awaiting_client_review" : "awaiting_connection");
+    const now = new Date().toISOString();
+    const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
+    const adminEmail = "cristian2200299@gmail.com";
+
+    try {
+      if (action === "submit_review_request") {
+        if (isAdmin) return res.status(403).json({ error: "Solo el cliente puede iniciar una ronda." });
+        const result = startClientRound(workflow, String(text || ""), now);
+        dbInstance.updateProject(project.id, { ascensoWorkflow: result.workflow });
+        await dbInstance.flush();
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Nueva solicitud de revisión Ascenso · ${project.name}`, text: `El cliente ${client?.name || "cliente"} envió la ronda ${result.request.round} de ${result.request.maxRounds} para ${project.name}.\n\nSolicitud:\n${result.request.requestText}\n\nEntra al panel de Local Lift para preparar la revisión.` });
+        return res.json({ success: true, workflow: result.workflow, request: result.request, roundsRemaining: result.workflow.maxRounds - result.workflow.roundsUsed });
+      }
+
+      if (action === "admin_send_revision") {
+        if (!isAdmin) return res.status(403).json({ error: "Solo administración puede enviar una revisión." });
+        if (typeof requestId !== "string" || !requestId.trim()) return res.status(400).json({ error: "Falta la solicitud." });
+        workflow = markAdminRevisionReady(workflow, requestId.trim(), String(adminResponse || ""), now);
+        if (packageSnapshot !== undefined) {
+          if (!packageSnapshot || typeof packageSnapshot !== "object" || JSON.stringify(packageSnapshot).length > 90000) return res.status(400).json({ error: "El paquete de revisión no es válido." });
+          if (!project.localLiftLeadId) return res.status(400).json({ error: "El proyecto no tiene lead Local Lift." });
+          await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).update({ package: packageSnapshot, packageVersion: workflow.currentVersion, updatedAt: new Date() });
+        }
+        dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+        await dbInstance.flush();
+        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu revisión de Ascenso está lista · ${project.name}`, replyTo: adminEmail, text: `Hola ${client.name || ""}.\n\nYa preparamos la revisión solicitada para ${project.name}. Entra a tu portal para revisar el material y elegir entre “Aprobar implementación” o “Solicitar aclaraciones”.\n\nEsta respuesta corresponde a la ronda ${workflow.requests.find((r) => r.id === requestId)?.round || "actual"}; pedir aclaraciones sobre esta misma revisión no consume una ronda nueva.` });
+        return res.json({ success: true, workflow });
+      }
+
+      if (action === "client_start_additional_round") {
+        if (isAdmin) return res.status(403).json({ error: "Solo el cliente puede iniciar una nueva ronda." });
+        if (typeof requestId !== "string") return res.status(400).json({ error: "Falta la revisión anterior." });
+        const result = startAdditionalRound(workflow, requestId, String(text || ""), now);
+        dbInstance.updateProject(project.id, { ascensoWorkflow: result.workflow });
+        await dbInstance.flush();
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Nueva ronda de Ascenso · ${project.name}`, text: `El cliente ${client?.name || "cliente"} inició la ronda ${result.request.round} de ${result.request.maxRounds} para ${project.name}.\n\nSolicitud:\n${result.request.requestText}\n\nEntra al panel de Local Lift para preparar la nueva revisión.` });
+        return res.json({ success: true, workflow: result.workflow, request: result.request, roundsRemaining: result.workflow.maxRounds - result.workflow.roundsUsed });
+      }
+
+      if (action === "client_approve_revision") {
+        if (isAdmin) return res.status(403).json({ error: "Solo el cliente puede aprobar la revisión." });
+        if (typeof requestId !== "string") return res.status(400).json({ error: "Falta la solicitud." });
+        workflow = clientApproveRevision(workflow, requestId, now);
+        dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+        await dbInstance.flush();
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Ascenso aprobado para publicar · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó la revisión ${requestId} de ${project.name}. Revisa el paquete en el panel y publica la implementación aprobada.` });
+        return res.json({ success: true, workflow });
+      }
+
+      if (action === "client_request_revision_changes") {
+        if (isAdmin) return res.status(403).json({ error: "Solo el cliente puede pedir aclaraciones." });
+        if (typeof requestId !== "string") return res.status(400).json({ error: "Falta la solicitud." });
+        workflow = clientRequestChangesOnRevision(workflow, requestId, String(text || ""), now);
+        dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+        await dbInstance.flush();
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Aclaraciones de revisión Ascenso · ${project.name}`, text: `El cliente pidió aclaraciones sobre la revisión ${requestId}.\n\n${String(text || "")}\n\nLa ronda no aumentó: sigue siendo la misma ronda.` });
+        return res.json({ success: true, workflow });
+      }
+
+      if (action === "admin_close_service") {
+        if (!isAdmin) return res.status(403).json({ error: "Solo administración puede cerrar el servicio." });
+        if (!["implementation_completed", "approved"].includes(workflow.status)) return res.status(409).json({ error: "La implementación todavía no está lista para cerrar." });
+        workflow = { ...workflow, status: "closed", closedAt: now, history: [...workflow.history, { id: `ascenso-closed-${Date.now()}`, type: "service_closed", actor: "admin", at: now, version: workflow.currentVersion }] };
+        dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+        await dbInstance.flush();
+        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Implementación Ascenso cerrada · ${project.name}`, text: `La implementación incluida para ${project.name} ha quedado cerrada. Puedes seguir consultando el historial en tu portal. Los cambios posteriores se cotizan como un servicio nuevo.` });
+        return res.json({ success: true, workflow });
+      }
+
+      if (action === "admin_mark_published") {
+        if (!isAdmin) return res.status(403).json({ error: "Solo administración puede cerrar la publicación." });
+        if (workflow.status !== "pending_admin_review") return res.status(409).json({ error: "El cliente todavía no ha aprobado una revisión." });
+        const phases = (project.phases || []).map((phase) => phase.name === "Implementación asistida" || phase.name === "Entrega" ? { ...phase, status: "completed" as const } : phase);
+        const completed = transitionLocalLiftAfterPackageSent({ ...project, phases, localLiftTier: "ascenso" });
+        workflow = markImplementationCompleted(workflow, workflow.activeRequestId, now);
+        dbInstance.updateProject(project.id, { ...completed, ascensoWorkflow: workflow });
+        await dbInstance.flush();
+        if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu implementación de Ascenso está completada · ${project.name}`, text: `La implementación aprobada para ${project.name} ya fue marcada como completada. Puedes consultar el paquete y el historial en tu portal.` });
+        return res.json({ success: true, workflow, currentPhase: completed.currentPhase, progress: completed.progress });
+      }
+
+      return res.status(400).json({ error: "Acción de workflow no válida." });
+    } catch (error: any) {
+      return res.status(400).json({ error: error?.message || "No se pudo actualizar el workflow." });
+    }
   });
 
   // --- Client Portal Core Operations (Multi-role support) ---

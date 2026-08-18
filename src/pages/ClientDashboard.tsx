@@ -44,6 +44,7 @@ import {
   PenTool,
   MapPin
 } from "lucide-react";
+import AscensoWorkflowPanel from "../components/AscensoWorkflowPanel";
 import AISparkleIcon from "../components/AISparkleIcon";
 import BookingScheduler from "../components/BookingScheduler";
 import Logo from "../components/Logo";
@@ -3874,6 +3875,10 @@ export default function ClientDashboard() {
                               </div>
                             </div>
                           </div>
+                        )}
+
+                        {isLocalLiftProject && (clientProject as any).localLiftTier === "ascenso" && (
+                          <AscensoWorkflowPanel project={clientProject} token={token} onChanged={handleRefresh} />
                         )}
 
                         {/* Contrato de servicio -- firma electrónica simple. Vive en

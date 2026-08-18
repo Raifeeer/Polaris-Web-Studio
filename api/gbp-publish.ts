@@ -168,6 +168,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
+    if (action === "publish-post" || action === "reply-review") {
+      const portalSnapshot = await firestore.collection("portal_state").doc("main").get();
+      const portalData = portalSnapshot.exists ? portalSnapshot.data() || {} : {};
+      const linkedProject = Array.isArray(portalData.projects) ? portalData.projects.find((project: any) => project.localLiftLeadId === leadId.trim() && !project.deletedAt) : null;
+      const workflowStatus = linkedProject?.ascensoWorkflow?.status;
+      if (workflowStatus !== "pending_admin_review") {
+        return res.status(409).json({ error: "La implementación todavía no está aprobada por el cliente. Primero envía la revisión y espera su aprobación." });
+      }
+    }
+
     const accessToken = await getValidAccessToken(firestore, leadId.trim());
     if (!accessToken) return res.status(400).json({ error: "Este lead no tiene una cuenta de Google conectada (o hay que reconectarla)." });
     const authHeader = { Authorization: `Bearer ${accessToken}` };

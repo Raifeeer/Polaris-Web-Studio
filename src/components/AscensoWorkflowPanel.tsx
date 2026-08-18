@@ -1,0 +1,138 @@
+import { useEffect, useMemo, useState } from "react";
+import { Check, CheckCircle2, Clock, FileText, Loader2, MessageCircle, Send, ShieldCheck } from "lucide-react";
+
+interface WorkflowPanelProps {
+  project: any;
+  token: string;
+  onChanged?: () => void;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  package_ready: "Paquete generado",
+  awaiting_connection: "Esperando conexión de Google",
+  awaiting_client_review: "Listo para revisar",
+  changes_requested: "Solicitud recibida",
+  revision_ready: "Revisión lista para aprobar",
+  approved: "Aprobado, pendiente de publicación",
+  pending_admin_review: "Aprobado, pendiente de implementación",
+  publishing: "Publicando implementación",
+  implementation_completed: "Implementación completada",
+  closed: "Servicio cerrado",
+};
+
+const requestStatus: Record<string, string> = {
+  submitted: "Recibida",
+  in_progress: "En revisión",
+  revision_ready: "Lista para revisar",
+  approved: "Aprobada",
+  changes_requested: "Aclaración enviada",
+  closed: "Cerrada",
+};
+
+export default function AscensoWorkflowPanel({ project, token, onChanged }: WorkflowPanelProps) {
+  const [data, setData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [requestText, setRequestText] = useState("");
+  const [clarification, setClarification] = useState("");
+  const [additionalRoundText, setAdditionalRoundText] = useState("");
+  const [busy, setBusy] = useState("");
+  const [notice, setNotice] = useState("");
+
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/portal/local-lift/workflow/${encodeURIComponent(project.id)}`, { headers: { Authorization: `Bearer ${token}` } });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo cargar el paquete Ascenso.");
+      setData(result);
+    } catch (e: any) {
+      setError(e?.message || "No se pudo cargar el flujo Ascenso.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { void load(); }, [project.id, token]);
+
+  const workflow = data?.workflow;
+  const activeRequest = useMemo(() => workflow?.requests?.find((item: any) => ["submitted", "in_progress", "revision_ready", "changes_requested"].includes(item.status)) || null, [workflow]);
+  const packageData = data?.package;
+  const canRequest = !!workflow?.status && data?.canRequestNewRound && !activeRequest;
+
+  const mutate = async (action: string, extra: Record<string, unknown> = {}) => {
+    setBusy(action);
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/portal/local-lift/workflow", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }, body: JSON.stringify({ action, projectId: project.id, ...extra }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo actualizar la revisión.");
+      if (result.workflow) setData((previous: any) => ({ ...previous, workflow: result.workflow, roundsRemaining: Math.max(0, result.workflow.maxRounds - result.workflow.roundsUsed), canRequestNewRound: result.workflow.roundsUsed < result.workflow.maxRounds }));
+      setRequestText("");
+      setClarification("");
+      setAdditionalRoundText("");
+      setNotice(action === "submit_review_request" ? "Tu solicitud fue enviada." : action === "client_approve_revision" ? "Aprobaste esta revisión. Polaris recibirá la notificación." : "Tu aclaración fue enviada sin consumir una ronda nueva.");
+      onChanged?.();
+    } catch (e: any) {
+      setError(e?.message || "No se pudo actualizar la revisión.");
+    } finally {
+      setBusy("");
+    }
+  };
+
+  if (loading) return <div className="rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] p-6 flex items-center gap-3 text-sm text-[var(--color-text-secondary)]"><Loader2 size={17} className="animate-spin text-[var(--color-primary-base)]" /> Cargando tu paquete Ascenso…</div>;
+  if (error) return <div className="rounded-[var(--radius-bento)] border border-red-500/20 bg-red-500/5 p-5 text-sm text-red-300">{error}<button type="button" onClick={() => void load()} className="ml-3 underline font-bold">Reintentar</button></div>;
+  if (!workflow) return null;
+
+  return (
+    <section className="rounded-[var(--radius-bento)] border border-indigo-500/20 bg-indigo-500/[0.04] p-6 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex items-start gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"><ShieldCheck size={19} className="text-indigo-400" /></div>
+          <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Implementación Ascenso</p><h2 className="mt-1 text-lg font-display font-black text-[var(--color-text-primary)]">Revisa tu paquete antes de publicarlo</h2><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">La conexión de Google permite implementar los cambios aprobados; no publica nada por sí sola.</p></div>
+        </div>
+        <span className="shrink-0 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-300">{STATUS_LABEL[workflow.status] || workflow.status}</span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Rondas usadas</p><p className="mt-1 text-2xl font-black text-[var(--color-text-primary)]">{workflow.roundsUsed} <span className="text-sm text-[var(--color-text-tertiary)]">de {workflow.maxRounds}</span></p></div>
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Versión actual</p><p className="mt-1 text-2xl font-black text-[var(--color-text-primary)]">v{workflow.currentVersion}</p></div>
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Restantes</p><p className="mt-1 text-2xl font-black text-[var(--color-primary-base)]">{Math.max(0, workflow.maxRounds - workflow.roundsUsed)}</p></div>
+      </div>
+
+      {packageData && (
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 space-y-3">
+          <div className="flex items-center gap-2"><FileText size={15} className="text-[var(--color-primary-base)]" /><h3 className="text-sm font-black text-[var(--color-text-primary)]">Contenido preparado</h3></div>
+          <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">{packageData.rewrittenDescription || "Descripción preparada para tu perfil."}</p>
+          <div className="flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-secondary)]"><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.googlePosts?.length || 0} publicaciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.reviewReplies?.length || 0} respuestas</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.services?.length || 0} servicios</span></div>
+        </div>
+      )}
+
+      {activeRequest && (
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Clock size={15} className="text-amber-400" /><h3 className="text-sm font-black text-[var(--color-text-primary)]">Ronda {activeRequest.round} de {activeRequest.maxRounds}</h3></div><span className="text-[10px] font-black uppercase tracking-wider text-amber-400">{requestStatus[activeRequest.status] || activeRequest.status}</span></div>
+          <p className="whitespace-pre-wrap text-xs leading-relaxed text-[var(--color-text-secondary)]">{activeRequest.requestText}</p>
+          {activeRequest.adminResponse && <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/50 p-3"><p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Revisión de Polaris</p><p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-[var(--color-text-secondary)]">{activeRequest.adminResponse}</p></div>}
+          {activeRequest.status === "revision_ready" && (
+            <div className="space-y-3 pt-2"><textarea value={clarification} onChange={(e) => setClarification(e.target.value)} rows={3} placeholder="Si necesitas aclarar algo de esta misma revisión, escríbelo aquí…" className="w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-3 py-2 text-xs outline-none focus:border-indigo-400" /><div className="flex flex-wrap gap-2"><button type="button" disabled={!!busy} onClick={() => void mutate("client_approve_revision", { requestId: activeRequest.id })} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 text-xs font-black text-white disabled:opacity-50"><CheckCircle2 size={14} /> Aprobar implementación</button><button type="button" disabled={!!busy || !clarification.trim()} onClick={() => void mutate("client_request_revision_changes", { requestId: activeRequest.id, text: clarification })} className="inline-flex items-center gap-2 rounded-lg border border-amber-500/40 px-4 py-2 text-xs font-black text-amber-300 disabled:opacity-50"><MessageCircle size={14} /> Pedir aclaración</button></div><p className="text-[10px] text-[var(--color-text-tertiary)]">Pedir una aclaración sobre esta misma revisión no descuenta una ronda nueva.</p>{workflow.roundsUsed < workflow.maxRounds && <div className="border-t border-[var(--color-border-subtle)] pt-3 space-y-2"><p className="text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">¿Necesitas cambios adicionales?</p><textarea value={additionalRoundText} onChange={(e) => setAdditionalRoundText(e.target.value)} rows={3} placeholder="Agrupa aquí los cambios de una nueva ronda…" className="w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-3 py-2 text-xs outline-none focus:border-indigo-400" /><button type="button" disabled={!!busy || !additionalRoundText.trim()} onClick={() => void mutate("client_start_additional_round", { requestId: activeRequest.id, text: additionalRoundText })} className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/40 px-4 py-2 text-xs font-black text-indigo-300 disabled:opacity-50"><Send size={14} /> Iniciar ronda {workflow.roundsUsed + 1} de {workflow.maxRounds}</button></div>}</div>
+          )}
+        </div>
+      )}
+
+      {canRequest && (
+        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 space-y-3"><div className="flex items-center gap-2"><MessageCircle size={15} className="text-[var(--color-primary-base)]" /><h3 className="text-sm font-black text-[var(--color-text-primary)]">¿Quieres solicitar cambios?</h3></div><p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">Agrupa todos tus comentarios en una sola solicitud. Al enviarla se utilizará una ronda.</p><textarea value={requestText} onChange={(e) => setRequestText(e.target.value)} rows={5} maxLength={5000} placeholder="Ejemplo: cambia la descripción, ajusta el tono de la publicación 2 y modifica la respuesta a la reseña de María…" className="w-full rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-3 py-2 text-xs outline-none focus:border-[var(--color-primary-base)]" /><div className="flex items-center justify-between gap-3"><span className="text-[10px] text-[var(--color-text-tertiary)]">{requestText.length}/5000</span><button type="button" disabled={!requestText.trim() || !!busy} onClick={() => void mutate("submit_review_request", { text: requestText })} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white disabled:opacity-50"><Send size={14} /> Enviar solicitud · usar una ronda</button></div></div>
+      )}
+
+      {!canRequest && !activeRequest && workflow.roundsUsed >= workflow.maxRounds && workflow.status !== "closed" && <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-xs leading-relaxed text-amber-200">Has utilizado las {workflow.maxRounds} rondas incluidas. Puedes seguir consultando el paquete y su historial; cualquier cambio nuevo se cotiza como un servicio adicional.</div>}
+      {workflow.status === "pending_admin_review" && <div className="rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4 text-xs leading-relaxed text-indigo-200">Aprobaste la revisión. Polaris hará la implementación final y te avisará cuando termine.</div>}
+      {workflow.status === "implementation_completed" && <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-xs leading-relaxed text-emerald-200">La implementación incluida ya fue completada. El historial queda disponible para consulta.</div>}
+      {workflow.status === "closed" && <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4 text-xs leading-relaxed text-[var(--color-text-secondary)]">Este servicio ya fue cerrado. Los cambios posteriores se cotizan por separado.</div>}
+      {notice && <p className="text-xs font-bold text-emerald-400">{notice}</p>}
+      {error && <p className="text-xs font-bold text-red-400">{error}</p>}
+
+      <div className="space-y-2"><h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Historial del servicio</h3>{(workflow.history || []).slice(-8).reverse().map((event: any) => <div key={event.id} className="flex items-start gap-2 text-[11px] text-[var(--color-text-tertiary)]"><Check size={12} className="mt-0.5 shrink-0 text-emerald-400" /><span>{new Date(event.at).toLocaleString("es-DO")} · {event.type.replaceAll("_", " ")}</span></div>)}</div>
+    </section>
+  );
+}
