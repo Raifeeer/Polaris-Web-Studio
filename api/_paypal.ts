@@ -118,3 +118,15 @@ export function paypalCaptureId(order: any): string | null {
   const id = order?.purchase_units?.[0]?.payments?.captures?.[0]?.id;
   return typeof id === "string" && id ? id : null;
 }
+
+export async function paypalRefundCapture(captureId: string): Promise<void> {
+  const normalized = captureId.trim();
+  if (!/^[A-Za-z0-9_-]{4,128}$/.test(normalized)) throw new Error("ID de captura PayPal inválido.");
+  const accessToken = await getPayPalAccessToken();
+  const response = await fetch(`${paypalApiBase()}/v2/payments/captures/${encodeURIComponent(normalized)}/refund`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({}),
+  });
+  await parsePayPalResponse(response);
+}

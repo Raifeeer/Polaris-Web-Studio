@@ -3,7 +3,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { buildEmailFooter } from "./_localLift.js";
-import { paypalCaptureId, paypalCaptureOrder, paypalCreateOrder, paypalGetOrder, paypalOrderAmount, paypalReferenceId } from "./_paypal.js";
+import { paypalCaptureId, paypalCaptureOrder, paypalCreateOrder, paypalGetOrder, paypalOrderAmount, paypalReferenceId, paypalRefundCapture } from "./_paypal.js";
 
 // Confirma pagos directos de Local Lift (cliente compra el paquete pago sin
 // pasar antes por el diagnóstico gratis, o paga desde el correo de
@@ -47,6 +47,15 @@ function pendingOrderIsFresh(value: unknown, maxAgeMs = 15 * 60 * 1000): boolean
 
 function paymentAlreadyCompletedResponse(res: VercelResponse, leadId: string) {
   return res.status(409).json({ success: false, alreadyPaid: true, reason: "already_paid", leadId });
+}
+
+async function refundCompletedOrderIfNeeded(orderId: string, expectedReference: string): Promise<boolean> {
+  const order = await paypalGetOrder(orderId).catch(() => null);
+  if (order?.status !== "COMPLETED" || paypalReferenceId(order) !== expectedReference) return false;
+  const captureId = paypalCaptureId(order);
+  if (!captureId) return false;
+  await paypalRefundCapture(captureId);
+  return true;
 }
 
 // Confirmación real al CLIENTE de que su pago se recibió. Antes usaba el
@@ -381,7 +390,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const existing = await docRef.get();
       if (!existing.exists) return res.status(404).json({ error: "Lead no encontrado." });
       const initial = existing.data() || {};
-      if (initial.paid) return paymentAlreadyCompletedResponse(res, docRef.id);
+      if (initial.paid) {
+        if (initial.paypalOrderId !== paypalOrderId) {
+          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+        }
+        return paymentAlreadyCompletedResponse(res, docRef.id);
+      }
 
       const expectedAmount = TIER_PRICE[tier];
       const expectedReference = `local-lift:${docRef.id}`;
@@ -395,6 +409,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       let captureAlreadyPaid = false;
+      let duplicateCaptureBlocked = false;
       let captureInProgress = false;
       let captureClaimed = false;
       await firestore.runTransaction(async (transaction) => {
@@ -403,10 +418,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const v = latest.data() || {};
         if (v.paid) {
           captureAlreadyPaid = true;
+          duplicateCaptureBlocked = v.paypalOrderId !== paypalOrderId;
           return;
         }
         if (v.paypalOrderId && v.paypalOrderId !== paypalOrderId) {
           captureInProgress = true;
+          duplicateCaptureBlocked = true;
           return;
         }
         if (v.paypalCaptureInProgress && pendingOrderIsFresh(v.paypalCaptureStartedAt, 2 * 60 * 1000)) {
@@ -421,8 +438,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         captureClaimed = true;
       });
-      if (captureAlreadyPaid) return paymentAlreadyCompletedResponse(res, docRef.id);
-      if (captureInProgress || !captureClaimed) return res.status(409).json({ success: false, reason: "payment_in_progress" });
+      if (captureAlreadyPaid) {
+        if (duplicateCaptureBlocked) {
+          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+        }
+        return paymentAlreadyCompletedResponse(res, docRef.id);
+      }
+      if (captureInProgress || !captureClaimed) {
+        if (duplicateCaptureBlocked) {
+          await refundCompletedOrderIfNeeded(paypalOrderId, `local-lift:${docRef.id}`).catch((refundError) => console.error("[local-lift-order] No se pudo compensar una captura duplicada:", refundError));
+        }
+        return res.status(409).json({ success: false, reason: "payment_in_progress" });
+      }
 
       let capture: any;
       try {
