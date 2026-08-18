@@ -59,6 +59,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
   const workflow = data?.workflow;
   const activeRequest = useMemo(() => workflow?.requests?.find((item: any) => ["submitted", "in_progress", "revision_ready", "changes_requested"].includes(item.status)) || null, [workflow]);
   const packageData = data?.package;
+  const guideSteps = Array.isArray(packageData?.implementationGuide) ? packageData.implementationGuide : [];
   const canRequest = !!workflow?.status && data?.canRequestNewRound && !activeRequest;
 
   const mutate = async (action: string, extra: Record<string, unknown> = {}) => {
@@ -103,13 +104,32 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       </div>
 
       {packageData && (
-        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 space-y-3">
-          <div className="flex items-center gap-2"><FileText size={15} className="text-[var(--color-primary-base)]" /><h3 className="text-sm font-black text-[var(--color-text-primary)]">Paquete y guía de implementación</h3></div>
-          <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">{packageData.rewrittenDescription || "Descripción preparada para tu negocio."}</p>
-          <p className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200">La guía te indica cómo aplicar cada cambio. Si quieres ajustar el material antes de hacerlo, agrupa tus comentarios en una solicitud de ronda.</p>
-          <div className="flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-secondary)]"><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.googlePosts?.length || 0} publicaciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.reviewReplies?.length || 0} respuestas</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.services?.length || 0} servicios</span></div>
-          {packageData.implementationGuide?.length > 0 && <div className="space-y-2 pt-2"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Cómo aplicar cada parte</p>{packageData.implementationGuide.map((step: any, index: number) => <details key={`${step.title}-${index}`} className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-3"><summary className="cursor-pointer list-none text-xs font-black text-[var(--color-text-primary)]">{index + 1}. {step.title}<span className="ml-1 font-normal text-[var(--color-text-tertiary)]">· {step.where}</span></summary><ol className="mt-2 list-decimal space-y-1 pl-5 text-xs leading-relaxed text-[var(--color-text-secondary)]">{(step.steps || []).map((item: string, itemIndex: number) => <li key={itemIndex}>{item}</li>)}</ol></details>)}</div>}
-        </div>
+        <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/10"><FileText size={17} className="text-[var(--color-primary-base)]" /></div>
+            <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Documento de implementación Ascenso</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Cómo aplicar cada cambio, paso a paso</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Polaris prepara el contenido. Tú aplicas los cambios en tu perfil y este documento te indica exactamente dónde hacerlo, qué revisar y cuándo pedirnos ayuda.</p></div>
+          </div>
+
+          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y marca tus dudas para la sesión de acompañamiento. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
+          <div className="flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-secondary)]"><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{guideSteps.length} secciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.googlePosts?.length || 0} publicaciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.reviewReplies?.length || 0} respuestas</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.services?.length || 0} servicios</span></div>
+
+          <div className="space-y-3">
+            {guideSteps.map((step: any, index: number) => (
+              <details key={`${step.title}-${index}`} open={index === 0} className="group rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4">
+                <summary className="cursor-pointer list-none pr-5 text-sm font-black text-[var(--color-text-primary)] marker:hidden"><span className="mr-2 text-[var(--color-primary-base)]">{String(index + 1).padStart(2, "0")}</span>{step.title}<span className="mt-1 block text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">Dónde hacerlo: {step.where}</span></summary>
+                <div className="mt-4 space-y-4 border-t border-[var(--color-border-subtle)] pt-4">
+                  <p className="text-xs leading-relaxed text-[var(--color-text-secondary)]">{step.summary}</p>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Antes de empezar</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-[var(--color-text-secondary)]">{(step.beforeYouStart || []).map((item: string, itemIndex: number) => <li key={itemIndex}>{item}</li>)}</ul></div>
+                    <div><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Comprueba al final</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-[var(--color-text-secondary)]">{(step.verify || []).map((item: string, itemIndex: number) => <li key={itemIndex}>{item}</li>)}</ul></div>
+                  </div>
+                  <div><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Instrucciones</p><ol className="mt-2 list-decimal space-y-2 pl-5 text-xs leading-relaxed text-[var(--color-text-secondary)]">{(step.steps || []).map((item: string, itemIndex: number) => <li key={itemIndex} className="pl-1">{item}</li>)}</ol></div>
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3"><p className="text-[10px] font-black uppercase tracking-widest text-amber-300">Evita estos errores</p><ul className="mt-2 list-disc space-y-1 pl-4 text-xs leading-relaxed text-amber-100/80">{(step.avoid || []).map((item: string, itemIndex: number) => <li key={itemIndex}>{item}</li>)}</ul></div>
+                </div>
+              </details>
+            ))}
+          </div>
+        </article>
       )}
 
       {activeRequest && (

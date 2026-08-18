@@ -228,16 +228,134 @@ type PackageTier = "impulso" | "ascenso";
 
 type ImplementationGuideStep = {
   title: string;
+  titleEn: string;
+  summary: string;
+  summaryEn: string;
   where: string;
+  whereEn: string;
+  beforeYouStart: string[];
+  beforeYouStartEn: string[];
   steps: string[];
+  stepsEn: string[];
+  verify: string[];
+  verifyEn: string[];
+  avoid: string[];
+  avoidEn: string[];
 };
 
 const ASCENSO_IMPLEMENTATION_GUIDE: ImplementationGuideStep[] = [
-  { title: "Descripción del negocio", where: "Información del negocio", steps: ["Abre la sección de información del negocio.", "Sustituye la descripción actual por la versión preparada y revisa que el tono represente tu negocio.", "Guarda el cambio y verifica cómo se muestra en la vista pública."] },
-  { title: "Servicios y llamadas a la acción", where: "Servicios", steps: ["Entra en la sección de servicios o productos.", "Añade o ajusta cada servicio con el nombre y detalle sugeridos.", "Revisa que la llamada a la acción lleve al siguiente paso que realmente puedes atender."] },
-  { title: "Publicaciones", where: "Publicaciones o novedades", steps: ["Crea una publicación nueva y elige el formato más cercano al objetivo.", "Copia el texto preparado, adapta fechas, precios o disponibilidad y añade una imagen propia si corresponde.", "Revisa la vista previa y publica solo cuando todo esté correcto."] },
-  { title: "Respuestas a reseñas", where: "Reseñas", steps: ["Abre la reseña correspondiente y lee el contexto completo.", "Usa la respuesta preparada como base, personaliza el saludo y corrige cualquier dato antes de enviarla.", "En casos sensibles, pausa y consulta a Polaris durante el acompañamiento."] },
-  { title: "Verificación final", where: "Vista pública del negocio", steps: ["Comprueba que la información guardada se vea coherente desde la vista pública.", "Anota cualquier diferencia o duda para revisarla en la sesión.", "Usa las rondas incluidas solo para solicitar cambios al material preparado, no para abrir un servicio indefinido."] },
+  {
+    title: "Descripción del negocio",
+    titleEn: "Business description",
+    summary: "Coloca la descripción preparada para explicar con claridad qué ofrece tu negocio y por qué alguien debería contactarte.",
+    summaryEn: "Use the prepared description to explain clearly what your business offers and why someone should contact you.",
+    where: "Perfil de Empresa → Editar perfil → Descripción",
+    whereEn: "Business Profile → Edit profile → Description",
+    beforeYouStart: ["Ten a mano la versión preparada en tu paquete.", "Confirma que el nombre, los servicios y la ubicación mencionados siguen siendo correctos."],
+    beforeYouStartEn: ["Keep the prepared version from your package nearby.", "Confirm that the name, services, and location mentioned are still correct."],
+    steps: ["Abre la sección de información o edición del perfil.", "Busca el campo de descripción y reemplaza el texto anterior por la versión preparada.", "Lee el resultado completo antes de guardar para detectar frases que quieras aclarar.", "Guarda el cambio y vuelve a abrir la vista pública para comprobar cómo se muestra."],
+    stepsEn: ["Open the profile information or edit section.", "Find the description field and replace the previous text with the prepared version.", "Read the full result before saving and clarify any phrase that needs adjustment.", "Save the change and reopen the public view to check how it appears."],
+    verify: ["El texto representa lo que realmente vendes hoy.", "Los servicios y datos mencionados coinciden con tu operación actual."],
+    verifyEn: ["The text represents what you actually sell today.", "The services and details mentioned match your current operation."],
+    avoid: ["No agregues servicios, horarios o promesas que no puedas cumplir.", "No cambies el sentido de la descripción sin pedir una aclaración si tienes dudas."],
+    avoidEn: ["Do not add services, hours, or promises you cannot fulfill.", "Do not change the meaning of the description without asking for clarification if needed."],
+  },
+  {
+    title: "Servicios y llamadas a la acción",
+    titleEn: "Services and calls to action",
+    summary: "Organiza lo que ofreces para que el cliente entienda rápidamente qué puede solicitar y cuál es el siguiente paso.",
+    summaryEn: "Organize what you offer so customers quickly understand what they can request and what to do next.",
+    where: "Perfil de Empresa → Editar productos o servicios",
+    whereEn: "Business Profile → Edit products or services",
+    beforeYouStart: ["Revisa la lista de servicios preparada por Polaris.", "Define qué acción puedes atender mejor: llamar, escribir, reservar, comprar o solicitar información."],
+    beforeYouStartEn: ["Review the service list prepared by Polaris.", "Choose the action you can handle best: call, message, book, buy, or request information."],
+    steps: ["Entra en la sección de servicios o productos del perfil.", "Añade cada servicio con el nombre y la descripción sugeridos.", "Ajusta precios, disponibilidad o detalles que hayan cambiado desde la preparación del paquete.", "Comprueba que la llamada a la acción de cada publicación o servicio lleve a un canal que revisas con frecuencia."],
+    stepsEn: ["Open the profile services or products section.", "Add each service with the suggested name and description.", "Update prices, availability, or details that changed since the package was prepared.", "Check that each call to action leads to a channel you monitor regularly."],
+    verify: ["No hay servicios repetidos o fuera de temporada.", "Cada llamada a la acción tiene un destino real y atendible."],
+    verifyEn: ["There are no duplicate or out-of-season services.", "Each call to action leads to a real channel you can handle."],
+    avoid: ["No publiques una oferta si ya no está disponible.", "No dejes una llamada a la acción apuntando a un número, enlace o canal que nadie revisa."],
+    avoidEn: ["Do not publish an offer that is no longer available.", "Do not leave a call to action pointing to a number, link, or channel nobody monitors."],
+  },
+  {
+    title: "Publicaciones y novedades",
+    titleEn: "Posts and updates",
+    summary: "Convierte cada publicación preparada en una actualización real, revisada y adaptada al momento en que la vas a publicar.",
+    summaryEn: "Turn each prepared post into a real update, reviewed and adapted to the moment you publish it.",
+    where: "Perfil de Empresa → Añadir actualización o publicación",
+    whereEn: "Business Profile → Add an update or post",
+    beforeYouStart: ["Reúne las fechas, precios, enlaces e imágenes aprobadas que correspondan a esa publicación.", "Confirma que la oferta siga vigente antes de comenzar."],
+    beforeYouStartEn: ["Gather the relevant dates, prices, links, and approved images for the post.", "Confirm that the offer is still valid before you begin."],
+    steps: ["Crea una publicación nueva y selecciona el formato más cercano al objetivo.", "Copia el texto preparado y reemplaza los campos variables, como fechas o disponibilidad.", "Añade la imagen aprobada o una imagen propia que represente exactamente la oferta.", "Selecciona la llamada a la acción indicada, revisa la vista previa y publica solo cuando todo esté correcto."],
+    stepsEn: ["Create a new post and choose the format closest to the goal.", "Copy the prepared text and replace variable details such as dates or availability.", "Add the approved image or an original image that accurately represents the offer.", "Select the suggested call to action, review the preview, and publish only when everything is correct."],
+    verify: ["La fecha, el precio, la disponibilidad y el enlace coinciden.", "La imagen y el texto prometen exactamente lo mismo."],
+    verifyEn: ["The date, price, availability, and link match.", "The image and text make the same promise."],
+    avoid: ["No publiques una promoción vencida.", "No uses una imagen que muestre un producto, precio o condición diferente a la oferta."],
+    avoidEn: ["Do not publish an expired promotion.", "Do not use an image showing a different product, price, or condition than the offer."],
+  },
+  {
+    title: "Fotos del negocio",
+    titleEn: "Business photos",
+    summary: "Aplica las imágenes aprobadas para que la presencia visual del negocio esté actualizada y sea coherente con lo que ofreces.",
+    summaryEn: "Apply the approved images so the business presence stays current and matches what you offer.",
+    where: "Perfil de Empresa → Fotos → Añadir fotos",
+    whereEn: "Business Profile → Photos → Add photos",
+    beforeYouStart: ["Descarga o reúne las imágenes aprobadas que acompañan tu paquete.", "Identifica qué muestra cada imagen: espacio, producto, equipo, servicio o resultado."],
+    beforeYouStartEn: ["Download or gather the approved images included with your package.", "Identify what each image shows: space, product, team, service, or result."],
+    steps: ["Abre la sección de fotos del perfil.", "Elige la categoría más apropiada para cada imagen cuando esté disponible.", "Sube las imágenes aprobadas y revisa que no se hayan recortado de forma problemática.", "Comprueba la vista pública después de guardar y anota cualquier imagen que necesite reemplazo."],
+    stepsEn: ["Open the profile photos section.", "Choose the most appropriate category for each image when available.", "Upload the approved images and check that they were not cropped incorrectly.", "Check the public view after saving and note any image that needs replacement."],
+    verify: ["Las imágenes muestran el negocio real y actual.", "No aparecen datos privados, personas sin autorización o información que ya no aplica."],
+    verifyEn: ["The images show the real, current business.", "No private data, unauthorized people, or outdated information appears."],
+    avoid: ["No subas imágenes de bancos de fotos como si fueran del negocio.", "No publiques una imagen solo porque se ve bonita si puede confundir al cliente."],
+    avoidEn: ["Do not upload stock images as if they were from the business.", "Do not publish an image just because it looks good if it could confuse customers."],
+  },
+  {
+    title: "Respuestas a reseñas",
+    titleEn: "Review replies",
+    summary: "Usa las respuestas preparadas como base, pero personalízalas después de leer la reseña y su contexto completo.",
+    summaryEn: "Use the prepared replies as a starting point, but personalize them after reading the full review and context.",
+    where: "Perfil de Empresa → Reseñas → Responder",
+    whereEn: "Business Profile → Reviews → Reply",
+    beforeYouStart: ["Abre la reseña original y confirma el nombre, la calificación y el contenido.", "Ten disponible la respuesta preparada correspondiente."],
+    beforeYouStartEn: ["Open the original review and confirm the name, rating, and content.", "Keep the corresponding prepared reply available."],
+    steps: ["Lee la reseña completa antes de escribir.", "Usa la respuesta preparada como base y personaliza el saludo o el detalle relevante.", "Si la reseña es crítica, responde al problema concreto sin discutir ni compartir datos privados.", "Revisa el texto final y envíalo desde la opción de responder."],
+    stepsEn: ["Read the full review before writing.", "Use the prepared reply as a base and personalize the greeting or relevant detail.", "If the review is critical, address the specific issue without arguing or sharing private details.", "Review the final text and send it through the reply option."],
+    verify: ["La respuesta corresponde a esa reseña y no a otra.", "El tono es profesional, humano y coherente con el negocio."],
+    verifyEn: ["The reply matches that specific review and not another one.", "The tone is professional, human, and consistent with the business."],
+    avoid: ["No copies la misma respuesta para todas las reseñas.", "No confirmes públicamente datos personales ni prometas una solución que no hayas coordinado."],
+    avoidEn: ["Do not copy the same reply for every review.", "Do not confirm personal data publicly or promise a solution you have not arranged."],
+  },
+  {
+    title: "Mensajes de seguimiento",
+    titleEn: "Follow-up messages",
+    summary: "Adapta los mensajes preparados para WhatsApp u otros canales y envíalos solo cuando el escenario realmente corresponda.",
+    summaryEn: "Adapt the prepared messages for WhatsApp or other channels and send them only when the situation truly applies.",
+    where: "WhatsApp o el canal de atención que uses",
+    whereEn: "WhatsApp or your chosen customer channel",
+    beforeYouStart: ["Identifica el escenario del mensaje: consulta, reserva, seguimiento o reactivación.", "Revisa el nombre, la fecha, el producto y cualquier dato variable antes de enviarlo."],
+    beforeYouStartEn: ["Identify the message scenario: inquiry, booking, follow-up, or reactivation.", "Review the name, date, product, and any variable detail before sending."],
+    steps: ["Elige la plantilla que corresponde a la situación.", "Reemplaza los campos variables y escribe como hablarías con ese cliente.", "Confirma que el enlace o el canal indicado sigue funcionando.", "Envía el mensaje y registra cualquier respuesta que requiera seguimiento."],
+    stepsEn: ["Choose the template that matches the situation.", "Replace variable fields and write as you would speak to that customer.", "Confirm that the link or channel mentioned still works.", "Send the message and record any reply that needs follow-up."],
+    verify: ["El mensaje tiene un siguiente paso claro.", "No contiene datos de otro cliente o de otra reserva."],
+    verifyEn: ["The message has a clear next step.", "It contains no details from another customer or booking."],
+    avoid: ["No envíes mensajes masivos sin revisar el contexto.", "No uses una plantilla fuera del escenario para el que fue preparada."],
+    avoidEn: ["Do not send mass messages without checking the context.", "Do not use a template outside the scenario it was prepared for."],
+  },
+  {
+    title: "Verificación final",
+    titleEn: "Final verification",
+    summary: "Comprueba que los cambios aplicados se vean bien desde la perspectiva de un cliente y reúne tus dudas para la sesión.",
+    summaryEn: "Check that the applied changes look right from a customer's perspective and collect questions for the session.",
+    where: "Vista pública del negocio y canales de atención",
+    whereEn: "Public business view and customer channels",
+    beforeYouStart: ["Abre la vista pública del negocio desde una ventana independiente.", "Ten a mano el paquete y marca qué piezas ya aplicaste."],
+    beforeYouStartEn: ["Open the public business view in a separate window.", "Keep the package nearby and mark which pieces you already applied."],
+    steps: ["Comprueba la descripción, los servicios, las fotos y las publicaciones visibles.", "Prueba los enlaces, botones o canales de contacto que hayas configurado.", "Revisa las respuestas y confirma que cada una esté asociada a la reseña correcta.", "Anota diferencias o dudas concretas para resolverlas durante el acompañamiento."],
+    stepsEn: ["Check the visible description, services, photos, and posts.", "Test the links, buttons, or contact channels you configured.", "Review the replies and confirm each one is associated with the correct review.", "Write down specific differences or questions to resolve during accompaniment."],
+    verify: ["La presencia pública cuenta una historia coherente.", "Los canales de contacto funcionan y llegan a alguien que puede responder."],
+    verifyEn: ["The public presence tells a coherent story.", "Contact channels work and reach someone who can respond."],
+    avoid: ["No marques el servicio como terminado si aún tienes cambios del material por solicitar.", "No agrupes en una nueva ronda dudas que solo necesitan una aclaración sobre la revisión actual."],
+    avoidEn: ["Do not mark the service complete if you still need changes to the prepared material.", "Do not use a new round for questions that only need clarification about the current review."],
+  },
 ];
 
 function normalizeTier(value: unknown): PackageTier {
@@ -454,7 +572,7 @@ function renderPackageEmailBody(
       };
 
   const tierItems = tier === "ascenso"
-    ? (isEnglish ? ["Step-by-step implementation guide", "Up to three grouped review rounds"] : ["Guía paso a paso para implementar los cambios", "Hasta tres rondas agrupadas de revisión"])
+    ? (isEnglish ? ["Detailed guide for applying the changes", "Up to three grouped review rounds"] : ["Documento detallado para aplicar los cambios", "Hasta tres rondas agrupadas de revisión"])
     : [];
   const items = reviewLine
     ? [...content.items.slice(0, 5), reviewLine, ...tierItems, content.items[5]]
@@ -499,8 +617,8 @@ function renderPackageEmailText(businessName: string, contactName: string | null
   const greeting = contactName ? (lang === "en" ? `Hi ${contactName},` : `Hola ${contactName},`) : lang === "en" ? "Hi," : "Hola,";
   const isEnglish = lang === "en";
   const items = isEnglish
-    ? ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", ...(tier === "ascenso" ? ["Step-by-step implementation guide", "Up to three grouped review rounds"] : []), "Clear next steps"]
-    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", ...(tier === "ascenso" ? ["Guía paso a paso para implementar los cambios", "Hasta tres rondas agrupadas de revisión"] : []), "Siguientes pasos claros"];
+    ? ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", ...(tier === "ascenso" ? ["Detailed guide for applying the changes", "Up to three grouped review rounds"] : []), "Clear next steps"]
+    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", ...(tier === "ascenso" ? ["Documento detallado para aplicar los cambios", "Hasta tres rondas agrupadas de revisión"] : []), "Siguientes pasos claros"];
   const lines = [
     isEnglish ? "YOUR PACKAGE IS READY" : "TU PAQUETE ESTÁ LISTO",
     isEnglish ? "Your Local Lift package is ready" : "Tu paquete Local Lift está listo",
