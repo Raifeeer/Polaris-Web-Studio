@@ -333,6 +333,9 @@ export default function LocalLiftPanel() {
 
 
   const loadLead = (lead: Lead) => {
+    const normalizedPlace = lead.place
+      ? { ...lead.place, photoUrls: Array.isArray(lead.place.photoUrls) ? lead.place.photoUrls : [] }
+      : null;
     setLeadId(lead.id);
     setLeadPaid(lead.paid);
     setAscensoWorkflowStatus(null);
@@ -341,11 +344,10 @@ export default function LocalLiftPanel() {
     setContactName(lead.contactName || "");
     setEmail(lead.email || "");
     setTier(lead.tier === "ascenso" || lead.tier === "implementado" ? "ascenso" : "impulso");
-    setSelectedLeadPlace(lead.place || null);
-    setPlace(lead.place || null);
+    setSelectedLeadPlace(normalizedPlace);
+    setPlace(normalizedPlace);
     setPkg(lead.package || null);
-    setGenStatus(lead.package && lead.place ? "done" : "idle");
-    setGenStatus(lead.package && lead.place ? "done" : "idle");
+    setGenStatus(lead.package && normalizedPlace ? "done" : "idle");
     setSendStatus("idle");
     setPortalSyncStatus(lead.portalSyncStatus === "synced" ? "synced" : lead.portalSyncStatus === "failed" || lead.portalSyncStatus === "unmatched" || lead.portalSyncStatus === "pending" ? "failed" : "unknown");
     setPortalSyncError(lead.portalSyncLastError || "");
@@ -612,7 +614,7 @@ export default function LocalLiftPanel() {
       {selectedLeadPlace && (
         <div className="mt-8 max-w-xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5">
           <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Información actual del negocio</h2>
-          {selectedLeadPlace.photoUrls.length > 0 && (
+          {Array.isArray(selectedLeadPlace.photoUrls) && selectedLeadPlace.photoUrls.length > 0 && (
             <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
               {selectedLeadPlace.photoUrls.slice(0, 6).map((url) => (
                 <button key={url} type="button" onClick={() => setLightboxUrl(url)} className="shrink-0 cursor-zoom-in">
