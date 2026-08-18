@@ -598,6 +598,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           source: v.source || "free_diagnostic",
           gbpConnected: !!v.gbp?.refreshToken || v.gbp?.demo === true,
           gbpDemo: v.gbp?.demo === true,
+          reviews: Array.isArray(v.reviews) ? v.reviews : [],
+          package: v.package || null,
           createdAt: v.createdAt?.toDate?.() || null,
           sentAt: v.sentAt?.toDate?.() || null,
           portalSyncStatus: v.portalSyncStatus || null,
@@ -981,7 +983,7 @@ text: renderPackageEmailText(givenPlace.name, contactName || null, language, con
         if (existing.exists) {
           const v = existing.data()!;
           finalPaid = !!v.paid;
-          await docRef.update({ place, package: pkg, tier: requestedTier, status: "package_ready", businessName: place.name, city });
+          await docRef.update({ place, reviews, package: pkg, tier: requestedTier, status: "package_ready", businessName: place.name, city });
         } else {
           finalLeadId = null; // lead inválido/borrado — cae al branch de creación abajo
         }
@@ -993,6 +995,7 @@ text: renderPackageEmailText(givenPlace.name, contactName || null, language, con
           contactName: contactName || null,
           email: email || null,
           place,
+          reviews,
           package: pkg,
           tier: requestedTier,
           status: "package_ready",

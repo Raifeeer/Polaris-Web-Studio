@@ -47,6 +47,13 @@ interface LocalLiftPackage {
   partialFailure: boolean;
   errors: Record<string, string | null>;
 }
+interface SourceReview {
+  author: string;
+  rating: number;
+  text: string;
+  publishTime?: string | null;
+  relativePublishTimeDescription?: string | null;
+}
 interface GbpReview {
   name: string;
   reviewer?: { displayName?: string };
@@ -80,12 +87,14 @@ interface Lead {
   source: string;
   gbpConnected: boolean;
   gbpDemo?: boolean;
+  place: PlaceInfo | null;
+  reviews?: SourceReview[];
+  package?: LocalLiftPackage | null;
   createdAt: string | null;
   sentAt: string | null;
   portalSyncStatus?: "pending" | "synced" | "failed" | "unmatched" | null;
   portalSyncAttempts?: number;
   portalSyncLastError?: string;
-  place: PlaceInfo | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -343,6 +352,14 @@ export default function LocalLiftPanel() {
   const pendingLeads = filteredLeads.filter((l) => l.status !== "sent");
   const sentLeads = filteredLeads.filter((l) => l.status === "sent");
 
+  const packageReplyForReview = (review: GbpReview, index: number, packageValue: LocalLiftPackage | null = pkg): string => {
+    const replies = packageValue?.reviewReplies || [];
+    const author = review.reviewer?.displayName || "";
+    const rating = ({ ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 } as Record<string, number>)[review.starRating || ""];
+    const matched = replies.find((reply) => reply.author === author && (rating == null || Math.round(reply.rating) === rating) && (!review.comment || reply.originalText === review.comment || reply.originalText.includes(review.comment.slice(0, 40))));
+    return matched?.reply || replies[index]?.reply || "";
+  };
+
   const loadLead = (lead: Lead) => {
     setLeadId(lead.id);
     setLeadPaid(lead.paid);
@@ -354,19 +371,28 @@ export default function LocalLiftPanel() {
     setEmail(lead.email || "");
     setTier(lead.tier === "ascenso" || lead.tier === "implementado" ? "ascenso" : "impulso");
     setSelectedLeadPlace(lead.place || null);
+    setPlace(lead.place || null);
+    setPkg(lead.package || null);
+    setGenStatus(lead.package && lead.place ? "done" : "idle");
     setGbpLocations(null);
-    setGbpReviews(null);
     setGbpReviewsStatus("idle");
     setGbpReviewsError("");
-    setGbpReplyDrafts({});
+    const storedGbpReviews = (lead.reviews || []).map((review, index) => ({
+      name: `stored-review-${lead.id}-${index}`,
+      reviewer: { displayName: review.author },
+      starRating: ({ 1: "ONE", 2: "TWO", 3: "THREE", 4: "FOUR", 5: "FIVE" } as Record<number, string>)[Math.round(review.rating)] || String(review.rating),
+      comment: review.text,
+      createTime: review.publishTime || undefined,
+    }));
+    setGbpReviews(storedGbpReviews);
+    setGbpReplyDrafts(Object.fromEntries(storedGbpReviews.map((review, index) => [review.name, packageReplyForReview(review, index, lead.package || null)])));
     setGbpReplyNotice("");
-    setPlace(null);
-    setPkg(null);
-    setGenStatus("idle");
+    setGenStatus(lead.package && lead.place ? "done" : "idle");
     setSendStatus("idle");
     setPortalSyncStatus(lead.portalSyncStatus === "synced" ? "synced" : lead.portalSyncStatus === "failed" || lead.portalSyncStatus === "unmatched" || lead.portalSyncStatus === "pending" ? "failed" : "unknown");
     setPortalSyncError(lead.portalSyncLastError || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (lead.gbpConnected) void loadGbpLocations(lead.id);
   };
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -389,7 +415,17 @@ export default function LocalLiftPanel() {
         return;
       }
       setPlace(data.place);
+      setSelectedLeadPlace(data.place);
       setPkg(data.package);
+      const generatedReviews: GbpReview[] = (data.reviews || []).map((review: SourceReview, index: number) => ({
+        name: `generated-review-${data.leadId || leadId || "new"}-${index}`,
+        reviewer: { displayName: review.author },
+        starRating: ({ 1: "ONE", 2: "TWO", 3: "THREE", 4: "FOUR", 5: "FIVE" } as Record<number, string>)[Math.round(review.rating)] || String(review.rating),
+        comment: review.text,
+        createTime: review.publishTime || undefined,
+      }));
+      setGbpReviews(generatedReviews);
+      setGbpReplyDrafts(Object.fromEntries(generatedReviews.map((review, index) => [review.name, packageReplyForReview(review, index, data.package)])));
       setLeadId(data.leadId || leadId);
       setLeadPaid(!!data.paid);
       setGenStatus("done");
@@ -454,15 +490,16 @@ export default function LocalLiftPanel() {
     }
   };
 
-  const loadGbpLocations = async () => {
-    if (!leadId) return;
+  const loadGbpLocations = async (targetLeadId?: string | null) => {
+    const effectiveLeadId = targetLeadId || leadId;
+    if (!effectiveLeadId) return;
     setGbpLocationsStatus("loading");
     setGbpLocationsError("");
     try {
       const res = await fetch("/api/gbp-publish", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "list-locations", leadId }),
+        body: JSON.stringify({ action: "list-locations", leadId: effectiveLeadId }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -470,17 +507,20 @@ export default function LocalLiftPanel() {
         setGbpLocationsStatus("error");
         return;
       }
-      setGbpLocations(data.locations || []);
+      const loadedLocations = data.locations || [];
+      setGbpLocations(loadedLocations);
       setLeadGbpDemo(!!data.demo || leadGbpDemo);
       setGbpLocationsStatus("idle");
+      if (loadedLocations[0]?.accountLocationPath) void loadGbpReviews(loadedLocations[0].accountLocationPath, effectiveLeadId);
     } catch {
       setGbpLocationsError("Algo salió mal consultando Google.");
       setGbpLocationsStatus("error");
     }
   };
 
-  const loadGbpReviews = async (accountLocationPath: string) => {
-    if (!leadId) return;
+  const loadGbpReviews = async (accountLocationPath: string, targetLeadId?: string | null) => {
+    const effectiveLeadId = targetLeadId || leadId;
+    if (!effectiveLeadId) return;
     setGbpReviewsStatus("loading");
     setGbpReviewsError("");
     setGbpReplyNotice("");
@@ -488,7 +528,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/gbp-publish", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "list-reviews", leadId, accountLocationPath }),
+        body: JSON.stringify({ action: "list-reviews", leadId: effectiveLeadId, accountLocationPath }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -496,7 +536,12 @@ export default function LocalLiftPanel() {
         setGbpReviewsStatus("error");
         return;
       }
-      setGbpReviews(data.reviews || []);
+      const loadedReviews: GbpReview[] = data.reviews || [];
+      setGbpReviews(loadedReviews);
+      setGbpReplyDrafts((previous) => ({
+        ...previous,
+        ...Object.fromEntries(loadedReviews.map((review, index) => [review.name, packageReplyForReview(review, index)])),
+      }));
       setLeadGbpDemo(!!data.demo || leadGbpDemo);
       setGbpReviewsStatus("idle");
     } catch {
@@ -857,7 +902,8 @@ export default function LocalLiftPanel() {
                       <button type="button" onClick={() => setEditingSnippet({ kind: "reply", index: i, current: r })} className="shrink-0 text-[var(--color-text-tertiary)] hover:text-[var(--color-primary-base)]"><Pencil size={12} /></button>
                     </div>
                     <p className="mt-1 break-words italic text-[var(--color-text-tertiary)]">"{r.originalText}"</p>
-                    <p className="mt-1 break-words text-[var(--color-text-secondary)]">→ {r.reply}</p>
+                    <label className="mt-2 block text-[10px] font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">Respuesta preparada para Google</label>
+                    <textarea value={gbpReplyDrafts[`package-${i}`] ?? r.reply} onChange={(e) => setGbpReplyDrafts((prev) => ({ ...prev, [`package-${i}`]: e.target.value }))} rows={3} className="mt-1 w-full rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)] px-3 py-2 text-xs leading-relaxed outline-none focus:border-[var(--color-primary-base)]" />
                   </div>
                 ))}
               </div>
