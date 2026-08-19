@@ -488,11 +488,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(202).json({ success: true, status: "processing", startedAt: atlasStartedAt.getTime(), place: v.placeData });
   }
 
-  const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";
-  if (rateLimited(ip, 10, 15 * 60 * 1000)) {
-    return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento e intenta de nuevo." });
-  }
-
   const { businessName, city, email, contactName, mapsUrl, confirmedPlaceId, lang } = req.body || {};
   const normalizedMapsUrl = typeof mapsUrl === "string" ? mapsUrl.trim() : "";
   const normalizedConfirmedPlaceId = typeof confirmedPlaceId === "string" ? confirmedPlaceId.trim() : "";
@@ -520,6 +515,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         language === "en"
           ? "Paste a valid HTTPS Google Maps link, such as https://maps.app.goo.gl/..."
           : "Pega un enlace HTTPS válido de Google Maps, por ejemplo https://maps.app.goo.gl/...",
+    });
+  }
+
+  // El límite protege únicamente la búsqueda de candidatos. La confirmación
+  // de una ficha ya seleccionada y las acciones del diagnóstico no consumen
+  // este bucket, para no castigar al usuario legítimo durante el flujo normal.
+  const ip = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim() || "unknown";
+  if (!normalizedConfirmedPlaceId && rateLimited(ip, 10, 15 * 60 * 1000)) {
+    res.setHeader("Retry-After", "900");
+    return res.status(429).json({
+      reason: "search_rate_limited",
+      error: language === "en"
+        ? "We received several searches in a short time. Please wait a few minutes and try again."
+        : "Recibimos varias búsquedas en poco tiempo. Espera unos minutos e intenta de nuevo.",
     });
   }
 
