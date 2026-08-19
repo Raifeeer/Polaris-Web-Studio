@@ -42,8 +42,14 @@ export interface PlaceCandidatesPage {
   nextPageToken: string | null;
 }
 
+const MAX_STORED_PLACE_PHOTOS = 6;
+
 function buildPlaceData(place: any, apiKey: string, fallbackName: string): PlaceData {
-  const photos = Array.isArray(place.photos) ? place.photos : [];
+  const allPhotos = Array.isArray(place.photos) ? place.photos : [];
+  // Solo conservamos las primeras seis referencias: el panel admin muestra
+  // hasta seis y el PDF usa cuatro. Guardar todas las referencias de Google
+  // hacía que el frontend pudiera precargar cientos de fotos innecesarias.
+  const photos = allPhotos.slice(0, MAX_STORED_PLACE_PHOTOS);
   // Vía el proxy propio (api/local-lift-photo.ts) en vez de la URL cruda de
   // Google -- esa URL llevaba la API key real en el query string, expuesta
   // directo en el HTML/PDF, y además fallaba con 403 al cargarse desde el
@@ -64,7 +70,7 @@ function buildPlaceData(place: any, apiKey: string, fallbackName: string): Place
     hasPhone: !!place.nationalPhoneNumber,
     phone: place.nationalPhoneNumber || null,
     hasHours: !!place.currentOpeningHours,
-    photoCount: photos.length,
+    photoCount: allPhotos.length,
     photoUrls,
     hasDescription: !!place.editorialSummary?.text,
     editorialSummary: place.editorialSummary?.text || null,

@@ -618,7 +618,7 @@ export default function LocalLiftPanel() {
             <div className="flex gap-2 overflow-x-auto pb-2 mb-3">
               {selectedLeadPlace.photoUrls.slice(0, 6).map((url) => (
                 <button key={url} type="button" onClick={() => setLightboxUrl(url)} className="shrink-0 cursor-zoom-in">
-                  <img src={url} alt="" className="h-20 w-20 rounded-lg object-cover border border-[var(--color-border-subtle)]" />
+                  <img src={url} alt="" loading="lazy" decoding="async" className="h-20 w-20 rounded-lg object-cover border border-[var(--color-border-subtle)]" />
                 </button>
               ))}
             </div>

@@ -1289,13 +1289,6 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
             </form>
           )}
 
-          {candidates.length > 0 && (
-            <div aria-hidden="true" className="pointer-events-none fixed left-0 top-0 h-px w-px overflow-hidden opacity-0">
-              {candidates.flatMap((candidate) => candidate.photoUrls || []).map((url, index) => (
-                <img key={`${url}-${index}`} src={url} alt="" loading="eager" decoding="async" />
-              ))}
-            </div>
-          )}
 
           {status === "confirm" && candidates.length > 0 && (
             <motion.div
@@ -1367,8 +1360,8 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                               src={url}
                               alt={cand.name}
                               className="h-full w-full object-cover"
-                              loading="eager"
-                              decoding="sync"
+                              loading="lazy"
+                              decoding="async"
                             />
                           </button>
                         ))}
