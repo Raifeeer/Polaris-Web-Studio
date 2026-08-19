@@ -32,6 +32,7 @@ const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const About = lazy(() => import("./pages/About"));
 const Contacto = lazy(() => import("./pages/Contacto"));
 const LocalLift = lazy(() => import("./pages/LocalLift"));
+const PolarisFlow = lazy(() => import("./pages/PolarisFlow"));
 const LocalLiftPanel = lazy(() => import("./pages/LocalLiftPanel"));
 const LocalLiftPay = lazy(() => import("./pages/LocalLiftPay"));
 const LocalLiftConnect = lazy(() => import("./pages/LocalLiftConnect"));
@@ -175,6 +176,7 @@ function AnimatedRoutes() {
             <Route path="/nosotros" element={<About />} />
             <Route path="/contacto" element={<Contacto />} />
             <Route path="/local-lift" element={<LocalLift />} />
+            <Route path="/flow" element={<PolarisFlow />} />
             <Route path="/local-lift/panel" element={<LocalLiftPanel />} />
             <Route path="/local-lift/pagar/:leadId" element={<LocalLiftPay />} />
             <Route path="/local-lift/conectar/:leadId" element={<LocalLiftConnect />} />
