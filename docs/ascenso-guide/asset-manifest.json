@@ -1,0 +1,208 @@
+{
+  "schemaVersion": 1,
+  "currentLanguage": "es",
+  "futureLanguages": [
+    "en"
+  ],
+  "note": "Reference originals and user-approved annotated versions. These are visual references, not production UI screenshots owned by Polaris.",
+  "items": [
+    {
+      "id": "01",
+      "slug": "editar-perfil",
+      "title": "Editar perfil",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/01-editar-perfil.jpg",
+      "annotated": "es/reference-annotated/01-editar-perfil.webp",
+      "normalizedAsset": "es/annotated/01-editar-perfil.png",
+      "futureEnglishAsset": "en/annotated/01-editar-perfil.png"
+    },
+    {
+      "id": "02",
+      "slug": "editar-servicios",
+      "title": "Editar servicios",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/02-editar-servicios.webp",
+      "annotated": "es/reference-annotated/02-editar-servicios.webp",
+      "normalizedAsset": "es/annotated/02-editar-servicios.png",
+      "futureEnglishAsset": "en/annotated/02-editar-servicios.png"
+    },
+    {
+      "id": "03",
+      "slug": "detalle-servicio",
+      "title": "Detalle del servicio",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/03-detalle-servicio.webp",
+      "annotated": "es/reference-annotated/03-detalle-servicio.webp",
+      "normalizedAsset": "es/annotated/03-detalle-servicio.png",
+      "futureEnglishAsset": "en/annotated/03-detalle-servicio.png"
+    },
+    {
+      "id": "04",
+      "slug": "horarios",
+      "title": "Horarios y horarios especiales",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/04-horarios.png",
+      "annotated": "es/reference-annotated/04-horarios.webp",
+      "normalizedAsset": "es/annotated/04-horarios.png",
+      "futureEnglishAsset": "en/annotated/04-horarios.png"
+    },
+    {
+      "id": "05",
+      "slug": "publicaciones",
+      "title": "Crear publicación",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/05-publicaciones.png",
+      "annotated": "es/reference-annotated/05-publicaciones.webp",
+      "normalizedAsset": "es/annotated/05-publicaciones.png",
+      "futureEnglishAsset": "en/annotated/05-publicaciones.png"
+    },
+    {
+      "id": "06",
+      "slug": "fotos",
+      "title": "Subir fotos",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/06-fotos.webp",
+      "annotated": "es/reference-annotated/06-fotos.webp",
+      "normalizedAsset": "es/annotated/06-fotos.png",
+      "futureEnglishAsset": "en/annotated/06-fotos.png"
+    },
+    {
+      "id": "07",
+      "slug": "resenas",
+      "title": "Responder reseñas",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/07-resenas.jpg",
+      "annotated": "es/reference-annotated/07-resenas.webp",
+      "normalizedAsset": "es/annotated/07-resenas.png",
+      "futureEnglishAsset": "en/annotated/07-resenas.png"
+    },
+    {
+      "id": "08",
+      "slug": "vista-publica",
+      "title": "Portada, logo e información pública",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/08-vista-publica.png",
+      "annotated": "es/reference-annotated/08-vista-publica.webp",
+      "normalizedAsset": "es/annotated/08-vista-publica.png",
+      "futureEnglishAsset": "en/annotated/08-vista-publica.png"
+    },
+    {
+      "id": "09",
+      "slug": "estado-pendiente",
+      "title": "Estado pendiente de revisión",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/09-estado-pendiente.png",
+      "annotated": "es/reference-annotated/09-estado-pendiente.webp",
+      "normalizedAsset": "es/annotated/09-estado-pendiente.png",
+      "futureEnglishAsset": "en/annotated/09-estado-pendiente.png"
+    },
+    {
+      "id": "10",
+      "slug": "lista-publicaciones",
+      "title": "Lista y gestión de publicaciones",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/10-lista-publicaciones.png",
+      "annotated": "es/reference-annotated/10-lista-publicaciones.webp",
+      "normalizedAsset": "es/annotated/10-lista-publicaciones.png",
+      "futureEnglishAsset": "en/annotated/10-lista-publicaciones.png"
+    },
+    {
+      "id": "11",
+      "slug": "atributos",
+      "title": "Atributos del negocio",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/11-atributos.png",
+      "annotated": "es/reference-annotated/11-atributos.webp",
+      "normalizedAsset": "es/annotated/11-atributos.png",
+      "futureEnglishAsset": "en/annotated/11-atributos.png"
+    },
+    {
+      "id": "12",
+      "slug": "contacto",
+      "title": "Contacto y teléfonos",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/12-contacto.jpg",
+      "annotated": "es/reference-annotated/12-contacto.webp",
+      "normalizedAsset": "es/annotated/12-contacto.png",
+      "futureEnglishAsset": "en/annotated/12-contacto.png"
+    },
+    {
+      "id": "13",
+      "slug": "productos",
+      "title": "Añadir productos",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/13-productos.png",
+      "annotated": "es/reference-annotated/13-productos.webp",
+      "normalizedAsset": "es/annotated/13-productos.png",
+      "futureEnglishAsset": "en/annotated/13-productos.png"
+    },
+    {
+      "id": "14",
+      "slug": "reservas",
+      "title": "Enlaces de reserva",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/14-reservas.png",
+      "annotated": "es/reference-annotated/14-reservas.webp",
+      "normalizedAsset": "es/annotated/14-reservas.png",
+      "futureEnglishAsset": "en/annotated/14-reservas.png"
+    },
+    {
+      "id": "15",
+      "slug": "rendimiento",
+      "title": "Rendimiento y estadísticas",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/15-rendimiento.webp",
+      "annotated": "es/reference-annotated/15-rendimiento.png",
+      "normalizedAsset": "es/annotated/15-rendimiento.png",
+      "futureEnglishAsset": "en/annotated/15-rendimiento.png"
+    },
+    {
+      "id": "16",
+      "slug": "mensajeria",
+      "title": "Mensajería y WhatsApp/SMS",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/16-mensajeria.jpg",
+      "annotated": "es/reference-annotated/16-mensajeria.png",
+      "normalizedAsset": "es/annotated/16-mensajeria.png",
+      "futureEnglishAsset": "en/annotated/16-mensajeria.png"
+    },
+    {
+      "id": "17",
+      "slug": "ubicacion",
+      "title": "Ubicación y dirección",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/17-ubicacion.png",
+      "annotated": "es/reference-annotated/17-ubicacion.png",
+      "normalizedAsset": "es/annotated/17-ubicacion.png",
+      "futureEnglishAsset": "en/annotated/17-ubicacion.png"
+    },
+    {
+      "id": "18",
+      "slug": "panel-perfil",
+      "title": "Panel de edición del perfil",
+      "language": "es",
+      "status": "approved_reference",
+      "original": "es/reference-original/18-panel-perfil.jpeg",
+      "annotated": "es/reference-annotated/18-panel-perfil.png",
+      "normalizedAsset": "es/annotated/18-panel-perfil.png",
+      "futureEnglishAsset": "en/annotated/18-panel-perfil.png"
+    }
+  ]
+}

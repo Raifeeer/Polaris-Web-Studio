@@ -1081,6 +1081,7 @@ export default function ClientDashboard() {
   // que decirle al cliente que ya se lo enviamos.
   const localLiftPackageDelivered = isLocalLiftProject && clientProject?.phases?.some((ph: any) => ph.name === "Entrega" && ph.status === "completed");
   const [packageDownloading, setPackageDownloading] = useState(false);
+  const [guideDownloading, setGuideDownloading] = useState(false);
   // Autoagendamiento de la sesión de bienvenida 1:1 -- solo aplica a
   // Ascenso (implementación asistida), y solo hasta que ya exista una
   // reunión real registrada para este proyecto.
@@ -3829,10 +3830,12 @@ export default function ClientDashboard() {
                               <p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-2">Entrega</p>
                               <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                                 {localLiftPackageDelivered
-                                  ? "Te enviamos el paquete completo por correo. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo."
-                                  : "Estamos preparando tu paquete. Te va a llegar por correo apenas esté listo."}
+                                  ? ((clientProject as any).localLiftTier === "ascenso"
+                                    ? (language === "en" ? "We sent your content package and separate visual guide by email. If you have questions, message us on WhatsApp and we will review them with you." : "Te enviamos por correo tu paquete de contenido y la guía visual independiente. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo.")
+                                    : (language === "en" ? "We sent your complete package by email. If you have questions, message us on WhatsApp and we will review them with you." : "Te enviamos el paquete completo por correo. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo."))
+                                  : (language === "en" ? "We are preparing your package. It will arrive by email as soon as it is ready." : "Estamos preparando tu paquete. Te va a llegar por correo apenas esté listo.")}
                               </p>
-                              <div className="mt-3 flex items-center gap-2">
+                              <div className="mt-3 flex flex-wrap items-center gap-2">
                                 {localLiftPackageDelivered && (
                                   <button
                                     type="button"
@@ -3862,6 +3865,33 @@ export default function ClientDashboard() {
                                     {packageDownloading
                                       ? <><Loader2 size={13} className="animate-spin" /> Descargando…</>
                                       : <><Download size={13} /> Descargar informe</>}
+                                  </button>
+                                )}
+                                {localLiftPackageDelivered && (clientProject as any).localLiftTier === "ascenso" && (clientProject as any).localLiftGuideAvailable && (
+                                  <button
+                                    type="button"
+                                    disabled={guideDownloading}
+                                    onClick={async () => {
+                                      setGuideDownloading(true);
+                                      try {
+                                        const res = await fetch(`/api/portal/local-lift/download-guide/${clientProject.id}`, { headers: { Authorization: `Bearer ${token}` } });
+                                        if (!res.ok) throw new Error("guide_download_failed");
+                                        const blob = await res.blob();
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement("a");
+                                        a.href = url;
+                                        a.download = `Guia-Ascenso-${clientProject.name}.pdf`;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                      } catch {
+                                        setErrorMsg(language === "en" ? "We couldn't download the Ascenso guide right now." : "No pudimos descargar la guía Ascenso en este momento.");
+                                      } finally {
+                                        setGuideDownloading(false);
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/30 px-4 py-2 text-[11px] font-bold text-indigo-300 hover:border-indigo-400/60 transition-colors disabled:opacity-60"
+                                  >
+                                    {guideDownloading ? <><Loader2 size={13} className="animate-spin" /> Descargando…</>                                       : <><Download size={13} /> {language === "en" ? "Download visual guide" : "Descargar guía visual"}</>}
                                   </button>
                                 )}
                                 <a

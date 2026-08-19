@@ -4,6 +4,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { findPlace, findPlaceReviews, generateFast, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 // Ascenso incluye análisis profundo de reseñas; necesita margen para el
@@ -18,7 +19,26 @@ const firebaseApp = getApps().length
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
       }),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.GCLOUD_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`,
     });
+
+const GUIDE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || process.env.GCLOUD_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`;
+
+async function saveGuidePdfToStorage(leadId: string, buffer: Buffer): Promise<string> {
+  const objectPath = `local-lift-guides/${leadId.trim()}.pdf`;
+  const file = getStorage(firebaseApp).bucket(GUIDE_STORAGE_BUCKET).file(objectPath);
+  await file.save(buffer, {
+    resumable: false,
+    contentType: "application/pdf",
+    metadata: { cacheControl: "private, max-age=0, no-store" },
+  });
+  return objectPath;
+}
+
+async function readGuidePdfFromStorage(objectPath: string): Promise<Buffer> {
+  const [buffer] = await getStorage(firebaseApp).bucket(GUIDE_STORAGE_BUCKET).file(objectPath).download();
+  return buffer;
+}
 
 // Único email admin real del portal (mismo patrón ya usado en Chroma
 // Tech Store/VELVET Admin.tsx para gating por email exacto).
@@ -102,6 +122,7 @@ async function fetchPackagePdf(params: {
   lang: "es" | "en";
   pkg: LocalLiftPackage;
   place?: PlaceData | null;
+  documentType?: "package" | "guide";
 }): Promise<Buffer | null> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return null;
@@ -115,6 +136,7 @@ async function fetchPackagePdf(params: {
       date: new Date().toLocaleDateString(params.lang === "en" ? "en-US" : "es-DO", { year: "numeric", month: "long", day: "numeric" }),
       package: params.pkg,
       place: params.place || null,
+      documentType: params.documentType || "package",
     }),
   });
   if (!resp.ok) throw new Error(`local-lift-package-pdf ${resp.status}`);
@@ -611,21 +633,21 @@ function renderPackageEmailBody(
     ? {
         eyebrow: "YOUR PACKAGE IS READY",
         title: "Your Local Lift package is ready",
-        intro: "Your complete PDF is attached with the content prepared for your business. Open it when you have a moment and start applying the changes in the order that makes the most sense for you.",
+        intro: tier === "ascenso" ? "We attached two PDFs: your content package and a separate visual implementation guide with annotated references. Open the package first, then use the guide while applying each change." : "Your complete PDF is attached with the content prepared for your business. Open it when you have a moment and start applying the changes in the order that makes the most sense for you.",
         cardTitle: "Inside your package",
         items: ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", "A clear set of next steps"],
-        ctaTitle: "Your implementation guide is ready",
-        ctaBody: "Use the client portal to follow the steps, review the material and request changes if needed. The guide shows you what to do and where to do it.",
+        ctaTitle: tier === "ascenso" ? "Your visual Ascenso guide is attached" : "Your implementation guide is ready",
+        ctaBody: tier === "ascenso" ? "Use the separate guide while applying the content. The client portal also keeps the package and your review rounds together." : "Use the client portal to follow the steps, review the material and request changes if needed. The guide shows you what to do and where to do it.",
         signature: "The Polaris Local Lift team",
       }
     : {
         eyebrow: "TU PAQUETE ESTÁ LISTO",
         title: "Tu paquete Local Lift está listo",
-        intro: "Adjuntamos tu PDF completo con el contenido preparado para tu negocio. Ábrelo cuando tengas un momento y empieza a aplicar los cambios en el orden que más sentido tenga para ti.",
+        intro: tier === "ascenso" ? "Adjuntamos dos PDFs: tu paquete de contenido y una guía visual independiente con referencias anotadas. Abre primero el paquete y usa la guía mientras aplicas cada cambio." : "Adjuntamos tu PDF completo con el contenido preparado para tu negocio. Ábrelo cuando tengas un momento y empieza a aplicar los cambios en el orden que más sentido tenga para ti.",
         cardTitle: "Qué encontrarás dentro",
         items: ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Mensajes de seguimiento para WhatsApp", "Siguientes pasos claros para avanzar"],
-        ctaTitle: "Tu guía de implementación está lista",
-        ctaBody: "Entra al portal para seguir el paso a paso, revisar el material y solicitar cambios si los necesitas. La guía te muestra qué hacer y dónde hacerlo.",
+        ctaTitle: tier === "ascenso" ? "Tu guía visual Ascenso está adjunta" : "Tu guía de implementación está lista",
+        ctaBody: tier === "ascenso" ? "Usa la guía independiente mientras aplicas el contenido. En el portal también tendrás reunidos el paquete y tus rondas de revisión." : "Entra al portal para seguir el paso a paso, revisar el material y solicitar cambios si los necesitas. La guía te muestra qué hacer y dónde hacerlo.",
         signature: "El equipo de Polaris Local Lift",
       };
 
@@ -645,7 +667,7 @@ function renderPackageEmailBody(
   return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet"><title>${content.title}</title><style>body{margin:0;}a{text-decoration:none;color:#4f46e5;}.email-card{width:100% !important;max-width:600px !important;box-sizing:border-box !important;}.email-pad{padding-left:24px !important;padding-right:24px !important;}.email-item-card{box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;}</style></head><body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${content.title} — ${safeBusinessName}</div><div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;"><table class="email-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><tr><td class="email-pad" style="padding:40px 40px 0;text-align:center;">${localLiftLogoHeader}</td></tr><tr><td class="email-pad" style="padding:8px 40px 8px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#0284c7;margin-bottom:14px;">${content.eyebrow}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.3;color:#0f172a;">${content.title}</div></td></tr><tr><td class="email-pad" style="padding:16px 40px 0;text-align:center;"><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${greeting}<br>${content.intro}</p></td></tr><tr><td class="email-pad" style="padding:24px 40px 0;"><div class="email-item-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;color:#0f172a;margin-bottom:16px;">${content.cardTitle}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;line-height:1.4;color:#0f172a;margin-bottom:18px;">${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table></div></td></tr>${connectBlock}<tr><td class="email-pad" style="padding:40px 40px 0;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px auto;"><tr><td style="padding:0 10px;"><a href="https://www.instagram.com/polariswebstudio/" target="_blank" rel="noopener noreferrer"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-instagram.png" width="22" height="22" alt="Instagram" style="width:22px;height:22px;display:block;"></a></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-facebook.png" width="22" height="22" alt="Facebook" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-x.png" width="22" height="22" alt="X" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-linkedin.png" width="22" height="22" alt="LinkedIn" style="width:22px;height:22px;display:block;"></td></tr></table></td></tr><tr><td class="email-pad" style="padding:0 40px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:24px 40px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;"><tr><td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Sitio web</a></td><td width="34%" style="text-align:center;white-space:nowrap;"><a href="https://wa.me/18299200544" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">WhatsApp</a></td><td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Contacto</a></td></tr></table><div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Privacidad</a><span style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">&nbsp;&middot;&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Términos y condiciones</a></div><div style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Web Studio · República Dominicana · <a href="mailto:hola@polarisweb.studio" style="color:#64748b;text-decoration:underline;">hola@polarisweb.studio</a><br>Recibiste este correo porque adquiriste un paquete de contenido de Local Lift.</div></td></tr></table></div></body></html>`;
 }
 
-async function syncPortalPackageSent(leadId: string): Promise<{ synced: boolean; matched: boolean; error?: string }> {
+async function syncPortalPackageSent(leadId: string, guideAvailable = false): Promise<{ synced: boolean; matched: boolean; error?: string }> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return { synced: false, matched: false, error: "CRON_SECRET no configurado." };
   const controller = new AbortController();
@@ -655,7 +677,7 @@ async function syncPortalPackageSent(leadId: string): Promise<{ synced: boolean;
     const response = await fetch(`${portalUrl}/api/portal/local-lift/package-sent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-cron-secret": cronSecret },
-      body: JSON.stringify({ leadId: leadId.trim() }),
+      body: JSON.stringify({ leadId: leadId.trim(), guideAvailable: !!guideAvailable }),
       signal: controller.signal,
     });
     const data = await response.json().catch(() => ({}));
@@ -682,7 +704,9 @@ function renderPackageEmailText(businessName: string, contactName: string | null
     isEnglish ? "Your Local Lift package is ready" : "Tu paquete Local Lift está listo",
     "",
     greeting,
-    isEnglish ? `Your complete PDF for ${safeBusinessName} is attached with the content prepared for your business.` : `Tu PDF completo para ${safeBusinessName} está adjunto con el contenido preparado para tu negocio.`,
+    tier === "ascenso"
+      ? (isEnglish ? `Two PDFs are attached for ${safeBusinessName}: your content package and a separate visual implementation guide.` : `Adjuntamos dos PDFs para ${safeBusinessName}: tu paquete de contenido y una guía visual de implementación independiente.`)
+      : (isEnglish ? `Your complete PDF for ${safeBusinessName} is attached with the content prepared for your business.` : `Tu PDF completo para ${safeBusinessName} está adjunto con el contenido preparado para tu negocio.`),
     "",
     isEnglish ? "Inside your package:" : "Qué encontrarás dentro:",
     ...items.map((item) => `- ${item}`),
@@ -756,7 +780,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
   }
 
-  const { action, businessName, city, lang, email, contactName, tier, leadId, place: givenPlace, package: givenPackage } = req.body || {};
+  const { action, businessName, city, lang, email, contactName, tier, leadId, place: givenPlace, package: givenPackage, documentType } = req.body || {};
   const language: "es" | "en" = lang === "en" ? "en" : "es";
   const requestedTier = normalizeTier(tier);
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
@@ -790,6 +814,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           gbpDemo: v.gbp?.demo === true,
           reviews: Array.isArray(v.reviews) ? v.reviews : [],
           package: v.package || null,
+          guidePdfAvailable: !!v.guidePdfStoragePath || !!v.guidePdfBase64,
           createdAt: v.createdAt?.toDate?.() || null,
           sentAt: v.sentAt?.toDate?.() || null,
           portalSyncStatus: v.portalSyncStatus || null,
@@ -853,7 +878,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const lead = doc.data()!;
       if (!lead.paid) return res.status(400).json({ error: "El lead todavía no está pagado." });
       if (!lead.pdfBase64) return res.status(400).json({ error: "Este lead todavía no tiene un PDF enviado." });
-      const sync = await syncPortalPackageSent(leadId.trim());
+      const sync = await syncPortalPackageSent(leadId.trim(), !!lead.guidePdfStoragePath);
       const attempts = Math.max(0, Number(lead.portalSyncAttempts || 0)) + 1;
       await docRef.update({
         portalSyncStatus: sync.synced ? "synced" : sync.matched ? "failed" : "unmatched",
@@ -907,6 +932,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           : undefined;
       const tierLabelForPdf = TIER_PRICE[finalTier2]?.label || TIER_PRICE["impulso"].label;
       let pdfBuffer: Buffer | null = null;
+      let guidePdfBuffer: Buffer | null = null;
+      let guideStoragePath: string | null = null;
       try {
         pdfBuffer = await fetchPackagePdf({
           businessName: givenPlace.name,
@@ -914,9 +941,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lang: language,
           pkg: givenPackage,
           place: givenPlace,
+          documentType: "package",
         });
       } catch (pdfErr) {
-        console.error("[local-lift-package] Error generando PDF, se envía sin adjunto:", pdfErr);
+        console.error("[local-lift-package] Error generando PDF principal, se envía sin ese adjunto:", pdfErr);
+      }
+      if (finalTier2 === "ascenso") {
+        try {
+          guidePdfBuffer = await fetchPackagePdf({
+            businessName: givenPlace.name,
+            tierLabel: tierLabelForPdf,
+            lang: language,
+            pkg: givenPackage,
+            place: givenPlace,
+            documentType: "guide",
+          });
+        } catch (guideErr) {
+          console.error("[local-lift-package] Error generando guía visual Ascenso:", guideErr);
+        }
+      }
+      if (guidePdfBuffer && leadId) {
+        try {
+          guideStoragePath = await saveGuidePdfToStorage(leadId, guidePdfBuffer);
+        } catch (storageErr) {
+          console.error("[local-lift-package] No se pudo guardar la guía en Storage:", storageErr);
+        }
       }
       await transporter.sendMail({
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
@@ -925,9 +974,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         text: renderPackageEmailText(givenPlace.name, contactName || null, language, finalTier2, portalUrl),
         html: renderPackageEmailBody(givenPlace.name, contactName || null, language, finalTier2, givenPackage, portalUrl),
 
-        attachments: pdfBuffer
-          ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }]
-          : [],
+        attachments: [
+          ...(pdfBuffer ? [{ filename: `Local-Lift-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: pdfBuffer, contentType: "application/pdf" }] : []),
+          ...(guidePdfBuffer ? [{ filename: `Guia-Ascenso-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: guidePdfBuffer, contentType: "application/pdf" }] : []),
+        ],
       });
       let portalSyncResult: { synced: boolean; matched: boolean; error?: string } = { synced: false, matched: false, error: pdfBuffer ? "No se intentó sincronizar el portal." : "No se pudo generar el PDF." };
       if (docRef) {
@@ -940,14 +990,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           portalSyncAttempts: previousPortalSyncAttempts,
           portalSyncLastError: pdfBuffer ? "" : "No se pudo generar el PDF; el portal permanece en preparación.",
           ...(pdfBuffer ? { pdfBase64: pdfBuffer.toString("base64") } : {}),
+          ...(guideStoragePath ? { guidePdfStoragePath: guideStoragePath, guidePdfAvailable: true } : {}),
         });
         if (pdfBuffer) {
-          const firstSync = await syncPortalPackageSent(leadId!.trim());
+          const firstSync = await syncPortalPackageSent(leadId!.trim(), !!guideStoragePath);
           portalSyncResult = firstSync;
           let syncAttempts = 1;
           if (!firstSync.synced) {
             await new Promise((resolve) => setTimeout(resolve, 350));
-            portalSyncResult = await syncPortalPackageSent(leadId!.trim());
+            portalSyncResult = await syncPortalPackageSent(leadId!.trim(), !!guideStoragePath);
             syncAttempts = 2;
           }
           await docRef.update({
@@ -961,7 +1012,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         }
       }
-      return res.json({ success: true, sent: true, pdfStored: !!pdfBuffer, portalSynced: portalSyncResult.synced, portalSyncError: portalSyncResult.synced ? undefined : portalSyncResult.error });
+      return res.json({ success: true, sent: true, pdfStored: !!pdfBuffer, guidePdfStored: !!guideStoragePath, portalSynced: portalSyncResult.synced, portalSyncError: portalSyncResult.synced ? undefined : portalSyncResult.error });
     }
 
     if (action === "preview_pdf") {
@@ -981,6 +1032,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           lang: language,
           pkg: givenPackage,
           place: givenPlace,
+          documentType: documentType === "guide" ? "guide" : "package",
         });
       } catch (pdfErr) {
         console.error("[local-lift-package] Error generando vista previa del PDF:", pdfErr);
@@ -1137,10 +1189,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const doc = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
       if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
       const lead = doc.data()!;
-      if (!lead.pdfBase64) return res.status(404).json({ error: "Este paquete todavía no tiene un PDF generado." });
+      const wantsGuide = documentType === "guide";
+      const guideStoragePath = wantsGuide ? lead.guidePdfStoragePath : null;
+      const requestedPdf = wantsGuide ? null : lead.pdfBase64;
+      if (wantsGuide && !guideStoragePath) return res.status(404).json({ error: "La guía Ascenso todavía no está lista para descargar." });
+      if (!wantsGuide && !requestedPdf) return res.status(404).json({ error: "Este paquete todavía no tiene un PDF generado." });
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="Local-Lift-${(lead.businessName || "paquete").replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
-      return res.status(200).send(Buffer.from(lead.pdfBase64, "base64"));
+      res.setHeader("Content-Disposition", `attachment; filename="${wantsGuide ? "Guia-Ascenso" : "Local-Lift"}-${(lead.businessName || "paquete").replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
+      const pdf = wantsGuide ? await readGuidePdfFromStorage(guideStoragePath) : Buffer.from(requestedPdf, "base64");
+      return res.status(200).send(pdf);
     }
 
     // action === "generate" (default)

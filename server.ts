@@ -20,6 +20,7 @@ import { transitionLocalLiftAfterPackageSent } from "./local-lift-state.js";
 import { canStartNewRound, clientApproveRevision, clientRequestChangesOnRevision, createAscensoWorkflow, ensureAscensoWorkflow, markAdminRevisionReady, markImplementationCompleted, startAdditionalRound, startClientRound } from "./ascenso-workflow.js";
 import { cert as firebaseCert, getApps as getFirebaseApps, initializeApp as initFirebaseApp } from "firebase-admin/app";
 import { getFirestore as getFirebaseFirestore } from "firebase-admin/firestore";
+import { getStorage as getFirebaseStorage } from "firebase-admin/storage";
 import { getOfferConfig } from "./remote-config.js";
 import generateAddonDescriptionsHandler from "./api/generate-addon-descriptions.js";
 import suggestDomainsHandler from "./api/suggest-domains.js";
@@ -53,11 +54,22 @@ async function sendAscensoWorkflowEmail(params: { to: string; subject: string; t
   }
 }
 
-function getLocalLiftFirestore() {
-  const app = getFirebaseApps().length
+function getLocalLiftFirebaseApp() {
+  return getFirebaseApps().length
     ? getFirebaseApps()[0]
-    : initFirebaseApp({ credential: firebaseCert({ projectId: process.env.FIREBASE_PROJECT_ID, clientEmail: process.env.FIREBASE_CLIENT_EMAIL, privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n") }) });
-  return getFirebaseFirestore(app, "polaris-web-studio");
+    : initFirebaseApp({
+        credential: firebaseCert({ projectId: process.env.FIREBASE_PROJECT_ID, clientEmail: process.env.FIREBASE_CLIENT_EMAIL, privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n") }),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.GCLOUD_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`,
+      });
+}
+
+function getLocalLiftFirestore() {
+  return getFirebaseFirestore(getLocalLiftFirebaseApp(), "polaris-web-studio");
+}
+
+function getLocalLiftStorage() {
+  const bucketName = process.env.FIREBASE_STORAGE_BUCKET || process.env.GCLOUD_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`;
+  return getFirebaseStorage(getLocalLiftFirebaseApp()).bucket(bucketName);
 }
 
 // Hash scrypt de un valor aleatorio, usado para igualar el coste de verificación
@@ -1685,7 +1697,7 @@ const PORT = 3000;
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
     }
-    const { leadId } = req.body || {};
+    const { leadId, guideAvailable } = req.body || {};
     if (typeof leadId !== "string" || !leadId.trim()) {
       return res.status(400).json({ error: "missing_leadId" });
     }
@@ -1713,6 +1725,7 @@ const PORT = 3000;
       localLiftPortalSyncAttempts: attempts,
       localLiftPortalSyncLastAttemptAt: now,
       localLiftPortalSyncLastError: "",
+      ...(guideAvailable === true ? { localLiftGuideAvailable: true } : {}),
     });
     await dbInstance.flush();
     return res.json({ success: true, matched: true, synced: true, alreadySynced: project.localLiftPortalSyncStatus === "synced", projectId: project.id, currentPhase: transition.currentPhase, progress: transition.progress });
@@ -1752,6 +1765,33 @@ const PORT = 3000;
     } catch (err) {
       console.error("[local-lift/download-package] Error:", err);
       return res.status(500).json({ error: "No pudimos descargar el paquete." });
+    }
+  });
+
+  // Descarga separada de la guía visual Ascenso. Mantiene el mismo control de
+  // acceso que el PDF principal, pero lee el archivo privado desde Storage para
+  // no guardar un documento pesado dentro de Firestore.
+  app.get("/api/portal/local-lift/download-guide/:projectId", authenticateToken, async (req: any, res) => {
+    const project = dbInstance.getProjects().find((p) => p.id === req.params.projectId);
+    if (!project) return res.status(404).json({ error: "Proyecto no encontrado." });
+    if (req.user.role !== "admin" && project.clientUserId !== req.user.id) {
+      return res.status(403).json({ error: "Acceso denegado." });
+    }
+    if (!project.localLiftLeadId || project.localLiftTier !== "ascenso") {
+      return res.status(404).json({ error: "Este proyecto no tiene una guía Ascenso asociada." });
+    }
+    try {
+      const firestore = getLocalLiftFirestore();
+      const doc = await firestore.collection("localLiftDiagnostics").doc(project.localLiftLeadId).get();
+      const guideStoragePath = doc.exists ? doc.data()?.guidePdfStoragePath : null;
+      if (!guideStoragePath) return res.status(404).json({ error: "La guía Ascenso todavía no está lista para descargar." });
+      const [guidePdf] = await getLocalLiftStorage().file(guideStoragePath).download();
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="Guia-Ascenso-${project.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
+      return res.status(200).send(guidePdf);
+    } catch (err) {
+      console.error("[local-lift/download-guide] Error:", err);
+      return res.status(500).json({ error: "No pudimos descargar la guía Ascenso." });
     }
   });
 

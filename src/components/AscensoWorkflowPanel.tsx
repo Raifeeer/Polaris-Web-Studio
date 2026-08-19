@@ -21,14 +21,14 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const GUIDE_ASSET_BY_TITLE: Record<string, string> = {
-  "Descripción del negocio": "description-reference.jpg",
-  "Servicios y llamadas a la acción": "services-reference.png",
-  "Publicaciones y novedades": "posts-reference.jpg",
-  "Fotos del negocio": "photos-reference.jpg",
-  "Lectura de reseñas y buenas prácticas": "review-analysis-reference.png",
-  "Respuestas a reseñas": "review-replies-reference.jpg",
-  "Mensajes de seguimiento": "messages-reference.svg",
-  "Verificación final": "final-check-reference.png",
+  "Descripción del negocio": "es/annotated/01-editar-perfil.png",
+  "Servicios y llamadas a la acción": "es/annotated/02-editar-servicios.png",
+  "Publicaciones y novedades": "es/annotated/05-publicaciones.png",
+  "Fotos del negocio": "es/annotated/06-fotos.png",
+  "Lectura de reseñas y buenas prácticas": "es/annotated/15-rendimiento.png",
+  "Respuestas a reseñas": "es/annotated/07-resenas.png",
+  "Mensajes de seguimiento": "es/annotated/16-mensajeria.png",
+  "Verificación final": "es/annotated/09-estado-pendiente.png",
 };
 
 const requestStatus: Record<string, string> = {
@@ -132,10 +132,10 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
           <article className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/30 p-4 sm:p-5 space-y-4">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/10"><FileText size={17} className="text-[var(--color-primary-base)]" /></div>
-            <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Guía completa de implementación Ascenso</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Consulta todos los pasos al final del paquete</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Aquí encontrarás el detalle completo de cada proceso. Las instrucciones breves de arriba sirven para avanzar en contexto; esta guía queda como referencia.</p></div>
+            <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Guía visual de implementación Ascenso</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Consulta el documento completo por separado</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Aquí encontrarás el detalle completo de cada proceso y sus referencias visuales. Las instrucciones breves de arriba sirven para avanzar en contexto; la guía independiente queda como referencia.</p></div>
           </div>
 
-          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y marca tus dudas para la sesión de acompañamiento. Las rutas se contrastaron con la ayuda oficial de Google en agosto de 2026, pero los nombres y botones pueden variar. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
+          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y marca tus dudas para la sesión de acompañamiento. Los nombres y botones pueden variar según tu cuenta; si algo no aparece, detente y consúltalo con Polaris. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
           <div className="flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-secondary)]"><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{guideSteps.length} secciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.googlePosts?.length || 0} publicaciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.reviewReplies?.length || 0} respuestas</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.services?.length || 0} servicios</span></div>
 
           <div className="space-y-3">

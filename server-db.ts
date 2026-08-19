@@ -159,6 +159,7 @@ export interface DbProject {
   localLiftPortalSyncAttempts?: number;
   localLiftPortalSyncLastAttemptAt?: string;
   localLiftPortalSyncLastError?: string;
+  localLiftGuideAvailable?: boolean;
   ascensoWorkflow?: DbAscensoWorkflow;
   currentPhase: string;
   progress: number;

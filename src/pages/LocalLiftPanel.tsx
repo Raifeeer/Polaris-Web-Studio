@@ -414,7 +414,7 @@ export default function LocalLiftPanel() {
     }
   };
 
-  const handlePreviewPdf = async () => {
+  const handlePreviewPdf = async (documentType: "package" | "guide" = "package") => {
     if (!place || !pkg) return;
     setPreviewStatus("loading");
     setPreviewError("");
@@ -422,7 +422,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: pkg, tier, lang: "es" }),
+        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: pkg, tier, lang: "es", documentType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -843,9 +843,10 @@ export default function LocalLiftPanel() {
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button onClick={handlePreviewPdf} disabled={previewStatus === "loading"} className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 disabled:opacity-50">
-                {previewStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Generando vista previa...</> : <><Eye size={15} />Vista previa PDF</>}
+              <button onClick={() => handlePreviewPdf("package")} disabled={previewStatus === "loading"} className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 disabled:opacity-50">
+                {previewStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Generando vista previa...</> : <><Eye size={15} />Vista previa del paquete</>}
               </button>
+              {tier === "ascenso" && <button onClick={() => handlePreviewPdf("guide")} disabled={previewStatus === "loading"} className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/30 px-4 py-2.5 text-sm font-bold text-indigo-300 hover:border-indigo-400/60 disabled:opacity-50"><Eye size={15} />Vista previa de la guía</button>}
               <button onClick={handleSend} disabled={sendStatus === "loading" || !email.trim()} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">
                 {sendStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando...</> : <><Send size={15} />Enviar paquete completo<ArrowRight size={15} /></>}
               </button>
@@ -864,7 +865,7 @@ export default function LocalLiftPanel() {
             <section className="rounded-xl bg-[var(--color-surface-elevated)] p-5 max-w-xl border border-indigo-500/20">
               <h2 className="text-sm font-black uppercase tracking-widest text-indigo-400 flex items-center gap-1.5"><ShieldCheck size={14} /> Documento detallado de acompañamiento Ascenso</h2>
               <p className="mt-2 text-xs leading-relaxed text-[var(--color-text-secondary)]">El cliente recibe un documento completo para aplicar cada cambio por su cuenta. Incluye dónde hacerlo, qué preparar, instrucciones paso a paso, verificaciones y errores que conviene evitar.</p>
-              <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)]"><span className="rounded-full bg-[var(--color-surface-base)]/70 px-2.5 py-1">{pkg?.implementationGuide?.length || 0} secciones detalladas</span><span className="rounded-full bg-[var(--color-surface-base)]/70 px-2.5 py-1">Vista previa incluida arriba</span></div>
+              <div className="mt-3 flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-tertiary)]"><span className="rounded-full bg-[var(--color-surface-base)]/70 px-2.5 py-1">{pkg?.implementationGuide?.length || 0} secciones detalladas</span><span className="rounded-full bg-[var(--color-surface-base)]/70 px-2.5 py-1">Guía visual independiente</span><span className="rounded-full bg-[var(--color-surface-base)]/70 px-2.5 py-1">18 referencias organizadas</span></div>
               <div className="mt-4 grid gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/50 p-3"><p className="text-[10px] font-black uppercase tracking-wider text-indigo-300">1. Preparar</p><p className="mt-1 text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">Revisa el documento y reúne el material antes de la sesión.</p></div>
                 <div className="rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/50 p-3"><p className="text-[10px] font-black uppercase tracking-wider text-indigo-300">2. Acompañar</p><p className="mt-1 text-[11px] leading-relaxed text-[var(--color-text-tertiary)]">Guía al cliente mientras aplica cada instrucción; Polaris no publica por él.</p></div>
