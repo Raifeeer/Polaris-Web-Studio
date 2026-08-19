@@ -70,14 +70,23 @@ const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvet
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#16C8C1"; // teal, color primario real de Local Lift (palabra "LIFT" del logo)
 const DEEP = "#111936"; // navy de Local Lift
+const PREVIEW_PROBLEM_COUNT = 2;
+const PREVIEW_PLAN_DAY_COUNT = 3;
 
-function renderDiagnosticText(diagnostic: any, lang: "es" | "en"): string {
-  const problemsLabel = lang === "en" ? "Priority issues" : "Problemas prioritarios";
-  const planLabel = lang === "en" ? "7-day action plan" : "Plan de acción de 7 días";
+function renderDiagnosticText(diagnostic: any, lang: "es" | "en", payUrl: string): string {
+  const problemsLabel = lang === "en" ? "Priority issues preview" : "Vista previa de problemas prioritarios";
+  const planLabel = lang === "en" ? "7-day action plan preview" : "Vista previa del plan de acción de 7 días";
   const dayLabel = lang === "en" ? "Day" : "Día";
-  const problemsText = diagnostic.problems.map((p: any, i: number) => `${i + 1}. ${p.title}\n   ${p.why}\n   → ${p.fix}`).join("\n\n");
-  const planText = diagnostic.sevenDayPlan.map((d: any) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
-  return `${diagnostic.businessIntro}\n\n${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}`;
+  const previewProblems = diagnostic.problems.slice(0, PREVIEW_PROBLEM_COUNT);
+  const previewPlan = diagnostic.sevenDayPlan.slice(0, PREVIEW_PLAN_DAY_COUNT);
+  const problemsText = previewProblems.map((p: any, i: number) => `${i + 1}. ${p.title}\n   ${p.why}\n   → ${p.fix}`).join("\n\n");
+  const planText = previewPlan.map((d: any) => `${dayLabel} ${d.day}: ${d.action}`).join("\n");
+  const hiddenProblems = Math.max(0, diagnostic.problems.length - PREVIEW_PROBLEM_COUNT);
+  const hiddenDays = Math.max(0, diagnostic.sevenDayPlan.length - PREVIEW_PLAN_DAY_COUNT);
+  const teaser = lang === "en"
+    ? `\n\n+ ${hiddenProblems} more priority issues and ${hiddenDays} more plan days are available in the full diagnosis. Unlock the complete Local Lift plan here: ${payUrl}`
+    : `\n\n+ ${hiddenProblems} problemas prioritarios y ${hiddenDays} días más del plan están disponibles en el diagnóstico completo. Desbloquea el plan completo de Local Lift aquí: ${payUrl}`;
+  return `${diagnostic.businessIntro}\n\n${diagnostic.summary}\n\n${problemsLabel}:\n\n${problemsText}\n\n${planLabel}:\n\n${planText}${teaser}`;
 }
 
 // Réplica exacta de buildDiagnosticHtml en local-lift-diagnostic.ts --
@@ -88,16 +97,16 @@ function renderDiagnosticText(diagnostic: any, lang: "es" | "en"): string {
 function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, lang: "es" | "en", leadId: string): string {
   const hasName = !!contactName && contactName.trim().length > 0;
   const firstName = hasName ? contactName.trim().split(/\s+/)[0] : "";
-  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}`;
+  const payUrl = `https://polarisweb.studio/local-lift/pagar/${leadId}?tier=impulso`;
   const copy = lang === "en"
     ? {
         preheader: `Your Local Lift diagnosis for ${place.name} is ready.`,
         eyebrow: "Free diagnosis",
         title: hasName ? `Here's your diagnosis, ${firstName}!` : "Here's your diagnosis!",
-        problemsLabel: "Priority issues",
-        planLabel: "7-day action plan",
+        problemsLabel: "Priority issues preview",
+        planLabel: "7-day action plan preview",
         dayLabel: "Day",
-        ctaPrimary: "I want you to implement this",
+        ctaPrimary: "Unlock the full diagnosis",
         ctaSecondaryTop: "Questions?",
         ctaSecondaryBottom: "Reply to this email",
         footerLine1: "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio",
@@ -107,17 +116,17 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
         preheader: `Tu diagnóstico Local Lift de ${place.name} está listo.`,
         eyebrow: "Diagnóstico gratis",
         title: hasName ? `¡Aquí está tu diagnóstico, ${firstName}!` : "¡Aquí está tu diagnóstico!",
-        problemsLabel: "Problemas prioritarios",
-        planLabel: "Plan de acción de 7 días",
+        problemsLabel: "Vista previa de problemas prioritarios",
+        planLabel: "Vista previa del plan de acción de 7 días",
         dayLabel: "Día",
-        ctaPrimary: "Quiero que lo implementen",
+        ctaPrimary: "Desbloquear el diagnóstico completo",
         ctaSecondaryTop: "¿Dudas?",
         ctaSecondaryBottom: "Responde este correo",
         footerLine1: "Polaris Local Lift · República Dominicana · hola@polarisweb.studio",
         footerLine2: "Solicitaste este diagnóstico desde nuestro sitio.",
       };
 
-  const problemRows = diagnostic.problems
+  const problemRows = diagnostic.problems.slice(0, PREVIEW_PROBLEM_COUNT)
     .map(
       (p: any, i: number) => `
       <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 14px 0;">
@@ -137,7 +146,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
     )
     .join("");
 
-  const planRows = diagnostic.sevenDayPlan
+  const planRows = diagnostic.sevenDayPlan.slice(0, PREVIEW_PLAN_DAY_COUNT)
     .map(
       (d: any) => `
       <tr style="border-bottom:1px solid #e2e8f0;">
@@ -195,6 +204,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
     <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
       <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:14px;">${copy.problemsLabel}</div>
       ${problemRows}
+      <div style="margin-top:16px;padding-top:12px;border-top:1px dashed #cbd5e1;font-size:12px;line-height:1.5;color:#64748b;text-align:center;">${lang === "en" ? `+ ${Math.max(0, diagnostic.problems.length - PREVIEW_PROBLEM_COUNT)} more problems found — unlock the full diagnosis` : `+ ${Math.max(0, diagnostic.problems.length - PREVIEW_PROBLEM_COUNT)} problemas más encontrados — desbloquea el diagnóstico completo`}</div>
     </div>
   </div>
 
@@ -202,6 +212,7 @@ function buildDiagnosticHtml(diagnostic: any, place: any, contactName: string, l
     <div style="border:1px solid #e2e8f0;border-radius:10px;padding:24px;">
       <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin-bottom:12px;">${copy.planLabel}</div>
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${planRows}</table>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px dashed #cbd5e1;font-size:12px;line-height:1.5;color:#64748b;text-align:center;">${lang === "en" ? `+ ${Math.max(0, diagnostic.sevenDayPlan.length - PREVIEW_PLAN_DAY_COUNT)} more days — unlock the full plan` : `+ ${Math.max(0, diagnostic.sevenDayPlan.length - PREVIEW_PLAN_DAY_COUNT)} días más — desbloquea el plan completo`}</div>
     </div>
   </div>
 
@@ -262,8 +273,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     for (const doc of snap.docs) {
       const v = doc.data();
       if (!v.email || !v.placeData || v.status === "email_blocked") continue;
-      const lang: "es" | "en" = v.lang === "en" ? "en" : "es";
-      try {
+        const lang: "es" | "en" = v.lang === "en" ? "en" : "es";
+        const payUrl = `https://polarisweb.studio/local-lift/pagar/${doc.id}?tier=impulso`;
+        try {
         if (v.emailSent) continue;
         if (await hasSentDiagnostic(firestore, v.email)) {
           await doc.ref.update({ status: "email_blocked", emailScheduledAt: null });
@@ -285,7 +297,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           from: '"Polaris Local Lift" <hola@polarisweb.studio>',
           to: v.email,
           subject: lang === "en" ? `Your Local Lift diagnosis for ${v.businessName}` : `Tu diagnóstico Local Lift de ${v.businessName}`,
-          text: renderDiagnosticText(diagnostic, lang),
+          text: renderDiagnosticText(diagnostic, lang, payUrl),
           html: buildDiagnosticHtml(diagnostic, v.placeData, v.contactName || "", lang, doc.id),
         });
         await commitEmailDelivery(firestore, doc.ref, v.email, { leadId: doc.id, via: "scheduled" });

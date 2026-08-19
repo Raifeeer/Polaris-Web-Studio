@@ -4,7 +4,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
+import { findPlaceById, findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
 import { claimEmailDelivery, commitEmailDelivery, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
@@ -543,11 +543,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // "5-10 minutos" que mostraba la pantalla era pura ficción: el
     // diagnóstico ya estaba generado y el correo ya había salido en este
     // mismo request, sin importar qué mostrara la UI.
-    const mapsPlace = normalizedMapsUrl ? await findPlaceByMapsUrl(normalizedMapsUrl) : null;
-    const candidates = normalizedMapsUrl
-      ? (mapsPlace ? [mapsPlace] : [])
-      : await findPlaceCandidates(normalizedBusinessName, normalizedCity);
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    if (normalizedConfirmedPlaceId && !apiKey) throw new Error("GOOGLE_PLACES_API_KEY no configurada");
+    const confirmedPlace = normalizedConfirmedPlaceId
+      ? await findPlaceById(normalizedConfirmedPlaceId, apiKey as string)
+      : null;
+    const mapsPlace = !normalizedConfirmedPlaceId && normalizedMapsUrl ? await findPlaceByMapsUrl(normalizedMapsUrl) : null;
+    const candidates = normalizedConfirmedPlaceId
+      ? (confirmedPlace ? [confirmedPlace] : [])
+      : normalizedMapsUrl
+        ? (mapsPlace ? [mapsPlace] : [])
+        : await findPlaceCandidates(normalizedBusinessName, normalizedCity);
     if (!candidates.length) {
+      if (normalizedConfirmedPlaceId) {
+        return res.status(409).json({
+          reason: "candidate_changed",
+          error:
+            language === "en"
+              ? "The selected business is no longer available. Review the options again before continuing."
+              : "La ficha seleccionada ya no está disponible. Revisa las opciones nuevamente antes de continuar.",
+        });
+      }
       return res.status(404).json({
         reason: normalizedMapsUrl ? "maps_not_found" : "not_found",
         error:
@@ -575,7 +591,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (normalizedConfirmedPlaceId && !selectedPlace) {
       return res.status(409).json({
-        reason: normalizedMapsUrl ? "maps_changed" : "candidate_changed",
+        reason: "candidate_changed",
         error:
           language === "en"
             ? "The selected business changed. Review the options again before continuing."

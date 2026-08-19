@@ -226,25 +226,12 @@ export async function findPlaceCandidatePage(
 }
 
 export async function findPlaceCandidates(businessName: string, city: string): Promise<PlaceData[]> {
-  const allCandidates: PlaceData[] = [];
-  const seenIds = new Set<string>();
-  let pageToken: string | undefined;
-
-  // Text Search (New) permite hasta tres páginas de resultados (máximo 60).
-  // Recuperamos todas antes de responder para que la UI pueda precargar sus fotos.
-  for (let page = 0; page < 3; page += 1) {
-    const result = await findPlaceCandidatePage(businessName, city, pageToken);
-    for (const candidate of result.candidates) {
-      if (!seenIds.has(candidate.id)) {
-        seenIds.add(candidate.id);
-        allCandidates.push(candidate);
-      }
-    }
-    if (!result.nextPageToken) break;
-    pageToken = result.nextPageToken;
-  }
-
-  return allCandidates;
+  // La primera respuesta solo necesita una página: la UI muestra tres fichas
+  // inicialmente y permite ampliar la lista con los candidatos ya recibidos.
+  // Recuperar hasta 60 fichas antes de que el usuario pida ver más añadía
+  // latencia, referencias de fotos y payload sin aportar valor al primer paso.
+  const firstPage = await findPlaceCandidatePage(businessName, city);
+  return firstPage.candidates;
 }
 
 export async function findPlace(businessName: string, city: string): Promise<PlaceData | null> {
@@ -274,7 +261,7 @@ async function resolveGoogleMapsRedirect(rawUrl: string): Promise<string> {
   return currentUrl;
 }
 
-async function findPlaceById(placeId: string, apiKey: string): Promise<PlaceData | null> {
+export async function findPlaceById(placeId: string, apiKey: string): Promise<PlaceData | null> {
   const res = await fetch(`https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=es`, {
     headers: { "X-Goog-Api-Key": apiKey, "X-Goog-FieldMask": PLACE_DETAILS_FIELD_MASK },
     signal: AbortSignal.timeout(8000),
