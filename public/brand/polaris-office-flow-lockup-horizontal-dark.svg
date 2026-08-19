@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 128" role="img" aria-labelledby="title desc">
+  <title id="title">Polaris Office Flow</title>
+  <desc id="desc">Lockup horizontal de Polaris Office Flow.</desc>
+  <image href="/brand/polaris-flow-mark.svg" x="0" y="0" width="128" height="128"/>
+  <text x="158" y="68" fill="#f8fafc" font-family="Cabinet Grotesk, Satoshi, Arial, sans-serif" font-size="32" font-weight="800" letter-spacing="2.5">POLARIS</text>
+  <text x="380" y="68" fill="#2dd4bf" font-family="Satoshi, Arial, sans-serif" font-size="32" font-weight="700" letter-spacing="1.8">OFFICE FLOW</text>
+  <path d="M160 92h540" stroke="#2dd4bf" stroke-width="2" opacity=".35"/>
+  <text x="160" y="112" fill="#94a3b8" font-family="Satoshi, Arial, sans-serif" font-size="12" letter-spacing="3">QUOTES · DOCUMENTS · FOLLOW-UP</text>
+</svg>
