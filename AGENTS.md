@@ -1747,3 +1747,31 @@ Con ese access token, esta sesión puede pegarle directo a cualquier API REST de
 **VMs descartables para pruebas riesgosas:** cuando una prueba puede consumir memoria/CPU real (headless browser, scraping, compilaciones) y no conviene arriesgar Hermes ni el sandbox de la sesión, el patrón real (usado por primera vez el 17 de agosto, ver la investigación de scraping de reseñas de Google Maps) es crear una VM temporal vía la API de Compute Engine, correr la prueba en su `startup-script`, leer el resultado desde el log serial (`GET .../instances/<nombre>/serialPort?port=1`, el mismo mecanismo usado para diagnosticar Hermes en la Fase 62), y borrar la VM apenas termina. No hace falta SSH: todo pasa por metadata + log serial, ambos accesibles vía HTTPS desde el sandbox de la sesión sin el bloqueo de puerto 22.
 
 **Scripts de deploy genéricos ya existentes** (Meridian, `scripts/`): `deploy-cloud-function.mjs` + `cloud-function-configs.mjs` para las funciones ya registradas ahí; funciones más nuevas o puntuales (`calcom-booking`, `github-admin-proxy`, `hermes-exec-proxy`) se desplegaron armando el flujo de `generateUploadUrl`/`PATCH` a mano contra la API REST, sin agregarlas a ese script genérico -- válido hacerlo de cualquiera de las dos formas.
+
+
+## Visión futura — IA aplicada y Polaris Agents Lab
+
+> **Estado:** documentado para una sesión futura. No implementar todavía.
+
+Se aprobó conservar una línea de trabajo futura con dos partes:
+
+1. **Dentro de Polaris:**
+   - **Review Intelligence para Ascenso:** análisis de reseñas autorizadas, temas repetidos, fortalezas, problemas, evolución y buenas prácticas personalizadas.
+   - **Asistente interno de Polaris:** consulta privada de procesos, paquetes, documentación, decisiones, correos, políticas y estado de proyectos, siempre citando sus fuentes y reconociendo cuando no haya evidencia.
+   - **Centro de ayuda de Polaris:** búsqueda conversacional para clientes y usuarios del portal sobre servicios, diagnósticos, pagos, estados, revisiones, guías y soporte.
+   - **Meridian Memory 2.0:** queda como opción secundaria; ya existe una memoria semántica y no se debe duplicar sin una necesidad concreta.
+
+2. **Fuera de Polaris:** crear más adelante **Polaris Agents Lab**, un laboratorio experimental de mundos consultables. La propuesta inicial agrupa los experimentos en:
+   - Santo Domingo Conversacional.
+   - ADN de los Negocios Locales.
+   - Radar de Oportunidades.
+   - Oráculo de Diseño.
+   - Detector de Contradicciones.
+   - Universo de Ficción Consultable.
+   - Máquina del Tiempo de una Marca.
+   - Biblioteca Viva.
+   - Simulador de Civilizaciones.
+
+La dirección recomendada es construir primero una plataforma de laboratorio común y después probar tres mundos contrastantes: uno factual y cultural, uno analítico y uno narrativo. Review Intelligence y el Radar de Oportunidades podrían revelar futuras oportunidades para Local Lift, Ascenso u otros productos de Polaris, pero no deben presentarse como investigación definitiva sin evidencia suficiente.
+
+El alcance detallado, la arquitectura conceptual, las fases de experimentación, los criterios de éxito y los límites de seguridad están documentados en [`docs/polaris-agents-lab.md`](docs/polaris-agents-lab.md). Este trabajo queda pausado hasta terminar las prioridades actuales de Polaris.
