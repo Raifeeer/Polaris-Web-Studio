@@ -827,6 +827,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const requestedTier = normalizeTier(tier);
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
   let packageSendLockRef: DocumentReference | null = null;
+  let packageEmailSent = false;
 
   try {
     if (action === "leads") {
@@ -863,6 +864,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           portalSyncStatus: v.portalSyncStatus || null,
           portalSyncAttempts: Number(v.portalSyncAttempts || 0),
           portalSyncLastError: v.portalSyncLastError || "",
+          packageSendInProgress: !!v.packageSendInProgress,
+          packageSendStartedAt: v.packageSendStartedAt?.toDate?.() || null,
+          packageEmailSentAt: v.packageEmailSentAt?.toDate?.() || null,
+          packageDeliveryState: v.packageDeliveryState || null,
           place: v.placeData || null,
         };
       });
@@ -928,6 +933,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         portalSyncAttempts: attempts,
         portalSyncLastAttemptAt: new Date(),
         portalSyncLastError: sync.synced ? "" : (sync.error || "No se pudo sincronizar el portal."),
+        packageDeliveryState: sync.synced ? "delivered_synced" : sync.matched ? "email_sent_portal_pending" : "email_sent_portal_unmatched",
       });
       if (!sync.synced) {
         return res.status(502).json({ success: false, synced: false, error: sync.error || "No se pudo sincronizar el portal." });
@@ -1059,6 +1065,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           ...(guidePdfBuffer ? [{ filename: `Guia-Ascenso-${givenPlace.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: guidePdfBuffer, contentType: "application/pdf" }] : []),
         ],
       });
+      packageEmailSent = true;
       let portalSyncResult: { synced: boolean; matched: boolean; error?: string } = { synced: false, matched: false, error: pdfBuffer ? "No se intentó sincronizar el portal." : "No se pudo generar el PDF." };
       if (docRef) {
         await docRef.update({
@@ -1066,10 +1073,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           contactName: contactName || null,
           email,
           sentAt: new Date(),
+          packageEmailSentAt: new Date(),
+          packageDeliveryState: "email_sent_pending_sync",
           portalSyncStatus: pdfBuffer ? "pending" : "failed",
           portalSyncAttempts: previousPortalSyncAttempts,
           portalSyncLastError: pdfBuffer ? "" : "No se pudo generar el PDF; el portal permanece en preparación.",
-          ...(pdfBuffer ? { pdfBase64: pdfBuffer.toString("base64") } : {}),
+          ...(pdfBuffer ? {
+            pdfBase64: pdfBuffer.toString("base64"),
+            packagePdfCacheKey: buildPreviewCacheKey({ businessName: givenPlace.name, tierLabel: tierLabelForPdf, lang: language, pkg: givenPackage, place: givenPlace, documentType: "package" }),
+          } : {}),
           ...(guideStoragePath ? { guidePdfStoragePath: guideStoragePath, guidePdfAvailable: true } : {}),
           packageSendInProgress: null,
           packageSendStartedAt: null,
@@ -1088,6 +1100,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             portalSyncAttempts: previousPortalSyncAttempts + syncAttempts,
             portalSyncLastAttemptAt: new Date(),
             portalSyncLastError: portalSyncResult.synced ? "" : (portalSyncResult.error || "No se pudo sincronizar el portal."),
+            packageDeliveryState: portalSyncResult.synced ? "delivered_synced" : portalSyncResult.matched ? "email_sent_portal_pending" : "email_sent_portal_unmatched",
           });
           if (!portalSyncResult.synced) {
             console.error("[local-lift-package] La entrega fue enviada, pero la sincronización del portal quedó pendiente:", portalSyncResult.error);
@@ -1116,6 +1129,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
       const previewKey = buildPreviewCacheKey(previewParams);
       let previewPdf = getCachedPreviewPdf(previewKey);
+      if (!previewPdf && typeof leadId === "string" && leadId.trim()) {
+        const existingLead = await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get();
+        const existingData = existingLead.data() || {};
+        if (previewParams.documentType === "package" && existingData.packagePdfCacheKey === previewKey && typeof existingData.pdfBase64 === "string") {
+          previewPdf = Buffer.from(existingData.pdfBase64, "base64");
+        } else if (previewParams.documentType === "guide" && typeof existingData.guidePdfStoragePath === "string") {
+          previewPdf = await readGuidePdfFromStorage(existingData.guidePdfStoragePath).catch(() => null);
+        }
+      }
       if (!previewPdf) {
         try {
           previewPdf = await fetchPackagePdf(previewParams);
@@ -1200,7 +1222,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.json({ success: true, package: merged });
       } catch (retryErr) {
         console.error("[local-lift-package] Error reintentando piezas fallidas:", retryErr);
-        return res.status(500).json({ error: "No pudimos reintentar las partes fallidas." });
+        return res.status(500).json({ success: false, failedKeys, error: "No pudimos reintentar las partes fallidas. Revisa los mensajes de error del paquete y vuelve a intentarlo." });
       }
     }
 
@@ -1347,10 +1369,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.json({ success: true, place, reviews, package: pkg, tier: requestedTier, leadId: finalLeadId, status: finalStatus, paid: finalPaid });
   } catch (error: any) {
-    if (packageSendLockRef) {
+    // Si SMTP confirmó el envío pero una actualización posterior falló,
+    // conservamos el candado para impedir un segundo correo durante la
+    // ventana de recuperación. El admin verá el estado pendiente.
+    if (packageSendLockRef && packageEmailSent) {
+      const recovered = await packageSendLockRef.update({
+        status: "sent",
+        packageEmailSentAt: new Date(),
+        packageDeliveryState: "email_sent_sync_pending",
+        packageSendInProgress: null,
+        packageSendStartedAt: null,
+      }).then(() => true).catch(() => false);
+      if (recovered) {
+        console.error("[local-lift-package] Correo enviado; estado recuperado como pendiente de sincronización.");
+        return res.status(502).json({ success: false, reason: "email_sent_sync_pending", error: "El correo salió, pero falta completar la sincronización. No lo reenviaremos automáticamente." });
+      }
+    } else if (packageSendLockRef) {
       await packageSendLockRef.update({ packageSendInProgress: null, packageSendStartedAt: null }).catch(() => undefined);
     }
     console.error("[local-lift-package] Error:", error);
-    return res.status(500).json({ error: error?.message || "No se pudo generar/enviar el paquete." });
+    return res.status(500).json({ error: packageEmailSent ? "El correo salió, pero falta completar la sincronización. Revisa el estado del lead antes de reintentar." : (error?.message || "No se pudo generar/enviar el paquete.") });
   }
 }

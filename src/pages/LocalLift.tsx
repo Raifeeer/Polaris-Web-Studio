@@ -466,6 +466,16 @@ export default function LocalLift() {
 
   const persistAtlasRetryAndReload = () => {
     if (!diagnosticLeadId || !place) return;
+    let previousRetryCount = 0;
+    try {
+      const raw = sessionStorage.getItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
+      previousRetryCount = Number(raw ? JSON.parse(raw)?.retryCount : 0) || 0;
+    } catch { /* no-op */ }
+    if (previousRetryCount >= 2) {
+      setRevealNowError(language === "en" ? "We paused automatic retries. Please start Atlas manually again." : "Pausamos los reintentos automáticos. Inicia Atlas manualmente otra vez.");
+      return;
+    }
+    const retryCount = previousRetryCount + 1;
     persistFlowSnapshot({
       status: "queued",
       diagnostic: null,
@@ -491,6 +501,7 @@ export default function LocalLift() {
         atlasStartedAt,
         savedAt: Date.now(),
         scrollY: window.scrollY,
+        retryCount,
       }));
     } catch {
       // La recarga sigue siendo posible aunque el navegador bloquee sessionStorage.
@@ -707,7 +718,7 @@ export default function LocalLift() {
       if (["confirm", "queued", "success"].includes(savedStatus) && Number.isFinite(Number(saved.scrollY))) {
         restoredScrollYRef.current = Number(saved.scrollY);
       }
-      if (savedStatus === "queued" && (Boolean(retry) || Boolean(saved.revealRequested))) {
+      if (savedStatus === "queued" && (Boolean(retry) || Boolean(saved.revealRequested)) && Number(saved.retryCount || 0) <= 2) {
         setAutoRetryPending(true);
       }
       if (rawRetry) sessionStorage.removeItem(LOCAL_LIFT_ATLAS_RETRY_KEY);
@@ -882,11 +893,14 @@ export default function LocalLift() {
 
   useEffect(() => {
     if (!revealNowLoading || !diagnosticLeadId) return;
+    let disposed = false;
+    let nextPollTimer = 0;
     const poll = async () => {
-      if (atlasPollInFlightRef.current) return;
+      if (atlasPollInFlightRef.current || disposed) return;
       atlasPollInFlightRef.current = true;
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 10000);
+      let nextDelay = 1800;
       try {
         const res = await fetch("/api/local-lift-diagnostic", {
           method: "POST",
@@ -904,28 +918,36 @@ export default function LocalLift() {
         if (data.startedAt) {
           const started = Number(data.startedAt);
           setAtlasStartedAt(started);
-          setRevealElapsedSeconds(Math.max(0, Math.floor((Date.now() - started) / 1000)));
+          const elapsedMs = Math.max(0, Date.now() - started);
+          setRevealElapsedSeconds(Math.floor(elapsedMs / 1000));
+          nextDelay = elapsedMs < 30_000 ? 1800 : elapsedMs < 60_000 ? 3500 : 6000;
         }
         if (data.status === "success" && data.diagnostic) {
           applyAtlasSuccess(data);
-        } else if (data.status === "error") {
+          return;
+        }
+        if (data.status === "error") {
           setRevealNowLoading(false);
           setRevealRequested(false);
           setRevealTimedOut(false);
           setAtlasStartedAt(null);
           setRevealNowError(data.error || (language === "en" ? "Atlas couldn't finish this attempt." : "Atlas no pudo completar este intento."));
           persistFlowSnapshot({ status: "queued", revealRequested: false, revealTimedOut: false, atlasStartedAt: null });
+          return;
         }
       } catch {
         // Un fallo puntual de polling no cancela el job; la siguiente consulta continúa.
       } finally {
         window.clearTimeout(timeout);
         atlasPollInFlightRef.current = false;
+        if (!disposed && revealNowLoading) nextPollTimer = window.setTimeout(() => void poll(), nextDelay);
       }
     };
     void poll();
-    const interval = window.setInterval(() => void poll(), 1800);
-    return () => window.clearInterval(interval);
+    return () => {
+      disposed = true;
+      window.clearTimeout(nextPollTimer);
+    };
   }, [revealNowLoading, diagnosticLeadId, language]);
 
   useEffect(() => {

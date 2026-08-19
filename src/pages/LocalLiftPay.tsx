@@ -27,6 +27,7 @@ export default function LocalLiftPay() {
   const [errorMsg, setErrorMsg] = useState("");
   const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean; sentPortalWelcomeEmail: boolean; paypalOrderId: string | null; paypalPayerEmail: string | null; paidAt: string | null; contactName: string; email: string } | null>(null);
   const [invoiceDownloading, setInvoiceDownloading] = useState(false);
+  const [invoiceError, setInvoiceError] = useState("");
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [isSwitchingTier, setIsSwitchingTier] = useState(false);
@@ -52,7 +53,9 @@ export default function LocalLiftPay() {
       const normalizedTier = normalizeLocalLiftTier(data.tier);
       setLead({ ...data, tier: normalizedTier, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
       const urlTier = searchParams.get("tier");
-      if (initialLoad) setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : normalizedTier);
+      let storedTier = "";
+      try { storedTier = sessionStorage.getItem(`polaris-local-lift-tier:${leadId}`) || ""; } catch { /* no-op */ }
+      if (initialLoad) setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : TIER_PRICE[storedTier] ? normalizeLocalLiftTier(storedTier) : normalizedTier);
       setStatus(data.paid ? "paid" : "ready");
     } catch {
       if (initialLoad) setStatus("notfound");
@@ -82,11 +85,20 @@ export default function LocalLiftPay() {
   const otherTier = tier === "impulso" ? "ascenso" : "impulso";
   const otherPrice = TIER_PRICE[otherTier];
 
+  const paymentErrorMessage = (data: any, fallback: string) => {
+    if (data?.reason === "order_in_progress") return language === "en" ? "Another checkout tab is already preparing this payment. Wait a moment and try again." : "Otra pestaña ya está preparando este pago. Espera un momento e inténtalo de nuevo.";
+    if (data?.reason === "payment_in_progress") return language === "en" ? "This payment is already being confirmed. Wait a moment before trying again." : "Este pago ya se está confirmando. Espera un momento antes de intentarlo otra vez.";
+    if (data?.reason === "already_paid" || data?.alreadyPaid) return language === "en" ? "This order has already been paid." : "Esta orden ya fue pagada.";
+    if (data?.reason === "tier_conflict") return language === "en" ? "This checkout is already associated with another package. Reload to see the correct option." : "Este checkout ya está asociado a otro paquete. Recarga para ver la opción correcta.";
+    return data?.error || fallback;
+  };
+
   const handleTierChange = () => {
     if (isSwitchingTier) return;
     setIsSwitchingTier(true);
     window.setTimeout(() => {
       setSelectedTier(otherTier);
+      try { if (leadId) sessionStorage.setItem(`polaris-local-lift-tier:${leadId}`, otherTier); } catch { /* no-op */ }
       setIsSwitchingTier(false);
     }, prefersReducedMotion ? 0 : 420);
   };
@@ -100,11 +112,14 @@ export default function LocalLiftPay() {
     });
     const data = await res.json().catch(() => ({}));
     if (data?.alreadyPaid) {
+      setErrorMsg(paymentErrorMessage(data, language === "en" ? "This order has already been paid." : "Esta orden ya fue pagada."));
       await refreshLead(false);
       throw new Error("already_paid");
     }
     if (!res.ok || !data.success || typeof data.orderId !== "string") {
-      throw new Error(data?.error || "No se pudo iniciar el pago.");
+      const message = paymentErrorMessage(data, language === "en" ? "We couldn't start the payment." : "No se pudo iniciar el pago.");
+      setErrorMsg(message);
+      throw new Error(message);
     }
     return data.orderId;
   };
@@ -123,9 +138,10 @@ export default function LocalLiftPay() {
         return;
       }
       if (!res.ok || !result.success) {
-        setErrorMsg(language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp.");
+        setErrorMsg(paymentErrorMessage(result, language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp."));
         return;
       }
+      try { if (leadId) sessionStorage.removeItem(`polaris-local-lift-tier:${leadId}`); } catch { /* no-op */ }
       await refreshLead(false);
     } catch {
       setErrorMsg(language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp.");
@@ -348,13 +364,17 @@ export default function LocalLiftPay() {
                 disabled={invoiceDownloading}
                 onClick={async () => {
                   setInvoiceDownloading(true);
+                  setInvoiceError("");
                   try {
                     const res = await fetch("/api/local-lift-order", {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({ action: "invoice", leadId }),
                     });
-                    if (!res.ok) throw new Error("download_failed");
+                    if (!res.ok) {
+                      const payload = await res.json().catch(() => ({}));
+                      throw new Error(payload.error || (res.status === 404 ? "invoice_not_ready" : "download_failed"));
+                    }
                     const blob = await res.blob();
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
@@ -362,8 +382,11 @@ export default function LocalLiftPay() {
                     a.download = `Factura-${lead.invoiceNumber}.pdf`;
                     a.click();
                     URL.revokeObjectURL(url);
-                  } catch {
-                    setErrorMsg(language === "en" ? "We couldn't generate the invoice — it's also attached to your confirmation email." : "No pudimos generar la factura — también va adjunta en tu correo de confirmación.");
+                  } catch (error) {
+                    const code = error instanceof Error ? error.message : "download_failed";
+                    setInvoiceError(code === "invoice_not_ready"
+                      ? (language === "en" ? "The invoice is still being prepared. Try again in a moment." : "La factura todavía se está preparando. Intenta de nuevo en un momento.")
+                      : (language === "en" ? "We couldn't download the invoice. It is also attached to your confirmation email." : "No pudimos descargar la factura. También está adjunta a tu correo de confirmación."));
                   } finally {
                     setInvoiceDownloading(false);
                   }
@@ -376,6 +399,7 @@ export default function LocalLiftPay() {
                 }
               </button>
             )}
+            {invoiceError && <p className="mt-2 text-xs text-amber-500 text-left">{invoiceError}</p>}
 
             {errorMsg && (
               <div className="mt-4 flex items-start gap-2 text-left text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">

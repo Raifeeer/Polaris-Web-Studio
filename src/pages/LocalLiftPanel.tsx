@@ -86,6 +86,10 @@ interface Lead {
   portalSyncStatus?: "pending" | "synced" | "failed" | "unmatched" | null;
   portalSyncAttempts?: number;
   portalSyncLastError?: string;
+  packageSendInProgress?: boolean;
+  packageSendStartedAt?: string | null;
+  packageEmailSentAt?: string | null;
+  packageDeliveryState?: string | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -93,6 +97,7 @@ const STATUS_LABEL: Record<string, string> = {
   package_ready: "Paquete generado",
   sent: "Paquete completo enviado",
 };
+const PACKAGE_DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
 
 type SnippetKind = "description" | "post" | "reply" | "template" | "whatsapp";
 interface EditingSnippet {
@@ -264,13 +269,14 @@ export default function LocalLiftPanel() {
   const [place, setPlace] = useState<PlaceInfo | null>(null);
   const [pkg, setPkg] = useState<LocalLiftPackage | null>(null);
   const [retryingParts, setRetryingParts] = useState(false);
+  const [retryMessage, setRetryMessage] = useState("");
 
   const [email, setEmail] = useState("");
   const [contactName, setContactName] = useState("");
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
-  const [sendStatus, setSendStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [sendStatus, setSendStatus] = useState<"idle" | "loading" | "done" | "error" | "already_sent" | "in_progress">("idle");
   const [sendError, setSendError] = useState("");
-  const [portalSyncStatus, setPortalSyncStatus] = useState<"idle" | "loading" | "synced" | "failed" | "unknown">("idle");
+  const [portalSyncStatus, setPortalSyncStatus] = useState<"idle" | "loading" | "pending" | "synced" | "failed" | "unmatched" | "unknown">("idle");
   const [portalSyncError, setPortalSyncError] = useState("");
   const [previewStatus, setPreviewStatus] = useState<"idle" | "loading" | "error">("idle");
   const [previewError, setPreviewError] = useState("");
@@ -346,13 +352,36 @@ export default function LocalLiftPanel() {
     setTier(lead.tier === "ascenso" || lead.tier === "implementado" ? "ascenso" : "impulso");
     setSelectedLeadPlace(normalizedPlace);
     setPlace(normalizedPlace);
-    setPkg(lead.package || null);
-    setGenStatus(lead.package && normalizedPlace ? "done" : "idle");
+    let draftPackage = lead.package || null;
+    let draftReplies: Record<string, string> = {};
+    try {
+      const rawDraft = sessionStorage.getItem(`polaris-local-lift-package-draft:${lead.id}`);
+      if (rawDraft) {
+        const parsed = JSON.parse(rawDraft);
+        if (parsed?.savedAt && Date.now() - Number(parsed.savedAt) <= PACKAGE_DRAFT_TTL_MS) {
+          if (parsed.package) draftPackage = parsed.package;
+          if (parsed.replyDrafts && typeof parsed.replyDrafts === "object") draftReplies = parsed.replyDrafts;
+        } else {
+          sessionStorage.removeItem(`polaris-local-lift-package-draft:${lead.id}`);
+        }
+      }
+    } catch { /* el panel sigue funcionando sin sessionStorage */ }
+    setPkg(draftPackage);
+    setReplyDrafts(draftReplies);
+    setGenStatus(draftPackage && normalizedPlace ? "done" : "idle");
     setSendStatus("idle");
-    setPortalSyncStatus(lead.portalSyncStatus === "synced" ? "synced" : lead.portalSyncStatus === "failed" || lead.portalSyncStatus === "unmatched" || lead.portalSyncStatus === "pending" ? "failed" : "unknown");
+    setRetryMessage("");
+    setPortalSyncStatus(lead.portalSyncStatus === "synced" ? "synced" : lead.portalSyncStatus === "pending" ? "pending" : lead.portalSyncStatus === "unmatched" ? "unmatched" : lead.portalSyncStatus === "failed" ? "failed" : "unknown");
     setPortalSyncError(lead.portalSyncLastError || "");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    if (!leadId || !pkg || genStatus !== "done") return;
+    try {
+      sessionStorage.setItem(`polaris-local-lift-package-draft:${leadId}`, JSON.stringify({ savedAt: Date.now(), package: pkg, replyDrafts }));
+    } catch { /* el panel sigue funcionando sin sessionStorage */ }
+  }, [leadId, pkg, replyDrafts, genStatus]);
 
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,6 +389,7 @@ export default function LocalLiftPanel() {
     setGenStatus("loading");
     setGenError("");
     setPkg(null);
+    setRetryMessage("");
     setSendStatus("idle");
     try {
       const res = await fetch("/api/local-lift-package", {
@@ -398,17 +428,24 @@ export default function LocalLiftPanel() {
   // el aviso normal para que el admin reintente a mano con "Generar paquete".
   const retryFailedParts = async (currentPkg: LocalLiftPackage, currentPlace: PlaceInfo, currentLeadId: string | null) => {
     setRetryingParts(true);
+    setRetryMessage("");
     try {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: "retry_failed_parts", place: currentPlace, existingPackage: currentPkg, leadId: currentLeadId, tier, lang: "es" }),
       });
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.package) setPkg(data.package);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRetryMessage(data.error || "No se pudieron reintentar las partes fallidas. Puedes intentarlo manualmente.");
+        return;
+      }
+      if (data.package) {
+        setPkg(data.package);
+        setRetryMessage(data.package.partialFailure ? "El reintento terminó, pero todavía quedan partes pendientes." : "Las partes fallidas se generaron correctamente.");
+      }
     } catch {
-      // silencioso -- si falla, el admin ve el aviso normal de piezas faltantes
+      setRetryMessage("No se pudo completar el reintento. Comprueba la conexión y vuelve a intentarlo.");
     } finally {
       setRetryingParts(false);
     }
@@ -453,10 +490,20 @@ export default function LocalLiftPanel() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setSendError(data.error || "No se pudo enviar.");
-        setSendStatus("error");
+        if (res.status === 409 && data.reason === "package_already_sent") {
+          setSendError("Este paquete ya fue enviado. No se volverá a enviar para evitar duplicados.");
+          setSendStatus("already_sent");
+        } else if (res.status === 409 && data.reason === "package_send_in_progress") {
+          setSendError("Este paquete ya se está enviando o quedó en recuperación. Espera unos minutos y revisa el estado del lead.");
+          setSendStatus("in_progress");
+        } else {
+          setSendError(data.error || "No se pudo enviar.");
+          setSendStatus("error");
+        }
+        loadLeads();
         return;
       }
+      try { if (leadId) sessionStorage.removeItem(`polaris-local-lift-package-draft:${leadId}`); } catch { /* no-op */ }
       setSendStatus("done");
       setPortalSyncStatus(data.portalSynced ? "synced" : "failed");
       setPortalSyncError(data.portalSyncError || "");
@@ -492,12 +539,12 @@ export default function LocalLiftPanel() {
     }
   };
 
-  const needsPortalSync = leadId && portalSyncStatus !== "synced" && (sendStatus === "done" || leads.some((lead) => lead.id === leadId && lead.status === "sent"));
+  const needsPortalSync = leadId && portalSyncStatus !== "synced" && (sendStatus === "done" || sendStatus === "already_sent" || sendStatus === "in_progress" || leads.some((lead) => lead.id === leadId && lead.status === "sent"));
 
-  const missingParts = pkg
+  const missingPartDetails = pkg
     ? Object.entries(pkg.errors)
         .filter(([, v]) => v !== null)
-        .map(([k]) => k)
+        .map(([key, error]) => `${key}: ${error}`)
     : [];
 
   const renderLeadRow = (l: Lead) => (
@@ -509,8 +556,8 @@ export default function LocalLiftPanel() {
       <div className="flex items-center justify-between gap-2">
         <span className="font-black text-sm">{l.businessName || "(sin nombre)"}</span>
         {l.status === "sent" ? (
-          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-emerald-500">
-            <CheckCircle2 size={12} /> Enviado
+          <span className={`shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide ${l.portalSyncStatus === "synced" ? "text-emerald-500" : "text-amber-500"}`}>
+            {l.portalSyncStatus === "synced" ? <CheckCircle2 size={12} /> : <Clock size={12} />} {l.portalSyncStatus === "synced" ? "Enviado" : "Enviado · portal pendiente"}
           </span>
         ) : (
           <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide text-amber-500">
@@ -600,7 +647,7 @@ export default function LocalLiftPanel() {
           <div className="flex items-start gap-3">
             <AlertCircle size={18} className="mt-0.5 shrink-0 text-amber-500" />
             <div className="min-w-0">
-              <h2 className="text-sm font-black text-amber-500">El portal todavía no confirmó la entrega</h2>
+              <h2 className="text-sm font-black text-amber-500">{portalSyncStatus === "unmatched" ? "El portal no encontró este cliente todavía" : portalSyncStatus === "pending" ? "Sincronización del portal pendiente" : "El portal todavía no confirmó la entrega"}</h2>
               <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">El correo y el PDF ya pueden haberse enviado. Reintentar aquí solo actualiza el estado del portal; no vuelve a enviar el correo ni genera otro PDF.</p>
               {portalSyncError && <p className="mt-2 break-words text-[11px] text-amber-500/90">{portalSyncError}</p>}
               <button type="button" onClick={handleRetryPortalSync} disabled={portalSyncStatus === "loading"} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-amber-500/40 px-3 py-2 text-xs font-black text-amber-500 transition-colors hover:bg-amber-500/10 disabled:opacity-50">
@@ -689,10 +736,15 @@ export default function LocalLiftPanel() {
             </div>
           )}
 
-          {!retryingParts && missingParts.length > 0 && (
+          {!retryingParts && missingPartDetails.length > 0 && (
             <div className="flex items-start gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
               <AlertCircle size={15} className="mt-0.5 shrink-0" />
-              <span>No se pudieron generar estas partes tras reintentar automáticamente (intenta "Generar paquete" de nuevo): {missingParts.join(", ")}</span>
+              <div className="min-w-0 flex-1"><p>No se pudieron generar estas partes:</p><p className="mt-1 break-words">{missingPartDetails.join(" · ")}</p><button type="button" onClick={() => retryFailedParts(pkg, place, leadId)} disabled={retryingParts} className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-amber-500/40 px-2.5 py-1.5 font-black hover:bg-amber-500/10 disabled:opacity-50"><RefreshCw size={12} /> Reintentar ahora</button></div>
+            </div>
+          )}
+          {retryMessage && (
+            <div className="flex items-start gap-2 text-xs text-[var(--color-text-secondary)] bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-lg px-3 py-2.5">
+              <RefreshCw size={15} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" /><span>{retryMessage}</span>
             </div>
           )}
 
@@ -853,7 +905,9 @@ export default function LocalLiftPanel() {
             </div>
             <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">Revisa la vista previa antes de mandarlo. Si no te convence, corrige y vuelve a "Generar paquete": cada vista previa usa el contenido más reciente.</p>
             {previewStatus === "error" && <p className="mt-2 text-xs text-red-400">{previewError}</p>}
-            {sendStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Enviado a {email}.</p>}
+            {sendStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Enviado a {email}. El portal se actualizará por separado si aún aparece pendiente.</p>}
+            {sendStatus === "already_sent" && <p className="mt-2 text-xs text-amber-500">{sendError}</p>}
+            {sendStatus === "in_progress" && <p className="mt-2 text-xs text-amber-500">{sendError}</p>}
             {sendStatus === "error" && <p className="mt-2 text-xs text-red-400">{sendError}</p>}
           </section>
 

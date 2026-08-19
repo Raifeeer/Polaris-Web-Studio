@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { buildEmailFooter } from "./_localLift.js";
 import { paypalCaptureId, paypalCaptureOrder, paypalCreateOrder, paypalGetOrder, paypalOrderAmount, paypalPayerEmail as getPayPalPayerEmail, paypalReferenceId, paypalRefundCapture } from "./_paypal.js";
 
@@ -25,6 +26,7 @@ const firebaseApp = getApps().length
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/^["']|["']$/g, "").replace(/\\n/g, "\n"),
       }),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || process.env.GCLOUD_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`,
     });
 
 const TIER_PRICE: Record<string, number> = { "impulso": 29, "ascenso": 99 };
@@ -34,6 +36,19 @@ const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.fire
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
 const FONT_BODY = "'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif";
 const ACCENT = "#16C8C1"; // teal, color primario real de Local Lift (palabra "LIFT" del logo)
+const INVOICE_STORAGE_BUCKET = process.env.FIREBASE_STORAGE_BUCKET || process.env.GCLOUD_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`;
+
+async function saveInvoicePdfToStorage(leadId: string, buffer: Buffer): Promise<string> {
+  const objectPath = `local-lift-invoices/${leadId.trim()}.pdf`;
+  const file = getStorage(firebaseApp).bucket(INVOICE_STORAGE_BUCKET).file(objectPath);
+  await file.save(buffer, { resumable: false, contentType: "application/pdf", metadata: { cacheControl: "private, max-age=0, no-store" } });
+  return objectPath;
+}
+
+async function readInvoicePdfFromStorage(objectPath: string): Promise<Buffer> {
+  const [buffer] = await getStorage(firebaseApp).bucket(INVOICE_STORAGE_BUCKET).file(objectPath).download();
+  return buffer;
+}
 
 type LocalLiftTier = "impulso" | "ascenso";
 function isLocalLiftTier(value: unknown): value is LocalLiftTier {
@@ -363,17 +378,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const d = doc.data()!;
       if (!d.paid || !d.invoiceNumber) return res.status(404).json({ error: "Todavía no hay una factura emitida." });
 
-      const pdf = await fetchInvoicePdf({
-        invoiceNumber: d.invoiceNumber,
-        clientName: d.contactName || d.businessName || "",
-        clientEmail: d.email || "",
-        description: `Local Lift: ${TIER_LABEL[d.tier] || "Local Lift"}, ${d.businessName || ""}`,
-        amount: TIER_PRICE[d.tier] || 0,
-        paypalOrderId: d.paypalOrderId || "",
-        // La tasa del día en que se emitió, no la de hoy: si no, una factura
-        // vieja se descargaría con un monto en pesos distinto al original.
-        exchangeRate: typeof d.exchangeRate === "number" ? d.exchangeRate : undefined,
-      });
+      let pdf: Buffer | null = null;
+      if (typeof d.invoicePdfStoragePath === "string" && d.invoicePdfStoragePath) {
+        pdf = await readInvoicePdfFromStorage(d.invoicePdfStoragePath).catch(() => null);
+      }
+      if (!pdf) {
+        pdf = await fetchInvoicePdf({
+          invoiceNumber: d.invoiceNumber,
+          clientName: d.contactName || d.businessName || "",
+          clientEmail: d.email || "",
+          description: `Local Lift: ${TIER_LABEL[d.tier] || "Local Lift"}, ${d.businessName || ""}`,
+          amount: TIER_PRICE[d.tier] || 0,
+          paypalOrderId: d.paypalOrderId || "",
+          // La tasa del día en que se emitió, no la de hoy: si no, una factura
+          // vieja se descargaría con un monto en pesos distinto al original.
+          exchangeRate: typeof d.exchangeRate === "number" ? d.exchangeRate : undefined,
+        });
+        if (pdf) {
+          const storagePath = await saveInvoicePdfToStorage(leadId.trim(), pdf).catch(() => null);
+          if (storagePath) await doc.ref.update({ invoicePdfStoragePath: storagePath }).catch(() => undefined);
+        }
+      }
       if (!pdf) return res.status(500).json({ error: "No pudimos generar la factura." });
 
       res.setHeader("Content-Type", "application/pdf");
@@ -593,6 +618,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // cloud-functions/invoice-pdf en Meridian). Si falla, el correo sale
       // igual sin adjunto -- nunca se bloquea la confirmación de un pago real.
       let invoicePdf: Buffer | null = null;
+      let invoicePdfStoragePath: string | null = null;
       if (invoiceNumber) {
         try {
           invoicePdf = await fetchInvoicePdf({
@@ -606,6 +632,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           });
         } catch (pdfErr) {
           console.error("[local-lift-order] Error generando PDF de factura:", pdfErr);
+        }
+        if (invoicePdf) {
+          invoicePdfStoragePath = await saveInvoicePdfToStorage(docRef.id, invoicePdf).catch((storageErr) => {
+            console.error("[local-lift-order] Error guardando factura en Storage:", storageErr);
+            return null;
+          });
+          if (invoicePdfStoragePath) await docRef.update({ invoicePdfStoragePath }).catch((storageErr) => console.error("[local-lift-order] Error guardando ruta de factura:", storageErr));
         }
       }
 
