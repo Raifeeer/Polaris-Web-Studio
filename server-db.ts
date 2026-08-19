@@ -185,6 +185,21 @@ export interface DbProject {
   contractIp?: string;
   contractPdfUrl?: string;           // URL de contract-pdf con los params ya resueltos, cacheada tras firmar
   contractCode?: string;             // ej. "C-P001" -- asignado una sola vez (secuencia global), la letra final (A pendiente / B firmado) se deriva en runtime, no se guarda acá
+  // Contrato específico de Local Lift. Se mantiene separado del contrato web para
+  // que los estados, códigos, versiones y auditoría nunca se mezclen entre productos.
+  localLiftContractStatus?: "draft" | "sent" | "viewed" | "awaiting_client_data" | "ready_for_signature" | "signed" | "cancelled";
+  localLiftContractCode?: string;
+  localLiftContractVersion?: string;
+  localLiftContractSignedAt?: string;
+  localLiftContractSignatureDataUrl?: string;
+  localLiftContractSignerName?: string;
+  localLiftContractHash?: string;
+  localLiftContractIp?: string;
+  localLiftContractTermsVersion?: string;
+  localLiftContractPrivacyVersion?: string;
+  localLiftContractSupportVersion?: string;
+  localLiftContractViewedAt?: string;
+  localLiftContractPdfUrl?: string;
   // Facturación recurrente de addons mensuales (hosting, agente IA, etc.) --
   // ver /api/portal/billing/run-cycle. Se inicializa la primera vez que el
   // ciclo diario ve un proyecto firmado con addons mensuales y sin fecha
@@ -302,6 +317,7 @@ export interface DatabaseSchema {
   deploys: DbDeploy[];
   projectDisplayCounter: number;
   contractCodeCounter: number;
+  localLiftContractCodeCounter: number;
   invoiceCodeCounter: number;
 }
 
@@ -329,6 +345,7 @@ const getInitialSeededData = (): DatabaseSchema => {
   return {
     projectDisplayCounter: 1,
     contractCodeCounter: 0,
+    localLiftContractCodeCounter: 0,
     invoiceCodeCounter: 0,
     users: [
       {
@@ -516,6 +533,19 @@ class PortalDatabase {
       }
       c.contractCodeCounter = maxContractNum;
     }
+    if (typeof c.localLiftContractCodeCounter !== "number") {
+      let maxLocalLiftContractNum = 0;
+      if (Array.isArray(c.projects)) {
+        for (const p of c.projects) {
+          const match = /^C-LL(\d+)$/.exec(p.localLiftContractCode || "");
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxLocalLiftContractNum) maxLocalLiftContractNum = num;
+          }
+        }
+      }
+      c.localLiftContractCodeCounter = maxLocalLiftContractNum;
+    }
     if (typeof c.invoiceCodeCounter !== "number") {
       // Migración de formato: las facturas viejas usan "POL-2026-009"
       // (por año); el contador nuevo es global, como Q-00126/C-P001. Se
@@ -645,6 +675,17 @@ class PortalDatabase {
     this.ensureInitialized();
     this.cache!.contractCodeCounter++;
     const code = `C-P${this.cache!.contractCodeCounter.toString().padStart(3, "0")}`;
+    this.save();
+    return code;
+  }
+
+  // Código de contrato Local Lift (ej. "C-LL001") -- separado del
+  // contador de contratos web para que una migración o alta de producto no
+  // cambie la numeración histórica de los contratos de desarrollo.
+  consumeNextLocalLiftContractCode(): string {
+    this.ensureInitialized();
+    this.cache!.localLiftContractCodeCounter++;
+    const code = `C-LL${this.cache!.localLiftContractCodeCounter.toString().padStart(3, "0")}`;
     this.save();
     return code;
   }

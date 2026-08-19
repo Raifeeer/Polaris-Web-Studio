@@ -1080,6 +1080,8 @@ export default function ClientDashboard() {
   // paquete (ver /api/portal/local-lift/package-sent) -- antes de eso no hay
   // que decirle al cliente que ya se lo enviamos.
   const localLiftPackageDelivered = isLocalLiftProject && clientProject?.phases?.some((ph: any) => ph.name === "Entrega" && ph.status === "completed");
+  const localLiftContractStatus = isLocalLiftProject ? ((clientProject as any)?.localLiftContractStatus || "sent") : null;
+  const localLiftContractSigned = localLiftContractStatus === "signed";
   const [packageDownloading, setPackageDownloading] = useState(false);
   const [guideDownloading, setGuideDownloading] = useState(false);
   // Autoagendamiento de la sesión de bienvenida 1:1 -- solo aplica a
@@ -1089,6 +1091,7 @@ export default function ClientDashboard() {
     !isAdmin &&
     isLocalLiftProject &&
     (clientProject as any)?.localLiftTier === "ascenso" &&
+    localLiftContractSigned &&
     !(data?.meetings || []).some((m: any) => m.projectId === clientProject?.id);
   const [ascensoBookingDone, setAscensoBookingDone] = useState(false);
 
@@ -1164,6 +1167,9 @@ export default function ClientDashboard() {
   // dispara re-render por sí solo.
   const [contractHasDrawn, setContractHasDrawn] = useState(false);
   const [contractDownloading, setContractDownloading] = useState(false);
+  const [contractTermsVersion, setContractTermsVersion] = useState("");
+  const [contractPrivacyVersion, setContractPrivacyVersion] = useState("");
+  const [contractSupportVersion, setContractSupportVersion] = useState("");
 
   // Modal de solo-lectura para ver el contrato (firmado o no) en vivo, con
   // descargar/compartir por correo -- distinto del modal de arriba, que es
@@ -1969,6 +1975,9 @@ export default function ClientDashboard() {
       setContractCode(info?.contract?.code || "");
       setContractCedula(info?.client?.cedula || "");
       setContractAddress(info?.client?.address || "");
+      setContractTermsVersion(info?.contract?.termsVersion || "");
+      setContractPrivacyVersion(info?.contract?.privacyVersion || "");
+      setContractSupportVersion(info?.contract?.supportVersion || "");
       if (info?.contract?.status === "signed") {
         setContractStep("done");
       } else if (hasLegalInfo) {
@@ -2012,7 +2021,12 @@ export default function ClientDashboard() {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
-        .then((info) => setContractCode(info?.contract?.code || ""))
+        .then((info) => {
+          setContractCode(info?.contract?.code || "");
+          setContractTermsVersion(info?.contract?.termsVersion || "");
+          setContractPrivacyVersion(info?.contract?.privacyVersion || "");
+          setContractSupportVersion(info?.contract?.supportVersion || "");
+        })
         .catch((err) => console.error(err));
     }
     await fetchContractHtml();
@@ -2101,7 +2115,11 @@ export default function ClientDashboard() {
       const res = await fetch(`/api/portal/projects/${clientProject.id}/sign-contract`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ signatureDataUrl, signerName, contractHtml }),
+        body: JSON.stringify({ signatureDataUrl, signerName, contractHtml, acceptance: {
+          termsVersion: contractTermsVersion,
+          privacyVersion: contractPrivacyVersion,
+          supportVersion: contractSupportVersion,
+        } }),
       });
       if (!res.ok) throw new Error(`sign-contract respondió ${res.status}`);
       // Transición breve antes de la pantalla de éxito -- sin esto, el
@@ -3907,7 +3925,42 @@ export default function ClientDashboard() {
                           </div>
                         )}
 
-                        {isLocalLiftProject && (clientProject as any).localLiftTier === "ascenso" && (
+                        {isLocalLiftProject && (
+                          <div className="p-5 rounded-xl glass-panel border border-[#16C8C1]/25 bg-[#16C8C1]/[0.04] flex items-center justify-between gap-4 flex-wrap">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-10 h-10 rounded-lg bg-[#16C8C1]/10 flex items-center justify-center flex-shrink-0">
+                                <FileText size={18} className="text-[#16C8C1]" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato Local Lift</div>
+                                <div className="text-xs text-[var(--color-text-secondary)]">
+                                  {localLiftContractSigned
+                                    ? "Firmado — puedes descargar tu copia cuando quieras."
+                                    : "Revísalo y fírmalo antes de que preparemos o entreguemos tu paquete."}
+                                </div>
+                              </div>
+                            </div>
+                            {localLiftContractSigned ? (
+                              <button
+                                type="button"
+                                onClick={openContractViewModal}
+                                className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[#16C8C1]/30 text-xs font-bold text-[var(--color-text-primary)] hover:border-[#16C8C1]/60 whitespace-nowrap"
+                              >
+                                Ver contrato firmado
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={openContractModal}
+                                className="px-4 py-2 rounded-lg bg-[#16C8C1] text-[#111936] text-xs font-bold hover:opacity-95 whitespace-nowrap"
+                              >
+                                Revisar y firmar
+                              </button>
+                            )}
+                          </div>
+                        )}
+
+                        {isLocalLiftProject && (clientProject as any).localLiftTier === "ascenso" && localLiftContractSigned && (
                           <AscensoWorkflowPanel project={clientProject} token={token} onChanged={handleRefresh} />
                         )}
 

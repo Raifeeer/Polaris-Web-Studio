@@ -806,6 +806,96 @@ function contractFullCode(project: import("./server-db.js").DbProject): string {
   return `${project.contractCode || "C-P000"}${project.contractStatus === "signed" ? "B" : "A"}`;
 }
 
+const LOCAL_LIFT_CONTRACT_VERSION = "2026-08-20";
+const LOCAL_LIFT_TERMS_VERSION = "local-lift-2026-08-20";
+const LOCAL_LIFT_PRIVACY_VERSION = "privacy-2026-08-20";
+const LOCAL_LIFT_SUPPORT_VERSION = "support-2026-08-20";
+
+type LocalLiftContractStatus = NonNullable<import("./server-db.js").DbProject["localLiftContractStatus"]>;
+
+function localLiftContractFullCode(project: import("./server-db.js").DbProject): string {
+  return `${project.localLiftContractCode || "C-LL000"}${project.localLiftContractStatus === "signed" ? "B" : "A"}`;
+}
+
+function localLiftTierFromProject(project: import("./server-db.js").DbProject): "impulso" | "ascenso" {
+  return project.localLiftTier === "ascenso" ? "ascenso" : "impulso";
+}
+
+function localLiftContractBenefits(tier: "impulso" | "ascenso") {
+  const impulso = [
+    "Auditoría completa de tu perfil local",
+    "Descripción, servicios y llamadas a la acción optimizados",
+    "10 publicaciones listas para aplicar",
+    "15 respuestas personalizadas para reseñas",
+    "10 mensajes de WhatsApp para seguimiento",
+    "Entrega del paquete por correo",
+  ];
+  if (tier === "impulso") return impulso;
+  return [
+    ...impulso,
+    "Análisis de reseñas recientes y buenas prácticas personalizadas",
+    "Guía paso a paso para aplicar cada cambio",
+    "Indicaciones para aplicar textos e imágenes",
+    "Hasta tres rondas agrupadas de revisión",
+    "Acompañamiento personalizado 1:1",
+  ];
+}
+
+async function ensureLocalLiftContract(project: import("./server-db.js").DbProject): Promise<void> {
+  if (project.productType !== "local_lift") return;
+  const changes: Partial<import("./server-db.js").DbProject> = {};
+  if (!project.localLiftContractCode) changes.localLiftContractCode = dbInstance.consumeNextLocalLiftContractCode();
+  if (!project.localLiftContractVersion) changes.localLiftContractVersion = LOCAL_LIFT_CONTRACT_VERSION;
+  if (!project.localLiftContractTermsVersion) changes.localLiftContractTermsVersion = LOCAL_LIFT_TERMS_VERSION;
+  if (!project.localLiftContractPrivacyVersion) changes.localLiftContractPrivacyVersion = LOCAL_LIFT_PRIVACY_VERSION;
+  if (!project.localLiftContractSupportVersion) changes.localLiftContractSupportVersion = LOCAL_LIFT_SUPPORT_VERSION;
+  if (!project.localLiftContractStatus) changes.localLiftContractStatus = "sent";
+  if (Object.keys(changes).length) {
+    dbInstance.updateProject(project.id, changes);
+    Object.assign(project, changes);
+    await dbInstance.flush();
+  }
+}
+
+function localLiftInvoice(project: import("./server-db.js").DbProject) {
+  return dbInstance.getInvoices().find((invoice) => invoice.projectId === project.id && invoice.kind === "local_lift");
+}
+
+function buildLocalLiftContractPayload(project: import("./server-db.js").DbProject, client: import("./server-db.js").DbUser) {
+  const tier = localLiftTierFromProject(project);
+  const invoice = localLiftInvoice(project);
+  const paidAmount = Number(invoice?.amount || 0);
+  return {
+    lang: client.language === "en" ? "en" : "es",
+    productType: "local_lift",
+    localLiftTier: tier,
+    clientName: client.name,
+    clientEmail: client.email,
+    cedula: client.cedula || "",
+    address: client.address || "",
+    projectName: project.name,
+    businessName: project.name,
+    packageName: tier === "ascenso" ? "Ascenso" : "Impulso",
+    benefits: localLiftContractBenefits(tier),
+    paidAmount,
+    balanceAmount: 0,
+    signed: project.localLiftContractStatus === "signed",
+    signatureDataUrl: project.localLiftContractSignatureDataUrl || null,
+    signerName: project.localLiftContractSignerName || null,
+    signedAt: project.localLiftContractSignedAt || null,
+    contractHash: project.localLiftContractHash || null,
+    contractCode: localLiftContractFullCode(project),
+    contractVersion: project.localLiftContractVersion || LOCAL_LIFT_CONTRACT_VERSION,
+    termsVersion: project.localLiftContractTermsVersion || LOCAL_LIFT_TERMS_VERSION,
+    privacyVersion: project.localLiftContractPrivacyVersion || LOCAL_LIFT_PRIVACY_VERSION,
+    supportVersion: project.localLiftContractSupportVersion || LOCAL_LIFT_SUPPORT_VERSION,
+    termsUrl: "https://polarisweb.studio/terminos",
+    privacyUrl: "https://polarisweb.studio/privacidad",
+    supportUrl: "https://polarisweb.studio/local-lift/politicas",
+    portalUrl: "https://polarisweb.studio/dashboard",
+  };
+}
+
 // Arma el payload que consume contract-pdf (Meridian) a partir de un
 // proyecto/cliente reales -- usado tanto para servir el HTML de revisión
 // (que el cliente firma tal cual) como para descargar el PDF final.
@@ -833,6 +923,20 @@ function buildContractPdfPayload(project: import("./server-db.js").DbProject, cl
 // real (dos copias independientes con sello de tiempo de Zoho/Gmail), no el
 // registro en Firestore -- ver POST /api/portal/projects/:id/sign-contract.
 async function notifyContractSigned(params: {
+  productType?: "website" | "local_lift";
+  localLiftTier?: "impulso" | "ascenso";
+  paidAmount?: number;
+  balanceAmount?: number;
+  contractVersion?: string;
+  termsVersion?: string;
+  privacyVersion?: string;
+  supportVersion?: string;
+  benefits?: string[];
+  businessName?: string;
+  termsUrl?: string;
+  privacyUrl?: string;
+  supportUrl?: string;
+  portalUrl?: string;
   clientEmail: string;
   clientName: string;
   cedula: string;
@@ -1560,20 +1664,28 @@ const PORT = 3000;
         localLiftTier: isAscenso ? "ascenso" : "impulso",
         ...(typeof localLiftLeadId === "string" && localLiftLeadId.trim() ? { localLiftLeadId: localLiftLeadId.trim() } : {}),
         ...(isAscenso ? { ascensoWorkflow: createAscensoWorkflow("awaiting_client_review") } : {}),
-        currentPhase: isAscenso ? "Agenda tu reunión" : "Preparando tu paquete",
-        progress: isAscenso ? 20 : 33,
+        currentPhase: isAscenso ? "Revisa tu contrato" : "Revisa tu contrato",
+        progress: 20,
         description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
         status: "active",
+        localLiftContractCode: dbInstance.consumeNextLocalLiftContractCode(),
+        localLiftContractVersion: LOCAL_LIFT_CONTRACT_VERSION,
+        localLiftContractStatus: "sent",
+        localLiftContractTermsVersion: LOCAL_LIFT_TERMS_VERSION,
+        localLiftContractPrivacyVersion: LOCAL_LIFT_PRIVACY_VERSION,
+        localLiftContractSupportVersion: LOCAL_LIFT_SUPPORT_VERSION,
         phases: isAscenso
           ? [
               { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-              { name: "Agenda tu reunión", status: "active", detail: "Agenda tu sesión de bienvenida 1:1 desde la pestaña de Reuniones de este portal para coordinar el acompañamiento." },
+              { name: "Contrato", status: "active", detail: "Revisa y firma el contrato en tu portal para activar el acompañamiento." },
+              { name: "Agenda tu reunión", status: "pending", detail: "Cuando el contrato esté firmado, agenda tu sesión de bienvenida 1:1 desde la pestaña de Reuniones." },
               { name: "Acompañamiento guiado", status: "pending", detail: "Te mostramos paso a paso cómo aplicar los cambios y revisamos tus dudas durante la sesión." },
               { name: "Entrega", status: "pending", detail: "Te avisamos por correo cuando el acompañamiento quede completado." },
             ]
           : [
               { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-              { name: "Preparando tu paquete", status: "active", detail: "Estamos armando el contenido real a partir de tu ficha: descripción, publicaciones y respuestas a reseñas." },
+              { name: "Contrato", status: "active", detail: "Revisa y firma el contrato en tu portal para liberar la preparación y entrega del paquete." },
+              { name: "Preparando tu paquete", status: "pending", detail: "Comenzaremos a armar el contenido real a partir de tu ficha después de firmar." },
               { name: "Entrega", status: "pending", detail: "Te enviamos el paquete completo por correo." },
             ],
       });
@@ -1692,6 +1804,33 @@ const PORT = 3000;
   // Sincroniza de forma idempotente el envío real del paquete Local Lift con
   // el portal. Puede llamarse varias veces: nunca reenvía correo ni regenera
   // PDF, y conserva reunión/implementación como fases activas en Ascenso.
+  app.get("/api/portal/admin/local-lift/contract-status/:leadId", authenticateToken, requireAdmin, async (req: any, res) => {
+    const leadId = String(req.params.leadId || "").trim();
+    if (!leadId || leadId.length > 160) return res.status(400).json({ error: "missing_leadId" });
+    const project = dbInstance.getProjects().find((p) => p.productType === "local_lift" && p.localLiftLeadId === leadId && !p.deletedAt);
+    if (!project) return res.status(404).json({ matched: false, error: "project_not_found" });
+    await ensureLocalLiftContract(project);
+    return res.json({ matched: true, projectId: project.id, status: project.localLiftContractStatus || "sent", code: localLiftContractFullCode(project), signedAt: project.localLiftContractSignedAt || null });
+  });
+
+  app.get("/api/portal/local-lift/contract-status/:leadId", async (req, res) => {
+    const secret = req.headers["x-cron-secret"];
+    if (!secret || secret !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "unauthorized" });
+    }
+    const leadId = String(req.params.leadId || "").trim();
+    if (!leadId || leadId.length > 160) return res.status(400).json({ error: "missing_leadId" });
+    const project = dbInstance.getProjects().find((p) => p.productType === "local_lift" && p.localLiftLeadId === leadId && !p.deletedAt);
+    if (!project) return res.status(404).json({ matched: false, error: "project_not_found" });
+    await ensureLocalLiftContract(project);
+    return res.json({
+      matched: true,
+      projectId: project.id,
+      status: project.localLiftContractStatus || "sent",
+      code: localLiftContractFullCode(project),
+    });
+  });
+
   app.post("/api/portal/local-lift/package-sent", async (req, res) => {
     const secret = req.headers["x-cron-secret"];
     if (!secret || secret !== process.env.CRON_SECRET) {
@@ -1701,10 +1840,14 @@ const PORT = 3000;
     if (typeof leadId !== "string" || !leadId.trim()) {
       return res.status(400).json({ error: "missing_leadId" });
     }
-    const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === leadId.trim());
+        const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === leadId.trim());
     if (!project) return res.status(404).json({ success: false, matched: false, retryable: true, error: "project_not_found" });
-
+    await ensureLocalLiftContract(project);
+    if (!project.localLiftPackageSentAt && project.localLiftContractStatus !== "signed") {
+      return res.status(409).json({ success: false, matched: true, retryable: false, error: "contract_not_signed", contractStatus: project.localLiftContractStatus || "sent" });
+    }
     const now = new Date().toISOString();
+
     const wasAlreadySent = !!project.localLiftPackageSentAt;
     const transition = transitionLocalLiftAfterPackageSent(project);
     const attempts = Math.max(0, Number(project.localLiftPortalSyncAttempts || 0)) + 1;
@@ -2244,6 +2387,8 @@ const PORT = 3000;
     if (!project || project.productType !== "local_lift" || project.localLiftTier !== "ascenso") return res.status(404).json({ error: "Workflow Ascenso no encontrado." });
     const isAdmin = req.user.role === "admin";
     if (!isAdmin && project.clientUserId !== req.user.id) return res.status(403).json({ error: "Acceso denegado." });
+    await ensureLocalLiftContract(project);
+    if (project.localLiftContractStatus !== "signed") return res.status(409).json({ error: "contract_not_signed", message: "El cliente debe firmar el contrato antes de iniciar el workflow Ascenso." });
     let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review");
     const now = new Date().toISOString();
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
@@ -2732,7 +2877,10 @@ const PORT = 3000;
 
     // El cliente no puede pagar hasta firmar el contrato -- un admin sí puede
     // (ej. cobro manual acordado fuera del portal antes de que el cliente firme).
-    if (req.user.role !== "admin" && (invoiceProject as any).contractStatus !== "signed") {
+    const invoiceProjectContractSigned = (invoiceProject as any).productType === "local_lift"
+      ? (invoiceProject as any).localLiftContractStatus === "signed"
+      : (invoiceProject as any).contractStatus === "signed";
+    if (req.user.role !== "admin" && !invoiceProjectContractSigned) {
       return res.status(403).json({ error: "Debes firmar el contrato de servicio antes de poder pagar esta factura." });
     }
 
@@ -3688,6 +3836,40 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
 
+    if (project.productType === "local_lift") {
+      await ensureLocalLiftContract(project);
+      if (project.localLiftContractStatus === "sent") {
+        const viewedAt = new Date().toISOString();
+        dbInstance.updateProject(project.id, { localLiftContractStatus: "viewed", localLiftContractViewedAt: viewedAt });
+        project.localLiftContractStatus = "viewed";
+        project.localLiftContractViewedAt = viewedAt;
+        await dbInstance.flush();
+      }
+      const localPayload = buildLocalLiftContractPayload(project, client);
+      return res.json({
+        client: { name: client.name, email: client.email, cedula: client.cedula || "", address: client.address || "" },
+        project: { id: project.id, name: project.name, productType: "local_lift", localLiftTier: localPayload.localLiftTier },
+        package: { id: "local_lift", name: localPayload.packageName },
+        addons: [],
+        pricing: { discountedTotal: localPayload.paidAmount, depositAmount: localPayload.paidAmount, finalAmount: 0, monthlyAddonsPrice: 0, paidAmount: localPayload.paidAmount, balanceAmount: 0, offerActive: false, offerDiscount: 0 },
+        contract: {
+          status: project.localLiftContractStatus || "sent",
+          signedAt: project.localLiftContractSignedAt || null,
+          signerName: project.localLiftContractSignerName || null,
+          hash: project.localLiftContractHash || null,
+          code: localLiftContractFullCode(project),
+          productType: "local_lift",
+          version: localPayload.contractVersion,
+          termsVersion: localPayload.termsVersion,
+          privacyVersion: localPayload.privacyVersion,
+          supportVersion: localPayload.supportVersion,
+          termsUrl: localPayload.termsUrl,
+          privacyUrl: localPayload.privacyUrl,
+          supportUrl: localPayload.supportUrl,
+        },
+      });
+    }
+
     const { pkg, selectedAddons, discountedTotal, depositAmount, finalAmount, monthlyAddonsPrice, offerActive, offerDiscountPercent } = resolveContractPricing(project);
     await ensureContractCode(project);
 
@@ -3721,6 +3903,27 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     }
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+    if (project.productType === "local_lift") {
+      await ensureLocalLiftContract(project);
+      if (project.localLiftContractStatus !== "signed") {
+        dbInstance.updateProject(project.id, { localLiftContractStatus: "ready_for_signature" });
+        project.localLiftContractStatus = "ready_for_signature";
+        await dbInstance.flush();
+      }
+      try {
+        const htmlRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app?format=html", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildLocalLiftContractPayload(project, client)),
+        });
+        if (!htmlRes.ok) throw new Error(`contract-pdf respondió ${htmlRes.status}`);
+        res.set("Content-Type", "text/html");
+        return res.status(200).send(await htmlRes.text());
+      } catch (err) {
+        console.error("Error generando contract-html Local Lift:", err);
+        return res.status(502).json({ error: "No se pudo generar el contrato Local Lift." });
+      }
+    }
     await ensureContractCode(project);
 
     try {
@@ -3754,6 +3957,24 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     }
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+    if (project.productType === "local_lift") {
+      await ensureLocalLiftContract(project);
+      try {
+        const pdfRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(buildLocalLiftContractPayload(project, client)),
+        });
+        if (!pdfRes.ok) throw new Error(`contract-pdf respondió ${pdfRes.status}`);
+        const buf = Buffer.from(await pdfRes.arrayBuffer());
+        res.set("Content-Type", "application/pdf");
+        res.set("Content-Disposition", `attachment; filename="${localLiftContractFullCode(project)}.pdf"`);
+        return res.status(200).send(buf);
+      } catch (err) {
+        console.error("Error generando contract-pdf Local Lift:", err);
+        return res.status(502).json({ error: "No se pudo generar el PDF del contrato Local Lift." });
+      }
+    }
     await ensureContractCode(project);
 
     try {
@@ -3797,6 +4018,106 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
     }
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     if (!client) return res.status(404).json({ error: "Cliente no encontrado." });
+
+    if (project.productType === "local_lift") {
+      await ensureLocalLiftContract(project);
+      if (project.localLiftContractStatus === "signed") {
+        return res.status(200).json({ success: true, alreadySigned: true, contractHash: project.localLiftContractHash || null, signedAt: project.localLiftContractSignedAt || null });
+      }
+      const safeSignerName = String(signerName || "").trim();
+      const safeContractHtml = typeof contractHtml === "string" ? contractHtml : "";
+      const acceptance = req.body?.acceptance || {};
+      if (!client.cedula || !client.address) return res.status(409).json({ error: "legal_info_required" });
+      if (safeSignerName.length < 2 || safeSignerName.length > 160) return res.status(400).json({ error: "invalid_signer_name" });
+      if (safeContractHtml.length < 1000 || safeContractHtml.length > 300000) return res.status(413).json({ error: "contract_html_size_invalid" });
+      if (signatureDataUrl && (typeof signatureDataUrl !== "string" || signatureDataUrl.length > 300000 || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(signatureDataUrl))) {
+        return res.status(400).json({ error: "invalid_signature" });
+      }
+      if (acceptance.termsVersion !== (project.localLiftContractTermsVersion || LOCAL_LIFT_TERMS_VERSION) || acceptance.privacyVersion !== (project.localLiftContractPrivacyVersion || LOCAL_LIFT_PRIVACY_VERSION) || acceptance.supportVersion !== (project.localLiftContractSupportVersion || LOCAL_LIFT_SUPPORT_VERSION)) {
+        return res.status(409).json({ error: "policy_version_mismatch" });
+      }
+      const canonicalPayload = buildLocalLiftContractPayload(project, client);
+      const canonicalHtmlRes = await fetch("https://contract-pdf-wdvfac6mgq-ue.a.run.app?format=html", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(canonicalPayload),
+      });
+      if (!canonicalHtmlRes.ok) return res.status(502).json({ error: "contract_canonical_unavailable" });
+      const canonicalHtml = await canonicalHtmlRes.text();
+      const submittedHash = crypto.createHash("sha256").update(safeContractHtml).digest("hex");
+      const canonicalHash = crypto.createHash("sha256").update(canonicalHtml).digest("hex");
+      if (submittedHash !== canonicalHash) return res.status(409).json({ error: "contract_changed_reload" });
+
+      const signedAt = new Date().toISOString();
+      const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim().slice(0, 128);
+      const signedPhases = Array.isArray(project.phases) ? project.phases.map((phase: any) => {
+        if (phase.name === "Contrato") return { ...phase, status: "completed" as const };
+        if (localLiftTierFromProject(project) === "ascenso" && phase.name === "Agenda tu reunión") return { ...phase, status: "active" as const };
+        if (localLiftTierFromProject(project) === "impulso" && phase.name === "Preparando tu paquete") return { ...phase, status: "active" as const };
+        return phase;
+      }) : project.phases;
+      dbInstance.updateProject(project.id, {
+        localLiftContractStatus: "signed",
+        localLiftContractSignedAt: signedAt,
+        localLiftContractSignatureDataUrl: signatureDataUrl || undefined,
+        localLiftContractSignerName: safeSignerName,
+        localLiftContractHash: submittedHash,
+        localLiftContractIp: ip,
+        localLiftContractTermsVersion: acceptance.termsVersion,
+        localLiftContractPrivacyVersion: acceptance.privacyVersion,
+        localLiftContractSupportVersion: acceptance.supportVersion,
+        currentPhase: localLiftTierFromProject(project) === "ascenso" ? "Agenda tu reunión" : "Preparando tu paquete",
+        progress: localLiftTierFromProject(project) === "ascenso" ? 20 : 33,
+        phases: signedPhases,
+      });
+      Object.assign(project, {
+        localLiftContractStatus: "signed",
+        localLiftContractSignedAt: signedAt,
+        localLiftContractSignatureDataUrl: signatureDataUrl || undefined,
+        localLiftContractSignerName: safeSignerName,
+        localLiftContractHash: submittedHash,
+        localLiftContractIp: ip,
+        localLiftContractTermsVersion: acceptance.termsVersion,
+        localLiftContractPrivacyVersion: acceptance.privacyVersion,
+        localLiftContractSupportVersion: acceptance.supportVersion,
+      });
+      await dbInstance.flush();
+      const localInvoice = localLiftInvoice(project);
+      notifyContractSigned({
+        productType: "local_lift",
+        localLiftTier: localLiftTierFromProject(project),
+        clientEmail: client.email,
+        clientName: client.name,
+        cedula: client.cedula || "",
+        address: client.address || "",
+        projectName: project.name,
+        businessName: project.name,
+        packageName: localLiftTierFromProject(project) === "ascenso" ? "Ascenso" : "Impulso",
+        benefits: localLiftContractBenefits(localLiftTierFromProject(project)),
+        termsUrl: "https://polarisweb.studio/terminos",
+        privacyUrl: "https://polarisweb.studio/privacidad",
+        supportUrl: "https://polarisweb.studio/local-lift/politicas",
+        portalUrl: "https://polarisweb.studio/dashboard",
+        addons: [],
+        discountedTotal: Number(localInvoice?.amount || 0),
+        depositAmount: Number(localInvoice?.amount || 0),
+        finalAmount: 0,
+        monthlyAddonsPrice: 0,
+        paidAmount: Number(localInvoice?.amount || 0),
+        balanceAmount: 0,
+        contractVersion: project.localLiftContractVersion || LOCAL_LIFT_CONTRACT_VERSION,
+        termsVersion: project.localLiftContractTermsVersion || LOCAL_LIFT_TERMS_VERSION,
+        privacyVersion: project.localLiftContractPrivacyVersion || LOCAL_LIFT_PRIVACY_VERSION,
+        supportVersion: project.localLiftContractSupportVersion || LOCAL_LIFT_SUPPORT_VERSION,
+        signatureDataUrl: signatureDataUrl || undefined,
+        signerName: safeSignerName,
+        contractHash: submittedHash,
+        signedAt,
+        contractCode: localLiftContractFullCode(project),
+      });
+      return res.json({ success: true, contractHash: submittedHash, signedAt });
+    }
+
     await ensureContractCode(project);
 
     const contractHash = crypto.createHash("sha256").update(contractHtml).digest("hex");

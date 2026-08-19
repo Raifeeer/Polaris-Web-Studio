@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
-import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, Globe, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Send, ShieldCheck, Star, User, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Building2, Check, CheckCircle2, Clock, Eye, FileText, Globe, Loader2, Mail, MapPin, Pencil, Phone, RefreshCw, Search, Send, ShieldCheck, Star, User, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import ImageLightbox from "../components/ImageLightbox";
@@ -90,6 +90,8 @@ interface Lead {
   packageSendStartedAt?: string | null;
   packageEmailSentAt?: string | null;
   packageDeliveryState?: string | null;
+  contractStatus?: string | null;
+  contractCode?: string | null;
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -259,6 +261,8 @@ export default function LocalLiftPanel() {
   const [leadPaid, setLeadPaid] = useState(false);
   const [ascensoWorkflowStatus, setAscensoWorkflowStatus] = useState<string | null>(null);
   const [selectedLeadPlace, setSelectedLeadPlace] = useState<PlaceInfo | null>(null);
+  const [selectedLeadContractStatus, setSelectedLeadContractStatus] = useState<string | null>(null);
+  const [selectedLeadContractCode, setSelectedLeadContractCode] = useState<string | null>(null);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const [businessName, setBusinessName] = useState("");
@@ -338,7 +342,7 @@ export default function LocalLiftPanel() {
   const sentLeads = filteredLeads.filter((l) => l.status === "sent");
 
 
-  const loadLead = (lead: Lead) => {
+  const loadLead = async (lead: Lead) => {
     const normalizedPlace = lead.place
       ? { ...lead.place, photoUrls: Array.isArray(lead.place.photoUrls) ? lead.place.photoUrls : [] }
       : null;
@@ -351,7 +355,17 @@ export default function LocalLiftPanel() {
     setEmail(lead.email || "");
     setTier(lead.tier === "ascenso" || lead.tier === "implementado" ? "ascenso" : "impulso");
     setSelectedLeadPlace(normalizedPlace);
+    setSelectedLeadContractStatus(lead.contractStatus || null);
+    setSelectedLeadContractCode(lead.contractCode || null);
     setPlace(normalizedPlace);
+    try {
+      const contractRes = await fetch(`/api/portal/admin/local-lift/contract-status/${encodeURIComponent(lead.id)}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (contractRes.ok) {
+        const contractData = await contractRes.json();
+        setSelectedLeadContractStatus(contractData.status || null);
+        setSelectedLeadContractCode(contractData.code || null);
+      }
+    } catch { /* el panel continúa aunque el indicador contractual no cargue */ }
     let draftPackage = lead.package || null;
     let draftReplies: Record<string, string> = {};
     try {
@@ -496,6 +510,12 @@ export default function LocalLiftPanel() {
         } else if (res.status === 409 && data.reason === "package_send_in_progress") {
           setSendError("Este paquete ya se está enviando o quedó en recuperación. Espera unos minutos y revisa el estado del lead.");
           setSendStatus("in_progress");
+        } else if (res.status === 409 && data.reason === "contract_not_signed") {
+          setSendError("El cliente todavía debe revisar y firmar el contrato desde su portal. El paquete permanece bloqueado hasta entonces.");
+          setSendStatus("error");
+        } else if (res.status === 502 && data.reason === "contract_status_unavailable") {
+          setSendError("No se pudo verificar el contrato con el portal. No se envió el paquete; intenta de nuevo cuando el portal esté disponible.");
+          setSendStatus("error");
         } else {
           setSendError(data.error || "No se pudo enviar.");
           setSendStatus("error");
@@ -658,6 +678,24 @@ export default function LocalLiftPanel() {
         </section>
       )}
 
+      {leadId && selectedLeadContractStatus && (
+        <section className="mt-8 max-w-xl rounded-xl border border-[#16C8C1]/25 bg-[#16C8C1]/[0.05] p-5">
+          <div className="flex items-start gap-3">
+            <FileText size={18} className="mt-0.5 shrink-0 text-[#16C8C1]" />
+            <div className="min-w-0">
+              <h2 className="text-sm font-black text-[var(--color-text-primary)]">Contrato Local Lift {selectedLeadContractCode && <span className="font-mono text-[10px] font-normal text-[var(--color-text-tertiary)]">{selectedLeadContractCode}</span>}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                {selectedLeadContractStatus === "signed"
+                  ? "Firmado. El cliente puede avanzar con la preparación, entrega o acompañamiento del paquete."
+                  : selectedLeadContractStatus === "ready_for_signature"
+                    ? "Listo para firma. El cliente ya puede revisar y aceptar el contrato desde su portal."
+                    : "Pendiente de firma. El envío del paquete permanece bloqueado hasta que el cliente lo acepte."}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {selectedLeadPlace && (
         <div className="mt-8 max-w-xl rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5">
           <h2 className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">Información actual del negocio</h2>
@@ -694,7 +732,7 @@ export default function LocalLiftPanel() {
         {leadId && (
           <div className="sm:col-span-2 flex items-center justify-between text-xs text-[var(--color-text-tertiary)] bg-[var(--color-surface-elevated)] rounded-lg px-3 py-2">
             <span>Lead cargado, puedes corregir cualquier campo antes de generar.</span>
-            <button type="button" onClick={() => { setLeadId(null); setLeadPaid(false); setBusinessName(""); setCity(""); setContactName(""); setEmail(""); setPlace(null); setPkg(null); setSelectedLeadPlace(null); }} className="font-bold text-[var(--color-primary-base)]">Nuevo</button>
+            <button type="button" onClick={() => { setLeadId(null); setLeadPaid(false); setBusinessName(""); setCity(""); setContactName(""); setEmail(""); setPlace(null); setPkg(null); setSelectedLeadPlace(null); setSelectedLeadContractStatus(null); setSelectedLeadContractCode(null); }} className="font-bold text-[var(--color-primary-base)]">Nuevo</button>
           </div>
         )}
         <input type="text" required placeholder="Nombre del negocio" value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="glass-input rounded-xl px-4 py-3 text-sm sm:col-span-2 border border-[var(--color-border-subtle)] outline-none focus:border-[var(--color-primary-base)]" />

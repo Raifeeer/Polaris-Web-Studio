@@ -22,6 +22,7 @@ export function transitionLocalLiftAfterPackageSent(project: LocalLiftProjectSta
   const nextPhases = phases.map((phase) => {
     const isLegacyAscensoGuide = isAscenso && phase.name === "Implementación asistida";
     if (isLegacyAscensoGuide) return { ...phase, name: "Acompañamiento guiado", detail: "Te mostramos paso a paso cómo aplicar los cambios y revisamos tus dudas durante la sesión." };
+    if (phase.name === "Contrato" && (project as any).localLiftContractStatus === "signed") return { ...phase, status: "completed" as const };
     if (phase.name === "Entrega") return { ...phase, status: "completed" as const };
     if (!isAscenso && phase.name === "Preparando tu paquete") return { ...phase, status: "completed" as const };
     return phase;

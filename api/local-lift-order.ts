@@ -143,8 +143,8 @@ function buildPaymentConfirmedHtml(params: {
   <div style="padding:12px 32px 0 32px;">
     <p style="font-size:14px;line-height:1.6;color:#475569;margin:0;">${
       tier === "ascenso"
-        ? `Recibimos y confirmamos tu pago. Tu paquete Ascenso incluye una lectura de hasta cinco reseñas recientes disponibles, buenas prácticas personalizadas y una sesión de bienvenida 1:1 para revisar tu presencia en Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu reunión en el horario que prefieras.${sentPortalWelcomeEmail ? " Por separado, te enviamos otro correo con las credenciales de acceso a ese portal." : ""}`
-        : `Recibimos y confirmamos tu pago. Ya estamos preparando el contenido real de tu paquete Local Lift a partir de tu ficha de Google. Lo vas a recibir por este mismo correo en las próximas 2 horas.${sentPortalWelcomeEmail ? " Por separado, te enviamos otro correo con las credenciales de acceso a tu portal de cliente." : ""}`
+        ? `Recibimos y confirmamos tu pago. El siguiente paso es entrar a tu portal, revisar y firmar el contrato de acompañamiento. Después podrás agendar tu reunión de bienvenida 1:1. El paquete Ascenso incluye una lectura de hasta cinco reseñas recientes disponibles, buenas prácticas personalizadas, guía paso a paso y hasta tres rondas agrupadas de revisión.${sentPortalWelcomeEmail ? " Te enviamos por separado las credenciales de acceso a ese portal." : ""}`
+        : `Recibimos y confirmamos tu pago. El siguiente paso es entrar a tu portal, revisar y firmar el contrato de servicio. Después prepararemos y enviaremos el contenido real de tu paquete Local Lift a partir de tu ficha de Google.${sentPortalWelcomeEmail ? " Te enviamos por separado las credenciales de acceso a tu portal." : ""}`
     }</p>
   </div>
 
@@ -665,7 +665,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             from: '"Polaris Local Lift" <hola@polarisweb.studio>',
             to: data.email,
             subject: `Pago confirmado: ${data.businessName}`,
-            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Tu paquete incluye una lectura de reseñas recientes, buenas prácticas personalizadas y una sesión de bienvenida 1:1. Entra a tu portal de cliente para agendarla." : "Ya estamos preparando tu paquete real, lo recibirás por este mismo correo en las próximas 2 horas."}`,
+            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Entra a tu portal para revisar y firmar el contrato; después podrás agendar tu sesión de bienvenida 1:1." : "Entra a tu portal para revisar y firmar el contrato; después prepararemos tu paquete real."}`,
             html: buildPaymentConfirmedHtml({
               businessName: data.businessName,
               city: data.city,
