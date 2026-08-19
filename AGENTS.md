@@ -1775,3 +1775,28 @@ Se aprobó conservar una línea de trabajo futura con dos partes:
 La dirección recomendada es construir primero una plataforma de laboratorio común y después probar tres mundos contrastantes: uno factual y cultural, uno analítico y uno narrativo. Review Intelligence y el Radar de Oportunidades podrían revelar futuras oportunidades para Local Lift, Ascenso u otros productos de Polaris, pero no deben presentarse como investigación definitiva sin evidencia suficiente.
 
 El alcance detallado, la arquitectura conceptual, las fases de experimentación, los criterios de éxito y los límites de seguridad están documentados en [`docs/polaris-agents-lab.md`](docs/polaris-agents-lab.md). Este trabajo queda pausado hasta terminar las prioridades actuales de Polaris.
+
+## Plan futuro — VM de respaldo gratuita para Hermes
+> **Estado:** plan documentado; no implementar ni migrar Hermes todavía.
+
+Se evaluará una infraestructura de respaldo independiente para mantener la capacidad de producción si Hermes o su VM principal dejan de estar disponibles. La primera opción a probar será **Oracle Cloud Always Free**, que ofrece recursos gratuitos permanentes, incluyendo una instancia Ampere A1 con hasta 2 OCPU y 12 GB de memoria equivalentes, sujeto a límites de cuenta, disponibilidad regional y condiciones de uso. Oracle puede reclamar instancias Always Free que permanezcan demasiado inactivas durante siete días, por lo que esta opción debe considerarse un respaldo experimental y no una garantía de disponibilidad.[1] [2]
+
+El orden previsto será:
+
+1. Crear y validar una VM de respaldo aislada, con un usuario Linux y credenciales separadas de Hermes.
+2. Instalar primero **OpenCode Telegram Bot** como respaldo ligero especializado en programación. Debe usar un bot de Telegram distinto, una lista blanca estricta del ID de Cristian y acceso limitado a los repositorios necesarios.[3]
+3. Configurar DeepSeek directo u otro proveedor aprobado mediante secretos server-side, sin depender de OpenRouter como único proveedor.
+4. Probar sesiones, edición de código, Git, archivos, permisos, reinicios, logs, alertas y recuperación.
+5. Solo después evaluar **OpenClaw** como respaldo general de Hermes, con Telegram, pairing/allowlist, sandboxing y auditoría de seguridad antes de darle acceso a herramientas del host.[4] [5]
+6. Documentar un procedimiento de recuperación manual y mantener esta VM separada de la producción hasta validar su estabilidad.
+
+No se debe usar Vercel como sustituto directo de esta VM: sus Functions son ejecuciones temporales con límites de duración y no mantienen un proceso persistente de Telegram, systemd o Docker.[6] Tampoco se debe asumir que Render, Railway, Koyeb o GitHub Codespaces ofrecen una VM gratuita 24/7 con almacenamiento persistente; sus planes gratuitos tienen suspensión, créditos, límites de tiempo o recursos insuficientes.
+
+### Referencias del plan de respaldo
+
+[1]: https://www.oracle.com/cloud/free/ "Oracle Cloud Free Tier"
+[2]: https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm "Oracle Always Free Resources"
+[3]: https://github.com/grinev/opencode-telegram-bot "OpenCode Telegram Bot"
+[4]: https://github.com/openclaw/openclaw "OpenClaw"
+[5]: https://docs.openclaw.ai/gateway/security "OpenClaw Security"
+[6]: https://vercel.com/docs/functions/limitations "Vercel Functions Limits"
