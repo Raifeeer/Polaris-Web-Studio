@@ -4,7 +4,7 @@ import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
-import { findPlaceById, findPlaceByMapsUrl, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
+import { findPlaceById, findPlaceByMapsUrl, findPlaceCandidatePage, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
 import { claimEmailDelivery, commitEmailDelivery, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
@@ -488,9 +488,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(202).json({ success: true, status: "processing", startedAt: atlasStartedAt.getTime(), place: v.placeData });
   }
 
-  const { businessName, city, email, contactName, mapsUrl, confirmedPlaceId, lang } = req.body || {};
+  const { businessName, city, email, contactName, mapsUrl, confirmedPlaceId, pageToken, lang } = req.body || {};
   const normalizedMapsUrl = typeof mapsUrl === "string" ? mapsUrl.trim() : "";
   const normalizedConfirmedPlaceId = typeof confirmedPlaceId === "string" ? confirmedPlaceId.trim() : "";
+  const normalizedPageToken = typeof pageToken === "string" ? pageToken.trim() : "";
   const hasMapsUrl = Boolean(normalizedMapsUrl);
   const normalizedBusinessName = typeof businessName === "string" ? businessName.trim() : "";
   const normalizedCity = typeof city === "string" ? city.trim() : "";
@@ -508,6 +509,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: "Falta tu nombre." });
   }
   const language: "es" | "en" = lang === "en" ? "en" : "es";
+  if (normalizedPageToken.length > 4096) {
+    return res.status(400).json({ error: language === "en" ? "That result page is no longer available. Start the search again." : "Esa página de resultados ya no está disponible. Inicia la búsqueda de nuevo." });
+  }
+  if (normalizedPageToken && (normalizedMapsUrl || normalizedConfirmedPlaceId)) {
+    return res.status(400).json({ error: language === "en" ? "A next results page is only available for name searches." : "La siguiente página solo está disponible para búsquedas por nombre." });
+  }
   if (normalizedMapsUrl.length > 2000 || (normalizedMapsUrl && !isGoogleMapsUrl(normalizedMapsUrl))) {
     return res.status(400).json({
       reason: "maps_invalid",
@@ -549,11 +556,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? await findPlaceById(normalizedConfirmedPlaceId, apiKey as string)
       : null;
     const mapsPlace = !normalizedConfirmedPlaceId && normalizedMapsUrl ? await findPlaceByMapsUrl(normalizedMapsUrl) : null;
+    const candidatePage = !normalizedConfirmedPlaceId && !normalizedMapsUrl
+      ? await findPlaceCandidatePage(normalizedBusinessName, normalizedCity, normalizedPageToken || undefined)
+      : null;
     const candidates = normalizedConfirmedPlaceId
       ? (confirmedPlace ? [confirmedPlace] : [])
       : normalizedMapsUrl
         ? (mapsPlace ? [mapsPlace] : [])
-        : await findPlaceCandidates(normalizedBusinessName, normalizedCity);
+        : candidatePage?.candidates || [];
     if (!candidates.length) {
       if (normalizedConfirmedPlaceId) {
         return res.status(409).json({
@@ -586,7 +596,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       : null;
 
     if (normalizedMapsUrl && !normalizedConfirmedPlaceId) {
-      return res.json({ success: true, requiresConfirmation: true, candidates, place: firstPlace });
+      return res.json({ success: true, requiresConfirmation: true, candidates, place: firstPlace, nextPageToken: null });
     }
 
     if (normalizedConfirmedPlaceId && !selectedPlace) {
@@ -602,7 +612,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // La búsqueda puede devolver candidatos sin crear leads ni programar correos.
     // Solo la confirmación explícita del negocio llega a este punto.
     if (!normalizedConfirmedPlaceId) {
-      return res.json({ success: true, requiresConfirmation: true, candidates, place: firstPlace, leadId: null });
+      return res.json({ success: true, requiresConfirmation: true, candidates, place: firstPlace, leadId: null, nextPageToken: candidatePage?.nextPageToken || null });
     }
 
     const place = selectedPlace || firstPlace;

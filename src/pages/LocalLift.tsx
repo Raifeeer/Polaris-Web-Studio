@@ -241,6 +241,8 @@ export default function LocalLift() {
   const [place, setPlace] = useState<PlaceResult | null>(null);
   const [candidates, setCandidates] = useState<PlaceResult[]>([]);
   const [visibleCandidateCount, setVisibleCandidateCount] = useState(3);
+  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [loadingMoreCandidates, setLoadingMoreCandidates] = useState(false);
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [revealedByAtlas, setRevealedByAtlas] = useState(false);
   const [diagnosticLeadId, setDiagnosticLeadId] = useState<string | null>(null);
@@ -390,6 +392,8 @@ export default function LocalLift() {
     }
     setCandidates([]);
     setVisibleCandidateCount(3);
+    setNextPageToken(null);
+    setLoadingMoreCandidates(false);
     setPlace(null);
     setDiagnostic(null);
     setRevealedByAtlas(false);
@@ -423,6 +427,7 @@ export default function LocalLift() {
         place,
         candidates,
         visibleCandidateCount,
+        nextPageToken,
         revealedByAtlas,
         diagnosticLeadId,
         emailGuardReason,
@@ -444,8 +449,9 @@ export default function LocalLift() {
       status: "success",
       diagnostic,
       place,
-      candidates: [],
-      revealedByAtlas,
+        candidates: [],
+        nextPageToken: null,
+        revealedByAtlas,
       diagnosticLeadId,
     });
   };
@@ -456,7 +462,7 @@ export default function LocalLift() {
     if (!hasProgress) return;
     const timer = window.setTimeout(() => persistFlowSnapshot(), 120);
     return () => window.clearTimeout(timer);
-  }, [businessName, city, contactName, email, mapsUrl, lookupMode, status, diagnostic, place, candidates, visibleCandidateCount, revealedByAtlas, diagnosticLeadId, emailGuardReason, revealTimedOut, revealRequested, atlasStartedAt]);
+  }, [businessName, city, contactName, email, mapsUrl, lookupMode, status, diagnostic, place, candidates, visibleCandidateCount, nextPageToken, revealedByAtlas, diagnosticLeadId, emailGuardReason, revealTimedOut, revealRequested, atlasStartedAt]);
 
   const persistAtlasRetryAndReload = () => {
     if (!diagnosticLeadId || !place) return;
@@ -526,6 +532,45 @@ export default function LocalLift() {
   // Este submit valida el negocio real en Google y prepara sus fotos antes de
   // abrir la confirmación. La generación del diagnóstico con IA corre después,
   // cuando el cliente pide "Atlas ahora" en handleRevealNow.
+  const handleShowMoreCandidates = async () => {
+    if (loadingMoreCandidates || status !== "confirm") return;
+    if (visibleCandidateCount < candidates.length) {
+      setVisibleCandidateCount((count) => Math.min(count + 3, candidates.length));
+      return;
+    }
+    if (!nextPageToken) return;
+    setLoadingMoreCandidates(true);
+    setErrorMsg("");
+    try {
+      const response = await fetch("/api/local-lift-diagnostic", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          businessName,
+          city,
+          contactName,
+          email,
+          pageToken: nextPageToken,
+          lang: language === "en" ? "en" : "es",
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || (language === "en" ? "We couldn't load more listings." : "No pudimos cargar más fichas."));
+      const incoming: PlaceResult[] = Array.isArray(data.candidates) ? data.candidates : [];
+      const existingIds = new Set(candidates.map((candidate) => candidate.id));
+      const additions = incoming.filter((candidate) => candidate.id && !existingIds.has(candidate.id));
+      const merged = [...candidates, ...additions];
+      setCandidates(merged);
+      setVisibleCandidateCount(Math.min(visibleCandidateCount + 3, merged.length));
+      setNextPageToken(typeof data.nextPageToken === "string" ? data.nextPageToken : null);
+      persistFlowSnapshot({ candidates: merged, visibleCandidateCount: Math.min(visibleCandidateCount + 3, merged.length), nextPageToken: typeof data.nextPageToken === "string" ? data.nextPageToken : null });
+    } catch (error: any) {
+      setErrorMsg(error?.message || (language === "en" ? "We couldn't load more listings." : "No pudimos cargar más fichas."));
+    } finally {
+      setLoadingMoreCandidates(false);
+    }
+  };
+
   const handleDiagnosticSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (lookupMode === "name" && (!businessName.trim() || !city.trim())) return;
@@ -572,10 +617,9 @@ export default function LocalLift() {
       // las primeras tres bloquean la apertura; las demás empiezan en paralelo.
       setCandidates(verifiedCandidates);
       setVisibleCandidateCount(3);
+      setNextPageToken(typeof data.nextPageToken === "string" ? data.nextPageToken : null);
       const firstThreePhotoUrls = [...new Set(verifiedCandidates.slice(0, 3).flatMap((candidate) => candidate.photoUrls || []))];
-      const remainingPhotoUrls = [...new Set(verifiedCandidates.slice(3).flatMap((candidate) => candidate.photoUrls || []))];
       setLoadingStage("photos");
-      void waitForPhotos(remainingPhotoUrls, "low");
       await waitForPhotos(firstThreePhotoUrls, "high");
       await new Promise<void>((resolve) => setTimeout(resolve, 300));
 
@@ -587,12 +631,14 @@ export default function LocalLift() {
       const firstPlace = verifiedCandidates[0] ?? data.place ?? null;
       setCandidates(verifiedCandidates);
       setVisibleCandidateCount(3);
+      setNextPageToken(typeof data.nextPageToken === "string" ? data.nextPageToken : null);
       setPlace(firstPlace);
       setDiagnosticLeadId(data.leadId || null);
       persistFlowSnapshot({
         status: "confirm",
         candidates: verifiedCandidates,
         visibleCandidateCount: 3,
+        nextPageToken: typeof data.nextPageToken === "string" ? data.nextPageToken : null,
         place: firstPlace,
         diagnostic: null,
         diagnosticLeadId: data.leadId || null,
@@ -648,6 +694,7 @@ export default function LocalLift() {
       setPlace(saved.place || null);
       setCandidates(Array.isArray(saved.candidates) ? saved.candidates : []);
       setVisibleCandidateCount(Number(saved.visibleCandidateCount) || 3);
+      setNextPageToken(typeof saved.nextPageToken === "string" ? saved.nextPageToken : null);
       setRevealedByAtlas(Boolean(saved.revealedByAtlas));
       setDiagnosticLeadId(saved.diagnosticLeadId || null);
       setEmailGuardReason(saved.emailGuardReason === "in_progress" ? "in_progress" : "already_used");
@@ -1419,18 +1466,19 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                 ))}
                 </AnimatePresence>
               </div>
-              {visibleCandidateCount < candidates.length && (
+              {(visibleCandidateCount < candidates.length || nextPageToken) && (
                 <motion.button
                   type="button"
-                  onClick={() => setVisibleCandidateCount((count) => Math.min(count + 3, candidates.length))}
+                  onClick={handleShowMoreCandidates}
+                  disabled={loadingMoreCandidates}
                   whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.02 }}
                   whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
                   transition={prefersReducedMotion ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 26 }}
                   className="mt-4 mx-auto flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/30 px-4 py-2 text-xs font-black text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/10 will-change-transform focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
                 >
-                  <ChevronRight size={14} className="rotate-90" />
-                  <T en="Show more listings">Mostrar más sucursales</T>
-                  <span className="opacity-70">({candidates.length - visibleCandidateCount})</span>
+                  {loadingMoreCandidates ? <Loader2 size={14} className="animate-spin" /> : <ChevronRight size={14} className="rotate-90" />}
+                  <T en={loadingMoreCandidates ? "Loading more listings…" : "Show more listings"}>{loadingMoreCandidates ? "Cargando más sucursales…" : "Mostrar más sucursales"}</T>
+                  {!loadingMoreCandidates && visibleCandidateCount < candidates.length && <span className="opacity-70">({candidates.length - visibleCandidateCount})</span>}
                 </motion.button>
               )}
               <div className="mt-3 border-t border-[var(--color-border-subtle)]/70 pt-3">

@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createPublicKey, timingSafeEqual, verify as cryptoVerify } from "node:crypto";
+import { createHash, createPublicKey, timingSafeEqual, verify as cryptoVerify } from "node:crypto";
 import { z } from "zod";
 import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, type DocumentReference } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { findPlace, findPlaceReviews, generateFast, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
@@ -116,6 +116,48 @@ const LOCAL_LIFT_PDF_URL = "https://local-lift-package-pdf-wdvfac6mgq-ue.a.run.a
 // Pide el PDF del paquete a la Cloud Function nueva (diseño Claude Design,
 // ver Meridian/cloud-functions/local-lift-package-pdf) -- reemplaza el
 // volcado de HTML en el cuerpo del correo por un adjunto real y descargable.
+const PREVIEW_CACHE_TTL_MS = 10 * 60 * 1000;
+const PREVIEW_CACHE_MAX_ENTRIES = 8;
+const previewPdfCache = new Map<string, { createdAt: number; buffer: Buffer }>();
+
+function buildPreviewCacheKey(params: {
+  businessName: string;
+  tierLabel: string;
+  lang: "es" | "en";
+  pkg: LocalLiftPackage;
+  place?: PlaceData | null;
+  documentType?: "package" | "guide";
+}): string {
+  return createHash("sha256")
+    .update(JSON.stringify({
+      businessName: params.businessName,
+      tierLabel: params.tierLabel,
+      lang: params.lang,
+      pkg: params.pkg,
+      place: params.place || null,
+      documentType: params.documentType || "package",
+    }))
+    .digest("hex");
+}
+
+function getCachedPreviewPdf(key: string): Buffer | null {
+  const entry = previewPdfCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.createdAt > PREVIEW_CACHE_TTL_MS) {
+    previewPdfCache.delete(key);
+    return null;
+  }
+  return entry.buffer;
+}
+
+function cachePreviewPdf(key: string, buffer: Buffer): void {
+  if (previewPdfCache.size >= PREVIEW_CACHE_MAX_ENTRIES) {
+    const oldestKey = [...previewPdfCache.entries()].sort((a, b) => a[1].createdAt - b[1].createdAt)[0]?.[0];
+    if (oldestKey) previewPdfCache.delete(oldestKey);
+  }
+  previewPdfCache.set(key, { createdAt: Date.now(), buffer });
+}
+
 async function fetchPackagePdf(params: {
   businessName: string;
   tierLabel: string;
@@ -784,6 +826,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const language: "es" | "en" = lang === "en" ? "en" : "es";
   const requestedTier = normalizeTier(tier);
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
+  let packageSendLockRef: DocumentReference | null = null;
 
   try {
     if (action === "leads") {
@@ -903,20 +946,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return res.status(400).json({ error: "El correo no es válido." });
       }
-      let docRef = null;
+      let docRef: DocumentReference | null = null;
       let previousPortalSyncAttempts = 0;
       if (typeof leadId === "string" && leadId.trim()) {
         docRef = firestore.collection("localLiftDiagnostics").doc(leadId.trim());
-        const doc = await docRef.get();
-        if (!doc.exists) return res.status(404).json({ error: "Lead no encontrado." });
-        const leadData = doc.data()!;
-        if (!leadData.paid) {
-          return res.status(400).json({ error: "Este lead todavía no ha pagado. Envía la propuesta primero (botón 'Enviar propuesta')." });
-        }
-        previousPortalSyncAttempts = Math.max(0, Number(leadData.portalSyncAttempts || 0));
+        let missingLead = false;
+        let unpaidLead = false;
+        let alreadySent = false;
+        let sendInProgress = false;
+        let sendClaimed = false;
+        await firestore.runTransaction(async (transaction) => {
+          const snapshot = await transaction.get(docRef!);
+          if (!snapshot.exists) {
+            missingLead = true;
+            return;
+          }
+          const leadData = snapshot.data()!;
+          if (!leadData.paid) {
+            unpaidLead = true;
+            return;
+          }
+          previousPortalSyncAttempts = Math.max(0, Number(leadData.portalSyncAttempts || 0));
+          if (leadData.sentAt || leadData.status === "sent") {
+            alreadySent = true;
+            return;
+          }
+          const startedAt = typeof leadData.packageSendStartedAt?.toMillis === "function"
+            ? leadData.packageSendStartedAt.toMillis()
+            : new Date(String(leadData.packageSendStartedAt || "")).getTime();
+          const lockIsFresh = Number.isFinite(startedAt) && Date.now() - startedAt < 20 * 60 * 1000;
+          if (leadData.packageSendInProgress && lockIsFresh) {
+            sendInProgress = true;
+            return;
+          }
+          transaction.update(docRef!, {
+            packageSendInProgress: true,
+            packageSendStartedAt: new Date(),
+          });
+          sendClaimed = true;
+        });
+        if (missingLead) return res.status(404).json({ error: "Lead no encontrado." });
+        if (unpaidLead) return res.status(400).json({ error: "Este lead todavía no ha pagado. Envía la propuesta primero (botón 'Enviar propuesta')." });
+        if (alreadySent) return res.status(409).json({ success: false, reason: "package_already_sent" });
+        if (sendInProgress || !sendClaimed) return res.status(409).json({ success: false, reason: "package_send_in_progress" });
+        packageSendLockRef = docRef;
       }
       const zohoPassword = process.env.ZOHO_PASSWORD;
       if (!zohoPassword) {
+        if (packageSendLockRef) {
+          await packageSendLockRef.update({ packageSendInProgress: null, packageSendStartedAt: null }).catch(() => undefined);
+          packageSendLockRef = null;
+        }
         return res.status(500).json({ error: "ZOHO_PASSWORD no configurado — no se puede enviar." });
       }
       const transporter = nodemailer.createTransport({
@@ -991,6 +1071,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           portalSyncLastError: pdfBuffer ? "" : "No se pudo generar el PDF; el portal permanece en preparación.",
           ...(pdfBuffer ? { pdfBase64: pdfBuffer.toString("base64") } : {}),
           ...(guideStoragePath ? { guidePdfStoragePath: guideStoragePath, guidePdfAvailable: true } : {}),
+          packageSendInProgress: null,
+          packageSendStartedAt: null,
         });
         if (pdfBuffer) {
           const firstSync = await syncPortalPackageSent(leadId!.trim(), !!guideStoragePath);
@@ -1024,20 +1106,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
       const finalTierPreview = normalizeTier(typeof leadId === "string" && leadId.trim() ? (await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get()).data()?.tier : tier);
       const tierLabelPreview = TIER_PRICE[finalTierPreview]?.label || TIER_PRICE["impulso"].label;
-      let previewPdf: Buffer | null = null;
-      try {
-        previewPdf = await fetchPackagePdf({
-          businessName: givenPlace.name,
-          tierLabel: tierLabelPreview,
-          lang: language,
-          pkg: givenPackage,
-          place: givenPlace,
-          documentType: documentType === "guide" ? "guide" : "package",
-        });
-      } catch (pdfErr) {
-        console.error("[local-lift-package] Error generando vista previa del PDF:", pdfErr);
+      const previewParams = {
+        businessName: givenPlace.name,
+        tierLabel: tierLabelPreview,
+        lang: language,
+        pkg: givenPackage,
+        place: givenPlace,
+        documentType: documentType === "guide" ? "guide" as const : "package" as const,
+      };
+      const previewKey = buildPreviewCacheKey(previewParams);
+      let previewPdf = getCachedPreviewPdf(previewKey);
+      if (!previewPdf) {
+        try {
+          previewPdf = await fetchPackagePdf(previewParams);
+          if (previewPdf) cachePreviewPdf(previewKey, previewPdf);
+        } catch (pdfErr) {
+          console.error("[local-lift-package] Error generando vista previa del PDF:", pdfErr);
+        }
       }
       if (!previewPdf) return res.status(500).json({ error: "No pudimos generar la vista previa." });
+      res.setHeader("Cache-Control", "private, max-age=0, no-store");
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", "inline; filename=\"vista-previa.pdf\"");
       return res.status(200).send(previewPdf);
@@ -1259,6 +1347,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     return res.json({ success: true, place, reviews, package: pkg, tier: requestedTier, leadId: finalLeadId, status: finalStatus, paid: finalPaid });
   } catch (error: any) {
+    if (packageSendLockRef) {
+      await packageSendLockRef.update({ packageSendInProgress: null, packageSendStartedAt: null }).catch(() => undefined);
+    }
     console.error("[local-lift-package] Error:", error);
     return res.status(500).json({ error: error?.message || "No se pudo generar/enviar el paquete." });
   }
