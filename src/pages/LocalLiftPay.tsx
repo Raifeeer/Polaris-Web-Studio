@@ -519,7 +519,7 @@ export default function LocalLiftPay() {
             </div>
 
             <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]/45 px-4 py-3 text-left">
-              <label className="flex items-start gap-3 cursor-pointer">
+              <label className="group flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
                   checked={termsAccepted}
@@ -527,8 +527,14 @@ export default function LocalLiftPay() {
                     setTermsAccepted(event.target.checked);
                     if (event.target.checked) setTermsError("");
                   }}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#16C8C1]"
+                  className="peer sr-only"
                 />
+                <span
+                  aria-hidden="true"
+                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[7px] border-2 transition-all duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-[#16C8C1] peer-focus-visible:ring-offset-2 ${termsAccepted ? "border-[#16C8C1] bg-[#16C8C1] text-[#111936] shadow-sm shadow-teal-500/20" : "border-slate-400 bg-white text-transparent group-hover:border-[#16C8C1]"}`}
+                >
+                  <Check size={13} strokeWidth={3} />
+                </span>
                 <span className="text-[11px] leading-5 text-[var(--color-text-secondary)]">
                   <T en="By clicking a payment button, you accept the Local Lift service conditions and cancellation policy. You can read them before paying.">Al pulsar un botón de pago, aceptas las condiciones del servicio y la política de cancelación de Local Lift. Puedes leerlas antes de pagar.</T>{" "}
                   <button
