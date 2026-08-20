@@ -466,14 +466,31 @@ Estado: ${place.isOperational ? "operativo" : "cerrado o no operativo según Goo
 export function buildEmailFooter(lang: "es" | "en", reasonLine: string): string {
   const en = lang === "en";
   const linkWeb = en ? "Website" : "Sitio web";
+  const linkWhatsApp = "WhatsApp";
   const linkContact = en ? "Contact" : "Contacto";
   const linkPrivacy = en ? "Privacy" : "Privacidad";
   const linkTerms = en ? "Terms and conditions" : "Términos y condiciones";
   const identity = en
     ? "Polaris Local Lift · Dominican Republic · hola@polarisweb.studio"
     : "Polaris Local Lift · República Dominicana · hola@polarisweb.studio";
+  const socialBase = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets";
   return `
-    <div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${linkWeb}</a><span style="font-size:13px;color:#1f2937;">&nbsp;·&nbsp;</span><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${linkContact}</a></div>
+    <div style="text-align:center;padding:0 0 24px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+        <td style="padding:0 10px;"><a href="https://www.instagram.com/polariswebstudio/" target="_blank" rel="noopener noreferrer"><img src="${socialBase}/social-instagram.png" width="22" height="22" alt="Instagram" style="width:22px;height:22px;display:block;"></a></td>
+        <td style="padding:0 10px;"><img src="${socialBase}/social-facebook.png" width="22" height="22" alt="Facebook" style="width:22px;height:22px;display:block;"></td>
+        <td style="padding:0 10px;"><img src="${socialBase}/social-x.png" width="22" height="22" alt="X" style="width:22px;height:22px;display:block;"></td>
+        <td style="padding:0 10px;"><img src="${socialBase}/social-linkedin.png" width="22" height="22" alt="LinkedIn" style="width:22px;height:22px;display:block;"></td>
+      </tr></table>
+    </div>
+    <div style="height:1px;background:#e2e8f0;margin-bottom:24px;"></div>
+    <div style="text-align:center;margin-bottom:16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto;"><tr>
+        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${linkWeb}</a></td>
+        <td width="34%" style="text-align:center;white-space:nowrap;"><a href="https://wa.me/18299200544" target="_blank" style="font-size:13px;color:#1f2937;">${linkWhatsApp}</a></td>
+        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${linkContact}</a></td>
+      </tr></table>
+    </div>
     <div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-size:12px;color:#64748b;">${linkPrivacy}</a><span style="font-size:12px;color:#64748b;">&nbsp;·&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-size:12px;color:#64748b;">${linkTerms}</a></div>
     <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${identity}<br>${reasonLine}</div>`;
 }
