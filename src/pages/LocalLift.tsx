@@ -1578,11 +1578,20 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       lang={language}
                     />
                   </div>
-                  <p className="text-xs text-[var(--color-text-tertiary)]">
+                  <div className="mt-1 flex items-center justify-center">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary-base)]/20 bg-[var(--color-primary-base)]/8 px-3 py-1.5 text-[11px] font-semibold text-[var(--color-text-secondary)]">
+                      <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-[var(--color-primary-base)]/45 motion-safe:animate-ping" />
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--color-primary-base)]" />
+                      </span>
+                      <span>
+                        <T en="Usually ready in">Normalmente lista en</T>{" "}
+                        <strong className="font-black text-[var(--color-primary-base)]">30–45 s</strong>
+                      </span>
+                    </span>
+                  </div>
+                  <p className="sr-only" aria-live="polite">
                     <T en={`Atlas has been working for ${revealElapsedSeconds} seconds.`}>{`Atlas lleva ${revealElapsedSeconds} segundos trabajando.`}</T>
-                  </p>
-                  <p className="text-xs leading-relaxed text-[var(--color-text-tertiary)]">
-                    <T en="This process usually takes about 30–45 seconds.">Este proceso suele tardar unos 30–45 segundos.</T>
                   </p>
                 </div>
               ) : revealNowLoading && revealTimedOut ? (
