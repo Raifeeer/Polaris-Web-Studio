@@ -38,9 +38,9 @@ if (!scriptMatch || !stylesheetMatch) {
 
 const assetTags = [scriptMatch[0], ...preloadMatches, stylesheetMatch[0]].join("\n    ");
 
-const title = "Polaris Local Lift | Más visibilidad y conversaciones en 48 horas";
+const title = "Polaris Local Lift | Claridad para mejorar tu presencia local";
 const description =
-  "Polaris Local Lift optimiza tu Google Business Profile, Google Maps y WhatsApp en 48 horas: diagnóstico gratis con datos reales de tu ficha, y un paquete completo de contenido (publicaciones, respuestas a reseñas, mensajes de seguimiento) listo para usar.";
+  "Polaris Local Lift analiza tu presencia local y prepara contenido, guías y revisiones para ayudarte a mejorarla sin pedirte contraseñas ni administrar tu cuenta de Google.";
 
 const html = `<!doctype html>
 <html lang="es">
@@ -115,14 +115,14 @@ const html = `<!doctype html>
     <div id="root">
       <main class="ll-snap" style="max-width: 760px; margin: 0 auto; padding: 56px 24px;">
         <img src="/brand/local-lift-lockup-horizontal-dark.svg" alt="Local Lift by Polaris Web Studio" style="height: 40px; width: auto; margin-bottom: 32px;" />
-        <h1 style="font-weight: 800; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 20px;">Haz que tu ficha de Google ayude a decidir.</h1>
-        <p class="ll-snap-p1" style="font-size: 17px; line-height: 1.7; margin: 0 0 28px;">Tus clientes ya te están buscando. Polaris Local Lift organiza tu presencia en Google y WhatsApp en 48 horas para que tus clientes entiendan qué ofreces, dónde estás y cómo contactarte.</p>
+        <h1 style="font-weight: 800; font-size: 40px; line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 20px;">Entiende qué conviene mejorar en tu presencia local.</h1>
+        <p class="ll-snap-p1" style="font-size: 17px; line-height: 1.7; margin: 0 0 28px;">Polaris Local Lift analiza la información que tus clientes encuentran y prepara materiales claros para que puedas mejorarla sin entregar contraseñas ni delegar la administración de tu cuenta.</p>
         <ul class="ll-snap-ul" style="list-style: disc; padding-left: 20px; margin: 0 0 28px; display: flex; flex-direction: column; gap: 14px; font-size: 15px; line-height: 1.6;">
-          <li><strong style="color: #16C8C1;">Diagnóstico Express</strong> (24 horas) -- revisión de tu ficha de Google/Maps y WhatsApp, cinco problemas prioritarios, y un plan de acción de 7 días.</li>
-          <li><strong style="color: #16C8C1;">Impulso</strong> -- auditoría completa, descripción y servicios reescritos, 10 publicaciones listas, respuestas personalizadas a tus reseñas reales, y 10 mensajes de WhatsApp de seguimiento.</li>
-          <li><strong style="color: #16C8C1;">Ascenso</strong> -- todo lo de Impulso, más implementación asistida de los cambios que autorices.</li>
+          <li><strong style="color: #16C8C1;">Diagnóstico Express</strong> -- revisión inicial, cinco prioridades y un plan de acción breve.</li>
+          <li><strong style="color: #16C8C1;">Impulso</strong> -- auditoría completa, contenido listo para aplicar y entrega por correo y portal en aproximadamente dos horas.</li>
+          <li><strong style="color: #16C8C1;">Ascenso</strong> -- análisis más profundo, guía paso a paso, entrega preparada en cinco horas corridas tras firmar y hasta tres rondas de revisión desde el portal.</li>
         </ul>
-        <p class="ll-snap-p2" style="font-size: 15px; line-height: 1.7; margin: 0;">Si conectas tu cuenta de Google Business Profile, con tu autorización explícita en cada caso, publicamos el contenido aprobado directamente en tu ficha o respondemos tus reseñas en tu nombre.</p>
+        <p class="ll-snap-p2" style="font-size: 15px; line-height: 1.7; margin: 0;">Tú conservas el control de tu cuenta. Nosotros preparamos el contenido, te mostramos dónde aplicarlo y revisamos tus cambios sin administrar directamente tu Google Business Profile.</p>
       </main>
     </div>
   </body>

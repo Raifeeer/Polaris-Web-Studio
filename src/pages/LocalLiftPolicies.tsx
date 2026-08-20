@@ -69,11 +69,12 @@ export default function LocalLiftPolicies() {
               <ul className="grid md:grid-cols-2 gap-3 text-sm text-[var(--color-text-secondary)]">
                 {[
                   "Todo lo incluido en Impulso",
+                  "Entrega preparada en un máximo de 5 horas corridas después de firmar",
                   "Análisis de reseñas recientes y buenas prácticas personalizadas",
                   "Guía paso a paso para aplicar cada cambio",
                   "Indicaciones para aplicar textos e imágenes",
-                  "Hasta tres rondas agrupadas de revisión",
-                  "Acompañamiento personalizado 1:1",
+                  "Hasta tres rondas agrupadas de revisión desde el portal",
+                  "Acompañamiento guiado desde el portal, sin reuniones obligatorias ni contraseñas",
                 ].map((item) => <li key={item} className="flex items-start gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#16C8C1]" />{item}</li>)}
               </ul>
             </div>
@@ -81,7 +82,7 @@ export default function LocalLiftPolicies() {
           </PolicySection>
 
           <PolicySection title={<T en="4. Delivery and approvals">4. Entrega y aprobaciones</T>}>
-            <p><T en="After payment, the client receives portal access and must review and sign the applicable service agreement. The package is prepared and released after the agreement is signed. Ascenso's meeting and review workflow becomes available after signing.">Después del pago, el cliente recibe acceso al portal y debe revisar y firmar el contrato aplicable. El paquete se prepara y se libera después de firmar. La reunión y el workflow de revisiones de Ascenso quedan disponibles después de la firma.</T></p>
+            <p><T en="After payment, the client receives portal access and must review and sign the applicable service agreement. Once the agreement is signed, Ascenso is prepared within five consecutive hours and becomes available in the portal for review. The final PDFs are released by email after the client approves the prepared version. No meeting is required; support and review requests happen through the portal.">Después del pago, el cliente recibe acceso al portal y debe revisar y firmar el contrato aplicable. Una vez firmado, Ascenso se prepara dentro de cinco horas corridas y queda disponible en el portal para revisión. Los PDFs finales se envían por correo después de que el cliente aprueba la versión preparada. No es necesaria una reunión; el soporte y las solicitudes de revisión se gestionan desde el portal.</T></p>
             <p><T en="Approving a version does not create unlimited new work. It confirms the current version and allows the service to move to its next defined stage.">Aprobar una versión no crea trabajo nuevo ilimitado. Confirma la versión actual y permite que el servicio avance a su siguiente etapa definida.</T></p>
           </PolicySection>
 
@@ -95,6 +96,11 @@ export default function LocalLiftPolicies() {
 
           <PolicySection title={<T en="6. Data and third-party platforms">6. Datos y plataformas de terceros</T>}>
             <p><T en="We use the business and contact information required to prepare and support the purchased service. The Privacy Policy explains the broader handling of personal data. Google Business Profile and other external platforms have their own rules, permissions and availability; Local Lift cannot guarantee their decisions, uptime or review moderation.">Usamos la información del negocio y de contacto necesaria para preparar y acompañar el servicio adquirido. La Política de Privacidad explica el tratamiento general de los datos personales. Google Business Profile y las demás plataformas externas tienen sus propias reglas, permisos y disponibilidad; Local Lift no puede garantizar sus decisiones, disponibilidad o moderación de reseñas.</T></p>
+          </PolicySection>
+
+          <PolicySection title={<T en="7. Abandonment, pauses and refunds">7. Abandono, pausas y reembolsos</T>}>
+            <p><T en="If the client does not complete a required step, Local Lift may send reminders. If there is no response after the defined reminder period, the project may be paused while preserving its history and prepared material. The client can request a manual review to resume it.">Si el cliente no completa un paso necesario, Local Lift puede enviar recordatorios. Si no hay respuesta después del periodo definido de recordatorios, el proyecto puede quedar pausado conservando su historial y el material preparado. El cliente puede solicitar una revisión manual para reanudarlo.</T></p>
+            <p><T en="No automatic refund is issued after work begins. Any exception is reviewed manually according to the circumstances and the applicable agreement.">No se emite un reembolso automático después de iniciar el trabajo. Cualquier excepción se revisa manualmente según las circunstancias y el contrato aplicable.</T></p>
           </PolicySection>
         </div>
       </main>

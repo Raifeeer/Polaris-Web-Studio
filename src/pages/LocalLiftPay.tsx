@@ -280,11 +280,12 @@ export default function LocalLiftPay() {
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Entrega preparada en un máximo de 5 horas corridas después de firmar", "Prepared delivery within 5 consecutive hours after signing"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
                     ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
-                    ["Hasta tres rondas agrupadas de revisión", "Up to three grouped review rounds"],
-                    ["Acompañamiento personalizado 1:1 para avanzar con claridad", "Personalized 1:1 accompaniment to move forward with clarity"],
+                    ["Hasta tres rondas agrupadas de revisión desde el portal", "Up to three grouped review rounds through the portal"],
+                    ["Acompañamiento guiado desde el portal, sin reuniones obligatorias ni contraseñas", "Guided support through the portal, without mandatory meetings or passwords"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
@@ -469,11 +470,12 @@ export default function LocalLiftPay() {
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Entrega preparada en un máximo de 5 horas corridas después de firmar", "Prepared delivery within 5 consecutive hours after signing"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
                     ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
-                    ["Hasta tres rondas agrupadas de revisión", "Up to three grouped review rounds"],
-                    ["Acompañamiento personalizado 1:1 para avanzar con claridad", "Personalized 1:1 accompaniment to move forward with clarity"],
+                    ["Hasta tres rondas agrupadas de revisión desde el portal", "Up to three grouped review rounds through the portal"],
+                    ["Acompañamiento guiado desde el portal, sin reuniones obligatorias ni contraseñas", "Guided support through the portal, without mandatory meetings or passwords"],
                   ].map(([es, en]) => (
                     <li key={es} className="flex items-start gap-2">
                       <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />

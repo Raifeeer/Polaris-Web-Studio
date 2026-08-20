@@ -176,20 +176,21 @@ const tiers = [
     isFree: false,
     price: "99",
     enPrice: "99",
-    time: "Acompañamiento personalizado 1:1",
-    enTime: "Personalized 1:1 accompaniment",
+    time: "Entrega guiada en ≤ 5 horas",
+    enTime: "Guided delivery within 5 hours",
     accent: "violet",
     icon: "trending",
-    description: "Preparamos el contenido, te mostramos dónde aplicarlo y te guiamos paso a paso, sin pedirte contraseñas.",
-    enDescription: "We prepare the content, show you where to apply it, and guide you step by step without asking for passwords.",
-    cta: "Solicitar acompañamiento",
-    enCta: "Request guided support",
+    description: "Preparamos el contenido, te mostramos dónde aplicarlo y te acompañamos desde el portal, sin reuniones obligatorias ni pedirte contraseñas.",
+    enDescription: "We prepare the content, show you where to apply it, and support you through the portal, without mandatory meetings or passwords.",
+    cta: "Comenzar mi plan guiado",
+    enCta: "Start my guided plan",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
+      ["Entrega preparada en un máximo de 5 horas corridas después de firmar", "Prepared delivery within 5 consecutive hours after signing"],
       ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
       ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
       ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
-      ["Hasta tres rondas agrupadas de revisión", "Up to three grouped review rounds"],
+      ["Hasta tres rondas agrupadas de revisión desde el portal", "Up to three grouped review rounds through the portal"],
     ],
   },
 ];
@@ -1781,8 +1782,8 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                   </div>
                   <div>
                     <p className="text-xs text-[var(--color-text-tertiary)] mb-2 leading-relaxed">
-                      <T en="Ascenso adds assisted implementation, so the approved changes move from plan to execution without asking for passwords.">
-                        Ascenso añade implementación asistida para llevar los cambios aprobados del plan a la ejecución, sin pedirte contraseñas.
+                      <T en="Ascenso adds guided support: we prepare the material, explain where to apply it, and review your changes through the portal without asking for passwords.">
+                        Ascenso añade acompañamiento guiado: preparamos el material, te explicamos dónde aplicarlo y revisamos tus cambios desde el portal, sin pedirte contraseñas.
                       </T>
                     </p>
                     <motion.a
