@@ -1145,6 +1145,7 @@ export default function ClientDashboard() {
   // (dibujada o tipeada, Ley 126-02 RD). Pasos: 1) completar cédula/domicilio
   // si faltan, 2) revisar el HTML exacto que se va a firmar, 3) firmar.
   const [showContractModal, setShowContractModal] = useState(false);
+  const autoOpenedContractProjectRef = useRef<string | null>(null);
   const [contractStep, setContractStep] = useState<"legal-info" | "review" | "signing" | "done">("legal-info");
   const [contractCode, setContractCode] = useState("");
   const [contractCedula, setContractCedula] = useState("");
@@ -1988,6 +1989,24 @@ export default function ClientDashboard() {
       setContractError("No se pudo cargar la información del contrato.");
     }
   };
+
+  // En el primer acceso de un cliente Local Lift con contrato pendiente,
+  // el contrato debe ser la siguiente acción visible. Se espera a que termine
+  // el cambio obligatorio de contraseña y solo se abre una vez por proyecto
+  // durante la sesión, para no reabrirlo tras cada actualización del dashboard.
+  useEffect(() => {
+    if (
+      isAdmin ||
+      !clientProject?.id ||
+      !isLocalLiftProject ||
+      localLiftContractSigned ||
+      user?.mustChangePassword ||
+      autoOpenedContractProjectRef.current === clientProject.id
+    ) return;
+
+    autoOpenedContractProjectRef.current = clientProject.id;
+    void openContractModal();
+  }, [clientProject?.id, isAdmin, isLocalLiftProject, localLiftContractSigned, user?.mustChangePassword]);
 
   const fetchContractHtml = async () => {
     if (!clientProject?.id) return;
