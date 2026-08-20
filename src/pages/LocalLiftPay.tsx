@@ -2,12 +2,14 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useCallback, useEffect, useState, type ComponentProps } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { FUNDING, PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, ArrowLeft, Check, Download, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, Zap } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, Download, ExternalLink, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, X, Zap } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
+import LocalLiftPolicyContent from "../components/LocalLiftPolicyContent";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { downloadLocalLiftPoliciesPdf } from "../lib/localLiftPolicyPdf";
 
 const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string }> = {
   impulso: { amount: "29", label: "Impulso", enLabel: "Impulso" },
@@ -33,6 +35,7 @@ export default function LocalLiftPay() {
   const [isSwitchingTier, setIsSwitchingTier] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [termsError, setTermsError] = useState("");
+  const [policyModalOpen, setPolicyModalOpen] = useState(false);
 
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
 
@@ -67,6 +70,20 @@ export default function LocalLiftPay() {
   useEffect(() => {
     void refreshLead(true);
   }, [refreshLead]);
+
+  useEffect(() => {
+    if (!policyModalOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPolicyModalOpen(false);
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [policyModalOpen]);
 
   // Otra pestaña puede completar el pago mientras esta sigue abierta. Al
   // volver al checkout, el backend es la autoridad y los botones desaparecen.
@@ -514,9 +531,13 @@ export default function LocalLiftPay() {
                 />
                 <span className="text-[11px] leading-5 text-[var(--color-text-secondary)]">
                   <T en="By clicking a payment button, you accept the Local Lift service conditions and cancellation policy. You can read them before paying.">Al pulsar un botón de pago, aceptas las condiciones del servicio y la política de cancelación de Local Lift. Puedes leerlas antes de pagar.</T>{" "}
-                  <a href="/local-lift/politicas" target="_blank" rel="noreferrer" className="font-bold text-[var(--color-primary-base)] underline underline-offset-2">
+                  <button
+                    type="button"
+                    onClick={() => setPolicyModalOpen(true)}
+                    className="font-bold text-[var(--color-primary-base)] underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                  >
                     <T en="Read conditions">Leer condiciones</T>
-                  </a>
+                  </button>
                 </span>
               </label>
               {termsError && <p className="mt-2 text-[11px] font-bold text-red-500" role="alert">{termsError}</p>}
@@ -569,6 +590,72 @@ export default function LocalLiftPay() {
             </div>
 
             <p className="mt-5 flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]"><ShieldCheck size={13} /> <T en="Secure payment via PayPal.">Pago seguro vía PayPal.</T></p>
+          </div>
+        )}
+
+        {policyModalOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#111936]/55 p-3 backdrop-blur-sm sm:p-6"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="local-lift-policy-modal-title"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget) setPolicyModalOpen(false);
+            }}
+          >
+            <section className="flex max-h-[min(88vh,820px)] w-full max-w-3xl min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--color-primary-base)]/20 bg-[var(--color-surface-base)] shadow-2xl">
+              <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-4 py-4 sm:px-6">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
+                    <T en="Local Lift policies">Políticas Local Lift</T>
+                  </p>
+                  <h2 id="local-lift-policy-modal-title" className="mt-1 font-display text-xl font-black tracking-tight text-[var(--color-text-primary)] sm:text-2xl">
+                    <T en="Service conditions">Condiciones del servicio</T>
+                  </h2>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => downloadLocalLiftPoliciesPdf(language === "en" ? "en" : "es")}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border-subtle)] px-2.5 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+                  >
+                    <Download size={14} />
+                    <span className="hidden sm:inline"><T en="Download PDF">Descargar PDF</T></span>
+                    <span className="sm:hidden"><T en="PDF">PDF</T></span>
+                  </button>
+                  <a
+                    href="/local-lift/politicas"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-2.5 py-2 text-[11px] font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+                  >
+                    <ExternalLink size={14} />
+                    <span className="hidden sm:inline"><T en="Open full page">Abrir página completa</T></span>
+                    <span className="sm:hidden"><T en="Open">Abrir</T></span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => setPolicyModalOpen(false)}
+                    aria-label={language === "en" ? "Close policies" : "Cerrar condiciones"}
+                    className="inline-flex items-center justify-center rounded-lg p-2 text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </header>
+              <div className="min-h-0 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
+                <LocalLiftPolicyContent compact />
+              </div>
+              <footer className="flex shrink-0 items-center justify-end border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-4 py-3 sm:px-6">
+                <button
+                  type="button"
+                  onClick={() => setPolicyModalOpen(false)}
+                  className="rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
+                >
+                  <T en="Return to payment">Volver al pago</T>
+                </button>
+              </footer>
+            </section>
           </div>
         )}
 
