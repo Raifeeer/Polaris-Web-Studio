@@ -6421,46 +6421,16 @@ export default function ClientDashboard() {
                   )}
 
                   {contractStep === "intro" && (
-                    <div className="space-y-5 overflow-y-auto">
-                      <div className="rounded-2xl bg-[var(--color-primary-base)]/10 border border-[var(--color-primary-base)]/20 p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-11 h-11 rounded-2xl bg-[var(--color-primary-base)]/15 flex items-center justify-center">
-                            <FileText size={22} className="text-[var(--color-primary-base)]" />
-                          </div>
-                          <div>
-                            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[var(--color-primary-base)]">Siguiente paso</p>
-                            <h4 className="text-lg font-display font-black text-[var(--color-text-primary)]">Revisar tu contrato de servicio</h4>
-                          </div>
-                        </div>
-                        <p className="text-sm leading-6 text-[var(--color-text-secondary)]">
-                          Este documento confirma qué incluye tu paquete Local Lift, qué recibes y cuáles son las responsabilidades de cada parte.
-                        </p>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]/50 p-3">
-                          <div className="text-xs font-black text-[var(--color-primary-base)] mb-1">01</div>
-                          <p className="text-xs font-bold text-[var(--color-text-primary)]">Completa tus datos legales</p>
-                        </div>
-                        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]/50 p-3">
-                          <div className="text-xs font-black text-[var(--color-primary-base)] mb-1">02</div>
-                          <p className="text-xs font-bold text-[var(--color-text-primary)]">Lee el documento completo</p>
-                        </div>
-                        <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]/50 p-3">
-                          <div className="text-xs font-black text-[var(--color-primary-base)] mb-1">03</div>
-                          <p className="text-xs font-bold text-[var(--color-text-primary)]">Firma para activar tu servicio</p>
-                        </div>
-                      </div>
-                      <div className="rounded-xl border border-[var(--color-border-subtle)] p-4">
-                        <p className="text-xs leading-5 text-[var(--color-text-secondary)]">
-                          Te pediremos tu cédula o pasaporte y domicilio únicamente para identificarte correctamente en el contrato. No solicitamos acceso a tu cuenta de Google ni publicamos cambios por ti.
-                        </p>
-                      </div>
+                    <div className="space-y-5">
+                      <p className="text-sm leading-6 text-center text-[var(--color-text-secondary)]">
+                        Revisa y firma tu contrato de servicio para activar tu paquete.
+                      </p>
                       <button
                         type="button"
                         onClick={() => void continueContractIntro()}
                         className="w-full px-6 py-3 rounded-xl bg-[var(--color-primary-base)] text-white text-sm font-bold hover:opacity-95"
                       >
-                        Continuar con el contrato
+                        Continuar
                       </button>
                     </div>
                   )}
