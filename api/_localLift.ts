@@ -483,11 +483,10 @@ export function buildEmailFooter(lang: "es" | "en", reasonLine: string): string 
       </tr></table>
     </div>
     <div style="height:1px;background:#e2e8f0;margin-bottom:24px;"></div>
-    <div style="text-align:center;margin-bottom:16px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto;"><tr>
-        <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${linkWeb}</a></td>
-        <td width="50%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${linkContact}</a></td>
-      </tr></table>
+    <div style="text-align:center;margin-bottom:16px;white-space:nowrap;">
+      <a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;text-decoration:none;">${linkWeb}</a>
+      <span style="font-size:13px;color:#64748b;">&nbsp;·&nbsp;</span>
+      <a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;text-decoration:none;">${linkContact}</a>
     </div>
     <div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-size:12px;color:#64748b;">${linkPrivacy}</a><span style="font-size:12px;color:#64748b;">&nbsp;·&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-size:12px;color:#64748b;">${linkTerms}</a></div>
     <div style="font-size:12px;color:#64748b;line-height:1.6;text-align:center;">${identity}<br>${reasonLine}</div>`;
