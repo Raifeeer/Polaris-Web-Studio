@@ -149,7 +149,7 @@ const tiers = [
   },
   {
     name: "Impulso",
-    enName: "Impulso",
+    enName: "Boost",
     isFree: false,
     price: "29",
     enPrice: "29",
@@ -172,7 +172,7 @@ const tiers = [
   },
   {
     name: "Ascenso",
-    enName: "Ascenso",
+    enName: "Rise",
     isFree: false,
     price: "99",
     enPrice: "99",
@@ -185,7 +185,7 @@ const tiers = [
     cta: "Comenzar mi plan guiado",
     enCta: "Start my guided plan",
     items: [
-      ["Todo lo incluido en Impulso", "Everything in Impulso"],
+      ["Todo lo incluido en Impulso", "Everything in Boost"],
       ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
       ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
       ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
@@ -1794,7 +1794,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       className="inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-4 text-sm font-black text-white shadow-lg shadow-teal-500/20 transition-transform hover:-translate-y-0.5 w-full"
                     >
                       <MessageCircle size={16} />
-                      <T en="I want Impulso">Quiero Impulso</T>
+                      <T en="I want Boost">Quiero Impulso</T>
                       <ArrowRight size={15} />
                     </motion.a>
                   </div>
@@ -1810,7 +1810,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
                       className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-primary-base)]/40 bg-[var(--color-primary-base)]/8 px-6 py-3 text-sm font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 w-full"
                     >
                       <TrendingUp size={16} />
-                      <T en="I want Ascenso">Quiero Ascenso</T>
+                      <T en="I want Rise">Quiero Ascenso</T>
                     </motion.a>
                   </div>
                 </div>
@@ -1846,7 +1846,7 @@ const REVEAL_STEPS: Array<{ es: string; en: string }> = [
               {[
                 ["What do I need to start?", "¿Qué necesito para empezar?", "Just your business name and city, or its direct Google Maps link.", "Solo el nombre y la ciudad de tu negocio, o su enlace directo de Google Maps."],
                 ["Can I see the result without receiving an email?", "¿Puedo ver el resultado sin recibir un correo?", "Yes. You can view it on screen when it is ready; email is optional.", "Sí. Puedes verlo en pantalla cuando esté listo; el correo es opcional."],
-                ["What is the difference between the packages?", "¿Qué diferencia hay entre los paquetes?", "Express identifies priorities, Impulso prepares the materials, and Ascenso adds personalized 1:1 implementation support.", "Express identifica prioridades, Impulso prepara los materiales y Ascenso añade implementación personalizada 1:1."],
+                ["What is the difference between the packages?", "¿Qué diferencia hay entre los paquetes?", "Express identifies priorities, Boost prepares the materials, and Rise adds personalized 1:1 implementation support.", "Express identifica prioridades, Impulso prepara los materiales y Ascenso añade implementación personalizada 1:1."],
                 ["Will you ask for my passwords?", "¿Me pedirán mis contraseñas?", "No. We work with the information and changes you approve.", "No. Trabajamos con la información y los cambios que tú apruebes."],
                 ["Do you guarantee a position on Google?", "¿Garantizan una posición en Google?", "No. We show what may be creating friction and what is worth improving first.", "No. Mostramos qué puede estar generando dudas y qué conviene mejorar primero."],
               ].map(([enQuestion, esQuestion, enAnswer, esAnswer], index) => (

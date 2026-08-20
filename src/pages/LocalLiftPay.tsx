@@ -12,8 +12,8 @@ import { useDocumentTitle } from "../hooks/useDocumentTitle";
 import { downloadLocalLiftPoliciesPdf } from "../lib/localLiftPolicyPdf";
 
 const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string }> = {
-  impulso: { amount: "29", label: "Impulso", enLabel: "Impulso" },
-  ascenso: { amount: "99", label: "Ascenso", enLabel: "Ascenso" },
+  impulso: { amount: "29", label: "Impulso", enLabel: "Boost" },
+  ascenso: { amount: "99", label: "Ascenso", enLabel: "Rise" },
 };
 
 function normalizeLocalLiftTier(value: unknown): "impulso" | "ascenso" {
@@ -213,7 +213,7 @@ export default function LocalLiftPay() {
               <Mail size={22} className="mx-auto text-[var(--color-primary-base)] mb-3" />
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
                 {lead.tier === "ascenso" ? (
-                  <T en="Your Ascenso package includes a 1:1 welcome session to review your Google listing and plan the changes we'll implement together. Go to your client portal to schedule your session at a time that works for you.">
+                  <T en="Your Rise package includes a 1:1 welcome session to review your Google listing and plan the changes we'll implement together. Go to your client portal to schedule your session at a time that works for you.">
                     Tu paquete Ascenso incluye una sesión de bienvenida 1:1 para revisar tu ficha de Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu sesión en el horario que prefieras.
                   </T>
                 ) : (
@@ -306,7 +306,7 @@ export default function LocalLiftPay() {
               {lead.tier === "ascenso" ? (
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
-                    ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Todo lo incluido en Impulso", "Everything in Boost"],
                     ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
@@ -496,7 +496,7 @@ export default function LocalLiftPay() {
               ) : (
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
-                    ["Todo lo incluido en Impulso", "Everything in Impulso"],
+                    ["Todo lo incluido en Impulso", "Everything in Boost"],
                     ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],

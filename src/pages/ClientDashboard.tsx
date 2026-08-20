@@ -5305,7 +5305,7 @@ export default function ClientDashboard() {
                             <T en="Schedule your welcome session">Agenda tu sesión de bienvenida</T>
                           </h3>
                           <p className="mt-1 text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                            <T en="Ascenso is handled asynchronously from the portal. If you need a separate session, contact Polaris and we will review availability.">
+                            <T en="Rise is handled asynchronously from the portal. If you need a separate session, contact Polaris and we will review availability.">
                               Ascenso se gestiona de forma asíncrona desde el portal. Si necesitas una sesión aparte, contáctanos y revisaremos disponibilidad.
                             </T>
                           </p>

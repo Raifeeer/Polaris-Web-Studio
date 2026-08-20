@@ -185,9 +185,9 @@ async function fetchPackagePdf(params: {
   return Buffer.from(await resp.arrayBuffer());
 }
 
-const TIER_PRICE: Record<string, { amount: string; label: string }> = {
-  "impulso": { amount: "29", label: "Impulso" },
-  "ascenso": { amount: "99", label: "Ascenso" },
+const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string }> = {
+  "impulso": { amount: "29", label: "Impulso", enLabel: "Boost" },
+  "ascenso": { amount: "99", label: "Ascenso", enLabel: "Rise" },
 };
 
 // Genera el paquete completo del tier "Impulso" ($29) / "Ascenso"
@@ -678,7 +678,7 @@ function renderPackageEmailBody(
         intro: tier === "ascenso" ? "We attached two PDFs: your content package and a separate visual implementation guide with annotated references. Open the package first, then use the guide while applying each change." : "Your complete PDF is attached with the content prepared for your business. Open it when you have a moment and start applying the changes in the order that makes the most sense for you.",
         cardTitle: "Inside your package",
         items: ["Rewritten business description", "Services and CTAs to highlight", "Google posts ready to adapt", "Personalized review replies", "WhatsApp follow-up messages", "A clear set of next steps"],
-        ctaTitle: tier === "ascenso" ? "Your visual Ascenso guide is attached" : "Your implementation guide is ready",
+        ctaTitle: tier === "ascenso" ? "Your visual Rise guide is attached" : "Your implementation guide is ready",
         ctaBody: tier === "ascenso" ? "Use the separate guide while applying the content. The client portal also keeps the package and your review rounds together." : "Use the client portal to follow the steps, review the material and request changes if needed. The guide shows you what to do and where to do it.",
         signature: "The Polaris Local Lift team",
       }
@@ -776,8 +776,8 @@ function renderPackageEmailText(businessName: string, contactName: string | null
     ...items.map((item) => `- ${item}`),
     "",
   ];
-  if (portalUrl) lines.push("", isEnglish ? `Review your Ascenso package in the client portal: ${portalUrl}` : `Revisa tu paquete Ascenso en el portal de cliente: ${portalUrl}`);
-  if (tier === "ascenso") lines.push("", isEnglish ? "Your Ascenso package includes up to three grouped review rounds." : "Tu paquete Ascenso incluye hasta tres rondas agrupadas de revisión.");
+  if (portalUrl) lines.push("", isEnglish ? `Review your Rise package in the client portal: ${portalUrl}` : `Revisa tu paquete Ascenso en el portal de cliente: ${portalUrl}`);
+  if (tier === "ascenso") lines.push("", isEnglish ? "Your Rise package includes up to three grouped review rounds." : "Tu paquete Ascenso incluye hasta tres rondas agrupadas de revisión.");
   lines.push("", isEnglish ? "The Polaris Local Lift team" : "El equipo de Polaris Local Lift");
   return lines.join("\n");
 }
@@ -800,16 +800,16 @@ function renderPackageApprovalReadyBody(
     : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Análisis de reseñas recientes y buenas prácticas", "Guía visual de implementación"];
   const itemRows = items.map((item) => `<li style="margin:0 0 8px;color:#1f2937;">${escapeHtml(item)}</li>`).join("");
   const intro = isEnglish
-    ? `Your Ascenso material for <b>${safeBusinessName}</b> is ready in the client portal. Review it there before approving the version. The final PDFs are intentionally not attached yet; after your approval, we will send them by email.`
+    ? `Your Rise material for <b>${safeBusinessName}</b> is ready in the client portal. Review it there before approving the version. The final PDFs are intentionally not attached yet; after your approval, we will send them by email.`
     : `Tu material Ascenso para <b>${safeBusinessName}</b> ya está listo en el portal de cliente. Revísalo allí antes de aprobar la versión. Los PDFs finales todavía no van adjuntos; después de tu aprobación te los enviaremos por correo.`;
-  return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#f8fafc}a{text-decoration:none}.card{width:100%;max-width:600px!important;box-sizing:border-box}@media(max-width:480px){.pad{padding-left:24px!important;padding-right:24px!important}}</style></head><body><div style="width:100%;padding:40px 16px;box-sizing:border-box;background:#f8fafc;font-family:'Satoshi','Helvetica Neue',Arial,sans-serif"><table class="card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden"><tr><td class="pad" style="padding:36px 40px 0;text-align:center">${localLiftLogoHeader}</td></tr><tr><td class="pad" style="padding:20px 40px 0;text-align:center"><div style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#0f9f99;font-weight:700">${isEnglish ? "READY TO REVIEW" : "LISTO PARA REVISAR"}</div><h1 style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:25px;line-height:1.3;color:${LOCAL_LIFT_NAVY};margin:9px 0 0">${isEnglish ? "Your Ascenso package is ready" : "Tu paquete Ascenso está listo"}</h1></td></tr><tr><td class="pad" style="padding:18px 40px 0;text-align:center"><p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0">${greeting}<br>${intro}</p></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #99f6e4;background:#f0fdfa;border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.65;color:#334155"><b>${isEnglish ? "Review available until:" : "Revisión disponible desde:"}</b><br>${escapeHtml(dueText)}<br><span style="font-size:12px;color:#64748b">${isEnglish ? "This is the estimated preparation window counted from your payment confirmation." : "Este es el plazo estimado de preparación contado desde la confirmación de tu pago."}</span></div></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:20px 22px"><p style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:15px;font-weight:700;color:#0f172a;margin:0 0 12px">${isEnglish ? "Inside your package" : "Qué encontrarás dentro"}</p><ul style="padding-left:20px;margin:0;font-size:14px;line-height:1.5">${itemRows}</ul></div></td></tr><tr><td class="pad" style="padding:24px 40px 0;text-align:center"><a href="${escapeHtml(portalUrl)}" style="display:inline-block;background:${LOCAL_LIFT_ACCENT};color:#111936;padding:14px 24px;border-radius:8px;font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-weight:700;font-size:14px">${isEnglish ? "Review and approve my package" : "Revisar y aprobar mi paquete"}</a></td></tr><tr><td class="pad" style="padding:28px 40px 36px;text-align:center"><p style="font-size:12px;line-height:1.6;color:#64748b;margin:0">${isEnglish ? "You can request grouped changes from the portal before approving. Clarifications about the same version do not use an additional round." : "Puedes solicitar cambios agrupados desde el portal antes de aprobar. Las aclaraciones sobre una misma versión no consumen una ronda adicional."}</p></td></tr></table></div></body></html>`;
+  return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#f8fafc}a{text-decoration:none}.card{width:100%;max-width:600px!important;box-sizing:border-box}@media(max-width:480px){.pad{padding-left:24px!important;padding-right:24px!important}}</style></head><body><div style="width:100%;padding:40px 16px;box-sizing:border-box;background:#f8fafc;font-family:'Satoshi','Helvetica Neue',Arial,sans-serif"><table class="card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden"><tr><td class="pad" style="padding:36px 40px 0;text-align:center">${localLiftLogoHeader}</td></tr><tr><td class="pad" style="padding:20px 40px 0;text-align:center"><div style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#0f9f99;font-weight:700">${isEnglish ? "READY TO REVIEW" : "LISTO PARA REVISAR"}</div><h1 style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:25px;line-height:1.3;color:${LOCAL_LIFT_NAVY};margin:9px 0 0">${isEnglish ? "Your Rise package is ready" : "Tu paquete Ascenso está listo"}</h1></td></tr><tr><td class="pad" style="padding:18px 40px 0;text-align:center"><p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0">${greeting}<br>${intro}</p></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #99f6e4;background:#f0fdfa;border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.65;color:#334155"><b>${isEnglish ? "Review available until:" : "Revisión disponible desde:"}</b><br>${escapeHtml(dueText)}<br><span style="font-size:12px;color:#64748b">${isEnglish ? "This is the estimated preparation window counted from your payment confirmation." : "Este es el plazo estimado de preparación contado desde la confirmación de tu pago."}</span></div></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:20px 22px"><p style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:15px;font-weight:700;color:#0f172a;margin:0 0 12px">${isEnglish ? "Inside your package" : "Qué encontrarás dentro"}</p><ul style="padding-left:20px;margin:0;font-size:14px;line-height:1.5">${itemRows}</ul></div></td></tr><tr><td class="pad" style="padding:24px 40px 0;text-align:center"><a href="${escapeHtml(portalUrl)}" style="display:inline-block;background:${LOCAL_LIFT_ACCENT};color:#111936;padding:14px 24px;border-radius:8px;font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-weight:700;font-size:14px">${isEnglish ? "Review and approve my package" : "Revisar y aprobar mi paquete"}</a></td></tr><tr><td class="pad" style="padding:28px 40px 36px;text-align:center"><p style="font-size:12px;line-height:1.6;color:#64748b;margin:0">${isEnglish ? "You can request grouped changes from the portal before approving. Clarifications about the same version do not use an additional round." : "Puedes solicitar cambios agrupados desde el portal antes de aprobar. Las aclaraciones sobre una misma versión no consumen una ronda adicional."}</p></td></tr></table></div></body></html>`;
 }
 
 function renderPackageApprovalReadyText(businessName: string, contactName: string | null, lang: "es" | "en", portalUrl: string, deliveryDueAt?: string | null): string {
   const greeting = contactName ? (lang === "en" ? `Hi ${contactName},` : `Hola ${contactName},`) : (lang === "en" ? "Hi," : "Hola,");
   const dueText = deliveryDueAt ? new Date(deliveryDueAt).toLocaleString(lang === "en" ? "en-US" : "es-DO", { dateStyle: "medium", timeStyle: "short" }) : (lang === "en" ? "within five consecutive hours" : "dentro de cinco horas corridas");
   return lang === "en"
-    ? `READY TO REVIEW\n\n${greeting}\n\nYour Ascenso package for ${businessName} is ready in the client portal. Review it and approve the version there. The final PDFs will be emailed after approval.\n\nEstimated window: ${dueText}\n\nOpen the portal: ${portalUrl}`
+    ? `READY TO REVIEW\n\n${greeting}\n\nYour Rise package for ${businessName} is ready in the client portal. Review it and approve the version there. The final PDFs will be emailed after approval.\n\nEstimated window: ${dueText}\n\nOpen the portal: ${portalUrl}`
     : `LISTO PARA REVISAR\n\n${greeting}\n\nTu paquete Ascenso para ${businessName} ya está listo en el portal de cliente. Revísalo y aprueba la versión allí. Los PDFs finales se enviarán por correo después de tu aprobación.\n\nPlazo estimado: ${dueText}\n\nAbrir portal: ${portalUrl}`;
 }
 
@@ -828,7 +828,7 @@ function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: 
     return `
       ${localLiftLogoHeader}
       <p>Hi,</p>
-      <p>We already prepared your <strong>${price.label}</strong> package for <strong>${place.name}</strong> — everything is ready to send, based on your real Google listing:</p>
+      <p>We already prepared your <strong>${price.enLabel}</strong> package for <strong>${place.name}</strong> — everything is ready to send, based on your real Google listing:</p>
       <ul>
         <li>A rewritten description and highlighted services</li>
         <li>${postsCount || 10} Google posts ready to publish</li>
@@ -1041,7 +1041,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await finalTransporter.sendMail({
           from: '"Polaris Local Lift" <hola@polarisweb.studio>',
           to: String(approvedLead.email || email || ""),
-          subject: finalLanguage === "en" ? `Your Ascenso package — ${finalBusinessName}` : `Tu paquete Ascenso — ${finalBusinessName}`,
+          subject: finalLanguage === "en" ? `Your Rise package — ${finalBusinessName}` : `Tu paquete Ascenso — ${finalBusinessName}`,
           text: renderPackageEmailText(finalBusinessName, finalContactName, finalLanguage, "ascenso", finalPortalUrl),
           html: renderPackageEmailBody(finalBusinessName, finalContactName, finalLanguage, "ascenso", approvedLead.package, finalPortalUrl),
           attachments: finalAttachments,
@@ -1140,7 +1140,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         finalTier2 === "ascenso"
           ? `${process.env.PORTAL_BASE_URL || "https://polarisweb.studio"}/dashboard`
           : undefined;
-      const tierLabelForPdf = TIER_PRICE[finalTier2]?.label || TIER_PRICE["impulso"].label;
+      const tierPriceForPdf = TIER_PRICE[finalTier2] || TIER_PRICE["impulso"];
+      const tierLabelForPdf = language === "en" ? tierPriceForPdf.enLabel : tierPriceForPdf.label;
       let pdfBuffer: Buffer | null = null;
       let guidePdfBuffer: Buffer | null = null;
       let guideStoragePath: string | null = null;
@@ -1189,7 +1190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         from: '"Polaris Local Lift" <hola@polarisweb.studio>',
         to: email,
         subject: isAscensoApproval
-          ? (language === "en" ? `Your Ascenso package is ready to review — ${givenPlace.name}` : `Tu paquete Ascenso está listo para revisar — ${givenPlace.name}`)
+          ? (language === "en" ? `Your Rise package is ready to review — ${givenPlace.name}` : `Tu paquete Ascenso está listo para revisar — ${givenPlace.name}`)
           : (language === "en" ? `Your Local Lift content package — ${givenPlace.name}` : `Tu paquete de contenido Local Lift — ${givenPlace.name}`),
         text: readyText,
         html: readyHtml,
@@ -1249,7 +1250,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: "Falta 'place' o 'package' para la vista previa." });
       }
       const finalTierPreview = normalizeTier(typeof leadId === "string" && leadId.trim() ? (await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).get()).data()?.tier : tier);
-      const tierLabelPreview = TIER_PRICE[finalTierPreview]?.label || TIER_PRICE["impulso"].label;
+      const tierPriceForPreview = TIER_PRICE[finalTierPreview] || TIER_PRICE["impulso"];
+      const tierLabelPreview = language === "en" ? tierPriceForPreview.enLabel : tierPriceForPreview.label;
       const previewParams = {
         businessName: givenPlace.name,
         tierLabel: tierLabelPreview,

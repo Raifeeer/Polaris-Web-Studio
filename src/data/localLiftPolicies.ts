@@ -38,7 +38,7 @@ export const LOCAL_LIFT_POLICY_SECTIONS: LocalLiftPolicySection[] = [
   },
   {
     id: "impulso",
-    title: { es: "2. Impulso", en: "2. Impulso" },
+    title: { es: "2. Impulso", en: "2. Boost" },
     tone: "default",
     items: [
       { es: "Auditoría completa del perfil local", en: "Complete audit of your local profile" },
@@ -51,16 +51,16 @@ export const LOCAL_LIFT_POLICY_SECTIONS: LocalLiftPolicySection[] = [
     paragraphs: [
       {
         es: "Impulso es un paquete de preparación. No incluye reuniones, rondas de implementación, publicación directa, gestión continua ni soporte indefinido. El trabajo nuevo fuera del paquete se cotiza por separado.",
-        en: "Impulso is a preparation package. It does not include meetings, implementation rounds, direct publishing, ongoing management or indefinite support. New work outside the package is quoted separately.",
+        en: "Boost is a preparation package. It does not include meetings, implementation rounds, direct publishing, ongoing management or indefinite support. New work outside the package is quoted separately.",
       },
     ],
   },
   {
     id: "ascenso",
-    title: { es: "3. Ascenso", en: "3. Ascenso" },
+    title: { es: "3. Ascenso", en: "3. Rise" },
     tone: "teal",
     items: [
-      { es: "Todo lo incluido en Impulso", en: "Everything in Impulso" },
+      { es: "Todo lo incluido en Impulso", en: "Everything in Boost" },
       { es: "Entrega preparada en un máximo de 5 horas corridas después del pago", en: "Prepared delivery within 5 consecutive hours after payment" },
       { es: "Análisis de reseñas recientes y buenas prácticas personalizadas", en: "Recent review analysis and personalized best practices" },
       { es: "Guía paso a paso para aplicar cada cambio", en: "Step-by-step guide to apply each change" },
@@ -81,7 +81,7 @@ export const LOCAL_LIFT_POLICY_SECTIONS: LocalLiftPolicySection[] = [
     paragraphs: [
       {
         es: "Después del pago y la aceptación en el checkout, Local Lift empieza inmediatamente a preparar el servicio adquirido. El portal del cliente está disponible como espacio opcional para seguir el avance, revisar el paquete Ascenso y solicitar cambios agrupados. Ascenso se prepara dentro de cinco horas corridas después del pago. Los PDFs finales se envían por correo después de que el cliente aprueba la versión preparada. No es necesaria una reunión.",
-        en: "After payment and checkout acceptance, Local Lift begins preparing the purchased service immediately. The client portal is available as an optional place to follow progress, review the prepared Ascenso package and request grouped changes. Ascenso is prepared within five consecutive hours after payment. The final PDFs are released by email after the client approves the prepared version. No meeting is required.",
+        en: "After payment and checkout acceptance, Local Lift begins preparing the purchased service immediately. The client portal is available as an optional place to follow progress, review the prepared Rise package and request grouped changes. Rise is prepared within five consecutive hours after payment. The final PDFs are released by email after the client approves the prepared version. No meeting is required.",
       },
       {
         es: "Aprobar una versión no crea trabajo nuevo ilimitado. Confirma la versión actual y permite que el servicio avance a su siguiente etapa definida.",
@@ -116,7 +116,7 @@ export const LOCAL_LIFT_POLICY_SECTIONS: LocalLiftPolicySection[] = [
     paragraphs: [
       {
         es: "Local Lift no exige una firma posterior al pago ni activar el portal para comenzar. En Ascenso, los recordatorios se envían únicamente cuando el paquete preparado está esperando la revisión o aprobación del cliente. Si no hay respuesta después del periodo definido, el proyecto puede quedar pausado conservando su historial y el material preparado. El cliente puede solicitar una revisión manual para reanudarlo.",
-        en: "Local Lift does not require a post-payment signature or portal activation to begin. For Ascenso, reminders may be sent only when the prepared package is waiting for the client's review or approval. If there is no response after the defined reminder period, the project may be paused while preserving its history and prepared material. The client can request a manual review to resume it.",
+        en: "Local Lift does not require a post-payment signature or portal activation to begin. For Rise, reminders may be sent only when the prepared package is waiting for the client's review or approval. If there is no response after the defined reminder period, the project may be paused while preserving its history and prepared material. The client can request a manual review to resume it.",
       },
       {
         es: "No se emite un reembolso automático después de iniciar el trabajo. Cualquier excepción se revisa manualmente según las circunstancias y el contrato aplicable.",
