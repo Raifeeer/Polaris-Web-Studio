@@ -80,6 +80,8 @@ async function generateDiagnostic(place: PlaceData, lang: "es" | "en"): Promise<
 
 ${placeDataSummary(place)}
 
+REGLA IMPORTANTE SOBRE FOTOS: "Fotos devueltas por la consulta de Places API" no significa el total de fotos de la ficha. Google devuelve como máximo 10 referencias en esta respuesta. Nunca escribas frases como "X fotos cargadas", "X fotos en total" o "completar las X disponibles". Si las fotos son relevantes, usa una formulación prudente como "la consulta recuperó referencias fotográficas" y no afirmes un total.
+
 Con base ÚNICAMENTE en estos datos reales, generá primero una breve introducción de qué es el negocio (businessIntro), y luego exactamente 5 problemas prioritarios (ordenados de mayor a menor impacto en conseguir más llamadas/mensajes/reservas) y un plan de acción de 7 días. Tono profesional, directo, sin exagerar ni prometer resultados garantizados. Si el negocio ya tiene buena calificación/reseñas, decilo -- no inventes problemas que no existen; en ese caso enfocate en optimización fina (fotos, descripción, horario, respuestas a reseñas, etc.). Todo en ${lang === "en" ? "inglés" : "español neutro, sin voseo"}. Nunca uses dos guiones seguidos ("--") como signo de puntuación: usa una raya (—), una coma o punto y aparte según corresponda.`;
 
   // generateFast() usa un timeout fijo de 9.2s -- pensado para los llamados

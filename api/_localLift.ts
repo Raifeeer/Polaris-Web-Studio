@@ -451,7 +451,7 @@ Cantidad de reseñas: ${place.reviewCount}
 Tiene sitio web: ${place.hasWebsite ? `sí (link corto para usar si hace falta: ${shortUrl})` : "no"}
 Tiene teléfono visible: ${place.hasPhone ? "sí" : "no"}
 Tiene horario cargado: ${place.hasHours ? "sí" : "no"}
-Cantidad de fotos: ${place.photoCount} (${place.photoUrls.length} disponibles para mostrar)
+Fotos devueltas por la consulta de Places API: ${place.photoCount} (Google devuelve como máximo 10 referencias; este valor no representa el total de fotos de la ficha). Fotos seleccionadas para mostrar en Polaris: ${place.photoUrls.length}
 Descripción actual: ${place.editorialSummary || "sin descripción"}
 Estado: ${place.isOperational ? "operativo" : "cerrado o no operativo según Google"}
 `.trim();
