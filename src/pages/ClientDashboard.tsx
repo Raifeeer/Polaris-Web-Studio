@@ -1076,24 +1076,21 @@ export default function ClientDashboard() {
   // anteriores a que Polaris vendiera algo más (agosto 2026) lo son, así que
   // este campo se puede leer sin migrar datos viejos.
   const isLocalLiftProject = (clientProject as any)?.productType === "local_lift";
-  // "Entrega" solo queda "completed" cuando el admin de verdad manda el
-  // paquete (ver /api/portal/local-lift/package-sent) -- antes de eso no hay
-  // que decirle al cliente que ya se lo enviamos.
-  const localLiftPackageDelivered = isLocalLiftProject && clientProject?.phases?.some((ph: any) => ph.name === "Entrega" && ph.status === "completed");
+  // Impulso queda entregado cuando termina su fase de Entrega. En Ascenso,
+  // los PDFs solo se consideran entregados después de la aprobación inicial.
+  const localLiftPackageReadyForReview = isLocalLiftProject && (clientProject as any)?.localLiftPackageApprovalStatus === "awaiting_approval";
+  const localLiftPackageDelivered = isLocalLiftProject && ((clientProject as any)?.localLiftTier === "ascenso"
+    ? (clientProject as any)?.localLiftPackageApprovalStatus === "completed"
+    : clientProject?.phases?.some((ph: any) => (ph.name === "Entrega" || ph.name === "Entrega final") && ph.status === "completed"));
   const localLiftContractStatus = isLocalLiftProject ? ((clientProject as any)?.localLiftContractStatus || "sent") : null;
   const localLiftContractSigned = localLiftContractStatus === "signed";
   const [packageDownloading, setPackageDownloading] = useState(false);
   const [guideDownloading, setGuideDownloading] = useState(false);
-  // Autoagendamiento de la sesión de bienvenida 1:1 -- solo aplica a
-  // Ascenso (implementación asistida), y solo hasta que ya exista una
-  // reunión real registrada para este proyecto.
-  const needsAscensoBooking =
-    !isAdmin &&
-    isLocalLiftProject &&
-    (clientProject as any)?.localLiftTier === "ascenso" &&
-    localLiftContractSigned &&
-    !(data?.meetings || []).some((m: any) => m.projectId === clientProject?.id);
-  const [ascensoBookingDone, setAscensoBookingDone] = useState(false);
+  // Ascenso ya no exige una reunión: el cliente revisa y aprueba desde el
+  // portal, mientras la pestaña de reuniones queda disponible solo para
+  // reuniones internas o futuras sesiones opcionales.
+  const needsAscensoBooking = false;
+  const [ascensoBookingDone] = useState(false);
 
   // Sync client selected project when data loads
   useEffect(() => {
@@ -3849,9 +3846,11 @@ export default function ClientDashboard() {
                               <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
                                 {localLiftPackageDelivered
                                   ? ((clientProject as any).localLiftTier === "ascenso"
-                                    ? (language === "en" ? "We sent your content package and separate visual guide by email. If you have questions, message us on WhatsApp and we will review them with you." : "Te enviamos por correo tu paquete de contenido y la guía visual independiente. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo.")
+                                    ? (language === "en" ? "Your final package and visual guide were sent by email. You can keep consulting them here." : "Tu paquete final y la guía visual fueron enviados por correo. También puedes seguir consultándolos aquí.")
                                     : (language === "en" ? "We sent your complete package by email. If you have questions, message us on WhatsApp and we will review them with you." : "Te enviamos el paquete completo por correo. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo."))
-                                  : (language === "en" ? "We are preparing your package. It will arrive by email as soon as it is ready." : "Estamos preparando tu paquete. Te va a llegar por correo apenas esté listo.")}
+                                  : localLiftPackageReadyForReview
+                                    ? (language === "en" ? "Your Ascenso package is ready in the portal. Review it and approve it to receive the final PDFs by email." : "Tu paquete Ascenso ya está listo en el portal. Revísalo y apruébalo para recibir los PDFs finales por correo.")
+                                    : (language === "en" ? "We are preparing your package. It will arrive in the portal as soon as it is ready." : "Estamos preparando tu paquete. Aparecerá en el portal apenas esté listo.")}
                               </p>
                               <div className="mt-3 flex flex-wrap items-center gap-2">
                                 {localLiftPackageDelivered && (
@@ -5299,7 +5298,7 @@ export default function ClientDashboard() {
                           <Check size={18} className="text-emerald-500" />
                         </div>
                         <p className="text-sm font-bold text-[var(--color-text-primary)]">
-                          <T en="Your welcome session is scheduled. We'll see you there.">Tu sesión de bienvenida quedó agendada. Nos vemos ahí.</T>
+                            <T en="Your optional session is scheduled.">Tu sesión opcional quedó agendada.</T>
                         </p>
                       </div>
                     ) : (
@@ -5309,8 +5308,8 @@ export default function ClientDashboard() {
                             <T en="Schedule your welcome session">Agenda tu sesión de bienvenida</T>
                           </h3>
                           <p className="mt-1 text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                            <T en="Your Ascenso package includes a 1:1 call to review your Google listing and plan the changes we'll implement. Pick a time that works for you.">
-                              Tu paquete Ascenso incluye una llamada 1:1 para revisar tu ficha de Google y planificar los cambios que vamos a implementar. Elige el horario que te convenga.
+                            <T en="Ascenso is handled asynchronously from the portal. If you need a separate session, contact Polaris and we will review availability.">
+                              Ascenso se gestiona de forma asíncrona desde el portal. Si necesitas una sesión aparte, contáctanos y revisaremos disponibilidad.
                             </T>
                           </p>
                         </div>
@@ -5330,7 +5329,6 @@ export default function ClientDashboard() {
                                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                                 body: JSON.stringify({ projectId: clientProject.id, date: dateStr, time: timeStr, meetLink: booking.meetUrl }),
                               });
-                              setAscensoBookingDone(true);
                               setRefreshTrigger((prev) => prev + 1);
                             } catch (err) {
                               console.error(err);

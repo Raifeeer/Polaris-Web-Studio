@@ -54,6 +54,23 @@ async function sendAscensoWorkflowEmail(params: { to: string; subject: string; t
   }
 }
 
+async function deliverApprovedLocalLiftPackage(leadId: string): Promise<{ ok: boolean; portalSynced?: boolean; error?: string }> {
+  if (!PORTAL_ADMIN_SECRET) return { ok: false, error: "PORTAL_ADMIN_SECRET no configurado." };
+  try {
+    const baseUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
+    const response = await fetch(`${baseUrl}/api/local-lift-package`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-portal-admin-secret": PORTAL_ADMIN_SECRET },
+      body: JSON.stringify({ action: "deliver_approved", leadId: leadId.trim() }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, error: String(data.error || `Entrega final respondió ${response.status}.`) };
+    return { ok: true, portalSynced: data.portalSynced !== false };
+  } catch (error: any) {
+    return { ok: false, error: String(error?.message || "No se pudo iniciar la entrega final.") };
+  }
+}
+
 function getLocalLiftFirebaseApp() {
   return getFirebaseApps().length
     ? getFirebaseApps()[0]
@@ -810,6 +827,12 @@ const LOCAL_LIFT_CONTRACT_VERSION = "2026-08-20";
 const LOCAL_LIFT_TERMS_VERSION = "local-lift-2026-08-20";
 const LOCAL_LIFT_PRIVACY_VERSION = "privacy-2026-08-20";
 const LOCAL_LIFT_SUPPORT_VERSION = "support-2026-08-20";
+const LOCAL_LIFT_ASCENSO_SLA_HOURS = 5;
+const LOCAL_LIFT_ABANDONMENT_POLICY_VERSION = "abandonment-2026-08-20";
+
+function localLiftDeliveryDueAt(signedAt: string): string {
+  return new Date(new Date(signedAt).getTime() + LOCAL_LIFT_ASCENSO_SLA_HOURS * 60 * 60 * 1000).toISOString();
+}
 
 type LocalLiftContractStatus = NonNullable<import("./server-db.js").DbProject["localLiftContractStatus"]>;
 
@@ -819,6 +842,14 @@ function localLiftContractFullCode(project: import("./server-db.js").DbProject):
 
 function localLiftTierFromProject(project: import("./server-db.js").DbProject): "impulso" | "ascenso" {
   return project.localLiftTier === "ascenso" ? "ascenso" : "impulso";
+}
+
+async function markLocalLiftPortalActivated(userId: string): Promise<void> {
+  const now = new Date().toISOString();
+  const projects = dbInstance.getProjects().filter((project) => project.clientUserId === userId && project.productType === "local_lift" && !project.deletedAt && !project.localLiftPortalActivatedAt);
+  if (!projects.length) return;
+  projects.forEach((project) => dbInstance.updateProject(project.id, { localLiftPortalActivatedAt: now }));
+  await dbInstance.flush();
 }
 
 function localLiftContractBenefits(tier: "impulso" | "ascenso") {
@@ -837,7 +868,7 @@ function localLiftContractBenefits(tier: "impulso" | "ascenso") {
     "Guía paso a paso para aplicar cada cambio",
     "Indicaciones para aplicar textos e imágenes",
     "Hasta tres rondas agrupadas de revisión",
-    "Acompañamiento personalizado 1:1",
+    "Acompañamiento asíncrono desde el portal hasta aprobar la versión final",
   ];
 }
 
@@ -889,6 +920,9 @@ function buildLocalLiftContractPayload(project: import("./server-db.js").DbProje
     termsVersion: project.localLiftContractTermsVersion || LOCAL_LIFT_TERMS_VERSION,
     privacyVersion: project.localLiftContractPrivacyVersion || LOCAL_LIFT_PRIVACY_VERSION,
     supportVersion: project.localLiftContractSupportVersion || LOCAL_LIFT_SUPPORT_VERSION,
+    deliveryHours: tier === "ascenso" ? LOCAL_LIFT_ASCENSO_SLA_HOURS : 2,
+    abandonmentPolicyVersion: LOCAL_LIFT_ABANDONMENT_POLICY_VERSION,
+    noAutomaticRefundAfterWorkBegins: true,
     termsUrl: "https://polarisweb.studio/terminos",
     privacyUrl: "https://polarisweb.studio/privacidad",
     supportUrl: "https://polarisweb.studio/local-lift/politicas",
@@ -1655,6 +1689,7 @@ const PORT = 3000;
     if (isLocalLift) {
       const liftLabel = String(tierLabel || "").trim() || "Local Lift";
       const isAscenso = liftLabel.toLowerCase().includes("ascenso");
+      const localLiftProvisionedAt = new Date().toISOString();
       dbInstance.addProject({
         id: projectId,
         displayId,
@@ -1671,16 +1706,19 @@ const PORT = 3000;
         localLiftContractCode: dbInstance.consumeNextLocalLiftContractCode(),
         localLiftContractVersion: LOCAL_LIFT_CONTRACT_VERSION,
         localLiftContractStatus: "sent",
+        localLiftContractSentAt: localLiftProvisionedAt,
+        localLiftPortalInviteSentAt: localLiftProvisionedAt,
+        localLiftPackageApprovalStatus: "not_ready",
         localLiftContractTermsVersion: LOCAL_LIFT_TERMS_VERSION,
         localLiftContractPrivacyVersion: LOCAL_LIFT_PRIVACY_VERSION,
         localLiftContractSupportVersion: LOCAL_LIFT_SUPPORT_VERSION,
         phases: isAscenso
           ? [
               { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-              { name: "Contrato", status: "active", detail: "Revisa y firma el contrato en tu portal para activar el acompañamiento." },
-              { name: "Agenda tu reunión", status: "pending", detail: "Cuando el contrato esté firmado, agenda tu sesión de bienvenida 1:1 desde la pestaña de Reuniones." },
-              { name: "Acompañamiento guiado", status: "pending", detail: "Te mostramos paso a paso cómo aplicar los cambios y revisamos tus dudas durante la sesión." },
-              { name: "Entrega", status: "pending", detail: "Te avisamos por correo cuando el acompañamiento quede completado." },
+              { name: "Contrato", status: "active", detail: "Revisa y firma el contrato en tu portal para activar la preparación." },
+              { name: "Preparando tu paquete", status: "pending", detail: "Después de firmar, comenzaremos a preparar tu paquete. Te avisaremos cuando esté listo para revisar." },
+              { name: "Revisión y aprobación", status: "pending", detail: "Revisa la versión preparada y apruébala o solicita cambios desde el portal." },
+              { name: "Entrega final", status: "pending", detail: "Después de tu aprobación recibirás los PDFs finales por correo y en tu portal." },
             ]
           : [
               { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
@@ -1810,7 +1848,7 @@ const PORT = 3000;
     const project = dbInstance.getProjects().find((p) => p.productType === "local_lift" && p.localLiftLeadId === leadId && !p.deletedAt);
     if (!project) return res.status(404).json({ matched: false, error: "project_not_found" });
     await ensureLocalLiftContract(project);
-    return res.json({ matched: true, projectId: project.id, status: project.localLiftContractStatus || "sent", code: localLiftContractFullCode(project), signedAt: project.localLiftContractSignedAt || null });
+    return res.json({ matched: true, projectId: project.id, status: project.localLiftContractStatus || "sent", code: localLiftContractFullCode(project), signedAt: project.localLiftContractSignedAt || null, deliveryDueAt: project.localLiftDeliveryDueAt || null });
   });
 
   app.get("/api/portal/local-lift/contract-status/:leadId", async (req, res) => {
@@ -1828,6 +1866,8 @@ const PORT = 3000;
       projectId: project.id,
       status: project.localLiftContractStatus || "sent",
       code: localLiftContractFullCode(project),
+      signedAt: project.localLiftContractSignedAt || null,
+      deliveryDueAt: project.localLiftDeliveryDueAt || null,
     });
   });
 
@@ -1836,7 +1876,7 @@ const PORT = 3000;
     if (!secret || secret !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "unauthorized" });
     }
-    const { leadId, guideAvailable } = req.body || {};
+    const { leadId, guideAvailable, finalDelivery } = req.body || {};
     if (typeof leadId !== "string" || !leadId.trim()) {
       return res.status(400).json({ error: "missing_leadId" });
     }
@@ -1846,24 +1886,30 @@ const PORT = 3000;
     if (!project.localLiftPackageSentAt && project.localLiftContractStatus !== "signed") {
       return res.status(409).json({ success: false, matched: true, retryable: false, error: "contract_not_signed", contractStatus: project.localLiftContractStatus || "sent" });
     }
-    const now = new Date().toISOString();
-
-    const wasAlreadySent = !!project.localLiftPackageSentAt;
-    const transition = transitionLocalLiftAfterPackageSent(project);
+        const now = new Date().toISOString();
+    const isAscenso = project.localLiftTier === "ascenso";
+    const isFinalDelivery = finalDelivery === true || !isAscenso;
+    const wasAlreadySent = isFinalDelivery ? !!project.localLiftFinalDeliveryAt : !!project.localLiftPackageReadyAt;
+    const transition = transitionLocalLiftAfterPackageSent({ ...project, localLiftPackageReadyAt: project.localLiftPackageReadyAt || now });
     const attempts = Math.max(0, Number(project.localLiftPortalSyncAttempts || 0)) + 1;
     let ascensoWorkflow = project.localLiftTier === "ascenso" ? ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review") : undefined;
     if (ascensoWorkflow) {
-      const nextStatus = "awaiting_client_review";
+      const nextStatus = isFinalDelivery ? "package_approved" : "awaiting_package_approval";
       ascensoWorkflow = {
         ...ascensoWorkflow,
-        status: ["approved", "pending_admin_review", "publishing", "implementation_completed", "closed"].includes(ascensoWorkflow.status) ? ascensoWorkflow.status : nextStatus,
-        history: wasAlreadySent ? ascensoWorkflow.history : [...ascensoWorkflow.history, { id: `ascenso-package-sent-${Date.now()}`, type: "package_sent", actor: "system", at: now, version: ascensoWorkflow.currentVersion }],
+        status: isFinalDelivery && ["implementation_completed", "closed"].includes(ascensoWorkflow.status) ? ascensoWorkflow.status : nextStatus,
+        packageReadyAt: ascensoWorkflow.packageReadyAt || project.localLiftPackageReadyAt || now,
+        ...(isFinalDelivery ? { packageApprovedAt: ascensoWorkflow.packageApprovedAt || now } : {}),
+        history: wasAlreadySent ? ascensoWorkflow.history : [...ascensoWorkflow.history, { id: `ascenso-package-${isFinalDelivery ? "final-delivered" : "ready"}-${Date.now()}`, type: isFinalDelivery ? "final_package_delivered" : "package_ready_for_approval", actor: "system", at: now, version: ascensoWorkflow.currentVersion }],
       };
     }
     dbInstance.updateProject(project.id, {
       ...transition,
       ...(ascensoWorkflow ? { ascensoWorkflow } : {}),
-      localLiftPackageSentAt: project.localLiftPackageSentAt || now,
+      localLiftPackageSentAt: isFinalDelivery ? (project.localLiftPackageSentAt || now) : project.localLiftPackageSentAt,
+      localLiftPackageReadyAt: project.localLiftPackageReadyAt || now,
+      localLiftPackageApprovalStatus: isFinalDelivery ? "completed" : "awaiting_approval",
+      ...(isFinalDelivery ? { localLiftPackageApprovedAt: project.localLiftPackageApprovedAt || now, localLiftFinalDeliveryAt: project.localLiftFinalDeliveryAt || now } : {}),
       localLiftPortalSyncStatus: "synced",
       localLiftPortalSyncAttempts: attempts,
       localLiftPortalSyncLastAttemptAt: now,
@@ -1871,7 +1917,7 @@ const PORT = 3000;
       ...(guideAvailable === true ? { localLiftGuideAvailable: true } : {}),
     });
     await dbInstance.flush();
-    return res.json({ success: true, matched: true, synced: true, alreadySynced: project.localLiftPortalSyncStatus === "synced", projectId: project.id, currentPhase: transition.currentPhase, progress: transition.progress });
+    return res.json({ success: true, matched: true, synced: true, finalDelivery: isFinalDelivery, approvalRequired: isAscenso && !isFinalDelivery, alreadySynced: project.localLiftPortalSyncStatus === "synced", projectId: project.id, currentPhase: transition.currentPhase, progress: transition.progress });
   });
 
   // Descarga real del PDF del paquete ya enviado, desde el portal del cliente
@@ -1885,6 +1931,7 @@ const PORT = 3000;
       return res.status(403).json({ error: "Acceso denegado." });
     }
     if (!project.localLiftLeadId) return res.status(404).json({ error: "Este proyecto no tiene un paquete Local Lift asociado." });
+    if (project.localLiftTier === "ascenso" && project.localLiftPackageApprovalStatus && project.localLiftPackageApprovalStatus !== "completed") return res.status(409).json({ error: "package_not_approved", message: "Aprueba el paquete desde tu portal antes de descargar los PDFs finales." });
 
     try {
       const app = getFirebaseApps().length
@@ -1923,6 +1970,7 @@ const PORT = 3000;
     if (!project.localLiftLeadId || project.localLiftTier !== "ascenso") {
       return res.status(404).json({ error: "Este proyecto no tiene una guía Ascenso asociada." });
     }
+    if (project.localLiftPackageApprovalStatus && project.localLiftPackageApprovalStatus !== "completed") return res.status(409).json({ error: "package_not_approved", message: "Aprueba el paquete desde tu portal antes de descargar la guía final." });
     try {
       const firestore = getLocalLiftFirestore();
       const doc = await firestore.collection("localLiftDiagnostics").doc(project.localLiftLeadId).get();
@@ -2259,7 +2307,7 @@ const PORT = 3000;
 
   // --- Portal Authentication Endpoints ---
 
-  app.post("/api/auth/login", (req, res) => {
+  app.post("/api/auth/login", async (req, res) => {
     // Máx. 10 intentos por IP cada 15 min para frenar fuerza bruta de credenciales.
     if (!rateLimit(`login:${clientIp(req)}`, 10, 15 * 60 * 1000)) {
       return res.status(429).json({ success: false, error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." });
@@ -2292,6 +2340,7 @@ const PORT = 3000;
     if (legacy) {
       dbInstance.updateUser(user.id, { password: hashPassword(String(password)) });
     }
+    if (user.role === "client") await markLocalLiftPortalActivated(user.id);
 
     const { password: _, ...userWithoutPassword } = user;
     const token = createSessionToken(user);
@@ -2308,7 +2357,7 @@ const PORT = 3000;
    * alta automática (mustChangePassword: true, ver auto-provision-client)
    * como por cualquier usuario que quiera cambiarla voluntariamente.
    */
-  app.post("/api/auth/change-password", authenticateToken, (req: any, res) => {
+  app.post("/api/auth/change-password", authenticateToken, async (req: any, res) => {
     const { currentPassword, newPassword } = req.body || {};
     if (!currentPassword || !newPassword || typeof newPassword !== "string") {
       return res.status(400).json({ success: false, error: "Faltan datos." });
@@ -2322,6 +2371,7 @@ const PORT = 3000;
       return res.status(401).json({ success: false, error: "La contraseña actual no es correcta." });
     }
     dbInstance.updateUser(req.user.id, { password: hashPassword(newPassword), mustChangePassword: false });
+    await markLocalLiftPortalActivated(req.user.id);
     res.json({ success: true });
   });
 
@@ -2350,7 +2400,7 @@ const PORT = 3000;
     } catch (error: any) {
       console.error("[ascenso-workflow:by-lead] error:", error?.message || error);
     }
-    return res.json({ success: true, projectId: project.id, projectName: project.name, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent });
+    return res.json({ success: true, projectId: project.id, projectName: project.name, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent, packageApprovalStatus: project.localLiftPackageApprovalStatus || "not_ready", deliveryDueAt: project.localLiftDeliveryDueAt || null, packageReadyAt: project.localLiftPackageReadyAt || null, finalDeliveryAt: project.localLiftFinalDeliveryAt || null });
   });
 
   app.get("/api/portal/local-lift/workflow/:projectId", authenticateToken, async (req: any, res) => {
@@ -2377,7 +2427,7 @@ const PORT = 3000;
         console.error("[ascenso-workflow:get] error:", error?.message || error);
       }
     }
-    return res.json({ success: true, projectId: project.id, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), canRequestNewRound: canStartNewRound(workflow), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent });
+    return res.json({ success: true, projectId: project.id, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), canRequestNewRound: canStartNewRound(workflow), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent, packageApprovalStatus: project.localLiftPackageApprovalStatus || "not_ready", deliveryDueAt: project.localLiftDeliveryDueAt || null, packageReadyAt: project.localLiftPackageReadyAt || null, finalDeliveryAt: project.localLiftFinalDeliveryAt || null });
   });
 
   app.post("/api/portal/local-lift/workflow", authenticateToken, async (req: any, res) => {
@@ -2427,6 +2477,27 @@ const PORT = 3000;
         await dbInstance.flush();
         await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Nueva ronda de Ascenso · ${project.name}`, text: `El cliente ${client?.name || "cliente"} inició la ronda ${result.request.round} de ${result.request.maxRounds} para ${project.name}.\n\nSolicitud:\n${result.request.requestText}\n\nEntra al panel de Local Lift para preparar la nueva revisión.` });
         return res.json({ success: true, workflow: result.workflow, request: result.request, roundsRemaining: result.workflow.maxRounds - result.workflow.roundsUsed });
+      }
+
+      if (action === "client_approve_initial_package") {
+        if (isAdmin) return res.status(403).json({ error: "Solo el cliente puede aprobar el paquete inicial." });
+        if (project.localLiftPackageApprovalStatus !== "awaiting_approval" && workflow.status !== "awaiting_package_approval") return res.status(409).json({ error: "package_not_ready", message: "El paquete todavía no está listo para aprobación." });
+        if (!project.localLiftLeadId) return res.status(409).json({ error: "lead_missing" });
+        const approvedWorkflow = { ...workflow, status: "package_approved" as const, packageApprovedAt: now, history: [...workflow.history, { id: `ascenso-package-approved-${Date.now()}`, type: "initial_package_approved", actor: "client" as const, at: now, version: workflow.currentVersion }] };
+        dbInstance.updateProject(project.id, { ascensoWorkflow: approvedWorkflow, localLiftPackageApprovalStatus: "approved", localLiftPackageApprovedAt: now });
+        await dbInstance.flush();
+        const delivery = await deliverApprovedLocalLiftPackage(project.localLiftLeadId);
+        if (!delivery.ok) return res.status(502).json({ error: "final_delivery_failed", message: delivery.error || "No se pudo entregar el paquete final. El equipo puede reintentar sin pedirte otra aprobación." });
+        const finalPhases = (project.phases || []).map((phase: any) => {
+          if (phase.name === "Contrato" || phase.name === "Preparando tu paquete" || phase.name === "Revisión y aprobación" || phase.name === "Acompañamiento guiado" || phase.name === "Agenda tu reunión") return { ...phase, name: phase.name === "Agenda tu reunión" ? "Revisión y aprobación" : phase.name, status: "completed" as const };
+          if (phase.name === "Entrega" || phase.name === "Entrega final") return { ...phase, name: "Entrega final", status: "completed" as const };
+          return phase;
+        });
+        const closedWorkflow = { ...approvedWorkflow, status: "closed" as const, closedAt: now, history: [...approvedWorkflow.history, { id: `ascenso-service-closed-${Date.now()}`, type: "service_closed_after_approval", actor: "system" as const, at: now, version: approvedWorkflow.currentVersion }] };
+        dbInstance.updateProject(project.id, { ascensoWorkflow: closedWorkflow, localLiftPackageApprovalStatus: "completed", localLiftPackageApprovedAt: now, localLiftFinalDeliveryAt: now, currentPhase: "Entrega final", progress: 100, status: "completed", phases: finalPhases });
+        await dbInstance.flush();
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Ascenso aprobado y entregado · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó el paquete Ascenso de ${project.name}. Los PDFs finales fueron enviados y el servicio quedó cerrado.` });
+        return res.json({ success: true, workflow: closedWorkflow, finalDelivery: true, currentPhase: "Entrega final", progress: 100 });
       }
 
       if (action === "client_approve_revision") {
@@ -4049,11 +4120,13 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
       if (submittedHash !== canonicalHash) return res.status(409).json({ error: "contract_changed_reload" });
 
       const signedAt = new Date().toISOString();
+      const deliveryDueAt = localLiftTierFromProject(project) === "ascenso" ? localLiftDeliveryDueAt(signedAt) : undefined;
       const ip = String(req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim().slice(0, 128);
+      const isSignedAscenso = localLiftTierFromProject(project) === "ascenso";
       const signedPhases = Array.isArray(project.phases) ? project.phases.map((phase: any) => {
         if (phase.name === "Contrato") return { ...phase, status: "completed" as const };
-        if (localLiftTierFromProject(project) === "ascenso" && phase.name === "Agenda tu reunión") return { ...phase, status: "active" as const };
-        if (localLiftTierFromProject(project) === "impulso" && phase.name === "Preparando tu paquete") return { ...phase, status: "active" as const };
+        if (isSignedAscenso && (phase.name === "Preparando tu paquete" || phase.name === "Acompañamiento guiado" || phase.name === "Agenda tu reunión")) return { ...phase, name: "Preparando tu paquete", detail: "Estamos preparando tu paquete. Te avisaremos cuando esté listo para revisar.", status: "active" as const };
+        if (!isSignedAscenso && phase.name === "Preparando tu paquete") return { ...phase, status: "active" as const };
         return phase;
       }) : project.phases;
       dbInstance.updateProject(project.id, {
@@ -4066,9 +4139,12 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
         localLiftContractTermsVersion: acceptance.termsVersion,
         localLiftContractPrivacyVersion: acceptance.privacyVersion,
         localLiftContractSupportVersion: acceptance.supportVersion,
-        currentPhase: localLiftTierFromProject(project) === "ascenso" ? "Agenda tu reunión" : "Preparando tu paquete",
-        progress: localLiftTierFromProject(project) === "ascenso" ? 20 : 33,
+        localLiftDeliveryDueAt: deliveryDueAt,
+        localLiftPackageApprovalStatus: "not_ready",
+        currentPhase: "Preparando tu paquete",
+        progress: 33,
         phases: signedPhases,
+        ...(isSignedAscenso ? { ascensoWorkflow: { ...ensureAscensoWorkflow(project.ascensoWorkflow, "preparing_package"), status: "preparing_package", deliveryDueAt, history: [...ensureAscensoWorkflow(project.ascensoWorkflow, "preparing_package").history, { id: `ascenso-contract-signed-${Date.now()}`, type: "contract_signed_preparing_package", actor: "system", at: signedAt, version: ensureAscensoWorkflow(project.ascensoWorkflow, "preparing_package").currentVersion }] } } : {}),
       });
       Object.assign(project, {
         localLiftContractStatus: "signed",
@@ -4080,6 +4156,9 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
         localLiftContractTermsVersion: acceptance.termsVersion,
         localLiftContractPrivacyVersion: acceptance.privacyVersion,
         localLiftContractSupportVersion: acceptance.supportVersion,
+        localLiftDeliveryDueAt: deliveryDueAt,
+        localLiftPackageApprovalStatus: "not_ready",
+        ...(isSignedAscenso ? { ascensoWorkflow: { ...ensureAscensoWorkflow(project.ascensoWorkflow, "preparing_package"), status: "preparing_package", deliveryDueAt } } : {}),
       });
       await dbInstance.flush();
       const localInvoice = localLiftInvoice(project);
@@ -4109,6 +4188,9 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
         termsVersion: project.localLiftContractTermsVersion || LOCAL_LIFT_TERMS_VERSION,
         privacyVersion: project.localLiftContractPrivacyVersion || LOCAL_LIFT_PRIVACY_VERSION,
         supportVersion: project.localLiftContractSupportVersion || LOCAL_LIFT_SUPPORT_VERSION,
+        deliveryHours: isSignedAscenso ? LOCAL_LIFT_ASCENSO_SLA_HOURS : 2,
+        abandonmentPolicyVersion: LOCAL_LIFT_ABANDONMENT_POLICY_VERSION,
+        noAutomaticRefundAfterWorkBegins: true,
         signatureDataUrl: signatureDataUrl || undefined,
         signerName: safeSignerName,
         contractHash: submittedHash,

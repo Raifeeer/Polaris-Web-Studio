@@ -10,7 +10,11 @@ interface WorkflowPanelProps {
 const STATUS_LABEL: Record<string, string> = {
   package_ready: "Paquete generado",
   awaiting_connection: "Paquete recibido · listo para revisar",
-  awaiting_client_review: "Guía lista para revisar",
+  awaiting_client_review: "Paquete en preparación",
+  preparing_package: "Preparando tu paquete",
+  awaiting_package_approval: "Paquete listo para aprobar",
+  package_approved: "Aprobación recibida · enviando PDFs",
+  paused_no_response: "Pausado por falta de respuesta",
   changes_requested: "Solicitud recibida",
   revision_ready: "Revisión lista para aprobar",
   approved: "Versión aprobada · preparando cierre",
@@ -71,7 +75,8 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
   const activeRequest = useMemo(() => workflow?.requests?.find((item: any) => ["submitted", "in_progress", "revision_ready", "changes_requested"].includes(item.status)) || null, [workflow]);
   const packageData = data?.package;
   const guideSteps = Array.isArray(packageData?.implementationGuide) ? packageData.implementationGuide : [];
-  const canRequest = !!workflow?.status && data?.canRequestNewRound && !activeRequest;
+  const canRequest = !!workflow?.status && !!data?.packageSent && data?.canRequestNewRound && !activeRequest && !["closed", "paused_no_response", "package_approved"].includes(workflow.status);
+  const canApproveInitial = !!data?.packageSent && workflow.status === "awaiting_package_approval" && !activeRequest;
   const quickGuide = (title: string) => {
     const step = guideSteps.find((item: any) => item.title === title || item.titleEn === title);
     if (!step?.quickStart) return null;
@@ -91,7 +96,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       setRequestText("");
       setClarification("");
       setAdditionalRoundText("");
-      setNotice(action === "submit_review_request" ? "Tu solicitud fue enviada." : action === "client_approve_revision" ? "Aprobaste esta revisión. Polaris recibirá la notificación." : "Tu aclaración fue enviada sin consumir una ronda nueva.");
+      setNotice(action === "submit_review_request" ? "Tu solicitud fue enviada." : action === "client_approve_revision" ? "Aprobaste esta revisión. Polaris recibirá la notificación." : action === "client_approve_initial_package" ? "Aprobaste el paquete. Te enviaremos los PDFs finales por correo." : "Tu aclaración fue enviada sin consumir una ronda nueva.");
       onChanged?.();
     } catch (e: any) {
       setError(e?.message || "No se pudo actualizar la revisión.");
@@ -135,7 +140,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
             <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Guía visual de implementación Ascenso</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Consulta el documento completo por separado</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Aquí encontrarás el detalle completo de cada proceso y sus referencias visuales. Las instrucciones breves de arriba sirven para avanzar en contexto; la guía independiente queda como referencia.</p></div>
           </div>
 
-          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y marca tus dudas para la sesión de acompañamiento. Los nombres y botones pueden variar según tu cuenta; si algo no aparece, detente y consúltalo con Polaris. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
+          <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-3 text-xs leading-relaxed text-indigo-200"><strong>Cómo usar este documento:</strong> abre una sección, reúne lo que necesitas antes de empezar, sigue las instrucciones y registra tus dudas desde el portal. Los nombres y botones pueden variar según tu cuenta; si algo no aparece, detente y consúltalo con Polaris. Las rondas sirven para ajustar el material preparado; no significan que Polaris publique por ti.</div>
           <div className="flex flex-wrap gap-2 text-[10px] font-bold text-[var(--color-text-secondary)]"><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{guideSteps.length} secciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.googlePosts?.length || 0} publicaciones</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.reviewReplies?.length || 0} respuestas</span><span className="rounded-full bg-[var(--color-surface-highlight)] px-2 py-1">{packageData.services?.length || 0} servicios</span></div>
 
           <div className="space-y-3">
@@ -159,6 +164,13 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
         </div>
       )}
 
+      {canApproveInitial && (
+        <div className="rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 space-y-3">
+          <div className="flex items-start gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-teal-500/20 bg-teal-500/10"><CheckCircle2 size={17} className="text-teal-400" /></div><div><p className="text-[10px] font-black uppercase tracking-widest text-teal-400">Paquete listo para aprobar</p><h3 className="mt-1 text-base font-display font-black text-[var(--color-text-primary)]">Revisa la versión preparada</h3><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Si todo está correcto, aprueba el paquete. Después recibirás por correo el PDF final y la guía visual de Ascenso.</p></div></div>
+          <div className="flex flex-wrap gap-2"><button type="button" disabled={!!busy} onClick={() => void mutate("client_approve_initial_package")} className="inline-flex items-center gap-2 rounded-lg bg-teal-500 px-4 py-2 text-xs font-black text-slate-950 disabled:opacity-50"><CheckCircle2 size={14} /> Aprobar paquete y recibir PDFs</button><span className="self-center text-[10px] text-[var(--color-text-tertiary)]">También puedes solicitar una ronda antes de aprobar.</span></div>
+        </div>
+      )}
+
       {activeRequest && (
         <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 space-y-3">
           <div className="flex items-center justify-between gap-3"><div className="flex items-center gap-2"><Clock size={15} className="text-amber-400" /><h3 className="text-sm font-black text-[var(--color-text-primary)]">Ronda {activeRequest.round} de {activeRequest.maxRounds}</h3></div><span className="text-[10px] font-black uppercase tracking-wider text-amber-400">{requestStatus[activeRequest.status] || activeRequest.status}</span></div>
@@ -175,7 +187,11 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       )}
 
       {!canRequest && !activeRequest && workflow.roundsUsed >= workflow.maxRounds && workflow.status !== "closed" && <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-xs leading-relaxed text-amber-200">Has utilizado las {workflow.maxRounds} rondas incluidas. Puedes seguir consultando el paquete y su historial; cualquier cambio nuevo se cotiza como un servicio adicional.</div>}
-      {workflow.status === "pending_admin_review" && <div className="rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4 text-xs leading-relaxed text-indigo-200">Aprobaste esta versión. Polaris preparará el acompañamiento final y te avisará cuando esté listo.</div>}
+      {workflow.status === "preparing_package" && <div className="rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 text-xs leading-relaxed text-teal-200">Estamos preparando tu paquete. El plazo estimado de Ascenso es de cinco horas corridas desde la firma del contrato.</div>}
+      {workflow.status === "awaiting_package_approval" && <div className="rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 text-xs leading-relaxed text-teal-200">Tu paquete ya está disponible para revisión. Los PDFs finales se enviarán después de que apruebes la versión.</div>}
+      {workflow.status === "package_approved" && <div className="rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4 text-xs leading-relaxed text-indigo-200">Aprobación recibida. Estamos enviando tus PDFs finales.</div>}
+      {workflow.status === "paused_no_response" && <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-xs leading-relaxed text-amber-200">El servicio quedó pausado por falta de respuesta. El material preparado se conserva; contáctanos para reanudarlo.</div>}
+      {workflow.status === "pending_admin_review" && <div className="rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4 text-xs leading-relaxed text-indigo-200">Aprobaste esta revisión. Polaris preparará la siguiente versión y te avisará cuando esté lista.</div>}
       {workflow.status === "implementation_completed" && <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-4 text-xs leading-relaxed text-emerald-200">El acompañamiento incluido ya fue completado. La guía y el historial quedan disponibles para consulta.</div>}
       {workflow.status === "closed" && <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4 text-xs leading-relaxed text-[var(--color-text-secondary)]">Este servicio ya fue cerrado. Los cambios posteriores se cotizan por separado.</div>}
       {notice && <p className="text-xs font-bold text-emerald-400">{notice}</p>}

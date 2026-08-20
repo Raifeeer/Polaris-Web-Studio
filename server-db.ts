@@ -86,13 +86,17 @@ export type AscensoWorkflowStatus =
   | "package_ready"
   | "awaiting_connection"
   | "awaiting_client_review"
+  | "preparing_package"
+  | "awaiting_package_approval"
   | "changes_requested"
   | "revision_ready"
   | "approved"
   | "pending_admin_review"
   | "publishing"
   | "implementation_completed"
-  | "closed";
+  | "paused_no_response"
+  | "closed"
+  | "package_approved";
 
 export type AscensoReviewStatus =
   | "submitted"
@@ -127,6 +131,10 @@ export interface DbAscensoWorkflow {
   lastClientActionAt?: string;
   approvedAt?: string;
   publishedAt?: string;
+  packageReadyAt?: string;
+  packageApprovedAt?: string;
+  deliveryDueAt?: string;
+  pausedAt?: string;
   closedAt?: string;
   history: Array<{
     id: string;
@@ -152,9 +160,15 @@ export interface DbProject {
   // resumen del portal cambia según este campo; facturas, reuniones, cuenta
   // y el panel admin son iguales para todos los productos.
   productType?: "website" | "local_lift";
-  localLiftTier?: "impulso" | "ascenso"; // solo con productType "local_lift" -- gatea la tarjeta de autoagendamiento de la reunión de bienvenida de Ascenso
+  localLiftTier?: "impulso" | "ascenso"; // solo con productType "local_lift"
   localLiftLeadId?: string; // id real del doc en localLiftDiagnostics (Firestore, base polaris-web-studio) -- une este proyecto con el PDF real que se le mandó por correo, para poder ofrecerlo de nuevo desde el portal
   localLiftPackageSentAt?: string;
+  localLiftPackageReadyAt?: string;
+  localLiftPackageApprovalStatus?: "not_ready" | "awaiting_approval" | "approved" | "paused" | "completed";
+  localLiftDeliveryDueAt?: string;
+  localLiftPackageApprovedAt?: string;
+  localLiftFinalDeliveryAt?: string;
+  localLiftPausedAt?: string;
   localLiftPortalSyncStatus?: "pending" | "synced" | "failed" | "unmatched";
   localLiftPortalSyncAttempts?: number;
   localLiftPortalSyncLastAttemptAt?: string;
@@ -188,6 +202,8 @@ export interface DbProject {
   // Contrato específico de Local Lift. Se mantiene separado del contrato web para
   // que los estados, códigos, versiones y auditoría nunca se mezclen entre productos.
   localLiftContractStatus?: "draft" | "sent" | "viewed" | "awaiting_client_data" | "ready_for_signature" | "signed" | "cancelled";
+  localLiftContractSentAt?: string;
+  localLiftPortalInviteSentAt?: string;
   localLiftContractCode?: string;
   localLiftContractVersion?: string;
   localLiftContractSignedAt?: string;
@@ -199,6 +215,13 @@ export interface DbProject {
   localLiftContractPrivacyVersion?: string;
   localLiftContractSupportVersion?: string;
   localLiftContractViewedAt?: string;
+  localLiftPortalActivatedAt?: string;
+  localLiftContractReminderStage?: number;
+  localLiftPackageReminderStage?: number;
+  localLiftPackageReminderStageClaimedAt?: string;
+  localLiftContractReminderStageClaimedAt?: string;
+  localLiftPortalReminderStage?: number;
+  localLiftPortalReminderStageClaimedAt?: string;
   localLiftContractPdfUrl?: string;
   // Facturación recurrente de addons mensuales (hosting, agente IA, etc.) --
   // ver /api/portal/billing/run-cycle. Se inicializa la primera vez que el
