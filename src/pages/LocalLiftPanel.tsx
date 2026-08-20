@@ -511,10 +511,10 @@ export default function LocalLiftPanel() {
           setSendError("Este paquete ya se está enviando o quedó en recuperación. Espera unos minutos y revisa el estado del lead.");
           setSendStatus("in_progress");
         } else if (res.status === 409 && data.reason === "contract_not_signed") {
-          setSendError("El cliente todavía debe revisar y firmar el contrato desde su portal. El paquete permanece bloqueado hasta entonces.");
+          setSendError("El servicio todavía no está listo para preparar el paquete. Revisa el estado del pago e inténtalo de nuevo.");
           setSendStatus("error");
         } else if (res.status === 502 && data.reason === "contract_status_unavailable") {
-          setSendError("No se pudo verificar el contrato con el portal. No se envió el paquete; intenta de nuevo cuando el portal esté disponible.");
+          setSendError("No se pudo verificar el estado del servicio. No se envió el paquete; inténtalo de nuevo cuando el portal esté disponible.");
           setSendStatus("error");
         } else {
           setSendError(data.error || "No se pudo enviar.");

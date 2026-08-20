@@ -201,8 +201,12 @@ export interface DbProject {
   contractCode?: string;             // ej. "C-P001" -- asignado una sola vez (secuencia global), la letra final (A pendiente / B firmado) se deriva en runtime, no se guarda acá
   // Contrato específico de Local Lift. Se mantiene separado del contrato web para
   // que los estados, códigos, versiones y auditoría nunca se mezclen entre productos.
-  localLiftContractStatus?: "draft" | "sent" | "viewed" | "awaiting_client_data" | "ready_for_signature" | "signed" | "cancelled";
+  localLiftContractStatus?: "draft" | "sent" | "viewed" | "awaiting_client_data" | "ready_for_signature" | "signed" | "accepted" | "not_required" | "cancelled";
   localLiftContractSentAt?: string;
+  // Aceptación breve registrada durante el checkout; no requiere firma posterior.
+  localLiftServiceTermsAcceptedAt?: string;
+  localLiftServiceTermsAcceptedVersion?: string;
+  localLiftServiceTermsAcceptedTier?: "impulso" | "ascenso";
   localLiftPortalInviteSentAt?: string;
   localLiftContractCode?: string;
   localLiftContractVersion?: string;

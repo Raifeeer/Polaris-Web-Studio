@@ -1082,8 +1082,9 @@ export default function ClientDashboard() {
   const localLiftPackageDelivered = isLocalLiftProject && ((clientProject as any)?.localLiftTier === "ascenso"
     ? (clientProject as any)?.localLiftPackageApprovalStatus === "completed"
     : clientProject?.phases?.some((ph: any) => (ph.name === "Entrega" || ph.name === "Entrega final") && ph.status === "completed"));
-  const localLiftContractStatus = isLocalLiftProject ? ((clientProject as any)?.localLiftContractStatus || "sent") : null;
+  const localLiftContractStatus = isLocalLiftProject ? ((clientProject as any)?.localLiftContractStatus || "accepted") : null;
   const localLiftContractSigned = localLiftContractStatus === "signed";
+  const localLiftServiceAccepted = !isLocalLiftProject || ["signed", "accepted", "not_required"].includes(localLiftContractStatus || "");
   const [packageDownloading, setPackageDownloading] = useState(false);
   const [guideDownloading, setGuideDownloading] = useState(false);
   // Ascenso ya no exige una reunión: el cliente revisa y aprueba desde el
@@ -2000,8 +2001,8 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (
       isAdmin ||
+      isLocalLiftProject ||
       !clientProject?.id ||
-      !isLocalLiftProject ||
       localLiftContractSigned ||
       user?.mustChangePassword ||
       autoOpenedContractProjectRef.current === clientProject.id
@@ -3955,42 +3956,7 @@ export default function ClientDashboard() {
                           </div>
                         )}
 
-                        {isLocalLiftProject && (
-                          <div className="p-5 rounded-xl glass-panel border border-[#16C8C1]/25 bg-[#16C8C1]/[0.04] flex items-center justify-between gap-4 flex-wrap">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-lg bg-[#16C8C1]/10 flex items-center justify-center flex-shrink-0">
-                                <FileText size={18} className="text-[#16C8C1]" />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="text-sm font-bold text-[var(--color-text-primary)]">Contrato Local Lift</div>
-                                <div className="text-xs text-[var(--color-text-secondary)]">
-                                  {localLiftContractSigned
-                                    ? "Firmado — puedes descargar tu copia cuando quieras."
-                                    : "Revísalo y fírmalo antes de que preparemos o entreguemos tu paquete."}
-                                </div>
-                              </div>
-                            </div>
-                            {localLiftContractSigned ? (
-                              <button
-                                type="button"
-                                onClick={openContractViewModal}
-                                className="px-4 py-2 rounded-lg bg-[var(--color-surface-highlight)] border border-[#16C8C1]/30 text-xs font-bold text-[var(--color-text-primary)] hover:border-[#16C8C1]/60 whitespace-nowrap"
-                              >
-                                Ver contrato firmado
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={openContractModal}
-                                className="px-4 py-2 rounded-lg bg-[#16C8C1] text-[#111936] text-xs font-bold hover:opacity-95 whitespace-nowrap"
-                              >
-                                Revisar y firmar
-                              </button>
-                            )}
-                          </div>
-                        )}
-
-                        {isLocalLiftProject && (clientProject as any).localLiftTier === "ascenso" && localLiftContractSigned && (
+                        {isLocalLiftProject && (clientProject as any).localLiftTier === "ascenso" && localLiftServiceAccepted && (
                           <AscensoWorkflowPanel project={clientProject} token={token} onChanged={handleRefresh} />
                         )}
 
@@ -5183,7 +5149,7 @@ export default function ClientDashboard() {
                                 {inv.status === "pending" && (
                                   (() => {
                                     const invProject = data?.projects.find((p: any) => p.id === inv.projectId);
-                                    const contractSigned = (invProject as any)?.contractStatus === "signed";
+                                    const contractSigned = (invProject as any)?.productType === "local_lift" || (invProject as any)?.contractStatus === "signed";
                                     return contractSigned ? (
                                       <button
                                         type="button"

@@ -31,6 +31,7 @@ const firebaseApp = getApps().length
 
 const TIER_PRICE: Record<string, number> = { "impulso": 29, "ascenso": 99 };
 const TIER_LABEL: Record<string, string> = { "impulso": "Impulso", "ascenso": "Ascenso" };
+const LOCAL_LIFT_CHECKOUT_TERMS_VERSION = "local-lift-2026-08-20";
 
 const LOGO_URL = "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/local-lift-logo-v7.png";
 const FONT_DISPLAY = "'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif";
@@ -140,9 +141,9 @@ function buildPaymentConfirmedHtml(params: {
 
   <div style="padding:12px 32px 0 32px;">
     <p style="font-size:14px;line-height:1.6;color:#475569;margin:0;">${
-      tier === "ascenso"
-        ? `Recibimos y confirmamos tu pago. El siguiente paso es entrar a tu portal, revisar y firmar el contrato de acompañamiento. Después podrás agendar tu reunión de bienvenida 1:1. El paquete Ascenso incluye una lectura de hasta cinco reseñas recientes disponibles, buenas prácticas personalizadas, guía paso a paso y hasta tres rondas agrupadas de revisión.${sentPortalWelcomeEmail ? " Te enviamos por separado las credenciales de acceso a ese portal." : ""}`
-        : `Recibimos y confirmamos tu pago. El siguiente paso es entrar a tu portal, revisar y firmar el contrato de servicio. Después prepararemos y enviaremos el contenido real de tu paquete Local Lift a partir de tu ficha de Google.${sentPortalWelcomeEmail ? " Te enviamos por separado las credenciales de acceso a tu portal." : ""}`
+        tier === "ascenso"
+        ? `Recibimos y confirmamos tu pago. Ya comenzamos a preparar tu paquete Ascenso y te avisaremos cuando esté listo para revisarlo en el portal. La entrega preparada se estima dentro de cinco horas corridas desde el pago. Incluye una lectura de hasta cinco reseñas recientes disponibles, buenas prácticas personalizadas, guía paso a paso y hasta tres rondas agrupadas de revisión.${sentPortalWelcomeEmail ? " Te enviamos por separado las credenciales de acceso a ese portal, pero no necesitas entrar para que comencemos." : ""}`
+        : `Recibimos y confirmamos tu pago. Ya comenzamos a preparar tu paquete Impulso y lo recibirás por correo dentro de las próximas dos horas. Tu portal queda disponible para consultar el avance y la factura cuando quieras.${sentPortalWelcomeEmail ? " Te enviamos por separado las credenciales de acceso a tu portal, pero no necesitas entrar para que comencemos." : ""}`
     }</p>
   </div>
 
@@ -273,7 +274,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
-  const { action, leadId, businessName, city, contactName, email, tier, paypalOrderId, paypalPayerEmail } = req.body || {};
+  const { action, leadId, businessName, city, contactName, email, tier, paypalOrderId, paypalPayerEmail, termsAccepted, termsVersion } = req.body || {};
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
 
   try {
@@ -405,6 +406,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (action === "confirm") {
       if (!isLocalLiftTier(tier)) return res.status(400).json({ error: "Tier inválido." });
+      if (termsAccepted !== true || termsVersion !== LOCAL_LIFT_CHECKOUT_TERMS_VERSION) {
+        return res.status(400).json({ error: "service_terms_required", message: "Debes aceptar las condiciones del servicio antes de pagar." });
+      }
       if (typeof paypalOrderId !== "string" || !paypalOrderId.trim()) {
         return res.status(400).json({ error: "Falta la confirmación de pago." });
       }
@@ -541,6 +545,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           paypalOrderCreatingAt: null,
           paypalCaptureInProgress: null,
           paypalCaptureStartedAt: null,
+          serviceTermsAcceptedAt: new Date(),
+          serviceTermsAcceptedVersion: LOCAL_LIFT_CHECKOUT_TERMS_VERSION,
+          serviceTermsAcceptedTier: tier,
         });
         paymentClaimed = true;
       });
@@ -577,6 +584,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               paypalOrderId,
               language: "es",
               localLiftLeadId: docRef.id,
+              serviceTermsAcceptedAt: new Date().toISOString(),
+              serviceTermsAcceptedVersion: LOCAL_LIFT_CHECKOUT_TERMS_VERSION,
             }),
           });
           const prov = await provRes.json().catch(() => null);
@@ -662,7 +671,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             from: '"Polaris Local Lift" <hola@polarisweb.studio>',
             to: data.email,
             subject: `Pago confirmado: ${data.businessName}`,
-            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName}. ${tier === "ascenso" ? "Entra a tu portal para revisar y firmar el contrato; después podrás agendar tu sesión de bienvenida 1:1." : "Entra a tu portal para revisar y firmar el contrato; después prepararemos tu paquete real."}`,
+            text: `Gracias ${data.contactName || ""}. Recibimos tu pago para ${data.businessName} y ya comenzamos a preparar tu servicio. ${tier === "ascenso" ? "Tu paquete estará listo dentro de cinco horas corridas; entra al portal cuando quieras para seguir el avance y revisarlo." : "Tu paquete se preparará y llegará por correo dentro de dos horas."}`,
             html: buildPaymentConfirmedHtml({
               businessName: data.businessName,
               city: data.city,

@@ -186,7 +186,7 @@ const tiers = [
     enCta: "Start my guided plan",
     items: [
       ["Todo lo incluido en Impulso", "Everything in Impulso"],
-      ["Entrega preparada en un máximo de 5 horas corridas después de firmar", "Prepared delivery within 5 consecutive hours after signing"],
+      ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
       ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
       ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
       ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],

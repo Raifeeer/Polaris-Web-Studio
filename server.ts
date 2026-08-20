@@ -880,7 +880,7 @@ async function ensureLocalLiftContract(project: import("./server-db.js").DbProje
   if (!project.localLiftContractTermsVersion) changes.localLiftContractTermsVersion = LOCAL_LIFT_TERMS_VERSION;
   if (!project.localLiftContractPrivacyVersion) changes.localLiftContractPrivacyVersion = LOCAL_LIFT_PRIVACY_VERSION;
   if (!project.localLiftContractSupportVersion) changes.localLiftContractSupportVersion = LOCAL_LIFT_SUPPORT_VERSION;
-  if (!project.localLiftContractStatus) changes.localLiftContractStatus = "sent";
+  if (!project.localLiftContractStatus) changes.localLiftContractStatus = "accepted";
   if (Object.keys(changes).length) {
     dbInstance.updateProject(project.id, changes);
     Object.assign(project, changes);
@@ -965,6 +965,9 @@ async function notifyContractSigned(params: {
   termsVersion?: string;
   privacyVersion?: string;
   supportVersion?: string;
+  deliveryHours?: number;
+  abandonmentPolicyVersion?: string;
+  noAutomaticRefundAfterWorkBegins?: boolean;
   benefits?: string[];
   businessName?: string;
   termsUrl?: string;
@@ -1616,6 +1619,7 @@ const PORT = 3000;
       // web: ni depósito 50/50, ni contrato, ni fases de desarrollo. Se le
       // registra una factura ya PAGADA por el monto real que pagó.
       productType, paidAmount, tierLabel, paypalOrderId, localLiftLeadId,
+      serviceTermsAcceptedAt, serviceTermsAcceptedVersion,
     } = req.body || {};
     const isLocalLift = productType === "local_lift";
     if (!email || !name || (!packageId && !isLocalLift)) {
@@ -1698,32 +1702,39 @@ const PORT = 3000;
         productType: "local_lift",
         localLiftTier: isAscenso ? "ascenso" : "impulso",
         ...(typeof localLiftLeadId === "string" && localLiftLeadId.trim() ? { localLiftLeadId: localLiftLeadId.trim() } : {}),
-        ...(isAscenso ? { ascensoWorkflow: createAscensoWorkflow("awaiting_client_review") } : {}),
-        currentPhase: isAscenso ? "Revisa tu contrato" : "Revisa tu contrato",
-        progress: 20,
+        ...(isAscenso ? {
+          ascensoWorkflow: {
+            ...createAscensoWorkflow("preparing_package"),
+            deliveryDueAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+          },
+        } : {}),
+        currentPhase: "Preparando tu paquete",
+        progress: isAscenso ? 30 : 35,
         description: `Optimización del perfil de Google Business Profile (${liftLabel}) para ${projectName}.`,
         status: "active",
         localLiftContractCode: dbInstance.consumeNextLocalLiftContractCode(),
         localLiftContractVersion: LOCAL_LIFT_CONTRACT_VERSION,
-        localLiftContractStatus: "sent",
+        localLiftContractStatus: "accepted",
         localLiftContractSentAt: localLiftProvisionedAt,
         localLiftPortalInviteSentAt: localLiftProvisionedAt,
+        localLiftServiceTermsAcceptedAt: typeof serviceTermsAcceptedAt === "string" && serviceTermsAcceptedAt ? serviceTermsAcceptedAt : localLiftProvisionedAt,
+        localLiftServiceTermsAcceptedVersion: typeof serviceTermsAcceptedVersion === "string" && serviceTermsAcceptedVersion ? serviceTermsAcceptedVersion : LOCAL_LIFT_TERMS_VERSION,
+        localLiftServiceTermsAcceptedTier: isAscenso ? "ascenso" : "impulso",
         localLiftPackageApprovalStatus: "not_ready",
+        ...(isAscenso ? { localLiftDeliveryDueAt: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString() } : {}),
         localLiftContractTermsVersion: LOCAL_LIFT_TERMS_VERSION,
         localLiftContractPrivacyVersion: LOCAL_LIFT_PRIVACY_VERSION,
         localLiftContractSupportVersion: LOCAL_LIFT_SUPPORT_VERSION,
         phases: isAscenso
           ? [
-              { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-              { name: "Contrato", status: "active", detail: "Revisa y firma el contrato en tu portal para activar la preparación." },
-              { name: "Preparando tu paquete", status: "pending", detail: "Después de firmar, comenzaremos a preparar tu paquete. Te avisaremos cuando esté listo para revisar." },
+              { name: "Pago y aceptación", status: "completed", detail: "Recibimos tu pago y aceptaste las condiciones de tu paquete." },
+              { name: "Preparando tu paquete", status: "active", detail: "Ya estamos preparando tu paquete. Te avisaremos cuando esté listo para revisar." },
               { name: "Revisión y aprobación", status: "pending", detail: "Revisa la versión preparada y apruébala o solicita cambios desde el portal." },
               { name: "Entrega final", status: "pending", detail: "Después de tu aprobación recibirás los PDFs finales por correo y en tu portal." },
             ]
           : [
-              { name: "Pago confirmado", status: "completed", detail: "Recibimos tu pago y ya tenemos tu ficha de Google identificada." },
-              { name: "Contrato", status: "active", detail: "Revisa y firma el contrato en tu portal para liberar la preparación y entrega del paquete." },
-              { name: "Preparando tu paquete", status: "pending", detail: "Comenzaremos a armar el contenido real a partir de tu ficha después de firmar." },
+              { name: "Pago y aceptación", status: "completed", detail: "Recibimos tu pago y aceptaste las condiciones de tu paquete." },
+              { name: "Preparando tu paquete", status: "active", detail: "Ya estamos armando el contenido real a partir de la información de tu negocio." },
               { name: "Entrega", status: "pending", detail: "Te enviamos el paquete completo por correo." },
             ],
       });
@@ -1848,7 +1859,7 @@ const PORT = 3000;
     const project = dbInstance.getProjects().find((p) => p.productType === "local_lift" && p.localLiftLeadId === leadId && !p.deletedAt);
     if (!project) return res.status(404).json({ matched: false, error: "project_not_found" });
     await ensureLocalLiftContract(project);
-    return res.json({ matched: true, projectId: project.id, status: project.localLiftContractStatus || "sent", code: localLiftContractFullCode(project), signedAt: project.localLiftContractSignedAt || null, deliveryDueAt: project.localLiftDeliveryDueAt || null });
+    return res.json({ matched: true, projectId: project.id, status: project.localLiftContractStatus || "accepted", code: localLiftContractFullCode(project), signedAt: project.localLiftContractSignedAt || null, deliveryDueAt: project.localLiftDeliveryDueAt || null });
   });
 
   app.get("/api/portal/local-lift/contract-status/:leadId", async (req, res) => {
@@ -1864,7 +1875,7 @@ const PORT = 3000;
     return res.json({
       matched: true,
       projectId: project.id,
-      status: project.localLiftContractStatus || "sent",
+      status: project.localLiftContractStatus || "accepted",
       code: localLiftContractFullCode(project),
       signedAt: project.localLiftContractSignedAt || null,
       deliveryDueAt: project.localLiftDeliveryDueAt || null,
@@ -1883,10 +1894,7 @@ const PORT = 3000;
         const project = dbInstance.getProjects().find((p) => p.localLiftLeadId === leadId.trim());
     if (!project) return res.status(404).json({ success: false, matched: false, retryable: true, error: "project_not_found" });
     await ensureLocalLiftContract(project);
-    if (!project.localLiftPackageSentAt && project.localLiftContractStatus !== "signed") {
-      return res.status(409).json({ success: false, matched: true, retryable: false, error: "contract_not_signed", contractStatus: project.localLiftContractStatus || "sent" });
-    }
-        const now = new Date().toISOString();
+    const now = new Date().toISOString();
     const isAscenso = project.localLiftTier === "ascenso";
     const isFinalDelivery = finalDelivery === true || !isAscenso;
     const wasAlreadySent = isFinalDelivery ? !!project.localLiftFinalDeliveryAt : !!project.localLiftPackageReadyAt;
@@ -2438,8 +2446,7 @@ const PORT = 3000;
     const isAdmin = req.user.role === "admin";
     if (!isAdmin && project.clientUserId !== req.user.id) return res.status(403).json({ error: "Acceso denegado." });
     await ensureLocalLiftContract(project);
-    if (project.localLiftContractStatus !== "signed") return res.status(409).json({ error: "contract_not_signed", message: "El cliente debe firmar el contrato antes de iniciar el workflow Ascenso." });
-    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, "awaiting_client_review");
+    let workflow = ensureAscensoWorkflow(project.ascensoWorkflow, "preparing_package");
     const now = new Date().toISOString();
     const client = dbInstance.getUsers().find((u) => u.id === project.clientUserId);
     const adminEmail = "cristian2200299@gmail.com";
@@ -2946,10 +2953,12 @@ const PORT = 3000;
       return res.status(400).json({ error: "Esta factura ya está pagada." });
     }
 
-    // El cliente no puede pagar hasta firmar el contrato -- un admin sí puede
-    // (ej. cobro manual acordado fuera del portal antes de que el cliente firme).
-    const invoiceProjectContractSigned = (invoiceProject as any).productType === "local_lift"
-      ? (invoiceProject as any).localLiftContractStatus === "signed"
+    // Los pagos adicionales de proyectos web siguen dependiendo del contrato.
+    // Local Lift registra la aceptación de condiciones durante el checkout y no
+    // exige una firma posterior para continuar.
+    const isLocalLiftProject = (invoiceProject as any).productType === "local_lift";
+    const invoiceProjectContractSigned = isLocalLiftProject
+      ? true
       : (invoiceProject as any).contractStatus === "signed";
     if (req.user.role !== "admin" && !invoiceProjectContractSigned) {
       return res.status(403).json({ error: "Debes firmar el contrato de servicio antes de poder pagar esta factura." });
@@ -3924,7 +3933,7 @@ FORMATO DE RESPUESTA -- responde ÚNICAMENTE con este JSON, sin markdown ni back
         addons: [],
         pricing: { discountedTotal: localPayload.paidAmount, depositAmount: localPayload.paidAmount, finalAmount: 0, monthlyAddonsPrice: 0, paidAmount: localPayload.paidAmount, balanceAmount: 0, offerActive: false, offerDiscount: 0 },
         contract: {
-          status: project.localLiftContractStatus || "sent",
+          status: project.localLiftContractStatus || "accepted",
           signedAt: project.localLiftContractSignedAt || null,
           signerName: project.localLiftContractSignerName || null,
           hash: project.localLiftContractHash || null,

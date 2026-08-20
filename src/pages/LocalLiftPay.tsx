@@ -31,6 +31,8 @@ export default function LocalLiftPay() {
   // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [isSwitchingTier, setIsSwitchingTier] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [termsError, setTermsError] = useState("");
 
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
 
@@ -105,6 +107,14 @@ export default function LocalLiftPay() {
 
   const handleCreateOrder: NonNullable<ComponentProps<typeof PayPalButtons>["createOrder"]> = async () => {
     setErrorMsg("");
+    if (!termsAccepted) {
+      const message = language === "en"
+        ? "Accept the service conditions before continuing to payment."
+        : "Acepta las condiciones del servicio antes de continuar con el pago.";
+      setTermsError(message);
+      throw new Error("terms_acceptance_required");
+    }
+    setTermsError("");
     const res = await fetch("/api/local-lift-order", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -130,7 +140,7 @@ export default function LocalLiftPay() {
       const res = await fetch("/api/local-lift-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "confirm", leadId, tier, paypalOrderId: data.orderID }),
+        body: JSON.stringify({ action: "confirm", leadId, tier, paypalOrderId: data.orderID, termsAccepted: true, termsVersion: "local-lift-2026-08-20" }),
       });
       const result = await res.json().catch(() => ({}));
       if (result?.alreadyPaid) {
@@ -280,7 +290,7 @@ export default function LocalLiftPay() {
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
-                    ["Entrega preparada en un máximo de 5 horas corridas después de firmar", "Prepared delivery within 5 consecutive hours after signing"],
+                    ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
                     ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
@@ -470,7 +480,7 @@ export default function LocalLiftPay() {
                 <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
                   {[
                     ["Todo lo incluido en Impulso", "Everything in Impulso"],
-                    ["Entrega preparada en un máximo de 5 horas corridas después de firmar", "Prepared delivery within 5 consecutive hours after signing"],
+                    ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
                     ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
                     ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
                     ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
@@ -491,7 +501,28 @@ export default function LocalLiftPay() {
               <span className="pb-1.5 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>
             </div>
 
-            <div className="mt-5">
+            <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]/45 px-4 py-3 text-left">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(event) => {
+                    setTermsAccepted(event.target.checked);
+                    if (event.target.checked) setTermsError("");
+                  }}
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#16C8C1]"
+                />
+                <span className="text-[11px] leading-5 text-[var(--color-text-secondary)]">
+                  <T en="By clicking a payment button, you accept the Local Lift service conditions and cancellation policy. You can read them before paying.">Al pulsar un botón de pago, aceptas las condiciones del servicio y la política de cancelación de Local Lift. Puedes leerlas antes de pagar.</T>{" "}
+                  <a href="/local-lift/politicas" target="_blank" rel="noreferrer" className="font-bold text-[var(--color-primary-base)] underline underline-offset-2">
+                    <T en="Read conditions">Leer condiciones</T>
+                  </a>
+                </span>
+              </label>
+              {termsError && <p className="mt-2 text-[11px] font-bold text-red-500" role="alert">{termsError}</p>}
+            </div>
+
+            <div className="mt-3">
               <PayPalCheckoutProvider>
                 <PayPalButtons
                   style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 48 }}

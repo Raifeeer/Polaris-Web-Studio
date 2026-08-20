@@ -5,6 +5,10 @@ export type LocalLiftPhase = DbProjectPhase;
 
 export interface LocalLiftProjectState {
   localLiftTier?: string;
+  localLiftPackageReadyAt?: string;
+  localLiftContractStatus?: string;
+  localLiftPackageApprovalStatus?: string;
+  localLiftFinalDeliveryAt?: string;
   currentPhase?: string;
   progress?: number;
   phases?: LocalLiftPhase[];

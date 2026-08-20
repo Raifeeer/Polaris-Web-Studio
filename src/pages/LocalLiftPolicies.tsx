@@ -69,7 +69,7 @@ export default function LocalLiftPolicies() {
               <ul className="grid md:grid-cols-2 gap-3 text-sm text-[var(--color-text-secondary)]">
                 {[
                   "Todo lo incluido en Impulso",
-                  "Entrega preparada en un máximo de 5 horas corridas después de firmar",
+                  "Entrega preparada en un máximo de 5 horas corridas después del pago",
                   "Análisis de reseñas recientes y buenas prácticas personalizadas",
                   "Guía paso a paso para aplicar cada cambio",
                   "Indicaciones para aplicar textos e imágenes",
@@ -82,12 +82,12 @@ export default function LocalLiftPolicies() {
           </PolicySection>
 
           <PolicySection title={<T en="4. Delivery and approvals">4. Entrega y aprobaciones</T>}>
-            <p><T en="After payment, the client receives portal access and must review and sign the applicable service agreement. Once the agreement is signed, Ascenso is prepared within five consecutive hours and becomes available in the portal for review. The final PDFs are released by email after the client approves the prepared version. No meeting is required; support and review requests happen through the portal.">Después del pago, el cliente recibe acceso al portal y debe revisar y firmar el contrato aplicable. Una vez firmado, Ascenso se prepara dentro de cinco horas corridas y queda disponible en el portal para revisión. Los PDFs finales se envían por correo después de que el cliente aprueba la versión preparada. No es necesaria una reunión; el soporte y las solicitudes de revisión se gestionan desde el portal.</T></p>
+            <p><T en="After payment and checkout acceptance, Local Lift begins preparing the purchased service immediately. The client portal is available as an optional place to follow progress, review the prepared Ascenso package and request grouped changes. Ascenso is prepared within five consecutive hours after payment. The final PDFs are released by email after the client approves the prepared version. No meeting is required.">Después del pago y la aceptación en el checkout, Local Lift empieza inmediatamente a preparar el servicio adquirido. El portal del cliente está disponible como espacio opcional para seguir el avance, revisar el paquete Ascenso y solicitar cambios agrupados. Ascenso se prepara dentro de cinco horas corridas después del pago. Los PDFs finales se envían por correo después de que el cliente aprueba la versión preparada. No es necesaria una reunión.</T></p>
             <p><T en="Approving a version does not create unlimited new work. It confirms the current version and allows the service to move to its next defined stage.">Aprobar una versión no crea trabajo nuevo ilimitado. Confirma la versión actual y permite que el servicio avance a su siguiente etapa definida.</T></p>
           </PolicySection>
 
           <PolicySection title={<T en="5. Communication and support">5. Comunicación y soporte</T>}>
-            <p><T en="The client portal is the source of truth for contract status, package status, review rounds and project notices. For questions that do not require a new deliverable, the client may contact support through the portal or WhatsApp.">El portal del cliente es la fuente principal para el estado del contrato, el paquete, las rondas de revisión y los avisos del proyecto. Para preguntas que no requieran un nuevo trabajo, el cliente puede contactar soporte desde el portal o por WhatsApp.</T></p>
+            <p><T en="The client portal is the source of truth for package status, review rounds and project notices. Portal access is optional for starting the service; it becomes useful when the client wants to review the prepared material, request changes or follow progress.">El portal del cliente es la fuente principal para el estado del paquete, las rondas de revisión y los avisos del proyecto. Entrar al portal no es necesario para que comencemos el servicio; resulta útil cuando el cliente quiere revisar el material, solicitar cambios o seguir el avance.</T></p>
             <a href="https://wa.me/18299200544" target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#16C8C1] px-4 py-2.5 text-xs font-bold text-[#111936] hover:opacity-90 transition-opacity">
               <MessageCircle size={15} />
               <T en="Contact Local Lift support">Contactar soporte Local Lift</T>
@@ -99,7 +99,7 @@ export default function LocalLiftPolicies() {
           </PolicySection>
 
           <PolicySection title={<T en="7. Abandonment, pauses and refunds">7. Abandono, pausas y reembolsos</T>}>
-            <p><T en="If the client does not complete a required step, Local Lift may send reminders. If there is no response after the defined reminder period, the project may be paused while preserving its history and prepared material. The client can request a manual review to resume it.">Si el cliente no completa un paso necesario, Local Lift puede enviar recordatorios. Si no hay respuesta después del periodo definido de recordatorios, el proyecto puede quedar pausado conservando su historial y el material preparado. El cliente puede solicitar una revisión manual para reanudarlo.</T></p>
+            <p><T en="Local Lift does not require a post-payment signature or portal activation to begin. For Ascenso, reminders may be sent only when the prepared package is waiting for the client's review or approval. If there is no response after the defined reminder period, the project may be paused while preserving its history and prepared material. The client can request a manual review to resume it.">Local Lift no exige una firma posterior al pago ni activar el portal para comenzar. En Ascenso, los recordatorios se envían únicamente cuando el paquete preparado está esperando la revisión o aprobación del cliente. Si no hay respuesta después del periodo definido, el proyecto puede quedar pausado conservando su historial y el material preparado. El cliente puede solicitar una revisión manual para reanudarlo.</T></p>
             <p><T en="No automatic refund is issued after work begins. Any exception is reviewed manually according to the circumstances and the applicable agreement.">No se emite un reembolso automático después de iniciar el trabajo. Cualquier excepción se revisa manualmente según las circunstancias y el contrato aplicable.</T></p>
           </PolicySection>
         </div>
