@@ -466,7 +466,6 @@ Estado: ${place.isOperational ? "operativo" : "cerrado o no operativo según Goo
 export function buildEmailFooter(lang: "es" | "en", reasonLine: string): string {
   const en = lang === "en";
   const linkWeb = en ? "Website" : "Sitio web";
-  const linkWhatsApp = "WhatsApp";
   const linkContact = en ? "Contact" : "Contacto";
   const linkPrivacy = en ? "Privacy" : "Privacidad";
   const linkTerms = en ? "Terms and conditions" : "Términos y condiciones";
@@ -487,8 +486,7 @@ export function buildEmailFooter(lang: "es" | "en", reasonLine: string): string 
     <div style="text-align:center;margin-bottom:16px;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto;"><tr>
         <td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-size:13px;color:#1f2937;">${linkWeb}</a></td>
-        <td width="34%" style="text-align:center;white-space:nowrap;"><a href="https://wa.me/18299200544" target="_blank" style="font-size:13px;color:#1f2937;">${linkWhatsApp}</a></td>
-        <td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${linkContact}</a></td>
+        <td width="50%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-size:13px;color:#1f2937;">${linkContact}</a></td>
       </tr></table>
     </div>
     <div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-size:12px;color:#64748b;">${linkPrivacy}</a><span style="font-size:12px;color:#64748b;">&nbsp;·&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-size:12px;color:#64748b;">${linkTerms}</a></div>
