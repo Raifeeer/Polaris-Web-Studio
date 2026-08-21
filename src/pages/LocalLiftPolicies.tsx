@@ -26,8 +26,8 @@ export default function LocalLiftPolicies() {
             <T en="Clear scope. Guided implementation. Defined support.">Alcance claro. Implementación guiada. Soporte definido.</T>
           </h1>
           <p className="mt-5 text-base leading-relaxed text-[var(--color-text-secondary)] md:text-lg">
-            <T en="These policies explain what each Local Lift package includes, how reviews work, and where the service ends. The service agreement accepted in the client portal controls the specific purchase.">
-              Estas políticas explican qué incluye cada paquete Local Lift, cómo funcionan las revisiones y dónde termina el servicio. El contrato aceptado en el portal controla la compra específica.
+            <T en="These policies explain what each Local Lift package includes, how reviews work, and where the service ends. Acceptance happens during checkout before payment.">
+              Estas políticas explican qué incluye cada paquete Local Lift, cómo funcionan las revisiones y dónde termina el servicio. La aceptación se realiza durante el checkout antes del pago.
             </T>
           </p>
           <p className="mt-4 text-xs text-[var(--color-text-tertiary)]">Última actualización: {LAST_UPDATED}</p>
