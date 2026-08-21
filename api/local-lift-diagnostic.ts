@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { findPlaceById, findPlaceByMapsUrl, findPlaceCandidatePage, findPlaceCandidates, generateWithFallback, isGoogleMapsUrl, placeDataSummary, type PlaceData , buildEmailFooter } from "./_localLift.js";
-import { claimEmailDelivery, commitEmailDelivery, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
+import { claimEmailDelivery, commitEmailDelivery, hasCompletedLocalLiftPackage, hasRecentPendingDiagnostic, hasSentDiagnostic, releaseEmailDelivery } from "./_localLiftEmailGuard.js";
 
 // Node en Vercel Hobby soporta hasta 60s reales por función (config
 // maxDuration explícito) -- no el techo duro de 10s que asumía la versión
@@ -458,10 +458,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (v.status === "diagnostic_generating" || v.status === "diagnostic_generated" || v.emailDeliveryInProgress) {
       return res.status(202).json({ success: true, status: "processing", startedAt, place: v.placeData });
     }
-    if (v.emailSent || await hasSentDiagnostic(firestore, v.email)) {
+    const hasCompletedPackage = await hasCompletedLocalLiftPackage(firestore, v.email);
+    if (v.emailSent || ((await hasSentDiagnostic(firestore, v.email)) && !hasCompletedPackage)) {
       return res.status(409).json({ reason: "email_already_used" });
     }
-    const deliveryClaim = await claimEmailDelivery(firestore, docRef, v.email);
+    const deliveryClaim = await claimEmailDelivery(firestore, docRef, v.email, { allowAfterCompletedPackage: hasCompletedPackage });
     if (deliveryClaim === "blocked") return res.status(409).json({ reason: "email_already_used" });
     if (deliveryClaim === "in_progress") {
       const claimed = await docRef.get();

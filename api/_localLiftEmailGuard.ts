@@ -27,6 +27,35 @@ export async function hasSentDiagnostic(firestore: any, email: string): Promise<
   return snapshot.exists && snapshot.data()?.status === "sent";
 }
 
+/**
+ * A completed Local Lift delivery authorizes a later diagnostic with the same
+ * email. The portal state is the source of truth for delivery: Impulso is
+ * complete after localLiftPackageSentAt, while Ascenso is complete only after
+ * final delivery/approval. This reads one Firestore document and never calls
+ * Google or an AI provider.
+ */
+export async function hasCompletedLocalLiftPackage(firestore: any, email: string): Promise<boolean> {
+  const stateSnapshot = await firestore.collection("portal_state").doc("main").get();
+  if (!stateSnapshot.exists) return false;
+  const state = stateSnapshot.data() || {};
+  const normalized = normalizeEmail(email);
+  const userIds = new Set(
+    (Array.isArray(state.users) ? state.users : [])
+      .filter((user: any) => normalizeEmail(String(user?.email || "")) === normalized && !user?.deletedAt)
+      .map((user: any) => String(user.id || ""))
+      .filter(Boolean),
+  );
+  if (!userIds.size) return false;
+
+  return (Array.isArray(state.projects) ? state.projects : []).some((project: any) => {
+    if (project?.productType !== "local_lift" || project?.deletedAt || !userIds.has(String(project.clientUserId || ""))) return false;
+    if (project.localLiftTier === "ascenso") {
+      return Boolean(project.localLiftFinalDeliveryAt || project.localLiftPackageApprovalStatus === "completed");
+    }
+    return Boolean(project.localLiftPackageSentAt);
+  });
+}
+
 export async function hasRecentPendingDiagnostic(firestore: any, email: string): Promise<boolean> {
   const snapshot = await firestore
     .collection("localLiftDiagnostics")
@@ -43,13 +72,18 @@ export async function hasRecentPendingDiagnostic(firestore: any, email: string):
   });
 }
 
-export async function claimEmailDelivery(firestore: any, leadRef: any, email: string): Promise<GuardResult> {
+export async function claimEmailDelivery(
+  firestore: any,
+  leadRef: any,
+  email: string,
+  options: { allowAfterCompletedPackage?: boolean } = {},
+): Promise<GuardResult> {
   let result: GuardResult = "in_progress";
   const guardRef = firestore.collection(GUARD_COLLECTION).doc(guardId(email));
 
   await firestore.runTransaction(async (transaction: any) => {
     const guardSnapshot = await transaction.get(guardRef);
-    if (guardSnapshot.exists && guardSnapshot.data()?.status === "sent") {
+    if (guardSnapshot.exists && guardSnapshot.data()?.status === "sent" && !options.allowAfterCompletedPackage) {
       result = "blocked";
       return;
     }
