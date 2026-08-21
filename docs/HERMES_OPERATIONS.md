@@ -412,6 +412,25 @@ El puente no envía mensajes a Telegram, no marca errores como revisados, no esc
 
 La auditoría del 21 de agosto de 2026 confirmó que el bot de Meridian en producción es `@PolarisFaroBot`, que el chat destino es el supergrupo `Faro Polaris` y que ambos están enlazados. El `broken=true` inicial era un falso positivo por un job mensual retirado, una pausa intencional de Speed Audit y un workflow histórico fallido; se corrigió el chequeo y una corrida real posterior confirmó `broken=false`. En la misma intervención se corrigió la referencia del secreto de `local-lift-lifecycle` y se elevó `nav-perf-log` a 256 MiB. Los registros históricos de errores deben seguir distinguiéndose de incidentes activos.
 
+## 20. Gmail: lectura y borradores sin envío
+
+El gateway normal de Hermes tiene Gmail autorizado con los scopes `gmail.readonly` y `gmail.compose`, además de los scopes existentes de Drive, Docs, Sheets, Slides, Calendar y Tasks. La API oficial de Gmail quedó habilitada en el proyecto GCP sin contratar servicios de pago.
+
+Hermes puede consultar el perfil, buscar mensajes, leer mensajes y listar borradores. También puede crear y actualizar borradores para preparar respuestas. El gestor local `/home/cristian2200299/.hermes/tools/workspace_manager.py` aplica una barrera a nivel de API: solo permite lecturas y operaciones sobre borradores; rechaza operaciones de envío, eliminación, archivado, etiquetado, marcado como leído, modificación de mensajes y eliminación de borradores. No existe comando de envío en la skill.
+
+El scope `gmail.compose` es técnicamente más amplio que “solo borradores” y Google lo muestra durante el consentimiento. Hermes no usa ese alcance para enviar correo. La prueba de integración creó un único borrador dirigido a `cristian2200299@gmail.com` con asunto `[Hermes] Prueba de borrador Gmail — no enviar`; permanece sin enviar para que el usuario pueda eliminarlo manualmente si lo desea.
+
+| Consulta natural | Operación permitida |
+|---|---|
+| “Busca correos de esta semana sobre Polaris” | Búsqueda Gmail read-only. |
+| “Lee el correo con este ID” | Lectura del mensaje sin modificarlo. |
+| “Resume mis correos pendientes” | Búsqueda y lectura read-only. |
+| “Prepara una respuesta para este correo” | Creación de borrador, sin envío. |
+| “Actualiza el borrador anterior” | Actualización de borrador, sin envío. |
+| “Envía este correo”, “borra este correo” o “archívalo” | Bloqueado por el gestor y no disponible en la skill. |
+
+La sesión OAuth está almacenada con permisos restringidos en el HOME de Hermes y conserva refresh token y metadatos de renovación. El perfil trading conserva su proceso y configuración separados; no se modificó su gateway como parte de esta integración.
+
 ## Referencias
 
 [1]: https://parallel.ai/blog/free-web-search-mcp — Anuncio oficial del MCP gratuito de Parallel Search.
