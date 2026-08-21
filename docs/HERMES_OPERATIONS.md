@@ -410,7 +410,7 @@ El adaptador usa el token de servicio GCP ya disponible en la VM para leer Fires
 
 El puente no envía mensajes a Telegram, no marca errores como revisados, no escribe Firestore, no modifica Vercel, no despliega código, no edita GitHub y no reinicia servicios. El perfil trading no carga esta skill ni lee la memoria general. Si el estado persistido está desactualizado, Hermes debe distinguir entre “último error registrado” y “error activo” y mostrar la hora de comprobación.
 
-La auditoría del 21 de agosto de 2026 confirmó que el bot de Meridian en producción es `@PolarisFaroBot`, que el chat destino es el supergrupo `Faro Polaris` y que ambos están enlazados. También confirmó que el estado actual de Meridian registra tres funciones con errores históricos y `alertHealthChecks/latest` aparece como `broken=true`; esto debe investigarse como un diagnóstico operativo separado, no ocultarse ni traducirse automáticamente en una caída actual.
+La auditoría del 21 de agosto de 2026 confirmó que el bot de Meridian en producción es `@PolarisFaroBot`, que el chat destino es el supergrupo `Faro Polaris` y que ambos están enlazados. El `broken=true` inicial era un falso positivo por un job mensual retirado, una pausa intencional de Speed Audit y un workflow histórico fallido; se corrigió el chequeo y una corrida real posterior confirmó `broken=false`. En la misma intervención se corrigió la referencia del secreto de `local-lift-lifecycle` y se elevó `nav-perf-log` a 256 MiB. Los registros históricos de errores deben seguir distinguiéndose de incidentes activos.
 
 ## Referencias
 
