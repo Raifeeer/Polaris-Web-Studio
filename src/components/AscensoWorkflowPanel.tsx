@@ -53,17 +53,22 @@ const HISTORY_EVENT_LABEL: Record<string, string> = {
   client_round_submitted: "Ronda enviada por el cliente",
   admin_revision_ready: "Revisión enviada por Polaris",
   client_approved_initial_package: "Paquete aprobado por el cliente",
+  initial_package_approved: "Paquete inicial aprobado por el cliente",
+  final_package_delivered: "Entrega final enviada",
   revision_requested: "Solicitud de cambios recibida",
   review_request_submitted: "Ronda enviada por el cliente",
   revision_submitted: "Ronda enviada por el cliente",
   revision_ready: "Revisión lista para revisar",
   client_approved_revision: "Revisión aprobada por el cliente",
   client_request_changes: "Aclaración solicitada por el cliente",
+  client_requested_clarification: "Aclaración solicitada por el cliente",
+  client_additional_round_submitted: "Ronda adicional enviada por el cliente",
   admin_started_revision: "Nueva revisión iniciada",
   package_approved: "Paquete aprobado",
   final_delivery_sent: "Entrega final enviada",
   service_paused: "Servicio pausado",
   service_closed: "Servicio cerrado",
+  service_closed_after_approval: "Servicio cerrado tras la aprobación",
 };
 
 function formatHistoryEvent(type: unknown): string {
@@ -226,7 +231,8 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       {workflow.status === "awaiting_package_approval" && <div className="rounded-xl border border-teal-400/50 bg-teal-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">Tu paquete ya está disponible para revisión. Los PDFs finales se enviarán después de que apruebes la versión.</div>}
       {workflow.status === "package_approved" && <div className="rounded-xl border border-indigo-400/50 bg-indigo-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">Aprobación recibida. Estamos enviando tus PDFs finales.</div>}
       {workflow.status === "paused_no_response" && <div className="rounded-xl border border-amber-400/50 bg-amber-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">El servicio quedó pausado por falta de respuesta. El material preparado se conserva; contáctanos para reanudarlo.</div>}
-      {workflow.status === "pending_admin_review" && <div className="rounded-xl border border-indigo-400/50 bg-indigo-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">Aprobaste esta revisión. Polaris preparará la siguiente versión y te avisará cuando esté lista.</div>}
+      {workflow.status === "pending_admin_review" && <div className="rounded-xl border border-indigo-400/50 bg-indigo-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">Aprobaste esta revisión. Polaris recibió la aprobación y está preparando la entrega final. Te avisaremos cuando los PDFs estén disponibles.</div>}
+      {workflow.status === "closed" && (workflow.history || []).some((event: any) => event.type === "service_closed_after_approval") && <div className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">Aprobaste esta revisión. El PDF final y la guía se enviaron automáticamente. Las rondas restantes no se consumieron.</div>}
       {workflow.status === "implementation_completed" && <div className="rounded-xl border border-emerald-400/50 bg-emerald-500/10 p-4 text-sm font-semibold leading-relaxed text-[var(--color-text-primary)]">El acompañamiento incluido ya fue completado. La guía y el historial quedan disponibles para consulta.</div>}
       {workflow.status === "closed" && <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4 text-xs leading-relaxed text-[var(--color-text-secondary)]">Este servicio ya fue cerrado. Los cambios posteriores se cotizan por separado.</div>}
       {notice && <p className="text-xs font-bold text-emerald-400">{notice}</p>}

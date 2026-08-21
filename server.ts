@@ -2531,6 +2531,7 @@ const PORT = 3000;
         if (project.localLiftPackageApprovalStatus !== "awaiting_approval" && workflow.status !== "awaiting_package_approval") return res.status(409).json({ error: "package_not_ready", message: "El paquete todavía no está listo para aprobación." });
         if (!project.localLiftLeadId) return res.status(409).json({ error: "lead_missing" });
         const approvedWorkflow = { ...workflow, status: "package_approved" as const, packageApprovedAt: now, history: [...workflow.history, { id: `ascenso-package-approved-${Date.now()}`, type: "initial_package_approved", actor: "client" as const, at: now, version: workflow.currentVersion }] };
+        await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).update({ packageApprovalStatus: "approved", packageApprovedAt: now });
         dbInstance.updateProject(project.id, { ascensoWorkflow: approvedWorkflow, localLiftPackageApprovalStatus: "approved", localLiftPackageApprovedAt: now });
         await dbInstance.flush();
         const delivery = await deliverApprovedLocalLiftPackage(project.localLiftLeadId);
@@ -2550,11 +2551,39 @@ const PORT = 3000;
       if (action === "client_approve_revision") {
         if (isAdmin) return res.status(403).json({ error: "Solo el cliente puede aprobar la revisión." });
         if (typeof requestId !== "string") return res.status(400).json({ error: "Falta la solicitud." });
-        workflow = clientApproveRevision(workflow, requestId, now);
-        dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
+        if (!project.localLiftLeadId) return res.status(409).json({ error: "lead_missing", message: "El proyecto no tiene lead Local Lift." });
+        const existingRevision = workflow.requests.find((request) => request.id === requestId);
+        if (workflow.status === "closed" && existingRevision?.status === "closed") {
+          return res.json({ success: true, workflow, finalDelivery: true, alreadyDelivered: true, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed) });
+        }
+        const approvedWorkflow = clientApproveRevision(workflow, requestId, now);
+        await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).update({ packageApprovalStatus: "approved", packageApprovedAt: now });
+        dbInstance.updateProject(project.id, { ascensoWorkflow: approvedWorkflow, localLiftPackageApprovalStatus: "approved", localLiftPackageApprovedAt: now });
         await dbInstance.flush();
-        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Versión Ascenso aprobada · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó la revisión ${requestId} de ${project.name}. Revisa el paquete y prepara el acompañamiento final desde el panel.` });
-        return res.json({ success: true, workflow });
+
+        const delivery = await deliverApprovedLocalLiftPackage(project.localLiftLeadId);
+        if (!delivery.ok) {
+          await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Ascenso aprobado · entrega pendiente · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó la revisión de ${project.name}, pero la entrega automática necesita atención.\n\nMotivo: ${delivery.error || "error desconocido"}\n\nEl servicio no consumió rondas adicionales.` });
+          return res.status(502).json({ error: "final_delivery_failed", message: delivery.error || "No se pudo entregar automáticamente el paquete final.", workflow: approvedWorkflow, roundsRemaining: approvedWorkflow.maxRounds - approvedWorkflow.roundsUsed });
+        }
+
+        const finalPhases = (project.phases || []).map((phase: any) => {
+          if (phase.name === "Contrato" || phase.name === "Preparando tu paquete" || phase.name === "Revisión y aprobación" || phase.name === "Acompañamiento guiado" || phase.name === "Agenda tu reunión") return { ...phase, name: phase.name === "Agenda tu reunión" ? "Revisión y aprobación" : phase.name, status: "completed" as const };
+          if (phase.name === "Entrega" || phase.name === "Entrega final") return { ...phase, name: "Entrega final", status: "completed" as const };
+          return phase;
+        });
+        const closedWorkflow = {
+          ...approvedWorkflow,
+          status: "closed" as const,
+          activeRequestId: undefined,
+          closedAt: now,
+          requests: approvedWorkflow.requests.map((request) => request.id === requestId ? { ...request, status: "closed" as const, closedAt: now, updatedAt: now } : request),
+          history: [...approvedWorkflow.history, { id: `ascenso-service-closed-after-revision-${Date.now()}`, type: "service_closed_after_approval", actor: "system" as const, at: now, version: approvedWorkflow.currentVersion }],
+        };
+        dbInstance.updateProject(project.id, { ascensoWorkflow: closedWorkflow, localLiftPackageApprovalStatus: "completed", localLiftPackageApprovedAt: now, localLiftFinalDeliveryAt: now, currentPhase: "Entrega final", progress: 100, status: "completed", phases: finalPhases });
+        await dbInstance.flush();
+        await sendAscensoWorkflowEmail({ to: adminEmail, subject: `Ascenso aprobado y entregado · ${project.name}`, text: `El cliente ${client?.name || "cliente"} aprobó la revisión de ${project.name}. El PDF final y la guía fueron entregados automáticamente. No se consumieron las rondas restantes: quedan ${Math.max(0, closedWorkflow.maxRounds - closedWorkflow.roundsUsed)}.` });
+        return res.json({ success: true, workflow: closedWorkflow, finalDelivery: true, roundsRemaining: Math.max(0, closedWorkflow.maxRounds - closedWorkflow.roundsUsed), currentPhase: "Entrega final", progress: 100 });
       }
 
       if (action === "client_request_revision_changes") {
