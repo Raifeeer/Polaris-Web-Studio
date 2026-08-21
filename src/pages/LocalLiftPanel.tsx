@@ -336,6 +336,21 @@ export default function LocalLiftPanel() {
     });
   };
 
+  // Las respuestas reales se editan en textareas inline, no en SnippetEditModal.
+  // Construimos el snapshot final en el momento de previsualizar o enviar para
+  // que esas ediciones también entren en el PDF y en cada ronda Ascenso.
+  const getCurrentPackageSnapshot = (): LocalLiftPackage | undefined => {
+    if (!pkg) return undefined;
+    if (!pkg.reviewReplies?.length) return pkg;
+    return {
+      ...pkg,
+      reviewReplies: pkg.reviewReplies.map((reply, index) => ({
+        ...reply,
+        reply: replyDrafts[`package-${index}`] ?? reply.reply,
+      })),
+    };
+  };
+
   const loadLeads = () => {
     if (!token) return;
     setLeadsLoading(true);
@@ -510,14 +525,15 @@ export default function LocalLiftPanel() {
   };
 
   const handlePreviewPdf = async (documentType: "package" | "guide" = "package") => {
-    if (!place || !pkg) return;
+    const currentPackage = getCurrentPackageSnapshot();
+    if (!place || !currentPackage) return;
     setPreviewStatus("loading");
     setPreviewError("");
     try {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: pkg, tier, lang: leadLanguage, documentType }),
+        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: currentPackage, tier, lang: leadLanguage, documentType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -537,14 +553,15 @@ export default function LocalLiftPanel() {
 
 
   const handleSend = async () => {
-    if (!place || !pkg || !email.trim()) return;
+    const currentPackage = getCurrentPackageSnapshot();
+    if (!place || !currentPackage || !email.trim()) return;
     setSendStatus("loading");
     setSendError("");
     try {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "send", leadId, place, package: pkg, email, contactName, lang: leadLanguage }),
+        body: JSON.stringify({ action: "send", leadId, place, package: currentPackage, email, contactName, lang: leadLanguage }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -986,14 +1003,14 @@ export default function LocalLiftPanel() {
 
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button onClick={() => handlePreviewPdf("package")} disabled={previewStatus === "loading"} className="inline-flex items-center gap-2 rounded-lg border border-[var(--color-border-subtle)] px-4 py-2.5 text-sm font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 disabled:opacity-50">
-                {previewStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Generando vista previa...</> : <><Eye size={15} />Vista previa del paquete</>}
+                {previewStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Generando vista previa...</> : <><Eye size={15} />Vista previa del paquete actual</>}
               </button>
               {tier === "ascenso" && <button onClick={() => handlePreviewPdf("guide")} disabled={previewStatus === "loading"} className="inline-flex items-center gap-2 rounded-lg border border-indigo-500/30 px-4 py-2.5 text-sm font-bold text-indigo-300 hover:border-indigo-400/60 disabled:opacity-50"><Eye size={15} />Vista previa de la guía</button>}
               <button onClick={handleSend} disabled={sendStatus === "loading" || !email.trim()} className="inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2.5 text-sm font-black text-white disabled:opacity-50">
                 {sendStatus === "loading" ? <><Loader2 size={15} className="animate-spin" />Enviando...</> : <><Send size={15} />Enviar paquete completo<ArrowRight size={15} /></>}
               </button>
             </div>
-            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">Revisa la vista previa antes de mandarlo. Si no te convence, corrige y vuelve a "Generar paquete": cada vista previa usa el contenido más reciente.</p>
+            <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">La vista previa y cada revisión usan el contenido más reciente que hayas editado arriba, incluidas las respuestas escritas directamente. Para una ronda ya solicitada, no uses “Enviar paquete completo”: escribe la explicación en el bloque de revisión y envíala desde allí.</p>
             {previewStatus === "error" && <p className="mt-2 text-xs text-red-400">{previewError}</p>}
             {sendStatus === "done" && <p className="mt-2 text-xs text-emerald-500">Correo enviado a {email}. La entrega quedó sincronizada con el portal.</p>}
             {sendStatus === "email_sent_sync_pending" && <p className="mt-2 text-xs text-amber-500">{sendError} Usa “Reintentar sincronización” arriba cuando quieras.</p>}
@@ -1003,7 +1020,7 @@ export default function LocalLiftPanel() {
           </section>
 
           {tier === "ascenso" && leadId && (
-            <AscensoAdminWorkflowPanel leadId={leadId} token={token} packageSnapshot={pkg || undefined} onWorkflowChange={(workflow) => setAscensoWorkflowStatus(workflow?.status || null)} />
+            <AscensoAdminWorkflowPanel leadId={leadId} token={token} packageSnapshot={getCurrentPackageSnapshot()} onWorkflowChange={(workflow) => setAscensoWorkflowStatus(workflow?.status || null)} />
           )}
 
           {tier === "ascenso" && (
