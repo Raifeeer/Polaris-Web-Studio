@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, CheckCircle2, Clock, FileText, Loader2, MessageCircle, Send, ShieldCheck } from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Clock, FileText, Loader2, MessageCircle, Send, ShieldCheck } from "lucide-react";
 
 interface WorkflowPanelProps {
   project: any;
@@ -130,16 +130,23 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
   if (!workflow) return null;
 
   return (
-    <section className="rounded-[var(--radius-bento)] border border-indigo-500/20 bg-indigo-500/[0.04] p-6 space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"><ShieldCheck size={19} className="text-indigo-400" /></div>
-          <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Acompañamiento Ascenso</p><h2 className="mt-1 text-lg font-display font-black text-[var(--color-text-primary)]">{data?.packageSent ? "Revisa tu paquete y sigue la guía" : "Tu paquete está en preparación"}</h2><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">{data?.packageSent ? "Polaris preparó el contenido y la guía para que sepas qué hacer, dónde hacerlo y cómo avanzar paso a paso." : "El paquete y la guía aparecerán aquí cuando Polaris confirme el envío."}</p></div>
-        </div>
-        <span className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider ${workflow.status === "preparing_package" ? "border-teal-600/50 bg-teal-100 text-teal-950" : "border-indigo-500/30 bg-indigo-500/10 text-indigo-300"}`}>{STATUS_LABEL[workflow.status] || workflow.status}</span>
-      </div>
+    <section className="rounded-[var(--radius-bento)] border border-indigo-500/20 bg-indigo-500/[0.04] p-4 sm:p-6">
+      <details className="group">
+        <summary className="cursor-pointer list-none outline-none [&::-webkit-details-marker]:hidden">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"><ShieldCheck size={19} className="text-indigo-400" /></div>
+              <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Acompañamiento Ascenso</p><h2 className="mt-1 text-lg font-display font-black text-[var(--color-text-primary)]">{data?.packageSent ? "Revisa tu paquete y sigue la guía" : "Tu paquete está en preparación"}</h2><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">{data?.packageSent ? "Polaris preparó el contenido y la guía para que sepas qué hacer, dónde hacerlo y cómo avanzar paso a paso." : "El paquete y la guía aparecerán aquí cuando Polaris confirme el envío."}</p></div>
+            </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <span className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider ${workflow.status === "preparing_package" ? "border-teal-600/50 bg-teal-100 text-teal-950" : "border-indigo-500/30 bg-indigo-500/10 text-indigo-300"}`}>{STATUS_LABEL[workflow.status] || workflow.status}</span>
+              <ChevronDown size={17} aria-hidden="true" className="text-indigo-400 transition-transform duration-200 group-open:rotate-180" />
+            </div>
+          </div>
+        </summary>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Rondas usadas</p><p className="mt-1 text-2xl font-black text-[var(--color-text-primary)]">{workflow.roundsUsed} <span className="text-sm text-[var(--color-text-tertiary)]">de {workflow.maxRounds}</span></p></div>
         <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Versión actual</p><p className="mt-1 text-2xl font-black text-[var(--color-text-primary)]">v{workflow.currentVersion}</p></div>
         <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-base)]/40 p-4"><p className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Restantes</p><p className="mt-1 text-2xl font-black text-[var(--color-primary-base)]">{Math.max(0, workflow.maxRounds - workflow.roundsUsed)}</p></div>
@@ -217,7 +224,9 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       {notice && <p className="text-xs font-bold text-emerald-400">{notice}</p>}
       {error && <p className="text-xs font-bold text-red-400">{error}</p>}
 
-      <div className="space-y-2"><h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Historial del servicio</h3>{(workflow.history || []).slice(-8).reverse().map((event: any) => <div key={event.id} className="flex items-start gap-2 text-[11px] text-[var(--color-text-tertiary)]"><Check size={12} className="mt-0.5 shrink-0 text-emerald-400" /><span>{new Date(event.at).toLocaleString("es-DO")} · {formatHistoryEvent(event.type)}</span></div>)}</div>
+          <div className="space-y-2"><h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Historial del servicio</h3>{(workflow.history || []).slice(-8).reverse().map((event: any) => <div key={event.id} className="flex items-start gap-2 text-[11px] text-[var(--color-text-tertiary)]"><Check size={12} className="mt-0.5 shrink-0 text-emerald-400" /><span>{new Date(event.at).toLocaleString("es-DO")} · {formatHistoryEvent(event.type)}</span></div>)}</div>
+        </div>
+      </details>
     </section>
   );
 }
