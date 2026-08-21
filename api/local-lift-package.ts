@@ -754,7 +754,10 @@ function renderPackageEmailText(businessName: string, contactName: string | null
     ...items.map((item) => `- ${item}`),
     "",
   ];
-  if (portalUrl) lines.push("", isEnglish ? `Review your Rise package in the client portal: ${portalUrl}` : `Revisa tu paquete Ascenso en el portal de cliente: ${portalUrl}`);
+  if (portalUrl) {
+    const portalTierLabel = tier === "ascenso" ? (isEnglish ? "Rise" : "Ascenso") : (isEnglish ? "Boost" : "Impulso");
+    lines.push("", isEnglish ? `Review your ${portalTierLabel} package in the client portal: ${portalUrl}` : `Revisa tu paquete ${portalTierLabel} en el portal de cliente: ${portalUrl}`);
+  }
   if (tier === "ascenso") lines.push("", isEnglish ? "Your Rise package includes up to three grouped review rounds." : "Tu paquete Ascenso incluye hasta tres rondas agrupadas de revisión.");
   lines.push("", isEnglish ? "The Polaris Local Lift team" : "El equipo de Polaris Local Lift");
   return lines.join("\n");
@@ -1121,10 +1124,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
       const finalTier2 = normalizeTier(docRef ? (await docRef.get()).data()?.tier : tier);
       const isAscensoApproval = finalTier2 === "ascenso" && !!docRef;
-      const portalUrl =
-        finalTier2 === "ascenso"
-          ? `${process.env.PORTAL_BASE_URL || "https://polarisweb.studio"}/dashboard`
-          : undefined;
+      const portalUrl = `${process.env.PORTAL_BASE_URL || "https://polarisweb.studio"}/dashboard`;
       const tierPriceForPdf = TIER_PRICE[finalTier2] || TIER_PRICE["impulso"];
       const tierLabelForPdf = language === "en" ? tierPriceForPdf.enLabel : tierPriceForPdf.label;
       let pdfBuffer: Buffer | null = null;
@@ -1140,7 +1140,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           documentType: "package",
         });
       } catch (pdfErr) {
-        console.error("[local-lift-package] Error generando PDF principal, se envía sin ese adjunto:", pdfErr);
+        console.error("[local-lift-package] Error generando PDF principal; el envío quedará bloqueado:", pdfErr);
       }
       if (finalTier2 === "ascenso") {
         try {
@@ -1162,6 +1162,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         } catch (storageErr) {
           console.error("[local-lift-package] No se pudo guardar la guía en Storage:", storageErr);
         }
+      }
+      if (!isAscensoApproval && !pdfBuffer) {
+        throw new Error("No se pudo generar el PDF del paquete; el correo no se enviará para evitar prometer un adjunto inexistente.");
       }
       const readyHtml = isAscensoApproval
         ? renderPackageApprovalReadyBody(givenPlace.name, contactName || null, language, givenPackage, portalUrl || `${process.env.PORTAL_BASE_URL || "https://polarisweb.studio"}/dashboard`)
