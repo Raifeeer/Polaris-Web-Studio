@@ -1564,6 +1564,33 @@ export default function ClientDashboard() {
     if (isAdmin || !project) return;
     setAiSummaryLoading(true);
     try {
+      const isProjectLocalLift = project.productType === "local_lift";
+      const projectTier = (project.localLiftTier || "impulso") as "impulso" | "ascenso";
+      const projectDelivered = isProjectLocalLift && (projectTier === "ascenso"
+        ? project.localLiftPackageApprovalStatus === "completed"
+        : project.phases?.some((phase: any) => (phase.name === "Entrega" || phase.name === "Entrega final") && phase.status === "completed"));
+      const projectReadyForReview = isProjectLocalLift && project.localLiftPackageApprovalStatus === "awaiting_approval";
+
+      // Una entrega ya confirmada no debe depender de un resumen generado por IA:
+      // el texto determinista evita decir que el cliente "recibirá" algo futuro y
+      // además ahorra una llamada innecesaria de IA.
+      if (projectDelivered) {
+        setAiSummary(projectTier === "ascenso"
+          ? (language === "en"
+            ? "Your final package and visual guide are ready to download from this portal. You can keep consulting them here whenever you need."
+            : "Tu paquete final y la guía visual ya están disponibles para descargar desde este portal. También puedes consultarlos aquí cuando quieras.")
+          : (language === "en"
+            ? "Your package is ready and available to download from this portal. You can keep consulting it here whenever you need."
+            : "Tu paquete ya está listo y disponible para descargar desde este portal. También puedes consultarlo aquí cuando quieras."));
+        return;
+      }
+      if (projectReadyForReview) {
+        setAiSummary(language === "en"
+          ? "Your Rise package is ready to review in the portal. Approve it there to receive the final PDFs by email."
+          : "Tu paquete Ascenso ya está listo para revisarlo en el portal. Apruébalo allí para recibir los PDFs finales por correo.");
+        return;
+      }
+
       const text = await askAIFrontend({
         projectId: project.id,
         action: "summary"
