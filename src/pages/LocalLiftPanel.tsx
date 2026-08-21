@@ -74,6 +74,7 @@ interface Lead {
   city: string;
   contactName: string;
   email: string;
+  language?: "es" | "en";
   tier: string;
   status: string;
   paid: boolean;
@@ -153,6 +154,7 @@ function SnippetEditModal({
   place,
   leadId,
   tier,
+  lang,
   editing,
   onClose,
   onSave,
@@ -161,6 +163,7 @@ function SnippetEditModal({
   place: PlaceInfo;
   leadId: string | null;
   tier: string;
+  lang: "es" | "en";
   editing: EditingSnippet;
   onClose: () => void;
   onSave: (newValue: any) => void;
@@ -185,7 +188,7 @@ function SnippetEditModal({
           kind: editing.kind,
           current: fields,
           instruction: withInstruction ? instruction : undefined,
-          lang: "es",
+          lang,
         }),
       });
       const data = await res.json();
@@ -295,6 +298,7 @@ export default function LocalLiftPanel() {
   const [leadSearch, setLeadSearch] = useState("");
   const [leadId, setLeadId] = useState<string | null>(null);
   const [leadPaid, setLeadPaid] = useState(false);
+  const [leadLanguage, setLeadLanguage] = useState<"es" | "en">("es");
   const [ascensoWorkflowStatus, setAscensoWorkflowStatus] = useState<string | null>(null);
   const [selectedLeadPlace, setSelectedLeadPlace] = useState<PlaceInfo | null>(null);
   const [selectedLeadContractStatus, setSelectedLeadContractStatus] = useState<string | null>(null);
@@ -385,6 +389,7 @@ export default function LocalLiftPanel() {
       : null;
     setLeadId(lead.id);
     setLeadPaid(lead.paid);
+    setLeadLanguage(lead.language === "en" ? "en" : "es");
     setAscensoWorkflowStatus(null);
     setBusinessName(lead.businessName);
     setCity(lead.city);
@@ -447,7 +452,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ businessName, city, tier, contactName, email, lang: "es", leadId }),
+        body: JSON.stringify({ businessName, city, tier, contactName, email, lang: leadLanguage, leadId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -485,7 +490,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "retry_failed_parts", place: currentPlace, existingPackage: currentPkg, leadId: currentLeadId, tier, lang: "es" }),
+        body: JSON.stringify({ action: "retry_failed_parts", place: currentPlace, existingPackage: currentPkg, leadId: currentLeadId, tier, lang: leadLanguage }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok && data.reason === "retry_persistence_pending") {
@@ -526,7 +531,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: pkg, tier, lang: "es", documentType }),
+        body: JSON.stringify({ action: "preview_pdf", leadId, place, package: pkg, tier, lang: leadLanguage, documentType }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -553,7 +558,7 @@ export default function LocalLiftPanel() {
       const res = await fetch("/api/local-lift-package", {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: "send", leadId, place, package: pkg, email, contactName, lang: "es" }),
+        body: JSON.stringify({ action: "send", leadId, place, package: pkg, email, contactName, lang: leadLanguage }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -1049,6 +1054,7 @@ export default function LocalLiftPanel() {
           place={place}
           leadId={leadId}
           tier={tier}
+          lang={leadLanguage}
           editing={editingSnippet}
           onClose={() => setEditingSnippet(null)}
           onSave={(newValue) => handleSaveSnippet(editingSnippet.kind, editingSnippet.index, newValue)}

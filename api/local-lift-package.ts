@@ -903,6 +903,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           city: v.city || "",
           contactName: v.contactName || "",
           email: v.email || "",
+          language: v.language === "en" || v.lang === "en" ? "en" : "es",
           tier: normalizeTier(v.tier),
           status: v.status || "awaiting_generation",
           paid: !!v.paid,
