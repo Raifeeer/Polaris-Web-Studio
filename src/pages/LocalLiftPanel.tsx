@@ -690,27 +690,39 @@ export default function LocalLiftPanel() {
 
       <section className="mt-8 space-y-6">
         <div className="max-w-xl">
-          <label htmlFor="local-lift-lead-search" className="sr-only">Buscar leads</label>
-          <div className="relative">
-            <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
-            <input
-              id="local-lift-lead-search"
-              type="search"
-              value={leadSearch}
-              onChange={(e) => setLeadSearch(e.target.value)}
-              placeholder="Buscar por negocio, ciudad, contacto o correo"
-              className="glass-input w-full rounded-xl border border-[var(--color-border-subtle)] py-3 pl-11 pr-10 text-sm outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
-            />
-            {leadSearch && (
-              <button
-                type="button"
-                onClick={() => setLeadSearch("")}
-                aria-label="Limpiar búsqueda"
-                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)]"
-              >
-                <X size={14} />
-              </button>
-            )}
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <label htmlFor="local-lift-lead-search" className="sr-only">Buscar leads</label>
+              <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]" />
+              <input
+                id="local-lift-lead-search"
+                type="search"
+                value={leadSearch}
+                onChange={(e) => setLeadSearch(e.target.value)}
+                placeholder="Buscar por negocio, ciudad, contacto o correo"
+                className="glass-input w-full rounded-xl border border-[var(--color-border-subtle)] py-3 pl-11 pr-10 text-sm outline-none transition-[border-color,box-shadow] focus:border-[var(--color-primary-base)] focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/30"
+              />
+              {leadSearch && (
+                <button
+                  type="button"
+                  onClick={() => setLeadSearch("")}
+                  aria-label="Limpiar búsqueda"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)]"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={loadLeads}
+              disabled={leadsLoading}
+              aria-label="Actualizar lista de leads"
+              title="Actualizar lista de leads"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl border border-[var(--color-border-subtle)] p-3 text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]/40 disabled:cursor-wait disabled:opacity-60"
+            >
+              {leadsLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+            </button>
           </div>
           <p className="mt-2 text-[11px] text-[var(--color-text-tertiary)]">
             {normalizedLeadSearch ? `Mostrando ${filteredLeads.length} de ${leads.length} leads` : `${leads.length} leads · los más recientes aparecen primero`}
