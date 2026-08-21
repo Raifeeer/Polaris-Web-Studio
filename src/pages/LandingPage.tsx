@@ -176,6 +176,14 @@ export default function LandingPage() {
         enDesc:
           "Explore high-fidelity, real-world custom projects: Lumina Sky, Nexus Realty, and Chroma Tech Store meticulously engineered.",
       },
+      soluciones: {
+        esTitle: "Soluciones Polaris | Diseño Web, Presencia Local y Automatización",
+        esDesc:
+          "Conoce las soluciones de Polaris para crear una presencia digital sólida, mejorar tu visibilidad local y automatizar operaciones.",
+        enTitle: "Polaris Solutions | Web Design, Local Presence & Automation",
+        enDesc:
+          "Explore Polaris solutions to build a stronger digital presence, improve local visibility, and automate operations.",
+      },
       faq: {
         esTitle: "Preguntas Frecuentes | Soporte y Tarifas Web",
         esDesc:
@@ -239,6 +247,7 @@ export default function LandingPage() {
       "servicios",
       "proceso",
       "portafolio",
+      "soluciones",
       "faq",
     ];
     sections.forEach((id) => {
@@ -2206,6 +2215,120 @@ export default function LandingPage() {
             >
               <T en="Compare all features in detail">Comparar todas las funcionalidades en detalle</T>
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Polaris Solutions Section */}
+      <section className="py-24 px-6 md:px-12" id="soluciones">
+        <div className="max-w-6xl mx-auto">
+          <div className="max-w-3xl mx-auto text-center space-y-5 mb-12">
+            <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <T en="The Polaris ecosystem">El ecosistema Polaris</T>
+            </span>
+            <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">
+              <T en="More ways to move your business forward">Más formas de hacer crecer tu negocio</T>
+            </h2>
+            <p className="text-[var(--color-text-secondary)] text-base md:text-lg leading-relaxed">
+              <T en="Web design is our core. Around it, we build focused solutions for the moments that come after your website is ready.">
+                El diseño web es nuestro núcleo. A su alrededor creamos soluciones enfocadas para lo que viene después de tener una web lista.
+              </T>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ type: "spring", stiffness: 50, damping: 16 }}
+              className="md:col-span-2 rounded-[2rem] border border-[var(--color-primary-base)]/25 bg-gradient-to-br from-indigo-500/[0.08] via-transparent to-[var(--color-primary-base)]/[0.08] p-7 md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8"
+            >
+              <div className="max-w-2xl space-y-4">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]">
+                  <T en="Our core service">Nuestro servicio principal</T>
+                </span>
+                <h3 className="text-2xl md:text-3xl font-display font-black tracking-tight">
+                  <T en="Design and development for digital experiences that convert">Diseño y desarrollo de experiencias digitales que convierten</T>
+                </h3>
+                <p className="text-sm md:text-base text-[var(--color-text-secondary)] leading-relaxed">
+                  <T en="Landing pages, corporate websites and e-commerce built around your goals — with original code, strategy and a clear path to launch.">
+                    Landing pages, webs corporativas y e-commerce construidos alrededor de tus objetivos, con código original, estrategia y un camino claro hasta el lanzamiento.
+                  </T>
+                </p>
+              </div>
+              <Link
+                to="/cotizar"
+                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-[var(--color-primary-base)]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/40"
+              >
+                <T en="Quote your project">Cotiza tu proyecto</T>
+                <ArrowRight size={17} />
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.08 }}
+              className="rounded-[2rem] border border-[#16C8C1]/30 bg-gradient-to-br from-[#16C8C1]/[0.13] via-transparent to-cyan-500/[0.04] p-7 flex flex-col gap-6"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#16C8C1]/30 bg-[#16C8C1]/10 text-[#0faaa4] dark:text-[#5ee7df]">
+                  <Globe size={24} />
+                </div>
+                <span className="rounded-full border border-[#16C8C1]/30 bg-[#16C8C1]/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#0faaa4] dark:text-[#5ee7df]">
+                  <T en="Local presence">Presencia local</T>
+                </span>
+              </div>
+              <div className="space-y-3 flex-1">
+                <h3 className="text-2xl font-display font-black tracking-tight">Local Lift</h3>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                  <T en="A focused way to improve how your business appears, communicates and gets discovered locally — without handing over your Google account.">
+                    Una forma enfocada de mejorar cómo aparece, comunica y se descubre tu negocio a nivel local, sin entregarnos el acceso a tu cuenta de Google.
+                  </T>
+                </p>
+              </div>
+              <Link
+                to="/local-lift"
+                className="inline-flex items-center gap-2 text-sm font-black text-[#0faaa4] dark:text-[#5ee7df] transition-transform hover:translate-x-1"
+              >
+                <T en="Explore Local Lift">Conoce Local Lift</T>
+                <ArrowRight size={16} />
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.16 }}
+              className="rounded-[2rem] border border-teal-400/30 bg-gradient-to-br from-teal-400/[0.12] via-transparent to-emerald-500/[0.04] p-7 flex flex-col gap-6"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-400/10 text-teal-500 dark:text-teal-300">
+                  <Zap size={24} />
+                </div>
+                <span className="rounded-full border border-teal-400/30 bg-teal-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-300">
+                  <T en="Automation">Automatización</T>
+                </span>
+              </div>
+              <div className="space-y-3 flex-1">
+                <h3 className="text-2xl font-display font-black tracking-tight">Polaris Flow</h3>
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                  <T en="Focused automation systems that connect the repetitive parts of your business so your team can spend more time moving forward.">
+                    Sistemas de automatización enfocados que conectan las partes repetitivas de tu negocio para que tu equipo pueda avanzar con más tiempo y claridad.
+                  </T>
+                </p>
+              </div>
+              <Link
+                to="/flow"
+                className="inline-flex items-center gap-2 text-sm font-black text-teal-600 dark:text-teal-300 transition-transform hover:translate-x-1"
+              >
+                <T en="Explore Polaris Flow">Explora Polaris Flow</T>
+                <ArrowRight size={16} />
+              </Link>
+            </motion.div>
           </div>
         </div>
       </section>
