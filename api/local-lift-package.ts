@@ -5,7 +5,7 @@ import nodemailer from "nodemailer";
 import { cert, getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore, type DocumentReference } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
-import { findPlace, findPlaceReviews, generateFast, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
+import { buildEmailFooter, findPlace, findPlaceReviews, generateFast, generateWithFallback, placeDataSummary, type PlaceData } from "./_localLift.js";
 
 // Ascenso incluye análisis profundo de reseñas; necesita margen para el
 // fallback entre proveedores sin caer en el timeout por defecto.
@@ -127,6 +127,7 @@ function buildPreviewCacheKey(params: {
   pkg: LocalLiftPackage;
   place?: PlaceData | null;
   documentType?: "package" | "guide";
+  draft?: boolean;
 }): string {
   return createHash("sha256")
     .update(JSON.stringify({
@@ -136,6 +137,7 @@ function buildPreviewCacheKey(params: {
       pkg: params.pkg,
       place: params.place || null,
       documentType: params.documentType || "package",
+      draft: params.draft === true,
     }))
     .digest("hex");
 }
@@ -165,6 +167,7 @@ async function fetchPackagePdf(params: {
   pkg: LocalLiftPackage;
   place?: PlaceData | null;
   documentType?: "package" | "guide";
+  draft?: boolean;
 }): Promise<Buffer | null> {
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) return null;
@@ -179,6 +182,7 @@ async function fetchPackagePdf(params: {
       package: params.pkg,
       place: params.place || null,
       documentType: params.documentType || "package",
+      draft: params.draft === true,
     }),
   });
   if (!resp.ok) throw new Error(`local-lift-package-pdf ${resp.status}`);
@@ -706,7 +710,7 @@ function renderPackageEmailBody(
     ? `<tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:16px;line-height:1.35;color:#0f172a;margin-bottom:9px;">${content.ctaTitle}</div><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:14px;line-height:1.65;color:#1f2937;margin:0 0 18px;">${content.ctaBody}</p>${portalButton}</div></td></tr>`
     : "";
 
-  return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet"><title>${content.title}</title><style>body{margin:0;}a{text-decoration:none;color:#4f46e5;}.email-card{width:100% !important;max-width:600px !important;box-sizing:border-box !important;}.email-pad{padding-left:24px !important;padding-right:24px !important;}.email-item-card{box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;}</style></head><body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${content.title} — ${safeBusinessName}</div><div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;"><table class="email-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><tr><td class="email-pad" style="padding:40px 40px 0;text-align:center;">${localLiftLogoHeader}</td></tr><tr><td class="email-pad" style="padding:8px 40px 8px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#0284c7;margin-bottom:14px;">${content.eyebrow}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.3;color:#0f172a;">${content.title}</div></td></tr><tr><td class="email-pad" style="padding:16px 40px 0;text-align:center;"><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${greeting}<br>${content.intro}</p></td></tr><tr><td class="email-pad" style="padding:24px 40px 0;"><div class="email-item-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;color:#0f172a;margin-bottom:16px;">${content.cardTitle}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;line-height:1.4;color:#0f172a;margin-bottom:18px;">${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table></div></td></tr>${connectBlock}<tr><td class="email-pad" style="padding:40px 40px 0;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:28px 40px 0;text-align:center;"><table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px auto;"><tr><td style="padding:0 10px;"><a href="https://www.instagram.com/polariswebstudio/" target="_blank" rel="noopener noreferrer"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-instagram.png" width="22" height="22" alt="Instagram" style="width:22px;height:22px;display:block;"></a></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-facebook.png" width="22" height="22" alt="Facebook" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-x.png" width="22" height="22" alt="X" style="width:22px;height:22px;display:block;"></td><td style="padding:0 10px;"><img src="https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/email-assets/social-linkedin.png" width="22" height="22" alt="LinkedIn" style="width:22px;height:22px;display:block;"></td></tr></table></td></tr><tr><td class="email-pad" style="padding:0 40px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr><tr><td class="email-pad" style="padding:24px 40px 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:320px;margin:0 auto 16px auto;"><tr><td width="33%" style="text-align:left;white-space:nowrap;"><a href="https://www.polarisweb.studio" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Sitio web</a></td><td width="34%" style="text-align:center;white-space:nowrap;"><a href="https://wa.me/18299200544" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">WhatsApp</a></td><td width="33%" style="text-align:right;white-space:nowrap;"><a href="mailto:hola@polarisweb.studio" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:13px;color:#1f2937;">Contacto</a></td></tr></table><div style="text-align:center;margin-bottom:16px;"><a href="https://www.polarisweb.studio/privacidad" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Privacidad</a><span style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">&nbsp;&middot;&nbsp;</span><a href="https://www.polarisweb.studio/terminos" target="_blank" style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;">Términos y condiciones</a></div><div style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:12px;color:#64748b;line-height:1.6;text-align:center;">Polaris Web Studio · República Dominicana · <a href="mailto:hola@polarisweb.studio" style="color:#64748b;text-decoration:underline;">hola@polarisweb.studio</a><br>Recibiste este correo porque adquiriste un paquete de contenido de Local Lift.</div></td></tr></table></div></body></html>`;
+  return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet"><title>${content.title}</title><style>body{margin:0;}a{text-decoration:none;color:#4f46e5;}.email-card{width:100% !important;max-width:600px !important;box-sizing:border-box !important;}.email-pad{padding-left:24px !important;padding-right:24px !important;}.email-item-card{box-sizing:border-box;overflow-wrap:anywhere;word-break:break-word;}</style></head><body style="margin:0;padding:0;background:#f8fafc;color:#0f172a;"><div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f8fafc;opacity:0;">${content.title} — ${safeBusinessName}</div><div style="width:100%;min-height:100vh;background:#f8fafc;padding:48px 16px;box-sizing:border-box;font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;"><table class="email-card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;"><tr><td class="email-pad" style="padding:40px 40px 0;text-align:center;">${localLiftLogoHeader}</td></tr><tr><td class="email-pad" style="padding:8px 40px 8px;text-align:center;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#0284c7;margin-bottom:14px;">${content.eyebrow}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.3;color:#0f172a;">${content.title}</div></td></tr><tr><td class="email-pad" style="padding:16px 40px 0;text-align:center;"><p style="font-family:'Satoshi','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0;">${greeting}<br>${content.intro}</p></td></tr><tr><td class="email-pad" style="padding:24px 40px 0;"><div class="email-item-card" style="border:1px solid #e2e8f0;border-radius:10px;padding:22px 24px;"><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:14px;color:#0f172a;margin-bottom:16px;">${content.cardTitle}</div><div style="font-family:'Cabinet Grotesk','Century Gothic','Futura',Avenir,'Helvetica Neue',Arial,sans-serif;font-weight:700;font-size:15px;line-height:1.4;color:#0f172a;margin-bottom:18px;">${safeBusinessName}</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table></div></td></tr>${connectBlock}<tr><td class="email-pad" style="padding:28px 40px 40px;">${buildEmailFooter(isEnglish ? "en" : "es", isEnglish ? "You received this email because you purchased a Local Lift content package." : "Recibiste este correo porque adquiriste un paquete de contenido de Local Lift.")}</td></tr></table></div></body></html>`;
 }
 
 async function syncPortalPackageSent(leadId: string, guideAvailable = false, finalDelivery = false): Promise<{ synced: boolean; matched: boolean; error?: string }> {
@@ -769,29 +773,47 @@ function renderPackageApprovalReadyBody(
   lang: "es" | "en",
   pkg: LocalLiftPackage,
   portalUrl: string,
-  deliveryDueAt?: string | null,
 ): string {
   const isEnglish = lang === "en";
   const safeBusinessName = escapeHtml(businessName);
   const safeContactName = escapeHtml(contactName);
   const greeting = safeContactName ? (isEnglish ? `Hi ${safeContactName},` : `Hola ${safeContactName},`) : (isEnglish ? "Hi," : "Hola,");
-  const dueText = deliveryDueAt ? new Date(deliveryDueAt).toLocaleString(isEnglish ? "en-US" : "es-DO", { dateStyle: "medium", timeStyle: "short" }) : (isEnglish ? "within five consecutive hours" : "dentro de cinco horas corridas");
+  const postCount = Array.isArray(pkg.googlePosts) ? pkg.googlePosts.length : 0;
+  const replyCount = Array.isArray(pkg.reviewReplies) ? pkg.reviewReplies.length : 0;
   const items = isEnglish
-    ? ["Rewritten business description", "Services and calls to action", "Google posts ready to adapt", "Personalized review replies", "Recent review analysis and best practices", "Visual implementation guide"]
-    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", "Publicaciones para Google listas para adaptar", "Respuestas personalizadas a reseñas", "Análisis de reseñas recientes y buenas prácticas", "Guía visual de implementación"];
-  const itemRows = items.map((item) => `<li style="margin:0 0 8px;color:#1f2937;">${escapeHtml(item)}</li>`).join("");
+    ? ["Rewritten business description", "Services and calls to action", `${postCount || 10} Google posts ready to adapt`, `${replyCount || "Personalized"} review replies`, "Recent review analysis and best practices"]
+    : ["Nueva descripción del negocio", "Servicios y llamadas a la acción", `${postCount || 10} publicaciones para Google listas para adaptar`, `${replyCount || "Respuestas"} personalizadas a reseñas`, "Análisis de reseñas recientes y buenas prácticas"];
+  const itemRows = items.map((item) => `<li style="margin:0 0 8px;color:#1f2937;">${escapeHtml(String(item))}</li>`).join("");
   const intro = isEnglish
-    ? `Your Rise material for <b>${safeBusinessName}</b> is ready in the client portal. Review it there before approving the version. The final PDFs are intentionally not attached yet; after your approval, we will send them by email.`
-    : `Tu material Ascenso para <b>${safeBusinessName}</b> ya está listo en el portal de cliente. Revísalo allí antes de aprobar la versión. Los PDFs finales todavía no van adjuntos; después de tu aprobación te los enviaremos por correo.`;
-  return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body{margin:0;background:#f8fafc}a{text-decoration:none}.card{width:100%;max-width:600px!important;box-sizing:border-box}@media(max-width:480px){.pad{padding-left:24px!important;padding-right:24px!important}}</style></head><body><div style="width:100%;padding:40px 16px;box-sizing:border-box;background:#f8fafc;font-family:'Satoshi','Helvetica Neue',Arial,sans-serif"><table class="card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden"><tr><td class="pad" style="padding:36px 40px 0;text-align:center">${localLiftLogoHeader}</td></tr><tr><td class="pad" style="padding:20px 40px 0;text-align:center"><div style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#0f9f99;font-weight:700">${isEnglish ? "READY TO REVIEW" : "LISTO PARA REVISAR"}</div><h1 style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:25px;line-height:1.3;color:${LOCAL_LIFT_NAVY};margin:9px 0 0">${isEnglish ? "Your Rise package is ready" : "Tu paquete Ascenso está listo"}</h1></td></tr><tr><td class="pad" style="padding:18px 40px 0;text-align:center"><p style="font-size:15px;line-height:1.7;color:#1f2937;margin:0">${greeting}<br>${intro}</p></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #99f6e4;background:#f0fdfa;border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.65;color:#334155"><b>${isEnglish ? "Review available until:" : "Revisión disponible desde:"}</b><br>${escapeHtml(dueText)}<br><span style="font-size:12px;color:#64748b">${isEnglish ? "This is the estimated preparation window counted from your payment confirmation." : "Este es el plazo estimado de preparación contado desde la confirmación de tu pago."}</span></div></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:20px 22px"><p style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:15px;font-weight:700;color:#0f172a;margin:0 0 12px">${isEnglish ? "Inside your package" : "Qué encontrarás dentro"}</p><ul style="padding-left:20px;margin:0;font-size:14px;line-height:1.5">${itemRows}</ul></div></td></tr><tr><td class="pad" style="padding:24px 40px 0;text-align:center"><a href="${escapeHtml(portalUrl)}" style="display:inline-block;background:${LOCAL_LIFT_ACCENT};color:#111936;padding:14px 24px;border-radius:8px;font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-weight:700;font-size:14px">${isEnglish ? "Review and approve my package" : "Revisar y aprobar mi paquete"}</a></td></tr><tr><td class="pad" style="padding:28px 40px 36px;text-align:center"><p style="font-size:12px;line-height:1.6;color:#64748b;margin:0">${isEnglish ? "You can request grouped changes from the portal before approving. Clarifications about the same version do not use an additional round." : "Puedes solicitar cambios agrupados desde el portal antes de aprobar. Las aclaraciones sobre una misma versión no consumen una ronda adicional."}</p></td></tr></table></div></body></html>`;
+    ? `Your Rise package for <b>${safeBusinessName}</b> is ready in the client portal. Download the PDF marked <b>Draft for review</b>, review its content and request grouped changes there before approving it. The implementation guide is a separate reference document and will be available with the final delivery.`
+    : `Tu paquete Ascenso para <b>${safeBusinessName}</b> ya está listo en el portal de cliente. Descarga el PDF marcado como <b>Borrador para revisión</b>, revisa su contenido y solicita allí los cambios agrupados antes de aprobarlo. La guía de implementación es un documento de consulta separado y estará disponible con la entrega final.`;
+  const footerReason = isEnglish
+    ? "You received this email because you purchased a Local Lift content package."
+    : "Recibiste este correo porque adquiriste un paquete de contenido de Local Lift.";
+  return `<!DOCTYPE html><html lang="${isEnglish ? "en" : "es"}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@700,800,500&f[]=satoshi@400,500,700&display=swap" rel="stylesheet"><style>body{margin:0;background:#f8fafc}a{text-decoration:none}.card{width:100%;max-width:600px!important;box-sizing:border-box}@media(max-width:480px){.pad{padding-left:24px!important;padding-right:24px!important}}</style></head><body><div style="width:100%;padding:40px 16px;box-sizing:border-box;background:#f8fafc;font-family:'Satoshi','Helvetica Neue',Arial,sans-serif"><table class="card" role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden"><tr><td class="pad" style="padding:36px 40px 0;text-align:center">${localLiftLogoHeader}</td></tr><tr><td class="pad" style="padding:20px 40px 0;text-align:center"><div style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#0f9f99;font-weight:700">${isEnglish ? "READY TO REVIEW" : "LISTO PARA REVISAR"}</div><h1 style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-weight:800;font-size:26px;line-height:1.3;color:${LOCAL_LIFT_NAVY};margin:9px 0 0">${isEnglish ? "Your Rise package is ready to review" : "Tu paquete Ascenso está listo para revisar"}</h1></td></tr><tr><td class="pad" style="padding:18px 40px 0;text-align:center"><p style="font-family:'Satoshi','Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#1f2937;margin:0">${greeting}<br>${intro}</p></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #f5d7a2;background:#fffaf0;border-radius:10px;padding:16px 18px;font-size:13px;line-height:1.65;color:#7c2d12"><b>${isEnglish ? "Important:" : "Importante:"}</b><br>${isEnglish ? "The PDF currently available is a review draft. It is not the final or official delivery." : "El PDF disponible ahora es un borrador para revisión. No es la entrega final ni oficial."}</div></td></tr><tr><td class="pad" style="padding:22px 40px 0"><div style="border:1px solid #e2e8f0;border-radius:10px;padding:20px 22px"><p style="font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-size:15px;font-weight:700;color:#0f172a;margin:0 0 12px">${isEnglish ? "Inside the review package" : "Qué encontrarás en el paquete de revisión"}</p><ul style="padding-left:20px;margin:0;font-family:'Satoshi','Helvetica Neue',Arial,sans-serif;font-size:14px;line-height:1.5">${itemRows}</ul></div></td></tr><tr><td class="pad" style="padding:24px 40px 0;text-align:center"><a href="${escapeHtml(portalUrl)}" target="_blank" style="display:inline-block;background:${LOCAL_LIFT_ACCENT};color:#111936;padding:14px 24px;border-radius:8px;font-family:'Cabinet Grotesk','Century Gothic',Arial,sans-serif;font-weight:700;font-size:14px">${isEnglish ? "Open my review package" : "Abrir mi paquete de revisión"}</a></td></tr><tr><td class="pad" style="padding:28px 40px 0;text-align:center"><p style="font-family:'Satoshi','Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.6;color:#64748b;margin:0">${isEnglish ? "You can request grouped changes from the portal before approving. No meeting is required." : "Puedes solicitar cambios agrupados desde el portal antes de aprobar. No necesitas agendar una reunión."}</p></td></tr><tr><td class="pad" style="padding:32px 40px 40px;">${buildEmailFooter(isEnglish ? "en" : "es", footerReason)}</td></tr></table></div></body></html>`;
 }
 
-function renderPackageApprovalReadyText(businessName: string, contactName: string | null, lang: "es" | "en", portalUrl: string, deliveryDueAt?: string | null): string {
+function renderPackageApprovalReadyText(businessName: string, contactName: string | null, lang: "es" | "en", portalUrl: string): string {
   const greeting = contactName ? (lang === "en" ? `Hi ${contactName},` : `Hola ${contactName},`) : (lang === "en" ? "Hi," : "Hola,");
-  const dueText = deliveryDueAt ? new Date(deliveryDueAt).toLocaleString(lang === "en" ? "en-US" : "es-DO", { dateStyle: "medium", timeStyle: "short" }) : (lang === "en" ? "within five consecutive hours" : "dentro de cinco horas corridas");
   return lang === "en"
-    ? `READY TO REVIEW\n\n${greeting}\n\nYour Rise package for ${businessName} is ready in the client portal. Review it and approve the version there. The final PDFs will be emailed after approval.\n\nEstimated window: ${dueText}\n\nOpen the portal: ${portalUrl}`
-    : `LISTO PARA REVISAR\n\n${greeting}\n\nTu paquete Ascenso para ${businessName} ya está listo en el portal de cliente. Revísalo y aprueba la versión allí. Los PDFs finales se enviarán por correo después de tu aprobación.\n\nPlazo estimado: ${dueText}\n\nAbrir portal: ${portalUrl}`;
+    ? `READY TO REVIEW
+
+${greeting}
+
+Your Rise package for ${businessName} is ready in the client portal. Download the PDF marked “Draft for review”, review it and request grouped changes there before approving. The implementation guide is a separate reference document and will be available with the final delivery.
+
+Open the review package: ${portalUrl}
+
+No meeting is required.`
+    : `LISTO PARA REVISAR
+
+${greeting}
+
+Tu paquete Ascenso para ${businessName} ya está listo en el portal de cliente. Descarga el PDF marcado como “Borrador para revisión”, revísalo y solicita allí los cambios agrupados antes de aprobarlo. La guía de implementación es un documento de consulta separado y estará disponible con la entrega final.
+
+Abrir el paquete de revisión: ${portalUrl}
+
+No necesitas agendar una reunión.`;
 }
 
 function renderTeaserHtml(place: { name: string }, pkg: LocalLiftPackage, tier: string, leadId: string, language: "es" | "en"): string {
@@ -856,7 +878,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(429).json({ error: "Demasiadas solicitudes. Espera un momento." });
   }
 
-  const { action, businessName, city, lang, email, contactName, tier, leadId, place: givenPlace, package: givenPackage, documentType } = req.body || {};
+  const { action, businessName, city, lang, email, contactName, tier, leadId, place: givenPlace, package: givenPackage, documentType, draft } = req.body || {};
   const language: "es" | "en" = lang === "en" ? "en" : "es";
   const requestedTier = normalizeTier(tier);
   const firestore = getFirestore(firebaseApp, "polaris-web-studio");
@@ -1006,9 +1028,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await approvedLeadRef.update({ finalPackageSendInProgress: null, finalPackageSendStartedAt: null }).catch(() => undefined);
         return res.status(409).json({ error: "package_not_approved", message: "El cliente debe aprobar el paquete antes de recibir los PDFs finales." });
       }
-      if (!approvedLead.pdfBase64 || !approvedLead.place || !approvedLead.package) {
+      if (!approvedLead?.place || !approvedLead?.package) {
         await approvedLeadRef.update({ finalPackageSendInProgress: null, finalPackageSendStartedAt: null }).catch(() => undefined);
-        return res.status(409).json({ error: "package_files_unavailable", message: "El paquete aprobado no tiene sus archivos preparados." });
+        return res.status(409).json({ error: "package_files_unavailable", message: "El paquete aprobado no tiene su contenido preparado." });
       }
       const finalZohoPassword = process.env.ZOHO_PASSWORD;
       if (!finalZohoPassword) {
@@ -1019,8 +1041,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const finalPortalUrl = `${process.env.PORTAL_BASE_URL || "https://polarisweb.studio"}/dashboard`;
       const finalBusinessName = String(approvedLead.place.name || approvedLead.businessName || "tu negocio");
       const finalContactName = approvedLead.contactName || null;
+      const finalTier = normalizeTier(approvedLead.tier);
+      const finalTierLabel = finalLanguage === "en" ? (TIER_PRICE[finalTier] || TIER_PRICE.ascenso).enLabel : (TIER_PRICE[finalTier] || TIER_PRICE.ascenso).label;
+      let finalPdfBuffer: Buffer | null = null;
+      try {
+        finalPdfBuffer = await fetchPackagePdf({ businessName: finalBusinessName, tierLabel: finalTierLabel, lang: finalLanguage, pkg: approvedLead.package, place: approvedLead.place, documentType: "package", draft: false });
+      } catch (finalPdfError: any) {
+        console.error("[local-lift-package] Error regenerando el PDF final:", finalPdfError?.message || finalPdfError);
+      }
+      if (!finalPdfBuffer) {
+        await approvedLeadRef.update({ finalPackageSendInProgress: null, finalPackageSendStartedAt: null, finalPackageSendLastError: "No se pudo regenerar el PDF final." }).catch(() => undefined);
+        return res.status(502).json({ error: "final_pdf_unavailable", message: "No se pudo preparar el PDF final. No se enviaron los archivos." });
+      }
       const finalTransporter = nodemailer.createTransport({ host: "smtp.zoho.com", port: 465, secure: true, auth: { user: "hola@polarisweb.studio", pass: finalZohoPassword } });
-      const finalAttachments: any[] = [{ filename: `Local-Lift-${finalBusinessName.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: Buffer.from(approvedLead.pdfBase64, "base64"), contentType: "application/pdf" }];
+      const finalAttachments: any[] = [{ filename: `Local-Lift-${finalBusinessName.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: finalPdfBuffer, contentType: "application/pdf" }];
       if (approvedLead.guidePdfStoragePath) {
         const guideBuffer = await readGuidePdfFromStorage(String(approvedLead.guidePdfStoragePath)).catch(() => null);
         if (guideBuffer) finalAttachments.push({ filename: `Guia-Ascenso-${finalBusinessName.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf`, content: guideBuffer, contentType: "application/pdf" });
@@ -1039,7 +1073,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         throw finalEmailError;
       }
       const finalSentAt = new Date();
-      await approvedLeadRef.update({ status: "sent", finalPackageEmailSentAt: finalSentAt, finalPackageEmailSent: true, packageDeliveryState: "final_email_sent_pending_sync", finalPackageSendInProgress: null, finalPackageSendStartedAt: null, finalPackageSendLastError: "" });
+      await approvedLeadRef.update({ status: "sent", pdfBase64: finalPdfBuffer.toString("base64"), packagePdfCacheKey: buildPreviewCacheKey({ businessName: finalBusinessName, tierLabel: finalTierLabel, lang: finalLanguage, pkg: approvedLead.package, place: approvedLead.place, documentType: "package", draft: false }), finalPackageEmailSentAt: finalSentAt, finalPackageEmailSent: true, packageDeliveryState: "final_email_sent_pending_sync", finalPackageSendInProgress: null, finalPackageSendStartedAt: null, finalPackageSendLastError: "" });
       const finalSync = await syncPortalPackageSent(leadId.trim(), !!approvedLead.guidePdfStoragePath, true);
       await approvedLeadRef.update({
         portalSyncStatus: finalSync.synced ? "synced" : finalSync.matched ? "failed" : "unmatched",
@@ -1138,6 +1172,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           pkg: givenPackage,
           place: givenPlace,
           documentType: "package",
+          draft: isAscensoApproval,
         });
       } catch (pdfErr) {
         console.error("[local-lift-package] Error generando PDF principal; el envío quedará bloqueado:", pdfErr);
@@ -1198,7 +1233,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           portalSyncLastError: pdfBuffer ? "" : "No se pudo generar el PDF; el portal permanece en preparación.",
           ...(pdfBuffer ? {
             pdfBase64: pdfBuffer.toString("base64"),
-            packagePdfCacheKey: buildPreviewCacheKey({ businessName: givenPlace.name, tierLabel: tierLabelForPdf, lang: language, pkg: givenPackage, place: givenPlace, documentType: "package" }),
+            packagePdfCacheKey: buildPreviewCacheKey({ businessName: givenPlace.name, tierLabel: tierLabelForPdf, lang: language, pkg: givenPackage, place: givenPlace, documentType: "package", draft: isAscensoApproval }),
           } : {}),
           ...(guideStoragePath ? { guidePdfStoragePath: guideStoragePath, guidePdfAvailable: true } : {}),
           packageSendInProgress: null,
@@ -1245,6 +1280,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         pkg: givenPackage,
         place: givenPlace,
         documentType: documentType === "guide" ? "guide" as const : "package" as const,
+        draft: draft === true,
       };
       const previewKey = buildPreviewCacheKey(previewParams);
       let previewPdf = getCachedPreviewPdf(previewKey);

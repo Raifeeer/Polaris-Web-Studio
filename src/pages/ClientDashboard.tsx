@@ -3908,11 +3908,11 @@ export default function ClientDashboard() {
                                     ? (language === "en" ? "Your final package and visual guide were sent by email. You can keep consulting them here." : "Tu paquete final y la guía visual fueron enviados por correo. También puedes seguir consultándolos aquí.")
                                     : (language === "en" ? "We sent your complete package by email. If you have questions, message us on WhatsApp and we will review them with you." : "Te enviamos el paquete completo por correo. Si tienes dudas, escríbenos por WhatsApp y lo revisamos contigo."))
                                   : localLiftPackageReadyForReview
-                                    ? (language === "en" ? "Your Ascenso package is ready in the portal. Review it and approve it to receive the final PDFs by email." : "Tu paquete Ascenso ya está listo en el portal. Revísalo y apruébalo para recibir los PDFs finales por correo.")
+                                    ? (language === "en" ? "Your Ascenso review package is ready in the portal. Download the review draft, request changes if needed, and approve it when it is correct." : "Tu paquete de revisión Ascenso ya está listo en el portal. Descarga el borrador, solicita cambios si los necesitas y apruébalo cuando esté correcto.")
                                     : (language === "en" ? "We are preparing your package. It will arrive in the portal as soon as it is ready." : "Estamos preparando tu paquete. Aparecerá en el portal apenas esté listo.")}
                               </p>
                               <div className="mt-3 flex flex-wrap items-center gap-2">
-                                {localLiftPackageDelivered && (
+                                {(localLiftPackageDelivered || localLiftPackageReadyForReview) && (
                                   <button
                                     type="button"
                                     disabled={packageDownloading}
@@ -3927,7 +3927,7 @@ export default function ClientDashboard() {
                                         const url = URL.createObjectURL(blob);
                                         const a = document.createElement("a");
                                         a.href = url;
-                                        a.download = `Local-Lift-${clientProject.name}.pdf`;
+                                        a.download = `${localLiftPackageDelivered ? "Local-Lift" : "Borrador-Ascenso"}-${clientProject.name}.pdf`;
                                         a.click();
                                         URL.revokeObjectURL(url);
                                       } catch {
@@ -3940,7 +3940,7 @@ export default function ClientDashboard() {
                                   >
                                     {packageDownloading
                                       ? <><Loader2 size={13} className="animate-spin" /> Descargando…</>
-                                      : <><Download size={13} /> Descargar informe</>}
+                                      : <><Download size={13} /> {localLiftPackageDelivered ? (language === "en" ? "Download final package" : "Descargar paquete final") : (language === "en" ? "Download review draft" : "Descargar borrador para revisión")}</>}
                                   </button>
                                 )}
                                 {localLiftPackageDelivered && (clientProject as any).localLiftTier === "ascenso" && (clientProject as any).localLiftGuideAvailable && (

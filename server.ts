@@ -71,6 +71,29 @@ async function deliverApprovedLocalLiftPackage(leadId: string): Promise<{ ok: bo
   }
 }
 
+async function generateAscensoDraftPdf(params: { leadId: string; place: any; packageSnapshot: any; language: "es" | "en" }): Promise<Buffer> {
+  if (!PORTAL_ADMIN_SECRET) throw new Error("PORTAL_ADMIN_SECRET no configurado.");
+  const baseUrl = process.env.PORTAL_BASE_URL || "https://polarisweb.studio";
+  const response = await fetch(`${baseUrl}/api/local-lift-package`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-portal-admin-secret": PORTAL_ADMIN_SECRET },
+    body: JSON.stringify({
+      action: "preview_pdf",
+      leadId: params.leadId.trim(),
+      place: params.place,
+      package: params.packageSnapshot,
+      documentType: "package",
+      draft: true,
+      lang: params.language,
+    }),
+  });
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(String(data.error || `No se pudo regenerar el borrador (${response.status}).`));
+  }
+  return Buffer.from(await response.arrayBuffer());
+}
+
 function getLocalLiftFirebaseApp() {
   return getFirebaseApps().length
     ? getFirebaseApps()[0]
@@ -1939,7 +1962,7 @@ const PORT = 3000;
       return res.status(403).json({ error: "Acceso denegado." });
     }
     if (!project.localLiftLeadId) return res.status(404).json({ error: "Este proyecto no tiene un paquete Local Lift asociado." });
-    if (project.localLiftTier === "ascenso" && project.localLiftPackageApprovalStatus && project.localLiftPackageApprovalStatus !== "completed") return res.status(409).json({ error: "package_not_approved", message: "Aprueba el paquete desde tu portal antes de descargar los PDFs finales." });
+    const isAscensoDraft = project.localLiftTier === "ascenso" && project.localLiftPackageApprovalStatus !== "completed";
 
     try {
       const app = getFirebaseApps().length
@@ -1958,7 +1981,8 @@ const PORT = 3000;
 
       const pdf = Buffer.from(pdfBase64, "base64");
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="Local-Lift-${project.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
+      const downloadLabel = isAscensoDraft ? "Borrador-Ascenso" : "Local-Lift";
+      res.setHeader("Content-Disposition", `attachment; filename="${downloadLabel}-${project.name.replace(/[^a-zA-Z0-9-]+/g, "-")}.pdf"`);
       return res.status(200).send(pdf);
     } catch (err) {
       console.error("[local-lift/download-package] Error:", err);
@@ -2467,11 +2491,25 @@ const PORT = 3000;
         if (!isAdmin) return res.status(403).json({ error: "Solo administración puede enviar una revisión." });
         if (typeof requestId !== "string" || !requestId.trim()) return res.status(400).json({ error: "Falta la solicitud." });
         workflow = markAdminRevisionReady(workflow, requestId.trim(), String(adminResponse || ""), now);
-        if (packageSnapshot !== undefined) {
-          if (!packageSnapshot || typeof packageSnapshot !== "object" || JSON.stringify(packageSnapshot).length > 90000) return res.status(400).json({ error: "El paquete de revisión no es válido." });
-          if (!project.localLiftLeadId) return res.status(400).json({ error: "El proyecto no tiene lead Local Lift." });
-          await getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId).update({ package: packageSnapshot, packageVersion: workflow.currentVersion, updatedAt: new Date() });
+        if (!packageSnapshot || typeof packageSnapshot !== "object" || JSON.stringify(packageSnapshot).length > 90000) return res.status(400).json({ error: "El paquete de revisión no es válido." });
+        if (!project.localLiftLeadId) return res.status(400).json({ error: "El proyecto no tiene lead Local Lift." });
+        const revisionLeadRef = getLocalLiftFirestore().collection("localLiftDiagnostics").doc(project.localLiftLeadId);
+        const revisionLeadSnap = await revisionLeadRef.get();
+        const revisionLead = revisionLeadSnap.data() || {};
+        if (!revisionLead.place) return res.status(400).json({ error: "El lead no tiene la ficha necesaria para regenerar el PDF." });
+        let revisionPdf: Buffer;
+        try {
+          revisionPdf = await generateAscensoDraftPdf({
+            leadId: project.localLiftLeadId,
+            place: revisionLead.place,
+            packageSnapshot,
+            language: revisionLead.language === "en" || revisionLead.lang === "en" ? "en" : "es",
+          });
+        } catch (pdfError: any) {
+          console.error("[ascenso-workflow:revision-pdf] error:", pdfError?.message || pdfError);
+          return res.status(502).json({ error: "revision_pdf_failed", message: "No se pudo regenerar el borrador PDF. La revisión no se envió para evitar mostrar una versión desactualizada." });
         }
+        await revisionLeadRef.update({ package: packageSnapshot, pdfBase64: revisionPdf.toString("base64"), packageVersion: workflow.currentVersion, packageDeliveryState: "review_draft_updated", updatedAt: new Date() });
         dbInstance.updateProject(project.id, { ascensoWorkflow: workflow });
         await dbInstance.flush();
         if (client?.email) await sendAscensoWorkflowEmail({ to: client.email, subject: `Tu revisión de Ascenso está lista · ${project.name}`, replyTo: adminEmail, text: `Hola ${client.name || ""}.\n\nYa preparamos la revisión solicitada para ${project.name}. Entra a tu portal para revisar el material y elegir entre “Aprobar esta versión” o “Solicitar aclaraciones”. Si necesitas cambios adicionales, inicia la siguiente ronda antes de aprobar.\n\nEsta respuesta corresponde a la ronda ${workflow.requests.find((r) => r.id === requestId)?.round || "actual"}; pedir aclaraciones sobre esta misma revisión no consume una ronda nueva.` });
