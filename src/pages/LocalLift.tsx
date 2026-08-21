@@ -265,6 +265,7 @@ export default function LocalLift() {
   const nameFieldRef = useRef<HTMLInputElement | null>(null);
   const mapsFieldRef = useRef<HTMLInputElement | null>(null);
   const atlasPollInFlightRef = useRef(false);
+  const atlasPollAttemptsRef = useRef(0);
   const motionReveal = (delay = 0) => prefersReducedMotion
     ? { initial: false }
     : {
@@ -838,6 +839,7 @@ export default function LocalLift() {
     const requestedAt = atlasStartedAt || Date.now();
     setRevealNowLoading(true);
     setRevealNowError("");
+    atlasPollAttemptsRef.current = 0;
     setRevealTimedOut(false);
     setRevealRequested(true);
     setAtlasStartedAt(requestedAt);
@@ -895,9 +897,22 @@ export default function LocalLift() {
   useEffect(() => {
     if (!revealNowLoading || !diagnosticLeadId) return;
     let disposed = false;
+    let stopPolling = false;
     let nextPollTimer = 0;
+    const maxPollAttempts = 18;
     const poll = async () => {
-      if (atlasPollInFlightRef.current || disposed) return;
+      if (atlasPollInFlightRef.current || disposed || stopPolling) return;
+      atlasPollAttemptsRef.current += 1;
+      if (atlasPollAttemptsRef.current > maxPollAttempts) {
+        stopPolling = true;
+        setRevealNowLoading(false);
+        setRevealRequested(false);
+        setRevealTimedOut(true);
+        setAtlasStartedAt(null);
+        setRevealNowError(language === "en" ? "Atlas is taking longer than expected. You can retry without creating another diagnosis." : "Atlas está tardando más de lo esperado. Puedes reintentarlo sin crear otro diagnóstico.");
+        persistFlowSnapshot({ status: "queued", revealRequested: false, revealTimedOut: true, atlasStartedAt: null });
+        return;
+      }
       atlasPollInFlightRef.current = true;
       const controller = new AbortController();
       const timeout = window.setTimeout(() => controller.abort(), 10000);
@@ -924,10 +939,12 @@ export default function LocalLift() {
           nextDelay = elapsedMs < 30_000 ? 1800 : elapsedMs < 60_000 ? 3500 : 6000;
         }
         if (data.status === "success" && data.diagnostic) {
+          stopPolling = true;
           applyAtlasSuccess(data);
           return;
         }
         if (data.status === "error") {
+          stopPolling = true;
           setRevealNowLoading(false);
           setRevealRequested(false);
           setRevealTimedOut(false);
@@ -941,7 +958,7 @@ export default function LocalLift() {
       } finally {
         window.clearTimeout(timeout);
         atlasPollInFlightRef.current = false;
-        if (!disposed && revealNowLoading) nextPollTimer = window.setTimeout(() => void poll(), nextDelay);
+        if (!disposed && !stopPolling && revealNowLoading) nextPollTimer = window.setTimeout(() => void poll(), nextDelay);
       }
     };
     void poll();
@@ -956,7 +973,6 @@ export default function LocalLift() {
     const updateElapsed = () => {
       const elapsed = Math.max(0, Math.floor((Date.now() - atlasStartedAt) / 1000));
       setRevealElapsedSeconds(elapsed);
-      setRevealTimedOut(elapsed >= 45);
     };
     updateElapsed();
     const interval = window.setInterval(updateElapsed, 1000);
