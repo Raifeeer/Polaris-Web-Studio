@@ -44,6 +44,26 @@ const requestStatus: Record<string, string> = {
   closed: "Cerrada",
 };
 
+const HISTORY_EVENT_LABEL: Record<string, string> = {
+  workflow_created: "Flujo iniciado",
+  package_preparing: "Preparación del paquete iniciada",
+  package_ready: "Paquete listo para revisar",
+  client_approved_initial_package: "Paquete aprobado por el cliente",
+  revision_requested: "Solicitud de cambios recibida",
+  revision_ready: "Revisión lista para revisar",
+  client_approved_revision: "Revisión aprobada por el cliente",
+  admin_started_revision: "Nueva revisión iniciada",
+  package_approved: "Paquete aprobado",
+  final_delivery_sent: "Entrega final enviada",
+  service_paused: "Servicio pausado",
+  service_closed: "Servicio cerrado",
+};
+
+function formatHistoryEvent(type: unknown): string {
+  const normalized = String(type || "").trim();
+  return HISTORY_EVENT_LABEL[normalized] || normalized.replaceAll("_", " ") || "Actualización del servicio";
+}
+
 export default function AscensoWorkflowPanel({ project, token, onChanged }: WorkflowPanelProps) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -116,7 +136,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0"><ShieldCheck size={19} className="text-indigo-400" /></div>
           <div className="min-w-0"><p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">Acompañamiento Ascenso</p><h2 className="mt-1 text-lg font-display font-black text-[var(--color-text-primary)]">Revisa tu paquete y sigue la guía</h2><p className="mt-1 text-xs leading-relaxed text-[var(--color-text-secondary)]">Polaris preparó el contenido y la guía para que sepas qué hacer, dónde hacerlo y cómo avanzar paso a paso.</p></div>
         </div>
-        <span className="shrink-0 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-300">{STATUS_LABEL[workflow.status] || workflow.status}</span>
+        <span className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider ${workflow.status === "preparing_package" ? "border-teal-600/50 bg-teal-100 text-teal-950" : "border-indigo-500/30 bg-indigo-500/10 text-indigo-300"}`}>{STATUS_LABEL[workflow.status] || workflow.status}</span>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -187,7 +207,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       )}
 
       {!canRequest && !activeRequest && workflow.roundsUsed >= workflow.maxRounds && workflow.status !== "closed" && <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-xs leading-relaxed text-amber-200">Has utilizado las {workflow.maxRounds} rondas incluidas. Puedes seguir consultando el paquete y su historial; cualquier cambio nuevo se cotiza como un servicio adicional.</div>}
-      {workflow.status === "preparing_package" && <div className="rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 text-xs leading-relaxed text-teal-200">Estamos preparando tu paquete. El plazo estimado de Ascenso es de cinco horas corridas desde el pago confirmado.</div>}
+      {workflow.status === "preparing_package" && <div className="rounded-2xl border border-teal-600/45 bg-[#e4fffc] p-4 text-slate-900 shadow-sm"><div className="flex items-start gap-3"><div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#16C8C1] text-sm font-black text-slate-950">✓</div><div><p className="text-[10px] font-black uppercase tracking-widest text-teal-900">Estado actual</p><p className="mt-1 text-sm font-black leading-snug">Estamos preparando tu paquete</p><p className="mt-1 text-xs leading-relaxed text-slate-700">El plazo estimado de Ascenso es de cinco horas corridas desde el pago confirmado.</p></div></div></div>}
       {workflow.status === "awaiting_package_approval" && <div className="rounded-xl border border-teal-500/25 bg-teal-500/5 p-4 text-xs leading-relaxed text-teal-200">Tu paquete ya está disponible para revisión. Los PDFs finales se enviarán después de que apruebes la versión.</div>}
       {workflow.status === "package_approved" && <div className="rounded-xl border border-indigo-500/25 bg-indigo-500/5 p-4 text-xs leading-relaxed text-indigo-200">Aprobación recibida. Estamos enviando tus PDFs finales.</div>}
       {workflow.status === "paused_no_response" && <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 p-4 text-xs leading-relaxed text-amber-200">El servicio quedó pausado por falta de respuesta. El material preparado se conserva; contáctanos para reanudarlo.</div>}
@@ -197,7 +217,7 @@ export default function AscensoWorkflowPanel({ project, token, onChanged }: Work
       {notice && <p className="text-xs font-bold text-emerald-400">{notice}</p>}
       {error && <p className="text-xs font-bold text-red-400">{error}</p>}
 
-      <div className="space-y-2"><h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Historial del servicio</h3>{(workflow.history || []).slice(-8).reverse().map((event: any) => <div key={event.id} className="flex items-start gap-2 text-[11px] text-[var(--color-text-tertiary)]"><Check size={12} className="mt-0.5 shrink-0 text-emerald-400" /><span>{new Date(event.at).toLocaleString("es-DO")} · {event.type.replaceAll("_", " ")}</span></div>)}</div>
+      <div className="space-y-2"><h3 className="text-[10px] font-black uppercase tracking-widest text-[var(--color-text-tertiary)]">Historial del servicio</h3>{(workflow.history || []).slice(-8).reverse().map((event: any) => <div key={event.id} className="flex items-start gap-2 text-[11px] text-[var(--color-text-tertiary)]"><Check size={12} className="mt-0.5 shrink-0 text-emerald-400" /><span>{new Date(event.at).toLocaleString("es-DO")} · {formatHistoryEvent(event.type)}</span></div>)}</div>
     </section>
   );
 }
