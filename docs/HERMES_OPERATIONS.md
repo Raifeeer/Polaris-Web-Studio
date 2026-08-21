@@ -431,6 +431,26 @@ El scope `gmail.compose` es técnicamente más amplio que “solo borradores” 
 
 La sesión OAuth está almacenada con permisos restringidos en el HOME de Hermes y conserva refresh token y metadatos de renovación. El perfil trading conserva su proceso y configuración separados; no se modificó su gateway como parte de esta integración.
 
+## 21. Auditoría diaria silenciosa de Hermes
+
+Hermes tiene un auditor determinista en `/home/cristian2200299/.hermes/tools/hermes_daily_health_audit.py`, ejecutado por `hermes-daily-health-audit.timer` todos los días a las 08:00 en la zona horaria `America/Santo_Domingo`, con un retraso aleatorio máximo de 15 minutos. Usa la VM existente y no inicia una sesión de IA ni añade un servicio de pago.
+
+El auditor comprueba los dos gateways, recursos de la VM, archivos críticos, Telegram mediante `getMe`, DeepSeek mediante `/v1/models`, la configuración de Parallel, OAuth y APIs de Google Workspace, Drive/Docs/Sheets/Slides/Calendar/Tasks/Gmail, Meridian en modo read-only, permisos GitHub y componentes básicos de Hermes. No invoca jobs de Meridian, no publica en Faro, no envía Gmail, no modifica GitHub, no escribe Firestore y no crea artefactos canario en cada ejecución.
+
+El resultado se guarda con permisos 600 en `health-audit/latest.json` y `health-audit/state.json`. La ejecución permanece silenciosa cuando todo está correcto. Si aparece un fallo nuevo o cambia el detalle de un fallo activo, envía un solo aviso al destino normal configurado en `TELEGRAM_HOME_CHANNEL`; nunca usa `FARO_ALERTS_CHAT_ID`. Los fallos repetidos no generan spam. La recuperación se registra en el estado y permanece silenciosa, conforme a la política solicitada de avisar únicamente ante fallos.
+
+La primera corrida completa validada terminó con `failure_count=0`, `new_failure_count=0` y `alert_sent=false`. El servicio one-shot queda `inactive (dead)` después de terminar correctamente, mientras que el temporizador permanece `active`; esto es el comportamiento esperado de una unidad `Type=oneshot`.
+
+| Propiedad | Valor |
+|---|---|
+| Servicio | `hermes-daily-health-audit.service` |
+| Temporizador | `hermes-daily-health-audit.timer` |
+| Frecuencia | Diaria, 08:00 `America/Santo_Domingo` + hasta 15 min aleatorios |
+| Modo | Silencioso si todo está bien; aviso solo ante fallo nuevo |
+| Estado persistido | `/home/cristian2200299/.hermes/health-audit/` |
+| Destino de avisos | Chat normal configurado en `TELEGRAM_HOME_CHANNEL`, no Faro |
+| Gateway trading | Solo se verifica que esté activo; no se modifica ni recibe el auditor |
+
 ## Referencias
 
 [1]: https://parallel.ai/blog/free-web-search-mcp — Anuncio oficial del MCP gratuito de Parallel Search.
