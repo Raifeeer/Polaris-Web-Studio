@@ -2423,7 +2423,8 @@ const PORT = 3000;
         if (doc.exists) {
           const value = doc.data() || {};
           const connected = !!value.gbp?.refreshToken || value.gbp?.demo === true;
-          lead = { place: value.place || null, reviews: value.reviews || [], package: value.package || null, tier: value.tier || project.localLiftTier, packageReady: !!value.package, packageSent: !!value.pdfBase64, connected };
+          const packageSent = Boolean(project.localLiftPackageReadyAt);
+          lead = { place: value.place || null, reviews: value.reviews || [], package: value.package || null, tier: value.tier || project.localLiftTier, packageReady: !!value.package, packageSent, connected };
           if (connected && workflow.status === "awaiting_connection") {
             const connectedAt = new Date().toISOString();
             workflow = { ...workflow, status: "awaiting_client_review", connectedAt, history: [...workflow.history, { id: `ascenso-connected-${Date.now()}`, type: "google_connected", actor: "system", at: connectedAt, version: workflow.currentVersion }] };
@@ -2435,7 +2436,8 @@ const PORT = 3000;
         console.error("[ascenso-workflow:get] error:", error?.message || error);
       }
     }
-    return res.json({ success: true, projectId: project.id, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), canRequestNewRound: canStartNewRound(workflow), package: lead?.package || null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: !!lead?.package, packageSent: !!lead?.packageSent, packageApprovalStatus: project.localLiftPackageApprovalStatus || "not_ready", deliveryDueAt: project.localLiftDeliveryDueAt || null, packageReadyAt: project.localLiftPackageReadyAt || null, finalDeliveryAt: project.localLiftFinalDeliveryAt || null });
+    const packageSent = !!lead?.packageSent;
+    return res.json({ success: true, projectId: project.id, workflow, roundsRemaining: Math.max(0, workflow.maxRounds - workflow.roundsUsed), canRequestNewRound: canStartNewRound(workflow), package: packageSent ? (lead?.package || null) : null, place: lead?.place || null, reviews: lead?.reviews || [], packageReady: packageSent && !!lead?.package, packageSent, packageApprovalStatus: project.localLiftPackageApprovalStatus || "not_ready", deliveryDueAt: project.localLiftDeliveryDueAt || null, packageReadyAt: project.localLiftPackageReadyAt || null, finalDeliveryAt: project.localLiftFinalDeliveryAt || null });
   });
 
   app.post("/api/portal/local-lift/workflow", authenticateToken, async (req: any, res) => {
