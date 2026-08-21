@@ -32,7 +32,8 @@ export function ensureAscensoWorkflow(value?: Partial<DbAscensoWorkflow> | null,
 }
 
 export function canStartNewRound(workflow: DbAscensoWorkflow): boolean {
-  return workflow.status === "awaiting_client_review" && workflow.roundsUsed < workflow.maxRounds && !workflow.requests.some((r) => ["submitted", "in_progress", "revision_ready", "changes_requested"].includes(r.status));
+  const reviewStatuses = ["awaiting_client_review", "awaiting_package_approval"];
+  return reviewStatuses.includes(workflow.status) && workflow.roundsUsed < workflow.maxRounds && !workflow.requests.some((r) => ["submitted", "in_progress", "revision_ready", "changes_requested"].includes(r.status));
 }
 
 export function hasOpenRevision(workflow: DbAscensoWorkflow): boolean {
