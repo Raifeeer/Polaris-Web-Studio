@@ -989,9 +989,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         packageDeliveryState: sync.synced ? "delivered_synced" : sync.matched ? "email_sent_portal_pending" : "email_sent_portal_unmatched",
       });
       if (!sync.synced) {
-        return res.status(502).json({ success: false, synced: false, error: sync.error || "No se pudo sincronizar el portal." });
+        return res.status(502).json({
+          success: false,
+          synced: false,
+          matched: sync.matched,
+          portalSyncStatus: sync.matched ? "failed" : "unmatched",
+          error: sync.error || "No se pudo sincronizar el portal.",
+        });
       }
-      return res.json({ success: true, synced: true, retried: true });
+      return res.json({ success: true, synced: true, matched: true, portalSyncStatus: "synced", retried: true });
     }
 
     if (action === "deliver_approved") {
@@ -1306,7 +1312,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .filter(([, err]) => err !== null)
         .map(([key]) => key) as Array<keyof LocalLiftPackage["errors"]>;
       if (failedKeys.length === 0) {
-        return res.json({ success: true, package: existingPackage });
+        return res.json({ success: true, package: existingPackage, attemptedKeys: [], resolvedKeys: [], remainingFailedKeys: [] });
       }
       try {
         const place = givenPlace as PlaceData;
@@ -1345,14 +1351,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         merged.partialFailure = Object.values(merged.errors).some((e) => e !== null);
 
+        const resolvedKeys = failedKeys.filter((key) => merged.errors[key] === null);
+        const remainingFailedKeys = failedKeys.filter((key) => merged.errors[key] !== null);
+        let persisted = true;
         if (typeof leadId === "string" && leadId.trim()) {
           try {
             await firestore.collection("localLiftDiagnostics").doc(leadId.trim()).update({ package: merged });
           } catch (dbErr) {
+            persisted = false;
             console.error("[local-lift-package] Error guardando reintento:", dbErr);
           }
         }
-        return res.json({ success: true, package: merged });
+        if (!persisted) {
+          return res.status(502).json({
+            success: false,
+            reason: "retry_persistence_pending",
+            package: merged,
+            attemptedKeys: failedKeys,
+            resolvedKeys,
+            remainingFailedKeys,
+            error: "Las partes se procesaron, pero no pudimos guardar el resultado en el lead. No vuelvas a generar el paquete completo; reintenta la sincronización más tarde.",
+          });
+        }
+        return res.json({ success: true, package: merged, attemptedKeys: failedKeys, resolvedKeys, remainingFailedKeys });
       } catch (retryErr) {
         console.error("[local-lift-package] Error reintentando piezas fallidas:", retryErr);
         return res.status(500).json({ success: false, failedKeys, error: "No pudimos reintentar las partes fallidas. Revisa los mensajes de error del paquete y vuelve a intentarlo." });

@@ -15,6 +15,7 @@ const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: strin
   impulso: { amount: "29", label: "Impulso", enLabel: "Boost" },
   ascenso: { amount: "99", label: "Ascenso", enLabel: "Rise" },
 };
+const LOCAL_LIFT_TIER_SELECTION_TTL_MS = 30 * 60 * 1000;
 
 function normalizeLocalLiftTier(value: unknown): "impulso" | "ascenso" {
   return value === "ascenso" || value === "implementado" ? "ascenso" : "impulso";
@@ -59,7 +60,15 @@ export default function LocalLiftPay() {
       setLead({ ...data, tier: normalizedTier, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
       const urlTier = searchParams.get("tier");
       let storedTier = "";
-      try { storedTier = sessionStorage.getItem(`polaris-local-lift-tier:${leadId}`) || ""; } catch { /* no-op */ }
+      try {
+        const rawTier = sessionStorage.getItem(`polaris-local-lift-tier:${leadId}`);
+        const parsedTier = rawTier ? JSON.parse(rawTier) : null;
+        if (parsedTier?.savedAt && Date.now() - Number(parsedTier.savedAt) <= LOCAL_LIFT_TIER_SELECTION_TTL_MS && TIER_PRICE[parsedTier.tier]) {
+          storedTier = parsedTier.tier;
+        } else if (rawTier) {
+          sessionStorage.removeItem(`polaris-local-lift-tier:${leadId}`);
+        }
+      } catch { /* no-op */ }
       if (initialLoad) setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : TIER_PRICE[storedTier] ? normalizeLocalLiftTier(storedTier) : normalizedTier);
       setStatus(data.paid ? "paid" : "ready");
     } catch {
@@ -109,6 +118,8 @@ export default function LocalLiftPay() {
     if (data?.reason === "payment_in_progress") return language === "en" ? "This payment is already being confirmed. Wait a moment before trying again." : "Este pago ya se está confirmando. Espera un momento antes de intentarlo otra vez.";
     if (data?.reason === "already_paid" || data?.alreadyPaid) return language === "en" ? "This order has already been paid." : "Esta orden ya fue pagada.";
     if (data?.reason === "tier_conflict") return language === "en" ? "This checkout is already associated with another package. Reload to see the correct option." : "Este checkout ya está asociado a otro paquete. Recarga para ver la opción correcta.";
+    if (data?.reason === "service_terms_required" || data?.error === "service_terms_required") return language === "en" ? "Accept the service conditions before continuing to payment." : "Acepta las condiciones del servicio antes de continuar con el pago.";
+    if (data?.reason === "amount_mismatch" || data?.error === "amount_mismatch") return language === "en" ? "The payment amount does not match this package. Reload the checkout and try again." : "El monto del pago no coincide con este paquete. Recarga el checkout e inténtalo de nuevo.";
     return data?.error || fallback;
   };
 
@@ -117,7 +128,7 @@ export default function LocalLiftPay() {
     setIsSwitchingTier(true);
     window.setTimeout(() => {
       setSelectedTier(otherTier);
-      try { if (leadId) sessionStorage.setItem(`polaris-local-lift-tier:${leadId}`, otherTier); } catch { /* no-op */ }
+      try { if (leadId) sessionStorage.setItem(`polaris-local-lift-tier:${leadId}`, JSON.stringify({ tier: otherTier, savedAt: Date.now() })); } catch { /* no-op */ }
       setIsSwitchingTier(false);
     }, prefersReducedMotion ? 0 : 420);
   };
@@ -213,8 +224,8 @@ export default function LocalLiftPay() {
               <Mail size={22} className="mx-auto text-[var(--color-primary-base)] mb-3" />
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
                 {lead.tier === "ascenso" ? (
-                  <T en="Your Rise package includes a 1:1 welcome session to review your Google listing and plan the changes we'll implement together. Go to your client portal to schedule your session at a time that works for you.">
-                    Tu paquete Ascenso incluye una sesión de bienvenida 1:1 para revisar tu ficha de Google y planificar juntos los cambios que vamos a implementar. Entra a tu portal de cliente para agendar tu sesión en el horario que prefieras.
+                  <T en="Your Rise package is now in preparation. We start from your payment and will send it to your portal for review within five hours. No meeting or password is required.">
+                    Tu paquete Ascenso ya está en preparación. Comenzamos desde tu pago y lo enviaremos a tu portal para revisión dentro de cinco horas. No necesitas agendar una reunión ni compartir contraseñas.
                   </T>
                 ) : (
                   <T en="We're already working on your full Local Lift report. You'll receive it at your email within the next 2 hours. If you don't hear from us, write us on WhatsApp.">
@@ -263,7 +274,7 @@ export default function LocalLiftPay() {
                 )}
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-[var(--color-text-tertiary)]"><T en="Package">Paquete</T></dt>
-                  <dd className="font-bold text-[var(--color-text-primary)] text-right">{TIER_PRICE[lead.tier]?.label || lead.tier}</dd>
+                    <dd className="font-bold text-[var(--color-text-primary)] text-right">{language === "en" ? (TIER_PRICE[lead.tier]?.enLabel || lead.tier) : (TIER_PRICE[lead.tier]?.label || lead.tier)}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-[var(--color-text-tertiary)]"><T en="Amount">Monto</T></dt>
@@ -352,12 +363,12 @@ export default function LocalLiftPay() {
                     <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">
                       {lead.tier === "ascenso" ? (
                         lead.sentPortalWelcomeEmail ? (
-                          <T en="We sent your access credentials to your email. Go to your portal to schedule your welcome session and follow your package's progress.">
-                            Te enviamos tus credenciales de acceso por correo. Entra a tu portal para agendar tu sesión de bienvenida y seguir el avance de tu paquete.
+                          <T en="We sent your access credentials to your email. Go to your portal to follow your package's progress and review it when it is ready.">
+                            Te enviamos tus credenciales de acceso por correo. Entra a tu portal para seguir el avance de tu paquete y revisarlo cuando esté listo.
                           </T>
                         ) : (
-                          <T en="Sign in with your existing account to schedule your welcome session and follow your package's progress.">
-                            Entra con tu cuenta de siempre para agendar tu sesión de bienvenida y seguir el avance de tu paquete.
+                          <T en="Sign in with your existing account to follow your package's progress and review it when it is ready.">
+                            Entra con tu cuenta de siempre para seguir el avance de tu paquete y revisarlo cuando esté listo.
                           </T>
                         )
                       ) : lead.sentPortalWelcomeEmail ? (
@@ -375,7 +386,7 @@ export default function LocalLiftPay() {
                       className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white hover:opacity-90 transition-opacity"
                     >
                       {lead.tier === "ascenso" ? (
-                        <T en="Schedule my session">Agendar mi sesión</T>
+                        <T en="Go to my portal">Entrar a mi portal</T>
                       ) : (
                         <T en="Go to my portal">Entrar a mi portal</T>
                       )}
