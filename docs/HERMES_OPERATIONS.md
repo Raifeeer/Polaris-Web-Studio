@@ -395,6 +395,23 @@ Después conviene validar varios estudios de mercado con el MCP gratuito de Para
 
 También queda como línea de trabajo separada la resolución definitiva de los errores históricos de OpenRouter, los `429` de Vertex/Gemini y las reconexiones ocasionales de Telegram. No se deben rotar claves ni cambiar el perfil trading como reacción automática: primero hay que observar el error actual y comprobar qué proveedor está utilizando el proceso vivo.
 
+## 19. Consulta read-only de Meridian y Faro Polaris
+
+Meridian ya es la fuente de verdad para la observabilidad de Polaris y envía las alertas al supergrupo de Telegram **Faro Polaris**. El gateway normal de Hermes tiene instalado `/home/cristian2200299/.hermes/tools/meridian_status.py` y la skill `meridian-observability` para consultar los estados persistidos de Meridian desde Telegram.
+
+El adaptador usa el token de servicio GCP ya disponible en la VM para leer Firestore en modo exclusivamente read-only. Consulta `cloudFunctionHealth/errors/functions`, `vercelMonitor/deployStatus/projects`, `projects/*/siteHealth` y `alertHealthChecks/latest`. No invoca `monitoring-alert`, `cloud-function-health-watch`, `vercel-monitor`, `site-health-check` ni `alert-health-check`, porque esos jobs ya se ejecutan por Cloud Scheduler y son los que notifican a Faro.
+
+| Consulta natural | Comando interno | Resultado |
+|---|---|---|
+| “¿Hay errores nuevos?” | `errors` o `summary` | Últimos errores conocidos por función y conteo de la ventana observada. |
+| “¿Falló el deploy?” | `deploys` o `summary` | Estado persistido de deploys de Vercel, commit y fecha. |
+| “¿Está caído Polaris?” | `sites` o `summary` | Estado y código HTTP de sitios monitorizados. |
+| “¿Están sanas las alertas?” | `health` o `summary` | Último estado de Scheduler, workflows, uptime y servicios de Hermes. |
+
+El puente no envía mensajes a Telegram, no marca errores como revisados, no escribe Firestore, no modifica Vercel, no despliega código, no edita GitHub y no reinicia servicios. El perfil trading no carga esta skill ni lee la memoria general. Si el estado persistido está desactualizado, Hermes debe distinguir entre “último error registrado” y “error activo” y mostrar la hora de comprobación.
+
+La auditoría del 21 de agosto de 2026 confirmó que el bot de Meridian en producción es `@PolarisFaroBot`, que el chat destino es el supergrupo `Faro Polaris` y que ambos están enlazados. También confirmó que el estado actual de Meridian registra tres funciones con errores históricos y `alertHealthChecks/latest` aparece como `broken=true`; esto debe investigarse como un diagnóstico operativo separado, no ocultarse ni traducirse automáticamente en una caída actual.
+
 ## Referencias
 
 [1]: https://parallel.ai/blog/free-web-search-mcp — Anuncio oficial del MCP gratuito de Parallel Search.
