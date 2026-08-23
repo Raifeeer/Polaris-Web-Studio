@@ -218,3 +218,22 @@
     flex: 0 0 auto;
   }
 }
+
+@media (max-width: 639px) {
+  .mobile-atlas-card {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .mobile-atlas-card > a {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .mobile-atlas-card img {
+    display: block;
+    height: 1.35rem;
+    width: auto;
+    max-width: 100%;
+  }
+}

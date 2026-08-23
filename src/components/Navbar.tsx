@@ -238,17 +238,10 @@ export default function Navbar() {
                     onClick={() => setIsOpen(false)}
                     onTouchStart={() => prefetchRoute("/asistente")}
                     onMouseEnter={() => prefetchRoute("/asistente")}
-                    className="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-[var(--color-surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+                    className="flex min-w-0 items-center justify-center rounded-xl px-2 py-3 hover:bg-[var(--color-surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
                     aria-label={translate("Abrir Atlas Assistant", "Open Atlas Assistant")}
                   >
-                    <span className="mobile-atlas-icon grid h-8 w-8 shrink-0 place-items-center rounded-xl" aria-hidden="true">
-                      <AtlasMark variant="isotipo" className="h-6 w-6" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="mobile-atlas-label block text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Atlas Assistant</span>
-                      <span className="block text-xs text-[var(--color-text-secondary)]"><T en="Your Polaris digital guide">Tu guía digital de Polaris</T></span>
-                    </span>
-                    <span className="text-[var(--color-primary-base)]" aria-hidden="true">→</span>
+                    <AtlasMark variant="wordmark" className="h-5 w-auto max-w-full" label="Atlas Assistant" />
                   </Link>
                 </motion.div>
 
