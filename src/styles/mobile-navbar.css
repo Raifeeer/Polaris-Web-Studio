@@ -261,3 +261,20 @@
     max-width: 7.5rem;
   }
 }
+
+/* AtlasMark: una sola variante visible por tema. */
+.atlas-mark-image {
+  display: block;
+}
+
+.atlas-mark-black {
+  display: none;
+}
+
+html.light .atlas-mark-black {
+  display: block;
+}
+
+html.light .atlas-mark-white {
+  display: none;
+}
