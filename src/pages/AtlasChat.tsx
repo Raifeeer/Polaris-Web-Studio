@@ -1285,7 +1285,7 @@ export default function AtlasChat() {
         </div>
 
         <div className="shrink-0 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
-          <div className="max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] focus-within:border-[var(--color-primary-base)] transition-colors">
+          <div className="max-w-3xl mx-auto flex items-center gap-2 p-2 rounded-full border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] focus-within:border-[var(--color-primary-base)] transition-colors">
             {speech.listening ? (
               <VoiceInputBar
                 levels={speech.levels}
