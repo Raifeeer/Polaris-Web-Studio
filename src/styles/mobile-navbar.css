@@ -188,6 +188,7 @@
   .mobile-atlas-card {
     grid-column: span 1 / span 1;
     min-width: 0;
+    min-height: 4.25rem;
     padding: .65rem !important;
   }
 
@@ -227,7 +228,7 @@
 
   .mobile-atlas-card > a {
     width: 100%;
-    min-height: 2.75rem;
+    min-height: 3.55rem;
   }
 
   .mobile-atlas-card img {
@@ -249,16 +250,16 @@
 
   .mobile-atlas-lockup-mark {
     display: block;
-    width: 1.55rem;
-    height: 1.55rem;
-    flex: 0 0 1.55rem;
+    width: 2.1rem !important;
+    height: 2.1rem !important;
+    flex: 0 0 2.1rem;
   }
 
   .mobile-atlas-lockup-wordmark {
     display: block;
-    width: auto;
-    height: 1.15rem;
-    max-width: 7.5rem;
+    width: auto !important;
+    height: 1.55rem !important;
+    max-width: 8.5rem;
   }
 }
 
