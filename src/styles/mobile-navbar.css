@@ -237,3 +237,27 @@
     max-width: 100%;
   }
 }
+
+@media (max-width: 639px) {
+  .mobile-atlas-lockup {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .42rem;
+    max-width: 100%;
+  }
+
+  .mobile-atlas-lockup-mark {
+    display: block;
+    width: 1.55rem;
+    height: 1.55rem;
+    flex: 0 0 1.55rem;
+  }
+
+  .mobile-atlas-lockup-wordmark {
+    display: block;
+    width: auto;
+    height: 1.15rem;
+    max-width: 7.5rem;
+  }
+}

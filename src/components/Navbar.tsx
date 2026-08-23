@@ -241,7 +241,10 @@ export default function Navbar() {
                     className="flex min-w-0 items-center justify-center rounded-xl px-2 py-3 hover:bg-[var(--color-surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
                     aria-label={translate("Abrir Atlas Assistant", "Open Atlas Assistant")}
                   >
-                    <AtlasMark variant="wordmark" className="h-5 w-auto max-w-full" label="Atlas Assistant" />
+                    <span className="mobile-atlas-lockup" aria-hidden="true">
+                      <AtlasMark variant="isotipo" className="mobile-atlas-lockup-mark" />
+                      <AtlasMark variant="wordmark" className="mobile-atlas-lockup-wordmark" />
+                    </span>
                   </Link>
                 </motion.div>
 
