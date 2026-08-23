@@ -523,7 +523,7 @@ export default function AtlasChat() {
               <Tooltip label={translate("Ir al inicio", "Go to home")}>
                 <Link
                   to="/"
-                  className="flex items-center justify-center p-2.5 md:p-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0"
+                  className="flex items-center justify-center p-2.5 md:p-1.5 rounded-2xl border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Ir al inicio", "Go to home")}
                 >
                   <Home size={18} className="md:w-3.5 md:h-3.5" />
@@ -552,7 +552,7 @@ export default function AtlasChat() {
                   setSidebarOpen(false);
                   setSidebarAboveSearch(false);
                 }}
-                className="p-3 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
+                className="p-3 rounded-2xl border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0 md:hidden"
                 aria-label={translate("Cerrar menú", "Close menu")}
               >
                 <X size={22} />
@@ -575,7 +575,7 @@ export default function AtlasChat() {
                       setSidebarOpen(false);
                     }
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 md:py-1.5 px-3 md:px-2.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-sm md:text-xs font-black uppercase tracking-wider transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 md:py-1.5 px-3 md:px-2.5 rounded-2xl border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-sm md:text-xs font-black uppercase tracking-wider transition-colors"
                 >
                   <SquarePen size={16} className="md:w-3.5 md:h-3.5" />
                   <T en="New chat">Nuevo chat</T>
@@ -592,7 +592,7 @@ export default function AtlasChat() {
                     }
                   }}
                   aria-label={translate("Chat temporal", "Temporary chat")}
-                  className={`p-2.5 md:p-1.5 rounded-lg border transition-colors shrink-0 ${
+                  className={`p-2.5 md:p-1.5 rounded-2xl border transition-colors shrink-0 ${
                     isTemporary
                       ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
                       : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
@@ -609,7 +609,7 @@ export default function AtlasChat() {
                       setSidebarAboveSearch(false);
                     }}
                     aria-label={translate("Buscar conversaciones", "Search conversations")}
-                    className="p-2.5 md:p-1.5 rounded-lg border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                    className="p-2.5 md:p-1.5 rounded-2xl border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
                   >
                     <Search size={16} className="md:w-3.5 md:h-3.5" />
                   </button>
@@ -757,7 +757,7 @@ export default function AtlasChat() {
             <div className="shrink-0 border-t border-[var(--color-border-subtle)] p-2">
               <button
                 onClick={() => setSettingsOpen(true)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded-lg text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 md:py-2 rounded-2xl text-sm md:text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] transition-colors"
               >
                 <Settings size={16} className="md:w-3.5 md:h-3.5" />
                 <T en="Settings">Ajustes</T>
@@ -1210,7 +1210,7 @@ export default function AtlasChat() {
                     <button
                       key={s.es}
                       onClick={() => handleSend(translate(s.es, s.en))}
-                      className="text-left text-xs font-bold px-4 py-3 rounded-xl border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors"
+                      className="text-left text-xs font-bold px-4 py-3 rounded-2xl border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors"
                     >
                       {translate(s.es, s.en)}
                     </button>
@@ -1285,7 +1285,7 @@ export default function AtlasChat() {
         </div>
 
         <div className="shrink-0 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2">
-          <div className="max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] focus-within:border-[var(--color-primary-base)] transition-colors">
+          <div className="max-w-3xl mx-auto flex items-end gap-2 p-2 rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)] focus-within:border-[var(--color-primary-base)] transition-colors">
             {speech.listening ? (
               <VoiceInputBar
                 levels={speech.levels}
