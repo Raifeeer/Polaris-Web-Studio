@@ -31,7 +31,6 @@ import WhyPolaris from "../components/WhyPolaris";
 import Testimonials from "../components/Testimonials";
 import { T, useLanguage } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
-import Magnet from "../components/Magnet";
 import { useBorderGlow } from "../hooks/useBorderGlow";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
@@ -546,14 +545,7 @@ export default function LandingPage() {
                 className="pt-2"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6">
-                  {/* Efecto magnético real (pedido explícito del usuario,
-                      "más suave que el que tiene") -- Magnet.tsx reemplaza el
-                      spring de framer-motion (stiffness/damping fijos, solo
-                      reaccionaba al hover directo) por una transición CSS con
-                      easing que empieza a tirar del botón mientras el cursor
-                      todavía se acerca (padding=100px alrededor), sin el
-                      rebote característico de un spring. */}
-                  <Magnet padding={100} magnetStrength={3} wrapperClassName="shrink-0" innerClassName="relative group">
+                  <div className="relative group shrink-0">
                     {/* Static subtle glow */}
                     <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/20 pointer-events-none" style={{ filter: "blur(8px)" }} />
 
@@ -578,7 +570,7 @@ export default function LandingPage() {
                         className="ml-1 group-hover:translate-x-2 transition-transform duration-300"
                       />
                     </RippleButton>
-                  </Magnet>
+                  </div>
                   <div className="flex flex-col text-left space-y-0.5">
                     <span className="text-xs font-black text-[var(--color-primary-base)] tracking-wider uppercase font-mono">
                       <T en="From $299 USD">Proyectos desde $299 USD</T>
