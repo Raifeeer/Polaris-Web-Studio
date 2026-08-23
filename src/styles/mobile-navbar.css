@@ -104,3 +104,55 @@
     border: 1px solid color-mix(in srgb, var(--color-primary-base) 45%, transparent);
   }
 }
+
+@media (max-width: 639px) {
+  /* Contacto: no comprimir los enlaces en tres columnas; ambos deben leerse completos. */
+  .mobile-menu-card:nth-child(3) {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: .4rem;
+  }
+
+  .mobile-menu-card:nth-child(3) > p {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    white-space: normal;
+  }
+
+  .mobile-menu-card:nth-child(3) > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .35rem;
+  }
+
+  .mobile-menu-card:nth-child(3) > div a {
+    padding-left: .5rem;
+    padding-right: .5rem;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  /* Atlas se mantiene destacado, pero subordinado al CTA comercial. */
+  .mobile-atlas-card {
+    border-top-width: 2px;
+    background: color-mix(in srgb, var(--color-primary-base) 5%, var(--color-surface-elevated));
+  }
+
+  .mobile-atlas-icon {
+    opacity: .85;
+  }
+
+  .mobile-atlas-label {
+    opacity: .85;
+  }
+
+  .mobile-menu-cta {
+    min-height: 50px;
+    border: 2px solid color-mix(in srgb, var(--color-primary-base) 75%, #ffffff);
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--color-primary-base) 26%, transparent);
+    letter-spacing: .01em;
+  }
+}

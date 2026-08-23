@@ -231,21 +231,21 @@ export default function Navbar() {
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: cards.length * 0.06, ease: "easeOut" }}
-                  className="mobile-atlas-card col-span-2 sm:hidden rounded-2xl border bg-[var(--color-surface-elevated)] shadow-lg p-3"
+                  className="mobile-atlas-card col-span-2 sm:hidden rounded-2xl border bg-[var(--color-surface-elevated)] shadow-lg p-2.5"
                 >
                   <Link
                     to="/asistente"
                     onClick={() => setIsOpen(false)}
                     onTouchStart={() => prefetchRoute("/asistente")}
                     onMouseEnter={() => prefetchRoute("/asistente")}
-                    className="flex items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-[var(--color-surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+                    className="flex items-center gap-3 rounded-xl px-2 py-1 hover:bg-[var(--color-surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
                     aria-label={translate("Abrir Atlas Assistant", "Open Atlas Assistant")}
                   >
-                    <span className="mobile-atlas-icon grid h-9 w-9 shrink-0 place-items-center rounded-xl" aria-hidden="true">
+                    <span className="mobile-atlas-icon grid h-8 w-8 shrink-0 place-items-center rounded-xl" aria-hidden="true">
                       <AtlasMark variant="isotipo" className="h-6 w-6" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="block text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">Atlas Assistant</span>
+                      <span className="mobile-atlas-label block text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)]">Atlas Assistant</span>
                       <span className="block text-xs text-[var(--color-text-secondary)]"><T en="Your Polaris digital guide">Tu guía digital de Polaris</T></span>
                     </span>
                     <span className="text-[var(--color-primary-base)]" aria-hidden="true">→</span>
@@ -301,7 +301,7 @@ export default function Navbar() {
                       setIsOpen(false);
                       navigate("/cotizar");
                     }}
-                    className="col-span-2 sm:hidden ml-auto px-5 py-2 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-sm whitespace-nowrap"
+                    className="mobile-menu-cta col-span-2 sm:hidden ml-auto px-5 py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm whitespace-nowrap"
                   >
                     <T en="Plan your Project">Planifica tu Proyecto</T>
                   </button>
