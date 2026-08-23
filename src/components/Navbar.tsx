@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { BriefcaseBusiness, Building2, Mail, Menu, X } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, Building2, Mail, Menu, Rocket, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import TextSizeToggle from "./TextSizeToggle";
+import RippleButton from "./RippleButton";
 import AtlasMark from "./AtlasMark";
 import { useLanguage, T } from "../context/LanguageContext";
 import { prefetchRoute } from "../lib/routePrefetch";
@@ -154,13 +155,22 @@ export default function Navbar() {
               >
                 <AtlasMark variant="isotipo" className="w-6 h-6" />
               </Link>
-              <button
-                onClick={() => navigate("/cotizar")}
+              <div
+                className="hidden sm:block relative group shrink-0"
                 onMouseEnter={() => prefetchRoute("/cotizar")}
-                className="hidden sm:block px-5 py-2 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-sm hover:scale-95 transition-transform whitespace-nowrap"
               >
-                <T en="Plan your Project">Planifica tu Proyecto</T>
-              </button>
+                <div className="absolute inset-0 rounded-xl bg-[var(--color-primary-base)]/20 pointer-events-none" style={{ filter: "blur(8px)" }} />
+                <div className="absolute inset-0 rounded-xl border border-[var(--color-primary-base)]/35 pointer-events-none animate-cta-ping" />
+                <RippleButton
+                  onClick={() => navigate("/cotizar")}
+                  className="group relative overflow-hidden inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm hover:scale-105 transition-all shadow-lg whitespace-nowrap"
+                >
+                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
+                  <Rocket size={16} className="group-hover:rotate-12 group-hover:-translate-y-0.5 transition-transform duration-300" />
+                  <T en="Plan your Project">Planifica tu Proyecto</T>
+                  <ArrowRight size={16} className="ml-0.5 group-hover:translate-x-1 transition-transform duration-300" />
+                </RippleButton>
+              </div>
               <motion.button
                 onClick={() => setIsOpen((v) => !v)}
                 whileTap={{ scale: 0.92 }}
@@ -292,15 +302,18 @@ export default function Navbar() {
                       ))}
                     </div>
                   </div>
-                  <button
+                  <RippleButton
                     onClick={() => {
                       setIsOpen(false);
                       navigate("/cotizar");
                     }}
-                    className="mobile-menu-cta col-span-2 sm:hidden ml-auto px-5 py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm whitespace-nowrap"
+                    className="mobile-menu-cta col-span-2 sm:hidden ml-auto relative overflow-hidden inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-black text-sm whitespace-nowrap"
                   >
+                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
+                    <Rocket size={18} className="group-hover:rotate-12 group-hover:-translate-y-0.5 transition-transform duration-300" />
                     <T en="Plan your Project">Planifica tu Proyecto</T>
-                  </button>
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
+                  </RippleButton>
                 </motion.div>
               </div>
             </motion.div>
