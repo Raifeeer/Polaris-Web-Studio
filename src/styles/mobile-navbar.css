@@ -1,0 +1,106 @@
+.mobile-menu-grid {
+  --mobile-menu-gap: .5rem;
+}
+
+@media (max-width: 639px) {
+  .mobile-menu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--mobile-menu-gap);
+    padding-bottom: .5rem;
+  }
+
+  .mobile-menu-card {
+    min-width: 0;
+  }
+
+  .mobile-menu-card:nth-child(3) {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .mobile-menu-card:nth-child(3) > p {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  .mobile-menu-card:nth-child(3) > div {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .25rem;
+  }
+
+  .mobile-menu-card:nth-child(3) > div a {
+    min-width: 0;
+    padding-left: .35rem;
+    padding-right: .35rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mobile-menu-grid > .col-span-2:not(.mobile-atlas-card) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: .65rem;
+  }
+
+  .mobile-menu-grid > .col-span-2:not(.mobile-atlas-card) > div {
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .35rem;
+  }
+
+  .mobile-menu-grid > .col-span-2:not(.mobile-atlas-card) > div > span {
+    white-space: nowrap;
+  }
+
+  .mobile-menu-grid > .col-span-2:not(.mobile-atlas-card) > button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 639px) and (max-height: 760px) {
+  .mobile-menu-grid {
+    margin-top: .25rem;
+    gap: .35rem;
+  }
+
+  .mobile-menu-card {
+    padding: .55rem .65rem !important;
+  }
+
+  .mobile-menu-card > p {
+    margin-bottom: .25rem !important;
+  }
+
+  .mobile-menu-card a {
+    padding-top: .25rem !important;
+    padding-bottom: .25rem !important;
+  }
+
+  .mobile-menu-grid > .col-span-2:not(.mobile-atlas-card) {
+    padding: .55rem .65rem !important;
+    gap: .4rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .mobile-atlas-card {
+    border-color: color-mix(in srgb, var(--color-primary-base) 55%, var(--color-border-subtle));
+    border-top: 3px solid var(--color-primary-base);
+    background: color-mix(in srgb, var(--color-primary-base) 8%, var(--color-surface-elevated));
+  }
+
+  .mobile-atlas-icon {
+    background: color-mix(in srgb, var(--color-primary-base) 14%, var(--color-surface-base));
+    border: 1px solid color-mix(in srgb, var(--color-primary-base) 45%, transparent);
+  }
+}
