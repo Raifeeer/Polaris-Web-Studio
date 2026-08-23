@@ -156,3 +156,65 @@
     letter-spacing: .01em;
   }
 }
+
+@media (max-width: 639px) {
+  /* Contacto y Atlas comparten la misma fila para eliminar el espacio vacío. */
+  .mobile-menu-card:nth-child(3) {
+    grid-column: span 1 / span 1;
+    display: block;
+    padding: .65rem !important;
+  }
+
+  .mobile-menu-card:nth-child(3) > p {
+    margin-bottom: .35rem !important;
+    white-space: nowrap;
+  }
+
+  .mobile-menu-card:nth-child(3) > div {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+  }
+
+  .mobile-menu-card:nth-child(3) > div a {
+    padding: .3rem .35rem;
+    font-size: .82rem;
+    line-height: 1.15;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .mobile-atlas-card {
+    grid-column: span 1 / span 1;
+    min-width: 0;
+    padding: .65rem !important;
+  }
+
+  .mobile-atlas-card > a {
+    min-width: 0;
+    gap: .45rem;
+    padding: .1rem 0;
+  }
+
+  .mobile-atlas-card .mobile-atlas-icon {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+  }
+
+  .mobile-atlas-card .mobile-atlas-label {
+    font-size: .58rem;
+    letter-spacing: .1em;
+    white-space: nowrap;
+  }
+
+  .mobile-atlas-card .text-xs {
+    font-size: .68rem;
+    line-height: 1.15;
+  }
+
+  .mobile-atlas-card > a > span:last-child {
+    flex: 0 0 auto;
+  }
+}
