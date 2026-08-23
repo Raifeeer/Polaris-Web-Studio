@@ -23,6 +23,17 @@ export function useTheme() {
     localStorage.setItem("polaris-theme", theme);
   }, [theme]);
 
+  // Keep independent hook instances synchronized, such as ThemeToggle and AtlasMark.
+  useEffect(() => {
+    const handleThemeChange = (event: Event) => {
+      const nextTheme = (event as CustomEvent<Theme>).detail;
+      if (nextTheme === "light" || nextTheme === "dark") setTheme(nextTheme);
+    };
+
+    window.addEventListener("polaris-theme-change", handleThemeChange);
+    return () => window.removeEventListener("polaris-theme-change", handleThemeChange);
+  }, []);
+
   // Synchronize with system preferences automatically
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -51,7 +62,9 @@ export function useTheme() {
   }, []);
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    const nextTheme: Theme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    window.dispatchEvent(new CustomEvent<Theme>("polaris-theme-change", { detail: nextTheme }));
   };
 
   return { theme, toggleTheme };
