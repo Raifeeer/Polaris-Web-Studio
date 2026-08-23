@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { BriefcaseBusiness, Building2, Mail, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import TextSizeToggle from "./TextSizeToggle";
 import AtlasMark from "./AtlasMark";
 import { useLanguage, T } from "../context/LanguageContext";
 import { prefetchRoute } from "../lib/routePrefetch";
+import "../styles/mobile-navbar.css";
 
 // Reconstrucción del diseño real de CardNav (rama experimental
 // feature/cardnav-navbar, commit dabf395 -- el diseño que el usuario pidió
@@ -22,7 +23,7 @@ import { prefetchRoute } from "../lib/routePrefetch";
 // translúcidos con blur, mismo criterio ya aplicado sitewide.
 
 type CardLink = { label: React.ReactNode; path: string };
-type NavCard = { label: React.ReactNode; accent: string; links: CardLink[] };
+type NavCard = { label: React.ReactNode; accent: string; links: CardLink[]; icon: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }> };
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -86,6 +87,7 @@ export default function Navbar() {
     {
       label: <T en="Company">Compañía</T>,
       accent: "var(--color-accent-purple)",
+      icon: Building2,
       links: [
         { label: <T en="Home">Inicio</T>, path: "/" },
         { label: <T en="About">Nosotros</T>, path: "/nosotros" },
@@ -96,6 +98,7 @@ export default function Navbar() {
     {
       label: <T en="Work">Trabajo</T>,
       accent: "var(--color-accent-blue)",
+      icon: BriefcaseBusiness,
       links: [
         { label: <T en="Services">Servicios</T>, path: "/servicios" },
         { label: <T en="Polaris Flow">Polaris Flow</T>, path: "/flow" },
@@ -106,10 +109,10 @@ export default function Navbar() {
     {
       label: <T en="Get in touch">Contacto</T>,
       accent: "var(--color-primary-base)",
+      icon: Mail,
       links: [
         { label: <T en="Contact">Contacto</T>, path: "/contacto" },
         { label: <T en="Client Portal">Portal de Cliente</T>, path: "/login" },
-        { label: "Atlas Assistant", path: "/asistente" },
       ],
     },
   ];
@@ -191,20 +194,21 @@ export default function Navbar() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-1 sm:grid-cols-3 gap-2 max-h-[calc(100dvh-7rem)] overflow-y-auto overscroll-contain pb-2">
+              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2 overscroll-contain pb-2 mobile-menu-grid">
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, y: -12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.06, ease: "easeOut" }}
-                    className="rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-4 pt-3"
+                    className="mobile-menu-card rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-3 sm:p-4 sm:pt-3"
                     style={{ borderTopColor: card.accent, borderTopWidth: 3 }}
                   >
-                    <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: card.accent }}>
+                    <p className="flex items-center gap-2 text-[10px] sm:text-xs font-black uppercase tracking-widest mb-2" style={{ color: card.accent }}>
+                      <card.icon size={15} strokeWidth={2.2} aria-hidden="true" />
                       {card.label}
                     </p>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
                       {card.links.map((link) => (
                         <Link
                           key={link.path}
@@ -212,7 +216,7 @@ export default function Navbar() {
                           onClick={() => setIsOpen(false)}
                           onTouchStart={() => prefetchRoute(link.path)}
                           onMouseEnter={() => prefetchRoute(link.path)}
-                          className={`px-2 py-2 rounded-lg text-base font-bold transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] ${
+                          className={`px-2 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base font-bold transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-primary-base)] ${
                             location.pathname === link.path ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-primary)]"
                           }`}
                         >
@@ -227,22 +231,47 @@ export default function Navbar() {
                   initial={{ opacity: 0, y: -12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: cards.length * 0.06, ease: "easeOut" }}
-                  className="sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-4 flex flex-wrap items-center gap-x-8 gap-y-3"
+                  className="mobile-atlas-card col-span-2 sm:hidden rounded-2xl border bg-[var(--color-surface-elevated)] shadow-lg p-3"
+                >
+                  <Link
+                    to="/asistente"
+                    onClick={() => setIsOpen(false)}
+                    onTouchStart={() => prefetchRoute("/asistente")}
+                    onMouseEnter={() => prefetchRoute("/asistente")}
+                    className="flex items-center gap-3 rounded-xl px-2 py-1.5 hover:bg-[var(--color-surface-highlight)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
+                    aria-label={translate("Abrir Atlas Assistant", "Open Atlas Assistant")}
+                  >
+                    <span className="mobile-atlas-icon grid h-9 w-9 shrink-0 place-items-center rounded-xl" aria-hidden="true">
+                      <AtlasMark variant="isotipo" className="h-6 w-6" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">Atlas Assistant</span>
+                      <span className="block text-xs text-[var(--color-text-secondary)]"><T en="Your Polaris digital guide">Tu guía digital de Polaris</T></span>
+                    </span>
+                    <span className="text-[var(--color-primary-base)]" aria-hidden="true">→</span>
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: (cards.length + 1) * 0.06, ease: "easeOut" }}
+                  className="col-span-2 sm:col-span-3 rounded-2xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg p-3 sm:p-4 flex flex-wrap items-center gap-x-5 gap-y-2"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                       <T en="Theme">Tema</T>
                     </span>
                     <ThemeToggle />
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                       <T en="Text size">Tamaño de texto</T>
                     </span>
                     <TextSizeToggle />
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
+                    <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">
                       <T en="Language">Idioma</T>
                     </span>
                     <div className="flex items-center gap-1 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-full p-1 relative">
@@ -272,7 +301,7 @@ export default function Navbar() {
                       setIsOpen(false);
                       navigate("/cotizar");
                     }}
-                    className="sm:hidden ml-auto px-5 py-2.5 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-sm whitespace-nowrap"
+                    className="col-span-2 sm:hidden ml-auto px-5 py-2 rounded-lg bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-sm whitespace-nowrap"
                   >
                     <T en="Plan your Project">Planifica tu Proyecto</T>
                   </button>
