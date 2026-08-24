@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Check, ExternalLink, Radio } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { T, useLanguage } from "../context/LanguageContext";
 import StarBorder from "./StarBorder";
 
@@ -51,8 +51,13 @@ export default function Testimonials() {
               <div className="relative flex flex-col gap-7">
                 <div className="flex items-start justify-between gap-5">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-primary-base)]/[0.1] text-[var(--color-primary-base)] ring-1 ring-[var(--color-primary-base)]/20">
-                      <Radio size={19} strokeWidth={2.2} />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-primary-base)]/[0.1] ring-1 ring-[var(--color-primary-base)]/20">
+                      <img
+                        src="/images/portfolio/tano-excursions-isotipo.png"
+                        alt=""
+                        aria-hidden="true"
+                        className="h-8 w-8 object-contain"
+                      />
                     </div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
