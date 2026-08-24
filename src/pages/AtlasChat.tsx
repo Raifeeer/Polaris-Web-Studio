@@ -57,6 +57,10 @@ import TemporaryChatIcon from "../components/TemporaryChatIcon";
 // a la pantalla vacía, en vez de mostrar siempre las mismas 4.
 const SUGGESTIONS_POOL: { es: string; en: string }[] = [
   { es: "¿Cuáles son los planes y precios?", en: "What are the plans and prices?" },
+  { es: "¿Qué es Local Lift y cómo ayuda a mi negocio?", en: "What is Local Lift and how can it help my business?" },
+  { es: "¿Qué es Polaris Flow?", en: "What is Polaris Flow?" },
+  { es: "¿Qué diferencia hay entre diseño web y Local Lift?", en: "What's the difference between web design and Local Lift?" },
+  { es: "¿Qué incluye el primer flujo de Polaris Flow?", en: "What does the first Polaris Flow workflow include?" },
   { es: "¿Qué incluye el paquete Constelación?", en: "What's included in the Constelación package?" },
   { es: "¿Cuánto tarda un proyecto tipo e-commerce?", en: "How long does an e-commerce project take?" },
   { es: "¿Qué tecnologías usan?", en: "What tech stack do you use?" },
@@ -1201,8 +1205,8 @@ export default function AtlasChat() {
                   <AtlasMark variant="wordmark" label="Atlas Assistant" className="h-9 w-auto -mt-2" />
                 </div>
                 <p className="text-sm text-[var(--color-text-secondary)] mb-8">
-                  <T en="Ask me about plans, timelines, or anything about your next project.">
-                    Pregúntame sobre planes, plazos o lo que necesites de tu próximo proyecto.
+                  <T en="Ask me about web design, Local Lift, Polaris Flow, plans, timelines, or your next project.">
+                    Pregúntame sobre diseño web, Local Lift, Polaris Flow, planes, plazos o lo que necesites de tu próximo proyecto.
                   </T>
                 </p>
                 <div className="grid sm:grid-cols-2 gap-2.5">
