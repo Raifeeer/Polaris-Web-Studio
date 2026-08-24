@@ -51,6 +51,10 @@ export interface Project {
   // escritorio recortado). Tiene prioridad sobre mobileImg.
   mobileVideo?: string;
   mobilePoster?: string;
+  // Proporción real de cada MP4 para que el frame y sus esquinas coincidan
+  // con el archivo, aunque los proyectos usen resoluciones distintas.
+  desktopVideoAspectRatio?: string;
+  mobileVideoAspectRatio?: string;
   cinemaColor?: string;
 
   // Case Study Details
@@ -510,6 +514,8 @@ export const projects: Project[] = [
     mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v6.jpg",
     mobileVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePreview-v6.mp4",
     mobilePoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v6.jpg",
+    desktopVideoAspectRatio: "1600/900",
+    mobileVideoAspectRatio: "780/1688",
   },
   {
     slug: "vitality-clinic",
@@ -583,6 +589,7 @@ export const projects: Project[] = [
       "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityMobilePreview.mp4",
     mobilePoster:
       "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityMobilePoster.jpg",
+    desktopVideoAspectRatio: "1600/1000",
   },
   {
     slug: "sabor-autentico",
@@ -642,5 +649,6 @@ export const projects: Project[] = [
     desktopImg: "/images/portfolio/la-reja-landing-poster-hd.jpg",
     previewVideo: "/videos/portfolio/la-reja-landing-preview-hd.mp4",
     previewPoster: "/images/portfolio/la-reja-landing-poster-hd.jpg",
+    desktopVideoAspectRatio: "1600/900",
   },
 ];

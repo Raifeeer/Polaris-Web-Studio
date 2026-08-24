@@ -206,7 +206,7 @@ function ProjectImageCarousel({
                 src={previewVideo}
                 poster={previewPoster}
                 cornerBg="var(--color-surface-base)"
-                aspectRatio="1200/750"
+                aspectRatio={projects.find((p) => p.title === projectName)?.desktopVideoAspectRatio || "1200/750"}
                 ariaLabel={`${projectName} — desktop`}
               />
             ) : img.type === "mobile" && mobileVideo ? (
@@ -215,7 +215,7 @@ function ProjectImageCarousel({
                 src={mobileVideo}
                 poster={mobilePoster}
                 cornerBg="var(--color-surface-base)"
-                aspectRatio="560/1212"
+                aspectRatio={projects.find((p) => p.title === projectName)?.mobileVideoAspectRatio || "560/1212"}
                 maxWidthPx={240}
                 ariaLabel={`${projectName} — mobile`}
               />

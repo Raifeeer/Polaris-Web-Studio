@@ -277,7 +277,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                 src={project.previewVideo}
                 poster={project.previewPoster}
                 cornerBg={cornerBg}
-                aspectRatio="1200/750"
+                aspectRatio={project.desktopVideoAspectRatio || "1200/750"}
                 ariaLabel={`${project.title} Desktop`}
               />
             ) : project.desktopImg ? (
@@ -331,7 +331,7 @@ function ProjectScreenshot({ project, onExit, fillParent, fixedHeights, onSwipeP
                 src={project.mobileVideo}
                 poster={project.mobilePoster}
                 cornerBg={cornerBg}
-                aspectRatio="560/1212"
+                aspectRatio={project.mobileVideoAspectRatio || "560/1212"}
                 maxWidthPx={260}
                 ariaLabel={`${project.title} Mobile`}
               />
@@ -1280,7 +1280,7 @@ export default function Portfolio() {
                                   src={currentCinemaProject.previewVideo}
                                   poster={currentCinemaProject.previewPoster}
                                   cornerBg="var(--color-surface-base)"
-                                  aspectRatio="1200/750"
+                                  aspectRatio={currentCinemaProject.desktopVideoAspectRatio || "1200/750"}
                                   ariaLabel={`${currentCinemaProject.title} Desktop`}
                                 />
                               ) : currentCinemaProject.desktopImg ? (
@@ -1320,7 +1320,7 @@ export default function Portfolio() {
                                 src={currentCinemaProject.mobileVideo}
                                 poster={currentCinemaProject.mobilePoster}
                                 cornerBg="var(--color-surface-base)"
-                                aspectRatio="560/1212"
+                                aspectRatio={currentCinemaProject.mobileVideoAspectRatio || "560/1212"}
                                 maxWidthPx={260}
                                 ariaLabel={`${currentCinemaProject.title} Mobile`}
                               />
