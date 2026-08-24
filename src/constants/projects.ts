@@ -650,5 +650,8 @@ export const projects: Project[] = [
     previewVideo: "/videos/portfolio/la-reja-landing-preview-hd.mp4",
     previewPoster: "/images/portfolio/la-reja-landing-poster-hd.jpg",
     desktopVideoAspectRatio: "1600/900",
+    mobileVideo: "/videos/portfolio/la-reja-mobile-preview-hd.mp4",
+    mobilePoster: "/images/portfolio/la-reja-mobile-poster-hd.jpg",
+    mobileVideoAspectRatio: "780/1688",
   },
 ];
