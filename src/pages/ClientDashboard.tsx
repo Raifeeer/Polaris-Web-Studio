@@ -6240,7 +6240,7 @@ export default function ClientDashboard() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 z-50 h-[100dvh] w-full sm:w-[380px] flex flex-col glass-panel border-l border-[var(--color-border-subtle)] shadow-2xl"
+              className="fixed top-0 right-0 z-50 h-[100dvh] w-full sm:w-[380px] flex flex-col bg-[var(--color-surface-elevated)] border-l border-[var(--color-border-subtle)] shadow-2xl"
             >
               
               {/* Header */}
@@ -6354,7 +6354,7 @@ export default function ClientDashboard() {
                       document.getElementById("send-chat-btn")?.click();
                     }
                   }}
-                  className="glass-input chat-input flex-1 px-3 py-2 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
+                  className="chat-input flex-1 px-3 py-2 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
                   placeholder={isAdmin
                     ? (language === "en" ? "Ask about operations, projects or services..." : "Pregúntame sobre operaciones, proyectos o servicios...")
                     : (language === "en" ? "Ask about your project..." : "Escribe tu pregunta...")}
