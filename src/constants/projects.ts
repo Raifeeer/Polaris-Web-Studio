@@ -592,6 +592,7 @@ export const projects: Project[] = [
     isConcept: true,
     plan: "Destello",
     planEN: "Flash",
+    liveUrl: "https://la-reja-rd.vercel.app/",
     type: "Gastronomía · Experiencia Digital",
     typeEN: "Gastronomy · Digital Experience",
     shortDesc:
