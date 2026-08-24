@@ -652,7 +652,7 @@ export default function AtlasChat() {
                 return (
                 <div
                   key={c.id}
-                  className={`group relative flex items-center gap-2.5 px-3 py-3 md:py-2 rounded-lg cursor-pointer transition-colors ${
+                  className={`group relative flex items-center gap-2.5 px-3 py-3 md:py-2 rounded-full cursor-pointer transition-colors ${
                     c.id === activeId
                       ? "bg-[var(--color-primary-muted)] text-[var(--color-primary-base)]"
                       : "hover:bg-[var(--color-surface-highlight)] text-[var(--color-text-secondary)]"
