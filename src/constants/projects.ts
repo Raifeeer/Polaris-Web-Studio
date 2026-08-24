@@ -594,6 +594,7 @@ export const projects: Project[] = [
   {
     slug: "sabor-autentico",
     title: "La Reja",
+    cinemaColor: "#C0552C",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
