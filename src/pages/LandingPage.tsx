@@ -360,6 +360,34 @@ export default function LandingPage() {
       colorClass:
         "from-violet-500/20 to-fuchsia-500/5 hover:border-violet-500/40",
     },
+    {
+      title: "Vitality Med",
+      slug: "vitality-clinic",
+      desktopImg: "/screenshots/vitality-clinic-desktop.png",
+      type: <T en="Health · Appointment Portal">Salud · Portal de Citas</T>,
+      desc: (
+        <T en="Multi-specialty clinic with doctor profiles, health blog, real appointment booking, and its own admin panel.">
+          Clínica multidisciplinaria con perfiles de médicos, blog de salud,
+          agendado real de citas y panel administrativo propio.
+        </T>
+      ),
+      stack: ["React", "TypeScript", "React Router", "Firebase"],
+      colorClass: "from-emerald-500/20 to-teal-500/5 hover:border-emerald-500/40",
+    },
+    {
+      title: "La Reja",
+      slug: "sabor-autentico",
+      desktopImg: "/screenshots/la-reja-desktop.png",
+      type: <T en="Gastronomy · Digital Experience">Gastronomía · Experiencia Digital</T>,
+      desc: (
+        <T en="Premium digital experience for a contemporary Dominican restaurant, with a live menu, tasting routes, and budget-based menu planning.">
+          Experiencia digital premium para un restaurante dominicano de cocina
+          contemporánea, con carta viva, rutas de degustación y menú a medida.
+        </T>
+      ),
+      stack: ["React", "TypeScript", "Vite", "Firebase"],
+      colorClass: "from-orange-500/20 to-amber-500/5 hover:border-orange-500/40",
+    },
   ];
 
   const faqs = [
