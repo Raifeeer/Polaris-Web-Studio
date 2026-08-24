@@ -53,9 +53,9 @@ import VoiceInputBar from "../components/VoiceInputBar";
 import Tooltip from "../components/Tooltip";
 import TemporaryChatIcon from "../components/TemporaryChatIcon";
 
-// Preguntas comerciales de arranque. En cada visita se muestran 6, con
-// al menos 3 preguntas de Local Lift para que el servicio tenga presencia
-// visible sin introducir Office Flow mientras sigue en pulido.
+// Banco de preguntas comerciales de arranque. En cada visita se muestran
+// 4 preguntas seleccionadas aleatoriamente. Incluye Local Lift, sin mostrar
+// Office Flow mientras sigue en pulido.
 const SUGGESTIONS_POOL: { es: string; en: string }[] = [
   { es: "¿Cuáles son los planes y precios?", en: "What are the plans and prices?" },
   { es: "¿Qué es Polaris Flow?", en: "What is Polaris Flow?" },
@@ -133,10 +133,7 @@ function shuffleSuggestions(pool: { es: string; en: string }[]): { es: string; e
 }
 
 function pickRandomSuggestions(count: number): { es: string; en: string }[] {
-  const localLiftCount = Math.min(3, count);
-  const localLift = shuffleSuggestions(LOCAL_LIFT_SUGGESTIONS).slice(0, localLiftCount);
-  const general = shuffleSuggestions(SUGGESTIONS_POOL).slice(0, Math.max(0, count - localLift.length));
-  return shuffleSuggestions([...localLift, ...general]);
+  return shuffleSuggestions([...SUGGESTIONS_POOL, ...LOCAL_LIFT_SUGGESTIONS]).slice(0, count);
 }
 
 function MessageBubble({
@@ -420,7 +417,7 @@ export default function AtlasChat() {
   // mismo comportamiento que el botón de arriba a la izquierda en Gemini).
   const [sidebarAboveSearch, setSidebarAboveSearch] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [suggestions] = useState(() => pickRandomSuggestions(6));
+  const [suggestions] = useState(() => pickRandomSuggestions(4));
   const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
