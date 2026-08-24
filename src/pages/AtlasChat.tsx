@@ -545,7 +545,7 @@ export default function AtlasChat() {
                   className="flex items-center justify-center p-2.5 md:p-1.5 rounded-full border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] hover:text-[var(--color-primary-base)] text-[var(--color-text-secondary)] transition-colors shrink-0"
                   aria-label={translate("Ir al inicio", "Go to home")}
                 >
-                  <Home size={18} className="md:w-3.5 md:h-3.5" />
+                  <Home size={22} className="md:w-3.5 md:h-3.5" />
                 </Link>
               </Tooltip>
               <div className="flex-1 flex items-center justify-center gap-1.5 min-w-0">
@@ -611,7 +611,7 @@ export default function AtlasChat() {
                     }
                   }}
                   aria-label={translate("Chat temporal", "Temporary chat")}
-                  className={`p-2.5 md:p-1.5 rounded-full border transition-colors shrink-0 ${
+                  className={`p-3 md:p-1.5 rounded-full border transition-colors shrink-0 ${
                     isTemporary
                       ? "border-[var(--color-text-primary)] bg-[var(--color-text-primary)] text-[var(--color-surface-base)]"
                       : "border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)]"
@@ -628,7 +628,7 @@ export default function AtlasChat() {
                       setSidebarAboveSearch(false);
                     }}
                     aria-label={translate("Buscar conversaciones", "Search conversations")}
-                    className="p-2.5 md:p-1.5 rounded-full border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
+                    className="p-3 md:p-1.5 rounded-full border border-[var(--color-border-subtle)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-primary-muted)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors shrink-0"
                   >
                     <Search size={16} className="md:w-3.5 md:h-3.5" />
                   </button>
