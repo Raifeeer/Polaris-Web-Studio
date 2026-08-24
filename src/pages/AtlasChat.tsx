@@ -1369,9 +1369,9 @@ export default function AtlasChat() {
                   onClick={() => handleSend()}
                   disabled={!input.trim()}
                   aria-label={translate("Enviar mensaje", "Send message")}
-                  className="w-9 h-9 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
+                  className="w-10 h-10 shrink-0 rounded-full bg-[var(--color-primary-base)] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 transition-all"
                 >
-                  <Send size={14} />
+                  <Send size={15} />
                 </button>
               ))}
           </div>
