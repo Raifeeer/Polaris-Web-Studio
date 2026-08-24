@@ -1268,7 +1268,7 @@ export default function Portfolio() {
                               pasa a coincidir con el fondo real de la
                               slide (--color-surface-base), no con
                               --color-surface-elevated. */}
-                          <div ref={storyBoxRef} className="relative w-full max-w-3xl h-[42vh] max-h-[500px]">
+                          <div ref={storyBoxRef} className="relative w-full max-w-3xl h-[42vh] max-h-[500px] rounded-2xl overflow-hidden">
                             {storyView === "desktop" ? (
                               hasMockupContent(currentCinemaProject.slug) ? (
                                 <div className="w-full h-full px-2">

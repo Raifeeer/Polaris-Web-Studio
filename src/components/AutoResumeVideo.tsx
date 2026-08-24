@@ -321,6 +321,8 @@ const AutoResumeVideo = React.forwardRef<AutoResumeVideoHandle, {
     width: frameSize ? frameSize.width : 0,
     height: frameSize ? frameSize.height : 0,
     isolation: "isolate",
+    borderRadius: RADIUS,
+    overflow: "hidden",
   };
 
   return (
