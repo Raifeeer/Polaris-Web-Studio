@@ -47,6 +47,70 @@ const MOCKUP_MOBILE_ASPECT = 280 / 580;
 
 const CINEMA_STATE_KEY = "polaris_portfolio_cinema_state";
 
+// Búsqueda tolerante: ignora acentos y puntuación, permite coincidencias
+// parciales y corrige errores leves sin convertir términos muy cortos en
+// coincidencias demasiado amplias.
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, " ")
+    .trim();
+}
+
+function editDistance(a: string, b: string): number {
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    let diagonal = previous[0];
+    previous[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const above = previous[j];
+      previous[j] = a[i - 1] === b[j - 1]
+        ? diagonal
+        : Math.min(diagonal + 1, previous[j] + 1, previous[j - 1] + 1);
+      diagonal = above;
+    }
+  }
+  return previous[b.length];
+}
+
+function tokenMatchesWord(token: string, word: string): boolean {
+  if (word.includes(token) || token.includes(word)) return true;
+  if (token.length < 4 || Math.abs(token.length - word.length) > 2) return false;
+  const maxDistance = token.length >= 7 ? 2 : 1;
+  return editDistance(token, word) <= maxDistance;
+}
+
+function projectMatchesSearch(project: Project, query: string): boolean {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return true;
+
+  const searchableFields = [
+    project.title,
+    project.slug,
+    project.client,
+    project.clientEN,
+    project.type,
+    project.typeEN,
+    project.shortDesc,
+    project.shortDescEN,
+    project.keyResult,
+    project.keyResultEN,
+    project.resultLabel,
+    project.resultLabelEN,
+    ...project.techStack,
+  ]
+    .filter(Boolean)
+    .map((field) => normalizeSearchText(field as string));
+
+  const searchableWords = searchableFields.flatMap((field) => field.split(/\s+/));
+  return normalizedQuery.split(/\s+/).every((token) =>
+    searchableFields.some((field) => field.includes(token)) ||
+    searchableWords.some((word) => tokenMatchesWord(token, word)),
+  );
+}
+
 // Si el usuario regresa desde la página de detalle (ver caso de estudio) u otra
 // ruta, restaura el proyecto/modo cine que estaba viendo en vez de reiniciar al mosaico.
 function readRestoredCinemaIndex(): number | null {
@@ -434,27 +498,17 @@ export default function Portfolio() {
 
   // Filtered Projects List
   const filteredProjects = useMemo(() => {
-    return projects.filter(project => {
-      const pTitle = project.title.toLowerCase();
-      const pDesc = (project.shortDesc || "").toLowerCase();
-      const pDescEn = (project.shortDescEN || "").toLowerCase();
-      const pType = project.type.toLowerCase();
-      const pTypeEn = (project.typeEN || "").toLowerCase();
-      const matchesSearch =
-        pTitle.includes(searchQuery.toLowerCase()) ||
-        pDesc.includes(searchQuery.toLowerCase()) ||
-        pDescEn.includes(searchQuery.toLowerCase()) ||
-        pType.includes(searchQuery.toLowerCase()) ||
-        pTypeEn.includes(searchQuery.toLowerCase());
-
+    return projects.filter((project) => {
+      const matchesSearch = projectMatchesSearch(project, searchQuery);
       const matchesPlan =
         selectedPlan === "ALL" ||
         project.plan.toLowerCase() === selectedPlan.toLowerCase() ||
         (selectedPlan === "Destello" && project.planEN === "Flash");
 
+      const normalizedSelectedType = normalizeSearchText(selectedType);
       const matchesType =
         selectedType === "ALL" ||
-        project.type.toLowerCase().includes(selectedType.toLowerCase());
+        normalizeSearchText(project.type).includes(normalizedSelectedType);
 
       return matchesSearch && matchesPlan && matchesType;
     });
