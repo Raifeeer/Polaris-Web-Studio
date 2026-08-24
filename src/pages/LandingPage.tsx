@@ -1504,8 +1504,8 @@ export default function LandingPage() {
                               alt={p.title}
                               loading="lazy"
                               decoding="async"
-                              className="w-full h-full object-contain object-center rounded-lg"
-                            />
+                              className={`w-full h-full object-contain object-center rounded-lg ${["vitality-clinic", "sabor-autentico"].includes(p.slug) ? "scale-[1.08]" : ""}`}
+                              />
                           </div>
                         ) : (
                           <div className="h-[200px] w-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-subtle)]" />
@@ -1571,7 +1571,8 @@ export default function LandingPage() {
                                     alt={p.title}
                                     loading="lazy"
                                     decoding="async"
-                                    className="w-full h-full object-contain object-center rounded-lg"
+                                    className={`w-full h-full object-contain object-center rounded-lg ${["vitality-clinic", "sabor-autentico"].includes(p.slug) ? "scale-[1.08]" : ""}`}
+
                                   />
                                 </div>
                               ) : (
