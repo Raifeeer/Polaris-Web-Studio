@@ -19,6 +19,7 @@ import {
   Cpu,
   Brain,
   Cloud,
+  Rocket,
 } from "lucide-react";
 import { motion, AnimatePresence, useInView, useMotionValue, useSpring, useScroll, useTransform } from "framer-motion"; // Tree-shaking: solo se usan estos 7 exports
 import Navbar from "../components/Navbar";
