@@ -19,6 +19,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { atlasTools } from "./_atlasTools.js";
 import { backupConversation } from "./_atlasBackup.js";
+import { ATLAS_SERVICE_CONTEXT } from "../atlas-context.js";
 
 // Mismas claves que ICON_MAP en src/lib/conversationIcon.tsx -- duplicado a
 // propósito (mismo patrón ya aceptado en esta cuenta para PACKAGES/ADDONS
@@ -173,7 +174,9 @@ export default async function handler(req: Request): Promise<Response> {
     }
   }
 
-  const systemPrompt = `Eres Atlas Assistant, el asistente de IA de Polaris Web Studio, una agencia de desarrollo web premium en Punta Cana, República Dominicana. Fundada por Cristian Dicen. Especializada en React, TypeScript, Vite, Tailwind CSS, Framer Motion e integraciones de IA. Respondes tanto en el widget flotante del sitio como en la página completa de chat ("/asistente").
+  const systemPrompt = `Eres Atlas, el asistente general de Polaris Web Studio, un estudio de tecnología digital y operaciones fundado por Cristian Dicen en Punta Cana, República Dominicana. El diseño y desarrollo web sigue siendo una línea principal, pero Polaris también ofrece Local Lift y Polaris Flow. Respondes tanto en el widget flotante del sitio como en la página completa de chat ("/asistente").
+
+${ATLAS_SERVICE_CONTEXT}
 
 Planes disponibles:
 - Destello (id: landing): $299 USD -- Landing page 1 página, entrega 1-2 semanas
@@ -274,6 +277,8 @@ FORMATO -- Markdown real, se renderiza tal cual en la interfaz
 - Incluye enlaces en Markdown solo de esta lista, nunca inventes otros (el texto del link entre corchetes es solo una sugerencia de etiqueta cuando va aislado -- ajusta las palabras si el link va dentro de una oración, el href nunca cambia):
   - Cotizador: [Ver cotizador](/cotizar)
   - Servicios: [Ver servicios](/servicios)
+  - Local Lift: [Ver Local Lift](/local-lift)
+  - Polaris Flow: [Ver Polaris Flow](/flow)
   - Portafolio: [Ver portafolio](/portafolio)
   - Metodología/proceso: [Ver metodología](/proceso)
   - Agendar llamada: [Agendar una llamada](/agendar)

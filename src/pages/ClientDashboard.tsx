@@ -48,6 +48,7 @@ import AscensoWorkflowPanel from "../components/AscensoWorkflowPanel";
 import AISparkleIcon from "../components/AISparkleIcon";
 import BookingScheduler from "../components/BookingScheduler";
 import Logo from "../components/Logo";
+import AtlasMark from "../components/AtlasMark";
 import PasswordStrengthMeter from "../components/PasswordStrengthMeter";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
@@ -1071,6 +1072,9 @@ export default function ClientDashboard() {
   const clientProject = !isAdmin && data?.projects && data.projects.length > 0
     ? (data.projects.find((p: any) => p.id === selectedClientProjectId) || data.projects[0])
     : null;
+  const atlasStorageKey = user?.id
+    ? (isAdmin ? `portal_atlas_admin_${user.id}` : clientProject?.id ? `portal_chat_${clientProject.id}` : null)
+    : null;
 
   // Qué producto compró el cliente. Ausente == sitio web: todos los proyectos
   // anteriores a que Polaris vendiera algo más (agosto 2026) lo son, así que
@@ -1100,33 +1104,31 @@ export default function ClientDashboard() {
     }
   }, [data, isAdmin, selectedClientProjectId]);
 
-  // Synchronize chat with localStorage for the active project
+  // Synchronize Atlas with the active client project or with the admin workspace.
   useEffect(() => {
-    if (clientProject?.id) {
-      const saved = localStorage.getItem(`portal_chat_${clientProject.id}`);
-      if (saved) {
-        try {
-          setChatMessages(JSON.parse(saved));
-        } catch (e) {
-          setChatMessages([]);
-        }
-      } else {
-        // Default welcoming message if no history exists yet
-        setChatMessages([
-          {
-            role: "assistant",
-            text: `¡Hola, ${user?.name || "cliente"}! Soy Atlas Assistant, tu asistente de IA en Polaris Web Studio. ¿En qué puedo ayudarte hoy con tu proyecto "${clientProject.name}"?`
-          }
-        ]);
+    if (!atlasStorageKey) return;
+    const saved = localStorage.getItem(atlasStorageKey);
+    if (saved) {
+      try {
+        setChatMessages(JSON.parse(saved));
+        return;
+      } catch {
+        // Recreate a clean greeting below if the stored history is malformed.
       }
     }
-  }, [clientProject?.id]);
+
+    const firstName = user?.name?.split(" ")[0] || (isAdmin ? "operador" : "cliente");
+    const greeting = isAdmin
+      ? `¡Hola, ${firstName}! Soy Atlas, el asistente de operaciones de Polaris. Puedo ayudarte a revisar proyectos, clientes, Local Lift, Polaris Flow y los siguientes pasos del equipo.`
+      : `¡Hola, ${firstName}! Soy Atlas, el asistente de Polaris. Puedo ayudarte con el estado de tu ${isLocalLiftProject ? "servicio Local Lift" : `proyecto "${clientProject?.name || "activo"}"`}, sus facturas, revisiones y próximos pasos. También puedo explicarte nuestros servicios de diseño web, Local Lift y Polaris Flow.`;
+    setChatMessages([{ role: "assistant", text: greeting }]);
+  }, [atlasStorageKey, isAdmin, isLocalLiftProject, clientProject?.name, user?.name]);
 
   // Persist chat helper
   const saveChatMessages = (messages: typeof chatMessages) => {
     setChatMessages(messages);
-    if (clientProject?.id) {
-      localStorage.setItem(`portal_chat_${clientProject.id}`, JSON.stringify(messages));
+    if (atlasStorageKey) {
+      localStorage.setItem(atlasStorageKey, JSON.stringify(messages));
     }
   };
 
@@ -1558,6 +1560,53 @@ export default function ClientDashboard() {
     if (!res.ok) throw new Error(data.error || "Error de IA");
     if (!data.text) throw new Error("Sin respuesta de IA");
     return { text: data.text, widget: data.widget || null };
+  };
+
+  const askAdminPortalChat = async (
+    message: string,
+    history: { role: "user" | "assistant"; text: string }[]
+  ): Promise<{ text: string; widget: null }> => {
+    const res = await fetch("/api/ai/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tokenRef.current}`,
+      },
+      body: JSON.stringify({
+        action: "admin_chat",
+        message,
+        history: history.slice(-16).map(m => ({ role: m.role, content: m.text })),
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error de IA");
+    if (!data.text) throw new Error("Sin respuesta de IA");
+    return { text: data.text, widget: null };
+  };
+
+  const handlePortalChatSubmit = async (rawMessage: string) => {
+    const userMsg = rawMessage.trim();
+    if (!userMsg || chatLoading) return;
+    const history = chatMessages;
+    const newMsgs = [...history, { role: "user" as const, text: userMsg }];
+    setChatInput("");
+    saveChatMessages(newMsgs);
+    setChatLoading(true);
+    try {
+      const result = isAdmin
+        ? await askAdminPortalChat(userMsg, history)
+        : clientProject
+          ? await askPortalChat(clientProject.id, userMsg, history)
+          : (() => { throw new Error("No active project"); })();
+      saveChatMessages([...newMsgs, { role: "assistant" as const, text: result.text, widget: result.widget }]);
+    } catch {
+      saveChatMessages([...newMsgs, {
+        role: "assistant" as const,
+        text: language === "en" ? "I couldn't process that question. Please contact the Polaris team." : "No pude procesar tu pregunta. Contacta al equipo de Polaris.",
+      }]);
+    } finally {
+      setChatLoading(false);
+    }
   };
 
   const generateClientSummary = async (project: any) => {
@@ -6156,9 +6205,8 @@ export default function ClientDashboard() {
 
       </main>
 
-      {/* Chat lateral -- solo para clientes */}
-      {!isAdmin && (
-        <>
+      {/* Atlas lateral -- compartido por cliente y administrador */}
+      <>
           {/* Fondo oscuro en móvil */}
           <AnimatePresence>
             {chatOpen && (
@@ -6175,10 +6223,12 @@ export default function ClientDashboard() {
           {/* Botón Pestaña lateral */}
           <button
             onClick={() => setChatOpen(true)}
-            className={`fixed top-1/2 -translate-y-1/2 right-0 z-40 bg-white shadow-[-4px_0_15px_rgba(0,0,0,0.15)] rounded-l-xl py-4 px-2 flex flex-col items-center gap-2 transition-transform duration-300 hover:pr-3 group ${chatOpen ? "translate-x-full" : "translate-x-0"}`}
+            className={`fixed top-1/2 -translate-y-1/2 right-0 z-40 bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] border-r-0 shadow-[-4px_0_15px_rgba(0,0,0,0.15)] rounded-l-2xl py-4 px-2 flex flex-col items-center gap-2 transition-transform duration-300 hover:pr-3 group ${chatOpen ? "translate-x-full" : "translate-x-0"}`}
+            aria-label={isAdmin ? "Abrir Atlas para operaciones" : "Abrir Atlas Assistant"}
           >
-            <span className="text-[11px] font-black uppercase tracking-widest text-[var(--color-primary-base)] opacity-70 group-hover:opacity-100 transition-opacity" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-              Atlas Assistant
+            <AtlasMark variant="isotipo" className="w-5 h-5" />
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--color-primary-base)] opacity-70 group-hover:opacity-100 transition-opacity" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+              {isAdmin ? "Atlas Ops" : "Atlas"}
             </span>
           </button>
       
@@ -6194,32 +6244,19 @@ export default function ClientDashboard() {
             >
               
               {/* Header */}
-              <div className="px-5 py-4 bg-[var(--color-primary-base)] flex items-center justify-between shadow-md z-10 shrink-0">
+              <div className="px-5 py-4 bg-[var(--color-surface-elevated)] border-b border-[var(--color-border-subtle)] flex items-center justify-between shadow-md z-10 shrink-0">
                 <div className="flex items-center gap-3">
-                  {/* Isotipo SVG inline */}
-                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
-                    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-                      <defs>
-                        <linearGradient id="chat-logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#4f46e5" />
-                          <stop offset="100%" stopColor="#818cf8" />
-                        </linearGradient>
-                      </defs>
-                      <path
-                        d="M 16 2 L 17.5 13.5 L 21.5 10.5 L 18.5 14.5 L 30 16 L 18.5 17.5 L 21.5 21.5 L 17.5 18.5 L 16 30 L 14.5 18.5 L 10.5 21.5 L 13.5 17.5 L 2 16 L 13.5 14.5 L 10.5 10.5 L 14.5 13.5 Z"
-                        fill="url(#chat-logo-gradient)"
-                      />
-                      <circle cx="16" cy="16" r="1.5" fill="#4f46e5" />
-                    </svg>
+                  <div className="w-9 h-9 rounded-full bg-[var(--color-primary-muted)] border border-[var(--color-primary-base)]/20 flex items-center justify-center shrink-0">
+                    <AtlasMark variant="isotipo" className="w-7 h-7" />
                   </div>
                   <div>
-                    <p className="text-white font-black text-sm tracking-tight">Atlas Assistant</p>
-                    <p className="text-white/60 text-[10px]">by Polaris Web Studio</p>
+                    <AtlasMark variant="wordmark" label="Atlas Assistant" className="h-5 w-auto max-w-[128px]" />
+                    <p className="text-[var(--color-text-tertiary)] text-[10px]">{isAdmin ? "Polaris · operaciones internas" : "Polaris · tu espacio de seguimiento"}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setChatOpen(false)}
-                  className="text-white/50 hover:text-white transition p-1"
+                  className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition p-1"
                 >
                   <X size={16} />
                 </button>
@@ -6229,52 +6266,31 @@ export default function ClientDashboard() {
               <div className="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col">
                 {chatMessages.length === 0 && (
                   <div className="flex-1 flex flex-col justify-center items-center text-center py-6 space-y-2">
-                    <div className="flex items-center justify-center shrink-0 mb-4 drop-shadow-md">
-                      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-28 h-28">
-                        <defs>
-                          <linearGradient id="chat-logo-gradient-large" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stopColor="#4f46e5" />
-                            <stop offset="100%" stopColor="#818cf8" />
-                          </linearGradient>
-                        </defs>
-                        <path
-                          d="M 16 2 L 17.5 13.5 L 21.5 10.5 L 18.5 14.5 L 30 16 L 18.5 17.5 L 21.5 21.5 L 17.5 18.5 L 16 30 L 14.5 18.5 L 10.5 21.5 L 13.5 17.5 L 2 16 L 13.5 14.5 L 10.5 10.5 L 14.5 13.5 Z"
-                          fill="url(#chat-logo-gradient-large)"
-                        />
-                        <circle cx="16" cy="16" r="1.5" fill="#ffffff" />
-                      </svg>
+                    <div className="flex flex-col items-center justify-center shrink-0 mb-4 drop-shadow-md">
+                      <AtlasMark variant="isotipo" className="w-24 h-24" />
+                      <AtlasMark variant="wordmark" label="Atlas Assistant" className="h-8 w-auto -mt-2" />
                     </div>
                     <p className="text-xs text-[var(--color-text-secondary)]">
-                      Hola {user?.name?.split(" ")[0]}! Conozco todo tu proyecto — progreso, entregables, facturas, contrato, últimos cambios y reuniones. Pregúntame lo que necesites.
+                      {isAdmin
+                        ? (language === "en"
+                          ? `Hi ${user?.name?.split(" ")[0] || "there"}! I’m Atlas, Polaris’s operations assistant. I can help you review projects, clients, Local Lift, Polaris Flow and next steps.`
+                          : `¡Hola, ${user?.name?.split(" ")[0] || "operador"}! Soy Atlas, el asistente de operaciones de Polaris. Puedo ayudarte a revisar proyectos, clientes, Local Lift, Polaris Flow y los siguientes pasos.`)
+                        : (language === "en"
+                          ? `Hi ${user?.name?.split(" ")[0] || "there"}! I’m Atlas, your Polaris assistant. I can help with your project or Local Lift service, invoices, reviews and next steps, and explain web design, Local Lift and Polaris Flow.`
+                          : `¡Hola, ${user?.name?.split(" ")[0] || "cliente"}! Soy Atlas, tu asistente de Polaris. Puedo ayudarte con tu ${isLocalLiftProject ? "servicio Local Lift" : "proyecto"}, facturas, revisiones y próximos pasos, y explicarte diseño web, Local Lift y Polaris Flow.`)}
                     </p>
                     <div className="flex flex-wrap gap-1.5 justify-center pt-2 mt-4">
-                      {[
-                        "¿Cuándo estará listo?",
-                        "¿Qué falta por hacer?",
-                        "¿Tengo pagos pendientes?",
-                        "¿Cuál es el progreso actual?",
-                        "¿Qué dice mi contrato?",
-                        "¿Cuáles fueron los últimos cambios?"
-                      ].map(q => (
+                      {(isAdmin
+                        ? (language === "en"
+                          ? ["Which projects need attention?", "What is pending client approval?", "What is Local Lift?", "What is Polaris Flow?"]
+                          : ["¿Qué proyectos necesitan atención?", "¿Qué está pendiente de aprobación?", "¿Qué es Local Lift?", "¿Qué es Polaris Flow?"])
+                        : (language === "en"
+                          ? ["What is my current project status?", "What is pending from me?", "Do I have pending payments?", "What happens next?"]
+                          : ["¿Cuál es el estado de mi proyecto?", "¿Qué falta de mi parte?", "¿Tengo pagos pendientes?", "¿Qué sigue ahora?"]))
+                        .map(q => (
                         <button
                           key={q}
-                          onClick={async () => {
-                            if (chatLoading) return;
-                            const userMsg = q;
-                            const newMsgs = [...chatMessages, { role: "user" as const, text: userMsg }];
-                            saveChatMessages(newMsgs);
-                            setChatLoading(true);
-                            try {
-                              const project = clientProject;
-                              if (!project) throw new Error("No active project");
-                              const { text, widget } = await askPortalChat(project.id, userMsg, chatMessages);
-                              saveChatMessages([...newMsgs, { role: "assistant" as const, text, widget }]);
-                            } catch (e) {
-                              saveChatMessages([...newMsgs, { role: "assistant" as const, text: "No pude procesar tu pregunta. Contáctanos directamente." }]);
-                            } finally {
-                              setChatLoading(false);
-                            }
-                          }}
+                          onClick={() => handlePortalChatSubmit(q)}
                           className="text-[10px] px-2.5 py-1 rounded-full bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 hover:bg-[var(--color-primary-base)]/20 transition"
                         >
                           {q}
@@ -6312,7 +6328,7 @@ export default function ClientDashboard() {
               </div>
       
               {/* Soporte WhatsApp */}
-              <div className="px-3 pt-3 pb-3">
+              <div className={isAdmin ? "hidden" : "px-3 pt-3 pb-3"}>
                 <a
                   href={`https://wa.me/18299200544?text=${encodeURIComponent(`Hola, soy ${user?.name} y tengo una consulta sobre mi proyecto ${clientProject?.name}.`)}`}
                   target="_blank"
@@ -6339,29 +6355,14 @@ export default function ClientDashboard() {
                     }
                   }}
                   className="glass-input chat-input flex-1 px-3 py-2 rounded-xl bg-[var(--color-surface-highlight)] border border-[var(--color-border-subtle)] text-xs text-[var(--color-text-primary)] focus:outline-none"
-                  placeholder="Escribe tu pregunta..."
+                  placeholder={isAdmin
+                    ? (language === "en" ? "Ask about operations, projects or services..." : "Pregúntame sobre operaciones, proyectos o servicios...")
+                    : (language === "en" ? "Ask about your project..." : "Escribe tu pregunta...")}
                   autoCapitalize="none"
                 />
                 <button
                   id="send-chat-btn"
-                  onClick={async () => {
-                    if (!chatInput.trim() || chatLoading) return;
-                    const userMsg = chatInput.trim();
-                    setChatInput("");
-                    const newMsgs = [...chatMessages, { role: "user" as const, text: userMsg }];
-                    saveChatMessages(newMsgs);
-                    setChatLoading(true);
-                    try {
-                      const project = clientProject;
-                      if (!project) throw new Error("No active project");
-                      const { text, widget } = await askPortalChat(project.id, userMsg, chatMessages);
-                      saveChatMessages([...newMsgs, { role: "assistant" as const, text, widget }]);
-                    } catch (e) {
-                      saveChatMessages([...newMsgs, { role: "assistant" as const, text: "No pude procesar tu pregunta. Contáctanos directamente." }]);
-                    } finally {
-                      setChatLoading(false);
-                    }
-                  }}
+                  onClick={() => handlePortalChatSubmit(chatInput)}
                   className="w-8 h-8 rounded-xl bg-[var(--color-primary-base)] text-white flex items-center justify-center hover:opacity-90 transition shrink-0"
                 >
                   <Send size={14} />
@@ -6369,9 +6370,8 @@ export default function ClientDashboard() {
               </div>
             </motion.div>
           )}
-          </AnimatePresence>
+                    </AnimatePresence>
         </>
-      )}
 
       {/* Change Password Modal */}
           <AnimatePresence>
