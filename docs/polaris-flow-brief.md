@@ -108,7 +108,7 @@ Se recomienda usar expresiones como **“el trabajo sigue avanzando”**, **“u
 
 ## 12. Logo y arquitectura de marca
 
-La recomendación es utilizar **un único sistema de marca: Polaris Flow**, con el logo de Polaris Flow como identidad principal. No conviene crear un logo completamente distinto para Office Flow, Chat Convert o Villa Flow en esta etapa. Logos independientes harían que cada módulo pareciera un producto sin relación y aumentarían innecesariamente el trabajo de marca, diseño y reconocimiento.
+La recomendación es utilizar **un único sistema de marca: Polaris Flow**, con el logo de Polaris Flow como identidad principal, usando la tipografía oficial de Polaris y una firma cromática índigo que lo diferencie de Local Lift. No conviene crear un logo completamente distinto para Office Flow, Chat Convert o Villa Flow en esta etapa. Logos independientes harían que cada módulo pareciera un producto sin relación y aumentarían innecesariamente el trabajo de marca, diseño y reconocimiento.
 
 El asset principal recomendado es:
 
@@ -131,7 +131,7 @@ El isotipo independiente debe utilizarse en favicons, avatares, tarjetas de fluj
 | Presentaciones comerciales | Lockup Polaris Flow y, debajo, nombre del flujo |
 | Producto futuro totalmente independiente | Evaluar una nueva identidad solo si alcanza mercado, equipo y operación propios |
 
-La identidad actual usa un fondo azul profundo `#0F172A`, teal operativo `#2DD4BF`, teal claro `#99F6E4` y un acento índigo `#6366F1`. El teal debe representar movimiento, estado activo y continuidad. El índigo puede reservarse para profundidad, navegación o contraste; no debe competir con el teal como color principal.
+La identidad actual usa un fondo azul profundo `#0F172A`, el índigo oficial de Polaris `#4F46E5` con hover `#4338CA`, y el teal operativo `#2DD4BF` con teal claro `#99F6E4`. Como Local Lift ya utiliza el teal como color principal, Polaris Flow debe apropiarse del índigo como su color de acción y navegación. El teal queda como acento secundario para movimiento, conexiones, estados activos y señales de continuidad; no debe dominar el logo ni los CTA principales de Flow.
 
 ## 13. Recomendación final de marca
 
