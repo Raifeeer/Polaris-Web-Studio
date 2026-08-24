@@ -33,6 +33,7 @@ import { T, useLanguage } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
 import { useBorderGlow } from "../hooks/useBorderGlow";
 import { RocketIcon } from "@/components/ui/rocket";
+import Carousel from "../components/Carousel";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
 
@@ -311,6 +312,7 @@ export default function LandingPage() {
 
   const featuredProjects = [
     {
+      id: "lumina-sky-concept",
       title: "Lúmina Sky",
       slug: "lumina-sky-concept",
       desktopImg: "/screenshots/lumina-sky-desktop.png",
@@ -331,6 +333,7 @@ export default function LandingPage() {
       perfScore: 100,
     },
     {
+      id: "nexus-real-estate",
       title: "Nexus Realty",
       slug: "nexus-real-estate",
       desktopImg: "/screenshots/nexus-realty-desktop.png",
@@ -346,6 +349,7 @@ export default function LandingPage() {
       perfScore: 88,
     },
     {
+      id: "chroma-store",
       title: "Chroma Tech Store",
       slug: "chroma-store",
       desktopImg: "/screenshots/chroma-store-desktop.png",
@@ -361,6 +365,7 @@ export default function LandingPage() {
         "from-violet-500/20 to-fuchsia-500/5 hover:border-violet-500/40",
     },
     {
+      id: "vitality-clinic",
       title: "Vitality Med",
       slug: "vitality-clinic",
       desktopImg: "/screenshots/vitality-clinic-desktop.png",
@@ -375,6 +380,7 @@ export default function LandingPage() {
       colorClass: "from-emerald-500/20 to-teal-500/5 hover:border-emerald-500/40",
     },
     {
+      id: "sabor-autentico",
       title: "La Reja",
       slug: "sabor-autentico",
       desktopImg: "/screenshots/la-reja-desktop.svg",
@@ -1444,79 +1450,72 @@ export default function LandingPage() {
                 </T>
               </h2>
             </div>
-            {/* Desktop: grid original */}
-            <div className="hidden lg:grid lg:grid-cols-3 gap-8">
-              {featuredProjects.map((p, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.96, filter: "blur(6px)", y: 35 }}
-                  whileInView={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
-                  viewport={{ once: true, amount: 0.15 }}
-                  transition={{ type: "spring", stiffness: 45, damping: 14, delay: i * 0.15 }}
-                  onClick={() => navigate(`/portafolio/${p.slug}`)}
-                  onMouseMove={handleProjectMouseMove}
-                  onMouseEnter={() => {
-                    setCursorVisible(true);
-                    setCursorLabel(language === "es" ? "Ver proyecto" : "View project");
-                  }}
-                  onMouseLeave={() => setCursorVisible(false)}
-                  className="p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 md:cursor-none cursor-pointer bento-glow-hover will-change-transform opacity-0"
-                >
-                  {/* CONTENIDO ORIGINAL DE CADA CARD -- no cambiar nada adentro */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">{p.type}</span>
-                      <span className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                        <T en="Concept Demo">Prototipo</T>
-                      </span>
-                    </div>
-                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors">{p.title}</h3>
-                    <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed">{p.desc}</p>
-                    <div className="flex flex-wrap gap-1.5 pt-2">
-                      {p.stack.map((tech, tIdx) => (
-                        <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)] transition-colors group-hover:border-[var(--color-primary-base)]/20">{tech}</span>
-                      ))}
-                      {p.perfScore && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500 transition-colors">
-                          <Zap size={10} className="shrink-0" />
-                          {p.perfScore}/100 {p.scoreLabel || <T en="Performance">Rendimiento</T>}
+            {/* Desktop: animated project carousel */}
+            <div className="hidden lg:block">
+              <Carousel
+                items={featuredProjects}
+                baseWidth={960}
+                itemHeight={500}
+                loop
+                autoplay
+                autoplayDelay={5200}
+                pauseOnHover
+                className="mx-auto max-w-full"
+                onItemClick={(project) => navigate(`/portafolio/${project.slug}`)}
+                renderItem={(p) => (
+                  <div
+                    className="h-full w-full p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">{p.type}</span>
+                        <span className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
+                          <T en="Concept Demo">Prototipo</T>
                         </span>
-                      )}
-                    </div>
-                    <div className="pt-4 overflow-hidden rounded-lg">
-                      <div className="relative w-full overflow-hidden rounded-lg transition-transform duration-500 group-hover:scale-[1.03]">
-                        {p.desktopImg ? (
-                          <div className="relative w-full overflow-hidden rounded-xl bg-transparent h-[200px]">
-                            {/* loading/decoding explícitos (11 de agosto): estos
-                                PNG pesan 0.67-1.68 MB reales y se muestran a
-                                200px de alto -- sin esto, el navegador los
-                                decodificaba a resolución completa en el hilo
-                                principal durante la carga inicial, justo cuando
-                                el visitante intenta abrir el navbar. */}
+                      </div>
+                      <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors">{p.title}</h3>
+                      <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed max-w-2xl">{p.desc}</p>
+                      <div className="flex flex-wrap gap-1.5 pt-2">
+                        {p.stack.map((tech, tIdx) => (
+                          <span key={tIdx} className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded-md text-[10px] font-semibold text-[var(--color-text-secondary)] transition-colors group-hover:border-[var(--color-primary-base)]/20">{tech}</span>
+                        ))}
+                        {p.perfScore && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/30 rounded-md text-[10px] font-bold text-emerald-500 transition-colors">
+                            <Zap size={10} className="shrink-0" />
+                            {p.perfScore}/100 {p.scoreLabel || <T en="Performance">Rendimiento</T>}
+                          </span>
+                        )}
+                      </div>
+                      <div className="pt-4 overflow-hidden rounded-lg">
+                        <div className="relative w-full overflow-hidden rounded-lg bg-[var(--color-surface-base)]/30 h-[260px]">
+                          {p.desktopImg ? (
                             <img
                               src={p.desktopImg}
                               alt={p.title}
                               loading="eager"
                               decoding="async"
                               className="w-full h-full object-contain object-center rounded-lg"
-                              />
-                          </div>
-                        ) : (
-                          <div className="h-[200px] w-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-subtle)]" />
-                        )}
+                            />
+                          ) : (
+                            <div className="h-full w-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-subtle)]" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pt-6 border-t border-[var(--color-border-subtle)] space-y-4">
+                      <div className="flex justify-between items-center w-full pt-1">
+                        <span className="text-xs font-bold text-[var(--color-text-primary)] inline-flex items-center gap-1.5">
+                          <T en="View Details">Ver Detalles</T>
+                          <ArrowRight size={14} />
+                        </span>
+                        <span className="text-[10px] uppercase tracking-[0.18em] text-[var(--color-text-secondary)]">
+                          <T en="Drag or use the dots">Arrastra o usa los puntos</T>
+                        </span>
                       </div>
                     </div>
                   </div>
-                  <div className="pt-6 border-t border-[var(--color-border-subtle)] space-y-4">
-                    <div className="flex justify-between items-center w-full pt-1">
-                      <span className="text-xs font-bold text-[var(--color-text-primary)] group-hover:text-[var(--color-primary-base)] transition-colors inline-flex items-center gap-1.5">
-                        <T en="View Details">Ver Detalles</T>
-                        <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+                )}
+              />
             </div>
 
             {/* Mobile: carrusel automático */}
