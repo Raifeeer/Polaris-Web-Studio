@@ -34,6 +34,7 @@ import RippleButton from "../components/RippleButton";
 import { useBorderGlow } from "../hooks/useBorderGlow";
 import { RocketIcon } from "@/components/ui/rocket";
 import Carousel from "../components/Carousel";
+import TextLoop from "../components/TextLoop";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
 
@@ -315,7 +316,7 @@ export default function LandingPage() {
       id: "lumina-sky-concept",
       title: "Lúmina Sky",
       slug: "lumina-sky-concept",
-      desktopImg: "/screenshots/lumina-sky-desktop.png",
+      desktopImg: "/screenshots/lumina-sky-desktop.svg",
       type: <T en="Tourism · Immersive Web">Turismo · Web Inmersiva</T>,
       desc: (
         <T en="Luxury boutique hotel prototype with a custom booking engine and fine-tuned interactive animations.">
@@ -336,7 +337,7 @@ export default function LandingPage() {
       id: "nexus-real-estate",
       title: "Nexus Realty",
       slug: "nexus-real-estate",
-      desktopImg: "/screenshots/nexus-realty-desktop.png",
+      desktopImg: "/screenshots/nexus-realty-desktop.svg",
       type: <T en="Real Estate · Platform">Inmobiliaria · Plataforma</T>,
       desc: (
         <T en="Real estate platform catalog showing rapid, zero-lag filters to browse elite properties on mobile.">
@@ -352,7 +353,7 @@ export default function LandingPage() {
       id: "chroma-store",
       title: "Chroma Tech Store",
       slug: "chroma-store",
-      desktopImg: "/screenshots/chroma-store-desktop.png",
+      desktopImg: "/screenshots/chroma-store-desktop.svg",
       type: <T en="E-commerce · Technology">E-commerce · Tecnología</T>,
       desc: (
         <T en="High-performance automated digital store prototype with smart cart, AI assistant and secure gateway.">
@@ -368,7 +369,7 @@ export default function LandingPage() {
       id: "vitality-clinic",
       title: "Vitality Med",
       slug: "vitality-clinic",
-      desktopImg: "/screenshots/vitality-clinic-desktop.png",
+      desktopImg: "/screenshots/vitality-clinic-desktop.svg",
       type: <T en="Health · Appointment Portal">Salud · Portal de Citas</T>,
       desc: (
         <T en="Multi-specialty clinic with doctor profiles, health blog, real appointment booking, and its own admin panel.">
@@ -1459,14 +1460,18 @@ export default function LandingPage() {
                 loop
                 autoplay
                 autoplayDelay={5200}
-                pauseOnHover
+                pauseOnHover={false}
                 className="mx-auto max-w-full"
                 onItemClick={(project) => navigate(`/portafolio/${project.slug}`)}
                 renderItem={(p) => (
                   <div
-                    className="h-full w-full p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
+                    className="project-carousel-card relative h-full w-full p-8 rounded-[var(--radius-bento)] glass-panel flex flex-col justify-between space-y-6 group hover:border-[var(--color-primary-base)] transition-[border-color,background-color,box-shadow] duration-300 bento-glow-hover"
                   >
-                    <div className="space-y-4">
+                    <div
+                      className={`project-carousel-glow pointer-events-none absolute inset-0 bg-gradient-to-br ${p.colorClass.split(" ")[0]}`}
+                      aria-hidden="true"
+                    />
+                    <div className="relative z-10 space-y-4">
                       <div className="flex justify-between items-start">
                         <span className="text-[var(--color-text-secondary)] text-[10px] font-bold uppercase tracking-widest">{p.type}</span>
                         <span className="px-2 py-0.5 bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] rounded text-[9px] font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
@@ -1487,7 +1492,7 @@ export default function LandingPage() {
                         )}
                       </div>
                       <div className="pt-4 overflow-hidden rounded-lg">
-                        <div className="relative w-full overflow-hidden rounded-lg bg-[var(--color-surface-base)]/30 h-[260px]">
+                        <div className="project-mockup-frame relative w-full overflow-hidden rounded-[1.15rem] bg-[var(--color-surface-base)]/30 h-[260px]">
                           {p.desktopImg ? (
                             <img
                               src={p.desktopImg}
@@ -2220,11 +2225,25 @@ export default function LandingPage() {
 
           {/* Bottom note */}
           <div className="text-center space-y-3">
-            <p className="text-xs text-[var(--color-text-tertiary)]">
-              <T en="All packages include a domain up to $15 USD (1st year), SSL and managed hosting.">
-                Todos los paquetes incluyen dominio web hasta $15 USD (1er año), SSL y hosting administrado.
-              </T>
-            </p>
+            <TextLoop
+              text={
+                language === "en"
+                  ? "All packages include a domain up to $15 USD (1st year), SSL and managed hosting."
+                  : "Todos los paquetes incluyen dominio web hasta $15 USD (1er año), SSL y hosting administrado."
+              }
+              shape="line"
+              speed={34}
+              fontSize={24}
+              fontWeight={600}
+              letterSpacing={0.4}
+              separator=""
+              uppercase={false}
+              color="var(--color-text-tertiary)"
+              ribbon={false}
+              pauseOnHover={false}
+              className="packages-benefit-loop mx-auto max-w-4xl"
+              style={{ height: "44px" }}
+            />
             <button
               onClick={() => navigate("/servicios")}
               className="inline-flex items-center gap-1.5 text-xs text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] transition-colors"

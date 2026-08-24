@@ -21,9 +21,9 @@
   flex-shrink: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--color-border-subtle, rgba(148, 163, 184, 0.24));
+  border: 0;
   border-radius: var(--radius-bento, 1.25rem);
-  background: var(--color-surface-elevated, rgba(255, 255, 255, 0.68));
+  background: transparent;
   cursor: grab;
   outline: none;
   transform-style: preserve-3d;
@@ -31,13 +31,12 @@
 }
 
 .dark .carousel-item {
-  background: var(--color-surface-elevated, rgba(15, 23, 42, 0.7));
+  background: transparent;
 }
 
 .carousel-item:hover,
 .carousel-item:focus-visible {
-  border-color: color-mix(in srgb, var(--color-primary-base, #665cff) 52%, transparent);
-  box-shadow: 0 18px 42px color-mix(in srgb, var(--color-primary-base, #665cff) 14%, transparent);
+  box-shadow: none;
 }
 
 .carousel-item:active {
@@ -45,12 +44,42 @@
 }
 
 .carousel-item[role="button"]:focus-visible {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-base, #665cff) 24%, transparent),
-    0 18px 42px color-mix(in srgb, var(--color-primary-base, #665cff) 14%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-base, #665cff) 24%, transparent);
 }
 
 .carousel-item.round {
   border-radius: 50%;
+}
+
+.project-carousel-card {
+  overflow: hidden;
+  border: 1px solid var(--color-border-subtle, rgba(148, 163, 184, 0.24));
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-surface-elevated, #fff) 96%, transparent), color-mix(in srgb, var(--color-primary-base, #665cff) 3%, transparent));
+  box-shadow: 0 24px 64px rgba(15, 23, 42, 0.08);
+}
+
+.dark .project-carousel-card {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-surface-elevated, #0f172a) 94%, transparent), color-mix(in srgb, var(--color-primary-base, #665cff) 8%, transparent));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.24);
+}
+
+.project-carousel-glow {
+  opacity: 0.48;
+  filter: blur(42px);
+  transform: translate(12%, -18%) scale(0.8);
+}
+
+.project-mockup-frame {
+  border: 1px solid color-mix(in srgb, var(--color-border-subtle, #cbd5e1) 72%, transparent);
+  background: color-mix(in srgb, var(--color-surface-base, #fff) 55%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.42), 0 16px 34px rgba(15, 23, 42, 0.06);
+}
+
+.dark .project-mockup-frame {
+  background: color-mix(in srgb, var(--color-surface-base, #0f172a) 45%, transparent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 16px 34px rgba(0, 0, 0, 0.2);
 }
 
 .carousel-item-fallback {

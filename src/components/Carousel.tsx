@@ -129,6 +129,7 @@ export default function Carousel<T extends CarouselItemBase>({
   const [isHovered, setIsHovered] = useState(false);
   const [isJumping, setIsJumping] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [autoplayKey, setAutoplayKey] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -152,7 +153,7 @@ export default function Carousel<T extends CarouselItemBase>({
       setPosition((previous) => Math.min(previous + 1, itemsForRender.length - 1));
     }, autoplayDelay);
     return () => window.clearInterval(timer);
-  }, [autoplay, autoplayDelay, isHovered, pauseOnHover, itemsForRender.length]);
+  }, [autoplay, autoplayDelay, autoplayKey, isHovered, pauseOnHover, itemsForRender.length]);
 
   useEffect(() => {
     const startingPosition = loop ? 1 : 0;
@@ -199,6 +200,15 @@ export default function Carousel<T extends CarouselItemBase>({
     setIsAnimating(false);
   };
 
+  const restartAutoplay = () => {
+    setAutoplayKey((previous) => previous + 1);
+  };
+
+  const goToPosition = (nextPosition: number) => {
+    setPosition(nextPosition);
+    restartAutoplay();
+  };
+
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: { offset: { x: number }; velocity: { x: number } },
@@ -216,6 +226,7 @@ export default function Carousel<T extends CarouselItemBase>({
       const max = itemsForRender.length - 1;
       return Math.max(0, Math.min(next, max));
     });
+    restartAutoplay();
   };
 
   const dragProps = loop
@@ -249,7 +260,9 @@ export default function Carousel<T extends CarouselItemBase>({
     >
       <motion.div
         className="carousel-track"
-        drag={isAnimating ? false : "x"}
+        drag="x"
+        dragElastic={0.12}
+        dragMomentum={false}
         {...dragProps}
         style={{
           width: itemWidth,
@@ -291,7 +304,7 @@ export default function Carousel<T extends CarouselItemBase>({
               className={`carousel-indicator ${activeIndex === index ? "active" : "inactive"}`}
               aria-label={`Go to ${item.title}`}
               aria-current={activeIndex === index ? "true" : undefined}
-              onClick={() => setPosition(loop ? index + 1 : index)}
+              onClick={() => goToPosition(loop ? index + 1 : index)}
               animate={{ scale: activeIndex === index ? 1.2 : 1 }}
               transition={{ duration: 0.15 }}
             />
