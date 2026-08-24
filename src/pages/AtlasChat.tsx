@@ -53,14 +53,12 @@ import VoiceInputBar from "../components/VoiceInputBar";
 import Tooltip from "../components/Tooltip";
 import TemporaryChatIcon from "../components/TemporaryChatIcon";
 
-// Pool grande de preguntas de arranque -- se eligen 4 al azar en cada visita
-// a la pantalla vacía, en vez de mostrar siempre las mismas 4.
+// Preguntas comerciales de arranque. En cada visita se muestran 6, con
+// al menos 3 preguntas de Local Lift para que el servicio tenga presencia
+// visible sin introducir Office Flow mientras sigue en pulido.
 const SUGGESTIONS_POOL: { es: string; en: string }[] = [
   { es: "¿Cuáles son los planes y precios?", en: "What are the plans and prices?" },
-  { es: "¿Qué es Local Lift y cómo ayuda a mi negocio?", en: "What is Local Lift and how can it help my business?" },
   { es: "¿Qué es Polaris Flow?", en: "What is Polaris Flow?" },
-  { es: "¿Qué diferencia hay entre diseño web y Local Lift?", en: "What's the difference between web design and Local Lift?" },
-  { es: "¿Qué incluye el primer flujo de Polaris Flow?", en: "What does the first Polaris Flow workflow include?" },
   { es: "¿Qué incluye el paquete Constelación?", en: "What's included in the Constelación package?" },
   { es: "¿Cuánto tarda un proyecto tipo e-commerce?", en: "How long does an e-commerce project take?" },
   { es: "¿Qué tecnologías usan?", en: "What tech stack do you use?" },
@@ -112,13 +110,33 @@ const SUGGESTIONS_POOL: { es: string; en: string }[] = [
   { es: "¿Qué necesito para empezar hoy mismo?", en: "What do I need to get started today?" },
 ];
 
-function pickRandomSuggestions(count: number): { es: string; en: string }[] {
-  const pool = [...SUGGESTIONS_POOL];
-  for (let i = pool.length - 1; i > 0; i--) {
+const LOCAL_LIFT_SUGGESTIONS: { es: string; en: string }[] = [
+  { es: "¿Qué es Local Lift y cómo ayuda a mi negocio?", en: "What is Local Lift and how can it help my business?" },
+  { es: "¿Qué incluye el Diagnóstico Express de Local Lift?", en: "What's included in the Local Lift Express Diagnosis?" },
+  { es: "¿Qué diferencia hay entre Impulso y Ascenso?", en: "What's the difference between Impulso and Ascenso?" },
+  { es: "¿Qué recibo después de generar el diagnóstico?", en: "What do I receive after generating the diagnosis?" },
+  { es: "¿Qué información necesita Local Lift para analizar mi negocio?", en: "What information does Local Lift need to analyze my business?" },
+  { es: "¿Cuánto tarda un paquete de Local Lift?", en: "How long does a Local Lift package take?" },
+  { es: "¿Local Lift publica cambios por mí en Google?", en: "Does Local Lift publish changes for me on Google?" },
+  { es: "¿Puedo usar Local Lift para más de un negocio?", en: "Can I use Local Lift for more than one business?" },
+  { es: "¿Cómo aplico las recomendaciones de Local Lift?", en: "How do I apply Local Lift recommendations?" },
+  { es: "¿Local Lift sirve si mi negocio ya tiene una ficha en Google?", en: "Does Local Lift help if my business already has a Google profile?" },
+];
+
+function shuffleSuggestions(pool: { es: string; en: string }[]): { es: string; en: string }[] {
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return pool.slice(0, count);
+  return shuffled;
+}
+
+function pickRandomSuggestions(count: number): { es: string; en: string }[] {
+  const localLiftCount = Math.min(3, count);
+  const localLift = shuffleSuggestions(LOCAL_LIFT_SUGGESTIONS).slice(0, localLiftCount);
+  const general = shuffleSuggestions(SUGGESTIONS_POOL).slice(0, Math.max(0, count - localLift.length));
+  return shuffleSuggestions([...localLift, ...general]);
 }
 
 function MessageBubble({
@@ -402,7 +420,7 @@ export default function AtlasChat() {
   // mismo comportamiento que el botón de arriba a la izquierda en Gemini).
   const [sidebarAboveSearch, setSidebarAboveSearch] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [suggestions] = useState(() => pickRandomSuggestions(4));
+  const [suggestions] = useState(() => pickRandomSuggestions(6));
   const menuRef = useRef<HTMLDivElement | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
