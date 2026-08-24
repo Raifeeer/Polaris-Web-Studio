@@ -377,7 +377,7 @@ export default function LandingPage() {
     {
       title: "La Reja",
       slug: "sabor-autentico",
-      desktopImg: "/screenshots/la-reja-desktop.png",
+      desktopImg: "/screenshots/la-reja-desktop.svg",
       type: <T en="Gastronomy · Digital Experience">Gastronomía · Experiencia Digital</T>,
       desc: (
         <T en="Premium digital experience for a contemporary Dominican restaurant, with a live menu, tasting routes, and budget-based menu planning.">

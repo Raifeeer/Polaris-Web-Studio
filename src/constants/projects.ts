@@ -647,7 +647,7 @@ export const projects: Project[] = [
       },
     ],
     techStack: ["React", "TypeScript", "Vite", "Tailwind CSS", "Firebase/Firestore", "Vercel", "jsPDF"],
-    desktopImg: "/screenshots/la-reja-desktop.png",
+    desktopImg: "/screenshots/la-reja-desktop.svg",
     previewVideo: "/videos/portfolio/la-reja-landing-preview-hd.mp4",
     previewPoster: "/images/portfolio/la-reja-landing-poster-hd.jpg",
     desktopVideoAspectRatio: "1600/900",
