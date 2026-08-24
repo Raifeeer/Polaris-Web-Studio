@@ -1496,7 +1496,7 @@ export default function LandingPage() {
                             <img
                               src={p.desktopImg}
                               alt={p.title}
-                              loading="lazy"
+                              loading="eager"
                               decoding="async"
                               className="w-full h-full object-contain object-center rounded-lg"
                               />
