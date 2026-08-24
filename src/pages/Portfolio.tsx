@@ -1554,7 +1554,7 @@ export default function Portfolio() {
                   <div className="md:col-span-8 space-y-6">
                     <div className="space-y-3">
                       <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+                        <span className="px-3 py-1 text-[10px] font-black uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 rounded-full whitespace-nowrap shrink-0">
                           {language === "es" ? "Paquete" : "Plan"} {selectedProjectForQuickView.plan}
                         </span>
                         <span className="text-[10px] font-black uppercase text-[var(--color-text-tertiary)]">
