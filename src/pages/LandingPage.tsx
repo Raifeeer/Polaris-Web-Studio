@@ -1504,7 +1504,7 @@ export default function LandingPage() {
                               alt={p.title}
                               loading="lazy"
                               decoding="async"
-                              className={`w-full h-full object-contain object-center rounded-lg ${["vitality-clinic", "sabor-autentico"].includes(p.slug) ? "scale-[1.08]" : ""}`}
+                              className="w-full h-full object-contain object-center rounded-lg"
                               />
                           </div>
                         ) : (
@@ -1571,7 +1571,7 @@ export default function LandingPage() {
                                     alt={p.title}
                                     loading="lazy"
                                     decoding="async"
-                                    className={`w-full h-full object-contain object-center rounded-lg ${["vitality-clinic", "sabor-autentico"].includes(p.slug) ? "scale-[1.08]" : ""}`}
+                                    className="w-full h-full object-contain object-center rounded-lg"
 
                                   />
                                 </div>
