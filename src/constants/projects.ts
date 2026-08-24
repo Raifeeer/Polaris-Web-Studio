@@ -374,7 +374,7 @@ export const projects: Project[] = [
     // alcanzar el footer) en vez de extenderlo -- en su lugar, se acortó
     // el mobile (ver v12 más abajo) para no depender de un video más
     // largo.
-    desktopImg: "/screenshots/nexus-realty-desktop.svg",
+    desktopImg: "/screenshots/nexus-realty-desktop.png",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v12.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v12.jpg",
     // Mobile v12: recortado a 11000px de scroll real (de ~13929px

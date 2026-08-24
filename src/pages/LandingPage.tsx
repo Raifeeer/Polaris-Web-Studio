@@ -337,7 +337,7 @@ export default function LandingPage() {
       id: "nexus-real-estate",
       title: "Nexus Realty",
       slug: "nexus-real-estate",
-      desktopImg: "/screenshots/nexus-realty-desktop.svg",
+      desktopImg: "/screenshots/nexus-realty-desktop.png",
       type: <T en="Real Estate · Platform">Inmobiliaria · Plataforma</T>,
       desc: (
         <T en="Real estate platform catalog showing rapid, zero-lag filters to browse elite properties on mobile.">
