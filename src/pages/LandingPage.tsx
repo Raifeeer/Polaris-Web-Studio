@@ -313,7 +313,7 @@ export default function LandingPage() {
     {
       title: "Lúmina Sky",
       slug: "lumina-sky-concept",
-      desktopImg: "/screenshots/lumina-sky-desktop.svg",
+      desktopImg: "/screenshots/lumina-sky-desktop.png",
       type: <T en="Tourism · Immersive Web">Turismo · Web Inmersiva</T>,
       desc: (
         <T en="Luxury boutique hotel prototype with a custom booking engine and fine-tuned interactive animations.">
@@ -333,7 +333,7 @@ export default function LandingPage() {
     {
       title: "Nexus Realty",
       slug: "nexus-real-estate",
-      desktopImg: "/screenshots/nexus-realty-desktop.svg",
+      desktopImg: "/screenshots/nexus-realty-desktop.png",
       type: <T en="Real Estate · Platform">Inmobiliaria · Plataforma</T>,
       desc: (
         <T en="Real estate platform catalog showing rapid, zero-lag filters to browse elite properties on mobile.">
@@ -348,7 +348,7 @@ export default function LandingPage() {
     {
       title: "Chroma Tech Store",
       slug: "chroma-store",
-      desktopImg: "/screenshots/chroma-store-desktop.svg",
+      desktopImg: "/screenshots/chroma-store-desktop.png",
       type: <T en="E-commerce · Technology">E-commerce · Tecnología</T>,
       desc: (
         <T en="High-performance automated digital store prototype with smart cart, AI assistant and secure gateway.">
@@ -363,7 +363,7 @@ export default function LandingPage() {
     {
       title: "Vitality Med",
       slug: "vitality-clinic",
-      desktopImg: "/screenshots/vitality-clinic-desktop.svg",
+      desktopImg: "/screenshots/vitality-clinic-desktop.png",
       type: <T en="Health · Appointment Portal">Salud · Portal de Citas</T>,
       desc: (
         <T en="Multi-specialty clinic with doctor profiles, health blog, real appointment booking, and its own admin panel.">
@@ -1483,13 +1483,7 @@ export default function LandingPage() {
                         </span>
                       )}
                     </div>
-                    <motion.div
-                      className="pt-4 overflow-hidden rounded-lg"
-                      initial={{ clipPath: "inset(0 100% 0 0)" }}
-                      whileInView={{ clipPath: "inset(0 0% 0 0)" }}
-                      viewport={{ once: true, amount: 0.3 }}
-                      transition={{ duration: 0.8, delay: 0.2 + i * 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    >
+                    <div className="pt-4 overflow-hidden rounded-lg">
                       <div className="relative w-full overflow-hidden rounded-lg transition-transform duration-500 group-hover:scale-[1.03]">
                         {p.desktopImg ? (
                           <div className="relative w-full overflow-hidden rounded-xl bg-transparent h-[200px]">
@@ -1511,7 +1505,7 @@ export default function LandingPage() {
                           <div className="h-[200px] w-full bg-gradient-to-br from-[var(--color-surface-base)] to-[var(--color-surface-elevated)] rounded-lg border border-[var(--color-border-subtle)]" />
                         )}
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                   <div className="pt-6 border-t border-[var(--color-border-subtle)] space-y-4">
                     <div className="flex justify-between items-center w-full pt-1">
