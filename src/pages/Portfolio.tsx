@@ -361,8 +361,8 @@ export default function Portfolio() {
   useDocumentTitle(
     "Nuestro Portafolio de Proyectos Web | Casos de Éxito",
     "Our Web Projects Portfolio | Live Demos & Success Cases",
-    "Explora proyectos reales impecablemente optimizados: Lúmina Sky, Nexus Realty, y Chroma Tech Store construidos en código limpio.",
-    "Explore high-fidelity, real-world custom projects: Lumina Sky, Nexus Realty, and Chroma Tech Store meticulously engineered.",
+    "Explora proyectos de demostración impecablemente optimizados: Lúmina Sky, Nexus Realty, Chroma Tech Store y La Reja, construidos para demostrar experiencias digitales reales.",
+    "Explore high-fidelity demonstration projects: Lumina Sky, Nexus Realty, Chroma Tech Store, and La Reja, built to demonstrate real digital experiences.",
   );
   useJsonLd("jsonld-portafolio-breadcrumb", {
     "@context": "https://schema.org",

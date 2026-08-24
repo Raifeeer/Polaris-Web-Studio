@@ -255,12 +255,12 @@ const PORTFOLIO: {
   },
   {
     slug: "sabor-autentico",
-    title: "Sabor Auténtico",
-    type: "Gastronomía · Landing Page",
+    title: "La Reja",
+    type: "Gastronomía · Experiencia Digital",
     plan: "Destello",
-    shortDesc: "Menú digital interactivo y gestor de reservas para restaurantes.",
-    liveUrl: undefined,
-    image: "https://polarisweb.studio/screenshots/sabor-autentico-desktop.png",
+    shortDesc: "Experiencia digital gastronómica con carta viva de 45 platos, rutas de degustación y menú a medida por presupuesto.",
+    liveUrl: "https://la-reja-rd.vercel.app/",
+    image: "https://polarisweb.studio/images/portfolio/la-reja-landing-poster-hd.jpg",
   },
 ];
 

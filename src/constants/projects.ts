@@ -4,7 +4,7 @@ import {
   Briefcase,
   ShoppingCart,
   ShieldCheck,
-  Zap,
+  Utensils,
 } from "lucide-react";
 
 export interface Project {
@@ -586,59 +586,60 @@ export const projects: Project[] = [
   },
   {
     slug: "sabor-autentico",
-    title: "Sabor Auténtico",
+    title: "La Reja",
     client: "Proyecto de Concepto",
     clientEN: "Concept Project",
     isConcept: true,
     plan: "Destello",
     planEN: "Flash",
-    type: "Gastronomía · Landing Page",
-    typeEN: "Gastronomy · Landing Page",
+    type: "Gastronomía · Experiencia Digital",
+    typeEN: "Gastronomy · Digital Experience",
     shortDesc:
-      "Menú digital interactivo y gestor de reservas perfecto para restaurantes modernos.",
+      "Experiencia digital premium para un restaurante dominicano de cocina contemporánea, con carta viva, rutas de degustación y menú a medida por presupuesto.",
     shortDescEN:
-      "Interactive digital menu and reservation manager perfect for modern restaurants.",
-    keyResult: "Celular",
-    keyResultEN: "Mobile",
-    resultLabel: "Fácil de Usar",
-    resultLabelEN: "Easy to Use",
+      "Premium digital experience for a contemporary Dominican restaurant, with a live menu, tasting routes, and budget-based menu planning.",
+    keyResult: "Carta Viva",
+    keyResultEN: "Live Menu",
+    resultLabel: "45 Platos Reales",
+    resultLabelEN: "45 Real Dishes",
     color: "from-orange-500/20 to-transparent",
     size: "small",
-    icon: Zap,
+    icon: Utensils,
     context:
-      "Pensado para restaurantes, este prototipo muestra cómo los clientes pueden ver el menú desde su celular escaneando un código QR en la mesa.",
+      "La Reja es un prototipo funcional para un restaurante dominicano de cocina criolla contemporánea en la Zona Colonial. La experiencia combina una dirección editorial premium con una carta digital viva y herramientas para ayudar al visitante a decidir qué comer, beber y reservar.",
     contextEN:
-      "Designed for restaurants, this prototype shows how customers can view the menu from their phones by scanning a QR code on the table.",
+      "La Reja is a functional prototype for a contemporary Dominican restaurant in the Colonial Zone. The experience combines a premium editorial direction with a live digital menu and tools that help visitors decide what to eat, drink, and reserve.",
     challenge:
-      "Hacer que el menú se vea bien en celulares de todos los tamaños y que la gente encuentre rápido lo que quiere pedir.",
+      "Convertir una carta extensa en una experiencia clara, atractiva y útil en móvil, sin reducir la cocina dominicana de autor a un menú estático ni obligar al visitante a decidir sin orientación.",
     challengeEN:
-      "Make the menu look good on phones of all sizes and let people quickly find what they want to order.",
+      "Turn an extensive menu into a clear, attractive, mobile-friendly experience without reducing contemporary Dominican cuisine to a static menu or leaving visitors without guidance.",
     solution:
-      "Un diseño pensado totalmente para teléfonos móviles, con fotografías grandes, menú categorizado y fácil navegación con el dedo.",
+      "Una landing bilingüe con 45 platos organizados por categorías, rutas de degustación, selector DOP/USD, modo nocturno editorial y un planificador que arma propuestas según presupuesto y cantidad de personas. Incluye el modo Sorpréndeme, generación de PDF/compartir y una reserva guiada; la carta se alimenta desde Firestore con respaldo local.",
     solutionEN:
-      "A design meant entirely for mobile phones, with large photographs, a categorized menu, and easy touch navigation.",
+      "A bilingual landing with 45 dishes organized by category, tasting routes, DOP/USD selection, editorial night mode, and a planner that builds proposals based on budget and party size. It includes a Surprise Me mode, PDF/share output, and guided reservations; the menu is powered by Firestore with a local fallback.",
     results: [
       {
-        label: "Pantallas",
-        labelEN: "Screens",
-        value: "De Celular",
-        valueEN: "Mobile",
+        label: "Carta",
+        labelEN: "Menu",
+        value: "45 Platos",
+        valueEN: "45 Dishes",
       },
       {
-        label: "Navegación",
-        labelEN: "Navigation",
-        value: "Muy Cómoda",
-        valueEN: "Very Comfortable",
+        label: "Planificador",
+        labelEN: "Planner",
+        value: "Presupuesto + Personas",
+        valueEN: "Budget + Party Size",
       },
       {
         label: "Experiencia",
         labelEN: "Experience",
-        value: "Súper Rápida",
-        valueEN: "Super Fast",
+        value: "Bilingüe · DOP/USD",
+        valueEN: "Bilingual · DOP/USD",
       },
     ],
-    techStack: ["React", "CSS Modules", "Tailwind CSS"],
-    desktopImg: "/screenshots/sabor-autentico-desktop.png",
-    mobileImg: "/screenshots/sabor-autentico-mobile.png",
+    techStack: ["React", "TypeScript", "Vite", "Tailwind CSS", "Firebase/Firestore", "Vercel", "jsPDF"],
+    desktopImg: "/images/portfolio/la-reja-landing-poster-hd.jpg",
+    previewVideo: "/videos/portfolio/la-reja-landing-preview-hd.mp4",
+    previewPoster: "/images/portfolio/la-reja-landing-poster-hd.jpg",
   },
 ];

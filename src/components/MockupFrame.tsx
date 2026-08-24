@@ -602,7 +602,7 @@ function NexusRealtyMockup() {
 
 // MOCKUP_CONTENT tiene entradas para 5 proyectos, pero solo la de Lúmina Sky
 // fue revisada/verificada visualmente (pedido explícito del usuario) -- las
-// otras 4 (Nexus Realty, Chroma, Vitality Clinic, Sabor Auténtico) llevaban
+// otras 4 (Nexus Realty, Chroma, Vitality Clinic, La Reja) llevaban
 // meses como código muerto sin usarse en ningún lado del sitio, y activarlas
 // de golpe junto con Lúmina Sky se saldría del pedido real. Esta lista acota
 // a propósito qué proyectos ya pasaron esa revisión y pueden mostrar el
@@ -774,13 +774,13 @@ const MOCKUP_CONTENT: Record<
         <div className="relative z-10 flex flex-col items-center text-center space-y-4">
           <Utensils className="w-6 h-6 text-orange-400" />
           <div className="text-[12px] font-black uppercase tracking-tighter">
-            Sabor Auténtico
+            La Reja
           </div>
           <div className="text-sm font-black text-orange-400 font-bold">
-            Sabor Dominicano Auténtico
+            Cocina Dominicana Contemporánea
           </div>
           <p className="text-[9px] opacity-60">
-            Santo Domingo · Reservas & Catering
+            Zona Colonial · Carta & Reservas
           </p>
           <button className="w-full bg-orange-500 text-black text-[10px] font-black py-2.5 rounded-xl">
             Reservar Mesa
@@ -790,10 +790,10 @@ const MOCKUP_CONTENT: Record<
           <p className="text-[8px] font-bold uppercase tracking-widest opacity-40">
             Destacados del Menú
           </p>
-          {[
-            { n: "Sancocho Dominicano", p: "RD$450" },
-            { n: "Los Tres Golpes", p: "RD$280" },
-            { n: "Pollo Guisado", p: "RD$390" },
+            {[
+            { n: "Sancocho de Siete Carnes", p: "RD$980" },
+            { n: "Mangú de Autor", p: "RD$760" },
+            { n: "Res Criolla a la Parrilla", p: "RD$1,750" },
           ].map((item, i) => (
             <div
               key={i}
@@ -808,7 +808,8 @@ const MOCKUP_CONTENT: Record<
         </div>
         <div className="mt-auto pb-4 flex justify-center">
           <div className="bg-white/10 px-3 py-1 rounded-full text-[8px] font-black text-orange-200 border border-orange-500/20">
-            4.9 en Google Maps
+                          Carta viva · 45 platos
+
           </div>
         </div>
       </div>
