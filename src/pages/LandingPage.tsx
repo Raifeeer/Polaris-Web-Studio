@@ -313,7 +313,7 @@ export default function LandingPage() {
     {
       title: "Lúmina Sky",
       slug: "lumina-sky-concept",
-      desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20PC.PNG?alt=media&token=26caed50-0c21-4386-913f-ce3f31b0384c",
+      desktopImg: "/screenshots/lumina-sky-desktop.svg",
       type: <T en="Tourism · Immersive Web">Turismo · Web Inmersiva</T>,
       desc: (
         <T en="Luxury boutique hotel prototype with a custom booking engine and fine-tuned interactive animations.">
@@ -333,7 +333,7 @@ export default function LandingPage() {
     {
       title: "Nexus Realty",
       slug: "nexus-real-estate",
-      desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FNexusPC.PNG?alt=media&token=5550e8eb-4f3a-4cbd-b468-971651cc033d",
+      desktopImg: "/screenshots/nexus-realty-desktop.svg",
       type: <T en="Real Estate · Platform">Inmobiliaria · Plataforma</T>,
       desc: (
         <T en="Real estate platform catalog showing rapid, zero-lag filters to browse elite properties on mobile.">
@@ -348,7 +348,7 @@ export default function LandingPage() {
     {
       title: "Chroma Tech Store",
       slug: "chroma-store",
-      desktopImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FChromaPC.png?alt=media&token=7071ec72-9030-4227-bb96-c4359ceb3edd",
+      desktopImg: "/screenshots/chroma-store-desktop.svg",
       type: <T en="E-commerce · Technology">E-commerce · Tecnología</T>,
       desc: (
         <T en="High-performance automated digital store prototype with smart cart, AI assistant and secure gateway.">
@@ -363,7 +363,7 @@ export default function LandingPage() {
     {
       title: "Vitality Med",
       slug: "vitality-clinic",
-      desktopImg: "/screenshots/vitality-clinic-desktop.png",
+      desktopImg: "/screenshots/vitality-clinic-desktop.svg",
       type: <T en="Health · Appointment Portal">Salud · Portal de Citas</T>,
       desc: (
         <T en="Multi-specialty clinic with doctor profiles, health blog, real appointment booking, and its own admin panel.">

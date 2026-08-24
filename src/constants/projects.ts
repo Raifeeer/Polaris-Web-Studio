@@ -121,7 +121,7 @@ export const projects: Project[] = [
     // "de golpe" dentro del video, sin importar la fidelidad del muestreo.
     // El sitio real (Home.tsx) sigue con sus animaciones intactas para
     // cualquier visitante -- este truco es solo para la grabación.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreviewHD-v2.webp",
+    desktopImg: "/screenshots/lumina-sky-desktop.svg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPreview-v4.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Lum/LuminaPoster-v4.jpg",
     mobileImg: "https://firebasestorage.googleapis.com/v0/b/gen-lang-client-0746441136.firebasestorage.app/o/Lum%2FLumina%20Mobile.PNG?alt=media&token=b3e92c71-1467-4e30-bd32-0b1c3417b91e",
@@ -374,7 +374,7 @@ export const projects: Project[] = [
     // alcanzar el footer) en vez de extenderlo -- en su lugar, se acortó
     // el mobile (ver v12 más abajo) para no depender de un video más
     // largo.
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v12.jpg",
+    desktopImg: "/screenshots/nexus-realty-desktop.svg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPreview-v12.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Nexus/NexusPoster-v12.jpg",
     // Mobile v12: recortado a 11000px de scroll real (de ~13929px
@@ -508,7 +508,7 @@ export const projects: Project[] = [
     ],
     techStack: ["React", "TypeScript", "Vite", "Firebase", "Stripe", "PayPal"],
     liveUrl: "https://chroma-tech-store-azure.vercel.app/",
-    desktopImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPoster-v5.jpg",
+    desktopImg: "/screenshots/chroma-store-desktop.svg",
     previewVideo: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPreview-v5.mp4",
     previewPoster: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaPoster-v5.jpg",
     mobileImg: "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Chroma/ChromaMobilePoster-v6.jpg",
@@ -579,7 +579,7 @@ export const projects: Project[] = [
       "Firebase",
     ],
     liveUrl: "https://vitality-med-five.vercel.app/",
-    desktopImg: "/screenshots/vitality-clinic-desktop.png",
+    desktopImg: "/screenshots/vitality-clinic-desktop.svg",
     mobileImg: "/screenshots/vitality-clinic-mobile.png",
     previewVideo:
       "https://storage.googleapis.com/gen-lang-client-0746441136.firebasestorage.app/Vitality/VitalityPreview.mp4",
