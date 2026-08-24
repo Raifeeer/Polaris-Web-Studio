@@ -11,7 +11,6 @@ import {
   BarChart3,
   Star,
   ChevronDown,
-  Rocket,
   CheckCircle2,
   ShieldCheck,
   Lock,
@@ -32,6 +31,7 @@ import Testimonials from "../components/Testimonials";
 import { T, useLanguage } from "../context/LanguageContext";
 import RippleButton from "../components/RippleButton";
 import { useBorderGlow } from "../hooks/useBorderGlow";
+import { RocketIcon } from "@/components/ui/rocket";
 
 const Hero3D = lazy(() => import("../components/Hero3D"));
 
@@ -558,9 +558,10 @@ export default function LandingPage() {
                       {/* Shimmer effect */}
                       <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
 
-                      <Rocket
+                      <RocketIcon
                         size={20}
-                        className="group-hover:rotate-12 group-hover:-translate-y-1 transition-transform duration-300"
+                        aria-hidden={true}
+                        className="shrink-0 group-hover:rotate-12 group-hover:-translate-y-1 transition-transform duration-300"
                       />
 
                       <T en="Plan your Project">Planifica tu Proyecto</T>
