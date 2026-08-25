@@ -277,6 +277,7 @@ Para comenzar el prototipo sin ampliar el alcance, recomiendo aprobar estos valo
 | Salida inicial | Correo con cotización PDF y enlace para agendar |
 | Aprobación | Obligatoria para toda salida externa |
 | Responsable | Usuario administrador de Polaris |
+| Aprobador final | Usuario propietario de Polaris |
 | Recordatorios | 24 horas y 72 horas, ambos sujetos a aprobación |
 | Dedupe | Por evento y configuración; nunca bloqueo global por correo |
 | Catálogo | Paquetes y complementos vigentes, recalculados server-side |
@@ -285,9 +286,9 @@ Para comenzar el prototipo sin ampliar el alcance, recomiendo aprobar estos valo
 
 ## 14. Decisiones que todavía debe confirmar Polaris
 
-Antes de escribir código hay que confirmar cuatro puntos de negocio. Primero, si el correo con la cotización PDF seguirá siendo la salida principal o si la prioridad será el agendado. Segundo, quién será el aprobador único durante el dogfooding y quién lo reemplaza cuando no esté disponible. Tercero, si los recordatorios de 24 y 72 horas son adecuados para el ciclo comercial real de Polaris. Cuarto, cuál es el criterio manual para marcar una oportunidad como ganada o perdida después de la reunión.
+Antes de escribir código hay que confirmar tres puntos de negocio. Primero, si el correo con la cotización PDF seguirá siendo la salida principal o si la prioridad será el agendado. Segundo, si los recordatorios de 24 y 72 horas son adecuados para el ciclo comercial real de Polaris. Tercero, cuál es el criterio manual para marcar una oportunidad como ganada o perdida después de la reunión. El aprobador final ya queda definido: será el usuario propietario de Polaris.
 
-Mi recomendación es aceptar los valores de la sección anterior como configuración inicial y modificarlos después de operar los primeros casos. No conviene retrasar el prototipo intentando diseñar todos los escenarios futuros de Office Flow.
+Mi recomendación es aceptar los valores de la sección anterior como configuración inicial, incluyendo al usuario propietario de Polaris como aprobador final, y modificarlos después de operar los primeros casos. No conviene retrasar el prototipo intentando diseñar todos los escenarios futuros de Office Flow.
 
 ## Referencias internas
 
