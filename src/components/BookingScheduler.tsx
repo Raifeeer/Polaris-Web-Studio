@@ -18,6 +18,13 @@ export default function BookingScheduler({
   initialName = "",
   initialEmail = "",
   phone = "",
+  existingLeadId = "",
+  packageId = "",
+  addonIds = [],
+  domain = "",
+  businessType = "",
+  sector = "",
+  projectName = "",
   // Tipo de evento real de Cal.com a reservar -- "consultoria" (30 min,
   // default, wizard + CTA final de la landing), "alineacion" (15 min,
   // /proceso) o "reporte" (30 min, reporte mensual de tráfico). Cada uno
@@ -31,6 +38,13 @@ export default function BookingScheduler({
   initialName?: string;
   initialEmail?: string;
   phone?: string;
+  existingLeadId?: string;
+  packageId?: string;
+  addonIds?: string[];
+  domain?: string;
+  businessType?: string;
+  sector?: string;
+  projectName?: string;
   type?: "consultoria" | "alineacion" | "reporte" | "ascenso";
   // Recibe el nombre/correo con el que el cliente terminó confirmando la
   // reserva -- puede diferir de initialName/initialEmail si lo corrigió acá
@@ -41,7 +55,7 @@ export default function BookingScheduler({
   // Cal.com -- necesario para superficies (como el portal de Ascenso) que
   // deben registrar la reunión con su horario y link reales, no solo saber
   // que se agendó algo.
-  onBooked: (name: string, email: string, booking?: { start: string; end: string; meetUrl: string }) => void;
+  onBooked: (name: string, email: string, booking?: { start: string; end: string; meetUrl: string; bookingUid?: string | null; leadId?: string | null; leadSync?: string | null }) => void;
 }) {
   const { language, translate } = useLanguage();
   const locale = language === "en" ? "en-US" : "es-DO";
@@ -61,6 +75,15 @@ export default function BookingScheduler({
   const [nameError, setNameError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState<"slot" | "generic" | null>(null);
+  const [bookingKey] = useState(() => {
+    try {
+      return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `booking-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    } catch {
+      return `booking-${Date.now()}`;
+    }
+  });
 
   useEffect(() => {
     if (slotsByDay || slotsLoading) return;
@@ -114,11 +137,19 @@ export default function BookingScheduler({
             : notes,
           phone,
           type,
+          existingLeadId,
+          bookingKey,
+          packageId,
+          addonIds,
+          domain,
+          businessType,
+          sector,
+          projectName,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.ok) {
-        onBooked(name.trim(), email.trim(), { start: data.start, end: data.end, meetUrl: data.meetUrl });
+        onBooked(name.trim(), email.trim(), { start: data.start, end: data.end, meetUrl: data.meetUrl, bookingUid: data.bookingUid, leadId: data.leadId, leadSync: data.leadSync });
         return;
       }
       if (res.status === 409) {

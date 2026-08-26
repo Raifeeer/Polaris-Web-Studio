@@ -2384,10 +2384,18 @@ export default function WizardQuote() {
   // lead en Firestore -- y por lo tanto la pestaña /propuestas de Meridian --
   // se quedaba para siempre con el nombre viejo con el typo, aunque el
   // cliente ya lo hubiera corregido en el mismo flujo minutos después.
-  const handleBookingComplete = async (bookedName: string, bookedEmail: string) => {
-    if (wizardLeadDocId && (bookedName.trim() !== pdfName.trim() || bookedEmail.trim() !== pdfEmail.trim())) {
+  const handleBookingComplete = async (
+    bookedName: string,
+    bookedEmail: string,
+    booking?: { start: string; end: string; meetUrl: string; bookingUid?: string | null; leadId?: string | null; leadSync?: string | null },
+  ) => {
+    const leadId = booking?.leadId || wizardLeadDocId;
+    if (booking?.leadId && !wizardLeadDocId) setWizardLeadDocId(booking.leadId);
+    const knownName = selections.name?.trim() || pdfName.trim();
+    const knownEmail = selections.email?.trim() || pdfEmail.trim();
+    if (leadId && (bookedName.trim() !== knownName || bookedEmail.trim() !== knownEmail)) {
       try {
-        await updateDoc(doc(db, "wizardLeads", wizardLeadDocId), {
+        await updateDoc(doc(db, "wizardLeads", leadId), {
           name: bookedName.trim(),
           email: bookedEmail.trim(),
         });
@@ -3687,6 +3695,13 @@ export default function WizardQuote() {
                         initialName={selections.name || ""}
                         initialEmail={selections.email || ""}
                         phone={selections.phone || ""}
+                        existingLeadId={wizardLeadDocId || ""}
+                        packageId={selections.type}
+                        addonIds={selections.addons}
+                        domain={domainSummaryText || ""}
+                        businessType={selections.businessType || ""}
+                        sector={selections.sector || ""}
+                        type="consultoria"
                         onBooked={handleBookingComplete}
                       />
                     </div>
