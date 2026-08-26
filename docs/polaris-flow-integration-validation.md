@@ -11,6 +11,7 @@ La revisión visual estática de `http://localhost:5173/flow` confirmó que la n
 | Formulario contextual | Muestra Office Flow, copy específico y aviso de revisión humana | `/contacto?service=office-flow` |
 | Español e inglés | El formulario traduce título, descripción, placeholder y aviso contextual | Cambio de idioma de la interfaz, sin envío |
 | Hero móvil, 390 × 844 | Marca oficial, encabezado y cuerpo legibles; sin desbordamiento lateral visible | Captura local posterior al loader |
+| Dominio publicado | La ruta integrada responde desde `https://polarisweb.studio/flow` con el hero y CTA de Office Flow | Vercel `dpl_5qQEmxRfp7HyYqFAWnYPq6Qyqodn`, estado READY |
 
 El servidor Express completo no se inició en la copia local porque requiere una credencial Firebase válida de entorno. No se modificaron secretos ni se intentó una operación de datos. La interfaz se verificó mediante Vite estático.
 
