@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Check, AlertCircle, Send } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle, useJsonLd } from "../hooks/useDocumentTitle";
+import { resolveFlowContactContext } from "../lib/flowContact";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -16,6 +18,8 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // acá (eso ya vive en /nosotros#contacto y en el footer).
 export default function Contacto() {
   const { language, translate } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const flowContext = resolveFlowContactContext(searchParams.get("service"));
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -62,7 +66,7 @@ export default function Contacto() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: cleanName, email: cleanEmail, message: cleanMessage, company }),
+        body: JSON.stringify({ name: cleanName, email: cleanEmail, message: cleanMessage, company, topic: flowContext?.topic }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -91,14 +95,14 @@ export default function Contacto() {
           className="space-y-3 mb-12 text-center"
         >
           <span className="inline-block text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-highlight)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
-            <T en="Get in touch">Escríbenos</T>
+            <T en={flowContext ? "Polaris Flow diagnostic" : "Get in touch"}>{flowContext ? "Diagnóstico Polaris Flow" : "Escríbenos"}</T>
           </span>
           <h1 className="text-4xl md:text-5xl font-display font-black tracking-tighter text-[var(--color-text-primary)]">
-            <T en="Contact">Contacto</T>
+            <T en={flowContext?.headingEn ?? "Contact"}>{flowContext?.headingEs ?? "Contacto"}</T>
           </h1>
           <p className="text-[var(--color-text-secondary)] text-base md:text-lg max-w-xl mx-auto leading-relaxed">
-            <T en="Tell us about your project. We reply by email, usually within one business day.">
-              Cuéntanos sobre tu proyecto. Te respondemos por correo, normalmente dentro de un día hábil.
+            <T en={flowContext?.descriptionEn ?? "Tell us about your project. We reply by email, usually within one business day."}>
+              {flowContext?.descriptionEs ?? "Cuéntanos sobre tu proyecto. Te respondemos por correo, normalmente dentro de un día hábil."}
             </T>
           </p>
         </motion.div>
@@ -189,10 +193,19 @@ export default function Contacto() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   disabled={status === "loading"}
-                  placeholder={translate("Contanos sobre tu proyecto...", "Tell us about your project...")}
+                  placeholder={flowContext ? translate(flowContext.messagePlaceholderEs, flowContext.messagePlaceholderEn) : translate("Contanos sobre tu proyecto...", "Tell us about your project...")}
                   className="glass-input w-full rounded-xl px-4 py-3 text-sm text-[var(--color-text-primary)] placeholder-[var(--color-text-tertiary)] transition-all disabled:opacity-50 resize-none"
                 />
               </div>
+
+              {flowContext && (
+                <p className="rounded-xl border border-[#f59e0b]/25 bg-[#f59e0b]/10 px-4 py-3 text-xs leading-relaxed text-[var(--color-text-secondary)]">
+                  <strong className="text-[#f59e0b]">{flowContext.label}.</strong>{" "}
+                  <T en="This request is reviewed by Polaris Web Studio before any next step is proposed.">
+                    Esta solicitud es revisada por Polaris Web Studio antes de proponer cualquier siguiente paso.
+                  </T>
+                </p>
+              )}
 
               {errorMsg && (
                 <div className="flex items-center gap-1.5 text-red-500 text-xs">

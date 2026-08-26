@@ -2224,12 +2224,17 @@ const PORT = 3000;
   // replyTo al correo de quien escribe para poder contestarle directo.
   app.post("/api/contact", async (req, res) => {
     try {
-      const { name, email, message, company } = req.body || {};
+      const { name, email, message, company, topic } = req.body || {};
+      const flowTopic = topic === "polaris-flow" || topic === "office-flow" ? topic : undefined;
       // "company" es un honeypot -- campo invisible en el form real; si
       // viene relleno, es casi seguro un bot. Se responde éxito igual para
       // no delatar el mecanismo, sin mandar ningún correo real.
       if (company) {
         res.json({ success: true });
+        return;
+      }
+      if (!rateLimit(`contact:${clientIp(req)}`, 5, 15 * 60 * 1000)) {
+        res.status(429).json({ error: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo." });
         return;
       }
       if (
@@ -2267,8 +2272,8 @@ const PORT = 3000;
         from: '"Formulario de contacto -- Polaris Web Studio" <hola@polarisweb.studio>',
         to: "hola@polarisweb.studio",
         replyTo: email,
-        subject: `Nuevo mensaje de contacto de ${name}`,
-        text: `Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`,
+        subject: `${flowTopic === "office-flow" ? "Solicitud de Office Flow" : flowTopic === "polaris-flow" ? "Solicitud de Polaris Flow" : "Nuevo mensaje de contacto"} de ${name}`,
+        text: `${flowTopic ? `Interés: ${flowTopic === "office-flow" ? "Office Flow" : "Polaris Flow"}\n` : ""}Nombre: ${name}\nCorreo: ${email}\n\nMensaje:\n${message}`,
       });
 
       res.json({ success: true });
