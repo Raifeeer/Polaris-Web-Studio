@@ -10,5 +10,6 @@
 | Prueba de contrato | Correcta, 2 de 2 | `src/lib/flowContact.test.ts` |
 | TypeScript | Sin errores nuevos de la variante; persisten 3 errores preexistentes fuera de la landing | `api/index.ts`, `src/App.tsx` y `src/pages/AtlasChat.tsx` |
 | Móvil | La captura móvil automatizada queda pendiente; los breakpoints base, `sm`, `md` y `lg` fueron revisados en el código | Se requiere confirmación visual desde la vista previa |
+| Vista previa Vercel | Lista y vinculada al commit orbital de la rama experimental | `dpl_3yM1V2kKi8RSFpNQzVyc4R1N49DN`, estado READY |
 
 La verificación se realizó en una vista local estática. No se enviaron formularios, no se escribieron datos y no se usaron servicios externos.

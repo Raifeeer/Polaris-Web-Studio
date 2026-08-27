@@ -20,4 +20,4 @@
 - [x] Validar la variante Mercury de Polaris en escritorio y móvil, y actualizar la vista previa de la rama sin fusionar `main`.
 - [x] Analizar el nuevo documento de diseño y extraer su composición, tipografía, movimiento y restricciones antes de rediseñar.
 - [x] Sustituir la composición Mercury por una variante fiel a la nueva referencia usando exclusivamente identidad, contenido y destinos de Polaris.
-- [ ] Validar la nueva variante en escritorio y móvil, conservar las rutas existentes y actualizar la vista previa aislada de la rama.
+- [x] Validar la nueva variante en escritorio y móvil, conservar las rutas existentes y actualizar la vista previa aislada de la rama.
