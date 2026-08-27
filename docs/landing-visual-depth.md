@@ -15,3 +15,9 @@ La captura limpia del proceso confirma el objetivo: la imagen vertical introduce
 El proceso también se probó en viewport móvil de 390 × 844 px con captura de dispositivo para revisar el orden vertical y el recorte del asset editorial.
 
 La revisión móvil confirma una continuidad más rica: el hero conserva su jerarquía y el mockup comienza a aparecer como siguiente escena, sin desbordamiento horizontal ni pérdida del CTA. La imagen de proceso está preparada para continuar en flujo vertical.
+
+Nueva iteración: el hero sustituye el navegador por una escultura-compás suspendida sobre un horizonte crepuscular. La composición funciona con el copy porque concentra el foco en la mitad derecha y conserva una zona oscura limpia para la lectura visual. El rayo azul conecta la escena con los acentos de Polaris sin inventar un logo.
+
+El hero nuevo fue verificado en desktop y en móvil de 390 × 844 px. Se comprobó la prioridad del copy, el CTA y el recorte responsive de la escena, con el preview sin errores de consola fatales.
+
+La captura móvil muestra que el bloque textual sigue dominando la primera pantalla y la nueva escena aparece inmediatamente después como una segunda escena; el hero no pierde su jerarquía ni introduce desplazamiento horizontal.

@@ -36,3 +36,7 @@
 - [x] Integrar un sistema visual de capas, texturas y detalles de proceso sin volver a una cuadrícula de tarjetas genéricas.
 - [x] Crear o preparar assets adicionales optimizados para web y documentar su función narrativa.
 - [x] Validar la nueva dirección en desktop y mobile, incluyendo rendimiento y legibilidad.
+
+- [x] Reemplazar el asset visual del hero por una escena protagonista más distintiva.
+- [x] Añadir nuevas capas visuales y momentos editoriales al recorrido de la landing.
+- [x] Validar la nueva composición del hero en desktop y mobile sin afectar CTAs ni rutas.
