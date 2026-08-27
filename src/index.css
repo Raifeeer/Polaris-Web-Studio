@@ -74,10 +74,67 @@ button:not(:disabled),
   border-radius: 12px;
 }
 
+/* Variante orbital para la misma rama experimental. Conserva los colores
+   azul/índigo/violeta de Polaris y no modifica ningún token fuera de su raíz. */
+.auros-page,
+.auros-footer {
+  color-scheme: dark;
+  --color-surface-base: #020617;
+  --color-surface-elevated: #0f172a;
+  --color-surface-highlight: #1e293b;
+  --color-primary-base: #6366f1;
+  --color-primary-hover: #818cf8;
+  --color-primary-muted: rgba(99, 102, 241, 0.14);
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-border-subtle: rgba(203, 213, 225, 0.14);
+  --color-border-strong: #475569;
+  --color-on-primary: #020617;
+  font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+}
+
+.auros-display {
+  font-family: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.045em;
+}
+
+.auros-card {
+  background: #0f172a;
+  border-radius: 16px;
+}
+
+.auros-gradient-action {
+  background: linear-gradient(90deg, #0ea5e9 0%, #e0f2fe 48%, #c4b5fd 100%);
+}
+
+@keyframes auros-orb-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes auros-orb-pulse {
+  0%, 100% { opacity: 0.52; transform: scale(0.97); }
+  50% { opacity: 1; transform: scale(1.03); }
+}
+
+.auros-orb-rotate { animation: auros-orb-rotate 30s linear infinite; transform-origin: center; }
+.auros-orb-pulse { animation: auros-orb-pulse 8s ease-in-out infinite; transform-origin: center; }
+
 @media (prefers-reduced-motion: reduce) {
   .mercury-page *,
   .mercury-page *::before,
   .mercury-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .auros-page *,
+  .auros-page *::before,
+  .auros-page *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;

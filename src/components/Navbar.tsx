@@ -27,7 +27,7 @@ type CardLink = { label: React.ReactNode; path: string };
 type NavCard = { label: React.ReactNode; accent: string; links: CardLink[]; icon: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }> };
 
 interface NavbarProps {
-  variant?: "default" | "immersive" | "editorial" | "mercury";
+  variant?: "default" | "immersive" | "editorial" | "mercury" | "auros";
 }
 
 export default function Navbar({ variant = "default" }: NavbarProps) {
@@ -41,6 +41,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
   const isImmersive = variant === "immersive";
   const isEditorial = variant === "editorial";
   const isMercury = variant === "mercury";
+  const isAuros = variant === "auros";
 
   useEffect(() => {
     document.body.classList.toggle("mobile-menu-open", isOpen);
@@ -133,12 +134,14 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
         ref={navRef}
         className={`fixed left-0 right-0 top-0 z-50 w-full transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
-        <div className={isImmersive || isMercury ? "w-full" : isEditorial ? "mx-auto max-w-[1200px] px-4 pt-5 md:px-6" : "max-w-7xl mx-auto px-4 md:px-10 pt-3"}>
+        <div className={isImmersive || isMercury || isAuros ? "w-full" : isEditorial ? "mx-auto max-w-[1200px] px-4 pt-5 md:px-6" : "max-w-7xl mx-auto px-4 md:px-10 pt-3"}>
           {/* Barra superior -- fondo sólido (sin backdrop-blur) en vez del
               translúcido+blur del original. */}
           <div
             className={`flex items-center justify-between h-16 px-4 transition-colors duration-300 md:px-12 ${
-              isMercury
+              isAuros
+                ? `rounded-none border-x-0 border-t-0 px-6 md:px-12 ${scrolled || isOpen ? "border-b border-white/10 bg-[#020617]/95" : "border-b border-transparent bg-transparent"}`
+                : isMercury
                 ? `rounded-none border-x-0 border-t-0 px-6 md:px-12 ${scrolled || isOpen ? "border-b border-white/10 bg-[#171721]/95" : "border-b border-transparent bg-transparent"}`
                 : isEditorial
                 ? "rounded-[22px] border border-black/10 bg-white text-black shadow-[0_0_0_5px_#f7f7f7]"
@@ -174,7 +177,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
                 <div className="absolute inset-0 rounded-xl border border-[var(--color-primary-base)]/35 pointer-events-none animate-cta-ping" />
                 <RippleButton
                   onClick={() => navigate("/cotizar")}
-                  className={`group relative inline-flex items-center gap-1.5 overflow-hidden px-4 py-2 font-black text-sm transition-all whitespace-nowrap ${isMercury ? "rounded-full bg-[#5266eb] text-white hover:bg-[#6275ff]" : isEditorial ? "rounded-full bg-[#007aff] text-white shadow-[inset_0_1px_0_0_#ffffff,0_0_0_1px_rgba(0,0,0,0.15),0_3px_2px_0_rgba(0,0,0,0.06)] hover:bg-[#006ee6]" : "rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] hover:scale-105 shadow-lg"}`}
+                  className={`group relative inline-flex items-center gap-1.5 overflow-hidden px-4 py-2 font-black text-sm transition-all whitespace-nowrap ${isAuros ? "rounded-md bg-[linear-gradient(90deg,#0ea5e9_0%,#e0f2fe_48%,#c4b5fd_100%)] text-[#020617] hover:brightness-105" : isMercury ? "rounded-full bg-[#5266eb] text-white hover:bg-[#6275ff]" : isEditorial ? "rounded-full bg-[#007aff] text-white shadow-[inset_0_1px_0_0_#ffffff,0_0_0_1px_rgba(0,0,0,0.15),0_3px_2px_0_rgba(0,0,0,0.06)] hover:bg-[#006ee6]" : "rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] hover:scale-105 shadow-lg"}`}
                 >
                   <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" />
                   <Rocket size={16} className="group-hover:rotate-12 group-hover:-translate-y-0.5 transition-transform duration-300" />
@@ -215,7 +218,7 @@ export default function Navbar({ variant = "default" }: NavbarProps) {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className={`${isImmersive || isMercury ? "w-full px-4 md:px-12 mt-0" : isEditorial ? "mx-auto max-w-[1200px] px-4 md:px-6 mt-2" : "max-w-7xl mx-auto px-4 md:px-10 mt-2"} grid grid-cols-2 sm:grid-cols-3 gap-2 overscroll-contain pb-2 mobile-menu-grid`}>
+              <div className={`${isImmersive || isMercury || isAuros ? "w-full px-4 md:px-12 mt-0" : isEditorial ? "mx-auto max-w-[1200px] px-4 md:px-6 mt-2" : "max-w-7xl mx-auto px-4 md:px-10 mt-2"} grid grid-cols-2 sm:grid-cols-3 gap-2 overscroll-contain pb-2 mobile-menu-grid`}>
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}

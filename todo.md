@@ -18,3 +18,6 @@
 - [x] Rehacer el hero como una escena oscura y cinematográfica con imagen de portafolio real, navegación transparente y una sola acción cobalt.
 - [x] Sustituir el lienzo editorial claro por una jerarquía onyx y graphite, con controles en píldora y tarjetas sobrias de 12 px.
 - [x] Validar la variante Mercury de Polaris en escritorio y móvil, y actualizar la vista previa de la rama sin fusionar `main`.
+- [x] Analizar el nuevo documento de diseño y extraer su composición, tipografía, movimiento y restricciones antes de rediseñar.
+- [x] Sustituir la composición Mercury por una variante fiel a la nueva referencia usando exclusivamente identidad, contenido y destinos de Polaris.
+- [ ] Validar la nueva variante en escritorio y móvil, conservar las rutas existentes y actualizar la vista previa aislada de la rama.
