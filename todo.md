@@ -14,3 +14,7 @@
 - [x] Rehacer el hero con gradiente de atardecer, horizonte abstracto y una única maqueta de producto, sin reutilizar la composición anterior.
 - [x] Reorganizar el resto de la landing como lienzo editorial claro de una columna, con serif de display, Inter para interfaz y azul funcional único.
 - [x] Validar la nueva dirección visual en escritorio y móvil y actualizar la vista previa de la rama experimental.
+- [x] Adaptar la referencia Mercury al logotipo, copy, servicios y rutas reales de Polaris sin reutilizar marca ni contenido ajeno.
+- [x] Rehacer el hero como una escena oscura y cinematográfica con imagen de portafolio real, navegación transparente y una sola acción cobalt.
+- [x] Sustituir el lienzo editorial claro por una jerarquía onyx y graphite, con controles en píldora y tarjetas sobrias de 12 px.
+- [ ] Validar la variante Mercury de Polaris en escritorio y móvil, y actualizar la vista previa de la rama sin fusionar `main`.

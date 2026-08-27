@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;1,400&display=swap');
 @import "tailwindcss";
 
 /* Los navegadores NO le dan cursor:pointer a <button> por defecto (a
@@ -44,43 +43,41 @@ button:not(:disabled),
   --shadow-bento-hover: inset 0 0 30px rgba(99, 102, 241, 0.1);
 }
 
-/* Variante editorial de la rama experimental. Sus variables viven bajo
-   .twilight-page para no sustituir los tokens de Polaris en otras rutas. */
-.twilight-page,
-.twilight-footer {
-  color-scheme: light;
-  --color-surface-base: #f7f7f7;
-  --color-surface-elevated: #ffffff;
-  --color-surface-highlight: #f7f7f7;
-  --color-primary-base: #007aff;
-  --color-primary-hover: #006ee6;
-  --color-primary-muted: rgba(0, 122, 255, 0.1);
-  --color-text-primary: #000000;
-  --color-text-secondary: #3e3e3e;
-  --color-text-tertiary: #636363;
-  --color-border-subtle: #e9e9e9;
-  --color-border-strong: #000000;
+/* Variante Mercury para la rama experimental. Se limita a su árbol para que
+   el sistema existente de Polaris no cambie fuera de esta vista de prueba. */
+.mercury-page,
+.mercury-footer {
+  color-scheme: dark;
+  --color-surface-base: #171721;
+  --color-surface-elevated: #1e1e2a;
+  --color-surface-highlight: #272735;
+  --color-primary-base: #5266eb;
+  --color-primary-hover: #6275ff;
+  --color-primary-muted: rgba(82, 102, 235, 0.12);
+  --color-text-primary: #ededf3;
+  --color-text-secondary: #c3c3cc;
+  --color-text-tertiary: #9b9ba6;
+  --color-border-subtle: rgba(226, 227, 237, 0.14);
+  --color-border-strong: #70707d;
   --color-on-primary: #ffffff;
-  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
 }
 
-.twilight-display {
-  font-family: "Playfair Display", Georgia, serif;
-  font-feature-settings: "cv03", "cv04", "cv09", "cv11";
+.mercury-display {
+  font-family: "Cabinet Grotesk", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.012em;
 }
 
-.twilight-dusk {
-  background: linear-gradient(180deg, #4a7ff2 0%, #7b7ed8 30%, #c98ab5 65%, #e8a87c 100%);
-}
-
-.twilight-halo {
-  box-shadow: 0 0 0 5px #f7f7f7;
+.mercury-card {
+  background: #1e1e2a;
+  border-radius: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .twilight-page *,
-  .twilight-page *::before,
-  .twilight-page *::after {
+  .mercury-page *,
+  .mercury-page *::before,
+  .mercury-page *::after {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
