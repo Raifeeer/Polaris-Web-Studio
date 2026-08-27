@@ -13,4 +13,4 @@
 - [x] Adaptar los tokens del lineamiento editorial crepuscular a Polaris, preservando el logo y contenido propios de PWS.
 - [x] Rehacer el hero con gradiente de atardecer, horizonte abstracto y una única maqueta de producto, sin reutilizar la composición anterior.
 - [x] Reorganizar el resto de la landing como lienzo editorial claro de una columna, con serif de display, Inter para interfaz y azul funcional único.
-- [ ] Validar la nueva dirección visual en escritorio y móvil y actualizar la vista previa de la rama experimental.
+- [x] Validar la nueva dirección visual en escritorio y móvil y actualizar la vista previa de la rama experimental.
