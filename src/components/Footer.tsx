@@ -8,6 +8,7 @@ interface FooterProps {
   twitterUrl?: string;
   instagramUrl?: string;
   linkedinUrl?: string;
+  variant?: "default" | "immersive";
 }
 
 // Lucide no incluye el logo de X (antes Twitter); se dibuja a mano con el
@@ -25,6 +26,7 @@ export default function Footer({
   twitterUrl,
   instagramUrl,
   linkedinUrl,
+  variant = "default",
 }: FooterProps) {
   const { language, setLanguage, translate } = useLanguage();
 
@@ -35,7 +37,7 @@ export default function Footer({
   ];
 
   return (
-    <footer className="w-full border-t border-[var(--color-border-subtle)] glass-panel px-6 py-16 md:px-12">
+    <footer className={`w-full border-t border-[var(--color-border-subtle)] px-6 py-16 md:px-12 ${variant === "immersive" ? "bg-[var(--color-surface-elevated)]" : "glass-panel"}`}>
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
         {/* Brand */}
         <div className="col-span-1 md:col-span-1 space-y-6">

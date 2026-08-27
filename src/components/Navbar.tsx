@@ -26,7 +26,11 @@ import "../styles/mobile-navbar.css";
 type CardLink = { label: React.ReactNode; path: string };
 type NavCard = { label: React.ReactNode; accent: string; links: CardLink[]; icon: React.ComponentType<{ size?: number; strokeWidth?: number; "aria-hidden"?: boolean }> };
 
-export default function Navbar() {
+interface NavbarProps {
+  variant?: "default" | "immersive";
+}
+
+export default function Navbar({ variant = "default" }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -34,6 +38,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
   const { language, setLanguage, translate } = useLanguage();
+  const isImmersive = variant === "immersive";
 
   useEffect(() => {
     document.body.classList.toggle("mobile-menu-open", isOpen);
@@ -126,14 +131,14 @@ export default function Navbar() {
         ref={navRef}
         className={`fixed left-0 right-0 top-0 z-50 w-full transition-transform duration-300 ${hidden ? "-translate-y-full" : "translate-y-0"}`}
       >
-        <div className="max-w-7xl mx-auto px-4 md:px-10 pt-3">
+        <div className={isImmersive ? "w-full" : "max-w-7xl mx-auto px-4 md:px-10 pt-3"}>
           {/* Barra superior -- fondo sólido (sin backdrop-blur) en vez del
               translúcido+blur del original. */}
           <div
-            className={`flex items-center justify-between h-16 px-4 rounded-2xl border transition-colors duration-300 ${
-              scrolled || isOpen
-                ? "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] shadow-lg"
-                : "bg-[var(--color-surface-elevated)] border-transparent"
+            className={`flex items-center justify-between h-16 px-4 transition-colors duration-300 md:px-12 ${
+              isImmersive
+                ? `rounded-none border-x-0 border-t-0 ${scrolled || isOpen ? "border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] shadow-lg" : "border-b border-transparent bg-[var(--color-surface-base)]"}`
+                : `rounded-2xl border ${scrolled || isOpen ? "bg-[var(--color-surface-elevated)] border-[var(--color-border-subtle)] shadow-lg" : "bg-[var(--color-surface-elevated)] border-transparent"}`
             }`}
           >
             <Link
@@ -204,7 +209,7 @@ export default function Navbar() {
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="max-w-7xl mx-auto px-4 md:px-10 mt-2 grid grid-cols-2 sm:grid-cols-3 gap-2 overscroll-contain pb-2 mobile-menu-grid">
+              <div className={`${isImmersive ? "w-full px-4 md:px-12 mt-0" : "max-w-7xl mx-auto px-4 md:px-10 mt-2"} grid grid-cols-2 sm:grid-cols-3 gap-2 overscroll-contain pb-2 mobile-menu-grid`}>
                 {cards.map((card, i) => (
                   <motion.div
                     key={i}
