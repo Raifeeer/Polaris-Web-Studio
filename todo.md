@@ -9,4 +9,4 @@
 - [x] Reemplazar la composición de tarjetas de la landing por secciones de pantalla completa con una dirección visual coherente con Polaris.
 - [x] Mantener los CTAs, rutas, contenido comercial y comportamiento existente sin modificar reglas de negocio ni endpoints.
 - [x] Verificar el rediseño en escritorio y móvil, incluida la legibilidad, el foco y la ausencia de desbordamientos críticos.
-- [ ] Crear una vista previa de Vercel para la rama experimental sin fusionarla en `main`.
+- [x] Crear una vista previa de Vercel para la rama experimental sin fusionarla en `main`.

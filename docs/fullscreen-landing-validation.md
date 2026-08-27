@@ -14,6 +14,7 @@
 | Compilación Vite | Correcta | `vite build` completó en 12.66 s |
 | Prueba de contrato | Correcta, 2 de 2 | `src/lib/flowContact.test.ts` |
 | TypeScript | Sin errores nuevos de la rama; persisten 3 errores preexistentes fuera de la landing | `api/index.ts`, `src/App.tsx` y `src/pages/AtlasChat.tsx` |
+| Vista previa Vercel | Lista y muestra la landing inmersiva de la rama, no la producción | `dpl_3evw6ZUeJA8eSHJnfSs1joYNAQGF`, estado READY |
 
 La revisión se realizó contra Vite estático. No se inició el backend, no se enviaron formularios y no se hicieron cambios de datos, pagos ni Firestore.
 
