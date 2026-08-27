@@ -28,3 +28,6 @@
 - [x] Publicar una nueva vista previa de la rama experimental, sin fusionar cambios a `main`.
 - [x] Restituir la dirección editorial crepuscular de la vista previa indicada como base visual del upgrade, sustituyendo la variante orbital.
 - [x] Convertir los casos, proceso y productos en escenas de portafolio más visuales, con copys breves y activos reales de Polaris.
+
+- [x] Corregir mockups: usar capturas HD reales sin anidamiento de dispositivos.
+- [x] Eliminar franjas de color y degradados sobrantes en los marcos de portafolio.
