@@ -17,4 +17,4 @@
 - [x] Adaptar la referencia Mercury al logotipo, copy, servicios y rutas reales de Polaris sin reutilizar marca ni contenido ajeno.
 - [x] Rehacer el hero como una escena oscura y cinematográfica con imagen de portafolio real, navegación transparente y una sola acción cobalt.
 - [x] Sustituir el lienzo editorial claro por una jerarquía onyx y graphite, con controles en píldora y tarjetas sobrias de 12 px.
-- [ ] Validar la variante Mercury de Polaris en escritorio y móvil, y actualizar la vista previa de la rama sin fusionar `main`.
+- [x] Validar la variante Mercury de Polaris en escritorio y móvil, y actualizar la vista previa de la rama sin fusionar `main`.

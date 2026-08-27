@@ -9,5 +9,6 @@
 | Prueba de contrato | Correcta, 2 de 2 | `src/lib/flowContact.test.ts` |
 | TypeScript | Sin errores nuevos de la rama; persisten 3 errores preexistentes fuera de la landing | `api/index.ts`, `src/App.tsx` y `src/pages/AtlasChat.tsx` |
 | Revisión móvil | La captura aislada no terminó dentro de 90 s; las clases responsive fueron revisadas en código | Pendiente de una inspección manual en la vista previa |
+| Vista previa Vercel | Lista y vinculada al commit Mercury de la rama experimental | `dpl_AEf4t6UMWKfWQ3vssxrMyAqdxWVZ`, estado READY |
 
 No se modificaron rutas, precios, Firestore, endpoints ni flujos de cotización. Las pruebas se realizaron sobre una vista estática local, sin envíos de formularios ni operaciones de datos.
