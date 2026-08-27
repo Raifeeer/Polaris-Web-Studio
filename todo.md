@@ -31,3 +31,8 @@
 
 - [x] Corregir mockups: usar capturas HD reales sin anidamiento de dispositivos.
 - [x] Eliminar franjas de color y degradados sobrantes en los marcos de portafolio.
+
+- [x] Añadir profundidad visual más allá del hero y los mockups, con escenas editoriales que expliquen el trabajo de Polaris.
+- [x] Integrar un sistema visual de capas, texturas y detalles de proceso sin volver a una cuadrícula de tarjetas genéricas.
+- [x] Crear o preparar assets adicionales optimizados para web y documentar su función narrativa.
+- [x] Validar la nueva dirección en desktop y mobile, incluyendo rendimiento y legibilidad.
