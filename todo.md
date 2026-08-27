@@ -21,3 +21,10 @@
 - [x] Analizar el nuevo documento de diseño y extraer su composición, tipografía, movimiento y restricciones antes de rediseñar.
 - [x] Sustituir la composición Mercury por una variante fiel a la nueva referencia usando exclusivamente identidad, contenido y destinos de Polaris.
 - [x] Validar la nueva variante en escritorio y móvil, conservar las rutas existentes y actualizar la vista previa aislada de la rama.
+- [x] Auditar la variante de referencia indicada y definir una arquitectura narrativa más completa para la landing de Polaris.
+- [x] Crear activos visuales propios y reutilizables para reforzar el hero, el portafolio y las pruebas de capacidad sin usar imágenes de stock genéricas.
+- [x] Ampliar la landing con secciones visuales de proceso, señales de confianza, capacidades, casos y conversión sin alterar los endpoints ni precios actuales.
+- [ ] Validar el upgrade en escritorio y móvil, incluyendo accesibilidad, carga y rutas actuales.
+- [ ] Publicar una nueva vista previa de la rama experimental, sin fusionar cambios a `main`.
+- [x] Restituir la dirección editorial crepuscular de la vista previa indicada como base visual del upgrade, sustituyendo la variante orbital.
+- [x] Convertir los casos, proceso y productos en escenas de portafolio más visuales, con copys breves y activos reales de Polaris.
