@@ -466,8 +466,8 @@ export default function Services() {
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
       desc: (
-        <T en="A focused, effective landing page — up to 5 sections, designed to convert from the first scroll.">
-          Una landing page enfocada y efectiva — hasta 5 secciones, diseñada para convertir desde el primer scroll.
+        <T en="High-converting landing page designed to capture leads from day one and position your business on Google Maps.">
+          Landing page de alta conversión para captar prospectos desde el primer día y posicionar tu negocio en Google Maps.
         </T>
       ),
       originalPrice: 299,
@@ -527,8 +527,8 @@ export default function Services() {
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
       desc: (
-        <T en="Your complete digital presence — a professional corporate website of up to 5 pages, built to grow.">
-          Tu presencia digital completa — un sitio corporativo profesional de hasta 5 páginas, construido para crecer.
+        <T en="Complete digital presence with a 24/7 AI smart assistant to qualify leads and automate appointment booking.">
+          Tu presencia digital completa con asistente inteligente 24/7 para calificar prospectos y agendar citas automáticamente.
         </T>
       ),
       originalPrice: 699,
@@ -538,7 +538,7 @@ export default function Services() {
           title: <T en="Design">DISEÑO</T>,
           icon: Palette,
           items: [
-            <T en="Up to 5 custom sections/pages">Hasta 5 páginas personalizadas</T>,
+            <T en="Multi-section corporate web architecture">Arquitectura web corporativa multi-sección</T>,
             <T en="Visual identity coherent with your brand">Identidad visual coherente con tu marca</T>,
           ],
         },
@@ -605,8 +605,8 @@ export default function Services() {
       name: <T en="Nova Package">Paquete Nova</T>,
       titleColor: "text-violet-500",
       desc: (
-        <T en="Your high-performance online store — built to sell, scale and integrate AI.">
-          Tu tienda online de alto rendimiento — construida para vender, escalar e integrar IA.
+        <T en="Direct sales or booking engine with payment gateways and custom admin dashboard to scale revenue 24/7.">
+          Motor de ventas o reservas directas con pasarelas de pago y panel autogestionable para escalar tu facturación 24/7.
         </T>
       ),
       originalPrice: 1299,

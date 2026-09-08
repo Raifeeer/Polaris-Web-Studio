@@ -2061,16 +2061,16 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                <T en="One page designed to convert visitors into clients from the first scroll.">
-                  Una página diseñada para convertir visitantes en clientes desde el primer scroll.
+                <T en="High-converting landing page designed to capture leads from day one and position your business on Google Maps.">
+                  Landing page de alta conversión para captar prospectos desde el primer día y posicionar tu negocio en Google Maps.
                 </T>
               </p>
               <ul className="space-y-2.5 flex-1">
                 {[
-                  { es: "Diseño exclusivo y responsivo", en: "Exclusive responsive design" },
-                  { es: "Botón de WhatsApp integrado", en: "WhatsApp button integrated" },
-                  { es: "SEO On-Page incluido", en: "On-Page SEO included" },
-                  { es: "Entrega en 1–2 semanas", en: "Delivered in 1–2 weeks" },
+                  { es: "Diseño ultra-rápido enfocado en conversión (CRO)", en: "Ultra-fast conversion-focused design (CRO)" },
+                  { es: "Botón y embudo directo a WhatsApp optimizado", en: "Optimized WhatsApp direct sales button" },
+                  { es: "Optimización en Google Maps y SEO Local", en: "Google Maps & Local SEO setup" },
+                  { es: "Entrega garantizada en 1–2 semanas", en: "Guaranteed 1–2 week delivery" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-amber-500 shrink-0" />
@@ -2129,17 +2129,17 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                <T en="Complete corporate site up to 5 pages with AI chatbot, blog and Analytics.">
-                  Sitio corporativo completo de hasta 5 páginas con chatbot IA, blog y Analytics.
+                <T en="Complete digital presence with a 24/7 AI smart assistant to qualify leads and automate appointment booking.">
+                  Tu presencia digital completa con asistente inteligente 24/7 para calificar prospectos y agendar citas automáticamente.
                 </T>
               </p>
               <ul className="space-y-2.5 flex-1">
                 {[
                   { es: "Todo lo del Paquete Destello", en: "Everything in Flash Plan" },
-                  { es: "Hasta 5 páginas independientes", en: "Up to 5 independent pages" },
-                  { es: "Chatbot 24/7 con IA", en: "24/7 AI Chatbot" },
-                  { es: "SEO Técnico + Search Console", en: "Technical SEO + Search Console" },
-                  { es: "Google Analytics 4", en: "Google Analytics 4" },
+                  { es: "Arquitectura web corporativa multi-sección", en: "Multi-section corporate web architecture" },
+                  { es: "Asistente de IA 24/7 para atención y captación", en: "24/7 AI Lead & Support Assistant" },
+                  { es: "Agendamiento automático de citas y reuniones", en: "Automated meeting and appointment booking" },
+                  { es: "SEO Técnico + Google Analytics 4", en: "Technical SEO + Google Analytics 4" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-[var(--color-primary-base)] shrink-0" />
@@ -2192,17 +2192,17 @@ export default function LandingPage() {
                 </div>
               </div>
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                <T en="Complete sales platform with payments, admin panel and AI tool included.">
-                  Plataforma de ventas completa con pagos, panel admin y herramienta IA incluida.
+                <T en="Direct sales or booking engine with payment gateways and custom admin dashboard to scale revenue 24/7.">
+                  Motor de ventas o reservas directas con pasarelas de pago y panel autogestionable para escalar tu facturación 24/7.
                 </T>
               </p>
               <ul className="space-y-2.5 flex-1">
                 {[
                   { es: "Todo lo del Paquete Constelación", en: "Everything in Constellation Plan" },
-                  { es: "E-commerce + Stripe y PayPal", en: "E-commerce + Stripe & PayPal" },
-                  { es: "Panel admin personalizado", en: "Custom admin panel" },
-                  { es: "Schema Markup para Google", en: "Schema Markup for Google" },
-                  { es: "1 herramienta IA incluida", en: "1 AI tool included" },
+                  { es: "Motor de ventas o reservas (sin comisiones extra)", en: "Direct sales or booking engine (zero platform fees)" },
+                  { es: "Pasarelas de pago en línea (Locales e Internacionales)", en: "Online payment gateways (Local & Internacional)" },
+                  { es: "Panel admin para pedidos, reservas y catálogo", en: "Custom admin panel for orders, bookings & catalog" },
+                  { es: "Herramienta de IA integrada para acelerar ventas", en: "Integrated AI sales acceleration tool" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-2.5 text-sm text-[var(--color-text-secondary)]">
                     <CheckCircle2 size={14} className="text-violet-400 shrink-0" />
