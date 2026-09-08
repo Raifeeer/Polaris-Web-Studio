@@ -18,9 +18,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     if (saved === "es" || saved === "en") {
       return saved;
     }
-    const browserLang =
-      typeof navigator !== "undefined" ? navigator.language || "" : "";
-    return browserLang.toLowerCase().startsWith("es") ? "es" : "en";
+    return "es";
   });
 
   useEffect(() => {
