@@ -1,0 +1,25 @@
+name: Restore Pages
+
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-pages.yml'
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore files from working commit
+        run: |
+          git config user.name "Cristian Dicen"
+          git config user.email "cristian2200299@gmail.com"
+          git checkout 6306633ec6ca21b52bdf6bca912dfdebc5bd4cd5 -- src/pages/LandingPage.tsx src/pages/Services.tsx
+          git commit -m "revert: restaurar LandingPage y Services a version funcional"
+          git push origin main
