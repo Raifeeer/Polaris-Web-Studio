@@ -466,8 +466,8 @@ export default function Services() {
       name: <T en="Flash Package">Paquete Destello</T>,
       titleColor: "text-amber-500",
       desc: (
-        <T en="A focused, effective landing page — up to 5 sections, designed to convert from the first scroll.">
-          Una landing page enfocada y efectiva — hasta 5 secciones, diseñada para convertir desde el primer scroll.
+        <T en="High-converting landing page designed to capture leads from day one and position your business on Google Maps.">
+          Landing page de alta conversión para captar prospectos desde el primer día y posicionar tu negocio en Google Maps.
         </T>
       ),
       originalPrice: 299,
@@ -527,8 +527,8 @@ export default function Services() {
       name: <T en="Constellation Package">Paquete Constelación</T>,
       titleColor: "text-[var(--color-primary-base)]",
       desc: (
-        <T en="Your complete digital presence — a professional corporate website of up to 5 pages, built to grow.">
-          Tu presencia digital completa — un sitio corporativo profesional de hasta 5 páginas, construido para crecer.
+        <T en="Complete digital presence with a 24/7 AI smart assistant to qualify leads and automate appointment booking.">
+          Tu presencia digital completa con asistente inteligente 24/7 para calificar prospectos y agendar citas automáticamente.
         </T>
       ),
       originalPrice: 699,
@@ -605,8 +605,8 @@ export default function Services() {
       name: <T en="Nova Package">Paquete Nova</T>,
       titleColor: "text-violet-500",
       desc: (
-        <T en="Your high-performance online store — built to sell, scale and integrate AI.">
-          Tu tienda online de alto rendimiento — construida para vender, escalar e integrar IA.
+        <T en="Direct sales or booking engine with payment gateways and custom admin dashboard to scale revenue 24/7.">
+          Motor de ventas o reservas directas con pasarelas de pago y panel autogestionable para escalar tu facturación 24/7.
         </T>
       ),
       originalPrice: 1299,
@@ -690,163 +690,141 @@ export default function Services() {
           </>
         </T>,
       ],
-      footnote: (
-        <>
-          <T en="¹ Monthly API/Subscription costs for the AI tool are not included.">
-            ¹ Costos de suscripción/API mensual de la herramienta de IA no incluidos.
-          </T>
-          <br />
-          <T en="² Requires a minimum catalog of 20 products.">
-            ² Requiere un catálogo mínimo de 20 productos.
-          </T>
-        </>
-      ),
       highlight: false,
+      footnote: (
+        <T en="¹ Monthly tool subscription/API costs not included. ² Requires minimum 20 product catalog.">
+          ¹ Costos de suscripción/API mensual de la herramienta de IA no
+          incluidos. ² Requiere un catálogo mínimo de 20 productos.
+        </T>
+      ),
     },
   ];
 
-  const Check = () => (
-    <div className="flex justify-center select-none">
-      <CheckCircle2 size={16} className="text-indigo-600 dark:text-indigo-400" />
-    </div>
-  );
-
-  const Dash = () => (
-    <div className="flex justify-center select-none">
-      <span className="text-[var(--color-text-tertiary)]"> — </span>
-    </div>
-  );
-
-  const tableCategories = [
+  const comparisonCategories = [
     {
-      title: <T en="DESIGN">DISEÑO</T>,
-      icon: Palette,
-      rows: [
+      category: <T en="DESIGN">DISEÑO</T>,
+      features: [
         {
-          name: <T en="Pages / sections">Páginas / secciones</T>,
-          v1: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="1 page">1 página</T></span>,
-          v2: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Up to 5">Hasta 5</T></span>,
-          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Unlimited">Ilimitadas</T></span>,
+          name: <T en="Sections / Pages">Páginas / secciones</T>,
+          flash: <T en="1 page">1 página</T>,
+          constellation: <T en="Up to 5">Hasta 5</T>,
+          nova: <T en="Unlimited">Ilimitadas</T>,
         },
         {
           name: <T en="Exclusive design">Diseño exclusivo</T>,
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="Brand visual identity">Identidad visual de marca</T>,
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
       ],
     },
     {
-      title: <T en="FEATURES">FUNCIONALIDADES</T>,
-      icon: Wrench,
-      rows: [
+      category: <T en="FEATURES">FUNCIONALIDADES</T>,
+      features: [
         {
           name: <T en="Contact form">Formulario de contacto</T>,
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="WhatsApp button">Botón de WhatsApp</T>,
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="Self-managed blog">Blog autogestionable</T>,
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="24/7 Chatbot">Chatbot 24/7</T>,
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="Google Maps Integration">Integración de Google Maps</T>,
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="Online store">Tienda online</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
         {
           name: <T en="Payment gateways">Pasarelas de pago</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
       ],
     },
     {
-      title: <T en="ARTIFICIAL INTELLIGENCE">INTELIGENCIA ARTIFICIAL</T>,
-      icon: AISparkleIcon,
-      rows: [
+      category: <T en="ARTIFICIAL INTELLIGENCE">INTELIGENCIA ARTIFICIAL</T>,
+      features: [
         {
           name: <T en="AI tool included">Herramienta de IA incluida</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="1 included">1 incluida</T></span>,
+          flash: false,
+          constellation: false,
+          nova: <T en="1 included">1 incluida</T>,
         },
         {
           name: <T en="Chatbot trained on your catalog">Chatbot entrenado con tu catálogo</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
         {
           name: <T en="Smart cross-selling recommender">Recomendador inteligente cross-selling</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
       ],
     },
     {
-      title: <T en="BACKEND">BACKEND</T>,
-      icon: Database,
-      rows: [
+      category: <T en="BACKEND">BACKEND</T>,
+      features: [
         {
           name: <T en="Real-time database">Base de datos en tiempo real</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
         {
-          name: <T en="Client registration & login">Registro y login de clientes</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          name: <T en="Client registration and login">Registro y login de clientes</T>,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
         {
           name: <T en="Cloud stored images">Imágenes almacenadas en la nube</T>,
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
       ],
     },
     {
-      title: <T en="SEO & ANALYTICS">SEO & ANALYTICS</T>,
-      icon: BarChart3,
-      rows: [
+      category: <T en="SEO & ANALYTICS">SEO & ANALYTICS</T>,
+      features: [
         {
           name: <T en="Google indexing">Indexación en Google</T>,
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
         {
           name: (
@@ -854,9 +832,9 @@ export default function Services() {
               <T en="SEO On-Page">SEO On-Page</T>
             </Link>
           ),
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
         {
           name: (
@@ -864,9 +842,9 @@ export default function Services() {
               <T en="Technical SEO">SEO Técnico</T>
             </Link>
           ),
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
         {
           name: (
@@ -874,9 +852,9 @@ export default function Services() {
               <T en="Google Search Console">Google Search Console</T>
             </Link>
           ),
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
         {
           name: (
@@ -884,19 +862,19 @@ export default function Services() {
               <T en="Schema Markup">Schema Markup</T>
             </Link>
           ),
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
         {
           name: (
-            <T en={<><Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Business Profile</Link> guide</>}>
-              Guía de <Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">Google Business Profile</Link>
-            </T>
+            <Link to="/blog/google-business-profile-guia-completa" state={{ fromTab: "comparativa", fromServices: true }} className="hover:text-[var(--color-primary-base)] underline decoration-dotted underline-offset-4 transition-colors">
+              <T en="Google Business Profile Guide">Guía de Google Business Profile</T>
+            </Link>
           ),
-          v1: <Dash />,
-          v2: <Dash />,
-          v3: <Check />,
+          flash: false,
+          constellation: false,
+          nova: true,
         },
         {
           name: (
@@ -904,112 +882,224 @@ export default function Services() {
               <T en="Google Analytics 4">Google Analytics 4</T>
             </Link>
           ),
-          v1: <Dash />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: false,
+          constellation: true,
+          nova: true,
         },
       ],
     },
     {
-      title: <T en="INFRASTRUCTURE">INFRAESTRUCTURA</T>,
-      icon: ShieldCheck,
-      rows: [
+      category: <T en="INFRASTRUCTURE">INFRAESTRUCTURA</T>,
+      features: [
         {
           name: <T en="Domain included">Dominio incluido</T>,
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
         {
           name: <T en="Secure connection (HTTPS)">Conexión segura (HTTPS)</T>,
-          v1: <Check />,
-          v2: <Check />,
-          v3: <Check />,
+          flash: true,
+          constellation: true,
+          nova: true,
         },
       ],
     },
     {
-      title: <T en="SUPPORT">SOPORTE</T>,
-      icon: Headphones,
-      rows: [
+      category: <T en="SUPPORT">SOPORTE</T>,
+      features: [
         {
           name: <T en="Warranty days">Días de garantía</T>,
-          v1: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="30 days">30 días</T></span>,
-          v2: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="60 days">60 días</T></span>,
-          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="90 days">90 días</T></span>,
+          flash: <T en="30 days">30 días</T>,
+          constellation: <T en="60 days">60 días</T>,
+          nova: <T en="90 days">90 días</T>,
         },
         {
           name: <T en="Support priority">Prioridad de soporte</T>,
-          v1: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Normal">Normal</T></span>,
-          v2: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Normal">Normal</T></span>,
-          v3: <span className="text-[var(--color-text-primary)] font-bold text-sm"><T en="Priority">Prioritario</T></span>,
+          flash: <T en="Standard">Normal</T>,
+          constellation: <T en="Standard">Normal</T>,
+          nova: <T en="Priority">Prioritario</T>,
         },
       ],
     },
     {
-      title: <T en="PRICE">PRECIO</T>,
-      icon: Coins,
-      rows: [
+      category: <T en="PRICING">PRECIO</T>,
+      features: [
         {
           name: <T en="Base price">Precio base</T>,
-          v1: (
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] text-amber-500 font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
-                <T en="Flash">Destello</T>
-              </span>
-              <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(299 * 0.75) : 299} USD</span>
+          flash: (
+            <div>
+              <span className="font-extrabold text-sm block">Destello</span>
+              <span className="font-bold text-xs text-[var(--color-primary-base)]">$299 USD</span>
             </div>
           ),
-          v2: (
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] text-[var(--color-primary-base)] font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
-                <T en="Constellation">Constelación</T>
-              </span>
-              <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(699 * 0.75) : 699} USD</span>
+          constellation: (
+            <div>
+              <span className="font-extrabold text-sm block">Constelación</span>
+              <span className="font-bold text-xs text-[var(--color-primary-base)]">$699 USD</span>
             </div>
           ),
-          v3: (
-            <div className="flex flex-col items-center">
-              <span className="text-[10px] text-violet-500 font-display uppercase tracking-wider font-extrabold mb-0.5 select-none opacity-90">
-                <T en="Nova">Nova</T>
-              </span>
-              <span className="text-[var(--color-text-primary)] font-bold text-sm">${isOfferActive ? Math.round(1299 * 0.75) : 1299} USD</span>
+          nova: (
+            <div>
+              <span className="font-extrabold text-sm block">Nova</span>
+              <span className="font-bold text-xs text-[var(--color-primary-base)]">$1299 USD</span>
             </div>
+          ),
+        },
+        {
+          name: <T en="Select Package">Seleccionar Paquete</T>,
+          flash: (
+            <button
+              onClick={() => navigate("/cotizar?type=landing")}
+              className="px-4 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)] rounded-lg text-xs font-bold transition-all"
+            >
+              <T en="Choose this Plan">Elegir este Paquete</T>
+            </button>
+          ),
+          constellation: (
+            <button
+              onClick={() => navigate("/cotizar?type=corporate")}
+              className="px-4 py-2 bg-[var(--color-primary-base)] text-[var(--color-on-primary)] rounded-lg text-xs font-bold transition-all shadow-md shadow-[var(--color-primary-base)]/20 hover:opacity-90"
+            >
+              <T en="Choose this Plan">Elegir este Paquete</T>
+            </button>
+          ),
+          nova: (
+            <button
+              onClick={() => navigate("/cotizar?type=ecommerce")}
+              className="px-4 py-2 bg-[var(--color-surface-elevated)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)] rounded-lg text-xs font-bold transition-all"
+            >
+              <T en="Choose this Plan">Elegir este Paquete</T>
+            </button>
           ),
         },
       ],
     },
   ];
 
+  const addons = [
+    {
+      title: <T en="Quick Response Bot">Bot de Respuestas Rápidas</T>,
+      desc: (
+        <T en="Automated flows with pre-programmed buttons to answer FAQs and capture client info 24/7.">
+          Flujos automatizados con botones pre-programados para responder preguntas frecuentes y capturar datos de clientes 24/7.
+        </T>
+      ),
+      price: <T en="From $150">Desde $150</T>,
+      type: <T en="One-time Setup Fee">Pago Único de Implementación</T>,
+      typeMapValue: "quick-bot",
+      highlight: false,
+    },
+    {
+      title: <T en="Autonomous Sales Agent (AI)">Agente de Ventas Autónomo (IA)</T>,
+      desc: (
+        <T en="An AI with a 'brain' trained on your business data. Chats naturally, handles objections, and answers complex questions like a real employee.">
+          Una IA con "cerebro" entrenada con los datos de tu negocio. Conversa natural, maneja objeciones y atiende dudas complejas como un empleado real.
+        </T>
+      ),
+      price: <T en="From $49 / mo">Desde $49 / mes</T>,
+      type: <T en="Monthly Subscription">Suscripción Mensual</T>,
+      typeMapValue: "ai-agent",
+      highlight: false,
+    },
+    {
+      title: <T en="Semantic Search Engine">Buscador Semántico</T>,
+      desc: (
+        <T en="For e-commerce: your clients find products by describing what they need in natural language.">
+          Para e-commerce: tus clientes encuentran productos describiendo lo que necesitan en lenguaje natural.
+        </T>
+      ),
+      price: <T en="From $250">Desde $250</T>,
+      type: <T en="One-time Setup Fee">Pago Único de Implementación</T>,
+      typeMapValue: "semantic-search",
+      highlight: false,
+      badge: <T en="Recommended for Nova">Recomendado para Nova</T>,
+    },
+    {
+      title: <T en="Content Assistant">Asistente de Contenido</T>,
+      desc: (
+        <T en="Generates product descriptions, blog posts, and review responses automatically.">
+          Genera descripciones de productos, posts de blog y respuestas a reseñas automáticamente.
+        </T>
+      ),
+      price: <T en="From $29 / mo">Desde $29 / mes</T>,
+      type: <T en="Monthly Subscription">Suscripción Mensual</T>,
+      typeMapValue: "content-assistant",
+      highlight: false,
+    },
+  ];
+
+  const maintenanceFeatures = [
+    {
+      title: <T en="Hacking Protection">Protección contra hackeos</T>,
+      desc: (
+        <T en="We monitor your site so unauthorized access and malicious code injections are prevented.">
+          Vigilamos tu web para que nadie acceda sin permiso ni inyecte código malicioso.
+        </T>
+      ),
+      icon: Lock,
+    },
+    {
+      title: <T en="Continual Speed Optimization">Carga optimizada continuamente</T>,
+      desc: (
+        <T en="We continuously verify lightning speed and make performance tweaks whenever needed.">
+          Revisamos que tu web siga cargando rápido y hacemos ajustes cuando sea necesario.
+        </T>
+      ),
+      icon: Zap,
+    },
+    {
+      title: <T en="Regular Backups">Backups periódicos</T>,
+      desc: (
+        <T en="If anything ever breaks, we can restore your site immediately to its latest healthy state.">
+          Si algo falla, restauramos tu web al último estado estable.
+        </T>
+      ),
+      icon: Database,
+    },
+    {
+      title: <T en="Dependencies Kept Up to Date">Dependencias siempre actualizadas</T>,
+      desc: (
+        <T en="Zero security vulnerabilities caused by obsolete or unmaintained code libraries.">
+          Sin brechas de seguridad por código desactualizado.
+        </T>
+      ),
+      icon: RefreshCw,
+    },
+    {
+      title: <T en="Monthly Performance Report">Informe mensual de rendimiento</T>,
+      desc: (
+        <T en="Every month you receive a personalized summary of how your website is performing — visits, trends, and actionable recommendations. Nova clients also receive sales data.">
+          Cada mes recibes un resumen personalizado del rendimiento de tu web — visitas, tendencias y recomendaciones accionables. Los clientes Nova reciben además datos de ventas.
+        </T>
+      ),
+      icon: BarChart3,
+    },
+  ];
+
+  const Dash = () => (
+    <div className="flex justify-center select-none">
+      <span className="text-[var(--color-text-tertiary)]"> — </span>
+    </div>
+  );
+
   return (
     <div className="min-h-[100svh] flex flex-col bg-[var(--color-surface-base)] relative overflow-hidden">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 md:px-10 py-16 md:py-24 relative z-10">
         {/* Header */}
-        <section className="text-center space-y-4 mb-12">
+        <section className="text-center space-y-6 mb-20">
           <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em]">
-            <T en="Solutions that Convert">Soluciones que Convierten</T>
+            <T en="Solutions That Convert">Soluciones que Convierten</T>
           </span>
-          <h1 className="text-5xl md:text-7xl font-display font-black tracking-tighter max-w-4xl mx-auto leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
-            <T
-              en={
-                <>
-                  Scale your business <br className="hidden md:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                    with Custom Digital Engineering
-                  </span>
-                </>
-              }
-            >
-              Impulsa tu negocio <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                con ingeniería digital a medida
-              </span>
+          <h1 className="text-5xl md:text-8xl font-display font-black tracking-tighter">
+            <T en={<>Power your business <br className="hidden md:block" /> with tailored digital engineering</>}>
+              Impulsa tu negocio <br className="hidden md:block" /> con ingeniería digital a medida
             </T>
           </h1>
-          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto">
-            <T en="Transform your web presence into a 24/7 sales engine designed to grow your local or international business.">
+          <p className="text-[var(--color-text-secondary)] text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            <T en="Turn your digital presence into a 24/7 sales machine designed to scale your business.">
               Transforma tu presencia digital en una máquina de ventas 24/7 diseñada para hacer crecer tu negocio.
             </T>
           </p>
@@ -1021,42 +1111,31 @@ export default function Services() {
             <div className="-mx-8 md:-mx-16 -mt-8 md:-mt-16 mb-8 md:mb-12 bg-[var(--color-primary-base)]/10 border-b border-[var(--color-primary-base)]/30 px-4 py-4 md:py-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 text-center text-sm md:text-base relative z-10">
               <span className="font-bold text-[var(--color-text-primary)]">
                 <T en="Launch Offer: Get a 25% discount through the entire first month!">
-                  Oferta de lanzamiento: ¡todo el primer mes con 25% de
-                  descuento!
+                  Oferta de lanzamiento: ¡todo el primer mes con 25% de descuento!
                 </T>
               </span>
-              <CountdownPill targetDate={targetDate} onExpire={() => setIsOfferActive(false)} />
+              <CountdownPill
+                targetDate={targetDate}
+                onExpire={() => setIsOfferActive(false)}
+              />
             </div>
           )}
 
           <section className="space-y-12 text-center">
             <div className="flex flex-col items-center gap-6">
-              <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+              <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
                 <T en="Our Plans">Nuestros Paquetes</T>
               </span>
-              <h2 className="text-5xl md:text-7xl font-display font-black tracking-tighter leading-[1.1] md:leading-[1.05] text-[var(--color-text-primary)]">
-                <T
-                  en={
-                    <>
-                      Smart <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                        Investment
-                      </span>
-                    </>
-                  }
-                >
-                  Inversión <br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary-base)] to-[var(--color-accent-blue)] inline-block pb-1 pr-1">
-                    Inteligente
-                  </span>
-                </T>
+              <h2 className="text-4xl md:text-6xl font-display font-black tracking-tighter">
+                <T en="Smart Investment">Inversión Inteligente</T>
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left max-w-lg lg:max-w-none mx-auto pb-20 lg:pb-0">
-              {plans.map((plan, i) => (
+            {/* Grid de Precios */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
+              {plans.map((plan) => (
                 <PlanCard
-                  key={i}
+                  key={plan.id}
                   plan={plan}
                   isOfferActive={isOfferActive}
                   navigate={navigate}
@@ -1064,602 +1143,322 @@ export default function Services() {
               ))}
             </div>
 
-            {/* Comparar todos los planes button */}
-            <div className="pt-8 text-center mx-auto">
+            <div className="pt-8">
               <button
-                type="button"
-                style={{ cursor: "pointer" }}
                 onClick={handleToggleComparison}
-                className="text-sm font-black uppercase tracking-widest text-[var(--color-primary-base)] bg-transparent border-none outline-none select-none flex items-center gap-2 mx-auto cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-[var(--color-text-primary)] font-bold text-xs uppercase tracking-wider hover:border-[var(--color-primary-base)] transition-all cursor-pointer"
               >
-                <T en="Compare all plans">Comparar todos los planes</T>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform duration-300 ${showComparison ? "rotate-180" : ""}`}
-                />
+                {showComparison ? (
+                  <T en="Hide full comparison ↑">Ocultar comparativa ↑</T>
+                ) : (
+                  <T en="Compare all plans ↓">Comparar todos los planes ↓</T>
+                )}
               </button>
             </div>
-
-            {/* Collapsible Comparative Table */}
-            <div
-              ref={tableRef}
-              id="comparison-table"
-              style={{
-                maxHeight: showComparison ? "2500px" : "0px",
-                transition: "max-height 0.5s ease",
-              }}
-              className="overflow-hidden w-full text-left"
-            >
-                <div className="overflow-x-auto w-full">
-                  <table className="w-full text-left border-collapse min-w-[750px]">
-                    <thead>
-                      <tr className="md:hidden border-b border-[var(--color-border-subtle)]">
-                        <th className="sticky left-0 z-20 p-0 bg-[var(--color-surface-base)] pointer-events-none select-none min-w-[260px] w-[260px]">
-                          <div className="flex items-center justify-between w-full px-4 py-2 text-indigo-500 bg-indigo-500/5 border-b border-indigo-500/10">
-                            <ArrowLeft size={13} strokeWidth={3} className="shrink-0" />
-                            <div className="flex items-center gap-1 text-[9px] uppercase tracking-widest font-black">
-                              <Pointer size={11} className="-rotate-45 shrink-0 text-indigo-500" />
-                              <T en="Swipe">Desliza</T>
-                            </div>
-                            <ArrowRight size={13} strokeWidth={3} className="shrink-0" />
-                          </div>
-                        </th>
-                        <th className="bg-[var(--color-surface-base)]" />
-                        <th className="bg-[var(--color-surface-base)]" />
-                        <th className="bg-[var(--color-surface-base)]" />
-                      </tr>
-                      <tr className="border-b border-[var(--color-border-subtle)] sticky top-0 bg-[var(--color-surface-base)] z-10">
-                        <th className="p-4 pl-6 text-left font-extrabold text-xs uppercase tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-surface-base)] min-w-[260px] w-[260px]">
-                          <T en="Characteristics">Características</T>
-                        </th>
-                      <th className="p-6 py-8 text-center bg-[var(--color-surface-base)]">
-                        <div className="font-display font-black text-amber-500 text-lg md:text-2xl tracking-tight">
-                          <T en="Flash">Destello</T>
-                        </div>
-                        <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
-                          ${isOfferActive ? Math.round(299 * 0.75) : 299} USD
-                        </div>
-                      </th>
-                      <th className="p-6 py-8 text-center bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5">
-                        <div className="font-display font-black text-[var(--color-primary-base)] text-lg md:text-2xl tracking-tight">
-                          <T en="Constellation">Constelación</T>
-                        </div>
-                        <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
-                          ${isOfferActive ? Math.round(699 * 0.75) : 699} USD
-                        </div>
-                      </th>
-                      <th className="p-6 py-8 text-center bg-[var(--color-surface-base)]">
-                        <div className="font-display font-black text-violet-500 text-lg md:text-2xl tracking-tight">
-                          <T en="Nova">Nova</T>
-                        </div>
-                        <div className="text-sm md:text-lg text-[var(--color-text-primary)] mt-2 font-black">
-                          ${isOfferActive ? Math.round(1299 * 0.75) : 1299} USD
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableCategories.map((cat, catIdx) => (
-                      <React.Fragment key={catIdx}>
-                        {/* Category Row */}
-                        <motion.tr
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={showComparison ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                          transition={{
-                            duration: 0.4,
-                            delay: catIdx * 0.1,
-                            ease: [0.25, 0.46, 0.45, 0.94],
-                          }}
-                          className="bg-[var(--color-primary-base)]/[0.04] dark:bg-[var(--color-primary-base)]/[0.06] border-y border-[var(--color-border-subtle)]/70 font-sans"
-                        >
-                          <td colSpan={4} className="p-4 pl-4 text-sm md:text-[15px] font-display font-black uppercase tracking-wider text-[var(--color-text-primary)]">
-                            <span className="flex items-center gap-3 relational-heading">
-                              {cat.icon && <cat.icon className="text-indigo-600 dark:text-indigo-400 w-5 h-5 flex-shrink-0" />}
-                              {cat.title}
-                            </span>
-                          </td>
-                        </motion.tr>
-                        {/* Features Rows */}
-                        {cat.rows.map((row, rowIdx) => (
-                          <motion.tr
-                            key={rowIdx}
-                            initial={{ opacity: 0 }}
-                            animate={showComparison ? { opacity: 1 } : { opacity: 0 }}
-                            transition={{
-                              duration: 0.3,
-                              delay: catIdx * 0.08 + rowIdx * 0.04,
-                              ease: "easeOut",
-                            }}
-                            className={rowIdx % 2 === 1 ? "bg-[var(--color-surface-elevated)]/50 font-sans" : "font-sans"}
-                          >
-                            <td className="p-4 pl-4 text-left text-sm text-[var(--color-text-secondary)] font-medium min-w-[260px] w-[260px]">
-                              {row.name}
-                            </td>
-                            <td className="p-4 text-center text-sm font-bold">
-                              {row.v1}
-                            </td>
-                            <td className="p-4 text-center text-sm font-bold bg-indigo-50/10 dark:bg-indigo-950/5">
-                              {row.v2}
-                            </td>
-                            <td className="p-4 text-center text-sm font-bold">
-                              {row.v3}
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </React.Fragment>
-                    ))}
-                     {/* Action buttons row */}
-                    <tr className="border-t border-[var(--color-border-subtle)]">
-                      <td className="p-4 bg-[var(--color-surface-base)] pl-6 text-xs font-black uppercase tracking-wider text-[var(--color-text-tertiary)]">
-                        <T en="Select Plan">Seleccionar Paquete</T>
-                      </td>
-                      <td className="p-4 bg-[var(--color-surface-base)] text-center">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <button
-                            onClick={() => navigate("/cotizar?type=landing")}
-                            style={{ cursor: "pointer" }}
-                            className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
-                          >
-                            <T en="Choose this Plan">Elegir este Paquete</T>
-                          </button>
-                        </div>
-                      </td>
-                      <td className="p-4 bg-[var(--color-surface-base)] bg-indigo-50/10 dark:bg-indigo-950/5 text-center">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <button
-                            onClick={() => navigate("/cotizar?type=corporate")}
-                            style={{ cursor: "pointer" }}
-                            className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all bg-[var(--color-primary-base)] text-[var(--color-on-primary)] shadow-md border-none whitespace-nowrap cursor-pointer"
-                          >
-                            <T en="Choose this Plan">Elegir este Paquete</T>
-                          </button>
-                        </div>
-                      </td>
-                      <td className="p-4 bg-[var(--color-surface-base)] text-center">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <button
-                            onClick={() => navigate("/cotizar?type=ecommerce")}
-                            style={{ cursor: "pointer" }}
-                            className="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border-2 border-[var(--color-border-strong)] text-[var(--color-text-primary)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] hover:bg-[var(--color-surface-highlight)] whitespace-nowrap cursor-pointer"
-                          >
-                            <T en="Choose this Plan">Elegir este Paquete</T>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
           </section>
+
+          {/* Comparativa Detallada */}
+          <AnimatePresence>
+            {showComparison && (
+              <motion.div
+                id="comparison-table"
+                ref={tableRef}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="overflow-hidden pt-16 border-t border-[var(--color-border-subtle)] mt-16 select-text selection:bg-[var(--color-primary-base)]/20 selection:text-[var(--color-primary-base)]"
+              >
+                <div className="text-center mb-12">
+                  <h3 className="text-3xl font-display font-bold mb-4">
+                    <T en="Feature Comparison">Comparativa de Características</T>
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="Explore the exact technical specifications of every package.">
+                      Explora en detalle técnico qué incluye cada paquete.
+                    </T>
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto relative shadow-2xl rounded-2xl border border-[var(--color-border-subtle)]">
+                  <table className="w-full text-left border-collapse text-xs md:text-sm bg-[var(--color-surface-elevated)]">
+                    <thead>
+                      <tr className="border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]">
+                        <th className="p-4 md:p-6 font-bold text-[var(--color-text-primary)] min-w-[200px]">
+                          <T en="Swipe →">Desliza →</T>
+                        </th>
+                        {plans.map((p) => (
+                          <th
+                            key={p.id}
+                            className={`p-4 md:p-6 text-center font-bold min-w-[140px] md:min-w-[180px] ${
+                              p.highlight
+                                ? "bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)]"
+                                : "text-[var(--color-text-primary)]"
+                            }`}
+                          >
+                            <span className="block text-sm md:text-base font-black font-display">
+                              {p.name}
+                            </span>
+                            <span className="text-xs font-medium text-[var(--color-text-secondary)]">
+                              ${isOfferActive ? Math.round(p.originalPrice * 0.75) : p.originalPrice} USD
+                            </span>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border-subtle)] font-medium">
+                      {comparisonCategories.map((cat, cIdx) => (
+                        <React.Fragment key={cIdx}>
+                          <tr className="bg-[var(--color-surface-base)]/60">
+                            <td
+                              colSpan={4}
+                              className="p-3 md:p-4 font-black uppercase text-[10px] md:text-xs tracking-widest text-[var(--color-primary-base)] bg-[var(--color-surface-base)]"
+                            >
+                              {cat.category}
+                            </td>
+                          </tr>
+                          {cat.features.map((feat: any, fIdx: number) => (
+                            <tr
+                              key={fIdx}
+                              className="hover:bg-[var(--color-surface-highlight)] transition-colors"
+                            >
+                              <td className="p-4 md:p-6 font-semibold text-[var(--color-text-primary)]">
+                                {feat.name}
+                              </td>
+                              {["flash", "constellation", "nova"].map(
+                                (planId) => {
+                                  const val = feat[planId];
+                                  const isHighlight = planId === "constellation";
+                                  return (
+                                    <td
+                                      key={planId}
+                                      className={`p-4 md:p-6 text-center ${
+                                        isHighlight
+                                          ? "bg-[var(--color-primary-base)]/5"
+                                          : ""
+                                      }`}
+                                    >
+                                      {typeof val === "boolean" ? (
+                                        val ? (
+                                          <div className="flex justify-center">
+                                            <CheckCircle2
+                                              size={18}
+                                              className="text-emerald-500"
+                                            />
+                                          </div>
+                                        ) : (
+                                          <Dash />
+                                        )
+                                      ) : val ? (
+                                        <span className="font-bold text-[var(--color-text-primary)]">
+                                          {val}
+                                        </span>
+                                      ) : (
+                                        <Dash />
+                                      )}
+                                    </td>
+                                  );
+                                },
+                              )}
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* AI Add-ons Section */}
-        <section className="space-y-12 py-20 border-t border-[var(--color-border-subtle)]">
-          <div className="flex flex-col items-center text-center gap-6">
-            <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
+        {/* Addons Section */}
+        <section className="mb-32 space-y-12">
+          <div className="text-center space-y-4">
+            <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-elevated)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)] inline-block">
               <T en="Exclusive Add-ons">Add-ons Exclusivos</T>
             </span>
-            <h2 className="text-4xl md:text-5xl font-display font-black tracking-tighter">
-              <T
-                en={
-                  <>
-                    Power your site with{" "}
-                    <br className="hidden md:block lg:hidden" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 inline-block pb-1 pr-1">
-                      Artificial Intelligence
-                    </span>
-                  </>
-                }
-              >
-                Potencia tu web con <br className="hidden md:block lg:hidden" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 inline-block pb-1 pr-1">
-                  Inteligencia Artificial
-                </span>
+            <h2 className="text-4xl md:text-6xl font-display font-black tracking-tight">
+              <T en={<>Power your web with <br className="hidden md:block" /> Artificial Intelligence</>}>
+                Potencia tu web con <br className="hidden md:block" /> Inteligencia Artificial
               </T>
             </h2>
-            <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl mx-auto">
-              <T en="Optional add-ons with additional cost to implement in your plan to take your platform to the next level of automation.">
-                Complementos opcionales (add-ons) con costo adicional al
-                implementar en tu plan para llevar tu plataforma al siguiente
-                nivel de automatización.
+            <p className="text-[var(--color-text-secondary)] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
+              <T en="Optional add-on features with separate pricing to integrate into your plan and take your platform to the next level of automation.">
+                Complementos opcionales (add-ons) con costo adicional al implementar en tu plan para llevar tu plataforma al siguiente nivel de automatización.
               </T>
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <motion.div
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 20 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-purple-500/50 transition-colors duration-500 bento-glow-hover opacity-0 [transform:translateY(20px)]"
-            >
-              <div className="space-y-6">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
-                  <Bot size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">
-                    <T en="Lead Capture Bot">Bot de Respuestas Rápidas</T>
-                  </h3>
-                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="Automated flows with pre-programmed buttons to answer FAQs and capture client contact info 24/7.">
-                      Flujos automatizados con botones pre-programados para
-                      responder preguntas frecuentes y capturar datos de
-                      clientes 24/7.
-                    </T>
-                  </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">
-                    <T en="One-time Setup">Pago Único de Implementación</T>
-                  </span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]">
-                    <T en="From $150">Desde $150</T>
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate("/cotizar?addon=bot_fast")}
-                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
+            {addons.map((addon, i) => (
+              <div
+                key={i}
+                className="p-6 rounded-[var(--radius-bento)] glass-panel border border-[var(--color-border-subtle)] flex flex-col justify-between hover:border-[var(--color-primary-base)] transition-all duration-300 group"
               >
-                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
-              </button>
-            </motion.div>
-
-            <motion.div
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 20 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: 0.1 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-emerald-500/50 transition-colors duration-300 bento-glow-hover opacity-0 [transform:translateY(20px)]"
-            >
-              <div className="space-y-6">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 dark:text-emerald-400">
-                  <BrainCircuit size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">
-                    <T en="Autonomous AI Sales Agent">
-                      Agente de Ventas Autónomo (IA)
-                    </T>
-                  </h3>
-                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="An AI with a 'brain' (like Gemini or Grok) trained on your business. It chats naturally, handles objections, and answers complex questions like a real employee.">
-                      Una IA con "cerebro" entrenada con los datos de tu
-                      negocio. Conversa natural, maneja objeciones y atiende
-                      dudas complejas como un empleado real.
-                    </T>
-                  </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">
-                    <T en="Monthly Subscription">Suscripción Mensual</T>
-                  </span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]">
-                    <T en="From $49 / month">Desde $49 / mes</T>
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate("/cotizar?addon=ai_agent")}
-                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
-              >
-                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
-              </button>
-            </motion.div>
-
-            <motion.div
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 20 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: 0.2 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-blue-500/50 transition-colors duration-300 bento-glow-hover opacity-0 [transform:translateY(20px)]"
-            >
-              <div className="space-y-6">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 dark:text-blue-400">
-                  <Zap size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight flex flex-wrap items-center gap-2">
-                    <T en="Semantic Search">Buscador Semántico</T>
-                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-400 text-[9px] uppercase font-bold tracking-wider border border-violet-500/20 shadow-sm leading-none">
-                      <T en="Recommended for Nova">Recomendado para Nova</T>
+                <div className="space-y-4">
+                  {addon.badge && (
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--color-primary-base)] bg-[var(--color-surface-highlight)] px-2.5 py-1 rounded-full border border-[var(--color-primary-base)]/20 inline-block">
+                      {addon.badge}
                     </span>
+                  )}
+                  <h3 className="text-xl font-display font-bold group-hover:text-[var(--color-primary-base)] transition-colors">
+                    {addon.title}
                   </h3>
-                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="For e-commerce: your customers find products describing what they need in natural language.">
-                      Para e-commerce: tus clientes encuentran productos
-                      describiendo lo que necesitan en lenguaje natural.
-                    </T>
+                  <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                    {addon.desc}
                   </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">
-                    <T en="One-time Setup">Pago Único de Implementación</T>
-                  </span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]">
-                    <T en="From $250">Desde $250</T>
-                  </span>
                 </div>
-              </div>
-              <button
-                onClick={() => navigate("/cotizar?addon=semantic_search")}
-                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
-              >
-                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
-              </button>
-            </motion.div>
-
-            <motion.div
-              whileInView={{ opacity: 1, y: 0 }}
-              initial={{ opacity: 0, y: 20 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: 0.3 }}
-              className="p-8 rounded-[var(--radius-bento)] bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex flex-col justify-between group hover:border-indigo-500/50 transition-colors duration-300 bento-glow-hover opacity-0 [transform:translateY(20px)]"
-            >
-              <div className="space-y-6">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 dark:text-indigo-400">
-                  <AISparkleIcon size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-display font-bold mb-2 tracking-tight">
-                    <T en="Content Assistant">Asistente de Contenido</T>
-                  </h3>
-                  <p className="text-[var(--color-text-secondary)] text-sm leading-relaxed mb-4">
-                    <T en="Automatically generate product descriptions, blog posts, and review responses.">
-                      Genera descripciones de productos, posts de blog y
-                      respuestas a reseñas automáticamente.
-                    </T>
-                  </p>
-                  <span className="text-[10px] font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mb-1">
-                    <T en="Monthly Subscription">Suscripción Mensual</T>
-                  </span>
-                  <span className="text-sm font-black text-[var(--color-text-primary)]">
-                    <T en="From $29 / month">Desde $29 / mes</T>
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => navigate("/cotizar?addon=content_assistant")}
-                className="mt-8 text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)] hover:gap-4 flex items-center gap-2 transition-all"
-              >
-                <T en="Quote Add-on">Cotizar Add-on</T> <ArrowRight size={14} />
-              </button>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Hosting & Support Section */}
-        <section className="space-y-12 py-20 border-t border-[var(--color-border-subtle)]">
-          <div className="flex flex-col lg:flex-row gap-12 items-center">
-            <div className="flex-1 space-y-6">
-              <span className="glass-badge inline-block text-emerald-500 text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-emerald-500/20">
-                <T en="Post-Launch">Post-Lanzamiento</T>
-              </span>
-              <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">
-                <T
-                  en={
-                    <>
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-[var(--color-accent-blue)]">
-                        Premium
-                      </span>{" "}
-                      Maintenance & Support
-                    </>
-                  }
-                >
-                  Mantenimiento y Soporte{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-[var(--color-accent-blue)]">
-                    Premium
-                  </span>
-                </T>
-              </h2>
-              <p className="text-[var(--color-text-secondary)] text-lg max-w-2xl">
-                <T en="When your project goes live, your warranty begins. After that, we offer a $30/mo subscription to keep your business running smoothly without technical headaches.">
-                  Al entregar tu proyecto comienza tu periodo de garantía. A
-                  partir de ahí, ofrecemos una suscripción accesible para
-                  mantener tus servidores activos y tu web libre de hackeos.
-                </T>
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                    <ShieldCheck className="text-emerald-500" size={20} />
-                    <T en="Anti-hack Protection">Protección contra hackeos</T>
+                <div className="pt-6 border-t border-[var(--color-border-subtle)] mt-6 space-y-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)] block">
+                      {addon.type}
+                    </span>
+                    <span className="text-xl font-display font-black text-[var(--color-text-primary)]">
+                      {addon.price}
+                    </span>
                   </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    <T en="We monitor your website so no one accesses without permission or injects malicious code.">
-                      Vigilamos tu web para que nadie acceda sin permiso ni inyecte código malicioso.
-                    </T>
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                    <Zap className="text-amber-500" size={20} />
-                    <T en="Continuously Optimized Loading">Carga optimizada continuamente</T>
-                  </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    <T en="We check that your web continues to load quickly and make adjustments when necessary.">
-                      Revisamos que tu web siga cargando rápido y hacemos ajustes cuando sea necesario.
-                    </T>
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                    <Database className="text-blue-500" size={20} />
-                    <T en="Periodic Backups">Backups periódicos</T>
-                  </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    <T en="If anything fails, we restore your website to the last stable state.">
-                      Si algo falla, restauramos tu web al último estado estable.
-                    </T>
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                    <RefreshCw className="text-purple-500" size={20} />
-                    <T en="Always Updated Dependencies">Dependencias siempre actualizadas</T>
-                  </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    <T en="No security gaps due to outdated code.">
-                      Sin brechas de seguridad por código desactualizado.
-                    </T>
-                  </p>
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <div className="flex items-center gap-2 text-[var(--color-text-primary)] font-bold">
-                    <StatisticUpIcon className="text-indigo-500" size={20} />
-                    <T en="Monthly Performance Report">Informe mensual de rendimiento</T>
-                  </div>
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    <T en="Every month you receive a personalized summary of how your website is performing — visits, trends, and actionable recommendations. Nova clients also receive sales data.">
-                      Cada mes recibes un resumen personalizado del rendimiento de tu web — visitas, tendencias y recomendaciones accionables. Los clientes Nova reciben además datos de ventas.
-                    </T>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="w-full lg:w-[400px] flex-shrink-0 bg-[var(--color-surface-base)] p-8 rounded-[var(--radius-bento)] border border-[var(--color-border-strong)] relative overflow-hidden group hover:border-emerald-500/50 transition-colors duration-500 shadow-xl">
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-emerald-500/10 blur-[80px] rounded-full group-hover:bg-emerald-500/20 transition-colors"></div>
-              <h3 className="text-2xl font-display font-bold mb-2 relative">
-                <T en="Peace of Mind">Tranquilidad Total</T>
-              </h3>
-              <p className="text-sm text-[var(--color-text-secondary)] mb-6 relative">
-                <T en="Focus on running your business, we take care of the code.">
-                  Enfócate en tu negocio, nosotros nos encargamos del código.
-                </T>
-              </p>
-              <div className="flex items-baseline gap-1 mb-8 relative">
-                <span className="text-5xl font-black text-[var(--color-text-primary)]">
-                  $30
-                </span>
-                <span className="text-[var(--color-text-tertiary)] uppercase text-xs font-bold tracking-widest">
-                  <T en="USD / month">USD / mes</T>
-                </span>
-              </div>
-              <ul className="space-y-4 mb-8 relative">
-                {[
-                  <T en="Anti-hack Protection">
-                    Protección contra hackeos
-                  </T>,
-                  <T en="Continuously Optimized Loading">
-                    Carga optimizada continuamente
-                  </T>,
-                  <T en="Periodic Backups">
-                    Backups periódicos
-                  </T>,
-                  <T en="Always Updated Dependencies">
-                    Dependencias siempre actualizadas
-                  </T>,
-                  <T en="Monthly performance report">
-                    Informe mensual de rendimiento
-                  </T>,
-                ].map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-3 text-sm text-[var(--color-text-secondary)] font-medium"
+                  <button
+                    onClick={() => navigate(`/cotizar?addon=${addon.typeMapValue}`)}
+                    className="w-full py-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-strong)] text-xs font-bold hover:border-[var(--color-primary-base)] hover:bg-[var(--color-surface-highlight)] transition-all cursor-pointer"
                   >
-                    <CheckCircle2
-                      size={18}
-                      className="text-emerald-500 mt-0.5 flex-shrink-0"
-                    />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => {
-                  navigate("/cotizar?addon=hosting");
-                }}
-                className="w-full py-4 rounded-xl font-bold bg-[#E8F5E9] hover:bg-[#C8E6C9] dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 transition-colors relative cursor-pointer"
-              >
-                <T en="Include Add-on in Plan">
-                  Incluir en la Planificación
-                </T>
-              </button>
+                    <T en="Quote Add-on">Cotizar Add-on</T>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Mantenimiento Section */}
+        <section className="mb-32">
+          <div className="bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] rounded-[var(--radius-bento)] p-8 md:p-16 relative overflow-hidden">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              <div className="lg:col-span-7 space-y-6">
+                <span className="text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] bg-[var(--color-surface-base)] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)] inline-block">
+                  <T en="Post-Launch">Post-Lanzamiento</T>
+                </span>
+                <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight leading-tight">
+                  <T en="Premium Maintenance & Support">Mantenimiento y Soporte Premium</T>
+                </h2>
+                <p className="text-[var(--color-text-secondary)] text-sm md:text-base leading-relaxed">
+                  <T en="Upon project delivery your warranty period begins. Afterwards, we offer an accessible subscription to keep your servers running and your web free from vulnerabilities.">
+                    Al entregar tu proyecto comienza tu periodo de garantía. A partir de ahí, ofrecemos una suscripción accesible para mantener tus servidores activos y tu web libre de hackeos.
+                  </T>
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                  {maintenanceFeatures.map((feat, idx) => {
+                    const FeatIcon = feat.icon;
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-4 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] space-y-2 ${
+                          idx === 4 ? "sm:col-span-2" : ""
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 text-xs font-bold text-[var(--color-text-primary)]">
+                          <FeatIcon size={16} className="text-[var(--color-primary-base)] shrink-0" />
+                          {feat.title}
+                        </div>
+                        <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                          {feat.desc}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="lg:col-span-5 flex flex-col justify-center">
+                <div className="p-8 rounded-2xl bg-[var(--color-surface-base)] border-2 border-[var(--color-primary-base)]/40 relative shadow-2xl space-y-6 text-center">
+                  <span className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
+                    <T en="Total Peace of Mind">Tranquilidad Total</T>
+                  </span>
+                  <p className="text-sm text-[var(--color-text-secondary)]">
+                    <T en="Focus on your business, we take care of the code.">
+                      Enfócate en tu negocio, nosotros nos encargamos del código.
+                    </T>
+                  </p>
+                  <div className="py-2">
+                    <span className="text-5xl font-display font-black text-[var(--color-text-primary)]">
+                      $30
+                    </span>
+                    <span className="text-xs font-bold text-[var(--color-text-tertiary)] uppercase tracking-wider block mt-1">
+                      USD / <T en="month">mes</T>
+                    </span>
+                  </div>
+                  <ul className="space-y-2.5 text-xs font-medium text-[var(--color-text-secondary)] text-left border-t border-[var(--color-border-subtle)] pt-6">
+                    {maintenanceFeatures.map((feat, i) => (
+                      <li key={i} className="flex items-center gap-2">
+                        <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                        {feat.title}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    onClick={() => navigate("/cotizar?step=plan&maintenance=true")}
+                    className="w-full py-3 rounded-xl bg-[var(--color-primary-base)] text-[var(--color-on-primary)] font-bold text-xs uppercase tracking-wider hover:opacity-90 transition-opacity shadow-lg shadow-[var(--color-primary-base)]/20 cursor-pointer"
+                  >
+                    <T en="Include in Project Plan">Incluir en la Planificación</T>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
+        {/* Why Polaris Section */}
         <WhyPolaris />
+
+        {/* Testimonials Section */}
         <Testimonials />
 
+        {/* Final CTA */}
         <FinalCTA />
       </main>
 
-      {/* Sticky price bar -- mobile only. Se oculta al llegar al footer para no tapar sus enlaces. */}
+      {/* Floating Bottom Sticky Price Bar on Mobile */}
       <div
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-md border-t border-[var(--color-border-subtle)] shadow-xl rounded-t-2xl transition-all duration-300 ${
-          hideStickyPriceBar ? "opacity-0 translate-y-4 pointer-events-none" : "opacity-100 translate-y-0"
+        className={`fixed bottom-0 left-0 right-0 z-40 lg:hidden transition-all duration-300 ease-out ${
+          hideStickyPriceBar
+            ? "translate-y-full opacity-0 pointer-events-none"
+            : "translate-y-0 opacity-100"
         }`}
       >
-
-        <div className="flex items-stretch divide-x divide-[var(--color-border-subtle)]">
-          
-          {/* Destello */}
-          <button
-            onClick={() => scrollToPlan("flash")}
-            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all cursor-pointer ${
-              activePricePlan === "flash" ? "bg-amber-500/8" : ""
-            }`}
-          >
-            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
-              activePricePlan === "flash" ? "text-amber-400" : "text-[var(--color-text-tertiary)]"
-            }`}>
-              <T en="Flash">Destello</T>
-            </span>
-            <span className={`text-sm font-black transition-colors ${
-              activePricePlan === "flash" ? "text-amber-400" : "text-[var(--color-text-secondary)]"
-            }`}>
-              ${isOfferActive ? Math.round(299 * 0.75) : 299}
-            </span>
-            {activePricePlan === "flash" && (
-              <div className="w-4 h-0.5 rounded-full bg-amber-400 mt-1" />
-            )}
-          </button>
-
-          {/* Constelación */}
-          <button
-            onClick={() => scrollToPlan("constellation")}
-            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all cursor-pointer relative ${
-              activePricePlan === "constellation" ? "bg-[var(--color-primary-base)]/8" : ""
-            }`}
-          >
-            {/* Más popular badge */}
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap">
-              <T en="Most Popular">Más Popular</T>
-            </div>
-            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
-              activePricePlan === "constellation" ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-tertiary)]"
-            }`}>
-              <T en="Constellation">Constelación</T>
-            </span>
-            <span className={`text-sm font-black transition-colors ${
-              activePricePlan === "constellation" ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-secondary)]"
-            }`}>
-              ${isOfferActive ? Math.round(699 * 0.75) : 699}
-            </span>
-            {activePricePlan === "constellation" && (
-              <div className="w-4 h-0.5 rounded-full bg-[var(--color-primary-base)] mt-1" />
-            )}
-          </button>
-
-          {/* Nova */}
-          <button
-            onClick={() => scrollToPlan("nova")}
-            className={`flex-1 flex flex-col items-center justify-center py-3 px-2 transition-all cursor-pointer ${
-              activePricePlan === "nova" ? "bg-violet-500/8" : ""
-            }`}
-          >
-            <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
-              activePricePlan === "nova" ? "text-violet-400" : "text-[var(--color-text-tertiary)]"
-            }`}>
-              Nova
-            </span>
-            <span className={`text-sm font-black transition-colors ${
-              activePricePlan === "nova" ? "text-violet-400" : "text-[var(--color-text-secondary)]"
-            }`}>
-              ${(isOfferActive ? Math.round(1299 * 0.75) : 1299).toLocaleString("en-US")}
-            </span>
-            {activePricePlan === "nova" && (
-              <div className="w-4 h-0.5 rounded-full bg-violet-400 mt-1" />
-            )}
-          </button>
-
+        <div className="glass-panel border-t border-[var(--color-border-subtle)] px-3 py-2.5 flex items-center justify-between gap-1 shadow-2xl bg-[var(--color-surface-elevated)]/95 backdrop-blur-xl">
+          {[
+            { id: "flash", name: <T en="Flash">Destello</T>, price: 299 },
+            { id: "constellation", name: <T en="Constellation">Constelación</T>, price: 699, popular: true },
+            { id: "nova", name: "Nova", price: 1299 },
+          ].map((item) => {
+            const isActive = activePricePlan === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => scrollToPlan(item.id)}
+                className={`flex-1 py-2 px-1 rounded-xl flex flex-col items-center justify-center transition-all relative cursor-pointer ${
+                  isActive
+                    ? "bg-[var(--color-primary-base)]/15 border border-[var(--color-primary-base)]/40 shadow-sm"
+                    : "hover:bg-[var(--color-surface-highlight)] border border-transparent"
+                }`}
+              >
+                {item.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[var(--color-primary-base)] text-white text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full whitespace-nowrap">
+                    <T en="Most Popular">Más Popular</T>
+                  </div>
+                )}
+                <span className={`text-[10px] font-black uppercase tracking-wider transition-colors ${
+                  isActive ? "text-[var(--color-primary-base)]" : "text-[var(--color-text-secondary)]"
+                }`}>
+                  {item.name}
+                </span>
+                <span className="text-xs font-display font-black text-[var(--color-text-primary)]">
+                  ${isOfferActive ? Math.round(item.price * 0.75) : item.price}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
