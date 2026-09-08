@@ -620,7 +620,7 @@ export default function Services() {
           items: [
             <T en="Unlimited product catalog">Catálogo ilimitado de productos</T>,
             <T en="Initial loading of 20 products">Carga Inicial de 20 productos</T>,
-            <T en="Configured payment gateways">Pasarelas de pago configuradas</T>,
+            <T en="Configured payment gateways (Azul, CardNET, PayPal, Stripe)">Pasarelas de pago (Azul, CardNET, PayPal, Stripe)</T>,
             <T en="Inventory manager">Gestor de inventario</T>,
             <T en="Admin panel">Panel de administración</T>,
           ],
@@ -783,7 +783,7 @@ export default function Services() {
           v3: <Check />,
         },
         {
-          name: <T en="Payment gateways">Pasarelas de pago</T>,
+          name: <T en="Payment gateways (Azul, CardNET, PayPal, Stripe)">Pasarelas de pago (Azul, CardNET, PayPal, Stripe)</T>,
           v1: <Dash />,
           v2: <Dash />,
           v3: <Check />,

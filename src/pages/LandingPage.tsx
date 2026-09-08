@@ -738,7 +738,7 @@ export default function LandingPage() {
                     className="text-emerald-600 dark:text-emerald-400 shrink-0"
                   />
                   <span>
-                    <T en="Stripe & payment systems">Pasarela segura de pago</T>
+                    <T en="Local (Azul, CardNET) & global payments">Pasarelas locales (Azul, CardNET) y globales</T>
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-[11px] text-[var(--color-text-secondary)]">
@@ -1143,8 +1143,8 @@ export default function LandingPage() {
                       className="text-emerald-600 dark:text-emerald-400 shrink-0"
                     />
                     <span>
-                      <T en="Stripe or custom payment gateways">
-                        Pasarela Stripe o métodos locales
+                      <T en="Payment gateways (Azul, CardNET, PayPal, Stripe)">
+                        Pasarelas Azul, CardNET, PayPal y Stripe
                       </T>
                     </span>
                   </div>
