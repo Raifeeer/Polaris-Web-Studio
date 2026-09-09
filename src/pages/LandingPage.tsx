@@ -1170,11 +1170,11 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5 }}
-            className="md:col-span-2 lg:col-span-3 rounded-2xl md:rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.09] via-[var(--color-surface-base)] to-emerald-500/[0.03] p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+            className="md:col-span-2 lg:col-span-3 rounded-2xl md:rounded-3xl border border-[#16C8C1]/30 bg-gradient-to-br from-[#16C8C1]/[0.10] via-[var(--color-surface-base)] to-[#16C8C1]/[0.03] p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
           >
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-[0.16em]">
-                <Globe size={12} className="text-emerald-500 shrink-0" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#16C8C1]/10 border border-[#16C8C1]/25 text-[#0faaa4] dark:text-[#5ee7df] text-[10px] font-black uppercase tracking-[0.16em]">
+                <Globe size={12} className="text-[#16C8C1] shrink-0" />
                 <T en="Free Local Tool · Google Maps">Herramienta Gratuita · Google Maps</T>
               </div>
               <h3 className="text-xl md:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
@@ -1190,7 +1190,7 @@ export default function LandingPage() {
             </div>
             <Link
               to="/local-lift"
-              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-[#16C8C1] hover:bg-[#13b5ae] px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all hover:-translate-y-0.5"
             >
               <T en="Audit my business for free">Auditar mi negocio gratis</T>
               <ArrowRight size={15} />
