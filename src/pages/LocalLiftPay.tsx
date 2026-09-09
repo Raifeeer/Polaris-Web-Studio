@@ -16,10 +16,36 @@ const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: strin
 
 function PopularLogo({ className = "h-5 w-auto" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 4L24 20L12 36L0 20L12 4Z" fill="#002B49" />
-      <path d="M12 10L19.5 20L12 30L4.5 20L12 10Z" fill="#0072CE" />
-      <text x="32" y="27" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="20" fontWeight="900" fill="#002B49" letterSpacing="-0.5">Popular</text>
+    <svg className={className} viewBox="0 0 140 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="popGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#00357A" />
+          <stop offset="50%" stopColor="#0052A5" />
+          <stop offset="100%" stopColor="#0080D2" />
+        </linearGradient>
+      </defs>
+      <rect width="36" height="36" rx="6" fill="url(#popGrad)" />
+      <g fill="#FFFFFF">
+        <path d="M 18 18 L 25.5 18 L 32 19 A 14 14 0 0 1 16.05 31.86 L 16.99 25.13 A 7.2 7.2 0 0 0 18 18 Z" />
+        <path d="M 16.12 25.07 L 14.30 31.75 A 14 14 0 0 1 8.10 29.56 L 12.92 23.94 A 7.2 7.2 0 0 0 16.12 25.07 Z" />
+        <path d="M 12.56 23.68 L 7.42 29.05 A 14 14 0 0 1 4.54 26.01 L 11.08 22.09 A 7.2 7.2 0 0 0 12.56 23.68 Z" />
+        <path d="M 10.74 21.84 L 3.89 25.57 A 14 14 0 0 1 4.02 21.89 L 10.81 19.98 A 7.2 7.2 0 0 0 10.74 21.84 Z" />
+        <path d="M 10.82 19.67 L 4.04 21.28 A 14 14 0 0 1 4.22 17.58 L 10.91 17.78 A 7.2 7.2 0 0 0 10.82 19.67 Z" />
+        <path d="M 10.93 17.47 L 4.25 16.96 A 14 14 0 0 1 4.88 13.37 L 11.27 15.63 A 7.2 7.2 0 0 0 10.93 17.47 Z" />
+        <path d="M 11.37 15.34 L 5.05 12.83 A 14 14 0 0 1 6.13 9.77 L 11.92 13.73 A 7.2 7.2 0 0 0 11.37 15.34 Z" />
+        <path d="M 12.06 13.48 L 6.40 9.29 A 14 14 0 0 1 8.01 6.77 L 12.89 12.19 A 7.2 7.2 0 0 0 12.06 13.48 Z" />
+        <path d="M 13.06 11.99 L 8.41 6.37 A 14 14 0 0 1 10.51 4.50 L 14.17 11.03 A 7.2 7.2 0 0 0 13.06 11.99 Z" />
+        <path d="M 14.39 10.90 L 11.05 4.26 A 14 14 0 0 1 13.44 3.03 L 15.68 10.27 A 7.2 7.2 0 0 0 14.39 10.90 Z" />
+        <path d="M 15.93 10.20 L 14.09 2.82 A 14 14 0 0 1 16.71 2.21 L 17.34 9.88 A 7.2 7.2 0 0 0 15.93 10.20 Z" />
+        <path d="M 17.60 9.89 L 17.45 2.12 A 14 14 0 0 1 20.08 2.18 L 18.99 9.93 A 7.2 7.2 0 0 0 17.60 9.89 Z" />
+        <path d="M 19.23 9.99 L 20.78 2.30 A 14 14 0 0 1 23.36 3.12 L 20.68 10.41 A 7.2 7.2 0 0 0 19.23 9.99 Z" />
+        <path d="M 20.89 10.52 L 23.96 3.39 A 14 14 0 0 1 26.23 4.88 L 22.06 11.28 A 7.2 7.2 0 0 0 20.89 10.52 Z" />
+        <path d="M 22.23 11.43 L 26.70 5.23 A 14 14 0 0 1 28.53 7.37 L 23.18 12.53 A 7.2 7.2 0 0 0 22.23 11.43 Z" />
+        <path d="M 23.30 12.71 L 28.85 7.82 A 14 14 0 0 1 30.12 10.50 L 23.95 14.23 A 7.2 7.2 0 0 0 23.30 12.71 Z" />
+        <path d="M 24.03 14.43 L 30.34 11.00 A 14 14 0 0 1 31.06 14.07 L 24.40 16.27 A 7.2 7.2 0 0 0 24.03 14.43 Z" />
+        <path d="M 24.43 16.48 L 31.20 14.61 A 14 14 0 0 1 31.39 17.84 L 24.50 17.89 A 7.2 7.2 0 0 0 24.43 16.48 Z" />
+      </g>
+      <text x="46" y="24" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="18" fontWeight="900" fill="currentColor" letterSpacing="-0.3">Popular</text>
     </svg>
   );
 }
