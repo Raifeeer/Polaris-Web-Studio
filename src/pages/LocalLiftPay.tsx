@@ -1,213 +1,132 @@
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useCallback, useEffect, useState, type ComponentProps } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
-import { FUNDING, PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, ArrowLeft, Check, Download, ExternalLink, KeyRound, Loader2, Mail, MapPin, ShieldCheck, Star, X, Zap } from "lucide-react";
+import { PayPalButtons } from "@paypal/react-paypal-js";
+import { AlertCircle, Check, Copy, Loader2, Mail, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
-import LocalLiftPolicyContent from "../components/LocalLiftPolicyContent";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import { downloadLocalLiftPoliciesPdf } from "../lib/localLiftPolicyPdf";
 
-const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string }> = {
-  impulso: { amount: "29", label: "Impulso", enLabel: "Boost" },
-  ascenso: { amount: "99", label: "Ascenso", enLabel: "Rise" },
+const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string; dopAmount: string }> = {
+  impulso: { amount: "29", label: "Impulso", enLabel: "Impulso", dopAmount: "1,750" },
+  ascenso: { amount: "99", label: "Ascenso", enLabel: "Ascenso", dopAmount: "5,950" },
 };
-const LOCAL_LIFT_TIER_SELECTION_TTL_MS = 30 * 60 * 1000;
 
-function normalizeLocalLiftTier(value: unknown): "impulso" | "ascenso" {
-  return value === "ascenso" || value === "implementado" ? "ascenso" : "impulso";
-}
+const BANK_ACCOUNTS = {
+  popular: {
+    name: "Banco Popular",
+    color: "#002B49",
+    holder: "Cristian Raifer Dicen",
+    account: "821234051",
+    type: "Cuenta de Ahorros",
+    idDoc: "402-3767656-0",
+    email: null,
+  },
+  bhd: {
+    name: "Banco BHD",
+    color: "#008037",
+    holder: "CRISTIAN DICEN",
+    account: "26841430016",
+    type: "Cuenta de Ahorros RD$",
+    idDoc: "40237676560",
+    email: "cristian2200299@gmail.com",
+  },
+  qik: {
+    name: "Qik Banco Digital",
+    color: "#4B1278",
+    holder: "Cristian Raifer Dicen",
+    account: "1001984493",
+    type: "Cuenta de Ahorro",
+    idDoc: "40237676560",
+    email: null,
+  },
+};
 
 export default function LocalLiftPay() {
   const { leadId } = useParams<{ leadId: string }>();
   const [searchParams] = useSearchParams();
   const { language } = useLanguage();
-  const prefersReducedMotion = useReducedMotion();
   const [status, setStatus] = useState<"loading" | "ready" | "paid" | "notfound">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean; address: string | null; rating: number | null; reviewCount: number | null; primaryType: string | null; mapsUri: string | null; invoiceNumber: string | null; portalProvisioned: boolean; sentPortalWelcomeEmail: boolean; paypalOrderId: string | null; paypalPayerEmail: string | null; paidAt: string | null; contactName: string; email: string } | null>(null);
-  const [invoiceDownloading, setInvoiceDownloading] = useState(false);
-  const [invoiceError, setInvoiceError] = useState("");
-  // Tier the user actually wants to pay — starts from URL ?tier param or from lead.tier
+  const [lead, setLead] = useState<{ businessName: string; city: string; tier: string; paid: boolean } | null>(null);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [isSwitchingTier, setIsSwitchingTier] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [termsError, setTermsError] = useState("");
-  const [policyModalOpen, setPolicyModalOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"paypal" | "transfer">("paypal");
+  const [selectedBank, setSelectedBank] = useState<"popular" | "bhd" | "qik">("popular");
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
 
-  const refreshLead = useCallback(async (initialLoad = false) => {
+  useEffect(() => {
     if (!leadId) {
-      if (initialLoad) setStatus("notfound");
+      setStatus("notfound");
       return;
     }
-    try {
-      const response = await fetch("/api/local-lift-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "lookup", leadId }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        if (initialLoad) setStatus("notfound");
-        return;
-      }
-      const normalizedTier = normalizeLocalLiftTier(data.tier);
-      setLead({ ...data, tier: normalizedTier, address: data.address || null, rating: data.rating ?? null, reviewCount: data.reviewCount ?? null, primaryType: data.primaryType || null, mapsUri: data.mapsUri || null, invoiceNumber: data.invoiceNumber || null, portalProvisioned: !!data.portalProvisioned, sentPortalWelcomeEmail: !!data.sentPortalWelcomeEmail, paypalOrderId: data.paypalOrderId || null, paypalPayerEmail: data.paypalPayerEmail || null, paidAt: data.paidAt || null, contactName: data.contactName || "", email: data.email || "" });
-      const urlTier = searchParams.get("tier");
-      let storedTier = "";
-      try {
-        const rawTier = sessionStorage.getItem(`polaris-local-lift-tier:${leadId}`);
-        const parsedTier = rawTier ? JSON.parse(rawTier) : null;
-        if (parsedTier?.savedAt && Date.now() - Number(parsedTier.savedAt) <= LOCAL_LIFT_TIER_SELECTION_TTL_MS && TIER_PRICE[parsedTier.tier]) {
-          storedTier = parsedTier.tier;
-        } else if (rawTier) {
-          sessionStorage.removeItem(`polaris-local-lift-tier:${leadId}`);
+    fetch(`/api/local-lift-order?leadId=${encodeURIComponent(leadId)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.success) {
+          setStatus("notfound");
+          return;
         }
-      } catch { /* no-op */ }
-      if (initialLoad) setSelectedTier(urlTier && TIER_PRICE[urlTier] ? normalizeLocalLiftTier(urlTier) : TIER_PRICE[storedTier] ? normalizeLocalLiftTier(storedTier) : normalizedTier);
-      setStatus(data.paid ? "paid" : "ready");
-    } catch {
-      if (initialLoad) setStatus("notfound");
-    }
+        setLead(data);
+        const urlTier = searchParams.get("tier");
+        const activeTier = urlTier && TIER_PRICE[urlTier] ? urlTier : (data.tier || "impulso");
+        setSelectedTier(activeTier);
+        setStatus(data.paid ? "paid" : "ready");
+
+        try {
+          localStorage.setItem(
+            "local_lift_active_order",
+            JSON.stringify({ leadId, tier: activeTier, businessName: data.businessName, city: data.city })
+          );
+        } catch {}
+      })
+      .catch(() => setStatus("notfound"));
   }, [leadId, searchParams]);
-
-  useEffect(() => {
-    void refreshLead(true);
-  }, [refreshLead]);
-
-  useEffect(() => {
-    if (!policyModalOpen) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPolicyModalOpen(false);
-    };
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [policyModalOpen]);
-
-  // Otra pestaña puede completar el pago mientras esta sigue abierta. Al
-  // volver al checkout, el backend es la autoridad y los botones desaparecen.
-  useEffect(() => {
-    const refreshWhenVisible = () => {
-      if (document.visibilityState === "visible") void refreshLead(false);
-    };
-    window.addEventListener("focus", refreshWhenVisible);
-    document.addEventListener("visibilitychange", refreshWhenVisible);
-    return () => {
-      window.removeEventListener("focus", refreshWhenVisible);
-      document.removeEventListener("visibilitychange", refreshWhenVisible);
-    };
-  }, [refreshLead]);
 
   const tier = selectedTier || lead?.tier || "impulso";
   const price = TIER_PRICE[tier] || TIER_PRICE["impulso"];
   const otherTier = tier === "impulso" ? "ascenso" : "impulso";
   const otherPrice = TIER_PRICE[otherTier];
+  const activeBank = BANK_ACCOUNTS[selectedBank];
 
-  const paymentErrorMessage = (data: any, fallback: string) => {
-    if (data?.reason === "order_in_progress") return language === "en" ? "Another checkout tab is already preparing this payment. Wait a moment and try again." : "Otra pestaña ya está preparando este pago. Espera un momento e inténtalo de nuevo.";
-    if (data?.reason === "payment_in_progress") return language === "en" ? "This payment is already being confirmed. Wait a moment before trying again." : "Este pago ya se está confirmando. Espera un momento antes de intentarlo otra vez.";
-    if (data?.reason === "already_paid" || data?.alreadyPaid) return language === "en" ? "This order has already been paid." : "Esta orden ya fue pagada.";
-    if (data?.reason === "tier_conflict") return language === "en" ? "This checkout is already associated with another package. Reload to see the correct option." : "Este checkout ya está asociado a otro paquete. Recarga para ver la opción correcta.";
-    if (data?.reason === "service_terms_required" || data?.error === "service_terms_required") return language === "en" ? "Accept the service conditions before continuing to payment." : "Acepta las condiciones del servicio antes de continuar con el pago.";
-    if (data?.reason === "amount_mismatch" || data?.error === "amount_mismatch") return language === "en" ? "The payment amount does not match this package. Reload the checkout and try again." : "El monto del pago no coincide con este paquete. Recarga el checkout e inténtalo de nuevo.";
-    return data?.error || fallback;
+  const handleCopy = (text: string, fieldName: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    setTimeout(() => setCopiedField(null), 2500);
   };
 
-  const handleTierChange = () => {
-    if (isSwitchingTier) return;
-    setIsSwitchingTier(true);
-    window.setTimeout(() => {
-      setSelectedTier(otherTier);
-      try { if (leadId) sessionStorage.setItem(`polaris-local-lift-tier:${leadId}`, JSON.stringify({ tier: otherTier, savedAt: Date.now() })); } catch { /* no-op */ }
-      setIsSwitchingTier(false);
-    }, prefersReducedMotion ? 0 : 420);
-  };
-
-  const handleCreateOrder: NonNullable<ComponentProps<typeof PayPalButtons>["createOrder"]> = async () => {
-    setErrorMsg("");
-    if (!termsAccepted) {
-      const message = language === "en"
-        ? "Accept the service conditions before continuing to payment."
-        : "Acepta las condiciones del servicio antes de continuar con el pago.";
-      setTermsError(message);
-      throw new Error("terms_acceptance_required");
-    }
-    setTermsError("");
-    const res = await fetch("/api/local-lift-order", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "create-order", leadId, tier }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (data?.alreadyPaid) {
-      setErrorMsg(paymentErrorMessage(data, language === "en" ? "This order has already been paid." : "Esta orden ya fue pagada."));
-      await refreshLead(false);
-      throw new Error("already_paid");
-    }
-    if (!res.ok || !data.success || typeof data.orderId !== "string") {
-      const message = paymentErrorMessage(data, language === "en" ? "We couldn't start the payment." : "No se pudo iniciar el pago.");
-      setErrorMsg(message);
-      throw new Error(message);
-    }
-    return data.orderId;
-  };
-
-  const handlePaymentApproval: NonNullable<ComponentProps<typeof PayPalButtons>["onApprove"]> = async (data) => {
-    if (!data.orderID) return;
-    try {
-      const res = await fetch("/api/local-lift-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "confirm", leadId, tier, paypalOrderId: data.orderID, termsAccepted: true, termsVersion: "local-lift-2026-08-20" }),
-      });
-      const result = await res.json().catch(() => ({}));
-      if (result?.alreadyPaid) {
-        await refreshLead(false);
-        return;
-      }
-      if (!res.ok || !result.success) {
-        setErrorMsg(paymentErrorMessage(result, language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp."));
-        return;
-      }
-      try { if (leadId) sessionStorage.removeItem(`polaris-local-lift-tier:${leadId}`); } catch { /* no-op */ }
-      await refreshLead(false);
-    } catch {
-      setErrorMsg(language === "en" ? "We couldn't confirm this payment automatically — write us on WhatsApp." : "No pudimos confirmar este pago automáticamente — escríbenos por WhatsApp.");
-    }
-  };
+  const whatsappMessage = encodeURIComponent(
+    language === "en"
+      ? `Hello Cristian, I made the transfer for Local Lift (${lead?.businessName || "My business"} - Plan ${price.enLabel} - $${price.amount} USD / RD$ ${price.dopAmount}). Bank: ${activeBank.name}. Order ID: ${leadId}. Attaching receipt:`
+      : `Hola Cristian, realicé la transferencia para Local Lift (${lead?.businessName || "Mi negocio"} - Plan ${price.label} - $${price.amount} USD / RD$ ${price.dopAmount}). Banco: ${activeBank.name}. ID de orden: ${leadId}. Adjunto comprobante:`
+  );
 
   return (
     <div className="min-h-screen bg-[var(--color-surface-base)] text-[var(--color-text-primary)]">
       <Navbar />
-      <main className="max-w-lg mx-auto px-4 sm:px-6 py-16 md:py-24">
-        {status !== "loading" && (
-          <Link
-            to="/local-lift"
-            className="mb-5 inline-flex items-center gap-2 rounded-lg px-1 py-1 text-xs font-bold text-[var(--color-text-tertiary)] transition-colors hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
-          >
-            <ArrowLeft size={14} />
-            <T en="Back to diagnosis">Volver al diagnóstico</T>
-          </Link>
-        )}
+
+      <main className="max-w-xl mx-auto px-6 pt-32 pb-24">
         {status === "loading" && (
-          <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-[var(--color-primary-base)]" /></div>
+          <div className="flex flex-col items-center justify-center py-20 text-[var(--color-text-tertiary)]">
+            <Loader2 className="animate-spin mb-3" size={32} />
+            <p className="text-sm"><T en="Loading your proposal...">Cargando tu propuesta...</T></p>
+          </div>
         )}
 
         {status === "notfound" && (
-          <div className="text-center rounded-[var(--radius-bento)] glass-panel p-10 border border-[var(--color-border-subtle)]">
-            <AlertCircle size={28} className="mx-auto text-red-400" />
-            <p className="mt-4 text-sm text-[var(--color-text-secondary)]"><T en="We couldn't find this payment link. It may have expired — write us on WhatsApp and we'll help you directly.">No pudimos encontrar este enlace de pago. Puede haber vencido — escríbenos por WhatsApp y te ayudamos directo.</T></p>
-            <a href="https://wa.me/18299200544" target="_blank" rel="noreferrer" className="mt-6 inline-block rounded-xl bg-[var(--color-primary-base)] px-6 py-3 text-sm font-black text-white">WhatsApp</a>
+          <div className="rounded-[var(--radius-bento)] glass-panel p-8 text-center border border-red-500/20">
+            <AlertCircle size={32} className="mx-auto text-red-400 mb-3" />
+            <h1 className="text-xl font-display font-black tracking-tight"><T en="Proposal not found">Propuesta no encontrada</T></h1>
+            <p className="mt-2 text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              <T en="This payment link has expired or doesn't exist. Run a new free diagnosis to generate one.">
+                Este enlace de pago expiró o no existe. Corre un nuevo diagnóstico gratuito para generar uno.
+              </T>
+            </p>
+            <Link to="/local-lift" className="mt-5 inline-block text-xs font-black text-[var(--color-primary-base)] underline">
+              <T en="Go to Local Lift">Ir a Local Lift</T>
+            </Link>
           </div>
         )}
 
@@ -223,360 +142,237 @@ export default function LocalLiftPay() {
             <div className="mt-5 rounded-xl bg-[var(--color-surface-elevated)] border border-[var(--color-border-subtle)] p-5">
               <Mail size={22} className="mx-auto text-[var(--color-primary-base)] mb-3" />
               <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                {lead.tier === "ascenso" ? (
-                  <T en="Your Rise package is now in preparation. We start from your payment and will send it to your portal for review within five hours. No meeting or password is required.">
-                    Tu paquete Ascenso ya está en preparación. Comenzamos desde tu pago y lo enviaremos a tu portal para revisión dentro de cinco horas. No necesitas agendar una reunión ni compartir contraseñas.
-                  </T>
-                ) : (
-                  <T en="We're already working on your full Local Lift report. You'll receive it at your email within the next 2 hours. If you don't hear from us, write us on WhatsApp.">
-                    Ya estamos trabajando en tu informe completo de Local Lift. Lo recibirás en tu correo en las próximas 2 horas. Si no recibes nada, escríbenos por WhatsApp.
-                  </T>
-                )}
+                <T en="We're already preparing your full Local Lift package. You'll receive it at your email within the next 2 hours. If you don't hear from us, write us on WhatsApp.">
+                  Ya estamos preparando tu paquete completo de Local Lift. Lo recibirás en tu correo en las próximas 2 horas. Si no recibes nada, escríbenos por WhatsApp.
+                </T>
               </p>
-              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
-                <a
-                  href="https://wa.me/18299200544"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: "#25D366" }}
-                >
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">
-                    <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.92 0-2.65-1.03-5.14-2.91-7.01A9.85 9.85 0 0 0 12.04 2Zm0 18.15h-.01a8.24 8.24 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.55 3.71-8.26 8.27-8.26a8.2 8.2 0 0 1 5.84 2.42 8.19 8.19 0 0 1 2.42 5.83c0 4.56-3.71 8.25-8.27 8.25Zm4.53-6.19c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.24-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.16.04-.31-.02-.43-.06-.13-.56-1.34-.77-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01a.92.92 0 0 0-.67.31c-.23.25-.87.85-.87 2.07 0 1.23.89 2.41 1.02 2.58.12.16 1.75 2.67 4.24 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.14-1.18-.06-.1-.22-.16-.47-.28Z" />
-                  </svg>
-                  <T en="Chat on WhatsApp">Escribir por WhatsApp</T>
-                </a>
-                <a
-                  href={`mailto:hola@polarisweb.studio?subject=${encodeURIComponent(`Local Lift — ${lead.businessName}`)}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-5 py-2.5 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-                >
-                  <Mail size={14} />
-                  <T en="Write us by email">Escribir por correo</T>
-                </a>
-              </div>
-            </div>
-
-            {/* Detalle real del pago -- PayPal, monto, tier, negocio */}
-            <div className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
-                <T en="Payment details">Detalle del pago</T>
-              </p>
-              <dl className="space-y-2 text-xs">
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[var(--color-text-tertiary)]"><T en="Business">Negocio</T></dt>
-                  <dd className="font-bold text-[var(--color-text-primary)] text-right">{lead.businessName}</dd>
-                </div>
-                {lead.city && (
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="text-[var(--color-text-tertiary)]"><T en="City">Ciudad</T></dt>
-                    <dd className="font-bold text-[var(--color-text-primary)] text-right">{lead.city}</dd>
-                  </div>
-                )}
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[var(--color-text-tertiary)]"><T en="Package">Paquete</T></dt>
-                    <dd className="font-bold text-[var(--color-text-primary)] text-right">{language === "en" ? (TIER_PRICE[lead.tier]?.enLabel || lead.tier) : (TIER_PRICE[lead.tier]?.label || lead.tier)}</dd>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-[var(--color-text-tertiary)]"><T en="Amount">Monto</T></dt>
-                  <dd className="font-bold text-emerald-500 text-right">${TIER_PRICE[lead.tier]?.amount || "—"} USD</dd>
-                </div>
-                {lead.invoiceNumber && (
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="text-[var(--color-text-tertiary)]"><T en="Polaris payment N°">N.° de pago Polaris</T></dt>
-                    <dd className="font-bold text-[var(--color-text-primary)] text-right font-mono">{lead.invoiceNumber}</dd>
-                  </div>
-                )}
-                {lead.paypalOrderId && (
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="text-[var(--color-text-tertiary)]"><T en="PayPal reference">Referencia PayPal</T></dt>
-                    <dd className="font-bold text-[var(--color-text-primary)] text-right font-mono break-all">{lead.paypalOrderId}</dd>
-                  </div>
-                )}
-                {lead.paypalPayerEmail && (
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="text-[var(--color-text-tertiary)]"><T en="Payer email">Correo del pagador</T></dt>
-                    <dd className="font-bold text-[var(--color-text-primary)] text-right break-all">{lead.paypalPayerEmail}</dd>
-                  </div>
-                )}
-                {lead.paidAt && (
-                  <div className="flex items-center justify-between gap-3">
-                    <dt className="text-[var(--color-text-tertiary)]"><T en="Paid on">Pagado el</T></dt>
-                    <dd className="font-bold text-[var(--color-text-primary)] text-right">
-                      {new Date(lead.paidAt).toLocaleDateString(language === "en" ? "en-US" : "es-DO", { year: "numeric", month: "long", day: "numeric" })}
-                    </dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-
-            {/* Qué incluye el plan comprado -- mismo detalle que la pantalla de checkout */}
-            <div className="mt-4 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-5 text-left">
-              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
-                <T en={`What's included in ${TIER_PRICE[lead.tier]?.enLabel || "Local Lift"}`}>{`Qué incluye ${TIER_PRICE[lead.tier]?.label || "tu paquete"}`}</T>
-              </p>
-              {lead.tier === "ascenso" ? (
-                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
-                  {[
-                    ["Todo lo incluido en Impulso", "Everything in Boost"],
-                    ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
-                    ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
-                    ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
-                    ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
-                    ["Hasta tres rondas agrupadas de revisión desde el portal", "Up to three grouped review rounds through the portal"],
-                    ["Acompañamiento guiado desde el portal, sin reuniones obligatorias ni contraseñas", "Guided support through the portal, without mandatory meetings or passwords"],
-                  ].map(([es, en]) => (
-                    <li key={es} className="flex items-start gap-2">
-                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
-                      <T en={en}>{es}</T>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
-                  {[
-                    ["Auditoría completa de tu perfil local", "Complete audit of your local profile"],
-                    ["Descripción, servicios y llamadas a la acción optimizados", "Optimized description, services, and CTAs"],
-                    ["10 publicaciones listas para aplicar", "10 posts ready to apply"],
-                    ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
-                    ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
-                    ["Entrega por correo en 2 horas", "Delivered by email in 2 hours"],
-                  ].map(([es, en]) => (
-                    <li key={es} className="flex items-start gap-2">
-                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
-                      <T en={en}>{es}</T>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Acceso al portal -- las credenciales van por correo aparte, nunca
-                se muestran en pantalla (esta URL no exige sesión). */}
-            {lead.portalProvisioned && (
-              <div className="mt-4 rounded-xl border border-[var(--color-primary-base)]/25 bg-[var(--color-primary-base)]/[0.06] p-5 text-left">
-                <div className="flex items-start gap-3">
-                  <KeyRound size={18} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]" />
-                  <div>
-                    <p className="text-sm font-black text-[var(--color-text-primary)]">
-                      <T en="Your client portal is ready">Tu portal de cliente está listo</T>
-                    </p>
-                    <p className="mt-1.5 text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                      {lead.tier === "ascenso" ? (
-                        lead.sentPortalWelcomeEmail ? (
-                          <T en="We sent your access credentials to your email. Go to your portal to follow your package's progress and review it when it is ready.">
-                            Te enviamos tus credenciales de acceso por correo. Entra a tu portal para seguir el avance de tu paquete y revisarlo cuando esté listo.
-                          </T>
-                        ) : (
-                          <T en="Sign in with your existing account to follow your package's progress and review it when it is ready.">
-                            Entra con tu cuenta de siempre para seguir el avance de tu paquete y revisarlo cuando esté listo.
-                          </T>
-                        )
-                      ) : lead.sentPortalWelcomeEmail ? (
-                        <T en="We sent your access credentials to your email. From the portal you can follow your package's progress and download your invoice whenever you need it.">
-                          Te enviamos tus credenciales de acceso por correo. Desde el portal puedes seguir el avance de tu paquete y descargar tu factura cuando la necesites.
-                        </T>
-                      ) : (
-                        <T en="Sign in with your existing account to follow your package's progress and download your invoice whenever you need it.">
-                          Entra con tu cuenta de siempre para seguir el avance de tu paquete y descargar tu factura cuando la necesites.
-                        </T>
-                      )}
-                    </p>
-                    <Link
-                      to="/login"
-                      className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white hover:opacity-90 transition-opacity"
-                    >
-                      {lead.tier === "ascenso" ? (
-                        <T en="Go to my portal">Entrar a mi portal</T>
-                      ) : (
-                        <T en="Go to my portal">Entrar a mi portal</T>
-                      )}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Descarga directa de la factura, sin necesidad de entrar al portal */}
-            {lead.invoiceNumber && (
-              <button
-                type="button"
-                disabled={invoiceDownloading}
-                onClick={async () => {
-                  setInvoiceDownloading(true);
-                  setInvoiceError("");
-                  try {
-                    const res = await fetch("/api/local-lift-order", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ action: "invoice", leadId }),
-                    });
-                    if (!res.ok) {
-                      const payload = await res.json().catch(() => ({}));
-                      throw new Error(payload.error || (res.status === 404 ? "invoice_not_ready" : "download_failed"));
-                    }
-                    const blob = await res.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = `Factura-${lead.invoiceNumber}.pdf`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  } catch (error) {
-                    const code = error instanceof Error ? error.message : "download_failed";
-                    setInvoiceError(code === "invoice_not_ready"
-                      ? (language === "en" ? "The invoice is still being prepared. Try again in a moment." : "La factura todavía se está preparando. Intenta de nuevo en un momento.")
-                      : (language === "en" ? "We couldn't download the invoice. It is also attached to your confirmation email." : "No pudimos descargar la factura. También está adjunta a tu correo de confirmación."));
-                  } finally {
-                    setInvoiceDownloading(false);
-                  }
-                }}
-                className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-5 py-3 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors disabled:opacity-60"
+              <a
+                href="https://wa.me/18299200544"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[var(--color-border-subtle)] px-5 py-2.5 text-xs font-bold text-[var(--color-text-secondary)] hover:border-[var(--color-primary-base)]/40 transition-colors"
               >
-                {invoiceDownloading
-                  ? <><Loader2 size={14} className="animate-spin" /><T en="Generating…">Generando…</T></>
-                  : <><Download size={14} /><T en={`Download invoice N° ${lead.invoiceNumber}`}>{`Descargar factura N° ${lead.invoiceNumber}`}</T></>
-                }
-              </button>
-            )}
-            {invoiceError && <p className="mt-2 text-xs text-amber-500 text-left">{invoiceError}</p>}
-
-            {errorMsg && (
-              <div className="mt-4 flex items-start gap-2 text-left text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
-                <AlertCircle size={15} className="mt-0.5 shrink-0" /><span>{errorMsg}</span>
-              </div>
-            )}
+                <T en="Any questions? Write us">¿Alguna duda? Escríbenos</T>
+              </a>
+            </div>
           </div>
         )}
 
         {status === "ready" && lead && (
-          <div className="rounded-[var(--radius-bento)] glass-panel p-8 border border-[var(--color-primary-base)]/20">
+          <div className="rounded-[var(--radius-bento)] glass-panel p-6 sm:p-8 border border-[var(--color-primary-base)]/20">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]">
-              <T en="Local Lift">Local Lift</T>
+              <T en={`Local Lift · ${price.enLabel}`}>{`Local Lift · ${price.label}`}</T>
             </p>
             <h1 className="mt-2 text-2xl md:text-3xl font-display font-black tracking-[-0.03em]">{lead.businessName}</h1>
+            <p className="mt-1 text-sm text-[var(--color-text-tertiary)]">{lead.city}</p>
 
-            {/* Ubicación real desde Google Maps (place.address), no la ciudad que el cliente escribió */}
-            <div className="mt-1 flex flex-col gap-0.5">
-              {lead.address ? (
-                <p className="flex items-start gap-1.5 text-sm text-[var(--color-text-tertiary)]">
-                  <MapPin size={14} className="mt-0.5 shrink-0 text-[var(--color-primary-base)]/60" />
-                  <span>{lead.address}</span>
-                </p>
-              ) : lead.city ? (
-                <p className="text-sm text-[var(--color-text-tertiary)]">{lead.city}</p>
-              ) : null}
-              {lead.rating != null && (
-                <p className="flex items-center gap-1 text-xs text-[var(--color-text-tertiary)]">
-                  <Star size={12} className="text-amber-400 fill-amber-400" />
-                  <span className="font-bold text-[var(--color-text-secondary)]">{lead.rating.toFixed(1)}</span>
-                  {lead.reviewCount != null && <span>· {lead.reviewCount} <T en="reviews">reseñas</T></span>}
-                  {lead.primaryType && <span>· {lead.primaryType}</span>}
-                </p>
-              )}
-            </div>
-
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={tier}
-                initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8, scale: 0.99 }}
-                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {/* Detalle de qué incluye el tier elegido */}
-                <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4">
-              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-text-tertiary)] mb-3">
-                <T en={`What's included in ${price.enLabel}`}>{`Qué incluye ${price.label}`}</T>
-              </p>
-              {tier === "impulso" ? (
-                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
-                  {[
-                    ["Auditoría completa de tu perfil local", "Complete audit of your local profile"],
-                    ["Descripción, servicios y llamadas a la acción optimizados", "Optimized description, services, and CTAs"],
-                    ["10 publicaciones listas para aplicar", "10 posts ready to apply"],
-                    ["15 respuestas personalizadas para reseñas", "15 personalized review replies"],
-                    ["10 mensajes de WhatsApp para seguimiento", "10 WhatsApp follow-up messages"],
-                    ["Entrega por correo en 2 horas", "Delivered by email in 2 hours"],
-                  ].map(([es, en]) => (
-                    <li key={es} className="flex items-start gap-2">
-                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
-                      <T en={en}>{es}</T>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <ul className="space-y-1.5 text-xs text-[var(--color-text-secondary)]">
-                  {[
-                    ["Todo lo incluido en Impulso", "Everything in Boost"],
-                    ["Entrega preparada en un máximo de 5 horas corridas después del pago", "Prepared delivery within 5 consecutive hours after payment"],
-                    ["Análisis de reseñas recientes y buenas prácticas personalizadas", "Recent review analysis and personalized best practices"],
-                    ["Guía paso a paso para aplicar cada cambio", "Step-by-step guide to apply each change"],
-                    ["Indicaciones para aplicar textos e imágenes", "Instructions for applying text and images"],
-                    ["Hasta tres rondas agrupadas de revisión desde el portal", "Up to three grouped review rounds through the portal"],
-                    ["Acompañamiento guiado desde el portal, sin reuniones obligatorias ni contraseñas", "Guided support through the portal, without mandatory meetings or passwords"],
-                  ].map(([es, en]) => (
-                    <li key={es} className="flex items-start gap-2">
-                      <Check size={12} className="mt-0.5 shrink-0 text-emerald-500" />
-                      <T en={en}>{es}</T>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div className="mt-5 flex items-end gap-2">
-              <span className="text-4xl font-display font-black text-[var(--color-primary-base)]">${price.amount}</span>
+            <div className="mt-4 flex flex-wrap items-baseline gap-2">
+              <span className="text-4xl font-display font-black tracking-tight">${price.amount}</span>
               <span className="pb-1.5 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>
+              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md ml-auto">
+                ≈ RD$ {price.dopAmount}
+              </span>
             </div>
 
-            <div className="mt-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-highlight)]/45 px-4 py-3 text-left">
-              <label className="group flex cursor-pointer items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={termsAccepted}
-                  onChange={(event) => {
-                    setTermsAccepted(event.target.checked);
-                    if (event.target.checked) setTermsError("");
-                  }}
-                  className="peer sr-only"
-                />
-                <span
-                  aria-hidden="true"
-                  className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-[7px] border-2 transition-all duration-200 peer-focus-visible:ring-2 peer-focus-visible:ring-[#16C8C1] peer-focus-visible:ring-offset-2 ${termsAccepted ? "border-[#16C8C1] bg-[#16C8C1] text-[#111936] shadow-sm shadow-teal-500/20" : "border-slate-400 bg-white text-transparent group-hover:border-[#16C8C1]"}`}
+            {/* Payment Method Switcher */}
+            <div className="mt-6 flex rounded-xl bg-[var(--color-surface-elevated)] p-1 border border-[var(--color-border-subtle)]">
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("paypal")}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  paymentMethod === "paypal"
+                    ? "bg-[var(--color-surface-base)] text-[var(--color-text-primary)] shadow-sm border border-[var(--color-border-subtle)]"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                PayPal / Tarjeta
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentMethod("transfer")}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  paymentMethod === "transfer"
+                    ? "bg-[var(--color-surface-base)] text-[var(--color-text-primary)] shadow-sm border border-[var(--color-border-subtle)]"
+                    : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                }`}
+              >
+                Transferencia RD 🇩🇴
+              </button>
+            </div>
+
+            {/* PayPal Block */}
+            {paymentMethod === "paypal" && (
+              <div className="mt-6">
+                <PayPalCheckoutProvider>
+                  <PayPalButtons
+                    style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 48 }}
+                    createOrder={(_data, actions) =>
+                      actions.order.create({
+                        intent: "CAPTURE",
+                        purchase_units: [{ amount: { value: price.amount, currency_code: "USD" }, description: `Polaris Local Lift — ${price.label} — ${lead.businessName}` }],
+                      })
+                    }
+                    onApprove={async (_data, actions) => {
+                      if (!actions.order) return;
+                      const details = await actions.order.capture();
+                      try {
+                        const res = await fetch("/api/local-lift-order", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            action: "confirm",
+                            leadId,
+                            tier,
+                            paypalOrderId: details.id,
+                            paypalPayerEmail: details.payer?.email_address || null,
+                          }),
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data.success) {
+                          setErrorMsg(language === "en" ? "Payment went through, but we couldn't confirm it automatically — write us on WhatsApp." : "El pago pasó, pero no pudimos confirmarlo automáticamente — escríbenos por WhatsApp.");
+                          return;
+                        }
+                        setStatus("paid");
+                      } catch {
+                        setErrorMsg(language === "en" ? "Payment went through, but something failed on our end — write us on WhatsApp." : "El pago pasó, pero algo falló de nuestro lado — escríbenos por WhatsApp.");
+                      }
+                    }}
+                  />
+                </PayPalCheckoutProvider>
+                <p className="mt-4 flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]">
+                  <ShieldCheck size={13} /> <T en="Secure payment via PayPal.">Pago seguro vía PayPal.</T>
+                </p>
+              </div>
+            )}
+
+            {/* Local Bank Transfer Block */}
+            {paymentMethod === "transfer" && (
+              <div className="mt-6 space-y-4">
+                {/* Bank Tabs */}
+                <div className="grid grid-cols-3 gap-2">
+                  {(["popular", "bhd", "qik"] as const).map((bKey) => {
+                    const b = BANK_ACCOUNTS[bKey];
+                    const isSelected = selectedBank === bKey;
+                    return (
+                      <button
+                        key={bKey}
+                        type="button"
+                        onClick={() => setSelectedBank(bKey)}
+                        className={`p-2.5 rounded-xl border text-center transition-all ${
+                          isSelected
+                            ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/[0.08] shadow-sm font-black"
+                            : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] opacity-70 hover:opacity-100"
+                        }`}
+                      >
+                        <p className="text-[11px] font-bold text-[var(--color-text-primary)] leading-tight">{b.name}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Bank Account Details Card */}
+                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4 sm:p-5 text-left space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border-subtle)]">
+                    <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-primary)]">
+                      {activeBank.name}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)]">
+                      {activeBank.type}
+                    </span>
+                  </div>
+
+                  {/* Account Number */}
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                    <div>
+                      <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
+                        <T en="Account Number">No. de Cuenta</T>
+                      </p>
+                      <p className="font-mono text-sm font-bold text-[var(--color-text-primary)]">{activeBank.account}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(activeBank.account, "account")}
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                      title="Copiar número"
+                    >
+                      {copiedField === "account" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+
+                  {/* Account Holder */}
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                    <div>
+                      <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
+                        <T en="Beneficiary Name">Titular</T>
+                      </p>
+                      <p className="text-xs font-bold text-[var(--color-text-primary)]">{activeBank.holder}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(activeBank.holder, "holder")}
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                      title="Copiar titular"
+                    >
+                      {copiedField === "holder" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+
+                  {/* ID / Cédula */}
+                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                    <div>
+                      <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
+                        <T en="Identity Document">Cédula</T>
+                      </p>
+                      <p className="font-mono text-xs font-bold text-[var(--color-text-primary)]">{activeBank.idDoc}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(activeBank.idDoc, "idDoc")}
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                      title="Copiar cédula"
+                    >
+                      {copiedField === "idDoc" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    </button>
+                  </div>
+
+                  {/* Email if available */}
+                  {activeBank.email && (
+                    <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                      <div>
+                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
+                          <T en="Interbank Email">Correo interbancario</T>
+                        </p>
+                        <p className="font-mono text-xs text-[var(--color-text-primary)]">{activeBank.email}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(activeBank.email!, "email")}
+                        className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
+                        title="Copiar correo"
+                      >
+                        {copiedField === "email" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* WhatsApp Confirmation Button */}
+                <a
+                  href={`https://wa.me/18299200544?text=${whatsappMessage}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
                 >
-                  <Check size={13} strokeWidth={3} />
-                </span>
-                <span className="text-[11px] leading-5 text-[var(--color-text-secondary)]">
-                  <T en="By clicking a payment button, you accept the Local Lift service conditions and cancellation policy. You can read them before paying.">Al pulsar un botón de pago, aceptas las condiciones del servicio y la política de cancelación de Local Lift. Puedes leerlas antes de pagar.</T>{" "}
-                  <button
-                    type="button"
-                    onClick={() => setPolicyModalOpen(true)}
-                    className="font-bold text-[var(--color-primary-base)] underline underline-offset-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
-                  >
-                    <T en="Read conditions">Leer condiciones</T>
-                  </button>
-                </span>
-              </label>
-              {termsError && <p className="mt-2 text-[11px] font-bold text-red-500" role="alert">{termsError}</p>}
-            </div>
-
-            <div className="mt-3">
-              <PayPalCheckoutProvider>
-                <PayPalButtons
-                  style={{ layout: "vertical", shape: "rect", color: "gold", label: "pay", height: 48 }}
-                  createOrder={handleCreateOrder}
-                  onApprove={handlePaymentApproval}
-                />
-                <PayPalButtons
-                  fundingSource={FUNDING.CARD}
-                  style={{ layout: "vertical", shape: "rect", color: "silver", label: "pay", height: 48 }}
-                  createOrder={handleCreateOrder}
-                  onApprove={handlePaymentApproval}
-                />
-              </PayPalCheckoutProvider>
-            </div>
-              </motion.div>
-            </AnimatePresence>
+                  <MessageCircle size={16} />
+                  <T en="Send transfer receipt on WhatsApp">Enviar comprobante por WhatsApp</T>
+                </a>
+                <p className="text-[11px] text-center text-[var(--color-text-tertiary)]">
+                  <T en="Your order link is saved in your chat history so you can resume anytime.">
+                    El enlace a tu orden queda guardado en tu chat para que puedas reanudar cuando quieras.
+                  </T>
+                </p>
+              </div>
+            )}
 
             {errorMsg && (
               <div className="mt-4 flex items-start gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
@@ -587,96 +383,24 @@ export default function LocalLiftPay() {
             {/* Secondary tier option */}
             <div className="mt-5 rounded-xl border border-dashed border-[var(--color-border-subtle)] px-4 py-3">
               <p className="text-xs text-[var(--color-text-tertiary)] text-center mb-2">
-                <T en="Want to continue with another plan?">¿Quieres seguir con otro plan?</T>
+                <T en={`Or switch to ${otherPrice.enLabel} ($${otherPrice.amount})`}>{`¿Prefieres ${otherPrice.label} ($${otherPrice.amount})?`}</T>
               </p>
               <button
                 type="button"
-                onClick={handleTierChange}
-                disabled={isSwitchingTier}
-                className="w-full inline-flex items-center justify-center rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-3 py-2 text-[11px] font-bold leading-none whitespace-nowrap text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 disabled:cursor-wait disabled:opacity-70"
+                onClick={() => setSelectedTier(otherTier)}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-4 py-2 text-xs font-bold text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/14 transition-colors"
               >
-                {isSwitchingTier ? (
-                  <span className="inline-flex items-center gap-2" aria-live="polite">
-                    <Loader2 size={13} className="animate-spin" />
-                    <T en="Changing plan…">Cambiando plan…</T>
-                  </span>
-                ) : (
-                  <T en={`Switch to ${otherPrice.enLabel} ($${otherPrice.amount})`}>{`Cambiar a ${otherPrice.label} ($${otherPrice.amount})`}</T>
-                )}
+                <Sparkles size={13} />
+                {otherTier === "impulso"
+                  ? <T en="Switch to Impulso ($29) — quick wins">Cambiar a Impulso ($29) — mejoras rápidas</T>
+                  : <T en="Switch to Ascenso ($99) — full implementation">Cambiar a Ascenso ($99) — implementación completa</T>
+                }
               </button>
             </div>
-
-            <p className="mt-5 flex items-center gap-1.5 text-[11px] text-[var(--color-text-tertiary)]"><ShieldCheck size={13} /> <T en="Secure payment via PayPal.">Pago seguro vía PayPal.</T></p>
           </div>
         )}
-
-        {policyModalOpen && (
-          <div
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#111936]/55 p-3 backdrop-blur-sm sm:p-6"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="local-lift-policy-modal-title"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setPolicyModalOpen(false);
-            }}
-          >
-            <section className="flex max-h-[min(88vh,820px)] w-full max-w-3xl min-h-0 flex-col overflow-hidden rounded-2xl border border-[var(--color-primary-base)]/20 bg-[var(--color-surface-base)] shadow-2xl">
-              <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-4 py-4 sm:px-6">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[var(--color-primary-base)]">
-                    <T en="Local Lift policies">Políticas Local Lift</T>
-                  </p>
-                  <h2 id="local-lift-policy-modal-title" className="mt-1 font-display text-xl font-black tracking-tight text-[var(--color-text-primary)] sm:text-2xl">
-                    <T en="Service conditions">Condiciones del servicio</T>
-                  </h2>
-                </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => downloadLocalLiftPoliciesPdf(language === "en" ? "en" : "es")}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-border-subtle)] px-2.5 py-2 text-[11px] font-bold text-[var(--color-text-secondary)] transition-colors hover:border-[var(--color-primary-base)]/50 hover:text-[var(--color-primary-base)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
-                  >
-                    <Download size={14} />
-                    <span className="hidden sm:inline"><T en="Download PDF">Descargar PDF</T></span>
-                    <span className="sm:hidden"><T en="PDF">PDF</T></span>
-                  </button>
-                  <a
-                    href="/local-lift/politicas"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-2.5 py-2 text-[11px] font-bold text-[var(--color-primary-base)] transition-colors hover:bg-[var(--color-primary-base)]/14 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
-                  >
-                    <ExternalLink size={14} />
-                    <span className="hidden sm:inline"><T en="Open full page">Abrir página completa</T></span>
-                    <span className="sm:hidden"><T en="Open">Abrir</T></span>
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => setPolicyModalOpen(false)}
-                    aria-label={language === "en" ? "Close policies" : "Cerrar condiciones"}
-                    className="inline-flex items-center justify-center rounded-lg p-2 text-[var(--color-text-tertiary)] transition-colors hover:bg-[var(--color-surface-highlight)] hover:text-[var(--color-text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)]"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </header>
-              <div className="min-h-0 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6">
-                <LocalLiftPolicyContent compact />
-              </div>
-              <footer className="flex shrink-0 items-center justify-end border-t border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] px-4 py-3 sm:px-6">
-                <button
-                  type="button"
-                  onClick={() => setPolicyModalOpen(false)}
-                  className="rounded-lg bg-[var(--color-primary-base)] px-4 py-2 text-xs font-black text-white transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary-base)] focus-visible:ring-offset-2"
-                >
-                  <T en="Return to payment">Volver al pago</T>
-                </button>
-              </footer>
-            </section>
-          </div>
-        )}
-
       </main>
+
       <Footer />
     </div>
   );
