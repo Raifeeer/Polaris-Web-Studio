@@ -2357,8 +2357,8 @@ export default function LandingPage() {
                   </span>
                 </div>
                 <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  <T en="Optimize your Google Business Profile to rank first in your area. Get your business description, 10 ready-to-post updates, and 15 custom review responses in under 5 hours — without handing over your passwords.">
-                    Optimizamos tu perfil de Google Business para que aparezcas primero en tu zona. Te entregamos la descripción de tu negocio, 10 publicaciones listas y 15 respuestas personalizadas para reseñas en menos de 5 horas — sin pedirte contraseñas.
+                  <T en="Optimize your Google Business Profile so local customers find you with clear information and choose you. Get your business description, 10 ready-to-post updates, and 15 custom review responses in under 5 hours — without handing over your passwords.">
+                    Optimizamos tu perfil de Google Business para que los clientes de tu área te encuentren con información clara y te elijan. Te entregamos la descripción de tu negocio, 10 publicaciones listas y 15 respuestas personalizadas para reseñas en menos de 5 horas — sin pedirte contraseñas.
                   </T>
                 </p>
               </div>
