@@ -1,45 +1,77 @@
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams, Link } from "react-router-dom";
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import { AlertCircle, Check, Copy, Loader2, Mail, MessageCircle, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertCircle, Check, Copy, Loader2, Mail, MessageCircle, RefreshCw, ShieldCheck } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import AISparkleIcon from "../components/AISparkleIcon";
 import { PayPalCheckoutProvider } from "../components/PayPalCheckoutProvider";
 import { T, useLanguage } from "../context/LanguageContext";
 import { useDocumentTitle } from "../hooks/useDocumentTitle";
 
-const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string; dopAmount: string }> = {
-  impulso: { amount: "29", label: "Impulso", enLabel: "Impulso", dopAmount: "1,750" },
-  ascenso: { amount: "99", label: "Ascenso", enLabel: "Ascenso", dopAmount: "5,950" },
+const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: string }> = {
+  impulso: { amount: "29", label: "Impulso", enLabel: "Impulso" },
+  ascenso: { amount: "99", label: "Ascenso", enLabel: "Ascenso" },
 };
+
+function PopularLogo({ className = "h-5 w-auto" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 4L24 20L12 36L0 20L12 4Z" fill="#002B49" />
+      <path d="M12 10L19.5 20L12 30L4.5 20L12 10Z" fill="#0072CE" />
+      <text x="32" y="27" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="20" fontWeight="900" fill="#002B49" letterSpacing="-0.5">Popular</text>
+    </svg>
+  );
+}
+
+function BhdLogo({ className = "h-5 w-auto" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="20" r="14" fill="#008037" />
+      <path d="M10 20C10 16.6863 12.6863 14 16 14C19.3137 14 22 16.6863 22 20C22 23.3137 19.3137 26 16 26" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="16" cy="20" r="2.5" fill="#FFFFFF" />
+      <text x="36" y="27" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="22" fontWeight="900" fill="#008037" letterSpacing="0.5">BHD</text>
+    </svg>
+  );
+}
+
+function QikLogo({ className = "h-5 w-auto" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 130 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <text x="0" y="28" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="28" fontWeight="900" fill="#4B1278" letterSpacing="-1">qik</text>
+      <circle cx="27" cy="9" r="3.5" fill="#00E5FF" />
+      <text x="50" y="27" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="13" fontWeight="800" fill="#4B1278" letterSpacing="0.5">BANCO</text>
+    </svg>
+  );
+}
 
 const BANK_ACCOUNTS = {
   popular: {
     name: "Banco Popular",
     color: "#002B49",
-    holder: "Cristian Raifer Dicen",
+    LogoComponent: PopularLogo,
+    holder: "Cristian Dicen",
     account: "821234051",
-    type: "Cuenta de Ahorros",
-    idDoc: "402-3767656-0",
-    email: null,
+    idDoc: "40237676560",
+    email: "cristian2200299@gmail.com",
   },
   bhd: {
     name: "Banco BHD",
     color: "#008037",
-    holder: "CRISTIAN DICEN",
+    LogoComponent: BhdLogo,
+    holder: "Cristian Dicen",
     account: "26841430016",
-    type: "Cuenta de Ahorros RD$",
     idDoc: "40237676560",
     email: "cristian2200299@gmail.com",
   },
   qik: {
     name: "Qik Banco Digital",
     color: "#4B1278",
-    holder: "Cristian Raifer Dicen",
+    LogoComponent: QikLogo,
+    holder: "Cristian Dicen",
     account: "1001984493",
-    type: "Cuenta de Ahorro",
     idDoc: "40237676560",
-    email: null,
+    email: "cristian2200299@gmail.com",
   },
 };
 
@@ -55,7 +87,30 @@ export default function LocalLiftPay() {
   const [selectedBank, setSelectedBank] = useState<"popular" | "bhd" | "qik">("popular");
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // Live Exchange Rate (Google Finance / Market reference)
+  const [exchangeRate, setExchangeRate] = useState<number>(58.75);
+  const [isUpdatingRate, setIsUpdatingRate] = useState<boolean>(false);
+
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
+
+  const refreshExchangeRate = async () => {
+    setIsUpdatingRate(true);
+    try {
+      const res = await fetch("https://open.er-api.com/v6/latest/USD");
+      const data = await res.json();
+      if (data && data.rates && typeof data.rates.DOP === "number") {
+        setExchangeRate(data.rates.DOP);
+      }
+    } catch {
+      setExchangeRate(58.75);
+    } finally {
+      setIsUpdatingRate(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshExchangeRate();
+  }, []);
 
   useEffect(() => {
     if (!leadId) {
@@ -104,6 +159,8 @@ export default function LocalLiftPay() {
   const otherPrice = TIER_PRICE[otherTier];
   const activeBank = BANK_ACCOUNTS[selectedBank];
 
+  const exactDopAmount = Math.round(Number(price.amount) * exchangeRate).toLocaleString();
+
   const handleCopy = (text: string, fieldName: string) => {
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
@@ -112,8 +169,8 @@ export default function LocalLiftPay() {
 
   const whatsappMessage = encodeURIComponent(
     language === "en"
-      ? `Hello Cristian, I made the transfer for Local Lift (${lead?.businessName || "My business"} - Plan ${price.enLabel} - $${price.amount} USD / RD$ ${price.dopAmount}). Bank: ${activeBank.name}. Order ID: ${leadId}. Attaching receipt:`
-      : `Hola Cristian, realicé la transferencia para Local Lift (${lead?.businessName || "Mi negocio"} - Plan ${price.label} - $${price.amount} USD / RD$ ${price.dopAmount}). Banco: ${activeBank.name}. ID de orden: ${leadId}. Adjunto comprobante:`
+      ? `Hello Cristian, I made the transfer for Local Lift (${lead?.businessName || "My business"} - Plan ${price.enLabel} - $${price.amount} USD / RD$ ${exactDopAmount}). Bank: ${activeBank.name}. Order ID: ${leadId}. Attaching receipt:`
+      : `Hola Cristian, realicé la transferencia para Local Lift (${lead?.businessName || "Mi negocio"} - Plan ${price.label} - $${price.amount} USD / RD$ ${exactDopAmount}). Banco: ${activeBank.name}. ID de orden: ${leadId}. Adjunto comprobante:`
   );
 
   return (
@@ -182,9 +239,24 @@ export default function LocalLiftPay() {
             <div className="mt-4 flex flex-wrap items-baseline gap-2">
               <span className="text-4xl font-display font-black tracking-tight">${price.amount}</span>
               <span className="pb-1.5 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>
-              <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md ml-auto">
-                ≈ RD$ {price.dopAmount}
+              <span className="text-xs font-bold text-[#0faaa4] dark:text-[#5ee7df] bg-[#16C8C1]/10 px-2.5 py-1 rounded-md ml-auto font-mono">
+                RD$ {exactDopAmount}
               </span>
+            </div>
+
+            {/* Live Exchange Rate Subtext with Refresh button */}
+            <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] text-[var(--color-text-tertiary)]">
+              <span>
+                <T en="Live exchange rate: 1 USD = RD$">Tasa en vivo: 1 USD = RD$</T> {exchangeRate.toFixed(2)}
+              </span>
+              <button
+                type="button"
+                onClick={refreshExchangeRate}
+                className="p-1 rounded hover:text-[var(--color-text-primary)] transition-colors"
+                title={language === "en" ? "Refresh live rate" : "Actualizar tasa en vivo"}
+              >
+                <RefreshCw size={10} className={isUpdatingRate ? "animate-spin text-[#16C8C1]" : ""} />
+              </button>
             </div>
 
             {/* Payment Method Switcher */}
@@ -192,24 +264,24 @@ export default function LocalLiftPay() {
               <button
                 type="button"
                 onClick={() => setPaymentMethod("paypal")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                   paymentMethod === "paypal"
                     ? "bg-[var(--color-surface-base)] text-[var(--color-text-primary)] shadow-sm border border-[var(--color-border-subtle)]"
                     : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
                 }`}
               >
-                PayPal / Tarjeta
+                <T en="PayPal / Card">PayPal / Tarjeta</T>
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentMethod("transfer")}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                   paymentMethod === "transfer"
                     ? "bg-[var(--color-surface-base)] text-[var(--color-text-primary)] shadow-sm border border-[var(--color-border-subtle)]"
                     : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
                 }`}
               >
-                Transferencia RD 🇩🇴
+                <T en="Bank Transfer">Transferencia Bancaria</T>
               </button>
             </div>
 
@@ -261,23 +333,27 @@ export default function LocalLiftPay() {
             {/* Local Bank Transfer Block */}
             {paymentMethod === "transfer" && (
               <div className="mt-6 space-y-4">
-                {/* Bank Tabs */}
+                {/* Bank Tabs with Logos */}
                 <div className="grid grid-cols-3 gap-2">
                   {(["popular", "bhd", "qik"] as const).map((bKey) => {
                     const b = BANK_ACCOUNTS[bKey];
                     const isSelected = selectedBank === bKey;
+                    const Logo = b.LogoComponent;
                     return (
                       <button
                         key={bKey}
                         type="button"
                         onClick={() => setSelectedBank(bKey)}
-                        className={`p-2.5 rounded-xl border text-center transition-all ${
+                        className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${
                           isSelected
-                            ? "border-[var(--color-primary-base)] bg-[var(--color-primary-base)]/[0.08] shadow-sm font-black"
-                            : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] opacity-70 hover:opacity-100"
+                            ? "border-[#16C8C1] bg-[#16C8C1]/[0.08] shadow-sm font-black ring-1 ring-[#16C8C1]/30"
+                            : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] opacity-75 hover:opacity-100"
                         }`}
                       >
-                        <p className="text-[11px] font-bold text-[var(--color-text-primary)] leading-tight">{b.name}</p>
+                        <div className="h-6 flex items-center justify-center">
+                          <Logo className="h-5 w-auto max-w-[90px] object-contain" />
+                        </div>
+                        <p className="text-[10px] font-bold text-[var(--color-text-primary)] leading-tight">{b.name}</p>
                       </button>
                     );
                   })}
@@ -286,16 +362,18 @@ export default function LocalLiftPay() {
                 {/* Bank Account Details Card */}
                 <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4 sm:p-5 text-left space-y-3">
                   <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border-subtle)]">
-                    <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-primary)]">
-                      {activeBank.name}
-                    </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-md border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)]">
-                      {activeBank.type}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-primary)]">
+                        {activeBank.name}
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/30">
+                      <T en="Savings Account in RD$">Cuenta de Ahorro en RD$</T>
                     </span>
                   </div>
 
                   {/* Account Number */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
                     <div>
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Account Number">No. de Cuenta</T>
@@ -305,15 +383,15 @@ export default function LocalLiftPay() {
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.account, "account")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-                      title="Copiar número"
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      title={language === "en" ? "Copy account number" : "Copiar número de cuenta"}
                     >
                       {copiedField === "account" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                     </button>
                   </div>
 
                   {/* Account Holder */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
                     <div>
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Beneficiary Name">Titular</T>
@@ -323,15 +401,15 @@ export default function LocalLiftPay() {
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.holder, "holder")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-                      title="Copiar titular"
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      title={language === "en" ? "Copy beneficiary name" : "Copiar titular"}
                     >
                       {copiedField === "holder" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                     </button>
                   </div>
 
-                  {/* ID / Cédula */}
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                  {/* ID / Cédula (Sin guiones) */}
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
                     <div>
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Identity Document">Cédula</T>
@@ -341,40 +419,38 @@ export default function LocalLiftPay() {
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.idDoc, "idDoc")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-                      title="Copiar cédula"
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      title={language === "en" ? "Copy ID document" : "Copiar cédula"}
                     >
                       {copiedField === "idDoc" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                     </button>
                   </div>
 
-                  {/* Email if available */}
-                  {activeBank.email && (
-                    <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
-                      <div>
-                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
-                          <T en="Interbank Email">Correo interbancario</T>
-                        </p>
-                        <p className="font-mono text-xs text-[var(--color-text-primary)]">{activeBank.email}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleCopy(activeBank.email!, "email")}
-                        className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-primary-base)] hover:border-[var(--color-primary-base)]/40 transition-colors"
-                        title="Copiar correo"
-                      >
-                        {copiedField === "email" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-                      </button>
+                  {/* Email */}
+                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
+                    <div>
+                      <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
+                        <T en="Email">Correo electrónico</T>
+                      </p>
+                      <p className="font-mono text-xs text-[var(--color-text-primary)]">{activeBank.email}</p>
                     </div>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(activeBank.email, "email")}
+                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      title={language === "en" ? "Copy email" : "Copiar correo"}
+                    >
+                      {copiedField === "email" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    </button>
+                  </div>
                 </div>
 
-                {/* WhatsApp Confirmation Button */}
+                {/* WhatsApp Confirmation Button with True Local Lift Teal */}
                 <a
                   href={`https://wa.me/18299200544?text=${whatsappMessage}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3.5 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#16C8C1] hover:bg-[#13b5ae] px-5 py-3.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all hover:-translate-y-0.5"
                 >
                   <MessageCircle size={16} />
                   <T en="Send transfer receipt on WhatsApp">Enviar comprobante por WhatsApp</T>
@@ -403,7 +479,7 @@ export default function LocalLiftPay() {
                 onClick={() => setSelectedTier(otherTier)}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-4 py-2 text-xs font-bold text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/14 transition-colors"
               >
-                <Sparkles size={13} />
+                <AISparkleIcon size={13} className="shrink-0" />
                 {otherTier === "impulso"
                   ? <T en="Switch to Impulso ($29) — quick wins">Cambiar a Impulso ($29) — mejoras rápidas</T>
                   : <T en="Switch to Ascenso ($99) — full implementation">Cambiar a Ascenso ($99) — implementación completa</T>
