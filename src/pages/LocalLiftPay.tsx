@@ -62,6 +62,19 @@ export default function LocalLiftPay() {
       setStatus("notfound");
       return;
     }
+    if (leadId === "demo" || leadId === "test" || leadId === "ejemplo") {
+      const urlTier = searchParams.get("tier");
+      const activeTier = urlTier && TIER_PRICE[urlTier] ? urlTier : "impulso";
+      setLead({
+        businessName: "Restaurante & Grill El Criollo",
+        city: "Punta Cana, RD",
+        tier: activeTier,
+        paid: false,
+      });
+      setSelectedTier(activeTier);
+      setStatus("ready");
+      return;
+    }
     fetch(`/api/local-lift-order?leadId=${encodeURIComponent(leadId)}`)
       .then((r) => r.json())
       .then((data) => {
