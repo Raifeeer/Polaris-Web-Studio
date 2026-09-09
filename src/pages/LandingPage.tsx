@@ -1164,6 +1164,39 @@ export default function LandingPage() {
             </div>
           </motion.div>
 
+          {/* Local Lift Quick Audit Hook */}
+          <motion.div
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.5 }}
+            className="md:col-span-2 lg:col-span-3 rounded-2xl md:rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.09] via-[var(--color-surface-base)] to-emerald-500/[0.03] p-6 md:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+          >
+            <div className="space-y-2 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-[0.16em]">
+                <Globe size={12} className="text-emerald-500 shrink-0" />
+                <T en="Free Local Tool · Google Maps">Herramienta Gratuita · Google Maps</T>
+              </div>
+              <h3 className="text-xl md:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                <T en="Do local customers find your business when searching on Google Maps?">
+                  ¿Tus clientes te encuentran cuando buscan tu negocio en Google Maps?
+                </T>
+              </h3>
+              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                <T en="Most local calls and store visits start on Google Maps before anyone visits a website. Discover what might be holding back your calls and bookings in 1 minute — 100% free.">
+                  La mayoría de llamadas y visitas locales ocurren en Google Maps antes de entrar a una web. Descubre gratis qué está frenando tus contactos y reservas en 1 minuto.
+                </T>
+              </p>
+            </div>
+            <Link
+              to="/local-lift"
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-emerald-600/20 transition-all hover:-translate-y-0.5"
+            >
+              <T en="Audit my business for free">Auditar mi negocio gratis</T>
+              <ArrowRight size={15} />
+            </Link>
+          </motion.div>
+
           {/* Compact 3-Step Process Section */}
           <motion.div
             id="proceso"
@@ -2317,20 +2350,27 @@ export default function LandingPage() {
                 </span>
               </div>
               <div className="space-y-3 flex-1">
-                <h3 className="text-2xl font-display font-black tracking-tight">Local Lift</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-2xl font-display font-black tracking-tight">Local Lift</h3>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df]">
+                    <T en="From $29 USD · ≤ 5h Delivery">Desde $29 USD · Entrega ≤ 5h</T>
+                  </span>
+                </div>
                 <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  <T en="A focused way to improve how your business appears, communicates and gets discovered locally — without handing over your Google account.">
-                    Una forma enfocada de mejorar cómo aparece, comunica y se descubre tu negocio a nivel local, sin entregarnos el acceso a tu cuenta de Google.
+                  <T en="Optimize your Google Business Profile to rank first in your area. Get your business description, 10 ready-to-post updates, and 15 custom review responses in under 5 hours — without handing over your passwords.">
+                    Optimizamos tu perfil de Google Business para que aparezcas primero en tu zona. Te entregamos la descripción de tu negocio, 10 publicaciones listas y 15 respuestas personalizadas para reseñas en menos de 5 horas — sin pedirte contraseñas.
                   </T>
                 </p>
               </div>
-              <Link
-                to="/local-lift"
-                className="inline-flex items-center gap-2 text-sm font-black text-[#0faaa4] dark:text-[#5ee7df] transition-transform hover:translate-x-1"
-              >
-                <T en="Explore Local Lift">Conoce Local Lift</T>
-                <ArrowRight size={16} />
-              </Link>
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <Link
+                  to="/local-lift"
+                  className="inline-flex items-center gap-2 text-sm font-black text-[#0faaa4] dark:text-[#5ee7df] transition-transform hover:translate-x-1"
+                >
+                  <T en="Audit my business for free">Auditar mi negocio gratis</T>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             </motion.div>
 
             <motion.div
