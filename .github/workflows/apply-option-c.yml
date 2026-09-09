@@ -1,0 +1,36 @@
+name: Apply Option C Copy
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-option-c.yml'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Run Update Script
+        run: |
+          echo "d2l0aCBvcGVuKCdzcmMvcGFnZXMvTGFuZGluZ1BhZ2UudHN4JywgJ3InLCBlbmNvZGluZz0ndXRmLTgnKSBhcyBmOgogICAgbHAgPSBmLnJlYWQoKQoKb2xkX2MgPSAnJycgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXNtIHRleHQtW3ZhcigtLWNvbG9yLXRleHQtc2Vjb25kYXJ5KV0gbGVhZGluZy1yZWxheGVkIj4KICAgICAgICAgICAgICAgICAgPFQgZW49Ik9wdGltaXplIHlvdXIgR29vZ2xlIEJ1c2luZXNzIFByb2ZpbGUgdG8gcmFuayBmaXJzdCBpbiB5b3VyIGFyZWEuIEdldCB5b3VyIGJ1c2luZXNzIGRlc2NyaXB0aW9uLCAxMCByZWFkeS10by1wb3N0IHVwZGF0ZXMsIGFuZCAxNSBjdXN0b20gcmV2aWV3IHJlc3BvbnNlcyBpbiB1bmRlciA1IGhvdXJzIOKAlCB3aXRob3V0IGhhbmRpbmcgb3ZlciB5b3VyIHBhc3N3b3Jkcy4iPgogICAgICAgICAgICAgICAgICAgIE9wdGltaXphbW9zIHR1IHBlcmZpbCBkZSBHb29nbGUgQnVzaW5lc3MgcGFyYSBxdWUgYXBhcmV6Y2FzIHByaW1lcm8gZW4gdHUgem9uYS4gVGUgZW50cmVnYW1vcyBsYSBkZXNjcmlwY2nDs24gZGUgdHUgbmVnb2NpbywgMTAgcHVibGljYWNpb25lcyBsaXN0YXMgeSAxNSByZXNwdWVzdGFzIHBlcnNvbmFsaXphZGFzIHBhcmEgcmVzZcOxYXMgZW4gbWVub3MgZGUgNSBob3JhcyDigJQgc2luIHBlZGlydGUgY29udHJhc2XDsWFzLgogICAgICAgICAgICAgICAgICA8L1Q+CiAgICAgICAgICAgICAgICA8L3A+JycnCgpuZXdfYyA9ICcnJyAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9InRleHQtc20gdGV4dC1bdmFyKC0tY29sb3ItdGV4dC1zZWNvbmRhcnkpXSBsZWFkaW5nLXJlbGF4ZWQiPgogICAgICAgICAgICAgICAgICA8VCBlbj0iT3B0aW1pemUgeW91ciBHb29nbGUgQnVzaW5lc3MgUHJvZmlsZSBzbyBsb2NhbCBjdXN0b21lcnMgZmluZCB5b3Ugd2l0aCBjbGVhciBpbmZvcm1hdGlvbiBhbmQgY2hvb3NlIHlvdS4gR2V0IHlvdXIgYnVzaW5lc3MgZGVzY3JpcHRpb24sIDEwIHJlYWR5LXRvLXBvc3QgdXBkYXRlcywgYW5kIDE1IGN1c3RvbSByZXZpZXcgcmVzcG9uc2VzIGluIHVuZGVyIDUgaG91cnMg4oCUIHdpdGhvdXQgaGFuZGluZyBvdmVyIHlvdXIgcGFzc3dvcmRzLiI+CiAgICAgICAgICAgICAgICAgICAgT3B0aW1pemFtb3MgdHUgcGVyZmlsIGRlIEdvb2dsZSBCdXNpbmVzcyBwYXJhIHF1ZSBsb3MgY2xpZW50ZXMgZGUgdHUgw6FyZWEgdGUgZW5jdWVudHJlbiBjb24gaW5mb3JtYWNpw7NuIGNsYXJhIHkgdGUgZWxpamFuLiBUZSBlbnRyZWdhbW9zIGxhIGRlc2NyaXBjacOzbiBkZSB0dSBuZWdvY2lvLCAxMCBwdWJsaWNhY2lvbmVzIGxpc3RhcyB5IDE1IHJlc3B1ZXN0YXMgcGVyc29uYWxpemFkYXMgcGFyYSByZXNlw7FhcyBlbiBtZW5vcyBkZSA1IGhvcmFzIOKAlCBzaW4gcGVkaXJ0ZSBjb250cmFzZcOxYXMuCiAgICAgICAgICAgICAgICAgIDwvVD4KICAgICAgICAgICAgICAgIDwvcD4nJycKCmFzc2VydCBvbGRfYyBpbiBscCwgJ29sZF9jIG5vdCBmb3VuZCBpbiBMYW5kaW5nUGFnZS50c3gnCmxwID0gbHAucmVwbGFjZShvbGRfYywgbmV3X2MsIDEpCgp3aXRoIG9wZW4oJ3NyYy9wYWdlcy9MYW5kaW5nUGFnZS50c3gnLCAndycsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICBmLndyaXRlKGxwKQpwcmludCgiTGFuZGluZ1BhZ2UudHN4IHN1Y2Nlc3NmdWxseSB1cGRhdGVkIHdpdGggT3B0aW9uIEMhIikK" | base64 -d | python3
+
+      - name: Verify build compiles
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and push
+        run: |
+          git config user.name "Cristian Dicen"
+          git config user.email "cristian2200299@gmail.com"
+          git commit -am "fix(copy): ajustar propuesta de Local Lift en landing con enfoque de claridad y eleccion"
+          git push origin main
