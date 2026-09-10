@@ -1,0 +1,121 @@
+name: Upload Bank Logos and Update Checkout
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-bank-logos.yml'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Bank Logos and Component
+        run: |
+          python3 -c '
+          import base64
+          pop_b64 = """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"""
+          bhd_b64 = """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"""
+          with open("public/brand/banco-popular.png", "wb") as f:
+              f.write(base64.b64decode(pop_b64.strip()))
+          with open("public/brand/banco-bhd.png", "wb") as f:
+              f.write(base64.b64decode(bhd_b64.strip()))
+          '
+
+      - name: Update LocalLiftPay.tsx
+        run: |
+          python3 -c '
+          with open("src/pages/LocalLiftPay.tsx", "r", encoding="utf-8") as f:
+              c = f.read()
+
+          # Replace PopularLogo and BhdLogo
+          import re
+          old_pop = """function PopularLogo({ className = "h-5 w-auto" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 140 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="popGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#00357A" />
+          <stop offset="50%" stopColor="#0052A5" />
+          <stop offset="100%" stopColor="#0080D2" />
+        </linearGradient>
+      </defs>
+      <rect width="36" height="36" rx="6" fill="url(#popGrad)" />
+      <g fill="#FFFFFF">
+        <path d="M 18 18 L 25.5 18 L 32 19 A 14 14 0 0 1 16.05 31.86 L 16.99 25.13 A 7.2 7.2 0 0 0 18 18 Z" />
+        <path d="M 16.12 25.07 L 14.30 31.75 A 14 14 0 0 1 8.10 29.56 L 12.92 23.94 A 7.2 7.2 0 0 0 16.12 25.07 Z" />
+        <path d="M 12.56 23.68 L 7.42 29.05 A 14 14 0 0 1 4.54 26.01 L 11.08 22.09 A 7.2 7.2 0 0 0 12.56 23.68 Z" />
+        <path d="M 10.74 21.84 L 3.89 25.57 A 14 14 0 0 1 4.02 21.89 L 10.81 19.98 A 7.2 7.2 0 0 0 10.74 21.84 Z" />
+        <path d="M 10.82 19.67 L 4.04 21.28 A 14 14 0 0 1 4.22 17.58 L 10.91 17.78 A 7.2 7.2 0 0 0 10.82 19.67 Z" />
+        <path d="M 10.93 17.47 L 4.25 16.96 A 14 14 0 0 1 4.88 13.37 L 11.27 15.63 A 7.2 7.2 0 0 0 10.93 17.47 Z" />
+        <path d="M 11.37 15.34 L 5.05 12.83 A 14 14 0 0 1 6.13 9.77 L 11.92 13.73 A 7.2 7.2 0 0 0 11.37 15.34 Z" />
+        <path d="M 12.06 13.48 L 6.40 9.29 A 14 14 0 0 1 8.01 6.77 L 12.89 12.19 A 7.2 7.2 0 0 0 12.06 13.48 Z" />
+        <path d="M 13.06 11.99 L 8.41 6.37 A 14 14 0 0 1 10.51 4.50 L 14.17 11.03 A 7.2 7.2 0 0 0 13.06 11.99 Z" />
+        <path d="M 14.39 10.90 L 11.05 4.26 A 14 14 0 0 1 13.44 3.03 L 15.68 10.27 A 7.2 7.2 0 0 0 14.39 10.90 Z" />
+        <path d="M 15.93 10.20 L 14.09 2.82 A 14 14 0 0 1 16.71 2.21 L 17.34 9.88 A 7.2 7.2 0 0 0 15.93 10.20 Z" />
+        <path d="M 17.60 9.89 L 17.45 2.12 A 14 14 0 0 1 20.08 2.18 L 18.99 9.93 A 7.2 7.2 0 0 0 17.60 9.89 Z" />
+        <path d="M 19.23 9.99 L 20.78 2.30 A 14 14 0 0 1 23.36 3.12 L 20.68 10.41 A 7.2 7.2 0 0 0 19.23 9.99 Z" />
+        <path d="M 20.89 10.52 L 23.96 3.39 A 14 14 0 0 1 26.23 4.88 L 22.06 11.28 A 7.2 7.2 0 0 0 20.89 10.52 Z" />
+        <path d="M 22.23 11.43 L 26.70 5.23 A 14 14 0 0 1 28.53 7.37 L 23.18 12.53 A 7.2 7.2 0 0 0 22.23 11.43 Z" />
+        <path d="M 23.30 12.71 L 28.85 7.82 A 14 14 0 0 1 30.12 10.50 L 23.95 14.23 A 7.2 7.2 0 0 0 23.30 12.71 Z" />
+        <path d="M 24.03 14.43 L 30.34 11.00 A 14 14 0 0 1 31.06 14.07 L 24.40 16.27 A 7.2 7.2 0 0 0 24.03 14.43 Z" />
+        <path d="M 24.43 16.48 L 31.20 14.61 A 14 14 0 0 1 31.39 17.84 L 24.50 17.89 A 7.2 7.2 0 0 0 24.43 16.48 Z" />
+      </g>
+      <text x="46" y="24" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="18" fontWeight="900" fill="currentColor" letterSpacing="-0.3">Popular</text>
+    </svg>
+  );
+}
+
+function BhdLogo({ className = "h-5 w-auto" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 140 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="16" cy="20" r="14" fill="#008037" />
+      <path d="M10 20C10 16.6863 12.6863 14 16 14C19.3137 14 22 16.6863 22 20C22 23.3137 19.3137 26 16 26" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="16" cy="20" r="2.5" fill="#FFFFFF" />
+      <text x="36" y="27" fontFamily="'Cabinet Grotesk', system-ui, sans-serif" fontSize="22" fontWeight="900" fill="#008037" letterSpacing="0.5">BHD</text>
+    </svg>
+  );
+}"""
+
+          new_pop = """function PopularLogo({ className = "h-6 w-auto" }: { className?: string }) {
+  return (
+    <img
+      src="/brand/banco-popular.png"
+      alt="Banco Popular"
+      className={`${className} object-contain rounded-md shadow-xs`}
+    />
+  );
+}
+
+function BhdLogo({ className = "h-6 w-auto" }: { className?: string }) {
+  return (
+    <img
+      src="/brand/banco-bhd.png"
+      alt="Banco BHD"
+      className={`${className} object-contain`}
+    />
+  );
+}"""
+          assert old_pop in c, "old_pop pattern not found"
+          c = c.replace(old_pop, new_pop, 1)
+
+          with open("src/pages/LocalLiftPay.tsx", "w", encoding="utf-8") as f:
+              f.write(c)
+          '
+
+      - name: Verify build compiles
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and push
+        run: |
+          git config user.name "Cristian Dicen"
+          git config user.email "cristian2200299@gmail.com"
+          git add public/brand/banco-popular.png public/brand/banco-bhd.png src/pages/LocalLiftPay.tsx
+          git commit -m "feat(branding): desplegar logos oficiales PNG sin fondo de Banco Popular y BHD"
+          git push origin main
