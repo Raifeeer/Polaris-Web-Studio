@@ -1,9 +1,6 @@
 name: Deploy Popular PNG
 
-on:
-  push:
-    paths:
-      - '.github/workflows/deploy-popular.yml'
+on: [push]
 
 jobs:
   update:
@@ -21,5 +18,5 @@ jobs:
           git config user.name "Cristian Dicen"
           git config user.email "cristian2200299@gmail.com"
           git add public/brand/banco-popular.png
-          git commit -m "feat(branding): agregar banco-popular.png"
-          git push origin main
+          git commit -m "feat(branding): agregar banco-popular.png" || exit 0
+          git push
