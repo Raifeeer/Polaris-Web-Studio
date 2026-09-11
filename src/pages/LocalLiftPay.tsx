@@ -349,10 +349,6 @@ export default function LocalLiftPay() {
                             : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:-translate-y-1 hover:border-[#16C8C1]/40 hover:shadow-md hover:shadow-[#16C8C1]/10 active:translate-y-0 active:scale-[0.98]"
                         }`}
                       >
-                        {/* Subtle selected indicator dot */}
-                        {isSelected && (
-                          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#16C8C1] shadow-xs shadow-[#16C8C1]" />
-                        )}
                         <div className="h-9 w-full px-2 py-1 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-[1.03]">
                           <Logo className="h-6 w-auto max-w-[85px] object-contain" />
                         </div>
