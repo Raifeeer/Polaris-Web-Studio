@@ -237,7 +237,7 @@ export default function LocalLiftPay() {
             <div className="mt-4 flex flex-wrap items-baseline gap-2">
               <span className="text-4xl font-display font-black tracking-tight">${price.amount}</span>
               <span className="pb-1.5 text-xs font-bold uppercase tracking-widest text-[var(--color-text-tertiary)]">USD</span>
-              <span className="text-xs font-bold text-[#0faaa4] dark:text-[#5ee7df] bg-[#16C8C1]/10 px-2.5 py-1 rounded-md ml-auto font-mono">
+              <span className="text-xs font-bold text-[#0faaa4] dark:text-[#5ee7df] bg-[#16C8C1]/10 px-3 py-1 rounded-full ml-auto font-bold tracking-tight shadow-xs tabular-nums">
                 RD$ {exactDopAmount}
               </span>
             </div>
@@ -331,8 +331,8 @@ export default function LocalLiftPay() {
             {/* Local Bank Transfer Block */}
             {paymentMethod === "transfer" && (
               <div className="mt-6 space-y-4">
-                {/* Bank Tabs with Logos */}
-                <div className="grid grid-cols-3 gap-2">
+                {/* Bank Tabs with Logos and interactive hover animation */}
+                <div className="grid grid-cols-3 gap-2.5">
                   {(["popular", "bhd", "qik"] as const).map((bKey) => {
                     const b = BANK_ACCOUNTS[bKey];
                     const isSelected = selectedBank === bKey;
@@ -342,116 +342,191 @@ export default function LocalLiftPay() {
                         key={bKey}
                         type="button"
                         onClick={() => setSelectedBank(bKey)}
-                        className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all ${
+                        className={`group relative p-3 sm:p-3.5 rounded-2xl border flex flex-col items-center justify-center gap-2 transition-all duration-300 ease-out cursor-pointer ${
                           isSelected
-                            ? "border-[#16C8C1] bg-[#16C8C1]/[0.08] shadow-sm font-black ring-1 ring-[#16C8C1]/30"
-                            : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] opacity-75 hover:opacity-100"
+                            ? "border-[#16C8C1] bg-gradient-to-b from-[#16C8C1]/15 via-[#16C8C1]/[0.06] to-transparent shadow-lg shadow-[#16C8C1]/10 ring-2 ring-[#16C8C1]/40 -translate-y-0.5"
+                            : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] hover:-translate-y-1 hover:border-[#16C8C1]/40 hover:shadow-md hover:shadow-[#16C8C1]/10 active:translate-y-0 active:scale-[0.98]"
                         }`}
                       >
-                        <div className="h-7 w-full flex items-center justify-center">
+                        {/* Subtle selected indicator dot */}
+                        {isSelected && (
+                          <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#16C8C1] shadow-xs shadow-[#16C8C1]" />
+                        )}
+                        <div className="h-7 w-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
                           <Logo className="h-6 w-auto max-w-[85px] object-contain" />
                         </div>
-                        <p className="text-[10px] font-bold text-[var(--color-text-primary)] leading-tight">{b.name}</p>
+                        <p className={`text-[11px] font-bold tracking-tight transition-colors leading-tight ${
+                          isSelected ? "text-[#0faaa4] dark:text-[#5ee7df]" : "text-[var(--color-text-secondary)] group-hover:text-[var(--color-text-primary)]"
+                        }`}>
+                          {b.name}
+                        </p>
                       </button>
                     );
                   })}
                 </div>
 
-                {/* Bank Account Details Card */}
-                <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-4 sm:p-5 text-left space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-[var(--color-border-subtle)]">
+                {/* Bank Account Details Card - Elegant & modern without monospace */}
+                <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)]/60 backdrop-blur-md p-4 sm:p-5 text-left space-y-3 shadow-xl">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--color-border-subtle)]">
                     <div className="flex items-center gap-2.5">
-                      <activeBank.LogoComponent className="h-5 w-auto object-contain" />
+                      <div className="h-7 px-2 py-0.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shadow-xs">
+                        <activeBank.LogoComponent className="h-4.5 w-auto object-contain" />
+                      </div>
                       <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-primary)]">
                         {activeBank.name}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold px-2.5 py-1 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/30">
-                      <T en="Savings Account in RD$">Cuenta de Ahorro en RD$</T>
+                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-full bg-[#16C8C1]/12 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#16C8C1] animate-pulse" />
+                      <T en="Savings Account in RD$">Cuenta de Ahorros en RD$</T>
                     </span>
                   </div>
 
                   {/* Account Number */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
-                    <div>
+                  <div className="group/row flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:border-[#16C8C1]/30 transition-all duration-200">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Account Number">No. de Cuenta</T>
                       </p>
-                      <p className="font-mono text-sm font-bold text-[var(--color-text-primary)]">{activeBank.account}</p>
+                      <p className="text-sm sm:text-base font-bold tracking-tight text-[var(--color-text-primary)] tabular-nums select-all">
+                        {activeBank.account}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.account, "account")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      className={`shrink-0 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer ${
+                        copiedField === "account"
+                          ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500 dark:text-emerald-400"
+                          : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 hover:bg-[#16C8C1]/5"
+                      }`}
                       title={language === "en" ? "Copy account number" : "Copiar número de cuenta"}
                     >
-                      {copiedField === "account" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                      {copiedField === "account" ? (
+                        <>
+                          <Check size={13} className="text-emerald-500" />
+                          <span className="text-[11px]"><T en="Copied!">¡Copiado!</T></span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} />
+                          <span className="text-[11px]"><T en="Copy">Copiar</T></span>
+                        </>
+                      )}
                     </button>
                   </div>
 
-                  {/* Account Holder */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
-                    <div>
+                  {/* Beneficiary Name */}
+                  <div className="group/row flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:border-[#16C8C1]/30 transition-all duration-200">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Beneficiary Name">Titular</T>
                       </p>
-                      <p className="text-xs font-bold text-[var(--color-text-primary)]">{activeBank.holder}</p>
+                      <p className="text-xs sm:text-sm font-bold tracking-tight text-[var(--color-text-primary)] select-all">
+                        {activeBank.holder}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.holder, "holder")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      className={`shrink-0 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer ${
+                        copiedField === "holder"
+                          ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500 dark:text-emerald-400"
+                          : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 hover:bg-[#16C8C1]/5"
+                      }`}
                       title={language === "en" ? "Copy beneficiary name" : "Copiar titular"}
                     >
-                      {copiedField === "holder" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                      {copiedField === "holder" ? (
+                        <>
+                          <Check size={13} className="text-emerald-500" />
+                          <span className="text-[11px]"><T en="Copied!">¡Copiado!</T></span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} />
+                          <span className="text-[11px]"><T en="Copy">Copiar</T></span>
+                        </>
+                      )}
                     </button>
                   </div>
 
-                  {/* ID / Cédula (Sin guiones) */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
-                    <div>
+                  {/* ID / Cédula */}
+                  <div className="group/row flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:border-[#16C8C1]/30 transition-all duration-200">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Identity Document">Cédula</T>
                       </p>
-                      <p className="font-mono text-xs font-bold text-[var(--color-text-primary)]">{activeBank.idDoc}</p>
+                      <p className="text-xs sm:text-sm font-bold tracking-tight text-[var(--color-text-primary)] tabular-nums select-all">
+                        {activeBank.idDoc}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.idDoc, "idDoc")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      className={`shrink-0 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer ${
+                        copiedField === "idDoc"
+                          ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500 dark:text-emerald-400"
+                          : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 hover:bg-[#16C8C1]/5"
+                      }`}
                       title={language === "en" ? "Copy ID document" : "Copiar cédula"}
                     >
-                      {copiedField === "idDoc" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                      {copiedField === "idDoc" ? (
+                        <>
+                          <Check size={13} className="text-emerald-500" />
+                          <span className="text-[11px]"><T en="Copied!">¡Copiado!</T></span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} />
+                          <span className="text-[11px]"><T en="Copy">Copiar</T></span>
+                        </>
+                      )}
                     </button>
                   </div>
 
                   {/* Email */}
-                  <div className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)]">
-                    <div>
+                  <div className="group/row flex items-center justify-between gap-3 p-3 rounded-xl bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] hover:border-[#16C8C1]/30 transition-all duration-200">
+                    <div className="min-w-0 flex-1">
                       <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider font-bold">
                         <T en="Email">Correo electrónico</T>
                       </p>
-                      <p className="font-mono text-xs text-[var(--color-text-primary)]">{activeBank.email}</p>
+                      <p className="text-xs sm:text-sm font-semibold tracking-tight text-[var(--color-text-primary)] select-all truncate">
+                        {activeBank.email}
+                      </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleCopy(activeBank.email, "email")}
-                      className="shrink-0 p-2 rounded-lg border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 transition-colors"
+                      className={`shrink-0 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 flex items-center gap-1.5 active:scale-95 cursor-pointer ${
+                        copiedField === "email"
+                          ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-500 dark:text-emerald-400"
+                          : "border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] text-[var(--color-text-secondary)] hover:text-[#0faaa4] hover:border-[#16C8C1]/40 hover:bg-[#16C8C1]/5"
+                      }`}
                       title={language === "en" ? "Copy email" : "Copiar correo"}
                     >
-                      {copiedField === "email" ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                      {copiedField === "email" ? (
+                        <>
+                          <Check size={13} className="text-emerald-500" />
+                          <span className="text-[11px]"><T en="Copied!">¡Copiado!</T></span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} />
+                          <span className="text-[11px]"><T en="Copy">Copiar</T></span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
 
-                {/* WhatsApp Confirmation Button with True Local Lift Teal */}
+                {/* WhatsApp Confirmation Button with vibrant gradient, physics and animated icon */}
                 <a
                   href={`https://wa.me/18299200544?text=${whatsappMessage}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#16C8C1] hover:bg-[#13b5ae] px-5 py-3.5 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all hover:-translate-y-0.5"
+                  className="group relative w-full overflow-hidden inline-flex items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#16C8C1] via-[#14bdb6] to-[#0faaa4] hover:from-[#1cded6] hover:to-[#12b3ac] px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#16C8C1]/30 active:translate-y-0 active:scale-[0.99] cursor-pointer"
                 >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true" className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6 shrink-0">
                     <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.92 0-2.65-1.03-5.14-2.91-7.01A9.85 9.85 0 0 0 12.04 2Zm0 18.15h-.01a8.24 8.24 0 0 1-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.22 8.22 0 0 1-1.26-4.38c0-4.55 3.71-8.26 8.27-8.26a8.2 8.2 0 0 1 5.84 2.42 8.19 8.19 0 0 1 2.42 5.83c0 4.56-3.71 8.25-8.27 8.25Zm4.53-6.19c-.25-.12-1.47-.72-1.7-.81-.23-.08-.39-.12-.56.13-.17.24-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.04-.38-1.99-1.22-.73-.66-1.23-1.46-1.37-1.71-.14-.25-.02-.38.11-.51.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.16.04-.31-.02-.43-.06-.13-.56-1.34-.77-1.84-.2-.48-.41-.42-.56-.42-.14-.01-.31-.01-.48-.01a.92.92 0 0 0-.67.31c-.23.25-.87.85-.87 2.07 0 1.23.89 2.41 1.02 2.58.12.16 1.75 2.67 4.24 3.74.59.26 1.06.41 1.42.52.6.19 1.14.16 1.57.1.48-.07 1.47-.6 1.68-1.18.2-.58.2-1.08.14-1.18-.06-.1-.22-.16-.47-.28Z" />
                   </svg>
                   <T en="Send transfer receipt on WhatsApp">Enviar comprobante por WhatsApp</T>
