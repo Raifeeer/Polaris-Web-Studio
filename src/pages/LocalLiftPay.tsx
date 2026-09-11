@@ -17,7 +17,7 @@ const TIER_PRICE: Record<string, { amount: string; label: string; enLabel: strin
 function PopularLogo({ className = "h-6 w-auto" }: { className?: string }) {
   return (
     <img
-      src="/brand/banco-popular-horizontal.jpg"
+      src="/brand/banco-popular-horizontal-transparent.png"
       alt="Banco Popular"
       className={`${className} object-contain`}
     />
@@ -36,7 +36,10 @@ function BhdLogo({ className = "h-6 w-auto" }: { className?: string }) {
 
 function QikLogo({ className = "h-5 w-auto" }: { className?: string }) {
   return (
-    <img src="/brand/qik-logo.svg" alt="Qik Banco Digital" className={`${className} object-contain`} />
+    <span className="inline-flex items-center" aria-label="Qik Banco Digital">
+      <img src="/brand/qik-logo-light.svg" alt="Qik Banco Digital" className={`${className} object-contain dark:hidden`} />
+      <img src="/brand/qik-logo.svg" alt="Qik Banco Digital" className={`${className} hidden object-contain dark:block`} />
+    </span>
   );
 }
 
