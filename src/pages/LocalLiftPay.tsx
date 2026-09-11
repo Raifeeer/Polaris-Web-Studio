@@ -36,10 +36,11 @@ function BhdLogo({ className = "h-6 w-auto" }: { className?: string }) {
 
 function QikLogo({ className = "h-5 w-auto" }: { className?: string }) {
   return (
-    <span className="inline-flex items-center" aria-label="Qik Banco Digital">
-      <img src="/brand/qik-logo-light.svg" alt="Qik Banco Digital" className={`${className} object-contain dark:hidden`} />
-      <img src="/brand/qik-logo.svg" alt="Qik Banco Digital" className={`${className} hidden object-contain dark:block`} />
-    </span>
+    <img
+      src="/brand/qik-logo-light.svg"
+      alt="Qik Banco Digital"
+      className={`${className} object-contain`}
+    />
   );
 }
 
@@ -352,7 +353,7 @@ export default function LocalLiftPay() {
                         {isSelected && (
                           <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#16C8C1] shadow-xs shadow-[#16C8C1]" />
                         )}
-                        <div className="h-7 w-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+                        <div className="h-9 w-full px-2 py-1 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-[1.03]">
                           <Logo className="h-6 w-auto max-w-[85px] object-contain" />
                         </div>
                         <p className={`text-[11px] font-bold tracking-tight transition-colors leading-tight ${
@@ -369,15 +370,14 @@ export default function LocalLiftPay() {
                 <div className="rounded-2xl border border-[var(--color-border-subtle)] bg-gradient-to-b from-[var(--color-surface-elevated)] to-[var(--color-surface-base)]/60 backdrop-blur-md p-4 sm:p-5 text-left space-y-3 shadow-xl">
                   <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--color-border-subtle)]">
                     <div className="flex items-center gap-2.5">
-                      <div className="h-7 px-2 py-0.5 rounded-lg bg-[var(--color-surface-base)] border border-[var(--color-border-subtle)] flex items-center justify-center shadow-xs">
-                        <activeBank.LogoComponent className="h-4.5 w-auto object-contain" />
+                      <div className="h-8 px-2.5 py-1 rounded-xl bg-white border border-slate-200/80 flex items-center justify-center shadow-xs">
+                        <activeBank.LogoComponent className="h-5 w-auto object-contain" />
                       </div>
                       <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-primary)]">
                         {activeBank.name}
                       </span>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-full bg-[#16C8C1]/12 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#16C8C1] animate-pulse" />
+                    <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-[#16C8C1]/12 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/30">
                       <T en="Savings Account in RD$">Cuenta de Ahorros en RD$</T>
                     </span>
                   </div>
@@ -553,7 +553,7 @@ export default function LocalLiftPay() {
               <button
                 type="button"
                 onClick={() => setSelectedTier(otherTier)}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-4 py-2 text-xs font-bold text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/14 transition-colors"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/8 px-4 py-2 text-xs font-bold text-[var(--color-primary-base)] hover:bg-[var(--color-primary-base)]/14 transition-colors cursor-pointer"
               >
                 <AISparkleIcon size={13} className="shrink-0" />
                 {otherTier === "impulso"
