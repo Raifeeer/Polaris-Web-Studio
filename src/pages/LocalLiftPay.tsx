@@ -93,7 +93,9 @@ export default function LocalLiftPay() {
   useDocumentTitle("Pagar Local Lift | Polaris", "Pay Local Lift | Polaris", "", "");
 
   const refreshExchangeRate = async () => {
+    if (isUpdatingRate) return;
     setIsUpdatingRate(true);
+    const minSpinPromise = new Promise((resolve) => setTimeout(resolve, 750));
     try {
       const res = await fetch("https://open.er-api.com/v6/latest/USD");
       const data = await res.json();
@@ -103,6 +105,7 @@ export default function LocalLiftPay() {
     } catch {
       setExchangeRate(58.75);
     } finally {
+      await minSpinPromise;
       setIsUpdatingRate(false);
     }
   };
@@ -246,15 +249,16 @@ export default function LocalLiftPay() {
             {/* Live Exchange Rate Subtext with Refresh button */}
             <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px] text-[var(--color-text-tertiary)]">
               <span>
-                <T en="Live exchange rate: 1 USD = RD$">Tasa en vivo: 1 USD = RD$</T> {exchangeRate.toFixed(2)}
+                <T en="Live market rate: 1 USD = RD$">Tasa de mercado: 1 USD = RD$</T> {exchangeRate.toFixed(2)}
               </span>
               <button
                 type="button"
                 onClick={refreshExchangeRate}
-                className="p-1 rounded hover:text-[var(--color-text-primary)] transition-colors"
+                disabled={isUpdatingRate}
+                className="p-1 rounded hover:text-[var(--color-text-primary)] transition-colors cursor-pointer disabled:cursor-wait"
                 title={language === "en" ? "Refresh live rate" : "Actualizar tasa en vivo"}
               >
-                <RefreshCw size={10} className={isUpdatingRate ? "animate-spin text-[#16C8C1]" : ""} />
+                <RefreshCw size={11} className={`transition-all ${isUpdatingRate ? "animate-spin text-[#16C8C1]" : "hover:text-[#16C8C1]"}`} />
               </button>
             </div>
 
