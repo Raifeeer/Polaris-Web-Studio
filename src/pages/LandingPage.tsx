@@ -2290,120 +2290,222 @@ export default function LandingPage() {
       {/* Polaris Solutions Section */}
       <section className="py-24 px-6 md:px-12" id="soluciones">
         <div className="max-w-6xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center space-y-5 mb-12">
+          {/* Section Header */}
+          <div className="max-w-3xl mx-auto text-center space-y-5 mb-14">
             <span className="glass-badge text-[var(--color-primary-base)] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
-              <T en="The Polaris ecosystem">El ecosistema Polaris</T>
+              <T en="The Polaris Growth Triad">La Tríada de Crecimiento Polaris</T>
             </span>
             <h2 className="text-3xl md:text-5xl font-display font-black tracking-tight">
-              <T en="More ways to move your business forward">Más formas de hacer crecer tu negocio</T>
+              <T en="Web, Google Maps & 24/7 WhatsApp in one unified system">
+                Web de Alta Conversión + Google Maps + WhatsApp con IA 24/7
+              </T>
             </h2>
             <p className="text-[var(--color-text-secondary)] text-base md:text-lg leading-relaxed">
-              <T en="Web design is our core. Around it, we build focused solutions for the moments that come after your website is ready.">
-                El diseño web es nuestro núcleo. A su alrededor creamos soluciones enfocadas para lo que viene después de tener una web lista.
+              <T en="We don't just build fast websites: we position your business on Google Maps with Local Lift and automate your customer replies on WhatsApp with Polaris Flow so you never lose a sale after hours.">
+                No solo te diseñamos una web rápida: conectamos tus chats con Polaris Flow para que no pierdas ni una venta y te posicionamos en Google Maps con Local Lift.
               </T>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* 3 Balanced Pillars Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Pilar 1: Web de Alta Conversión */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16 }}
-              className="md:col-span-2 rounded-[2rem] border border-[var(--color-primary-base)]/25 bg-gradient-to-br from-indigo-500/[0.08] via-transparent to-[var(--color-primary-base)]/[0.08] p-7 md:p-10 flex flex-col md:flex-row md:items-center md:justify-between gap-8"
+              className="rounded-[2rem] border border-[var(--color-primary-base)]/25 bg-gradient-to-b from-[var(--color-primary-base)]/[0.08] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-7 md:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[var(--color-primary-base)]/50 transition-all duration-300"
             >
-              <div className="max-w-2xl space-y-4">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-primary-base)]">
-                  <T en="Our core service">Nuestro servicio principal</T>
-                </span>
-                <h3 className="text-2xl md:text-3xl font-display font-black tracking-tight">
-                  <T en="Design and development for digital experiences that convert">Diseño y desarrollo de experiencias digitales que convierten</T>
-                </h3>
-                <p className="text-sm md:text-base text-[var(--color-text-secondary)] leading-relaxed">
-                  <T en="Landing pages, corporate websites and e-commerce built around your goals — with original code, strategy and a clear path to launch.">
-                    Landing pages, webs corporativas y e-commerce construidos alrededor de tus objetivos, con código original, estrategia y un camino claro hasta el lanzamiento.
-                  </T>
-                </p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] shadow-xs">
+                    <Layers size={24} />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 font-mono">
+                    <T en="01 · Conversion">01 · Conversión</T>
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                    <T en="High-Converting Web">Tu Web Propia</T>
+                  </h3>
+                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    <T en="Landing pages, corporate websites and direct booking engines built with original code. Integrated with local payment gateways (Azul, CardNET) and international cards without paying 20-30% platform commissions.">
+                      Landing pages, webs corporativas y motores de reservas directas construidos a medida. Integrados con pasarelas locales (Azul, CardNET) y globales sin pagar comisiones del 20% al 30% a intermediarios.
+                    </T>
+                  </p>
+                </div>
+
+                <ul className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)] font-medium">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-[var(--color-primary-base)] shrink-0" />
+                    <T en="Zero templates · 100% original code">Sin plantillas · Código 100% original</T>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-[var(--color-primary-base)] shrink-0" />
+                    <T en="Azul, CardNET, PayPal & Stripe">Azul, CardNET, PayPal y Stripe</T>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-[var(--color-primary-base)] shrink-0" />
+                    <T en="Ultra-fast React 19 + Vite architecture">Arquitectura ultra-rápida React + Vite</T>
+                  </li>
+                </ul>
               </div>
+
               <Link
                 to="/cotizar"
-                className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-[var(--color-primary-base)]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/40"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[var(--color-primary-base)]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/40"
               >
-                <T en="Quote your project">Cotiza tu proyecto</T>
-                <ArrowRight size={17} />
+                <T en="Plan my website">Planificar mi web</T>
+                <ArrowRight size={15} />
               </Link>
             </motion.div>
 
+            {/* Pilar 2: Local Lift (Presencia Local) */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.08 }}
-              className="rounded-[2rem] border border-[#16C8C1]/30 bg-gradient-to-br from-[#16C8C1]/[0.13] via-transparent to-cyan-500/[0.04] p-7 flex flex-col gap-6"
+              className="rounded-[2rem] border border-[#16C8C1]/30 bg-gradient-to-b from-[#16C8C1]/[0.10] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-7 md:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[#16C8C1]/60 transition-all duration-300"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#16C8C1]/30 bg-[#16C8C1]/10 text-[#0faaa4] dark:text-[#5ee7df]">
-                  <Globe size={24} />
-                </div>
-                <span className="rounded-full border border-[#16C8C1]/30 bg-[#16C8C1]/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#0faaa4] dark:text-[#5ee7df]">
-                  <T en="Local presence">Presencia local</T>
-                </span>
-              </div>
-              <div className="space-y-3 flex-1">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-2xl font-display font-black tracking-tight">Local Lift</h3>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df]">
-                    <T en="From $29 USD · ≤ 5h Delivery">Desde $29 USD · Entrega ≤ 5h</T>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#16C8C1]/30 bg-[#16C8C1]/10 text-[#0faaa4] dark:text-[#5ee7df] shadow-xs">
+                    <Globe size={24} />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#16C8C1]/12 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/25 font-mono">
+                    <T en="02 · Local Traffic">02 · Tráfico Local</T>
                   </span>
                 </div>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  <T en="Optimize your Google Business Profile so local customers find you with clear information and choose you. Get your business description, 10 ready-to-post updates, and 15 custom review responses in under 5 hours — without handing over your passwords.">
-                    Optimizamos tu perfil de Google Business para que los clientes de tu área te encuentren con información clara y te elijan. Te entregamos la descripción de tu negocio, 10 publicaciones listas y 15 respuestas personalizadas para reseñas en menos de 5 horas — sin pedirte contraseñas.
-                  </T>
-                </p>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                      Local Lift
+                    </h3>
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df]">
+                      <T en="≤ 5h Delivery">Entrega ≤ 5h</T>
+                    </span>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    <T en="Optimize your Google Business Profile so local customers and tourists find you first. Get your business description, 10 ready-to-post updates, and 15 custom review responses in under 5 hours — without sharing passwords.">
+                      Optimizamos tu perfil de Google Business para que los clientes de tu área y turistas te encuentren de primero. Te entregamos 10 publicaciones listas y 15 respuestas estratégicas para reseñas en menos de 5 horas — sin pedirte contraseñas.
+                    </T>
+                  </p>
+                </div>
+
+                <ul className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)] font-medium">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-[#16C8C1] shrink-0" />
+                    <T en="Free instant audit tool">Auditoría instantánea gratuita</T>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-[#16C8C1] shrink-0" />
+                    <T en="Rank #1 on Google Maps in your area">Posicionamiento en Google Maps</T>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-[#16C8C1] shrink-0" />
+                    <T en="Plans starting at 9 USD">Planes desde 9 USD (pago único)</T>
+                  </li>
+                </ul>
               </div>
-              <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Link
-                  to="/local-lift"
-                  className="inline-flex items-center gap-2 text-sm font-black text-[#0faaa4] dark:text-[#5ee7df] transition-transform hover:translate-x-1"
-                >
-                  <T en="Audit my business for free">Auditar mi negocio gratis</T>
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
+
+              <Link
+                to="/local-lift"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#16C8C1] hover:bg-[#13b5ae] px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16C8C1]/40"
+              >
+                <T en="Audit my business for free">Auditar mi negocio gratis</T>
+                <ArrowRight size={15} />
+              </Link>
             </motion.div>
 
+            {/* Pilar 3: Polaris Flow (Automatización 24/7) */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.16 }}
-              className="rounded-[2rem] border border-teal-400/30 bg-gradient-to-br from-teal-400/[0.12] via-transparent to-emerald-500/[0.04] p-7 flex flex-col gap-6"
+              className="rounded-[2rem] border border-teal-400/30 bg-gradient-to-b from-teal-400/[0.10] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-7 md:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-teal-400/60 transition-all duration-300"
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-400/10 text-teal-500 dark:text-teal-300">
-                  <Zap size={24} />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-400/10 text-teal-500 dark:text-teal-300 shadow-xs">
+                    <Zap size={24} />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-teal-400/12 text-teal-600 dark:text-teal-300 border border-teal-400/25 font-mono">
+                    <T en="03 · 24/7 WhatsApp">03 · WhatsApp 24/7</T>
+                  </span>
                 </div>
-                <span className="rounded-full border border-teal-400/30 bg-teal-400/10 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-teal-600 dark:text-teal-300">
-                  <T en="Automation">Automatización</T>
-                </span>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                      Polaris Flow
+                    </h3>
+                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-teal-400/15 text-teal-600 dark:text-teal-300">
+                      <T en="1-Tap Approval">Aprobación 1-Toque</T>
+                    </span>
+                  </div>
+                  <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                    <T en="Never lose a client on WhatsApp after hours. Smart AI assistant that qualifies prospects, collects requirements and drafts proposals with human approval in 1 tap before sending.">
+                      No vuelvas a perder un cliente que te escribe a deshoras o en fines de semana. Asistente con IA que califica prospectos en WhatsApp, recopila datos y arma cotizaciones con aprobación humana en 1 toque.
+                    </T>
+                  </p>
+                </div>
+
+                <ul className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)] font-medium">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-teal-500 shrink-0" />
+                    <T en="24/7 WhatsApp lead qualification">Calificación de prospectos 24/7</T>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-teal-500 shrink-0" />
+                    <T en="Human-in-the-Loop 1-tap approval">Aprobación en 1 toque (nada se envía solo)</T>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={13} className="text-teal-500 shrink-0" />
+                    <T en="Setup from 49 USD">Implementación desde 49 USD</T>
+                  </li>
+                </ul>
               </div>
-              <div className="space-y-3 flex-1">
-                <h3 className="text-2xl font-display font-black tracking-tight">Polaris Flow</h3>
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  <T en="Focused automation systems that connect the repetitive parts of your business so your team can spend more time moving forward.">
-                    Sistemas de automatización enfocados que conectan las partes repetitivas de tu negocio para que tu equipo pueda avanzar con más tiempo y claridad.
-                  </T>
-                </p>
-              </div>
+
               <Link
                 to="/flow"
-                className="inline-flex items-center gap-2 text-sm font-black text-teal-600 dark:text-teal-300 transition-transform hover:translate-x-1"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 hover:bg-teal-400 px-5 py-3 text-xs font-black uppercase tracking-wider text-[#042f2e] shadow-lg shadow-teal-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-400/40"
               >
-                <T en="Explore Polaris Flow">Explora Polaris Flow</T>
-                <ArrowRight size={16} />
+                <T en="Explore WhatsApp & Flow">Conocer Polaris Flow</T>
+                <ArrowRight size={15} />
               </Link>
             </motion.div>
+          </div>
+
+          {/* Unified Bottom Callout Banner */}
+          <div className="mt-10 rounded-2xl md:rounded-3xl border border-[var(--color-border-subtle)] bg-[var(--color-surface-elevated)] p-6 md:p-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5">
+            <div className="space-y-1">
+              <p className="text-xs font-black uppercase tracking-widest text-[var(--color-primary-base)]">
+                <T en="Complete Digital Synergy">Sinergia Digital Completa</T>
+              </p>
+              <h4 className="text-lg md:text-xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                <T en="Three pillars, one single team moving your business forward.">
+                  Tres pilares, un solo equipo para impulsar tu facturación.
+                </T>
+              </h4>
+              <p className="text-xs md:text-sm text-[var(--color-text-secondary)]">
+                <T en="Attract clients on Google Maps → Convert them on your own website → Close sales on WhatsApp 24/7.">
+                  Atrae clientes en Google Maps → Conviértelos en tu propia Web → Cierra ventas en WhatsApp 24/7.
+                </T>
+              </p>
+            </div>
+            <Link
+              to="/cotizar"
+              className="shrink-0 inline-flex items-center justify-center gap-2 rounded-xl border border-[var(--color-border-strong)] hover:border-[var(--color-primary-base)] bg-[var(--color-surface-base)] px-5 py-3 text-xs font-bold text-[var(--color-text-primary)] hover:text-[var(--color-primary-base)] transition-all"
+            >
+              <T en="Talk to our team">Conversar con el equipo</T>
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
