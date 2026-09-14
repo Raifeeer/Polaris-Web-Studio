@@ -1,0 +1,40 @@
+{
+  "polaris-flow-mark-official.svg": {
+    "size": 1232322,
+    "has_text": false,
+    "text_content": [],
+    "has_image": true,
+    "colors": [
+      "#087d36",
+      "#126946",
+      "#47b1bd",
+      "#f0023b"
+    ]
+  },
+  "polaris-flow-vertical-dark-official.svg": {
+    "size": 1254637,
+    "has_text": false,
+    "text_content": [],
+    "has_image": true,
+    "colors": [
+      "#087556",
+      "#4f46e5",
+      "#b16b58",
+      "#c19537",
+      "#ca5e07",
+      "#d9fdfe",
+      "#dc4d43",
+      "#edb9fd",
+      "#f59e0b",
+      "#ffffff"
+    ]
+  },
+  "brand-assets/local-lift/local-lift-icon.svg": {
+    "size": 1376,
+    "snippet": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"266 429 692 579\" role=\"img\" aria-labelledby=\"title\">\n<title id=\"title\">Local Lift isotipo</title>\n<g transform=\"translate(286,449)\">\n<g transform=\"translate(-0.061603,538.925834) scale(0.100000,-0.100000)\"\nfill=\"#B9634B\" stroke=\"none\">\n<path d=\"M3500 5373 c-39 -14 -148 -120 -800 -777 -416 -419 -1181 -1189\n-1700 -1713 -672 -677 -952 -966 -970 -999 -33 -63 -39 -162 -15 -236 16 -46\n38 -74 177 -214 97 -98 175 -169 202 -182 89 -45 179 -45 268 -2 30 15 "
+  },
+  "isotipo-color.svg_exists": true,
+  "local-lift-icon.png_exists": true,
+  "polaris-flow-mark-official.png_exists": true,
+  "polaris-flow-symbol-v2.png_exists": true
+}
