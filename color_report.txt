@@ -1,0 +1,2 @@
+official hex: ['#087d36', '#126946', '#47b1bd', '#f0023b']
+vertical hex: ['#087556', '#4f46e5', '#b16b58', '#c19537', '#ca5e07', '#d9fdfe', '#dc4d43', '#edb9fd', '#f59e0b', '#ffffff']
