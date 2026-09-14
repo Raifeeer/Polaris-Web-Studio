@@ -2288,7 +2288,7 @@ export default function LandingPage() {
       </section>
 
       {/* Polaris Solutions Section */}
-      <section className="py-24 px-6 md:px-12" id="soluciones">
+      <section className="py-24 px-4 sm:px-6 md:px-12" id="soluciones">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
           <div className="max-w-3xl mx-auto text-center space-y-5 mb-14">
@@ -2308,14 +2308,14 @@ export default function LandingPage() {
           </div>
 
           {/* 3 Balanced Pillars Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
             {/* Pilar 1: Web de Alta Conversión */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16 }}
-              className="rounded-[2rem] border border-[var(--color-primary-base)]/25 bg-gradient-to-b from-[var(--color-primary-base)]/[0.08] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-7 md:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[var(--color-primary-base)]/50 transition-all duration-300"
+              className="rounded-[2rem] border border-[var(--color-primary-base)]/25 bg-gradient-to-b from-[var(--color-primary-base)]/[0.08] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-6 sm:p-7 lg:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[var(--color-primary-base)]/50 transition-all duration-300"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
@@ -2328,7 +2328,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                  <h3 className="text-xl sm:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] whitespace-nowrap">
                     <T en="High-Converting Web">Tu Web Propia</T>
                   </h3>
                   <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
@@ -2356,10 +2356,10 @@ export default function LandingPage() {
 
               <Link
                 to="/cotizar"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-primary-base)] px-5 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[var(--color-primary-base)]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/40"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[var(--color-primary-base)] px-3 sm:px-4 py-3 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[var(--color-primary-base)]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--color-primary-base)]/40 whitespace-nowrap"
               >
                 <T en="Plan my website">Planificar mi web</T>
-                <ArrowRight size={15} />
+                <ArrowRight size={14} className="shrink-0" />
               </Link>
             </motion.div>
 
@@ -2369,7 +2369,7 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.08 }}
-              className="rounded-[2rem] border border-[#16C8C1]/30 bg-gradient-to-b from-[#16C8C1]/[0.10] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-7 md:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[#16C8C1]/60 transition-all duration-300"
+              className="rounded-[2rem] border border-[#16C8C1]/30 bg-gradient-to-b from-[#16C8C1]/[0.10] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-6 sm:p-7 lg:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[#16C8C1]/60 transition-all duration-300"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
@@ -2382,11 +2382,11 @@ export default function LandingPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                    <h3 className="text-xl sm:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] whitespace-nowrap">
                       Local Lift
                     </h3>
-                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df]">
+                    <span className="shrink-0 whitespace-nowrap text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#16C8C1]/15 text-[#0faaa4] dark:text-[#5ee7df]">
                       <T en="≤ 5h Delivery">Entrega ≤ 5h</T>
                     </span>
                   </div>
@@ -2415,10 +2415,10 @@ export default function LandingPage() {
 
               <Link
                 to="/local-lift"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-[#16C8C1] hover:bg-[#13b5ae] px-5 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16C8C1]/40"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#16C8C1] hover:bg-[#13b5ae] px-3 sm:px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#16C8C1]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16C8C1]/40 whitespace-nowrap"
               >
-                <T en="Audit my business for free">Auditar mi negocio gratis</T>
-                <ArrowRight size={15} />
+                <T en="Free audit">Auditoría gratis</T>
+                <ArrowRight size={14} className="shrink-0" />
               </Link>
             </motion.div>
 
@@ -2428,24 +2428,24 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.16 }}
-              className="rounded-[2rem] border border-teal-400/30 bg-gradient-to-b from-teal-400/[0.10] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-7 md:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-teal-400/60 transition-all duration-300"
+              className="rounded-[2rem] border border-[#22c55e]/30 bg-gradient-to-b from-[#22c55e]/[0.08] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-6 sm:p-7 lg:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[#22c55e]/60 transition-all duration-300"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-teal-400/30 bg-teal-400/10 text-teal-500 dark:text-teal-300 shadow-xs">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#22c55e]/30 bg-[#22c55e]/10 text-[#16a34a] dark:text-[#4ade80] shadow-xs">
                     <Zap size={24} />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-teal-400/12 text-teal-600 dark:text-teal-300 border border-teal-400/25 font-mono">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#22c55e]/12 text-[#15803d] dark:text-[#4ade80] border border-[#22c55e]/25 font-mono">
                     <T en="03 · 24/7 WhatsApp">03 · WhatsApp 24/7</T>
                   </span>
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)]">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                    <h3 className="text-xl sm:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] whitespace-nowrap">
                       Polaris Flow
                     </h3>
-                    <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-teal-400/15 text-teal-600 dark:text-teal-300">
+                    <span className="shrink-0 whitespace-nowrap text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#15803d] dark:text-[#4ade80]">
                       <T en="1-Tap Approval">Aprobación 1-Toque</T>
                     </span>
                   </div>
@@ -2458,15 +2458,15 @@ export default function LandingPage() {
 
                 <ul className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)] font-medium">
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-teal-500 shrink-0" />
+                    <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
                     <T en="24/7 WhatsApp lead qualification">Calificación de prospectos 24/7</T>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-teal-500 shrink-0" />
+                    <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
                     <T en="Human-in-the-Loop 1-tap approval">Aprobación en 1 toque (nada se envía solo)</T>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-teal-500 shrink-0" />
+                    <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
                     <T en="Setup from 49 USD">Implementación desde 49 USD</T>
                   </li>
                 </ul>
@@ -2474,10 +2474,10 @@ export default function LandingPage() {
 
               <Link
                 to="/flow"
-                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 hover:bg-teal-400 px-5 py-3 text-xs font-black uppercase tracking-wider text-[#042f2e] shadow-lg shadow-teal-500/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-teal-400/40"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] px-3 sm:px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#22c55e]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#22c55e]/40 whitespace-nowrap"
               >
-                <T en="Explore WhatsApp & Flow">Conocer Polaris Flow</T>
-                <ArrowRight size={15} />
+                <T en="Explore Flow">Conocer Flow</T>
+                <ArrowRight size={14} className="shrink-0" />
               </Link>
             </motion.div>
           </div>
