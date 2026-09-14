@@ -1,0 +1,41 @@
+name: Inspect Flow Logo
+
+'on':
+  push:
+    paths:
+      - '.github/workflows/inspect-flow-logo.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect SVG colors
+        run: |
+          python3 -c "
+          import re
+          with open('public/brand/polaris-flow-mark-official.svg', 'r', errors='ignore') as f:
+              content = f.read()
+              hex_colors = set(re.findall(r'#[0-9a-fA-F]{6}', content))
+              print('HEX COLORS in official SVG:', sorted(hex_colors))
+              rgb_colors = set(re.findall(r'rgb\([^)]+\)', content))
+              print('RGB COLORS:', sorted(rgb_colors))
+          with open('public/brand/polaris-flow-mark.svg', 'r', errors='ignore') as f:
+              print('polaris-flow-mark.svg content:', f.read().strip())
+          with open('public/brand/polaris-flow-lockup-horizontal-dark.svg', 'r', errors='ignore') as f:
+              print('lockup dark:', f.read().strip())
+          with open('public/brand/polaris-flow-vertical-dark-official.svg', 'r', errors='ignore') as f:
+              content_v = f.read()
+              hex_v = set(re.findall(r'#[0-9a-fA-F]{6}', content_v))
+              print('HEX COLORS in vertical dark:', sorted(hex_v))
+          with open('color_report.txt', 'w') as out:
+              out.write(f'official hex: {sorted(hex_colors)}\nvertical hex: {sorted(hex_v)}\n')
+          "
+          git config user.name "Cristian Dicen"
+          git config user.email "cristian2200299@gmail.com"
+          git add color_report.txt
+          git rm .github/workflows/inspect-flow-logo.yml
+          git commit -m "ci: report flow logo colors"
+          git push origin main
