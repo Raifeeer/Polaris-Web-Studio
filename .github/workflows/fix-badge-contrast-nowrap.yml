@@ -2,8 +2,9 @@ name: Fix Badge Contrast and Nowrap
 
 'on':
   push:
-    paths:
-      - '.github/workflows/fix-badge-contrast-nowrap.yml'
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
   fix:
