@@ -1,0 +1,36 @@
+name: Deploy Landing Page
+
+'on':
+  push:
+    paths:
+      - '.github/workflows/deploy-landing.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Write LandingPage.tsx
+        run: |
+          python3 -c "import zlib, base64; open('src/pages/LandingPage.tsx', 'wb').write(zlib.decompress(base64.b64decode('$(cat << 'EOF'
+$(python3 -c "import zlib, base64; print(base64.b64encode(zlib.compress(open('/working_dir/c_2437e1a031a0d52e/src/pages/LandingPage.tsx', 'rb').read(), 9)).decode('utf-8'))")
+EOF
+)')))"
+
+      - name: Build and Test
+        run: |
+          npm ci
+          npm run build
+
+      - name: Commit and Push
+        run: |
+          git config user.name "Cristian Dicen"
+          git config user.email "cristian2200299@gmail.com"
+          git add src/pages/LandingPage.tsx
+          git rm -f .github/workflows/update-badges.yml .github/workflows/deploy-landing.yml || true
+          git commit -m "fix(landing): mantener etiquetas en 1 linea y aumentar contraste de texto"
+          git push origin main
