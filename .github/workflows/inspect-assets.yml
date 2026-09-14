@@ -1,0 +1,72 @@
+name: Inspect Assets
+
+'on':
+  push:
+    paths:
+      - '.github/workflows/inspect-assets.yml'
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect Flow and Lift assets
+        run: |
+          python3 -c "
+          import json, os, re
+
+          report = {}
+
+          # Check polaris-flow-mark-official.svg
+          if os.path.exists('public/brand/polaris-flow-mark-official.svg'):
+              with open('public/brand/polaris-flow-mark-official.svg', 'r', errors='ignore') as f:
+                  content = f.read()
+              report['polaris-flow-mark-official.svg'] = {
+                  'size': len(content),
+                  'has_text': bool(re.search(r'<text|<tspan', content, re.I)),
+                  'text_content': re.findall(r'<text[^>]*>(.*?)</text>', content, re.I | re.S),
+                  'has_image': bool(re.search(r'<image', content, re.I)),
+                  'colors': sorted(set(re.findall(r'#[0-9a-fA-F]{6}', content)))[:10]
+              }
+
+          # Check polaris-flow-vertical-dark-official.svg
+          if os.path.exists('public/brand/polaris-flow-vertical-dark-official.svg'):
+              with open('public/brand/polaris-flow-vertical-dark-official.svg', 'r', errors='ignore') as f:
+                  content = f.read()
+              report['polaris-flow-vertical-dark-official.svg'] = {
+                  'size': len(content),
+                  'has_text': bool(re.search(r'<text|<tspan', content, re.I)),
+                  'text_content': re.findall(r'<text[^>]*>(.*?)</text>', content, re.I | re.S),
+                  'has_image': bool(re.search(r'<image', content, re.I)),
+                  'colors': sorted(set(re.findall(r'#[0-9a-fA-F]{6}', content)))[:10]
+              }
+
+          # Check local-lift-icon.svg
+          if os.path.exists('brand-assets/local-lift/local-lift-icon.svg'):
+              with open('brand-assets/local-lift/local-lift-icon.svg', 'r', errors='ignore') as f:
+                  content = f.read()
+              report['brand-assets/local-lift/local-lift-icon.svg'] = {
+                  'size': len(content),
+                  'snippet': content[:500]
+              }
+              # copy to public/brand/local-lift-icon.svg
+              with open('public/brand/local-lift-icon.svg', 'w', encoding='utf-8') as f_out:
+                  f_out.write(content)
+
+          # Check polaris star isotipo
+          report['isotipo-color.svg_exists'] = os.path.exists('public/brand/isotipo-color.svg')
+          report['local-lift-icon.png_exists'] = os.path.exists('public/brand/local-lift-icon.png')
+          report['polaris-flow-mark-official.png_exists'] = os.path.exists('public/brand/polaris-flow-mark-official.png')
+          report['polaris-flow-symbol-v2.png_exists'] = os.path.exists('brand-assets/explorations/polaris-flow-symbol-v2.png')
+
+          with open('asset_report.json', 'w') as out:
+              json.dump(report, out, indent=2)
+          "
+          git config user.name "Cristian Dicen"
+          git config user.email "cristian2200299@gmail.com"
+          git add asset_report.json public/brand/local-lift-icon.svg || true
+          git rm .github/workflows/inspect-assets.yml
+          git commit -m "ci: inspect brand assets and sync local-lift-icon.svg"
+          git push origin main
