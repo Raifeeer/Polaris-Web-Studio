@@ -3,7 +3,7 @@ name: Deploy Landing Update
 'on':
   push:
     paths:
-      - '.github/workflows/deploy-landing.yml'
+      - 'trigger-landing.txt'
 
 jobs:
   deploy:
