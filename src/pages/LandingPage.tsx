@@ -2319,8 +2319,8 @@ export default function LandingPage() {
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] shadow-xs">
-                    <Layers size={24} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--color-primary-base)]/30 bg-[var(--color-primary-base)]/10 p-2.5 shadow-xs">
+                    <img src="/brand/isotipo-color.svg" alt="Polaris" className="h-full w-full object-contain" />
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[var(--color-primary-base)]/10 text-[var(--color-primary-base)] border border-[var(--color-primary-base)]/20 font-mono">
                     <T en="01 · Conversion">01 · Conversión</T>
@@ -2373,8 +2373,8 @@ export default function LandingPage() {
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#16C8C1]/30 bg-[#16C8C1]/10 text-[#0faaa4] dark:text-[#5ee7df] shadow-xs">
-                    <Globe size={24} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#16C8C1]/30 bg-[#16C8C1]/10 p-2.5 shadow-xs">
+                    <img src="/brand/local-lift-icon.svg" alt="Local Lift" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/brand/local-lift-icon.png'; }} />
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#16C8C1]/12 text-[#0faaa4] dark:text-[#5ee7df] border border-[#16C8C1]/25 font-mono">
                     <T en="02 · Local Traffic">02 · Tráfico Local</T>
@@ -2428,14 +2428,14 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ type: "spring", stiffness: 50, damping: 16, delay: 0.16 }}
-              className="rounded-[2rem] border border-[#22c55e]/30 bg-gradient-to-b from-[#22c55e]/[0.08] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-6 sm:p-7 lg:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[#22c55e]/60 transition-all duration-300"
+              className="rounded-[2rem] border border-[#f59e0b]/30 bg-gradient-to-b from-[#f59e0b]/[0.10] via-[var(--color-surface-elevated)] to-[var(--color-surface-base)] p-6 sm:p-7 lg:p-8 flex flex-col justify-between gap-6 shadow-xl relative overflow-hidden group hover:border-[#f59e0b]/60 transition-all duration-300"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#22c55e]/30 bg-[#22c55e]/10 text-[#16a34a] dark:text-[#4ade80] shadow-xs">
-                    <Zap size={24} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#f59e0b]/30 bg-[#fff8e6] dark:bg-[#17120a] p-1.5 shadow-xs overflow-hidden">
+                    <img src="/brand/polaris-flow-vertical-dark-official.svg" alt="Polaris Flow" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/brand/polaris-flow-vertical-official.png'; }} />
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#22c55e]/12 text-[#15803d] dark:text-[#4ade80] border border-[#22c55e]/25 font-mono">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#f59e0b]/12 text-[#d97706] dark:text-[#fcd34d] border border-[#f59e0b]/25 font-mono">
                     <T en="03 · 24/7 WhatsApp">03 · WhatsApp 24/7</T>
                   </span>
                 </div>
@@ -2445,7 +2445,7 @@ export default function LandingPage() {
                     <h3 className="text-xl sm:text-2xl font-display font-black tracking-tight text-[var(--color-text-primary)] whitespace-nowrap">
                       Polaris Flow
                     </h3>
-                    <span className="shrink-0 whitespace-nowrap text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#22c55e]/15 text-[#15803d] dark:text-[#4ade80]">
+                    <span className="shrink-0 whitespace-nowrap text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-[#f59e0b]/15 text-[#d97706] dark:text-[#fcd34d]">
                       <T en="1-Tap Approval">Aprobación 1-Toque</T>
                     </span>
                   </div>
@@ -2458,15 +2458,15 @@ export default function LandingPage() {
 
                 <ul className="space-y-2 pt-2 border-t border-[var(--color-border-subtle)] text-xs text-[var(--color-text-secondary)] font-medium">
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
+                    <CheckCircle2 size={13} className="text-[#f59e0b] shrink-0" />
                     <T en="24/7 WhatsApp lead qualification">Calificación de prospectos 24/7</T>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
+                    <CheckCircle2 size={13} className="text-[#f59e0b] shrink-0" />
                     <T en="Human-in-the-Loop 1-tap approval">Aprobación en 1 toque (nada se envía solo)</T>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle2 size={13} className="text-[#22c55e] shrink-0" />
+                    <CheckCircle2 size={13} className="text-[#f59e0b] shrink-0" />
                     <T en="Setup from 49 USD">Implementación desde 49 USD</T>
                   </li>
                 </ul>
@@ -2474,7 +2474,7 @@ export default function LandingPage() {
 
               <Link
                 to="/flow"
-                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] px-3 sm:px-4 py-3 text-xs font-black uppercase tracking-wider text-slate-950 shadow-lg shadow-[#22c55e]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#22c55e]/40 whitespace-nowrap"
+                className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#f59e0b] hover:bg-[#d97706] px-3 sm:px-4 py-3 text-xs font-black uppercase tracking-wider text-[#2d1900] shadow-lg shadow-[#f59e0b]/20 transition-all hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#f59e0b]/40 whitespace-nowrap"
               >
                 <T en="Explore Flow">Conocer Flow</T>
                 <ArrowRight size={14} className="shrink-0" />
